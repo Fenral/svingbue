@@ -1,0 +1,1173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="robots" content="noindex" />
+<title>Swing-arc simulator</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2052%2052'%20fill='none'%3E%3Cpath%20d='M11%2045%20C%2016%2026,%2024%2018,%2035%2015%20M21%2039%20L%2030%2024%20L%2043%2045'%20stroke='%2322E3D6'%20stroke-width='4.2'%20stroke-linecap='round'%20stroke-linejoin='round'/%3E%3Ccircle%20cx='37'%20cy='15'%20r='5.2'%20fill='%2322E3D6'/%3E%3C/svg%3E" />
+<link rel="stylesheet" href="./sa.css" />
+<style>
+  :root{
+    --accent:#22E3D6; --accent-soft:rgba(34,227,214,.16); --accent-line:rgba(34,227,214,.55);
+    --ink:#e8f0fb; --muted:#9aabc6;                     /* unified ink + AAA-ish muted */
+    --bg:#0A0E12; --bg-top:#0b1220;
+    --panel:rgba(12,20,33,.72); --line:rgba(255,255,255,.30);  /* line raised to ≥3:1 */
+    --radius-pill:999px; --radius-card:16px; --radius-control:12px;
+    --blur-surface:10px; --blur-overlay:18px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;overflow:hidden}
+  body{
+    background:radial-gradient(130% 120% at 50% -10%, var(--bg-top), var(--bg));
+    color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .stage{position:fixed;inset:0;overflow:hidden}
+  /* 3D scene canvas — the default (and only) Geometry scene */
+  #scene3d{position:fixed;inset:0;width:100%;height:100%;z-index:0}
+  /* live measured-bracket label for the 3D lowpoint (L1), positioned via JS */
+  .lp3d-label{
+    position:fixed;z-index:2;pointer-events:none;white-space:nowrap;
+    font-size:12px;font-weight:700;letter-spacing:.02em;color:var(--ink);
+    background:rgba(10,14,18,.7);border:1px solid rgba(255,209,102,.4);border-radius:8px;
+    padding:3px 9px;font-variant-numeric:tabular-nums;
+  }
+  .lp3d-label[hidden]{display:none}
+  .gc3d-label{
+    position:fixed;z-index:2;pointer-events:none;white-space:nowrap;
+    font-size:12px;font-weight:700;letter-spacing:.02em;color:var(--ink);
+    background:rgba(10,14,18,.7);border:1px solid rgba(138,90,43,.55);border-radius:8px;
+    padding:3px 9px;font-variant-numeric:tabular-nums;
+  }
+  .gc3d-label[hidden]{display:none}
+  /* GROUND-STRIKE cue (2026-07-02, owner: "see the club hit the ground BEFORE
+     the ball on a duff"): brief "turf first" emphasis pulse on the existing
+     FIX J turf label at the moment the early ground-strike FX fires — a
+     quick border/scale pop, not a new label, so it reads as "this is what
+     just happened" rather than introducing new UI. Reduced-motion: no
+     animation (rule at the bottom of this stylesheet already kills all
+     transitions/animations under prefers-reduced-motion). */
+  .gc3d-label.is-struck{
+    border-color:rgba(255,150,80,.9);
+    box-shadow:0 0 0 3px rgba(255,150,80,.28);
+    animation:gc3dStrike .5s ease-out;
+  }
+  @keyframes gc3dStrike{
+    0%{transform:scale(1.22)}
+    100%{transform:scale(1)}
+  }
+  .label{font-size:12px;fill:var(--muted);font-family:inherit;font-variant-numeric:tabular-nums}
+
+  /* FACE-ZOOM band-label chip: dark plate, fades in during the zoom
+     detour (reuses the app's panel/blur/radius tokens; see .readout/.tune). */
+  .facezoom-chip{
+    position:fixed;left:50%;bottom:max(18px,env(safe-area-inset-bottom));z-index:6;
+    transform:translateX(-50%) translateY(6px);
+    background:rgba(7,12,18,.86);-webkit-backdrop-filter:blur(var(--blur-surface));backdrop-filter:blur(var(--blur-surface));
+    border:1px solid var(--line);border-radius:var(--radius-pill);
+    padding:8px 18px;font-size:14px;font-weight:700;letter-spacing:.02em;
+    font-variant-numeric:tabular-nums;white-space:nowrap;pointer-events:none;
+    opacity:0;transition:opacity .22s ease,transform .22s ease;
+    box-shadow:0 14px 40px -18px rgba(0,0,0,.85);
+  }
+  .facezoom-chip.is-visible{opacity:1;transform:translateX(-50%) translateY(0)}
+  @media (prefers-reduced-motion:reduce){.facezoom-chip{transition:none}}
+
+  /* FACE-ZOOM "tap to continue" hint: small, muted, sits just below the
+     band-label chip during the indefinite hold. Fades in ~600ms after the
+     hold starts (see facezoom.js HINT_DELAY_MS) so it doesn't flash on
+     screen for people who tap through immediately. */
+  .facezoom-hint{
+    position:fixed;left:50%;bottom:max(58px,calc(env(safe-area-inset-bottom) + 58px));z-index:6;
+    transform:translateX(-50%) translateY(4px);
+    background:rgba(7,12,18,.7);-webkit-backdrop-filter:blur(var(--blur-surface));backdrop-filter:blur(var(--blur-surface));
+    border:1px solid rgba(255,255,255,.18);border-radius:var(--radius-pill);
+    padding:5px 14px;font-size:11px;font-weight:600;letter-spacing:.03em;color:var(--muted);
+    white-space:nowrap;pointer-events:none;
+    opacity:0;transition:opacity .3s ease,transform .3s ease;
+  }
+  .facezoom-hint.is-visible{opacity:1;transform:translateX(-50%) translateY(0)}
+  @media (prefers-reduced-motion:reduce){.facezoom-hint{transition:none}}
+
+  /* persistent ATTACK/PATH readout chips (top-centre, DOM-based — replaces the
+     old in-canvas SVG chip group 1:1 in look/values) */
+  .hud-chips{
+    position:fixed;top:max(10px,env(safe-area-inset-top));left:50%;z-index:3;
+    transform:translateX(-50%);display:flex;gap:8px;pointer-events:none;
+  }
+  .hud-chip{
+    display:inline-flex;align-items:center;gap:8px;height:24px;padding:0 10px;
+    border-radius:7px;background:rgba(7,16,20,.78);border:1px solid;
+    font-size:12px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap;
+  }
+  .hud-chip .sw{width:6.4px;height:6.4px;border-radius:50%;flex:none}
+  .hud-chip.atk{border-color:rgba(255,179,71,.5);color:#ffe0bb}
+  .hud-chip.atk .sw{background:#ffb347}
+  .hud-chip.path{border-color:rgba(34,227,214,.5);color:#bff6f1}
+  .hud-chip.path .sw{background:#22E3D6}
+
+  /* overlays */
+  .title{position:fixed;top:max(10px,env(safe-area-inset-top));left:max(14px,env(safe-area-inset-left));z-index:3;pointer-events:none}
+  .title h1{font-size:14px;font-weight:700;letter-spacing:-.01em}
+  .title p{color:var(--muted);font-size:11px;margin-top:1px}
+
+  /* ── module nav (top-left, thin strip — shared with Impact) ──── */
+  .modnav{position:fixed;top:max(8px,env(safe-area-inset-top));left:max(10px,env(safe-area-inset-left));z-index:5;
+    display:flex;align-items:center;gap:4px;view-transition-name:sa-nav;
+    background:linear-gradient(180deg, rgba(12,20,33,.55), rgba(10,14,18,.2));
+    -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+    border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:3px}
+  .modnav a{
+    -webkit-tap-highlight-color:transparent;text-decoration:none;color:var(--muted);
+    border:1px solid transparent;border-radius:8px;
+    min-height:44px;display:inline-flex;align-items:center;justify-content:center;
+    font-size:13px;font-weight:600;line-height:1;padding:0 12px;
+    transition:background .2s,border-color .2s,color .2s;
+  }
+  .modnav a.home{width:44px;padding:0;font-size:17px}
+  .modnav a:hover{background:rgba(255,255,255,.08);color:var(--ink)}
+  .modnav a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .modnav a[aria-current="page"]{
+    color:var(--accent);border-color:var(--accent-line);background:var(--accent-soft);
+  }
+
+  .controls{position:fixed;top:max(10px,env(safe-area-inset-top));right:max(12px,env(safe-area-inset-right));z-index:4;display:flex;gap:8px}
+  button{
+    background:rgba(10,18,30,.6);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+    color:var(--ink);border:1px solid var(--line);width:44px;height:44px;border-radius:var(--radius-pill);
+    font-size:17px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center;
+    transition:background .2s,border-color .2s,transform .1s;
+  }
+  button svg{width:20px;height:20px;display:block}
+  button:hover{background:rgba(255,255,255,.13);border-color:rgba(255,255,255,.3)}
+  button:active{transform:translateY(1px)}
+  button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  button[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+  #hit{color:var(--accent);border-color:var(--accent-line)}
+  #hit:hover{background:var(--accent-soft);border-color:var(--accent)}
+
+  /* strike readout */
+  .readout{
+    position:fixed;left:max(14px,env(safe-area-inset-left));bottom:max(14px,env(safe-area-inset-bottom));z-index:3;
+    width:min(42vw,300px);background:var(--panel);-webkit-backdrop-filter:blur(var(--blur-surface));backdrop-filter:blur(var(--blur-surface));
+    border:1px solid var(--line);border-radius:var(--radius-card);padding:12px 14px;display:flex;gap:12px;align-items:flex-start;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.06), 0 14px 40px -22px rgba(0,0,0,.8);
+  }
+  .readout .col{flex:1;min-width:0}
+  .verdict{display:flex;align-items:center;gap:8px}
+  .verdict .dot{width:12px;height:12px;border-radius:var(--radius-pill);background:var(--muted);flex:none;box-shadow:0 0 10px currentColor}
+  .verdict #band{font-size:18px;font-weight:700;letter-spacing:-.01em}
+  .verdict #pct{margin-left:auto;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+  #tip{font-size:11.5px;color:var(--muted);margin-top:4px;line-height:1.35}
+  .ballcloseup{width:84px;height:84px;flex:none}
+
+  /* tune rail — slim bottom-docked strip, full width minus safe-area, ONE row
+     of all 4 sliders side-by-side. Replaces the old bottom-right sheet. */
+  .tune{
+    position:fixed;left:0;right:0;bottom:0;z-index:3;
+    padding:8px max(12px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left));
+    background:var(--panel);-webkit-backdrop-filter:blur(var(--blur-surface));backdrop-filter:blur(var(--blur-surface));
+    border-top:1px solid var(--line);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.06), 0 -14px 40px -22px rgba(0,0,0,.8);
+    display:flex;gap:10px;align-items:flex-start;
+    max-height:80px;
+    transform:translateY(0);opacity:1;
+    transition:transform .2s ease,opacity .2s ease;
+  }
+  .tune[hidden]{display:none}
+  /* FIX M — pre-open/post-close resting transform for the 200ms slide-up
+     (kept as a separate class from [hidden] so the transform can transition;
+     [hidden] itself is display:none and can't animate). */
+  .tune.tune-closed{transform:translateY(100%);opacity:0;pointer-events:none}
+  @media (prefers-reduced-motion:reduce){.tune{transition:none}}
+  .tune h2{display:none} /* rail is self-explanatory via compact labels; heading dropped to save vertical space */
+  .row{flex:1;min-width:0;margin:0}
+  .row .top{display:flex;justify-content:space-between;gap:6px;font-size:10.5px;margin-bottom:2px;
+    text-transform:uppercase;letter-spacing:.04em;color:var(--muted);font-weight:700;white-space:nowrap;overflow:hidden}
+  .row .top label{overflow:hidden;text-overflow:ellipsis}
+  .row .top .val{color:var(--rng,var(--accent));font-variant-numeric:tabular-nums;font-weight:700;flex:none}
+  .row.dimmed{opacity:.4;transition:opacity .15s ease}
+  @media (prefers-reduced-motion:reduce){.row.dimmed{transition:none}}
+
+  /* ── premium custom range slider ──────────────────────────────────────── */
+  .slider{
+    --rng:var(--accent);            /* per-param accent tone (overridable) */
+    --p:50%;                        /* thumb position (computed on input) */
+    --o:50%;                        /* fill origin: centre for signed, 0 for left-fill */
+    --th:7%;                        /* half thumb width as % of track (for tick clamping) */
+    position:relative;height:44px;display:flex;align-items:center;  /* ≥44px hit area */
+  }
+  .slider input[type=range]{
+    -webkit-appearance:none;appearance:none;width:100%;height:44px;margin:0;
+    background:transparent;cursor:pointer;display:block;
+  }
+  /* track (webkit) */
+  .slider input[type=range]::-webkit-slider-runnable-track{
+    height:5px;border-radius:999px;
+    background:var(--track-bg, rgba(255,255,255,.14));
+  }
+  .slider input[type=range]::-moz-range-track{
+    height:5px;border-radius:999px;background:rgba(255,255,255,.14);
+  }
+  .slider input[type=range]::-moz-range-progress{height:5px;border-radius:999px;background:var(--rng)}
+  /* thumb (webkit) */
+  .slider input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;appearance:none;width:20px;height:20px;border-radius:50%;
+    margin-top:-7.5px;background:var(--rng);
+    border:2px solid rgba(10,14,18,.9);
+    box-shadow:0 0 0 1.5px var(--rng), 0 4px 10px -2px rgba(0,0,0,.7);
+    transition:transform .12s ease, box-shadow .12s ease;
+  }
+  .slider input[type=range]::-moz-range-thumb{
+    width:20px;height:20px;border-radius:50%;background:var(--rng);
+    border:2px solid rgba(10,14,18,.9);
+    box-shadow:0 0 0 1.5px var(--rng), 0 4px 10px -2px rgba(0,0,0,.7);
+    transition:transform .12s ease, box-shadow .12s ease;
+  }
+  /* grow on drag */
+  .slider input[type=range]:active::-webkit-slider-thumb{transform:scale(1.25)}
+  .slider input[type=range]:active::-moz-range-thumb{transform:scale(1.25)}
+  .slider input[type=range]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 3px var(--rng), 0 4px 10px -2px rgba(0,0,0,.7)}
+  .slider input[type=range]:focus-visible::-moz-range-thumb{box-shadow:0 0 0 3px var(--rng), 0 4px 10px -2px rgba(0,0,0,.7)}
+  .slider input[type=range]:focus{outline:none}
+  .slider input[type=range]:focus-visible{outline:none}
+  /* centre tick (signed sliders) + faint precision ticks (cm sliders) — drawn
+     as an overlay line beneath the thumb, non-interactive */
+  .slider .ticks{
+    position:absolute;left:0;right:0;top:50%;height:14px;transform:translateY(-50%);
+    pointer-events:none;z-index:0;
+  }
+  .slider[data-origin="center"] .ticks::before{ /* centre tick at the 0 origin (signed only) */
+    content:"";position:absolute;top:50%;left:var(--o);transform:translate(-50%,-50%);
+    width:2px;height:11px;border-radius:1px;background:rgba(255,255,255,.45);
+  }
+  .slider[data-ticks="cm"] .ticks{               /* CapCut-style faint precision ticks */
+    background-image:repeating-linear-gradient(90deg,
+      rgba(255,255,255,.16) 0, rgba(255,255,255,.16) 1px,
+      transparent 1px, transparent calc((100% - 2px)/10));
+    background-position:0 50%;background-size:100% 7px;background-repeat:no-repeat;
+  }
+  /* value bubble above the thumb */
+  .slider .bubble{
+    position:absolute;bottom:calc(100% - 6px);left:var(--p);transform:translateX(-50%) translateY(4px);
+    background:var(--rng);color:#06121a;font-size:11px;font-weight:700;line-height:1;
+    font-variant-numeric:tabular-nums;white-space:nowrap;
+    padding:4px 7px;border-radius:7px;box-shadow:0 4px 12px -3px rgba(0,0,0,.7);
+    opacity:0;pointer-events:none;transition:opacity .15s ease, transform .15s ease;z-index:2;
+  }
+  .slider .bubble::after{
+    content:"";position:absolute;top:100%;left:50%;transform:translateX(-50%);
+    border:4px solid transparent;border-top-color:var(--rng);
+  }
+  .slider.show-bubble .bubble{opacity:1;transform:translateX(-50%) translateY(0)}
+  @media (prefers-reduced-motion:reduce){
+    .slider input[type=range]:active::-webkit-slider-thumb{transform:none}
+    .slider input[type=range]:active::-moz-range-thumb{transform:none}
+    .slider .bubble{transition:none}
+  }
+
+  /* rotate hint */
+  .rotate{position:fixed;inset:0;z-index:9;display:none;flex-direction:column;align-items:center;justify-content:center;
+    gap:14px;background:var(--bg);text-align:center;padding:24px}
+  .rotate .ico{font-size:46px;animation:tilt 1.8s ease-in-out infinite}
+  .rotate p{font-size:15px;max-width:240px}
+  @keyframes tilt{0%,100%{transform:rotate(-12deg)}50%{transform:rotate(78deg)}}
+  @media (orientation:portrait){.rotate{display:flex}}
+  @media (max-width:560px){.readout{width:min(50vw,260px)}}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+</style>
+</head>
+<body>
+  <div class="stage">
+    <canvas id="scene3d" aria-hidden="true"></canvas>
+  </div>
+
+  <div class="lp3d-label" id="lp3dLabel" hidden aria-hidden="true"></div>
+  <div class="gc3d-label" id="gc3dLabel" hidden aria-hidden="true"></div>
+
+  <!-- FACE-ZOOM band-label chip (fades in during the zoom detour) -->
+  <div class="facezoom-chip" id="faceZoomChip" aria-hidden="true"></div>
+  <!-- FACE-ZOOM "tap to continue" hint (indefinite hold — fades in ~600ms after cut-in) -->
+  <div class="facezoom-hint" id="faceZoomHint" role="status" aria-live="polite">Tap to continue ▸</div>
+
+  <!-- persistent ATTACK/PATH readout chips (DOM, top-centre) -->
+  <div class="hud-chips" aria-hidden="true">
+    <span class="hud-chip atk" id="chipAtk"><span class="sw"></span><span id="chipAtkTx">ATTACK —</span></span>
+    <span class="hud-chip path" id="chipPath"><span class="sw"></span><span id="chipPathTx">PATH —</span></span>
+  </div>
+
+  <p id="sceneData" class="sr-only" aria-live="polite" aria-atomic="true">Swing arc loading.</p>
+  <p id="faceZoomLive" class="sr-only" aria-live="polite" aria-atomic="true"></p>
+
+  <nav class="modnav" aria-label="Modules">
+    <a class="home" href="./index.html" aria-label="Home"><svg width="22" height="22" viewBox="0 0 52 52" fill="none" aria-hidden="true"><path d="M11 45 C 16 26, 24 18, 35 15 M21 39 L 30 24 L 43 45" stroke="currentColor" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="37" cy="15" r="5.2" fill="currentColor"/></svg></a>
+    <a class="tab" href="./geometry.html" aria-current="page">Geometry</a>
+    <a class="tab" href="./impact.html">Impact</a>
+  </nav>
+
+  <div class="controls">
+    <button id="viewBtn" aria-pressed="false" aria-label="Switch perspective: front or down-the-line" title="Front / Down-the-line">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a1 1 0 0 1 1-1h9a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><path d="M14 10l5.4-3.1a1 1 0 0 1 1.5.87v8.46a1 1 0 0 1-1.5.87L14 14z"/></svg>
+    </button>
+    <button id="tuneBtn" aria-pressed="false" aria-label="Show/hide parameters" title="Parameters">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="4" y1="7" x2="20" y2="7"/><circle cx="9" cy="7" r="2.4" fill="var(--panel)"/><line x1="4" y1="17" x2="20" y2="17"/><circle cx="15" cy="17" r="2.4" fill="var(--panel)"/></svg>
+    </button>
+    <button id="strikeBtn" aria-pressed="true" aria-label="Show/hide strike result" title="Strike">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1" fill="currentColor"/></svg>
+    </button>
+    <button id="hit" aria-label="Hit – play the swing" title="Hit">
+      <svg viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><path d="M8 5.5v13a1 1 0 0 0 1.5.87l11-6.5a1 1 0 0 0 0-1.74l-11-6.5A1 1 0 0 0 8 5.5z"/></svg>
+    </button>
+    <button id="helpBtn" class="sa-help" aria-label="Replay the walkthrough" title="Help">?</button>
+  </div>
+
+  <aside class="readout" aria-live="polite" aria-label="Strike result">
+    <div class="col">
+      <div class="verdict"><span class="dot" id="dot"></span><span id="band">Pure</span><span id="pct">100%</span></div>
+      <p id="tip">—</p>
+    </div>
+    <svg class="ballcloseup" viewBox="0 0 120 120" aria-hidden="true">
+      <defs>
+        <radialGradient id="ballGrad" cx="38%" cy="32%" r="75%">
+          <stop offset="0" stop-color="#ffffff"/><stop offset="0.7" stop-color="#e7ecf2"/><stop offset="1" stop-color="#b9c3cf"/>
+        </radialGradient>
+      </defs>
+      <line x1="6" y1="100" x2="114" y2="100" stroke="rgba(255,255,255,.25)" stroke-width="2"/>
+      <circle cx="60" cy="66" r="34" fill="url(#ballGrad)"/>
+      <line id="cuLine" x1="14" y1="66" x2="106" y2="66" stroke="var(--muted)" stroke-width="3" stroke-linecap="round"/>
+      <text id="cuLabel" x="60" y="116" text-anchor="middle" class="label" font-size="11">center</text>
+    </svg>
+  </aside>
+
+  <div class="tune" id="tune" hidden>
+    <h2>Parameters</h2>
+    <div class="row" id="row_plane">
+      <div class="top"><label for="s_plane">Plane</label><span class="val" id="v_plane"></span></div>
+      <div class="slider" data-origin="left" style="--rng:#22E3D6">
+        <div class="ticks" aria-hidden="true"></div>
+        <input type="range" id="s_plane" min="45" max="70" step="1" aria-label="Plane angle">
+        <span class="bubble" id="b_plane" aria-hidden="true"></span>
+      </div>
+    </div>
+    <div class="row" id="row_dir">
+      <div class="top"><label for="s_dir">Direction</label><span class="val" id="v_dir"></span></div>
+      <div class="slider" data-origin="center" style="--rng:#22E3D6">
+        <div class="ticks" aria-hidden="true"></div>
+        <input type="range" id="s_dir" min="-8" max="8" step="0.5" aria-label="Swing direction">
+        <span class="bubble" id="b_dir" aria-hidden="true"></span>
+      </div>
+    </div>
+    <div class="row" id="row_lpx">
+      <div class="top"><label for="s_lpx">Low point</label><span class="val" id="v_lpx"></span></div>
+      <div class="slider" data-origin="center" data-ticks="cm" style="--rng:#ffd166">
+        <div class="ticks" aria-hidden="true"></div>
+        <input type="range" id="s_lpx" min="-0.30" max="0.30" step="0.005" aria-label="Low point, ahead or behind the ball">
+        <span class="bubble" id="b_lpx" aria-hidden="true"></span>
+      </div>
+    </div>
+    <div class="row" id="row_lpz">
+      <div class="top"><label for="s_lpz">Depth</label><span class="val" id="v_lpz"></span></div>
+      <div class="slider" data-origin="center" data-ticks="cm" style="--rng:#ffb347">
+        <div class="ticks" aria-hidden="true"></div>
+        <input type="range" id="s_lpz" min="-0.20" max="0.20" step="0.002" aria-label="Strike depth, fat or thin">
+        <span class="bubble" id="b_lpz" aria-hidden="true"></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="rotate" role="status">
+    <div class="ico" aria-hidden="true">📱</div>
+    <p>Rotate your phone to landscape</p>
+  </div>
+
+<script src="./vendor/gsap/gsap.min.js"></script>
+<script src="./sa-firstrun.js" defer></script>
+<script type="importmap">
+{ "imports": {
+  "three": "./vendor/three/build/three.module.js",
+  "three/addons/": "./vendor/three/examples/jsm/"
+}}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import {
+  RADIUS, deg2rad, arcPosition, tangentAt, thetaAtImpact,
+  strikeQuality, deriveImpact, clubBallContact, BALL_RADIUS_M,
+} from './swing-parameters-and-impact.js';
+import saHaptics from './sa-haptics.js';
+window.saHaptics = saHaptics;   // expose for non-module scripts / tests
+import { createScene } from './geo3d/scene.js';
+import { createArc } from './geo3d/arc.js';
+import { createPlane } from './geo3d/plane.js';
+import { createLowpoint } from './geo3d/lowpoint.js';
+import { createGroundContact } from './geo3d/groundcontact.js';
+import { createClub } from './geo3d/club.js';
+import { createTimeline3d } from './geo3d/timeline.js';
+import { createDelivery } from './geo3d/delivery.js';
+
+const $ = id => document.getElementById(id);
+
+// live swing state
+const state = {
+  view: 'face', radius: RADIUS, planeAngle: 60, swingDirection: 0,
+  lowPoint: { x: 0.04, y: 0, z: 0.016 },   // starts ~Pure
+};
+
+// ── 3D scene — the default (and only) Geometry scene ──────────────────────
+const reduceMotion3d = matchMedia('(prefers-reduced-motion: reduce)').matches;
+let sa3d = null;   // { scene, camera, rig, POSES, applyRig, renderer, invalidate, startTicking, stopTicking }
+let arc3d = null, plane3d = null, lp3d = null, gc3d = null, club3d = null, timeline3d = null, delivery3d = null;
+let ballTick = null; // FIX J — contact-height tick/ring on the 3D ball
+
+function makeBallTick() {
+  // short horizontal tick on the ball's camera-facing side (a thin flattened
+  // torus arc approximated with a plane strip is overkill — use a slim box
+  // "tick" that always faces +Y-ish/camera side, positioned at contact height).
+  const geo = new THREE.RingGeometry(BALL_RADIUS_M * 0.78, BALL_RADIUS_M * 0.92, 24, 1, 0, Math.PI * 0.55);
+  const mat = new THREE.MeshBasicMaterial({
+    color: 0xffffff, toneMapped: false, transparent: true, opacity: 0.95,
+    side: THREE.DoubleSide, depthWrite: false, depthTest: false,
+  });
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.renderOrder = 9;
+  mesh.visible = false;
+  return mesh;
+}
+
+function init3d() {
+  const canvas3d = $('scene3d');
+  sa3d = createScene(canvas3d);
+  arc3d = createArc(state);
+  plane3d = createPlane(state);
+  lp3d = createLowpoint(state, $('lp3dLabel'));
+  gc3d = createGroundContact(state, $('gc3dLabel'));
+  club3d = createClub(state);
+  delivery3d = createDelivery(state);
+  ballTick = makeBallTick();
+  sa3d.scene.add(arc3d.group, plane3d.group, lp3d.group, gc3d.group, club3d.group, delivery3d.group, ballTick);
+  arc3d.group.__invalidate = sa3d.invalidate;
+  plane3d.group.__invalidate = sa3d.invalidate;
+  delivery3d.group.__invalidate = sa3d.invalidate;
+  club3d.loadPromise.then(() => sa3d.invalidate());
+
+  // 3D swing timeline (trail/divot/flash + club/arc placement).
+  // controlsVisible is a hoisted function declared later in this module —
+  // safe to reference here since it's only ever CALLED after full parse.
+  timeline3d = createTimeline3d({
+    state, sa3d, arc3d, club3d,
+    getReduced: () => matchMedia('(prefers-reduced-motion: reduce)').matches,
+    controlsVisible: (show) => controlsVisible(show),
+    // FACE-ZOOM band-label chip + one-shot aria-live announcement
+    faceZoomChipEl: $('faceZoomChip'),
+    faceZoomLiveEl: $('faceZoomLive'),
+    // FACE-ZOOM indefinite-hold "tap to continue" hint + dismiss surface
+    faceZoomHintEl: $('faceZoomHint'),
+    faceZoomDismissEl: canvas3d,
+    // FIX K — nodes to hide during the closeup (only club+ball+contact marker+
+    // band chip+hint stay visible); DOM labels are hidden separately below.
+    // Lazy getter (not a static array) so it can safely reference fx.trail.mesh,
+    // which only exists once createTimeline3d's own fx object is constructed —
+    // by the time cutIn() actually calls this, timeline3d is fully assigned.
+    faceZoomHideNodes: () => [
+      arc3d.group, plane3d.group, lp3d.group, gc3d.group, delivery3d.group,
+      sa3d.targetLine, timeline3d ? timeline3d.fx.trail.mesh : null,
+    ].filter(Boolean),
+    faceZoomHideLabels: [$('lp3dLabel'), $('gc3dLabel')],
+    // GROUND-STRIKE-BEFORE-BALL — "turf first" cue reuses the existing FIX J
+    // turf label (gc3dLabel) for a brief emphasis pulse at the moment the
+    // early ground-strike FX fires (see timeline.js pulseGroundStrikeLabel()).
+    groundStrikeLabelEl: $('gc3dLabel'),
+  });
+
+  rebuild3d();
+  sa3d.invalidate();
+
+  // resize keeps the canvas in sync with the viewport (render-on-demand: just invalidate)
+  addEventListener('resize', () => sa3d.invalidate());
+
+  // context-loss recovery already wired inside createScene(); force one more
+  // render once restored so the scene isn't left blank.
+  canvas3d.addEventListener('webglcontextrestored', () => sa3d.invalidate());
+}
+
+function rebuild3d() {
+  if (!sa3d) return;
+  arc3d.rewrite();
+  const lowestTheta = lp3d.update(state, sa3d.camera, $('scene3d'));
+  arc3d.setLowestSegmentGlow(lowestTheta);
+  plane3d.update(state);
+  if (gc3d) gc3d.update(state, sa3d.camera, $('scene3d'));   // FIX J — turf zone + bracket
+  if (club3d) club3d.updateAddress(state);   // address pose follows the sliders live
+  if (delivery3d) delivery3d.update(state);  // delivery arrow direction follows the sliders live
+  updateBallTick(state);
+  // keep the arc fully inked while idle (only the swing timeline draws it in
+  // progressively); avoids a stale partial-ink look if sliders are dragged
+  // after a swing without pressing Hit again.
+  if (arc3d && (!timeline3d || !timeline3d.isPlaying())) {
+    arc3d.coreMat.uniforms.uProgress.value = 1;
+    arc3d.glowMat.uniforms.uProgress.value = 1;
+  }
+  sa3d.invalidate();
+}
+
+// FIX J — ball-strike tick/ring: sits on the ball's camera-facing side at the
+// contact height (clubBallContact(state).offset, metres, + = high). Hidden
+// when the band is Whiff (no ball contact at all).
+function updateBallTick(stateRef) {
+  if (!ballTick) return;
+  const sq = strikeQuality(stateRef);
+  if (sq.band === 'Whiff') { ballTick.visible = false; return; }
+  const ct = clubBallContact(stateRef);
+  const clampedOffset = Math.max(-BALL_RADIUS_M * 0.95, Math.min(BALL_RADIUS_M * 0.95, ct.offset));
+  const contactZ = BALL_RADIUS_M + clampedOffset; // world Z of the contact point on the ball
+  // ring sits in a plane facing -Y (camera side in FACE view): rotate the ring
+  // (built in local XY) so its normal points along -Y, then move it to the
+  // ball's front hemisphere at the contact height.
+  ballTick.position.set(0, -BALL_RADIUS_M * 0.985, contactZ);
+  ballTick.rotation.set(Math.PI / 2, 0, -Math.PI * 0.275); // face -Y, centre the arc slice
+  ballTick.material.color.set(sq.color);
+  ballTick.visible = true;
+}
+
+const els = {
+  chipAtkTx: $('chipAtkTx'), chipPathTx: $('chipPathTx'),
+};
+
+// ── strike readout ──────────────────────────────────────────────────────
+function renderReadout() {
+  const sq = strikeQuality(state);
+  $('band').textContent = sq.band;
+  $('band').style.color = sq.textColor;   // band TEXT uses textColor
+  $('dot').style.color = sq.color; $('dot').style.background = sq.color;
+  $('pct').textContent = sq.pct + '%';
+  $('tip').textContent = sq.tip;
+
+  // ball close-up: contact height marker (offsetRatio +1 top, -1 bottom)
+  const cuCenterY = 66, cuR = 34;
+  const ratio = Math.max(-1.6, Math.min(1.6, strikeQuality(state).offsetRatio));
+  const y = cuCenterY - ratio * cuR;
+  $('cuLine').setAttribute('y1', y.toFixed(1)); $('cuLine').setAttribute('y2', y.toFixed(1));
+  $('cuLine').setAttribute('stroke', sq.color);
+  // FIX J — exact mm value from clubBallContact(state).offset, replacing the
+  // old center/top/bottom word: "+8 mm high" / "−5 mm low" / "center"
+  // (|offset·1000| < 1.5 → "center"); turf-first strikes keep that prefix.
+  const offsetMm = clubBallContact(state).offset * 1000;
+  const mmWord = Math.abs(offsetMm) < 1.5 ? 'center' : (offsetMm > 0 ? `+${offsetMm.toFixed(0)} mm high` : `−${Math.abs(offsetMm).toFixed(0)} mm low`);
+  $('cuLabel').textContent = sq.clubZ < 0 ? `turf first, ${mmWord}` : mmWord;
+
+  // live numeric alternative to the chart (a11y) — keeps the screen-reader text in sync with the data
+  const di = deriveImpact(state);
+  const lpx = state.lowPoint.x;
+  const lpDesc = Math.abs(lpx) < 0.001 ? 'at the ball'
+    : (Math.abs(lpx * 100).toFixed(0) + ' cm ' + (lpx >= 0 ? 'ahead of the ball' : 'behind the ball'));
+  $('sceneData').textContent =
+    `Strike ${sq.band}, ${sq.pct}%. Plane angle ${state.planeAngle} degrees. ` +
+    `Attack angle ${di.attackAngle.toFixed(1)} degrees ${di.attackAngle >= 0 ? 'up' : 'down'}. ` +
+    `Club path ${di.clubPath.toFixed(1)} degrees. Low point ${lpDesc}.`;
+
+  // persistent HUD chips (live with the sliders)
+  const fmtSigned = v => (v >= 0 ? '+' : '−') + Math.abs(v).toFixed(1) + '°';
+  els.chipAtkTx.textContent = 'ATTACK ' + fmtSigned(di.attackAngle);
+  els.chipPathTx.textContent = 'PATH ' + fmtSigned(di.clubPath);
+}
+
+// ── init ──────────────────────────────────────────────────────────────────
+renderReadout();
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// ── fade the control surfaces during play for a clean ball-strike view ────
+// The HUD chips stay visible during play (matches the old in-canvas chips).
+const CONTROL_SEL = '.controls, .readout, .tune, .modnav, .title';
+function controlsVisible(show) {
+  const nodes = document.querySelectorAll(CONTROL_SEL);
+  if (reduce) { nodes.forEach(n => { n.style.opacity = show ? '' : '0'; n.style.pointerEvents = show ? '' : 'none'; }); return; }
+  nodes.forEach(n => {
+    gsap.to(n, { opacity: show ? 1 : 0, duration: show ? 0.4 : 0.3, ease: show ? 'power2.out' : 'power1.in',
+      onStart: () => { if (!show) n.style.pointerEvents = 'none'; },
+      onComplete: () => { if (show) { n.style.pointerEvents = ''; n.style.opacity = ''; } } });
+  });
+  // delivery arrow: hide while the swing timeline plays (fires at the same
+  // start/settle-complete moments as the control-surface fade), back in at
+  // settle/idle. 150ms fade; reduced-motion snaps instantly (handled inside
+  // delivery.js's setVisible).
+  if (delivery3d) delivery3d.setVisible(show, gsap, reduceMotion3d);
+}
+
+// ── 3D: camera orbit between FACE/DTL poses ────────────────────────────────
+let viewTween3d = null;
+function animate3dView(toView) {
+  if (!sa3d) return;
+  const pose = sa3d.POSES[toView];
+  if (reduceMotion3d) {
+    Object.assign(sa3d.rig, pose);
+    sa3d.applyRig();
+    sa3d.invalidate();
+    return;
+  }
+  if (viewTween3d) viewTween3d.kill();
+  sa3d.startTicking();
+  viewTween3d = gsap.to(sa3d.rig, {
+    ...pose, duration: 0.7, ease: 'power2.inOut',
+    onUpdate: () => { sa3d.applyRig(); lp3d && lp3d.placeLabel(sa3d.camera, $('scene3d')); },
+    onComplete: () => { viewTween3d = null; sa3d.stopTicking(); },
+  });
+}
+
+// ── FIX M — camera makes room: tween the rig's targetOffset.z when the tune
+// rail opens/closes, so the scene (arc/ball/lowpoint bracket/turf label)
+// composes fully above the rail instead of being covered by it. Runs AFTER
+// the pose math inside applyRig() (targetOffset is additive to rig.tz), so it
+// composes with the FACE<->DTL orbit tween (animate3dView) without fighting —
+// both tweens can be in flight at once and applyRig() always reads the latest
+// of both. Calibrated by eye against the two required breakpoints/views.
+const RAIL_OFFSET_Z = -0.5; // metres the look-at target drops when the rail is open — camera stays put but tilts up, pushing scene content higher on screen (calibrated against 900x470/740x416, FACE/DTL — verified via Playwright: ball + lowpoint-bracket screen bbox clears the rail rect with margin in all four combinations)
+let railOffsetTween3d = null;
+function animateRailOffset(open) {
+  if (!sa3d) return;
+  const target = open ? RAIL_OFFSET_Z : 0;
+  if (reduceMotion3d) {
+    sa3d.setTargetOffset({ z: target });
+    sa3d.applyRig();
+    sa3d.invalidate();
+    return;
+  }
+  if (railOffsetTween3d) railOffsetTween3d.kill();
+  sa3d.startTicking();
+  railOffsetTween3d = gsap.to(sa3d.targetOffset, {
+    z: target, duration: 0.35, ease: 'power2.out',
+    onUpdate: () => { sa3d.applyRig(); lp3d && lp3d.placeLabel(sa3d.camera, $('scene3d')); if (gc3d) gc3d.update(state, sa3d.camera, $('scene3d')); },
+    onComplete: () => { railOffsetTween3d = null; sa3d.stopTicking(); },
+  });
+}
+
+// ── shared swing-state → localStorage (consumed by impact.html) ───────────
+function writeSwingState() {
+  try {
+    const di = deriveImpact(state);
+    localStorage.setItem('sa_swing', JSON.stringify({
+      clubPath: di.clubPath,
+      attackAngle: di.attackAngle,
+    }));
+  } catch (e) { /* storage unavailable → ignore */ }
+}
+
+// ── sliders (rAF-throttled) ───────────────────────────────────────────────
+let pending = false;
+function applyLive() {
+  if (pending) return; pending = true;
+  requestAnimationFrame(() => { pending = false; renderReadout(); writeSwingState(); rebuild3d(); });
+}
+// ── premium slider visuals: centre-origin fill, thumb-aware position, bubble ─
+const TRACK_BASE = 'rgba(255,255,255,.14)';
+const THUMB_W = 20;
+function styleSlider(el) {
+  const box = el.closest('.slider'); if (!box) return;
+  const min = +el.min, max = +el.max, val = +el.value;
+  const span = (max - min) || 1;
+  const pct = (val - min) / span;                       // 0..1 of the value range
+  const w = el.clientWidth || box.clientWidth || 200;
+  const inset = w > 0 ? (THUMB_W / w) : 0.1;             // thumb half-width fraction at each end
+  const posFrac = pct * (1 - inset) + inset / 2;         // thumb-centre fraction (accounts for inset)
+  const posPct = +(posFrac * 100).toFixed(2);
+  const centered = box.dataset.origin === 'center';
+  // origin: value 0 for signed sliders, left edge for plane
+  const oFrac0 = centered ? (0 - min) / span : 0;
+  const oFrac = centered ? (oFrac0 * (1 - inset) + inset / 2) : 0;
+  const oPct = +(oFrac * 100).toFixed(2);
+  let bg;
+  if (centered) {
+    const lo = Math.min(posPct, oPct), hi = Math.max(posPct, oPct);
+    bg = `linear-gradient(90deg, ${TRACK_BASE} 0 ${lo}%, var(--rng) ${lo}% ${hi}%, ${TRACK_BASE} ${hi}% 100%)`;
+  } else {
+    bg = `linear-gradient(90deg, var(--rng) 0 ${posPct}%, ${TRACK_BASE} ${posPct}% 100%)`;
+  }
+  el.style.setProperty('--track-bg', bg);
+  box.style.setProperty('--p', posPct + '%');
+  box.style.setProperty('--o', oPct + '%');
+}
+// STAGE 4 — haptics: pointerdown→selectionStart, whole-degree (plane/dir) or
+// whole-cm (lpx/lpz) crossings→tick(key), pointerup→selectionEnd. Also detects
+// a strikeQuality band CHANGE vs the previous input event on this slider and
+// fires sa.band(key) instead (which suppresses the coincident tick).
+const HAPTIC_GRAIN = { s_plane: v => Math.round(v), s_dir: v => Math.round(v),
+  s_lpx: v => Math.round(v * 100), s_lpz: v => Math.round(v * 100) };
+function wireSliderHaptics(el, hapticKey) {
+  let lastGrain = null, lastBand = null;
+  const grain = HAPTIC_GRAIN[el.id];
+  el.addEventListener('pointerdown', () => {
+    lastGrain = grain(+el.value);
+    lastBand = strikeQuality(state).band;
+    saHaptics.selectionStart();
+  });
+  el.addEventListener('input', () => {
+    const g = grain(+el.value);
+    if (lastGrain === null) lastGrain = g;
+    const band = strikeQuality(state).band;
+    if (lastBand === null) lastBand = band;
+    if (band !== lastBand) {
+      lastBand = band;
+      lastGrain = g;
+      saHaptics.band(hapticKey);          // band change beats the coincident tick
+    } else if (g !== lastGrain) {
+      lastGrain = g;
+      saHaptics.tick(hapticKey);
+    }
+  });
+  const end = () => saHaptics.selectionEnd();
+  el.addEventListener('pointerup', end);
+  el.addEventListener('pointercancel', end);
+}
+
+function bind(id, get, fmt) {
+  const el = $(id), out = $('v_' + id.slice(2));
+  const box = el.closest('.slider');
+  const bubble = box ? box.querySelector('.bubble') : null;
+  const sync = () => {
+    const txt = fmt(+el.value);
+    out.textContent = txt; el.setAttribute('aria-valuetext', txt);
+    if (bubble) bubble.textContent = txt;
+    styleSlider(el);
+  };
+  el.addEventListener('input', () => { get(+el.value); sync(); applyLive(); });
+  // value bubble: show on drag / keyboard focus, fade out shortly after release
+  if (box) {
+    let bubbleT = null;
+    const showBubble = () => { clearTimeout(bubbleT); box.classList.add('show-bubble'); };
+    const hideBubble = () => { bubbleT = setTimeout(() => box.classList.remove('show-bubble'), 650); };
+    el.addEventListener('pointerdown', showBubble);
+    el.addEventListener('focus', showBubble);
+    el.addEventListener('input', showBubble);
+    el.addEventListener('pointerup', hideBubble);
+    el.addEventListener('pointercancel', hideBubble);
+    el.addEventListener('blur', () => box.classList.remove('show-bubble'));
+  }
+  wireSliderHaptics(el, id);
+  return sync;
+}
+const cm = v => (v * 100).toFixed(0) + ' cm';
+const syncers = [
+  bind('s_plane', v => state.planeAngle = v, v => v.toFixed(0) + '°'),
+  bind('s_dir', v => state.swingDirection = v, v => (v > 0 ? '+' : '') + v.toFixed(1) + '° ' + (Math.abs(v) < 0.1 ? '' : v > 0 ? 'in-out' : 'out-in')),
+  bind('s_lpx', v => state.lowPoint.x = v, v => Math.abs(v * 100).toFixed(0) + ' cm ' + (v >= 0 ? 'ahead' : 'behind')),
+  bind('s_lpz', v => state.lowPoint.z = v, v => v >= 0 ? (v * 100).toFixed(0) + ' cm above' : Math.abs(v * 100).toFixed(0) + ' cm below'),
+];
+
+// ── 3D: ghost arc (frozen snapshot on drag start) + shimmer on change ────────
+// FIX M — focus dimming: while dragging one slider's row, the other three
+// rows fade to ~40% opacity (150ms; reduced-motion: no fade — CSS transition
+// on .row.dimmed is already suppressed by the prefers-reduced-motion rule
+// above), active row stays 100%. Restored on release/cancel. Piggybacks on
+// this same pointerdown/up/cancel wiring (the one driving ghost-arc + haptics)
+// per the fix spec, rather than adding a second listener set.
+const ROW_IDS = { s_plane: 'row_plane', s_dir: 'row_dir', s_lpx: 'row_lpx', s_lpz: 'row_lpz' };
+function setRowsDimmed(activeId, dimmed) {
+  Object.entries(ROW_IDS).forEach(([sliderId, rowId]) => {
+    if (sliderId === activeId) return;
+    const row = $(rowId);
+    if (row) row.classList.toggle('dimmed', dimmed);
+  });
+}
+['s_plane', 's_dir', 's_lpx', 's_lpz'].forEach(id => {
+  const el = $(id);
+  el.addEventListener('pointerdown', () => {
+    if (!arc3d) return;
+    arc3d.snapshotGhost();
+    sa3d.invalidate();
+    if (delivery3d) delivery3d.setDragging(true, window.gsap, reduceMotion3d);
+    setRowsDimmed(id, true);
+  });
+  el.addEventListener('pointerup', () => {
+    if (!arc3d) return;
+    arc3d.fadeGhost(window.gsap, reduceMotion3d);
+    if (plane3d) plane3d.shimmer(window.gsap, reduceMotion3d);
+    if (delivery3d) delivery3d.setDragging(false, window.gsap, reduceMotion3d);
+    setRowsDimmed(id, false);
+  });
+  el.addEventListener('pointercancel', () => {
+    if (!arc3d) return;
+    arc3d.fadeGhost(window.gsap, reduceMotion3d);
+    if (delivery3d) delivery3d.setDragging(false, window.gsap, reduceMotion3d);
+    setRowsDimmed(id, false);
+  });
+});
+// set slider positions from state
+$('s_plane').value = state.planeAngle;
+$('s_dir').value = state.swingDirection; $('s_lpx').value = state.lowPoint.x; $('s_lpz').value = state.lowPoint.z;
+syncers.forEach(s => s());
+// re-run the visual fill/position computation for all sliders (width-dependent)
+function restyleSliders() { ['s_plane', 's_dir', 's_lpx', 's_lpz'].forEach(id => styleSlider($(id))); }
+addEventListener('resize', restyleSliders);
+writeSwingState();   // seed shared state so Impact reflects the current swing immediately
+
+// ── controls ──────────────────────────────────────────────────────────────
+// FIX M — tune rail open/close: 200ms slide-up (CSS transform/opacity),
+// reduced-motion instant. Runs alongside (not instead of) the 0.35s camera
+// target-offset tween (animateRailOffset) so the scene composes above the
+// rail by the time it's fully open.
+let tuneCloseTimer = null;
+$('tuneBtn').addEventListener('click', () => {
+  const t = $('tune');
+  const open = t.hasAttribute('hidden');
+  $('tuneBtn').setAttribute('aria-pressed', String(open));
+  clearTimeout(tuneCloseTimer);
+  if (open) {
+    t.removeAttribute('hidden');
+    t.classList.add('tune-closed');           // start off-screen (no flash)
+    // force layout so the browser registers the closed transform before we
+    // remove it — otherwise the browser may coalesce both class changes into
+    // one style recalc and skip the transition entirely.
+    void t.offsetHeight;
+    if (reduceMotion3d) {
+      t.classList.remove('tune-closed');
+    } else {
+      requestAnimationFrame(() => t.classList.remove('tune-closed'));
+    }
+    requestAnimationFrame(restyleSliders); // panel was display:none → 0 width
+    animateRailOffset(true);
+  } else {
+    t.classList.add('tune-closed');
+    animateRailOffset(false);
+    if (reduceMotion3d) {
+      t.setAttribute('hidden', '');
+    } else {
+      tuneCloseTimer = setTimeout(() => t.setAttribute('hidden', ''), 220);
+    }
+  }
+});
+$('viewBtn').addEventListener('click', () => {
+  const to = state.view === 'face' ? 'dtl' : 'face';
+  $('viewBtn').setAttribute('aria-pressed', String(to === 'dtl'));
+  $('viewBtn').title = to === 'dtl' ? 'Down-the-line' : 'Front';
+  state.view = to;
+  animate3dView(to);
+});
+$('hit').addEventListener('click', () => {
+  saHaptics.impact('medium');
+  // Hit plays the full 3D swing timeline; the readout/band logic is driven
+  // by the sliders (state), not by which swing animation ran.
+  if (timeline3d) timeline3d.play();
+});
+// strike toggle: show/hide the strike-result panel so you can study the bare swing arc
+const readoutEl = document.querySelector('.readout');
+$('strikeBtn').addEventListener('click', () => {
+  const on = readoutEl.style.display !== 'none';
+  readoutEl.style.display = on ? 'none' : 'flex';
+  $('strikeBtn').setAttribute('aria-pressed', String(!on));
+});
+
+init3d();
+// debug hooks for live orientation tuning from Playwright (no redeploy per tweak)
+window.__sa = {
+  haptics: saHaptics,   // STAGE 4 — test hook
+  // 3D bedrock debug/verification hooks
+  three: {
+    enabled: true,
+    renderCount: () => window.__sa3d ? window.__sa3d.renderCount : null,
+    ballScreenPx: () => {
+      if (!sa3d) return null;
+      const v = new THREE.Vector3(0, 0, 0.0213).project(sa3d.camera);
+      const rect = $('scene3d').getBoundingClientRect();
+      return { x: rect.left + (v.x * 0.5 + 0.5) * rect.width, y: rect.top + (-v.y * 0.5 + 0.5) * rect.height };
+    },
+    view: () => (sa3d ? sa3d.rig : null),
+    invalidate: () => sa3d && sa3d.invalidate(),
+    setPose: (view, pose) => { if (sa3d) { Object.assign(sa3d.POSES[view], pose); if (state.view === view || true) { Object.assign(sa3d.rig, sa3d.POSES[view]); sa3d.applyRig(); sa3d.invalidate(); } } },
+    rig: () => (sa3d ? { ...sa3d.rig } : null),
+    // FIX M — camera-makes-room debug/verification hooks
+    targetOffset: {
+      get: () => (sa3d ? { ...sa3d.targetOffset } : null),
+      set: (o) => { if (sa3d) { sa3d.setTargetOffset(o); sa3d.applyRig(); sa3d.invalidate(); } },
+    },
+    railOffsetZ: () => RAIL_OFFSET_Z,
+    // club debug: load state + world bbox (diagnostic only)
+    club: () => {
+      if (!club3d) return null;
+      const box = new THREE.Box3().setFromObject(club3d.group);
+      return {
+        loaded: club3d.loaded, loadFailed: club3d.loadFailed,
+        isPlaceholder: !!(club3d.modelSlot.children[0] && club3d.modelSlot.children[0].userData.isPlaceholder),
+        bbox: { min: box.min.toArray(), max: box.max.toArray() },
+        position: club3d.group.position.toArray(),
+        // FIX K.3 diagnostic
+        bladeFaceCentreXOffset: club3d.bladeFaceCentreXOffset,
+        modelSlotPosition: club3d.modelSlot.position.toArray(),
+        faceAnchorWorld: (() => { const v = new THREE.Vector3(); club3d.faceAnchor.getWorldPosition(v); return v.toArray(); })(),
+        // FIX P1 diagnostic — shaft/ferrule/grip retirement
+        shaftGroupVisible: club3d.shaftGroup ? club3d.shaftGroup.visible : null,
+      };
+    },
+    // delivery-arrow verification hooks (2026-07-02)
+    delivery: {
+      dir: () => { const d = delivery3d ? delivery3d.dir() : { x: 1, y: 0, z: 0 }; return [d.x, d.y, d.z]; },
+      visible: () => (delivery3d ? delivery3d.isVisible() : null),
+      debug: () => (delivery3d ? delivery3d.debug() : null),
+    },
+    // FIX J — turf-zone/bracket verification hooks
+    groundContact: {
+      entryX: () => (gc3d ? gc3d.entryX() : null),
+      labelText: () => { const el = $('gc3dLabel'); return el && !el.hidden ? el.textContent : null; },
+      visible: () => (gc3d ? gc3d.hasContact() : null),
+    },
+    // GROUND-STRIKE-BEFORE-BALL verification hooks (2026-07-02, owner: "see
+    // the club hit the ground BEFORE the ball on a duff"): pEntry/pImpact for
+    // the p_entry < p_impact assertion, fired/firedAtP for confirming the FX
+    // actually ran during playback, and headZ for reading the render-only
+    // visible-dig clamp on the clubhead during a swing.
+    groundStrike: {
+      trigger: () => (timeline3d ? timeline3d.groundStrike.trigger() : null),
+      fired: () => (timeline3d ? timeline3d.groundStrike.fired() : null),
+      firedAtP: () => (timeline3d ? timeline3d.groundStrike.firedAtP() : null),
+      pImpact: () => (timeline3d ? timeline3d._internal.pImpactFor() : null),
+      labelStruck: () => { const el = $('gc3dLabel'); return el ? el.classList.contains('is-struck') : null; },
+      headZ: () => (club3d ? club3d.group.position.z : null),
+      divotActiveCount: () => (timeline3d ? timeline3d.fx.divot.activeCount : null),
+    },
+    // FIX J — ball-strike tick/ring verification hooks
+    ballTick: {
+      visible: () => (ballTick ? ballTick.visible : null),
+      worldZ: () => {
+        if (!ballTick || !ballTick.visible) return null;
+        const v = new THREE.Vector3(); ballTick.getWorldPosition(v); return v.z;
+      },
+    },
+    // 3D swing timeline verification hooks
+    timeline: () => timeline3d,
+    playSwing3d: () => { if (timeline3d) timeline3d.play(); },
+    getPhase: () => (timeline3d ? timeline3d.getPhase() : null),
+    arcProgress: () => (arc3d ? arc3d.coreMat.uniforms.uProgress.value : null),
+    trailLength: () => (timeline3d ? timeline3d.fx.trail.length : null),
+    divotActiveCount: () => (timeline3d ? timeline3d.fx.divot.activeCount : null),
+    cameraDist: () => (sa3d ? sa3d.rig.dist : null),
+    hapticsLog: () => saHaptics._log.slice(),
+    // FACE-ZOOM verification hooks
+    faceZoom: {
+      lastContact: () => (timeline3d ? { ...timeline3d.faceZoom.lastContact } : null),
+      isActive: () => (timeline3d ? timeline3d.faceZoom.isActive() : null),
+      endNow: () => { if (timeline3d) timeline3d.faceZoom.endNow(); },
+      markerVisible: () => (timeline3d ? timeline3d.faceZoom.marker.visible : null),
+      markerWorldY: () => {
+        if (!timeline3d || !timeline3d.faceZoom.marker.visible) return null;
+        const v = new THREE.Vector3(); timeline3d.faceZoom.marker.getWorldPosition(v); return v.z;
+      },
+      chipText: () => { const el = $('faceZoomChip'); return el ? el.textContent : null; },
+      chipVisible: () => { const el = $('faceZoomChip'); return el ? el.classList.contains('is-visible') : null; },
+      cameraFov: () => (sa3d ? sa3d.camera.fov : null),
+      timeScale: () => (timeline3d && timeline3d.getTimeline() ? timeline3d.getTimeline().timeScale() : null),
+      // indefinite-hold verification hooks (2026-07-02)
+      hintText: () => { const el = $('faceZoomHint'); return el ? el.textContent : null; },
+      hintVisible: () => { const el = $('faceZoomHint'); return el ? el.classList.contains('is-visible') : null; },
+      setTestDelays: (opts) => { if (timeline3d) timeline3d.faceZoom._setTestDelays(opts); },
+      // FIX K.2 / FIX N — continuity + freeze asserts: pAt.cutIn() is the
+      // anim3.p snapshotted when the APPROACH cut-in ran (now fires BEFORE
+      // true impact); pAt.now() is the LIVE anim3.p (FIX N: FROZEN once the
+      // hold reaches true impact — tween.pause(), no longer a creep — resumes
+      // on cut-out with no snap); pAt.pImpact() is the target freeze p for
+      // the CURRENT/most-recent swing (from facezoom.js's own bookkeeping, or
+      // derived fresh from the live state if no swing has run yet).
+      pAt: {
+        cutIn: () => (timeline3d ? timeline3d.faceZoom.pAtCutIn() : null),
+        now: () => (timeline3d ? timeline3d.anim3.p : null),
+        pImpact: () => (timeline3d ? (timeline3d.faceZoom.pImpact() ?? timeline3d._internal.pImpactFor()) : null),
+      },
+      stage: () => (timeline3d ? timeline3d.faceZoom.stage() : null),
+      debugPose: () => (timeline3d ? timeline3d.faceZoom._debugPose() : null),
+      /** Simulate the user's dismiss gesture (pointerdown on the scene canvas). */
+      dismiss: () => {
+        const el = $('scene3d');
+        if (el) el.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, cancelable: true }));
+      },
+    },
+  },
+  // 3D club verification hook.
+  // For `samples` thetas spanning the arc: places the club at theta(p) and checks
+  //   (a) |clubGroup.position - arcPosition(theta)| < 0.001 m
+  //   (b) faceDir · normalize(tangentAt(theta)) > 0.999
+  //       faceDir = -basis.Z (canonical GLB face axis is local -Z since the
+  //       2026-07-02 CHIRALITY fix — basis.Z is the world dir of local +Z,
+  //       which is now the SHAFT-plane-normal-away-from-face side, not the
+  //       face itself; see geo3d/club.js file header)
+  // and, at the impact theta specifically, sole-parallelism at planeAngle 45 AND
+  // 70 (temporarily overriding state.planeAngle/lowPoint.x/swingDirection to
+  // isolate the lie-compensation math from the current low-point offset, then
+  // restoring). Returns { maxPosErr, minFaceDot, soleErr45, soleErr70, pass }.
+  checkAlign3d: (samples = 9) => {
+    if (!club3d) return { pass: false, error: 'club3d not ready' };
+    const savedPlane = state.planeAngle, savedDir = state.swingDirection, savedLpx = state.lowPoint.x;
+
+    const posErrs = [], faceDots = [];
+    for (let i = 0; i < samples; i++) {
+      const p = samples === 1 ? 0.5 : i / (samples - 1);
+      const SWEEP = deg2rad(90);
+      const theta = -SWEEP + 2 * SWEEP * p;
+      const { basis } = club3d.update(theta, state);
+      const want = arcPosition(theta, state);
+      const got = club3d.group.position;
+      posErrs.push(Math.hypot(got.x - want.x, got.y - want.y, got.z - want.z));
+      const tan = tangentAt(theta, state);
+      const tl = Math.hypot(tan.x, tan.y, tan.z) || 1;
+      const tanN = { x: tan.x / tl, y: tan.y / tl, z: tan.z / tl };
+      const faceDir = { x: -basis.Z.x, y: -basis.Z.y, z: -basis.Z.z }; // local -Z = face normal
+      faceDots.push(faceDir.x * tanN.x + faceDir.y * tanN.y + faceDir.z * tanN.z);
+    }
+
+    // sole-parallelism at the impact theta, planeAngle 45 and 70, low-point
+    // and swing-direction neutralized so the check isolates the lie math
+    // (a nonzero low-point-ahead offset tilts the arc tangent itself away
+    // from horizontal at impact — no single-axis blade rotation can fully
+    // cancel that; see geo3d/club.js computeLieDelta doc comment).
+    const soleErrAt = (planeDeg) => {
+      state.planeAngle = planeDeg; state.swingDirection = 0; state.lowPoint.x = 0;
+      const theta = thetaAtImpact(state);
+      const { basis } = club3d.update(theta, state);
+      // rotated sole-normal = blade's local +Y rotated by the applied lie delta
+      // about local Z; recover it from the blade node's actual rotation.z so
+      // this checks the REAL applied transform, not just the formula's output.
+      const d = club3d.blade ? club3d.blade.rotation.z : club3d.computeLieDelta(basis);
+      const Yp = {
+        x: Math.cos(d) * basis.Y.x - Math.sin(d) * basis.X.x,
+        y: Math.cos(d) * basis.Y.y - Math.sin(d) * basis.X.y,
+        z: Math.cos(d) * basis.Y.z - Math.sin(d) * basis.X.z,
+      };
+      const c = Math.max(-1, Math.min(1, Math.abs(Yp.z)));
+      return Math.acos(c) * 180 / Math.PI;
+    };
+    const soleErr45 = soleErrAt(45);
+    const soleErr70 = soleErrAt(70);
+
+    // restore
+    state.planeAngle = savedPlane; state.swingDirection = savedDir; state.lowPoint.x = savedLpx;
+    club3d.updateAddress(state);
+    sa3d && sa3d.invalidate();
+
+    const maxPosErr = Math.max(...posErrs);
+    const minFaceDot = Math.min(...faceDots);
+    const pass = maxPosErr < 0.001 && minFaceDot > 0.999 && soleErr45 <= 1 && soleErr70 <= 1;
+    return {
+      maxPosErr: +maxPosErr.toFixed(6), minFaceDot: +minFaceDot.toFixed(6),
+      soleErr45: +soleErr45.toFixed(3), soleErr70: +soleErr70.toFixed(3), pass,
+    };
+  },
+};
+
+// ── first-run coach marks (Phase C) ───────────────────────────────────────
+//   GATING (landscape-forced app): the walkthrough must never appear until
+//   (a) the phone is actually in landscape AND (b) the 3D scene has rendered
+//   at least once (window.__sa3d.renderCount > 0) — otherwise it can pop over
+//   the portrait rotate-hint, or over a blank/unrendered canvas. See
+//   readyForCoach() below. Mid-sequence portrait rotation pauses/hides the
+//   active step (the rotate-hint takes back over) and resumes the same step
+//   once landscape + scene-ready are true again.
+const COACH_STEPS = [
+  { selector: '#viewBtn', title: 'Tilt the view', body: 'Switch between front-on and down-the-line to see the swing plane lean back.' },
+  { selector: '#tuneBtn', title: 'Adjust the swing', body: 'Open Parameters to change plane angle, swing direction and low point (ahead or behind the ball).' },
+  { selector: '#hit',     title: 'Watch the strike', body: 'Press play to run the swing in slow motion and read the path & attack angle at impact.' },
+];
+const COACH_SETTLE_MS = 600;
+
+function isLandscape() {
+  try {
+    if (matchMedia('(orientation: landscape)').matches) return true;
+  } catch (e) {}
+  return innerWidth > innerHeight;
+}
+function sceneReady() {
+  return !!(window.__sa3d && window.__sa3d.renderCount > 0);
+}
+function readyForCoach() {
+  return isLandscape() && sceneReady();
+}
+
+let coachIdx = 0;              // resume position across pause/resume cycles
+let activeCoach = null;        // live SA.coachMarks() handle, or null when hidden/inactive
+let coachArmed = false;        // true once an auto/manual run has been requested
+let coachSettleTimer = null;
+
+function startCoachAt(startIndex) {
+  if (activeCoach) return;
+  const steps = COACH_STEPS.slice(startIndex);
+  if (!steps.length) return;
+  activeCoach = SA.coachMarks(steps, {
+    storageKey: 'sa_coach_geo',
+    onStep(i) { coachIdx = startIndex + i; },   // track live position for resume-after-portrait
+    onDone() { activeCoach = null; coachArmed = false; coachIdx = 0; }
+  });
+}
+
+function hideCoachForPortrait() {
+  if (activeCoach) {
+    try { activeCoach.close(); } catch (e) {}
+    activeCoach = null;
+  }
+  if (coachSettleTimer) { clearTimeout(coachSettleTimer); coachSettleTimer = null; }
+}
+
+function tryShowCoach() {
+  if (!coachArmed || activeCoach) return;
+  if (!readyForCoach()) return;
+  if (coachSettleTimer) return;
+  coachSettleTimer = setTimeout(() => {
+    coachSettleTimer = null;
+    if (!coachArmed || activeCoach || !readyForCoach()) return;
+    startCoachAt(coachIdx);
+  }, COACH_SETTLE_MS);
+}
+
+function runCoach() {
+  if (!(window.SA && SA.coachMarks)) return;
+  coachIdx = 0;
+  coachArmed = true;
+  if (readyForCoach()) {
+    // manual "?" replay while already in landscape+ready: no need to wait
+    // for the settle delay, the layout is already settled.
+    startCoachAt(0);
+  } else {
+    tryShowCoach();
+  }
+}
+$('helpBtn').addEventListener('click', runCoach);
+
+// run on first visit only (SA loaded with defer → wait for it if needed)
+function maybeFirstRun() {
+  if (!(window.SA && SA.coachMarks)) { setTimeout(maybeFirstRun, 60); return; }
+  if (SA.seen('sa_coach_geo')) return;
+  coachIdx = 0;
+  coachArmed = true;
+  tryShowCoach();
+}
+maybeFirstRun();
+
+// Listen for orientation flips + resizes (covers matchMedia change and the
+// simple width/height fallback) and for the scene's own render signal so the
+// gate re-evaluates the moment both become true.
+addEventListener('orientationchange', () => {
+  if (!isLandscape()) hideCoachForPortrait(); else tryShowCoach();
+});
+addEventListener('resize', () => {
+  if (!isLandscape()) hideCoachForPortrait(); else tryShowCoach();
+});
+try {
+  matchMedia('(orientation: landscape)').addEventListener('change', (e) => {
+    if (!e.matches) hideCoachForPortrait(); else tryShowCoach();
+  });
+} catch (e) {}
+// scene-ready can lag behind the orientation flip (first render happens on
+// init3d()/rebuild3d() completion) — poll briefly right after init3d() below
+// runs so tryShowCoach() fires as soon as renderCount ticks past 0.
+(function pollSceneReady() {
+  if (sceneReady()) { tryShowCoach(); return; }
+  setTimeout(pollSceneReady, 80);
+})();
+
+// tiny dev hook for headless verification (module scope isn't on window)
+window.__coachDebug = {
+  isLandscape, sceneReady, readyForCoach,
+  get idx() { return coachIdx; },
+  get armed() { return coachArmed; },
+  get active() { return !!activeCoach; },
+};
+</script>
+</body>
+</html>

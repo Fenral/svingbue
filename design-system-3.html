@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>StrikeArc — Kinetic Sport · Design System 3/3</title>
+<meta name="robots" content="noindex, nofollow" />
+
+<!-- Fonts: Anton (heavy condensed display) + Hanken Grotesk (energetic sans body) -->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Hanken+Grotesk:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,700&display=swap" rel="stylesheet" />
+
+<style>
+/* ============================================================
+   KINETIC SPORT — StrikeArc Design System 3 of 3
+   loud · athletic · motion-forward
+   ============================================================ */
+
+:root{
+  /* --- BASE --- */
+  --ink-900:#05060A;          /* near-black base */
+  --ink-850:#0A0C13;
+  --ink-800:#10131C;          /* raised panel */
+  --ink-700:#191D2A;          /* card */
+  --ink-600:#252A3B;          /* border / hairline */
+  --ink-500:#3A4159;
+  --fog:#9AA3BE;              /* muted text */
+  --chalk:#EAF0FF;            /* primary text */
+  --chalk-dim:#C3CBE2;
+
+  /* --- ELECTRIC ACCENTS --- */
+  --cyan:#22E3D6;             /* StrikeArc signature, pushed high-energy */
+  --cyan-hot:#5BFFEF;
+  --magenta:#FF2D9B;          /* hot secondary */
+  --magenta-deep:#D6007A;
+  --volt:#D8FF3E;             /* volt / lime third accent */
+  --orange:#FF5A1F;           /* flood accent */
+
+  /* --- GRADIENT MESHES --- */
+  --grad-kinetic: linear-gradient(115deg,#22E3D6 0%,#1FB6FF 38%,#FF2D9B 100%);
+  --grad-volt:    linear-gradient(120deg,#D8FF3E 0%,#22E3D6 100%);
+  --grad-heat:    linear-gradient(135deg,#FF2D9B 0%,#FF5A1F 100%);
+  --grad-flood:   linear-gradient(135deg,#FF5A1F 0%,#FF2D9B 55%,#D6007A 100%);
+  --mesh:
+     radial-gradient(60% 80% at 12% 8%, rgba(34,227,214,.30), transparent 60%),
+     radial-gradient(55% 70% at 92% 18%, rgba(255,45,155,.26), transparent 60%),
+     radial-gradient(70% 90% at 75% 100%, rgba(216,255,62,.10), transparent 60%);
+
+  /* --- TYPE --- */
+  --display:"Anton", "Arial Narrow", sans-serif;
+  --body:"Hanken Grotesk", system-ui, sans-serif;
+
+  /* --- MOTION --- */
+  --spring: cubic-bezier(.2,1.3,.3,1);
+  --swift:  cubic-bezier(.16,1,.3,1);
+
+  --radius:18px;
+  --radius-lg:26px;
+}
+
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  margin:0;
+  font-family:var(--body);
+  color:var(--chalk);
+  background:var(--ink-900);
+  background-image:var(--mesh);
+  background-attachment:fixed;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+  line-height:1.5;
+}
+
+/* grain overlay */
+body::after{
+  content:"";
+  position:fixed;inset:0;pointer-events:none;z-index:9999;
+  opacity:.05;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+::selection{background:var(--magenta);color:#fff;}
+
+a{color:inherit;}
+:focus-visible{
+  outline:3px solid var(--volt);
+  outline-offset:3px;
+  border-radius:6px;
+}
+
+/* ---------- layout shell ---------- */
+.wrap{max-width:1240px;margin:0 auto;padding:0 clamp(18px,4vw,48px);}
+section{padding:clamp(46px,7vw,86px) 0;position:relative;}
+.eyebrow{
+  font-family:var(--body);
+  font-weight:800;letter-spacing:.34em;text-transform:uppercase;
+  font-size:12px;color:var(--cyan);
+  display:inline-flex;align-items:center;gap:10px;margin:0 0 14px;
+}
+.eyebrow::before{content:"";width:30px;height:3px;background:var(--grad-kinetic);border-radius:2px;}
+.sec-title{
+  font-family:var(--display);
+  font-size:clamp(34px,5.4vw,68px);
+  line-height:.92;letter-spacing:.01em;text-transform:uppercase;
+  margin:0 0 8px;
+}
+.sec-sub{color:var(--fog);max-width:62ch;font-size:clamp(15px,1.6vw,17px);margin:0 0 34px;}
+
+.divider{height:1px;background:linear-gradient(90deg,transparent,var(--ink-600),transparent);}
+
+/* ============================================================
+   HEADER / HERO
+   ============================================================ */
+header.hero{
+  position:relative;overflow:hidden;
+  padding:clamp(40px,7vw,72px) 0 clamp(50px,8vw,96px);
+  border-bottom:1px solid var(--ink-600);
+}
+.hero-mesh{
+  position:absolute;inset:-20% -10% auto -10%;height:140%;z-index:0;
+  background:
+     radial-gradient(40% 60% at 18% 22%, rgba(34,227,214,.40), transparent 60%),
+     radial-gradient(46% 64% at 88% 30%, rgba(255,45,155,.36), transparent 62%),
+     radial-gradient(50% 60% at 60% 96%, rgba(216,255,62,.12), transparent 60%);
+  filter:blur(6px);
+  animation:meshDrift 18s ease-in-out infinite alternate;
+}
+@keyframes meshDrift{
+  0%{transform:translate3d(0,0,0) scale(1);}
+  100%{transform:translate3d(-3%,2%,0) scale(1.08);}
+}
+.hero-inner{position:relative;z-index:2;}
+.brandrow{display:flex;align-items:center;gap:14px;margin-bottom:26px;flex-wrap:wrap;}
+.logo-mark{
+  width:46px;height:46px;border-radius:13px;display:grid;place-items:center;
+  background:var(--grad-kinetic);
+  box-shadow:0 8px 30px rgba(34,227,214,.4);
+  position:relative;flex:none;
+}
+.logo-mark svg{width:28px;height:28px;}
+.brandtag{font-family:var(--display);font-size:26px;letter-spacing:.04em;text-transform:uppercase;}
+.dir-chip{
+  margin-left:auto;font-weight:800;font-size:12px;letter-spacing:.18em;text-transform:uppercase;
+  padding:9px 16px;border-radius:999px;color:var(--ink-900);
+  background:var(--grad-volt);
+}
+.hero h1{
+  font-family:var(--display);
+  font-size:clamp(58px,12.5vw,150px);
+  line-height:.84;letter-spacing:.005em;text-transform:uppercase;
+  margin:.08em 0 0;
+  background:linear-gradient(110deg,var(--chalk) 0%,var(--cyan-hot) 42%,var(--magenta) 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 8px 40px rgba(34,227,214,.25));
+}
+.hero h1 .line{display:block;}
+.hero h1 .skew{display:inline-block;transform:skewX(-8deg);}
+.hero .stmt{
+  margin:22px 0 0;max-width:54ch;font-size:clamp(16px,2vw,21px);font-weight:500;
+  color:var(--chalk-dim);
+}
+.hero .stmt b{color:var(--volt);font-weight:800;}
+.hero-meta{display:flex;gap:28px;flex-wrap:wrap;margin-top:34px;}
+.hero-meta div{font-size:13px;color:var(--fog);}
+.hero-meta b{display:block;font-family:var(--display);font-size:30px;color:var(--chalk);letter-spacing:.02em;line-height:1;}
+.hero-meta .c{color:var(--cyan);}
+.hero-meta .m{color:var(--magenta);}
+.hero-meta .v{color:var(--volt);}
+
+/* ============================================================
+   COLOR TOKENS
+   ============================================================ */
+.swatch-grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(178px,1fr));gap:16px;
+}
+.swatch{
+  border-radius:var(--radius);overflow:hidden;border:1px solid var(--ink-600);
+  background:var(--ink-800);transition:transform .35s var(--spring),box-shadow .35s var(--swift);
+  cursor:pointer;
+}
+.swatch:hover{transform:translateY(-6px);box-shadow:0 18px 40px rgba(0,0,0,.5);}
+.swatch .chip{height:104px;display:flex;align-items:flex-end;justify-content:flex-end;padding:10px;position:relative;}
+.swatch .chip .copy{
+  font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
+  background:rgba(5,6,10,.55);backdrop-filter:blur(6px);
+  padding:4px 8px;border-radius:8px;opacity:0;transition:opacity .25s;color:#fff;
+}
+.swatch:hover .copy{opacity:1;}
+.swatch .meta{padding:12px 14px 14px;}
+.swatch .nm{font-weight:800;font-size:14px;}
+.swatch .role{color:var(--fog);font-size:12px;margin-top:2px;}
+.swatch .hex{font-family:var(--display);letter-spacing:.06em;font-size:15px;color:var(--chalk-dim);margin-top:8px;}
+
+.grad-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-top:18px;}
+.grad-card{border-radius:var(--radius);overflow:hidden;border:1px solid var(--ink-600);}
+.grad-card .g{height:118px;}
+.grad-card .lbl{padding:12px 14px;background:var(--ink-800);}
+.grad-card .lbl b{font-weight:800;font-size:14px;}
+.grad-card .lbl span{display:block;color:var(--fog);font-size:12px;margin-top:3px;}
+
+/* ============================================================
+   TYPOGRAPHY
+   ============================================================ */
+.type-hero{
+  border-radius:var(--radius-lg);overflow:hidden;position:relative;
+  background:var(--ink-850);border:1px solid var(--ink-600);
+  padding:clamp(20px,3vw,40px);margin-bottom:26px;
+}
+.type-hero .giant{
+  font-family:var(--display);
+  font-size:clamp(140px,34vw,400px);line-height:.78;letter-spacing:-.01em;
+  background:var(--grad-kinetic);-webkit-background-clip:text;background-clip:text;color:transparent;
+  margin:0;user-select:none;
+}
+.type-hero .cap{
+  display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;
+  margin-top:12px;color:var(--fog);font-size:13px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;
+}
+.type-hero .cap b{color:var(--volt);}
+
+.scale-list{display:flex;flex-direction:column;gap:6px;}
+.scale-row{
+  display:flex;align-items:baseline;gap:20px;padding:14px 0;border-bottom:1px solid var(--ink-700);
+  flex-wrap:wrap;
+}
+.scale-row .tag{
+  font-family:var(--body);font-weight:800;font-size:11px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--cyan);min-width:84px;flex:none;
+}
+.scale-row .spec{flex:1;min-width:0;}
+.scale-row .dsp{font-family:var(--display);text-transform:uppercase;line-height:.9;letter-spacing:.01em;}
+.scale-row .px{color:var(--fog);font-size:12px;font-weight:600;flex:none;}
+.s-d1{font-size:clamp(40px,6vw,76px);}
+.s-d2{font-size:clamp(30px,4.4vw,52px);}
+.s-d3{font-size:clamp(24px,3.2vw,36px);}
+.body-spec{font-family:var(--body);}
+.bs-lead{font-size:20px;font-weight:600;}
+.bs-body{font-size:16px;font-weight:400;color:var(--chalk-dim);}
+.bs-cap{font-size:12px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--fog);}
+
+/* ============================================================
+   COMPONENTS
+   ============================================================ */
+.comp-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:18px;}
+.panel{
+  background:var(--ink-800);border:1px solid var(--ink-600);border-radius:var(--radius-lg);
+  padding:clamp(18px,2.4vw,28px);position:relative;overflow:hidden;
+}
+.panel-label{font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--fog);margin:0 0 16px;}
+
+.span-4{grid-column:span 4;}
+.span-5{grid-column:span 5;}
+.span-6{grid-column:span 6;}
+.span-7{grid-column:span 7;}
+.span-8{grid-column:span 8;}
+.span-12{grid-column:span 12;}
+
+/* Buttons / pills */
+.btn-row{display:flex;flex-wrap:wrap;gap:12px;align-items:center;}
+.btn{
+  font-family:var(--body);font-weight:800;font-size:15px;letter-spacing:.02em;
+  border:none;cursor:pointer;border-radius:999px;
+  padding:15px 26px;min-height:48px;display:inline-flex;align-items:center;gap:10px;
+  transition:transform .2s var(--spring),box-shadow .25s var(--swift),filter .25s;
+  color:var(--ink-900);
+}
+.btn:active{transform:scale(.95);}
+.btn-primary{background:var(--grad-kinetic);box-shadow:0 10px 28px rgba(34,227,214,.34);}
+.btn-primary:hover{transform:translateY(-3px) scale(1.02);box-shadow:0 16px 38px rgba(34,227,214,.5);}
+.btn-hot{background:var(--grad-heat);color:#fff;box-shadow:0 10px 28px rgba(255,45,155,.34);}
+.btn-hot:hover{transform:translateY(-3px) scale(1.02);box-shadow:0 16px 38px rgba(255,45,155,.5);}
+.btn-volt{background:var(--volt);box-shadow:0 10px 28px rgba(216,255,62,.3);}
+.btn-volt:hover{transform:translateY(-3px) scale(1.02);}
+.btn-ghost{
+  background:transparent;color:var(--chalk);border:2px solid var(--ink-500);
+}
+.btn-ghost:hover{border-color:var(--cyan);color:var(--cyan);transform:translateY(-3px);}
+.btn svg{width:18px;height:18px;}
+
+.pill-row{display:flex;flex-wrap:wrap;gap:9px;margin-top:18px;}
+.pill{
+  font-weight:700;font-size:13px;letter-spacing:.02em;
+  padding:8px 15px;min-height:34px;border-radius:999px;display:inline-flex;align-items:center;gap:7px;
+  background:var(--ink-700);border:1px solid var(--ink-600);color:var(--chalk-dim);
+  transition:all .25s var(--swift);
+}
+.pill .dot{width:8px;height:8px;border-radius:50%;}
+.pill.c .dot{background:var(--cyan);box-shadow:0 0 10px var(--cyan);}
+.pill.m .dot{background:var(--magenta);box-shadow:0 0 10px var(--magenta);}
+.pill.v .dot{background:var(--volt);box-shadow:0 0 10px var(--volt);}
+.pill.active{background:var(--grad-kinetic);color:var(--ink-900);border-color:transparent;font-weight:800;}
+
+/* Toggle */
+.toggle-line{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:20px;}
+.toggle-line span{font-weight:600;font-size:15px;}
+.toggle{
+  width:64px;height:36px;border-radius:999px;background:var(--ink-600);border:none;cursor:pointer;
+  position:relative;transition:background .3s var(--swift);flex:none;padding:0;
+}
+.toggle::after{
+  content:"";position:absolute;top:4px;left:4px;width:28px;height:28px;border-radius:50%;
+  background:#fff;transition:transform .35s var(--spring);
+}
+.toggle[aria-pressed="true"]{background:var(--grad-kinetic);}
+.toggle[aria-pressed="true"]::after{transform:translateX(28px);}
+
+/* Stat card with count-up */
+.stat-card{
+  background:linear-gradient(160deg,var(--ink-700),var(--ink-850));
+  border:1px solid var(--ink-600);
+}
+.stat-card .stat-top{display:flex;justify-content:space-between;align-items:flex-start;}
+.stat-card .stat-tag{font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--cyan);}
+.stat-card .trend{font-weight:800;font-size:13px;color:var(--volt);display:inline-flex;gap:5px;align-items:center;}
+.bignum{
+  font-family:var(--display);font-size:clamp(76px,12vw,128px);line-height:.84;letter-spacing:.01em;
+  margin:8px 0 0;display:flex;align-items:baseline;gap:10px;
+  background:var(--grad-volt);-webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.bignum .unit{font-size:.26em;-webkit-text-fill-color:var(--fog);color:var(--fog);letter-spacing:.1em;}
+.stat-card .stat-foot{color:var(--fog);font-size:13px;margin-top:8px;font-weight:600;}
+
+/* Gradient hero panel (flood) */
+.flood{
+  grid-column:span 5;border-radius:var(--radius-lg);overflow:hidden;position:relative;
+  background:var(--grad-flood);color:#fff;padding:clamp(22px,3vw,32px);
+  display:flex;flex-direction:column;justify-content:space-between;min-height:260px;
+  border:1px solid rgba(255,255,255,.12);
+}
+.flood::before{
+  content:"";position:absolute;inset:0;opacity:.5;mix-blend-mode:overlay;
+  background:radial-gradient(60% 80% at 80% 10%,rgba(255,255,255,.5),transparent 60%);
+}
+.flood .fl-tag{font-weight:800;font-size:11px;letter-spacing:.2em;text-transform:uppercase;opacity:.85;position:relative;}
+.flood .fl-head{font-family:var(--display);font-size:clamp(34px,5vw,58px);line-height:.9;text-transform:uppercase;margin:auto 0 0;position:relative;}
+.flood .fl-sub{position:relative;font-weight:600;opacity:.9;margin-top:10px;font-size:15px;}
+
+/* Energetic nav */
+.kin-nav{
+  display:flex;gap:6px;background:var(--ink-850);border:1px solid var(--ink-600);
+  border-radius:999px;padding:6px;position:relative;margin-top:4px;
+}
+.kin-nav button{
+  flex:1;border:none;background:transparent;color:var(--fog);cursor:pointer;
+  font-family:var(--body);font-weight:800;font-size:14px;letter-spacing:.04em;text-transform:uppercase;
+  padding:12px 8px;min-height:46px;border-radius:999px;position:relative;z-index:2;
+  transition:color .3s var(--swift);
+}
+.kin-nav button.on{color:var(--ink-900);}
+.kin-nav .glider{
+  position:absolute;top:6px;bottom:6px;left:6px;width:calc(33.33% - 4px);
+  background:var(--grad-kinetic);border-radius:999px;z-index:1;
+  transition:transform .45s var(--spring);box-shadow:0 6px 20px rgba(34,227,214,.4);
+}
+
+/* Slider */
+.slider-wrap{margin-top:8px;}
+.slider-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:14px;}
+.slider-head .lab{font-weight:700;font-size:14px;color:var(--chalk-dim);}
+.slider-head .val{font-family:var(--display);font-size:34px;color:var(--cyan);line-height:1;letter-spacing:.02em;}
+input[type=range].kin-range{
+  -webkit-appearance:none;appearance:none;width:100%;height:10px;border-radius:999px;
+  background:var(--ink-600);outline-offset:6px;cursor:pointer;
+}
+input[type=range].kin-range::-webkit-slider-thumb{
+  -webkit-appearance:none;appearance:none;width:30px;height:30px;border-radius:50%;
+  background:var(--grad-kinetic);border:3px solid var(--ink-900);
+  box-shadow:0 0 0 3px var(--cyan),0 6px 16px rgba(34,227,214,.5);cursor:grab;
+  transition:transform .15s var(--spring);
+}
+input[type=range].kin-range::-webkit-slider-thumb:active{transform:scale(1.25);}
+input[type=range].kin-range::-moz-range-thumb{
+  width:28px;height:28px;border-radius:50%;background:#22E3D6;border:3px solid var(--ink-900);
+  box-shadow:0 0 0 3px var(--cyan);cursor:grab;
+}
+.range-fill{height:10px;border-radius:999px;background:var(--grad-kinetic);margin-top:-10px;pointer-events:none;}
+
+/* Gauge / chart */
+.gauge-wrap{display:flex;align-items:center;gap:24px;flex-wrap:wrap;}
+.gauge{position:relative;width:178px;height:178px;flex:none;}
+.gauge svg{transform:rotate(-90deg);}
+.gauge .g-center{
+  position:absolute;inset:0;display:grid;place-items:center;text-align:center;
+}
+.gauge .g-center .gn{font-family:var(--display);font-size:52px;line-height:.9;color:var(--cyan);}
+.gauge .g-center .gl{font-size:10px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:var(--fog);}
+.bars{display:flex;align-items:flex-end;gap:8px;height:120px;flex:1;min-width:160px;}
+.bar{
+  flex:1;border-radius:8px 8px 4px 4px;background:var(--grad-kinetic);position:relative;
+  transition:height .8s var(--spring);min-height:6px;
+}
+.bar:nth-child(even){background:var(--grad-heat);}
+.bar .bv{position:absolute;top:-20px;left:0;right:0;text-align:center;font-weight:800;font-size:12px;color:var(--chalk-dim);}
+
+/* ============================================================
+   APPLIED VIGNETTE — STRIKE READOUT
+   ============================================================ */
+.vignette{
+  border-radius:var(--radius-lg);overflow:hidden;position:relative;
+  border:1px solid var(--ink-600);
+  background:
+     radial-gradient(70% 90% at 100% 0%,rgba(255,45,155,.18),transparent 55%),
+     radial-gradient(70% 90% at 0% 100%,rgba(34,227,214,.18),transparent 55%),
+     var(--ink-850);
+  padding:clamp(22px,3.4vw,40px);
+}
+.vig-grid{display:grid;grid-template-columns:1.3fr 1fr;gap:30px;align-items:center;}
+.vig-tag{font-weight:800;font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:var(--magenta);}
+.vig-head{font-family:var(--display);font-size:clamp(30px,4.4vw,52px);line-height:.9;text-transform:uppercase;margin:8px 0 18px;}
+.readout{display:flex;gap:14px;flex-wrap:wrap;}
+.ro{
+  background:var(--ink-800);border:1px solid var(--ink-600);border-radius:16px;
+  padding:16px 18px;flex:1;min-width:120px;
+}
+.ro .ro-l{font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--fog);}
+.ro .ro-v{font-family:var(--display);font-size:clamp(42px,6vw,62px);line-height:.85;margin-top:6px;letter-spacing:.02em;}
+.ro.cy .ro-v{color:var(--cyan);}
+.ro.mg .ro-v{color:var(--magenta);}
+.ro.vt .ro-v{color:var(--volt);}
+.ro .ro-u{font-size:.3em;color:var(--fog);letter-spacing:.08em;}
+
+/* D-plane mini instrument */
+.dplane{
+  aspect-ratio:1;background:var(--ink-900);border-radius:20px;border:1px solid var(--ink-600);
+  position:relative;overflow:hidden;display:grid;place-items:center;
+}
+.dplane .ring{position:absolute;border-radius:50%;border:1px solid var(--ink-600);}
+.dplane .r1{inset:14%;}
+.dplane .r2{inset:30%;}
+.dplane .r3{inset:46%;}
+.dplane .cross-h,.dplane .cross-v{position:absolute;background:var(--ink-600);}
+.dplane .cross-h{left:8%;right:8%;height:1px;top:50%;}
+.dplane .cross-v{top:8%;bottom:8%;width:1px;left:50%;}
+.dplane .face-path{position:absolute;height:3px;width:64%;left:18%;top:50%;border-radius:2px;
+  background:var(--grad-heat);transform-origin:center;transform:rotate(-18deg);
+  box-shadow:0 0 14px rgba(255,45,155,.6);}
+.dplane .swing-path{position:absolute;height:3px;width:78%;left:11%;top:50%;border-radius:2px;
+  background:var(--cyan);transform-origin:center;transform:rotate(7deg);
+  box-shadow:0 0 14px rgba(34,227,214,.6);}
+.dplane .impact-dot{
+  width:18px;height:18px;border-radius:50%;background:var(--volt);z-index:3;
+  box-shadow:0 0 0 4px rgba(216,255,62,.25),0 0 22px var(--volt);
+  animation:pulseDot 1.8s var(--swift) infinite;
+}
+@keyframes pulseDot{
+  0%,100%{box-shadow:0 0 0 4px rgba(216,255,62,.25),0 0 18px var(--volt);}
+  50%{box-shadow:0 0 0 9px rgba(216,255,62,.10),0 0 30px var(--volt);}
+}
+.dplane .legend{position:absolute;bottom:10px;left:10px;display:flex;flex-direction:column;gap:4px;}
+.dplane .legend i{display:inline-flex;align-items:center;gap:6px;font-size:10px;font-weight:700;font-style:normal;color:var(--chalk-dim);}
+.dplane .legend i b{width:14px;height:3px;border-radius:2px;display:inline-block;}
+
+/* ============================================================
+   MOTION PRINCIPLES
+   ============================================================ */
+.motion-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px;}
+.motion-card{
+  background:var(--ink-800);border:1px solid var(--ink-600);border-radius:var(--radius);
+  padding:22px;position:relative;overflow:hidden;
+}
+.motion-card .mn{font-family:var(--display);font-size:30px;color:var(--ink-600);line-height:1;position:absolute;top:14px;right:16px;}
+.motion-card h4{font-family:var(--display);font-size:21px;text-transform:uppercase;letter-spacing:.02em;margin:0 0 8px;color:var(--cyan);}
+.motion-card p{margin:0;color:var(--chalk-dim);font-size:14px;}
+.motion-card .demo{height:5px;border-radius:3px;margin-top:16px;background:var(--ink-700);overflow:hidden;position:relative;}
+.motion-card .demo::after{
+  content:"";position:absolute;inset:0;width:40%;border-radius:3px;background:var(--grad-kinetic);
+  animation:sweep 2.6s var(--spring) infinite;
+}
+@keyframes sweep{
+  0%{transform:translateX(-110%);}
+  60%,100%{transform:translateX(260%);}
+}
+
+/* footer */
+footer{padding:48px 0 64px;text-align:center;color:var(--fog);font-size:13px;border-top:1px solid var(--ink-600);}
+footer b{font-family:var(--display);color:var(--chalk);letter-spacing:.04em;font-size:18px;display:block;margin-bottom:6px;}
+
+/* entrance reveals */
+.reveal{opacity:0;transform:translateY(26px);transition:opacity .7s var(--swift),transform .7s var(--spring);}
+.reveal.in{opacity:1;transform:none;}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media(max-width:920px){
+  .comp-grid > *{grid-column:span 12 !important;}
+  .vig-grid{grid-template-columns:1fr;}
+  .flood{min-height:200px;}
+}
+@media(max-width:560px){
+  .hero-meta{gap:18px;}
+  .scale-row .px{width:100%;}
+}
+
+/* ============================================================
+   REDUCED MOTION — kill the kinetic
+   ============================================================ */
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{
+    animation:none !important;
+    transition:none !important;
+    scroll-behavior:auto !important;
+  }
+  .reveal{opacity:1;transform:none;}
+  .hero-mesh{animation:none;}
+}
+</style>
+</head>
+<body>
+
+<!-- ================= HEADER / HERO ================= -->
+<header class="hero">
+  <div class="hero-mesh" aria-hidden="true"></div>
+  <div class="wrap hero-inner">
+    <div class="brandrow">
+      <span class="logo-mark" aria-hidden="true">
+        <svg viewBox="0 0 32 32" fill="none"><path d="M3 24C8 8 24 6 29 8" stroke="#05060A" stroke-width="3.4" stroke-linecap="round"/><circle cx="24" cy="11" r="4.6" fill="#05060A"/></svg>
+      </span>
+      <span class="brandtag">StrikeArc</span>
+      <span class="dir-chip">Direction 3 / 3</span>
+    </div>
+
+    <p class="eyebrow">Design System · Kinetic Sport</p>
+    <h1><span class="line skew">KINETIC</span><span class="line">SPORT</span></h1>
+    <p class="stmt">A loud, athletic system for the <b>swing arc</b> and the <b>strike</b> — giant numerals, electric gradients, and motion that hits like impact.</p>
+
+    <div class="hero-meta">
+      <div><b class="c">163</b>BALL SPEED</div>
+      <div><b class="m">+4.2°</b>FACE TO PATH</div>
+      <div><b class="v">287</b>CARRY YDS</div>
+      <div><b>A−</b>STRIKE GRADE</div>
+    </div>
+  </div>
+</header>
+
+<main>
+
+<!-- ================= COLOR TOKENS ================= -->
+<section id="color" class="reveal">
+  <div class="wrap">
+    <p class="eyebrow">01 · Palette</p>
+    <h2 class="sec-title">Electric Tokens</h2>
+    <p class="sec-sub">A near-black arena lit by signature StrikeArc cyan, hot magenta, and a volt-lime spark. Defined as CSS variables — high contrast, vivid, unapologetic. Hover a swatch to grab its hex.</p>
+
+    <div class="swatch-grid">
+      <div class="swatch"><div class="chip" style="background:var(--cyan)"><span class="copy">#22E3D6</span></div><div class="meta"><div class="nm">Strike Cyan</div><div class="role">Primary accent</div><div class="hex">#22E3D6</div></div></div>
+      <div class="swatch"><div class="chip" style="background:var(--magenta)"><span class="copy">#FF2D9B</span></div><div class="meta"><div class="nm">Hot Magenta</div><div class="role">Secondary energy</div><div class="hex">#FF2D9B</div></div></div>
+      <div class="swatch"><div class="chip" style="background:var(--volt)"><span class="copy">#D8FF3E</span></div><div class="meta"><div class="nm">Volt Lime</div><div class="role">Spark / data hi</div><div class="hex">#D8FF3E</div></div></div>
+      <div class="swatch"><div class="chip" style="background:var(--orange)"><span class="copy">#FF5A1F</span></div><div class="meta"><div class="nm">Flood Orange</div><div class="role">Flood accent</div><div class="hex">#FF5A1F</div></div></div>
+      <div class="swatch"><div class="chip" style="background:var(--ink-900);border-bottom:1px solid var(--ink-600)"><span class="copy">#05060A</span></div><div class="meta"><div class="nm">Arena Black</div><div class="role">Base</div><div class="hex">#05060A</div></div></div>
+      <div class="swatch"><div class="chip" style="background:var(--ink-700)"><span class="copy">#191D2A</span></div><div class="meta"><div class="nm">Court Slate</div><div class="role">Card surface</div><div class="hex">#191D2A</div></div></div>
+      <div class="swatch"><div class="chip" style="background:var(--chalk)"><span class="copy">#EAF0FF</span></div><div class="meta"><div class="nm">Chalk</div><div class="role">Primary text</div><div class="hex">#EAF0FF</div></div></div>
+      <div class="swatch"><div class="chip" style="background:var(--fog)"><span class="copy">#9AA3BE</span></div><div class="meta"><div class="nm">Fog</div><div class="role">Muted text</div><div class="hex">#9AA3BE</div></div></div>
+    </div>
+
+    <div class="grad-row">
+      <div class="grad-card"><div class="g" style="background:var(--grad-kinetic)"></div><div class="lbl"><b>Kinetic</b><span>cyan → blue → magenta · heroes</span></div></div>
+      <div class="grad-card"><div class="g" style="background:var(--grad-volt)"></div><div class="lbl"><b>Volt</b><span>lime → cyan · big numbers</span></div></div>
+      <div class="grad-card"><div class="g" style="background:var(--grad-heat)"></div><div class="lbl"><b>Heat</b><span>magenta → orange · alerts</span></div></div>
+      <div class="grad-card"><div class="g" style="background:var(--grad-flood)"></div><div class="lbl"><b>Flood</b><span>full accent flood panel</span></div></div>
+    </div>
+  </div>
+</section>
+
+<div class="wrap"><div class="divider"></div></div>
+
+<!-- ================= TYPOGRAPHY ================= -->
+<section id="type" class="reveal">
+  <div class="wrap">
+    <p class="eyebrow">02 · Typography</p>
+    <h2 class="sec-title">Anton × Hanken</h2>
+    <p class="sec-sub">A heavy condensed display (<b style="color:var(--cyan)">Anton</b>) carries the giant numerals and headlines; a clean energetic grotesque (<b style="color:var(--cyan)">Hanken Grotesk</b>) keeps the body fast and legible.</p>
+
+    <div class="type-hero">
+      <p class="giant" aria-label="163, distance specimen">163</p>
+      <div class="cap"><span>Anton · Giant numeric specimen — carry distance</span><span><b>Display / Numeral</b> · 400</span></div>
+    </div>
+
+    <div class="scale-list panel">
+      <div class="scale-row"><span class="tag">Display 1</span><span class="spec"><span class="dsp s-d1">STRIKE THE ARC</span></span><span class="px">Anton · clamp 40–76px</span></div>
+      <div class="scale-row"><span class="tag">Display 2</span><span class="spec"><span class="dsp s-d2">SWING PLANE</span></span><span class="px">Anton · clamp 30–52px</span></div>
+      <div class="scale-row"><span class="tag">Display 3</span><span class="spec"><span class="dsp s-d3">IMPACT LIVE</span></span><span class="px">Anton · clamp 24–36px</span></div>
+      <div class="scale-row"><span class="tag">Lead</span><span class="spec"><span class="body-spec bs-lead">Read the face, path, and strike in real time.</span></span><span class="px">Hanken · 20px / 600</span></div>
+      <div class="scale-row"><span class="tag">Body</span><span class="spec"><span class="body-spec bs-body">Ball speed, launch angle, and spin resolve into a single ball-flight you can feel.</span></span><span class="px">Hanken · 16px / 400</span></div>
+      <div class="scale-row"><span class="tag">Caption</span><span class="spec"><span class="body-spec bs-cap">Face to path · degrees open</span></span><span class="px">Hanken · 12px / 800</span></div>
+    </div>
+  </div>
+</section>
+
+<div class="wrap"><div class="divider"></div></div>
+
+<!-- ================= COMPONENTS ================= -->
+<section id="components" class="reveal">
+  <div class="wrap">
+    <p class="eyebrow">03 · Components</p>
+    <h2 class="sec-title">Built To Hit</h2>
+    <p class="sec-sub">Bold, springy, tactile. Everything responds — press, hover, toggle, count. Touch targets ≥44px, focus rings on volt.</p>
+
+    <div class="comp-grid">
+
+      <!-- Buttons + pills + toggle -->
+      <div class="panel span-7">
+        <p class="panel-label">Buttons · Pills · Toggle</p>
+        <div class="btn-row">
+          <button class="btn btn-primary">Start Session
+            <svg viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <button class="btn btn-hot">Record Strike</button>
+          <button class="btn btn-volt">PR</button>
+          <button class="btn btn-ghost">Replay</button>
+        </div>
+        <div class="pill-row">
+          <button class="pill c active" data-pill>Driver</button>
+          <button class="pill m" data-pill><span class="dot"></span>7 Iron</button>
+          <button class="pill v" data-pill><span class="dot"></span>Wedge</button>
+          <button class="pill c" data-pill><span class="dot"></span>Putter</button>
+        </div>
+        <div class="toggle-line">
+          <span>Live D-plane overlay</span>
+          <button class="toggle" aria-pressed="true" aria-label="Toggle live D-plane overlay"></button>
+        </div>
+        <div class="toggle-line" style="margin-top:14px;">
+          <span>Auto count-up on landing</span>
+          <button class="toggle" aria-pressed="false" aria-label="Toggle auto count-up"></button>
+        </div>
+      </div>
+
+      <!-- Stat card with count-up -->
+      <div class="panel stat-card span-5">
+        <div class="stat-top">
+          <span class="stat-tag">Ball Speed</span>
+          <span class="trend">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 19l7-7 4 4 4-9" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            +6%
+          </span>
+        </div>
+        <p class="bignum"><span data-countup="163">0</span><span class="unit">MPH</span></p>
+        <p class="stat-foot">Session best · driver · smash 1.49</p>
+      </div>
+
+      <!-- Energetic nav -->
+      <div class="panel span-7">
+        <p class="panel-label">Navigation</p>
+        <div class="kin-nav" role="tablist" aria-label="StrikeArc screens">
+          <span class="glider" aria-hidden="true"></span>
+          <button class="on" role="tab" aria-selected="true">Menu</button>
+          <button role="tab" aria-selected="false">Geometry</button>
+          <button role="tab" aria-selected="false">Impact</button>
+        </div>
+        <p class="sec-sub" style="margin:18px 0 0;font-size:14px;">A springy glider tracks the active screen — the three StrikeArc surfaces: Menu, Geometry, Impact.</p>
+      </div>
+
+      <!-- Slider -->
+      <div class="panel span-5">
+        <p class="panel-label">Slider · Attack Angle</p>
+        <div class="slider-wrap">
+          <div class="slider-head">
+            <span class="lab">Angle of attack</span>
+            <span class="val" id="aoaVal">+2.5°</span>
+          </div>
+          <input type="range" class="kin-range" id="aoa" min="-8" max="8" step="0.5" value="2.5" aria-label="Angle of attack" />
+          <div class="range-fill" id="aoaFill"></div>
+        </div>
+      </div>
+
+      <!-- Flood panel -->
+      <div class="flood">
+        <span class="fl-tag">Accent Flood</span>
+        <span class="fl-head">Power On The Instrument</span>
+        <span class="fl-sub">One screen, fully committed to the heat gradient — the loud end of the system.</span>
+      </div>
+
+      <!-- Gauge + bars -->
+      <div class="panel span-7">
+        <p class="panel-label">Gauge &amp; Chart</p>
+        <div class="gauge-wrap">
+          <div class="gauge">
+            <svg width="178" height="178" viewBox="0 0 178 178">
+              <circle cx="89" cy="89" r="78" stroke="#252A3B" stroke-width="14" fill="none"/>
+              <circle id="gaugeArc" cx="89" cy="89" r="78" stroke="url(#gg)" stroke-width="14" fill="none"
+                stroke-linecap="round" stroke-dasharray="490" stroke-dashoffset="490"/>
+              <defs>
+                <linearGradient id="gg" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0" stop-color="#D8FF3E"/><stop offset="1" stop-color="#22E3D6"/>
+                </linearGradient>
+              </defs>
+            </svg>
+            <div class="g-center"><span><span class="gn" id="gaugeN">0</span><br><span class="gl">Strike %</span></span></div>
+          </div>
+          <div class="bars" id="bars" aria-hidden="true">
+            <div class="bar" style="height:6px" data-h="62"><span class="bv">62</span></div>
+            <div class="bar" style="height:6px" data-h="80"><span class="bv">80</span></div>
+            <div class="bar" style="height:6px" data-h="48"><span class="bv">48</span></div>
+            <div class="bar" style="height:6px" data-h="94"><span class="bv">94</span></div>
+            <div class="bar" style="height:6px" data-h="71"><span class="bv">71</span></div>
+            <div class="bar" style="height:6px" data-h="88"><span class="bv">88</span></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<div class="wrap"><div class="divider"></div></div>
+
+<!-- ================= APPLIED VIGNETTE ================= -->
+<section id="applied" class="reveal">
+  <div class="wrap">
+    <p class="eyebrow">04 · In Context</p>
+    <h2 class="sec-title">Strike Readout</h2>
+    <p class="sec-sub">The system in the wild — a high-energy impact panel from the Impact screen, pairing the live D-plane instrument with giant distance numerals.</p>
+
+    <div class="vignette">
+      <div class="vig-grid">
+        <div>
+          <span class="vig-tag">Impact · Live</span>
+          <h3 class="vig-head">That One Felt Pure</h3>
+          <div class="readout">
+            <div class="ro cy"><div class="ro-l">Carry</div><div class="ro-v" data-countup="287">0<span class="ro-u">yd</span></div></div>
+            <div class="ro mg"><div class="ro-l">Face / Path</div><div class="ro-v">+4.2<span class="ro-u">°</span></div></div>
+            <div class="ro vt"><div class="ro-l">Spin</div><div class="ro-v" data-countup="2480">0<span class="ro-u">rpm</span></div></div>
+          </div>
+        </div>
+        <div class="dplane" role="img" aria-label="D-plane instrument: cyan swing path angled right, magenta club face angled left, volt impact point at center">
+          <span class="ring r1"></span><span class="ring r2"></span><span class="ring r3"></span>
+          <span class="cross-h"></span><span class="cross-v"></span>
+          <span class="swing-path"></span>
+          <span class="face-path"></span>
+          <span class="impact-dot"></span>
+          <span class="legend">
+            <i><b style="background:#22E3D6"></b>Swing path</i>
+            <i><b style="background:#FF2D9B"></b>Face angle</i>
+            <i><b style="background:#D8FF3E"></b>Impact</i>
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="wrap"><div class="divider"></div></div>
+
+<!-- ================= MOTION PRINCIPLES ================= -->
+<section id="motion" class="reveal">
+  <div class="wrap">
+    <p class="eyebrow">05 · Motion</p>
+    <h2 class="sec-title">Moves Like Sport</h2>
+    <p class="sec-sub">Punchy and physical. Motion is a feature, never decoration — and it fully respects <b style="color:var(--volt)">prefers-reduced-motion</b> (the kinetic layer goes static).</p>
+
+    <div class="motion-grid">
+      <div class="motion-card"><span class="mn">01</span><h4>Springy</h4><p>Overshoot easing on press &amp; reveal — cubic-bezier(.2,1.3,.3,1). Things land like a footplant.</p><div class="demo"></div></div>
+      <div class="motion-card"><span class="mn">02</span><h4>Count-Up</h4><p>Big numbers race to value on entry. The number IS the moment — let it sprint, then settle.</p><div class="demo"></div></div>
+      <div class="motion-card"><span class="mn">03</span><h4>Diagonal Sweep</h4><p>Gradients and gliders cut across on a slight skew. Energy moves left-to-right, never flat.</p><div class="demo"></div></div>
+      <div class="motion-card"><span class="mn">04</span><h4>Restraint</h4><p>One hero moment per screen. Loud, not messy — kill motion the instant the user opts out.</p><div class="demo"></div></div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <b>StrikeArc · Kinetic Sport</b>
+    Direction 3 of 3 — design system board · Anton + Hanken Grotesk · not deployed
+  </div>
+</footer>
+
+<script>
+(function(){
+  "use strict";
+  var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  /* ---- copy hex on swatch click ---- */
+  document.querySelectorAll(".swatch").forEach(function(sw){
+    sw.addEventListener("click",function(){
+      var hex = sw.querySelector(".hex");
+      if(hex && navigator.clipboard){ navigator.clipboard.writeText(hex.textContent).catch(function(){}); }
+      var copy = sw.querySelector(".copy");
+      if(copy){ copy.textContent="COPIED"; setTimeout(function(){ copy.textContent=hex?hex.textContent:""; },900); }
+    });
+  });
+
+  /* ---- pill toggle ---- */
+  document.querySelectorAll("[data-pill]").forEach(function(p){
+    p.addEventListener("click",function(){
+      document.querySelectorAll("[data-pill]").forEach(function(o){o.classList.remove("active");});
+      p.classList.add("active");
+    });
+  });
+
+  /* ---- on/off toggles ---- */
+  document.querySelectorAll(".toggle").forEach(function(t){
+    t.addEventListener("click",function(){
+      t.setAttribute("aria-pressed", t.getAttribute("aria-pressed")==="true" ? "false":"true");
+    });
+  });
+
+  /* ---- nav glider ---- */
+  var nav = document.querySelector(".kin-nav");
+  if(nav){
+    var glider = nav.querySelector(".glider");
+    var btns = Array.prototype.slice.call(nav.querySelectorAll("button"));
+    btns.forEach(function(b,i){
+      b.addEventListener("click",function(){
+        btns.forEach(function(o){o.classList.remove("on");o.setAttribute("aria-selected","false");});
+        b.classList.add("on");b.setAttribute("aria-selected","true");
+        glider.style.transform = "translateX("+(i*100)+"%)";
+      });
+    });
+  }
+
+  /* ---- slider ---- */
+  var aoa = document.getElementById("aoa");
+  var aoaVal = document.getElementById("aoaVal");
+  var aoaFill = document.getElementById("aoaFill");
+  function updAoa(){
+    var v = parseFloat(aoa.value);
+    aoaVal.textContent = (v>0?"+":"")+v.toFixed(1)+"°";
+    var pct = (v - aoa.min)/(aoa.max - aoa.min)*100;
+    aoaFill.style.width = pct+"%";
+  }
+  if(aoa){ aoa.addEventListener("input",updAoa); updAoa(); }
+
+  /* ---- count-up ---- */
+  function countUp(el){
+    var target = parseFloat(el.getAttribute("data-countup"));
+    var unitNode = el.querySelector(".ro-u");
+    var unit = unitNode ? unitNode.outerHTML : "";
+    if(reduce){ el.innerHTML = Math.round(target).toLocaleString("en-US") + unit; return; }
+    var start = null, dur = 1100;
+    function step(ts){
+      if(!start) start = ts;
+      var p = Math.min((ts-start)/dur,1);
+      var eased = 1 - Math.pow(1-p,3);
+      var val = Math.round(target*eased);
+      el.innerHTML = val.toLocaleString("en-US") + unit;
+      if(p<1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+
+  /* ---- gauge ---- */
+  function runGauge(){
+    var arc = document.getElementById("gaugeArc");
+    var gn = document.getElementById("gaugeN");
+    var pctTarget = 86, circ = 490;
+    if(!arc) return;
+    if(reduce){
+      arc.style.strokeDashoffset = circ*(1-pctTarget/100);
+      gn.textContent = pctTarget;
+      return;
+    }
+    var start=null, dur=1200;
+    function step(ts){
+      if(!start) start=ts;
+      var p = Math.min((ts-start)/dur,1);
+      var eased = 1-Math.pow(1-p,3);
+      arc.style.strokeDashoffset = circ*(1-(pctTarget/100)*eased);
+      gn.textContent = Math.round(pctTarget*eased);
+      if(p<1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+
+  /* ---- bars ---- */
+  function runBars(){
+    document.querySelectorAll("#bars .bar").forEach(function(b,i){
+      var h = b.getAttribute("data-h");
+      if(reduce){ b.style.height = h+"%"; return; }
+      setTimeout(function(){ b.style.height = h+"%"; }, i*90);
+    });
+  }
+
+  /* ---- reveal on scroll + trigger animations ---- */
+  var seen = {};
+  function fire(id){
+    if(seen[id]) return; seen[id]=true;
+    if(id==="components"){ runGauge(); runBars(); document.querySelectorAll('.stat-card [data-countup]').forEach(countUp); }
+    if(id==="applied"){ document.querySelectorAll('#applied [data-countup]').forEach(countUp); }
+  }
+
+  if("IntersectionObserver" in window){
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){
+        if(e.isIntersecting){
+          e.target.classList.add("in");
+          if(e.target.id) fire(e.target.id);
+        }
+      });
+    },{threshold:0.18});
+    document.querySelectorAll(".reveal").forEach(function(s){ io.observe(s); });
+  } else {
+    document.querySelectorAll(".reveal").forEach(function(s){ s.classList.add("in"); if(s.id) fire(s.id); });
+  }
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="robots" content="noindex" />
+<title>Impact — Focus Modes Mock</title>
+<style>
+  :root{
+    --accent:#22E3D6; --accent-soft:rgba(34,227,214,.16); --accent-line:rgba(34,227,214,.55);
+    --ink:#e8f0fb; --muted:#9aabc6;
+    --bg:#0A0E12; --bg-top:#0b1220;
+    --panel:rgba(12,20,33,.72); --line:rgba(255,255,255,.30);
+    --radius-pill:999px; --radius-card:16px; --radius-control:12px;
+    --plate:#0E141C;
+    --c-face:#E83B47; --c-path:#8FB4D4; --c-loft:#A66BFF; --c-attack:#FF7AA8; --c-launch:#F4D000;
+    --good:#4ADE80; --warn:#FBBF24; --bad:#F87171;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;overflow:hidden}
+  body{
+    background:radial-gradient(130% 120% at 50% -10%, var(--bg-top), var(--bg));
+    color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .app{position:fixed;inset:0;display:flex;flex-direction:column;overflow:hidden}
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+
+  /* ══ TOP STRIP ══ */
+  .topstrip{
+    flex:0 0 auto;display:flex;align-items:center;gap:10px;
+    height:40px;padding:0 12px;
+    border-bottom:1px solid rgba(255,255,255,.06);
+    background:linear-gradient(180deg, rgba(12,20,33,.55), rgba(10,14,18,.2));
+  }
+  .ts-title{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink);white-space:nowrap;flex:0 0 auto}
+
+  /* ══ SEGMENTED CONTROL — top-centre ══ */
+  .segwrap{flex:1 1 auto;display:flex;justify-content:center;min-width:0}
+  .seg{
+    display:inline-flex;align-items:stretch;gap:2px;padding:3px;
+    background:rgba(10,16,24,.6);border:1px solid rgba(255,255,255,.10);
+    border-radius:var(--radius-pill);
+  }
+  .seg button{
+    appearance:none;font-family:inherit;cursor:pointer;border:1px solid transparent;
+    background:transparent;color:var(--muted);position:relative;
+    height:30px;min-width:78px;padding:0 14px;border-radius:999px;
+    font-size:11.5px;font-weight:700;letter-spacing:.03em;
+    display:inline-flex;align-items:center;justify-content:center;gap:5px;
+    transition:background .18s,color .18s,border-color .18s;
+  }
+  /* visual pill stays 30px (fits the thin top strip); the hit target is
+     expanded to >=44px via a transparent pseudo-element pad, matching the
+     app's ghostPill/ghostClear convention for compact controls. */
+  .seg button::after{content:"";position:absolute;left:0;right:0;top:50%;height:44px;transform:translateY(-50%)}
+  .seg button .sk{width:6px;height:6px;border-radius:2px;flex:0 0 auto;opacity:.7}
+  .seg button:hover{color:var(--ink);background:rgba(255,255,255,.06)}
+  .seg button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .seg button[aria-pressed="true"]{color:#04140f;background:var(--accent);border-color:var(--accent)}
+  .seg button[aria-pressed="true"] .sk{background:#04140f;opacity:1}
+
+  .ts-right{flex:0 0 auto;display:flex;align-items:center;gap:8px}
+  .speedmini{display:flex;align-items:center;gap:6px}
+  .speedmini label{font-size:10px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);font-weight:600;white-space:nowrap}
+  .speedmini .speedval{font-size:11px;font-weight:700;color:var(--accent);font-variant-numeric:tabular-nums;width:52px;text-align:right}
+
+  /* ══ MAIN STAGE ══ */
+  .stage{flex:1 1 auto;position:relative;min-height:0;padding:6px;display:flex}
+  .focusPanel{
+    position:absolute;inset:6px;display:flex;gap:8px;min-height:0;
+    opacity:0;transform:scale(.985);pointer-events:none;
+    transition:opacity .25s ease, transform .25s ease;
+  }
+  .focusPanel.active{opacity:1;transform:scale(1);pointer-events:auto;position:relative;inset:auto;flex:1 1 auto}
+  @media (prefers-reduced-motion:reduce){ .focusPanel{transition:none} }
+
+  /* hero lens (~70%) + mini panel (~30%) */
+  .heroLens{
+    flex:0 0 68%;min-width:0;border-radius:20px;position:relative;
+    background:radial-gradient(120% 90% at 50% 18%, rgba(34,227,214,.07), rgba(10,14,18,0) 62%), #0A0E12;
+    border:1px solid rgba(255,255,255,.07);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.04), 0 14px 40px -22px rgba(0,0,0,.8);
+    display:flex;flex-direction:column;overflow:hidden;
+  }
+  .heroLens .lenshead{position:absolute;top:9px;left:12px;z-index:3;pointer-events:none}
+  .heroLens .lenshead .lh1{font-size:10px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--ink)}
+  .heroLens .lenshead .lh2{font-size:9px;color:var(--muted);margin-top:1px;letter-spacing:.02em}
+  .heroLens svg{flex:1 1 auto;width:100%;height:100%;display:block;min-height:0}
+
+  .heroSliders{flex:0 0 auto;display:flex;gap:10px;padding:6px 12px 8px;border-top:1px solid rgba(255,255,255,.06);
+    background:linear-gradient(180deg, rgba(10,14,18,0), rgba(8,12,16,.5))}
+  .mini{flex:1 1 0;min-width:0}
+  .mini{display:flex;flex-direction:column}
+  .mini .mtop{flex:0 0 auto;display:flex;justify-content:space-between;align-items:baseline;gap:6px;margin-bottom:3px}
+  .mini .rwrap{flex:0 0 44px}
+  .mini .mname{font-size:10.5px;font-weight:700;letter-spacing:.02em;display:inline-flex;align-items:center;gap:5px}
+  .mini .mname label{cursor:pointer}
+  .mini .mdot{width:8px;height:8px;border-radius:2px;flex:0 0 auto}
+  .mini .mval{font-size:11.5px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--ink)}
+  .mini.k-face .mname{color:#ffb0b6}
+  .mini.k-path .mname{color:#bcd6ea}
+  .mini.k-loft .mname{color:#cdb0ff}
+  .mini.k-attack .mname{color:#ffc0d4}
+
+  /* ══ PREMIUM SLIDERS ══ */
+  .rwrap{position:relative;--rc:var(--accent);min-height:44px;display:flex;align-items:center}
+  .rwrap input[type=range].premium-range{
+    -webkit-appearance:none;appearance:none;width:100%;height:44px;margin:0;cursor:pointer;background:transparent;
+  }
+  .rwrap input[type=range].premium-range::-webkit-slider-runnable-track{height:5px;border-radius:999px;border:none;background:var(--rf, rgba(255,255,255,.14))}
+  .rwrap input[type=range].premium-range::-moz-range-track{height:5px;border-radius:999px;border:none;background:var(--rf, rgba(255,255,255,.14))}
+  .rwrap input[type=range].premium-range::-moz-range-progress{height:5px;border-radius:999px;background:transparent}
+  .rwrap input[type=range].premium-range::-webkit-slider-thumb{
+    -webkit-appearance:none;appearance:none;width:20px;height:20px;border-radius:50%;margin-top:-7.5px;
+    background:var(--rc);border:2px solid rgba(255,255,255,.92);
+    box-shadow:0 2px 7px rgba(0,0,0,.5), 0 0 0 4px color-mix(in srgb, var(--rc) 28%, transparent);
+    transition:transform .12s ease, box-shadow .12s ease;
+  }
+  .rwrap input[type=range].premium-range::-moz-range-thumb{
+    width:20px;height:20px;border-radius:50%;background:var(--rc);border:2px solid rgba(255,255,255,.92);
+    box-shadow:0 2px 7px rgba(0,0,0,.5), 0 0 0 4px color-mix(in srgb, var(--rc) 28%, transparent);
+    transition:transform .12s ease, box-shadow .12s ease;
+  }
+  .rwrap input[type=range].premium-range:active::-webkit-slider-thumb,
+  .rwrap input[type=range].premium-range.dragging::-webkit-slider-thumb{transform:scale(1.25);box-shadow:0 3px 11px rgba(0,0,0,.55), 0 0 0 6px color-mix(in srgb, var(--rc) 34%, transparent)}
+  .rwrap input[type=range].premium-range:active::-moz-range-thumb,
+  .rwrap input[type=range].premium-range.dragging::-moz-range-thumb{transform:scale(1.25);box-shadow:0 3px 11px rgba(0,0,0,.55), 0 0 0 6px color-mix(in srgb, var(--rc) 34%, transparent)}
+  .rwrap input[type=range].premium-range:focus-visible{outline:none}
+  .rwrap input[type=range].premium-range:focus-visible::-webkit-slider-thumb{box-shadow:0 2px 7px rgba(0,0,0,.5), 0 0 0 3px #0A0E12, 0 0 0 6px var(--rc)}
+  .rwrap input[type=range].premium-range:focus-visible::-moz-range-thumb{box-shadow:0 2px 7px rgba(0,0,0,.5), 0 0 0 3px #0A0E12, 0 0 0 6px var(--rc)}
+  .rwrap.signed::before{content:"";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:2px;height:11px;border-radius:2px;background:rgba(255,255,255,.42);pointer-events:none;z-index:1}
+  .rwrap .rbubble{
+    position:absolute;top:-2px;left:0;transform:translate(-50%,-100%) scale(.9);
+    padding:2px 7px;border-radius:7px;white-space:nowrap;
+    font-size:11px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.25;
+    color:#fff;background:color-mix(in srgb, var(--rc) 66%, #0A0E12);
+    border:1px solid rgba(255,255,255,.28);box-shadow:0 4px 12px rgba(0,0,0,.45);
+    opacity:0;pointer-events:none;z-index:3;transition:opacity .16s ease, transform .16s ease;
+  }
+  .rwrap .rbubble::after{content:"";position:absolute;left:50%;bottom:-4px;transform:translateX(-50%) rotate(45deg);width:7px;height:7px;background:inherit;border-right:1px solid rgba(255,255,255,.28);border-bottom:1px solid rgba(255,255,255,.28)}
+  .rwrap.bubble-show .rbubble{opacity:1;transform:translate(-50%,-100%) scale(1)}
+  .mini.k-face .rwrap{--rc:var(--c-face)}
+  .mini.k-path .rwrap{--rc:var(--c-path)}
+  .mini.k-loft .rwrap{--rc:var(--c-loft)}
+  .mini.k-attack .rwrap{--rc:var(--c-attack)}
+  @media (prefers-reduced-motion:reduce){
+    .rwrap input[type=range].premium-range::-webkit-slider-thumb{transition:none}
+    .rwrap input[type=range].premium-range::-moz-range-thumb{transition:none}
+    .rwrap .rbubble{transition:none}
+  }
+
+  /* ══ MINI SIDE PANEL (~30%) ══ */
+  .miniPanel{
+    flex:1 1 0;min-width:0;border-radius:18px;position:relative;
+    background:linear-gradient(180deg, rgba(20,32,48,.6), rgba(11,17,26,.7));
+    border:1px solid rgba(255,255,255,.08);
+    display:flex;flex-direction:column;overflow:hidden;
+    cursor:pointer;appearance:none;font-family:inherit;color:inherit;text-align:left;padding:0;
+    transition:border-color .15s ease, background .15s ease;
+  }
+  .miniPanel:hover{border-color:rgba(255,255,255,.18);background:linear-gradient(180deg, rgba(24,38,56,.68), rgba(13,20,30,.78))}
+  .miniPanel:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .miniPanel .mp-head{padding:9px 12px 0;display:flex;align-items:baseline;justify-content:space-between;gap:6px}
+  .miniPanel .mp-h1{font-size:9.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+  .miniPanel .mp-cta{font-size:9px;font-weight:700;color:var(--accent);letter-spacing:.02em;white-space:nowrap}
+  .miniPanel svg{flex:1 1 auto;width:100%;min-height:0;display:block}
+  .miniPanel .mp-chips{flex:0 0 auto;display:flex;gap:8px;padding:0 10px 10px}
+  .chip{
+    flex:1 1 0;min-width:0;min-height:44px;display:flex;flex-direction:column;justify-content:center;gap:2px;
+    padding:6px 10px;border-radius:12px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);
+    cursor:pointer;appearance:none;font-family:inherit;color:inherit;text-align:left;
+    transition:background .15s ease, border-color .15s ease, transform .1s ease;
+  }
+  .chip:hover{background:rgba(255,255,255,.09);border-color:rgba(255,255,255,.18)}
+  .chip:active{transform:scale(.97)}
+  .chip:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .chip .ck{font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:700;display:flex;align-items:center;gap:4px}
+  .chip .ck .cdot{width:6px;height:6px;border-radius:2px;flex:0 0 auto}
+  .chip .cv{font-size:15px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--ink)}
+
+  /* ══ HERO RESULTS ROW (metric cards) ══ */
+  .heroResults{flex:0 0 auto;display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:8px 12px 0}
+  .mcard{
+    min-height:44px;padding:8px 11px;border-radius:12px;
+    background:linear-gradient(180deg, rgba(22,34,50,.7), rgba(12,19,29,.7));
+    border:1px solid rgba(255,255,255,.09);
+    display:flex;flex-direction:column;justify-content:center;gap:2px;min-width:0;
+  }
+  .mcard .mk{font-size:9.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .mcard .mv{font-size:19px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--accent);letter-spacing:-.01em;white-space:nowrap}
+  .mcard .mv small{font-size:.55em;color:var(--muted);font-weight:600;margin-left:2px}
+
+  /* ══ COACH LINE ══ */
+  .coachWrap{flex:0 0 auto;padding:8px 12px 4px}
+  .coachLine{
+    font-size:12px;line-height:1.4;color:var(--ink);
+    display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 8px;
+  }
+  .coachLine .cause{font-weight:700;color:var(--ink)}
+  .coachLine .cue{color:var(--muted)}
+  .coachDot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent);flex:0 0 auto;margin-right:2px}
+
+  /* ══ FLIGHT PLACEHOLDER PANEL ══ */
+  .flightPanel{flex:1 1 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;
+    border-radius:20px;position:relative;overflow:hidden;
+    background:radial-gradient(120% 90% at 50% 30%, rgba(34,227,214,.08), rgba(10,14,18,0) 62%), #0A0E12;
+    border:1px solid rgba(255,255,255,.07);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.04), 0 14px 40px -22px rgba(0,0,0,.8);
+    padding:20px;
+  }
+  .flightShot{
+    width:min(78%,560px);aspect-ratio:16/7;border-radius:16px;position:relative;overflow:hidden;
+    background:linear-gradient(180deg, #0b1626 0%, #060a10 70%);
+    border:1px solid rgba(255,255,255,.10);
+    box-shadow:0 18px 44px -18px rgba(0,0,0,.75), inset 0 1px 0 rgba(255,255,255,.06);
+  }
+  .flightShot svg{width:100%;height:100%;display:block}
+  .flightShot .frameLabel{position:absolute;top:8px;left:12px;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:700}
+  .playFlightBtn{
+    position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+    appearance:none;font-family:inherit;cursor:pointer;
+    display:inline-flex;align-items:center;gap:10px;
+    height:52px;padding:0 26px;border-radius:999px;
+    background:var(--accent);color:#04140f;border:1px solid var(--accent);
+    font-size:15px;font-weight:800;letter-spacing:.03em;
+    box-shadow:0 10px 30px -8px rgba(34,227,214,.55);
+    transition:transform .12s ease, box-shadow .12s ease;
+  }
+  .playFlightBtn:hover{transform:translate(-50%,-50%) scale(1.03)}
+  .playFlightBtn:active{transform:translate(-50%,-50%) scale(.97)}
+  .playFlightBtn:focus-visible{outline:3px solid #fff;outline-offset:3px}
+  .playFlightBtn .pico{font-size:13px}
+  .flightCause{width:min(78%,560px);text-align:center}
+  .flightCause .cause{font-size:14px;font-weight:800;color:var(--ink)}
+  .flightCause .cue{font-size:12px;color:var(--muted);margin-top:4px}
+
+  /* ══ RESPONSIVE — narrower phones (740×416) ══ */
+  @media (max-width:800px){
+    .heroResults{grid-template-columns:repeat(4,1fr);gap:6px;padding:6px 8px 0}
+    .mcard{padding:6px 8px;min-height:44px}
+    .mcard .mv{font-size:16px}
+    .mcard .mk{font-size:8.5px}
+    .heroSliders{padding:5px 8px 6px;gap:8px}
+    .coachWrap{padding:6px 8px 3px}
+    .coachLine{font-size:11px}
+    .miniPanel .mp-chips{padding:0 8px 8px;gap:6px}
+    .chip{padding:5px 8px}
+    .chip .cv{font-size:13px}
+    .segwrap{overflow:hidden}
+    .seg button{min-width:60px;padding:0 9px;font-size:10.5px}
+    .speedmini label{display:none}
+  }
+  @media (max-width:800px) and (max-height:430px){
+    .topstrip{height:34px}
+    .heroLens .lenshead{top:6px;left:9px}
+    .stage{padding:5px}
+    .focusPanel{gap:6px}
+    .heroResults{gap:5px}
+    .mcard{min-height:40px;padding:5px 7px}
+    .mcard .mv{font-size:14px}
+  }
+
+  .arrowG{transition:opacity .22s ease}
+  .arrowG .aline{stroke-linecap:round}
+  @media (prefers-reduced-motion:reduce){ .arrowG{transition:none} }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ══ TOP STRIP ══ -->
+  <div class="topstrip">
+    <span class="ts-title">Impact</span>
+    <div class="segwrap">
+      <div class="seg" role="group" aria-label="Focus mode">
+        <button type="button" id="segDir" aria-pressed="true"><span class="sk" aria-hidden="true" style="background:var(--c-path)"></span>Direction</button>
+        <button type="button" id="segLaunch" aria-pressed="false"><span class="sk" aria-hidden="true" style="background:var(--c-attack)"></span>Launch</button>
+        <button type="button" id="segFlight" aria-pressed="false"><span class="sk" aria-hidden="true" style="background:var(--accent)"></span>Flight</button>
+      </div>
+    </div>
+    <div class="ts-right">
+      <div class="speedmini">
+        <label for="s_speed">Speed</label>
+        <input type="range" id="s_speed" min="40" max="130" step="1" value="90" style="width:70px" />
+        <span class="speedval" id="v_speed">90 mph</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ STAGE ══ -->
+  <div class="stage" id="stage">
+
+    <!-- ═══ DIRECTION FOCUS ═══ -->
+    <div class="focusPanel active" id="panelDir" data-focus="direction">
+      <section class="heroLens" id="lensDir" aria-label="Direction lens, top-down view">
+        <div class="lenshead"><div class="lh1">Direction</div><div class="lh2">Top-down · face &amp; path</div></div>
+        <svg id="svgDir" viewBox="0 0 400 360" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Top-down view. Face and path arrows rotate from the ball to show clubface aim and swing direction. A cyan dot shows the predicted landing position.">
+          <defs>
+            <radialGradient id="dirGlow" cx="50%" cy="78%" r="60%">
+              <stop offset="0" stop-color="rgba(34,227,214,.10)"/><stop offset="1" stop-color="rgba(34,227,214,0)"/>
+            </radialGradient>
+          </defs>
+          <rect x="0" y="0" width="400" height="360" fill="url(#dirGlow)"/>
+          <line x1="200" y1="330" x2="200" y2="40" stroke="var(--accent-line)" stroke-width="1.5" stroke-dasharray="5 8"/>
+          <circle cx="200" cy="40" r="4" fill="none" stroke="var(--accent)" stroke-width="1.5" opacity=".8"/>
+          <text x="200" y="28" text-anchor="middle" font-size="9" fill="var(--muted)" style="font-family:inherit;letter-spacing:.1em">TARGET</text>
+          <path id="dirCone" fill="rgba(34,227,214,.05)" stroke="none"/>
+          <!-- curve prediction line ball -> finish -->
+          <path id="predCurve" fill="none" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round" opacity=".35"/>
+          <circle cx="200" cy="330" r="5" fill="#fff" opacity=".9"/>
+          <g class="arrowG" id="g_path" aria-hidden="true">
+            <line class="aline" id="line_path" x1="200" y1="330" x2="200" y2="111" stroke="var(--c-path)" stroke-width="7"/>
+            <polygon id="head_path" points="200,95 184,125 200,116 216,125" fill="var(--c-path)"/>
+          </g>
+          <g class="arrowG" id="g_face" aria-hidden="true">
+            <line class="aline" id="line_face" x1="200" y1="330" x2="200" y2="111" stroke="var(--c-face)" stroke-width="7"/>
+            <polygon id="head_face" points="200,95 184,125 200,116 216,125" fill="var(--c-face)"/>
+          </g>
+          <g id="predGroup" aria-hidden="true">
+            <circle id="predHalo" cx="200" cy="52" r="5.5" fill="var(--accent)" opacity=".22"/>
+            <circle id="predDot" cx="200" cy="52" r="3.2" fill="var(--accent)" stroke="rgba(255,255,255,.7)" stroke-width=".75"/>
+          </g>
+        </svg>
+        <div class="heroSliders">
+          <div class="mini k-face">
+            <div class="mtop"><span class="mname"><span class="mdot" style="background:var(--c-face)" aria-hidden="true"></span><label for="s_face">Face</label></span><span class="mval" id="v_face">−2.0°</span></div>
+            <div class="rwrap signed"><input type="range" class="premium-range" id="s_face" min="-20" max="20" step="0.1" value="-2"><span class="rbubble" aria-hidden="true"></span></div>
+          </div>
+          <div class="mini k-path">
+            <div class="mtop"><span class="mname"><span class="mdot" style="background:var(--c-path)" aria-hidden="true"></span><label for="s_path">Path</label></span><span class="mval" id="v_path">+2.0°</span></div>
+            <div class="rwrap signed"><input type="range" class="premium-range" id="s_path" min="-20" max="20" step="0.1" value="2"><span class="rbubble" aria-hidden="true"></span></div>
+          </div>
+        </div>
+        <div class="heroResults" id="heroResultsDir">
+          <div class="mcard"><div class="mk">Face-to-path</div><div class="mv" id="hr_f2p">−4.0<small>°</small></div></div>
+          <div class="mcard"><div class="mk">Start dir</div><div class="mv" id="hr_start">−1.5<small>°</small></div></div>
+          <div class="mcard"><div class="mk">Spin axis</div><div class="mv" id="hr_axis">−6<small>°</small></div></div>
+          <div class="mcard"><div class="mk">Curve</div><div class="mv" id="hr_curve">−3.1<small>m</small></div></div>
+        </div>
+        <div class="coachWrap">
+          <div class="coachLine"><span class="coachDot" aria-hidden="true"></span><span class="cause" id="causeDir">Main cause: —</span><span class="cue" id="cueDir"></span></div>
+        </div>
+      </section>
+
+      <button type="button" class="miniPanel" id="mpLaunch" aria-label="Launch mini panel — tap to switch focus to Launch">
+        <div class="mp-head"><span class="mp-h1">Launch</span><span class="mp-cta">Tap to focus →</span></div>
+        <svg viewBox="0 0 200 200" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+          <line x1="18" y1="150" x2="188" y2="150" stroke="rgba(255,255,255,.16)" stroke-width="1.5"/>
+          <circle cx="40" cy="150" r="4" fill="#fff" opacity=".85"/>
+          <g id="g_attackMini">
+            <line id="line_attackMini" x1="40" y1="150" x2="140" y2="150" stroke="var(--c-attack)" stroke-width="5" stroke-linecap="round"/>
+            <polygon id="head_attackMini" points="152,150 132,138 138,150 132,162" fill="var(--c-attack)"/>
+          </g>
+          <g id="g_loftMini">
+            <line id="line_loftMini" x1="40" y1="150" x2="140" y2="150" stroke="var(--c-loft)" stroke-width="5" stroke-linecap="round"/>
+            <polygon id="head_loftMini" points="152,150 132,138 138,150 132,162" fill="var(--c-loft)"/>
+          </g>
+        </svg>
+        <div class="mp-chips">
+          <span class="chip" id="chipAttack" role="link" tabindex="0"><span class="ck"><span class="cdot" style="background:var(--c-attack)" aria-hidden="true"></span>Attack</span><span class="cv" id="chipAttackVal">−3.0°</span></span>
+          <span class="chip" id="chipDynLoft" role="link" tabindex="0"><span class="ck"><span class="cdot" style="background:var(--c-loft)" aria-hidden="true"></span>Dyn loft</span><span class="cv" id="chipDynLoftVal">30.0°</span></span>
+        </div>
+      </button>
+    </div>
+
+    <!-- ═══ LAUNCH FOCUS ═══ -->
+    <div class="focusPanel" id="panelLaunch" data-focus="launch">
+      <button type="button" class="miniPanel" id="mpDir" aria-label="Direction mini panel — tap to switch focus to Direction">
+        <div class="mp-head"><span class="mp-h1">Direction</span><span class="mp-cta">Tap to focus →</span></div>
+        <svg viewBox="0 0 200 200" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+          <line x1="100" y1="180" x2="100" y2="20" stroke="rgba(255,255,255,.16)" stroke-width="1.5" stroke-dasharray="4 6"/>
+          <circle cx="100" cy="180" r="4" fill="#fff" opacity=".85"/>
+          <g id="g_pathMini">
+            <line id="line_pathMini" x1="100" y1="180" x2="100" y2="60" stroke="var(--c-path)" stroke-width="5" stroke-linecap="round"/>
+            <polygon id="head_pathMini" points="100,48 88,72 100,65 112,72" fill="var(--c-path)"/>
+          </g>
+          <g id="g_faceMini">
+            <line id="line_faceMini" x1="100" y1="180" x2="100" y2="60" stroke="var(--c-face)" stroke-width="5" stroke-linecap="round"/>
+            <polygon id="head_faceMini" points="100,48 88,72 100,65 112,72" fill="var(--c-face)"/>
+          </g>
+        </svg>
+        <div class="mp-chips">
+          <span class="chip" id="chipFace" role="link" tabindex="0"><span class="ck"><span class="cdot" style="background:var(--c-face)" aria-hidden="true"></span>Face</span><span class="cv" id="chipFaceVal">−2.0°</span></span>
+          <span class="chip" id="chipPath" role="link" tabindex="0"><span class="ck"><span class="cdot" style="background:var(--c-path)" aria-hidden="true"></span>Path</span><span class="cv" id="chipPathVal">+2.0°</span></span>
+        </div>
+      </button>
+
+      <section class="heroLens" id="lensHt" aria-label="Launch lens, side-on view">
+        <div class="lenshead"><div class="lh1">Launch</div><div class="lh2">Side-on · attack &amp; dyn loft</div></div>
+        <svg id="svgHt" viewBox="0 0 400 360" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Side-on view. Attack and dynamic-loft arrows rotate from impact to show descent and delivered loft. A cyan launch vector and apex marker show the resulting trajectory.">
+          <defs>
+            <radialGradient id="htGlow" cx="22%" cy="62%" r="70%">
+              <stop offset="0" stop-color="rgba(34,227,214,.10)"/><stop offset="1" stop-color="rgba(34,227,214,0)"/>
+            </radialGradient>
+          </defs>
+          <rect x="0" y="0" width="400" height="360" fill="url(#htGlow)"/>
+          <line x1="30" y1="250" x2="380" y2="250" stroke="rgba(255,255,255,.18)" stroke-width="1.5"/>
+          <text x="372" y="266" text-anchor="end" font-size="9" fill="var(--muted)" style="font-family:inherit;letter-spacing:.1em">GROUND</text>
+          <!-- trajectory height hint + apex marker -->
+          <path id="trajPath" fill="none" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="5 6" opacity=".4"/>
+          <circle id="apexDot" cx="0" cy="0" r="3.5" fill="var(--accent)" opacity=".7"/>
+          <text id="apexLabel" font-size="9" fill="var(--accent)" text-anchor="middle" opacity=".75" style="font-family:inherit">Apex</text>
+          <circle cx="80" cy="250" r="5" fill="#fff" opacity=".9"/>
+          <path id="htCone" fill="rgba(34,227,214,.05)" stroke="none"/>
+          <g class="arrowG" id="g_attack" aria-hidden="true">
+            <line class="aline" id="line_attack" x1="80" y1="250" x2="284" y2="250" stroke="var(--c-attack)" stroke-width="7"/>
+            <polygon id="head_attack" points="300,250 270,234 279,250 270,266" fill="var(--c-attack)"/>
+          </g>
+          <g id="g_launchVec" aria-hidden="true" opacity=".92">
+            <line id="line_launchVec" x1="80" y1="250" x2="264" y2="250" stroke="var(--c-launch)" stroke-width="4" stroke-dasharray="6 5" stroke-linecap="round"/>
+            <polygon id="head_launchVec" points="280,250 254,238 262,250 254,262" fill="var(--c-launch)"/>
+          </g>
+          <g class="arrowG" id="g_loft" aria-hidden="true">
+            <line class="aline" id="line_loft" x1="80" y1="250" x2="284" y2="250" stroke="var(--c-loft)" stroke-width="7"/>
+            <polygon id="head_loft" points="300,250 270,234 279,250 270,266" fill="var(--c-loft)"/>
+          </g>
+        </svg>
+        <div class="heroSliders">
+          <div class="mini k-attack">
+            <div class="mtop"><span class="mname"><span class="mdot" style="background:var(--c-attack)" aria-hidden="true"></span><label for="s_attack">Attack</label></span><span class="mval" id="v_attack">−3.0°</span></div>
+            <div class="rwrap signed"><input type="range" class="premium-range" id="s_attack" min="-15" max="15" step="0.1" value="-3"><span class="rbubble" aria-hidden="true"></span></div>
+          </div>
+          <div class="mini k-loft">
+            <div class="mtop"><span class="mname"><span class="mdot" style="background:var(--c-loft)" aria-hidden="true"></span><label for="s_loft">Dyn loft</label></span><span class="mval" id="v_loft">30.0°</span></div>
+            <div class="rwrap"><input type="range" class="premium-range" id="s_loft" min="0" max="60" step="0.1" value="30"><span class="rbubble" aria-hidden="true"></span></div>
+          </div>
+        </div>
+        <div class="heroResults" id="heroResultsLaunch">
+          <div class="mcard"><div class="mk">Spin loft</div><div class="mv" id="hr_spinloft">33.0<small>°</small></div></div>
+          <div class="mcard"><div class="mk">Launch</div><div class="mv" id="hr_launch">17.9<small>°</small></div></div>
+          <div class="mcard"><div class="mk">Apex</div><div class="mv" id="hr_apex">28<small>m</small></div></div>
+          <div class="mcard"><div class="mk">Land angle</div><div class="mv" id="hr_land">50<small>°</small></div></div>
+        </div>
+        <div class="coachWrap">
+          <div class="coachLine"><span class="coachDot" aria-hidden="true"></span><span class="cause" id="causeLaunch">Main cause: —</span><span class="cue" id="cueLaunch"></span></div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ═══ FLIGHT FOCUS ═══ -->
+    <div class="focusPanel" id="panelFlight" data-focus="flight">
+      <div class="flightPanel" aria-label="Flight playback">
+        <div class="flightShot">
+          <span class="frameLabel">PLAY-FLIGHT PREVIEW</span>
+          <svg viewBox="0 0 400 175" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+            <defs>
+              <linearGradient id="fpg" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#0d1c2c"/><stop offset="1" stop-color="#060a10"/>
+              </linearGradient>
+            </defs>
+            <rect x="0" y="0" width="400" height="175" fill="url(#fpg)"/>
+            <line x1="0" y1="150" x2="400" y2="150" stroke="rgba(255,255,255,.14)" stroke-width="1"/>
+            <path id="ghostTraj" d="M20,150 Q160,10 380,140" fill="none" stroke="var(--accent)" stroke-width="2" opacity=".55" stroke-linecap="round"/>
+            <circle cx="20" cy="150" r="4" fill="#fff" opacity=".8"/>
+            <circle cx="380" cy="140" r="4" fill="var(--accent)" opacity=".8"/>
+          </svg>
+          <button type="button" class="playFlightBtn" id="playFlightBtn">
+            <span class="pico" aria-hidden="true">▶</span> PLAY FLIGHT
+          </button>
+        </div>
+        <div class="flightCause">
+          <div class="cause" id="causeFlight">Main cause: —</div>
+          <div class="cue" id="cueFlight"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script type="module">
+import { solveFlight } from './impact-flight.js';
+
+const $ = id => document.getElementById(id);
+const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const YD2M = 0.9144;
+const f1 = v => (v>=0?'+':'') + v.toFixed(1);
+
+// ── STATE ──────────────────────────────────────────────────────
+const state = { clubPath: 2, faceAngle: -2, attackAngle: -3, dynamicLoft: 30, clubSpeed: 90, club: '7iron' };
+
+let focus = 'direction';
+
+// ── COACH-CUE LIBRARY ──────────────────────────────────────────
+const CUES = {
+  faceOpen:   'Face open to path — the ball starts right of the swing line and tends to curve further right.',
+  faceClosed: 'Face closed to path — the ball starts left of the swing line and tends to curve further left.',
+  pathLeft:   'Path swings left (out-to-in) — this steers the start direction left of target.',
+  pathRight:  'Path swings right (in-to-out) — this steers the start direction right of target.',
+  attackDown: 'Downward attack — a steeper descent adds spin loft and launches the ball higher and shorter.',
+  attackUp:   'Upward attack — a shallower or ascending strike lowers spin loft for a flatter, hotter flight.',
+  loftHigh:   'High dynamic loft — more effective loft at impact climbs the ball steeply.',
+  loftLow:    'Low dynamic loft — less effective loft at impact keeps the ball flight low and driving.',
+  spinLoftHigh: 'High spin loft drives a tall, soft landing shot.',
+  spinLoftLow:  'Low spin loft drives a low, hot, running shot.',
+};
+
+function mainCause(f){
+  const face = state.faceAngle, path = state.clubPath;
+  const f2p = face - path;
+  const startDir = f.startDirection;
+  const spinLoft = f.spinLoft;
+  if (Math.abs(f2p) >= 2){
+    const curveDir = f2p > 0 ? 'right' : 'left';
+    const rel = f2p > 0 ? 'open' : 'closed';
+    return {
+      cause: `Main cause: face ${rel} to path → curves ${curveDir}`,
+      cue: f2p > 0 ? CUES.faceOpen : CUES.faceClosed,
+    };
+  }
+  if (Math.abs(startDir) >= 2){
+    const dir = startDir > 0 ? 'right' : 'left';
+    return {
+      cause: `Main cause: face and path aim ${dir} → straight push/pull`,
+      cue: path > 0 ? CUES.pathRight : (path < 0 ? CUES.pathLeft : (startDir>0?CUES.faceOpen:CUES.faceClosed)),
+    };
+  }
+  if (spinLoft >= 36){
+    return { cause: 'Main cause: high spin loft → high, short flight', cue: CUES.spinLoftHigh };
+  }
+  if (spinLoft <= 24){
+    return { cause: 'Main cause: low spin loft → low, hot flight', cue: CUES.spinLoftLow };
+  }
+  return { cause: 'Neutral delivery — small tweaks, big effects', cue: '' };
+}
+
+function secondaryCue(f){
+  // pick the most relevant single cue for attack/loft context (used to enrich Launch focus)
+  if (state.attackAngle <= -6) return CUES.attackDown;
+  if (state.attackAngle >= 4) return CUES.attackUp;
+  if (state.dynamicLoft >= 40) return CUES.loftHigh;
+  if (state.dynamicLoft <= 18) return CUES.loftLow;
+  return '';
+}
+
+// ── ARROW GEOMETRY (mirrors impact.html conventions) ──────────
+const DIR_PIVOT = { x:200, y:330 };
+const HT_PIVOT  = { x:80,  y:250 };
+const ARROWS = {
+  path:   { pivot:DIR_PIVOT, tipLen:235, group:'g_path', base:-90 },
+  face:   { pivot:DIR_PIVOT, tipLen:235, group:'g_face', base:-90 },
+  attack: { pivot:HT_PIVOT,  tipLen:220, group:'g_attack', base:0 },
+  loft:   { pivot:HT_PIVOT,  tipLen:220, group:'g_loft', base:0 },
+};
+// visual rotation gain (matches impact.html's readable ×2 style feel)
+const ROT_GAIN = 2;
+
+function rotArrow(id, pivot, angDeg){
+  const el = $(id); if (!el) return;
+  el.setAttribute('transform', `rotate(${angDeg.toFixed(2)} ${pivot.x} ${pivot.y})`);
+}
+
+function updateHeroArrows(f){
+  // Direction lens: face/path rotate around DIR_PIVOT, base -90 (pointing up)
+  rotArrow('g_path', DIR_PIVOT, state.clubPath * ROT_GAIN);
+  rotArrow('g_face', DIR_PIVOT, state.faceAngle * ROT_GAIN);
+  // Launch lens: attack/loft rotate around HT_PIVOT, base 0 (pointing right)
+  rotArrow('g_attack', HT_PIVOT, -state.attackAngle * ROT_GAIN);
+  rotArrow('g_loft', HT_PIVOT, -state.dynamicLoft * ROT_GAIN * 0.55);
+  // launch vector (derived, display-only)
+  rotArrow('g_launchVec', HT_PIVOT, -f.launchAngle * ROT_GAIN * 0.55);
+
+  // landing predictor dot (direction lens): map offline to lateral x, small vertical for curve feel
+  const dot = $('predDot'), halo = $('predHalo');
+  if (dot){
+    const clampedOff = Math.max(-60, Math.min(60, f.offline));
+    const x = 200 + clampedOff * 1.1;
+    dot.setAttribute('cx', x); halo.setAttribute('cx', x);
+  }
+  // curve prediction path: ball -> predicted finish
+  const curveEl = $('predCurve');
+  if (curveEl){
+    const clampedOff = Math.max(-60, Math.min(60, f.offline));
+    const endX = 200 + clampedOff * 1.1;
+    curveEl.setAttribute('d', `M200,330 Q${200 + clampedOff*0.5},180 ${endX},52`);
+  }
+  // cone wedge (direction)
+  drawWedge('dirCone', DIR_PIVOT, -90, state.faceAngle*ROT_GAIN, state.clubPath*ROT_GAIN, 235);
+  drawWedge('htCone', HT_PIVOT, 0, -state.attackAngle*ROT_GAIN, -state.dynamicLoft*ROT_GAIN*0.55, 220);
+
+  // trajectory height hint + apex marker (launch lens)
+  const traj = $('trajPath');
+  if (traj){
+    const apexFrac = Math.min(1, f.apex / 44); // 0..1 of max apex
+    const apexY = 250 - apexFrac * 190;
+    const apexX = 80 + (284-80) * 0.55;
+    traj.setAttribute('d', `M80,250 Q${apexX},${apexY} 320,250`);
+    const ap = $('apexDot'), al = $('apexLabel');
+    if (ap){ ap.setAttribute('cx', apexX); ap.setAttribute('cy', apexY); }
+    if (al){ al.setAttribute('x', apexX); al.setAttribute('y', apexY - 8); }
+  }
+}
+
+function drawWedge(pathId, pivot, baseDeg, angA, angB, r){
+  const a = (baseDeg + angA) * Math.PI/180, b = (baseDeg + angB) * Math.PI/180;
+  const ax = pivot.x + Math.cos(a)*r, ay = pivot.y + Math.sin(a)*r;
+  const bx = pivot.x + Math.cos(b)*r, by = pivot.y + Math.sin(b)*r;
+  let d = angB - angA; while (d>180) d-=360; while (d<=-180) d+=360;
+  const sweep = d >= 0 ? 1 : 0;
+  const el = $(pathId); if (!el) return;
+  el.setAttribute('d', `M ${pivot.x} ${pivot.y} L ${ax.toFixed(1)} ${ay.toFixed(1)} A ${r} ${r} 0 0 ${sweep} ${bx.toFixed(1)} ${by.toFixed(1)} Z`);
+}
+
+// mini-panel schematic arrows (simplified, small viewBox 0..200)
+function updateMiniArrows(){
+  // Launch mini (attack/loft), pivot 40,150 base 0
+  rotArrow('g_attackMini', {x:40,y:150}, -state.attackAngle * 1.4);
+  rotArrow('g_loftMini', {x:40,y:150}, -state.dynamicLoft * 1.4 * 0.55);
+  // Direction mini (face/path), pivot 100,180 base -90
+  rotArrow('g_pathMini', {x:100,y:180}, state.clubPath * 1.4);
+  rotArrow('g_faceMini', {x:100,y:180}, state.faceAngle * 1.4);
+}
+
+// ── MAIN UPDATE ─────────────────────────────────────────────────
+function update(){
+  const f = solveFlight(state);
+
+  // mini-value labels
+  $('v_face').textContent = f1(state.faceAngle) + '°';
+  $('v_path').textContent = f1(state.clubPath) + '°';
+  $('v_attack').textContent = f1(state.attackAngle) + '°';
+  $('v_loft').textContent = state.dynamicLoft.toFixed(1) + '°';
+  $('v_speed').textContent = Math.round(state.clubSpeed) + ' mph';
+
+  // chips (mini panels)
+  $('chipFaceVal').textContent = f1(state.faceAngle) + '°';
+  $('chipPathVal').textContent = f1(state.clubPath) + '°';
+  $('chipAttackVal').textContent = f1(state.attackAngle) + '°';
+  $('chipDynLoftVal').textContent = state.dynamicLoft.toFixed(1) + '°';
+
+  // hero results — Direction
+  const f2p = state.faceAngle - state.clubPath;
+  $('hr_f2p').innerHTML = f1(f2p) + '<small>°</small>';
+  $('hr_start').innerHTML = f1(f.startDirection) + '<small>°</small>';
+  $('hr_axis').innerHTML = (f.spinAxis>=0?'+':'') + Math.round(f.spinAxis) + '<small>°</small>';
+  $('hr_curve').innerHTML = f1(f.curve*YD2M) + '<small>m</small>';
+
+  // hero results — Launch
+  $('hr_spinloft').innerHTML = f.spinLoft.toFixed(1) + '<small>°</small>';
+  $('hr_launch').innerHTML = f.launchAngle.toFixed(1) + '<small>°</small>';
+  $('hr_apex').innerHTML = Math.round(f.apex*YD2M) + '<small>m</small>';
+  $('hr_land').innerHTML = Math.round(f.landingAngle) + '<small>°</small>';
+
+  // arrows
+  updateHeroArrows(f);
+  updateMiniArrows();
+
+  // main cause + coach cue (shared logic across all three focuses)
+  const mc = mainCause(f);
+  const sec = secondaryCue(f);
+  $('causeDir').textContent = mc.cause;
+  $('cueDir').textContent = mc.cue || sec;
+  $('causeLaunch').textContent = mc.cause;
+  $('cueLaunch').textContent = sec || mc.cue;
+  $('causeFlight').textContent = mc.cause;
+  $('cueFlight').textContent = mc.cue || sec;
+}
+
+// ── FOCUS SWITCHING ─────────────────────────────────────────────
+const panels = { direction: $('panelDir'), launch: $('panelLaunch'), flight: $('panelFlight') };
+const segBtns = { direction: $('segDir'), launch: $('segLaunch'), flight: $('segFlight') };
+
+function setFocus(next){
+  if (next === focus) return;
+  focus = next;
+  Object.entries(panels).forEach(([key, el]) => {
+    el.classList.toggle('active', key === next);
+  });
+  Object.entries(segBtns).forEach(([key, btn]) => {
+    btn.setAttribute('aria-pressed', key === next ? 'true' : 'false');
+  });
+}
+
+$('segDir').addEventListener('click', () => setFocus('direction'));
+$('segLaunch').addEventListener('click', () => setFocus('launch'));
+$('segFlight').addEventListener('click', () => setFocus('flight'));
+
+$('mpLaunch').addEventListener('click', () => setFocus('launch'));
+$('mpDir').addEventListener('click', () => setFocus('direction'));
+
+// chips inside mini panels also switch focus (and stop propagation isn't needed since
+// they live inside the miniPanel button — but chips are spans w/ tabindex, so give them
+// their own activation for keyboard users, plus click already bubbles to miniPanel).
+function chipActivate(chipId, targetFocus){
+  const el = $(chipId);
+  if (!el) return;
+  el.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' '){
+      e.preventDefault();
+      setFocus(targetFocus);
+    }
+  });
+}
+chipActivate('chipAttack', 'launch');
+chipActivate('chipDynLoft', 'launch');
+chipActivate('chipFace', 'direction');
+chipActivate('chipPath', 'direction');
+
+$('playFlightBtn').addEventListener('click', () => {
+  // mock affordance only — in the real app this opens the existing Play-flight overlay
+  $('playFlightBtn').animate(
+    [{ transform:'translate(-50%,-50%) scale(1)' }, { transform:'translate(-50%,-50%) scale(.94)' }, { transform:'translate(-50%,-50%) scale(1)' }],
+    { duration: reduce ? 0 : 220, easing:'ease-out' }
+  );
+});
+
+// ── PREMIUM SLIDER SETUP (mirrors impact.html's setupPremiumSliders) ──
+const TRACK_BASE = 'rgba(255,255,255,.14)';
+const SLIDER_CFG = {
+  s_face:   { signed:true,  key:'faceAngle' },
+  s_path:   { signed:true,  key:'clubPath' },
+  s_attack: { signed:true,  key:'attackAngle' },
+  s_loft:   { signed:false, key:'dynamicLoft' },
+  s_speed:  { signed:false, key:'clubSpeed' },
+};
+function setupSlider(id, cfg){
+  const el = $(id); if (!el) return;
+  const wrap = el.closest('.rwrap');
+  const bubble = wrap ? wrap.querySelector('.rbubble') : null;
+  const frac = () => {
+    const min=+el.min, max=+el.max;
+    return (max===min) ? 0 : ((+el.value - min) / (max - min));
+  };
+  const paint = () => {
+    const t = Math.max(0, Math.min(1, frac())) * 100;
+    let g;
+    if (cfg.signed){
+      const c = 50;
+      g = t >= c
+        ? `linear-gradient(90deg, ${TRACK_BASE} 0 ${c}%, var(--rc) ${c}% ${t}%, ${TRACK_BASE} ${t}% 100%)`
+        : `linear-gradient(90deg, ${TRACK_BASE} 0 ${t}%, var(--rc) ${t}% ${c}%, ${TRACK_BASE} ${c}% 100%)`;
+    } else {
+      g = `linear-gradient(90deg, var(--rc) 0 ${t}%, ${TRACK_BASE} ${t}% 100%)`;
+    }
+    el.style.setProperty('--rf', g);
+  };
+  const THUMB = 20;
+  const placeBubble = () => {
+    if (!bubble) return;
+    const w = el.clientWidth || el.getBoundingClientRect().width || 1;
+    const f = Math.max(0, Math.min(1, frac()));
+    const x = THUMB/2 + f * (w - THUMB);
+    bubble.style.left = x + 'px';
+    bubble.textContent = (cfg.key==='dynamicLoft' ? (+el.value).toFixed(1)+'°'
+      : cfg.key==='clubSpeed' ? Math.round(+el.value)+' mph'
+      : f1(+el.value)+'°');
+  };
+  const refresh = () => { paint(); placeBubble(); };
+  refresh();
+  let bubbleTimer = null;
+  const showBubble = () => { clearTimeout(bubbleTimer); wrap && wrap.classList.add('bubble-show','dragging'); };
+  const hideBubbleSoon = () => {
+    wrap && wrap.classList.remove('dragging');
+    clearTimeout(bubbleTimer);
+    bubbleTimer = setTimeout(()=> wrap && wrap.classList.remove('bubble-show'), 700);
+  };
+  el.addEventListener('input', ()=>{
+    state[cfg.key] = +el.value;
+    refresh();
+    update();
+    showBubble();
+  });
+  el.addEventListener('pointerdown', showBubble);
+  el.addEventListener('pointerup', hideBubbleSoon);
+  el.addEventListener('pointercancel', hideBubbleSoon);
+  el.addEventListener('keydown', showBubble);
+  el.addEventListener('keyup', hideBubbleSoon);
+  el.addEventListener('blur', ()=>{ wrap && wrap.classList.remove('dragging','bubble-show'); });
+  window.addEventListener('resize', refresh);
+}
+Object.entries(SLIDER_CFG).forEach(([id, cfg]) => setupSlider(id, cfg));
+
+// initial paint
+update();
+</script>
+</body>
+</html>

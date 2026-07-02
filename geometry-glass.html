@@ -1,0 +1,1005 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="robots" content="noindex" />
+<title>Swing-arc simulator</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2052%2052'%20fill='none'%3E%3Cpath%20d='M11%2045%20C%2016%2026,%2024%2018,%2035%2015%20M21%2039%20L%2030%2024%20L%2043%2045'%20stroke='%2322E3D6'%20stroke-width='4.2'%20stroke-linecap='round'%20stroke-linejoin='round'/%3E%3Ccircle%20cx='37'%20cy='15'%20r='5.2'%20fill='%2322E3D6'/%3E%3C/svg%3E" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="preconnect" href="https://api.fontshare.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&display=swap" rel="stylesheet" />
+<link href="https://api.fontshare.com/v2/css?f[]=hanken-grotesk@400,500,600,700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="./sa-glass.css" />
+<style>
+  :root{
+    /* ── Tactile Glass · dusk palette (cyan kept, violet added) ── */
+    --accent:#22E3D6; --accent-soft:rgba(34,227,214,.16); --accent-line:rgba(34,227,214,.55);
+    --violet:#8b7bff; --violet-glow:rgba(139,123,255,.45); --amber:#ffb45c;
+    --ink:#f4fbff; --muted:#9cb3c4;                     /* brighter dusk ink + AA muted on glass */
+    --bg:#06121b; --bg-top:#0A1C29; --bg-2:#10283a; --indigo-deep:#161a44;
+    /* glass material tokens */
+    --glass-blur:22px; --glass-alpha:rgba(255,255,255,.07);
+    --glass-surface:rgba(255,255,255,.07); --glass-surface-2:rgba(255,255,255,.12);
+    --glass-plate:rgba(8,18,28,.80);
+    --glass-border:rgba(255,255,255,.16); --glass-sheen:rgba(255,255,255,.22);
+    --glass-inset:inset 0 1px 0 0 rgba(255,255,255,.22);
+    --glass-glow:rgba(34,227,214,.30); --cyan-glow:rgba(34,227,214,.55); --on-cyan:#04222a;
+    --panel:rgba(8,18,28,.74); --line:rgba(255,255,255,.30);  /* opaque-ish plate for text AA */
+    --radius-pill:999px; --radius-card:16px; --radius-control:12px;
+    --blur-surface:22px; --blur-overlay:22px;
+    --display:"Bricolage Grotesque",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    --body:"Hanken Grotesk","Bricolage Grotesque",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;overflow:hidden}
+  body{
+    /* dusk teal → indigo layered atmosphere with soft cyan/violet orbs */
+    background:
+      radial-gradient(46vmax 46vmax at 6% 0%, var(--glass-glow), transparent 62%),
+      radial-gradient(40vmax 40vmax at 94% 6%, var(--violet-glow), transparent 60%),
+      radial-gradient(120% 120% at 50% 112%, rgba(22,26,68,.85), transparent 60%),
+      linear-gradient(165deg, var(--bg), var(--bg-top) 45%, var(--bg-2));
+    color:var(--ink);
+    font-family:var(--body);
+    -webkit-tap-highlight-color:transparent;
+  }
+  /* subtle film grain over the atmosphere (behind the scene) */
+  body::before{
+    content:"";position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.05;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  .stage{position:fixed;inset:0;overflow:hidden;z-index:1}
+  svg#scene{display:block;width:100%;height:100%}
+  #clubCanvas{position:fixed;inset:0;width:100%;height:100%;z-index:1;pointer-events:none}
+  .label{font-size:12px;fill:var(--muted);font-family:inherit;font-variant-numeric:tabular-nums}
+
+  /* overlays */
+  .title{position:fixed;top:max(10px,env(safe-area-inset-top));left:max(14px,env(safe-area-inset-left));z-index:3;pointer-events:none}
+  .title h1{font-family:var(--display);font-size:14px;font-weight:700;letter-spacing:-.01em}
+  .title p{color:var(--muted);font-size:11px;margin-top:1px}
+
+  /* ── module nav (top-left, thin strip — shared with Impact) ──── */
+  .modnav{position:fixed;top:max(8px,env(safe-area-inset-top));left:max(10px,env(safe-area-inset-left));z-index:5;
+    display:flex;align-items:center;gap:4px;view-transition-name:sa-nav;
+    background:var(--glass-alpha);
+    -webkit-backdrop-filter:blur(var(--glass-blur)) saturate(1.4);backdrop-filter:blur(var(--glass-blur)) saturate(1.4);
+    border:1px solid var(--glass-border);border-radius:14px;padding:3px;
+    box-shadow:0 12px 36px -16px rgba(0,0,0,.55), inset 0 1px 0 0 var(--glass-sheen)}
+  .modnav a{
+    -webkit-tap-highlight-color:transparent;text-decoration:none;color:var(--muted);
+    border:1px solid transparent;border-radius:8px;
+    min-height:44px;display:inline-flex;align-items:center;justify-content:center;
+    font-size:13px;font-weight:600;line-height:1;padding:0 12px;
+    transition:background .2s,border-color .2s,color .2s;
+  }
+  .modnav a.home{width:44px;padding:0;font-size:17px}
+  .modnav a:hover{background:rgba(255,255,255,.08);color:var(--ink)}
+  .modnav a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .modnav a[aria-current="page"]{
+    color:var(--accent);border-color:var(--accent-line);background:var(--accent-soft);
+  }
+
+  .controls{position:fixed;top:max(10px,env(safe-area-inset-top));right:max(12px,env(safe-area-inset-right));z-index:4;display:flex;gap:8px}
+  button{
+    background:var(--glass-alpha);-webkit-backdrop-filter:blur(var(--glass-blur)) saturate(1.4);backdrop-filter:blur(var(--glass-blur)) saturate(1.4);
+    color:var(--ink);border:1px solid var(--glass-border);width:44px;height:44px;border-radius:var(--radius-pill);
+    font-size:17px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center;
+    box-shadow:0 12px 36px -16px rgba(0,0,0,.55), inset 0 1px 0 0 var(--glass-sheen);
+    transition:background .2s,border-color .2s,transform .1s;
+  }
+  button svg{width:20px;height:20px;display:block}
+  button:hover{background:rgba(255,255,255,.13);border-color:rgba(255,255,255,.3)}
+  button:active{transform:translateY(1px)}
+  button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  button[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+  #hit{color:var(--accent);border-color:var(--accent-line)}
+  #hit:hover{background:var(--accent-soft);border-color:var(--accent)}
+
+  /* strike readout */
+  .readout{
+    position:fixed;left:max(14px,env(safe-area-inset-left));bottom:max(14px,env(safe-area-inset-bottom));z-index:3;
+    width:min(42vw,300px);background:var(--panel);-webkit-backdrop-filter:blur(var(--blur-surface)) saturate(1.4);backdrop-filter:blur(var(--blur-surface)) saturate(1.4);
+    border:1px solid var(--glass-border);border-radius:var(--radius-card);padding:12px 14px;display:flex;gap:12px;align-items:flex-start;
+    box-shadow:inset 0 1px 0 0 var(--glass-sheen), 0 24px 60px -24px rgba(0,0,0,.65);
+  }
+  .readout::before,.tune::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+    background:linear-gradient(180deg,rgba(255,255,255,.12),transparent 26%);mix-blend-mode:screen}
+  .readout .col{flex:1;min-width:0;position:relative;z-index:1}
+  .verdict{display:flex;align-items:center;gap:8px}
+  .verdict .dot{width:12px;height:12px;border-radius:var(--radius-pill);background:var(--muted);flex:none;box-shadow:0 0 10px currentColor}
+  .verdict #band{font-family:var(--display);font-size:18px;font-weight:700;letter-spacing:-.01em}
+  .verdict #pct{margin-left:auto;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+  #tip{font-size:11.5px;color:var(--muted);margin-top:4px;line-height:1.35}
+  .ballcloseup{width:84px;height:84px;flex:none}
+
+  /* tune sheet */
+  .tune{
+    position:fixed;right:max(12px,env(safe-area-inset-right));bottom:max(14px,env(safe-area-inset-bottom));z-index:3;
+    width:min(36vw,260px);max-width:calc(100vw - min(42vw,300px) - 40px);
+    background:var(--panel);-webkit-backdrop-filter:blur(var(--blur-surface)) saturate(1.4);backdrop-filter:blur(var(--blur-surface)) saturate(1.4);
+    border:1px solid var(--glass-border);border-radius:var(--radius-card);padding:12px 14px;
+    box-shadow:inset 0 1px 0 0 var(--glass-sheen), 0 24px 60px -24px rgba(0,0,0,.65);
+    transition:opacity .2s,transform .2s;
+  }
+  .tune[hidden]{display:none}
+  .tune h2{position:relative;z-index:1;font-family:var(--display);font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px;letter-spacing:.02em;text-transform:uppercase}
+  .row{position:relative;z-index:1;margin-bottom:9px}
+  .row:last-child{margin-bottom:0}
+  .row .top{display:flex;justify-content:space-between;font-size:12px;margin-bottom:2px}
+  .row .top .val{color:var(--accent);font-variant-numeric:tabular-nums}
+  input[type=range]{width:100%;accent-color:var(--accent);height:22px}
+  input[type=range]:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+
+  /* rotate hint */
+  .rotate{position:fixed;inset:0;z-index:9;display:none;flex-direction:column;align-items:center;justify-content:center;
+    gap:14px;background:linear-gradient(165deg, var(--bg), var(--bg-top) 45%, var(--bg-2));text-align:center;padding:24px}
+  .rotate .ico{font-size:46px;animation:tilt 1.8s ease-in-out infinite}
+  .rotate p{font-size:15px;max-width:240px}
+  @keyframes tilt{0%,100%{transform:rotate(-12deg)}50%{transform:rotate(78deg)}}
+  @media (orientation:portrait){.rotate{display:flex}}
+  @media (max-width:560px){.readout{width:min(50vw,260px)} .tune{width:min(40vw,220px)}}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+  /* drop the heavier turf/soil texture filters when the user asks to save data */
+  @media (prefers-reduced-data:reduce){#grassTop,#grassBand,#soilBand{filter:none}}
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+</style>
+</head>
+<body>
+  <div class="stage">
+    <svg id="scene" viewBox="0 0 960 480" preserveAspectRatio="xMidYMid meet" role="img"
+         aria-label="Interactive golf swing arc. Adjust swing radius, plane angle, club path and low point; see how the clubhead strikes the ball — ahead of or behind the ball, and where on the ball — in a swing plane that leans back.">
+      <defs>
+        <!-- richer multi-stop turf gradient (sunlit top → shaded base) -->
+        <!-- calm, low-saturation dark turf so the ground recedes and the cyan arc/club read clearly -->
+        <linearGradient id="grass" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#1f3530"/><stop offset="0.35" stop-color="#192c28"/>
+          <stop offset="0.72" stop-color="#13231f"/><stop offset="1" stop-color="#0e1b18"/>
+        </linearGradient>
+        <!-- layered soil gradient (topsoil → subsoil → deep) -->
+        <linearGradient id="soil" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#7a5232"/><stop offset="0.28" stop-color="#624025"/>
+          <stop offset="0.6" stop-color="#4a3119"/><stop offset="1" stop-color="#2e1d0d"/>
+        </linearGradient>
+        <radialGradient id="ballGrad" cx="38%" cy="32%" r="75%">
+          <stop offset="0" stop-color="#ffffff"/><stop offset="0.7" stop-color="#e7ecf2"/><stop offset="1" stop-color="#b9c3cf"/>
+        </radialGradient>
+        <linearGradient id="arcGrad" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#7ff4eb"/><stop offset="1" stop-color="#15b9ad"/>
+        </linearGradient>
+        <linearGradient id="glassGrad" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stop-color="rgba(255,255,255,.07)"/><stop offset="0.5" stop-color="rgba(120,190,255,.025)"/><stop offset="1" stop-color="rgba(255,255,255,.045)"/>
+        </linearGradient>
+
+        <!-- dusk sky harmonised to the Tactile Glass atmosphere: indigo zenith → dusk teal horizon -->
+        <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#0b1430"/><stop offset="0.45" stop-color="#0a1c29"/>
+          <stop offset="0.78" stop-color="#10283a"/><stop offset="1" stop-color="#173a4a"/>
+        </linearGradient>
+        <!-- soft horizon haze band sitting just above the turf line -->
+        <linearGradient id="hazeGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="rgba(120,170,210,0)"/>
+          <stop offset="0.55" stop-color="rgba(150,190,225,.10)"/>
+          <stop offset="1" stop-color="rgba(170,205,235,.18)"/>
+        </linearGradient>
+        <!-- subtle corner vignette overlay -->
+        <radialGradient id="vignetteGrad" cx="50%" cy="42%" r="72%">
+          <stop offset="0" stop-color="rgba(0,0,0,0)"/>
+          <stop offset="0.72" stop-color="rgba(0,0,0,0)"/>
+          <stop offset="1" stop-color="rgba(0,0,0,.42)"/>
+        </radialGradient>
+
+        <!-- STATIC turf texture: blade-like fibrous turbulence, lit then tinted green.
+             Applied only to non-animated ground elements. -->
+        <filter id="grassTex" x="-5%" y="-5%" width="110%" height="120%" color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="0.012 0.16" numOctaves="3" seed="7" stitchTiles="stitch" result="n"/>
+          <feColorMatrix in="n" type="matrix" result="a"
+            values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0.16 0 0 0 0"/>
+          <feComponentTransfer in="a" result="a2"><feFuncA type="gamma" amplitude="1" exponent="1.8" offset="0"/></feComponentTransfer>
+          <feComposite in="a2" in2="SourceGraphic" operator="in" result="tex"/>
+          <feMerge><feMergeNode in="SourceGraphic"/><feMergeNode in="tex"/></feMerge>
+        </filter>
+        <!-- STATIC soil texture: grainy speckle for the cut-face dirt band. -->
+        <filter id="soilTex" x="-5%" y="-5%" width="110%" height="120%" color-interpolation-filters="sRGB">
+          <feTurbulence type="fractalNoise" baseFrequency="0.5 0.55" numOctaves="2" seed="13" stitchTiles="stitch" result="n"/>
+          <feColorMatrix in="n" type="matrix" result="a"
+            values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0.7 0 0 0 0"/>
+          <feComposite in="a" in2="SourceGraphic" operator="in" result="tex"/>
+          <feBlend in="SourceGraphic" in2="tex" mode="overlay"/>
+        </filter>
+      </defs>
+
+      <!-- premium sky backdrop + horizon haze + vignette (static, behind the scene) -->
+      <g id="skyLayer" aria-hidden="true">
+        <rect x="-60" y="-60" width="1080" height="540" fill="url(#skyGrad)"/>
+        <rect x="-60" y="300" width="1080" height="110" fill="url(#hazeGrad)"/>
+        <rect x="-60" y="-60" width="1080" height="540" fill="url(#vignetteGrad)" style="mix-blend-mode:multiply"/>
+      </g>
+
+      <!-- ground: 3D receding grass surface (DTL) cross-faded with flat layered bands (face-on) -->
+      <polygon id="grassTop" fill="url(#grass)" filter="url(#grassTex)"/>
+      <g id="crossSection">
+        <rect id="soilBand" x="-60" y="425" width="1080" height="160" fill="url(#soil)" filter="url(#soilTex)"/>
+        <rect id="grassBand" x="-60" y="403" width="1080" height="22" fill="url(#grass)" filter="url(#grassTex)"/>
+        <rect x="-60" y="423" width="1080" height="2" fill="rgba(0,0,0,.28)"/>
+        <rect x="-60" y="403" width="1080" height="2" fill="rgba(255,255,255,.14)"/>
+      </g>
+
+      <polygon id="plane" fill="url(#glassGrad)" stroke="rgba(255,255,255,.12)" stroke-width="1" stroke-linejoin="round"/>
+      <g id="planeGrid" stroke="rgba(255,255,255,.045)" stroke-width="1"></g>
+      <line id="planeLine" stroke="rgba(255,255,255,.18)" stroke-width="2" stroke-dasharray="6 8"/>
+      <text id="planeLabel" class="label">60° plane</text>
+
+      <!-- low-point marker (where the arc bottoms) -->
+      <line id="lpTick" stroke="rgba(255,255,255,.35)" stroke-width="1.5" stroke-dasharray="3 4"/>
+      <circle id="lpMark" r="5" fill="none" stroke="#a99bff" stroke-width="2"/>
+
+      <ellipse id="divot" rx="30" ry="8" fill="#3a2614" opacity="0"/>
+      <ellipse id="ballShadow" rx="22" ry="6" fill="rgba(0,0,0,.35)"/>
+
+      <!-- glow underlay (cheap: wide translucent stroke, no SVG filter) -->
+      <path id="arcGlow" fill="none" stroke="#15b9ad" stroke-width="16" stroke-linecap="round" opacity="0.22"/>
+      <path id="arc" fill="none" stroke="url(#arcGrad)" stroke-width="6" stroke-linecap="round"/>
+
+      <line id="shaft" stroke="#cdd7e3" stroke-width="3.5" stroke-linecap="round"/>
+      <circle id="clubheadHalo" r="18" fill="var(--accent)" fill-opacity="0.25"/>
+      <circle id="clubhead" r="10" fill="#fff"/>
+      <circle id="hub" r="4.5" fill="rgba(255,255,255,.5)"/>
+      <circle id="ball" r="16" fill="url(#ballGrad)"/>
+
+      <!-- impact direction vector: attack angle + club path (quiet on-palette baseline;
+           hidden while the labelled impact emphasis arrows are shown) -->
+      <line id="dirVec" stroke="#7e8da7" stroke-width="4" stroke-linecap="round"/>
+      <polygon id="dirHead" fill="#7e8da7"/>
+      <text id="dirLabel" font-size="13" font-weight="600" fill="#b3bed1" font-family="inherit" style="font-variant-numeric:tabular-nums"></text>
+
+      <circle id="pulse" r="0" fill="none" stroke-width="3" opacity="0" aria-hidden="true"/>
+      <g id="debris" aria-hidden="true"></g>
+
+      <!-- impact emphasis arrows (animate IN at impact): horizontal PATH + vertical ATTACK,
+           with degree labels. Kept inside the scene viewBox by rebuildImpactArrows(). -->
+      <g id="impactArrows" opacity="0" aria-hidden="true">
+        <line id="pathArrow" stroke="#22E3D6" stroke-width="4" stroke-linecap="round"/>
+        <polygon id="pathHead" fill="#22E3D6"/>
+        <g id="pathChip">
+          <rect id="pathChipBg" rx="6" ry="6" fill="rgba(8,18,28,.82)" stroke="#22E3D6" stroke-opacity=".55"/>
+          <text id="pathChipTx" font-size="13" font-weight="700" fill="#bff6f1" font-family="inherit" style="font-variant-numeric:tabular-nums" text-anchor="middle" dominant-baseline="middle"></text>
+        </g>
+        <line id="atkArrow" stroke="#ffb347" stroke-width="4" stroke-linecap="round"/>
+        <polygon id="atkHead" fill="#ffb347"/>
+        <g id="atkChip">
+          <rect id="atkChipBg" rx="6" ry="6" fill="rgba(8,18,28,.82)" stroke="#ffb347" stroke-opacity=".55"/>
+          <text id="atkChipTx" font-size="13" font-weight="700" fill="#ffe0bb" font-family="inherit" style="font-variant-numeric:tabular-nums" text-anchor="middle" dominant-baseline="middle"></text>
+        </g>
+      </g>
+
+      <!-- persistent in-canvas readout chips (top-centre inside the scene, clear of
+           the top-left title and top-right control buttons) -->
+      <g id="canvasChips" aria-hidden="true">
+        <g id="chipAtk" transform="translate(386,16)">
+          <rect width="92" height="24" rx="7" ry="7" fill="rgba(8,18,28,.78)" stroke="#ffb347" stroke-opacity=".5"/>
+          <circle cx="12" cy="12" r="3.2" fill="#ffb347"/>
+          <text x="22" y="13" font-size="12" font-weight="700" fill="#ffe0bb" font-family="inherit" style="font-variant-numeric:tabular-nums" dominant-baseline="middle">ATTACK —</text>
+        </g>
+        <g id="chipPath" transform="translate(484,16)">
+          <rect width="92" height="24" rx="7" ry="7" fill="rgba(8,18,28,.78)" stroke="#22E3D6" stroke-opacity=".5"/>
+          <circle cx="12" cy="12" r="3.2" fill="#22E3D6"/>
+          <text x="22" y="13" font-size="12" font-weight="700" fill="#bff6f1" font-family="inherit" style="font-variant-numeric:tabular-nums" dominant-baseline="middle">PATH —</text>
+        </g>
+      </g>
+    </svg>
+  </div>
+
+  <canvas id="clubCanvas"></canvas>
+
+  <p id="sceneData" class="sr-only" aria-live="polite" aria-atomic="true">Swing arc loading.</p>
+
+  <nav class="modnav" aria-label="Modules">
+    <a class="home" href="./index-glass.html" aria-label="Home"><svg width="22" height="22" viewBox="0 0 52 52" fill="none" aria-hidden="true"><path d="M11 45 C 16 26, 24 18, 35 15 M21 39 L 30 24 L 43 45" stroke="currentColor" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="37" cy="15" r="5.2" fill="currentColor"/></svg></a>
+    <a class="tab" href="./geometry-glass.html" aria-current="page">Geometry</a>
+    <a class="tab" href="./impact-glass.html">Impact</a>
+  </nav>
+
+  <div class="controls">
+    <button id="viewBtn" aria-pressed="false" aria-label="Switch perspective: front or down-the-line" title="Front / Down-the-line">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a1 1 0 0 1 1-1h9a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><path d="M14 10l5.4-3.1a1 1 0 0 1 1.5.87v8.46a1 1 0 0 1-1.5.87L14 14z"/></svg>
+    </button>
+    <button id="tuneBtn" aria-pressed="false" aria-label="Show/hide parameters" title="Parameters">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="4" y1="7" x2="20" y2="7"/><circle cx="9" cy="7" r="2.4" fill="var(--panel)"/><line x1="4" y1="17" x2="20" y2="17"/><circle cx="15" cy="17" r="2.4" fill="var(--panel)"/></svg>
+    </button>
+    <button id="strikeBtn" aria-pressed="true" aria-label="Show/hide strike result" title="Strike">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1" fill="currentColor"/></svg>
+    </button>
+    <button id="hit" aria-label="Hit – play the swing" title="Hit">
+      <svg viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><path d="M8 5.5v13a1 1 0 0 0 1.5.87l11-6.5a1 1 0 0 0 0-1.74l-11-6.5A1 1 0 0 0 8 5.5z"/></svg>
+    </button>
+    <button id="helpBtn" class="sa-help" aria-label="Replay the walkthrough" title="Help">?</button>
+  </div>
+
+  <aside class="readout" aria-live="polite" aria-label="Strike result">
+    <div class="col">
+      <div class="verdict"><span class="dot" id="dot"></span><span id="band">Pure</span><span id="pct">100%</span></div>
+      <p id="tip">—</p>
+    </div>
+    <svg class="ballcloseup" viewBox="0 0 120 120" aria-hidden="true">
+      <line x1="6" y1="100" x2="114" y2="100" stroke="rgba(255,255,255,.25)" stroke-width="2"/>
+      <circle cx="60" cy="66" r="34" fill="url(#ballGrad)"/>
+      <line id="cuLine" x1="14" y1="66" x2="106" y2="66" stroke="var(--muted)" stroke-width="3" stroke-linecap="round"/>
+      <text id="cuLabel" x="60" y="116" text-anchor="middle" class="label" font-size="11">center</text>
+    </svg>
+  </aside>
+
+  <div class="tune" id="tune" hidden>
+    <h2>Parameters</h2>
+    <div class="row">
+      <div class="top"><label for="s_radius">Swing radius</label><span class="val" id="v_radius"></span></div>
+      <input type="range" id="s_radius" min="0.9" max="1.5" step="0.01">
+    </div>
+    <div class="row">
+      <div class="top"><label for="s_plane">Plane angle</label><span class="val" id="v_plane"></span></div>
+      <input type="range" id="s_plane" min="45" max="70" step="1">
+    </div>
+    <div class="row">
+      <div class="top"><label for="s_dir">Direction</label><span class="val" id="v_dir"></span></div>
+      <input type="range" id="s_dir" min="-8" max="8" step="0.5">
+    </div>
+    <div class="row">
+      <div class="top"><label for="s_lpx">Low point (ahead/behind ball)</label><span class="val" id="v_lpx"></span></div>
+      <input type="range" id="s_lpx" min="-0.10" max="0.15" step="0.005">
+    </div>
+    <div class="row">
+      <div class="top"><label for="s_lpz">Strike depth (fat/thin)</label><span class="val" id="v_lpz"></span></div>
+      <input type="range" id="s_lpz" min="-0.05" max="0.05" step="0.002">
+    </div>
+  </div>
+
+  <div class="rotate" role="status">
+    <div class="ico" aria-hidden="true">📱</div>
+    <p>Rotate your phone to landscape</p>
+  </div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="./sa-firstrun.js" defer></script>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+}}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import {
+  RADIUS, PLANE_DEFAULT, BALL_RADIUS_M, deg2rad, CAMS,
+  buildCamera, buildCameraFromCam, lerpCam, project, arcPosition, shaftPivot, buildPlanePolygon,
+  lpWorld, effectiveLpx, thetaAtImpact, tangentAt,
+  strikeQuality, deriveImpact, clubBallContact,
+} from './swing-parameters-and-impact.js';
+
+const $ = id => document.getElementById(id);
+const NS = 'http://www.w3.org/2000/svg';
+const VBW = 960, VBH = 480, groundY = 403;
+const SWEEP = deg2rad(90), SN = 140, MX = 110, MTOP = 78;  // margins: whole swing small + airy, not cut
+
+// live swing state
+const state = {
+  view: 'face', radius: RADIUS, planeAngle: 60, swingDirection: 0,
+  lowPoint: { x: 0.04, y: 0, z: 0.016 },   // starts ~Pure
+};
+
+const els = {
+  arc: $('arc'), arcGlow: $('arcGlow'), shaft: $('shaft'),
+  clubhead: $('clubhead'), halo: $('clubheadHalo'), hub: $('hub'),
+  ball: $('ball'), ballShadow: $('ballShadow'), plane: $('plane'),
+  planeGrid: $('planeGrid'), planeLine: $('planeLine'), planeLabel: $('planeLabel'),
+  glassGrad: $('glassGrad'), lpTick: $('lpTick'), lpMark: $('lpMark'),
+  divot: $('divot'), debris: $('debris'),
+  dirVec: $('dirVec'), dirHead: $('dirHead'), dirLabel: $('dirLabel'),
+  grassTop: $('grassTop'), crossSection: $('crossSection'), pulse: $('pulse'),
+  // impact emphasis arrows + persistent chips (Phase C)
+  impactArrows: $('impactArrows'),
+  pathArrow: $('pathArrow'), pathHead: $('pathHead'),
+  pathChip: $('pathChip'), pathChipBg: $('pathChipBg'), pathChipTx: $('pathChipTx'),
+  atkArrow: $('atkArrow'), atkHead: $('atkHead'),
+  atkChip: $('atkChip'), atkChipBg: $('atkChipBg'), atkChipTx: $('atkChipTx'),
+  chipAtkTx: $('chipAtk').querySelector('text'), chipPathTx: $('chipPath').querySelector('text'),
+};
+
+let arcFit = [];     // precomputed clubhead screen points (perf: no getPointAtLength)
+let L = 0;           // arc path length
+let curBasis = null; // current scene camera basis (for true 3D club orientation in the plane)
+const _nrm = d => { const m = Math.hypot(d.x, d.y, d.z) || 1; return { x: d.x / m, y: d.y / m, z: d.z / m }; };
+const _dot = (a, b) => a.x * b.x + a.y * b.y + a.z * b.z;
+const _crs = (a, b) => ({ x: a.y * b.z - a.z * b.y, y: a.z * b.x - a.x * b.z, z: a.x * b.y - a.y * b.x });
+let ballScreen = { x: VBW / 2, y: groundY };
+let lowPtScreen = { x: VBW / 2, y: groundY };   // projected low-point (true divot/ground-contact location)
+let hubScreen = { x: VBW / 2, y: 120 }, clubVbSize = 22, curFaceness = 1, clubReady = false, ballPxM = 10;
+
+// ── fit helpers (decoupled from projection so the orbit can interpolate fit) ─
+function computeFit(arcRaw, planeRaw, groundRaw) {
+  let minX = Infinity, maxX = -Infinity, minY = Infinity;
+  arcRaw.concat(planeRaw).forEach(p => { if (p) {
+    if (p.x < minX) minX = p.x; if (p.x > maxX) maxX = p.x; if (p.y < minY) minY = p.y;
+  }});
+  const scale = Math.min((VBW - 2 * MX) / (maxX - minX), (groundY - MTOP) / (groundRaw.y - minY));
+  return { scale, cx: (minX + maxX) / 2, gY: groundRaw.y };
+}
+const lerpFit = (a, b, t) => ({
+  scale: a.scale + (b.scale - a.scale) * t, cx: a.cx + (b.cx - a.cx) * t, gY: a.gY + (b.gY - a.gY) * t,
+});
+function fitFor(cam) {
+  const basis = buildCameraFromCam(cam, { w: 1000, h: 1000 });
+  const raw = p => project(p, basis);
+  const arcRaw = [];
+  for (let i = 0; i <= SN; i++) arcRaw.push(raw(arcPosition(-SWEEP + 2 * SWEEP * i / SN, state)));
+  return computeFit(arcRaw, buildPlanePolygon(state).map(raw), raw({ x: 0, y: 0, z: 0 }));
+}
+
+// ── geometry rebuild ────────────────────────────────────────────────────
+function rebuild(cam = CAMS[state.view], fitOverride = null, faceness = (state.view === 'face' ? 1 : 0)) {
+  curFaceness = faceness;
+  const basis = buildCameraFromCam(cam, { w: 1000, h: 1000 });
+  curBasis = basis;
+  const raw = p => project(p, basis);
+
+  const arcRaw = [];
+  for (let i = 0; i <= SN; i++) {
+    const t = -SWEEP + (2 * SWEEP) * (i / SN);
+    arcRaw.push(raw(arcPosition(t, state)));
+  }
+  const planeRaw = buildPlanePolygon(state).map(raw);
+  const groundRaw = raw({ x: 0, y: 0, z: 0 });
+
+  const fitS = fitOverride || computeFit(arcRaw, planeRaw, groundRaw);
+  const fit = p => ({ x: (p.x - fitS.cx) * fitS.scale + VBW / 2, y: (p.y - fitS.gY) * fitS.scale + groundY });
+  const proj = p => fit(raw(p));
+
+  // ground: 3D receding grass surface (DTL) cross-faded with flat layered bands (face-on)
+  const G = { xMin: -3, xMax: 3, yNear: -0.6, yFar: 4 };
+  const gTop = [{x:G.xMin,y:G.yNear,z:0},{x:G.xMax,y:G.yNear,z:0},{x:G.xMax,y:G.yFar,z:0},{x:G.xMin,y:G.yFar,z:0}].map(c => fit(raw(c)));
+  els.grassTop.setAttribute('points', gTop.every(Boolean) ? gTop.map(p => p.x.toFixed(1) + ',' + p.y.toFixed(1)).join(' ') : '');
+  els.grassTop.style.opacity = (1 - faceness).toFixed(3);   // receding grass shows in DTL
+  els.crossSection.style.opacity = faceness.toFixed(3);     // flat grass+soil layers show face-on
+
+  // arc
+  arcFit = arcRaw.map(fit);
+  let d = '';
+  arcFit.forEach((p, i) => { d += (i === 0 ? 'M' : 'L') + p.x.toFixed(2) + ' ' + p.y.toFixed(2) + ' '; });
+  els.arc.setAttribute('d', d); els.arcGlow.setAttribute('d', d);
+  L = els.arc.getTotalLength();
+  els.arc.style.strokeDasharray = L; els.arcGlow.style.strokeDasharray = L;
+
+  // glass plane + grid
+  const pf = planeRaw.map(fit);
+  els.plane.setAttribute('points', pf.map(p => p.x.toFixed(1) + ',' + p.y.toFixed(1)).join(' '));
+  els.glassGrad.setAttribute('x1', VBW / 2); els.glassGrad.setAttribute('y1', pf[3].y);
+  els.glassGrad.setAttribute('x2', VBW / 2); els.glassGrad.setAttribute('y2', groundY);
+  els.planeGrid.replaceChildren();
+  const { u, m } = (function () {
+    const phi = deg2rad(state.planeAngle), psi = deg2rad(-state.swingDirection);
+    return { u: { x: Math.cos(psi), y: Math.sin(psi), z: 0 },
+             m: { x: -Math.sin(psi) * Math.cos(phi), y: Math.cos(psi) * Math.cos(phi), z: Math.sin(phi) } };
+  })();
+  const lp = lpWorld(state);
+  const onPlane = (a, b) => ({ x: lp.x + a * u.x + b * m.x, y: lp.y + a * u.y + b * m.y, z: lp.z + a * u.z + b * m.z });
+  const r = state.radius, hwU = r * 0.95, topM = r * 1.08;
+  const line = (a, b) => {
+    const ln = document.createElementNS(NS, 'line');
+    ln.setAttribute('x1', a.x.toFixed(1)); ln.setAttribute('y1', a.y.toFixed(1));
+    ln.setAttribute('x2', b.x.toFixed(1)); ln.setAttribute('y2', b.y.toFixed(1));
+    els.planeGrid.appendChild(ln);
+  };
+  for (let i = 1; i <= 4; i++) line(proj(onPlane(-hwU, topM * i / 5)), proj(onPlane(hwU, topM * i / 5)));
+
+  // hub + ball + shadow
+  const hubP = proj(shaftPivot(state));
+  hubScreen = hubP;
+  els.hub.setAttribute('cx', hubP.x); els.hub.setAttribute('cy', hubP.y);
+  els.shaft.setAttribute('x1', hubP.x); els.shaft.setAttribute('y1', hubP.y);
+  ballScreen = proj({ x: 0, y: 0, z: BALL_RADIUS_M });
+  const ballEdge = proj({ x: BALL_RADIUS_M, y: 0, z: BALL_RADIUS_M });
+  const ballPx = Math.max(5, Math.min(26, Math.hypot(ballEdge.x - ballScreen.x, ballEdge.y - ballScreen.y)));
+  els.ball.setAttribute('cx', ballScreen.x); els.ball.setAttribute('cy', ballScreen.y); els.ball.setAttribute('r', ballPx.toFixed(1));
+  els.ballShadow.setAttribute('cx', ballScreen.x); els.ballShadow.setAttribute('cy', groundY + 3);
+  els.ballShadow.setAttribute('rx', (ballPx * 1.4).toFixed(1));
+  // clubhead / shaft sized proportionally to the swing scale (so they shrink with the arc)
+  els.clubhead.setAttribute('r', (ballPx * 1.25).toFixed(1));
+  els.halo.setAttribute('r', (ballPx * 2.1).toFixed(1));
+  els.shaft.setAttribute('stroke-width', Math.max(2, ballPx * 0.5).toFixed(1));
+  clubVbSize = ballPx * 6.5;   // 3D clubhead screen size (viewBox px), proportional to swing
+  ballPxM = ballPx;            // px-per-(ball-radius) scale for divot/pulse sizing
+
+  // low-point marker (where arc bottoms) + tick to ground
+  const lpScreen = proj(lpWorld(state));
+  lowPtScreen = lpScreen;   // expose the true low-point for divot/splash sync
+  els.lpMark.setAttribute('cx', lpScreen.x); els.lpMark.setAttribute('cy', lpScreen.y);
+  els.lpTick.setAttribute('x1', lpScreen.x); els.lpTick.setAttribute('y1', lpScreen.y);
+  els.lpTick.setAttribute('x2', lpScreen.x); els.lpTick.setAttribute('y2', groundY);
+
+  // plane label
+  els.planeLabel.setAttribute('x', pf[3].x + 8); els.planeLabel.setAttribute('y', pf[3].y - 8);
+  els.planeLabel.textContent = state.planeAngle + '° plane';
+  els.planeLine.setAttribute('x1', proj(onPlane(0, 0)).x); els.planeLine.setAttribute('y1', proj(onPlane(0, 0)).y);
+  els.planeLine.setAttribute('x2', proj(onPlane(0, topM)).x); els.planeLine.setAttribute('y2', proj(onPlane(0, topM)).y);
+
+  // impact direction vector (attack angle = vertical, club path = horizontal)
+  const tImp = thetaAtImpact(state);
+  const impW = arcPosition(tImp, state);
+  const tan = tangentAt(tImp, state);
+  const tl = Math.hypot(tan.x, tan.y, tan.z) || 1;
+  const VLEN = state.radius * 0.5;
+  const tipW = { x: impW.x + tan.x / tl * VLEN, y: impW.y + tan.y / tl * VLEN, z: impW.z + tan.z / tl * VLEN };
+  const a2 = proj(impW), b2 = proj(tipW);
+  els.dirVec.setAttribute('x1', a2.x); els.dirVec.setAttribute('y1', a2.y);
+  els.dirVec.setAttribute('x2', b2.x); els.dirVec.setAttribute('y2', b2.y);
+  const ang = Math.atan2(b2.y - a2.y, b2.x - a2.x), ah = 13;
+  els.dirHead.setAttribute('points',
+    `${b2.x},${b2.y} ${(b2.x - ah * Math.cos(ang - 0.45)).toFixed(1)},${(b2.y - ah * Math.sin(ang - 0.45)).toFixed(1)} ` +
+    `${(b2.x - ah * Math.cos(ang + 0.45)).toFixed(1)},${(b2.y - ah * Math.sin(ang + 0.45)).toFixed(1)}`);
+  const di = deriveImpact(state);
+  els.dirLabel.textContent = `${di.attackAngle >= 0 ? '↑' : '↓'}${Math.abs(di.attackAngle).toFixed(0)}°  ⟂${di.clubPath.toFixed(0)}°`;
+  els.dirLabel.setAttribute('x', (b2.x + 8).toFixed(1));
+  els.dirLabel.setAttribute('y', (b2.y - 8).toFixed(1));
+}
+
+// ── strike readout ──────────────────────────────────────────────────────
+function renderReadout() {
+  const sq = strikeQuality(state);
+  $('band').textContent = sq.band;
+  $('band').style.color = sq.color;
+  $('dot').style.color = sq.color; $('dot').style.background = sq.color;
+  $('pct').textContent = sq.pct + '%';
+  $('tip').textContent = sq.tip;
+
+  // ball close-up: contact height marker (offsetRatio +1 top, -1 bottom)
+  const cuCenterY = 66, cuR = 34;
+  const ratio = Math.max(-1.6, Math.min(1.6, strikeQuality(state).offsetRatio));
+  const y = cuCenterY - ratio * cuR;
+  $('cuLine').setAttribute('y1', y.toFixed(1)); $('cuLine').setAttribute('y2', y.toFixed(1));
+  $('cuLine').setAttribute('stroke', sq.color);
+  const where = ratio > 0.4 ? 'top' : ratio < -0.4 ? 'bottom' : 'center';
+  $('cuLabel').textContent = sq.clubZ < 0 ? 'turf first' : where;
+
+  // live numeric alternative to the chart (a11y) — keeps the screen-reader text in sync with the data
+  const di = deriveImpact(state);
+  const lpx = state.lowPoint.x;
+  const lpDesc = Math.abs(lpx) < 0.001 ? 'at the ball'
+    : (Math.abs(lpx * 100).toFixed(0) + ' cm ' + (lpx >= 0 ? 'ahead of the ball' : 'behind the ball'));
+  $('sceneData').textContent =
+    `Strike ${sq.band}, ${sq.pct}%. Plane angle ${state.planeAngle} degrees. ` +
+    `Attack angle ${di.attackAngle.toFixed(1)} degrees ${di.attackAngle >= 0 ? 'up' : 'down'}. ` +
+    `Club path ${di.clubPath.toFixed(1)} degrees. Low point ${lpDesc}.`;
+
+  // persistent in-canvas chips (live with the sliders)
+  const fmtSigned = v => (v >= 0 ? '+' : '−') + Math.abs(v).toFixed(1) + '°';
+  els.chipAtkTx.textContent = 'ATTACK ' + fmtSigned(di.attackAngle);
+  els.chipPathTx.textContent = 'PATH ' + fmtSigned(di.clubPath);
+}
+
+// ── clubhead placement (perf: index into precomputed points) ─────────────
+function place(p) {
+  els.arc.style.strokeDashoffset = L * (1 - p);
+  els.arcGlow.style.strokeDashoffset = L * (1 - p);
+  const pt = arcFit[Math.max(0, Math.min(arcFit.length - 1, Math.round(p * (arcFit.length - 1))))];
+  if (!pt) return;
+  els.clubhead.setAttribute('cx', pt.x); els.clubhead.setAttribute('cy', pt.y);
+  els.halo.setAttribute('cx', pt.x); els.halo.setAttribute('cy', pt.y);
+  els.shaft.setAttribute('x2', pt.x); els.shaft.setAttribute('y2', pt.y);
+  if (clubReady) placeClub(pt, -SWEEP + 2 * SWEEP * p);
+}
+
+// ── divot spray (grass + soil) at impact ─────────────────────────────────
+const GRASS = ['#5ab85f', '#4aa353', '#3f9b46', '#73c878'];
+const SOIL = ['#6e4a2c', '#5a3c22', '#43301c', '#7d5733'];
+const rnd = (a, b) => a + Math.random() * (b - a);
+function spawnParticles(count, turfFirst, mag, originX) {
+  for (let i = 0; i < count; i++) {
+    const grass = Math.random() < (turfFirst ? 0.45 : 0.6);
+    const el = document.createElementNS(NS, grass ? 'rect' : 'circle');
+    if (grass) { const w = rnd(1.5, 3), h = rnd(4, 9);
+      el.setAttribute('width', w); el.setAttribute('height', h); el.setAttribute('x', -w / 2); el.setAttribute('y', -h / 2);
+      el.setAttribute('rx', 1); el.setAttribute('fill', GRASS[(Math.random() * 4) | 0]);
+    } else { el.setAttribute('r', rnd(1.4, 3.2)); el.setAttribute('fill', SOIL[(Math.random() * 4) | 0]); }
+    els.debris.appendChild(el);
+    const spread = turfFirst ? 150 * (1 + mag) : 120;
+    const vx = rnd(-spread, spread), vy = -rnd(170, 340) * (turfFirst ? 1 + mag * 0.4 : 1), g = 980;
+    const x0 = (originX == null ? ballScreen.x : originX) + rnd(-14, 14), y0 = groundY - rnd(0, 6);
+    const rot0 = rnd(0, 360), spin = rnd(-540, 540), life = rnd(0.7, 1.2);
+    gsap.to(el, { duration: life, ease: 'none',
+      onUpdate: function () { const T = this.time();
+        el.setAttribute('transform', `translate(${(x0 + vx * T).toFixed(1)},${(y0 + vy * T + 0.5 * g * T * T).toFixed(1)}) rotate(${(rot0 + spin * T).toFixed(1)})`); },
+      onComplete: () => el.remove() });
+    gsap.to(el, { opacity: 0, duration: life, ease: 'power2.in' });
+  }
+}
+
+// ── impact emphasis arrows (PATH horizontal + ATTACK vertical) ────────────
+// Geometry is built from the ball's on-screen position and clamped to stay
+// inside the scene viewBox (0..VBW, 0..VBH) — arrows + labels never spill out.
+const VB_PAD = 18;                 // keep arrows/labels this far inside the frame
+function rebuildImpactArrows() {
+  const di = deriveImpact(state);
+  const fmtSigned = v => (v >= 0 ? '+' : '−') + Math.abs(v).toFixed(1) + '°';
+
+  // anchor at the ball, but pulled inside the frame so the full arrow fits
+  const bx = Math.max(VB_PAD + 70, Math.min(VBW - VB_PAD - 70, ballScreen.x));
+  const by = Math.max(VB_PAD + 60, Math.min(VBH - VB_PAD - 40, ballScreen.y));
+
+  // PATH = horizontal arrow. Sign of clubPath → direction; magnitude → length.
+  const pMag = Math.min(1, Math.abs(di.clubPath) / 8);
+  const pLen = 34 + pMag * 70;
+  const pDir = di.clubPath >= 0 ? 1 : -1;
+  let px2 = bx + pDir * pLen;
+  px2 = Math.max(VB_PAD + 4, Math.min(VBW - VB_PAD - 4, px2));   // clamp tip inside
+  const pLenC = Math.abs(px2 - bx);
+  els.pathArrow.setAttribute('x1', bx); els.pathArrow.setAttribute('y1', by);
+  els.pathArrow.setAttribute('x2', px2); els.pathArrow.setAttribute('y2', by);
+  const ph = 11;
+  els.pathHead.setAttribute('points',
+    `${px2},${by} ${px2 - pDir * ph},${by - ph * 0.7} ${px2 - pDir * ph},${by + ph * 0.7}`);
+  // path chip near the tip, kept inside the frame
+  const pcW = 86, pcH = 20;
+  let pcx = px2 + pDir * 8 - (pDir < 0 ? pcW : 0);
+  pcx = Math.max(VB_PAD, Math.min(VBW - VB_PAD - pcW, pcx));
+  let pcy = by - 26; pcy = Math.max(VB_PAD, pcy);
+  els.pathChipBg.setAttribute('x', pcx); els.pathChipBg.setAttribute('y', pcy);
+  els.pathChipBg.setAttribute('width', pcW); els.pathChipBg.setAttribute('height', pcH);
+  els.pathChipTx.setAttribute('x', pcx + pcW / 2); els.pathChipTx.setAttribute('y', pcy + pcH / 2 + 1);
+  els.pathChipTx.textContent = 'Path ' + fmtSigned(di.clubPath);
+
+  // ATTACK = vertical arrow. Up (+) or down (−) from attackAngle. Drawn from a
+  // point just left of the ball so the two arrows don't overlap.
+  const ax = Math.max(VB_PAD + 4, Math.min(VBW - VB_PAD - 4, bx - 4));
+  const aMag = Math.min(1, Math.abs(di.attackAngle) / 8);
+  const aLen = 30 + aMag * 64;
+  const aDir = di.attackAngle >= 0 ? -1 : 1;   // +attack = up = toward smaller y
+  let ay2 = by + aDir * aLen;
+  ay2 = Math.max(VB_PAD + 4, Math.min(VBH - VB_PAD - 4, ay2));
+  els.atkArrow.setAttribute('x1', ax); els.atkArrow.setAttribute('y1', by);
+  els.atkArrow.setAttribute('x2', ax); els.atkArrow.setAttribute('y2', ay2);
+  const ah = 11;
+  els.atkHead.setAttribute('points',
+    `${ax},${ay2} ${ax - ah * 0.7},${ay2 - aDir * ah} ${ax + ah * 0.7},${ay2 - aDir * ah}`);
+  const acW = 92, acH = 20;
+  let acx = ax - acW - 10; if (acx < VB_PAD) acx = ax + 10;
+  acx = Math.max(VB_PAD, Math.min(VBW - VB_PAD - acW, acx));
+  let acy = (by + ay2) / 2 - acH / 2;
+  acy = Math.max(VB_PAD, Math.min(VBH - VB_PAD - acH, acy));
+  els.atkChipBg.setAttribute('x', acx); els.atkChipBg.setAttribute('y', acy);
+  els.atkChipBg.setAttribute('width', acW); els.atkChipBg.setAttribute('height', acH);
+  els.atkChipTx.setAttribute('x', acx + acW / 2); els.atkChipTx.setAttribute('y', acy + acH / 2 + 1);
+  els.atkChipTx.textContent = 'Attack ' + fmtSigned(di.attackAngle);
+}
+let impactArrowsTl = null;
+const legacyVec = () => [els.dirVec, els.dirHead, els.dirLabel];
+function showImpactArrows() {
+  rebuildImpactArrows();
+  if (impactArrowsTl) impactArrowsTl.kill();
+  gsap.killTweensOf(legacyVec());
+  if (reduce) {                                         // static: arrows on, baseline hidden
+    els.impactArrows.setAttribute('opacity', '1');
+    gsap.set(legacyVec(), { opacity: 0 });
+    return;
+  }
+  // hide the quiet baseline vector so the labelled PATH/ATTACK arrows read alone at impact
+  impactArrowsTl = gsap.timeline({ onComplete: () => gsap.set(legacyVec(), { opacity: 1 }) });
+  impactArrowsTl
+    .to(legacyVec(), { opacity: 0, duration: 0.14, ease: 'power2.out' }, 0)
+    .fromTo(els.impactArrows, { opacity: 0 }, { opacity: 1, duration: 0.18, ease: 'power2.out' }, 0)
+    .to(els.impactArrows, { opacity: 0, duration: 0.7, ease: 'power1.in' }, '+=1.1')
+    .to(legacyVec(), { opacity: 1, duration: 0.4, ease: 'power1.out' }, '<');
+}
+
+// impact moment: attention pulse + ball-first vs turf-first effect + sized divot
+function spawnDivot() {
+  const sq = strikeQuality(state);
+  const turfFirst = sq.clubZ < 0;
+  const mag = Math.min(1, Math.abs(sq.offsetRatio));
+
+  // attention pulse ring in strike colour (no SVG filter) — brighter, larger flash at impact
+  els.pulse.setAttribute('cx', turfFirst ? lowPtScreen.x : ballScreen.x); els.pulse.setAttribute('cy', groundY);
+  els.pulse.setAttribute('stroke', sq.color);
+  if (reduce) {
+    els.pulse.setAttribute('opacity', '0');   // no flash for reduced motion
+  } else {
+    els.pulse.setAttribute('stroke-width', '4');
+    gsap.fromTo(els.pulse, { attr: { r: ballPxM * 0.5 }, opacity: 1 },
+      { attr: { r: ballPxM * 6.0 }, opacity: 0, duration: 0.55, ease: 'power2.out',
+        onComplete: () => els.pulse.setAttribute('stroke-width', '3') });
+    // brief brighter ball flash (ball-first) to read the strike clearly
+    if (!turfFirst) {
+      gsap.fromTo(els.ball, { attr: { fill: '#ffffff' } }, { duration: 0.18, ease: 'power2.out' });
+    }
+  }
+
+  // impact emphasis arrows (path + attack) — animate in, then ease out
+  showImpactArrows();
+
+  if (sq.band === 'Whiff') return;   // no contact → no divot/splash
+
+  // sized divot mark (chord geometry, visual-scaled), placed ahead (pure) or behind (fat)
+  const dM = Math.max(0, -Math.min(0, state.lowPoint.z));
+  const aa = Math.abs(deriveImpact(state).attackAngle) || 1;
+  const aaF = Math.max(0.6, Math.min(1.6, 5 / aa));
+  let lenM = (dM > 0 && dM < 2 * state.radius) ? 2 * Math.sqrt(2 * state.radius * dM - dM * dM) * 0.45 * aaF : 0;
+  lenM = Math.min(lenM, 0.22);
+  let depM = Math.min(dM, 0.025);
+  if (sq.band === 'Thin') { lenM *= 0.3; depM *= 0.3; }
+  const pxPerM = ballPxM / BALL_RADIUS_M;
+  const lenPx = Math.max(ballPxM * 1.2, lenM * pxPerM);
+  els.divot.setAttribute('cx', lowPtScreen.x);    // true low-point: ahead of ball for pure, behind for fat
+  els.divot.setAttribute('cy', groundY + 4);
+  els.divot.setAttribute('rx', (lenPx * 0.5).toFixed(1));
+  els.divot.setAttribute('ry', Math.max(4, depM * pxPerM * 0.5 + 4).toFixed(1));
+  const divTl = gsap.timeline();
+
+  if (turfFirst) {
+    spawnParticles(Math.round(18 * (1 + mag)), true, mag, lowPtScreen.x); // turf splash at the divot
+    divTl.fromTo(els.divot, { opacity: 0 }, { opacity: 0.7, duration: 0.15 });
+  } else {
+    gsap.fromTo(els.ball, { attr: { r: ballPxM } }, { attr: { r: ballPxM * 1.18 }, duration: 0.08, yoyo: true, repeat: 1, ease: 'back.out(2)' }); // ball pop
+    const delay = sq.band === 'Thin' ? 0.10 : 0.07;                    // turf AFTER the ball
+    gsap.delayedCall(delay, () => spawnParticles(sq.band === 'Thin' ? 5 : 12, false, mag, lowPtScreen.x));
+    divTl.fromTo(els.divot, { opacity: 0 }, { opacity: 0.45, duration: 0.15, delay: delay + 0.03 });
+  }
+  divTl.to(els.divot, { opacity: 0, duration: 0.6, delay: 0.8 });       // fade the mark before next loop
+}
+
+// ── init + animation ─────────────────────────────────────────────────────
+rebuild(); renderReadout();
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const anim = { p: 0.5 };
+const currentP = () => anim.p;
+const REST_BEHIND = deg2rad(5);           // address pose: clubhead sits just behind the ball
+const pAtTheta = th => Math.max(0, Math.min(1, (th + SWEEP) / (2 * SWEEP)));
+const restP = () => pAtTheta(thetaAtImpact(state) - REST_BEHIND);
+function rest() { anim.p = restP(); place(anim.p); els.arc.style.strokeDashoffset = 0; els.arcGlow.style.strokeDashoffset = 0; }
+
+// ── fade the control surfaces during play for a clean ball-strike view ────
+// The two in-canvas chips (#canvasChips) live inside the SVG scene and stay visible.
+const CONTROL_SEL = '.controls, .readout, .tune, .modnav, .title';
+function controlsVisible(show) {
+  const nodes = document.querySelectorAll(CONTROL_SEL);
+  if (reduce) { nodes.forEach(n => { n.style.opacity = show ? '' : '0'; n.style.pointerEvents = show ? '' : 'none'; }); return; }
+  nodes.forEach(n => {
+    gsap.to(n, { opacity: show ? 1 : 0, duration: show ? 0.4 : 0.3, ease: show ? 'power2.out' : 'power1.in',
+      onStart: () => { if (!show) n.style.pointerEvents = 'none'; },
+      onComplete: () => { if (show) { n.style.pointerEvents = ''; n.style.opacity = ''; } } });
+  });
+}
+
+// sliders set up the swing statically; "Hit" plays ONE swing with slow-mo through impact + zoom
+let swingTween = null;
+function playSwing() {
+  if (reduce) {
+    anim.p = 0.5; rest();
+    if (strikeQuality(state).band !== 'Whiff') spawnDivot(); else showImpactArrows();
+    return;
+  }
+  if (swingTween) swingTween.kill();
+  let fired = false;
+  const pImpact = pAtTheta(thetaAtImpact(state));   // fire at ball-contact frame (club reaches the ball), not the low point
+  const onU = () => { place(anim.p); if (!fired && anim.p >= pImpact) { fired = true; if (strikeQuality(state).band !== 'Whiff') spawnDivot(); } };
+  anim.p = 0;
+  controlsVisible(false);   // hide controls for a clean strike view
+  // Durations are 2× the previous values (whole swing 100% slower); the mid
+  // segment that carries impact is stretched an EXTRA 1.5× so the strike reads.
+  swingTween = gsap.timeline({ onComplete: () => { anim.p = 0.5; rest(); controlsVisible(true); } });
+  swingTween
+    .to('#scene, #clubCanvas', { scale: 1.16, transformOrigin: '50% 80%', duration: 2.10, ease: 'power2.out' }, 0)
+    .to(anim, { p: 0.42, duration: 0.90, ease: 'power1.in', onUpdate: onU }, 0)
+    .to(anim, { p: 0.58, duration: 2.55, ease: 'none', onUpdate: onU })          // slow-mo through impact (2× then ×1.5)
+    .to(anim, { p: 1, duration: 1.00, ease: 'power1.out', onUpdate: onU })
+    .to('#scene, #clubCanvas', { scale: 1, transformOrigin: '50% 80%', duration: 1.20, ease: 'power2.inOut' });
+}
+rest();
+
+// ── animated perspective transition (face <-> dtl orbit) ──────────────────
+let viewTween = null;
+function animateView(toView) {
+  if (reduce) { state.view = toView; rebuild(); renderReadout(); return; }
+  if (viewTween) viewTween.kill();
+  const fromCam = CAMS[state.view], toCam = CAMS[toView];
+  const fitStart = fitFor(fromCam), fitEnd = fitFor(toCam);
+  const fS = state.view === 'face' ? 1 : 0, fE = toView === 'face' ? 1 : 0;
+  const o = { t: 0 };
+  viewTween = gsap.to(o, { t: 1, duration: 0.7, ease: 'power2.inOut',
+    onUpdate: () => { rebuild(lerpCam(fromCam, toCam, o.t), lerpFit(fitStart, fitEnd, o.t), fS + (fE - fS) * o.t); place(currentP()); },
+    onComplete: () => { state.view = toView; viewTween = null; rebuild(); renderReadout(); place(currentP()); } });
+}
+
+// ── shared swing-state → localStorage (consumed by impact.html) ───────────
+function writeSwingState() {
+  try {
+    const di = deriveImpact(state);
+    localStorage.setItem('sa_swing', JSON.stringify({
+      clubPath: di.clubPath,
+      attackAngle: di.attackAngle,
+    }));
+  } catch (e) { /* storage unavailable → ignore */ }
+}
+
+// ── sliders (rAF-throttled) ───────────────────────────────────────────────
+let pending = false;
+function applyLive() {
+  if (pending) return; pending = true;
+  requestAnimationFrame(() => { pending = false; rebuild(); renderReadout(); rest(); writeSwingState(); });
+}
+function bind(id, get, fmt) {
+  const el = $(id), out = $('v_' + id.slice(2));
+  const sync = () => { out.textContent = fmt(+el.value); el.setAttribute('aria-valuetext', fmt(+el.value)); };
+  el.addEventListener('input', () => { get(+el.value); sync(); applyLive(); });
+  return sync;
+}
+const cm = v => (v * 100).toFixed(0) + ' cm';
+const syncers = [
+  bind('s_radius', v => state.radius = v, v => v.toFixed(2) + ' m'),
+  bind('s_plane', v => state.planeAngle = v, v => v.toFixed(0) + '°'),
+  bind('s_dir', v => state.swingDirection = v, v => (v > 0 ? '+' : '') + v.toFixed(1) + '° ' + (Math.abs(v) < 0.1 ? '' : v > 0 ? 'in-out' : 'out-in')),
+  bind('s_lpx', v => state.lowPoint.x = v, v => Math.abs(v * 100).toFixed(0) + ' cm ' + (v >= 0 ? 'ahead' : 'behind')),
+  bind('s_lpz', v => state.lowPoint.z = v, v => v >= 0 ? (v * 100).toFixed(0) + ' cm above' : Math.abs(v * 100).toFixed(0) + ' cm below'),
+];
+// set slider positions from state
+$('s_radius').value = state.radius; $('s_plane').value = state.planeAngle;
+$('s_dir').value = state.swingDirection; $('s_lpx').value = state.lowPoint.x; $('s_lpz').value = state.lowPoint.z;
+syncers.forEach(s => s());
+writeSwingState();   // seed shared state so Impact reflects the current swing immediately
+
+// ── controls ──────────────────────────────────────────────────────────────
+$('tuneBtn').addEventListener('click', () => {
+  const t = $('tune'); const open = t.hasAttribute('hidden');
+  if (open) t.removeAttribute('hidden'); else t.setAttribute('hidden', '');
+  $('tuneBtn').setAttribute('aria-pressed', String(open));
+});
+$('viewBtn').addEventListener('click', () => {
+  const to = state.view === 'face' ? 'dtl' : 'face';
+  $('viewBtn').setAttribute('aria-pressed', String(to === 'dtl'));
+  $('viewBtn').title = to === 'dtl' ? 'Down-the-line' : 'Front';
+  animateView(to);
+});
+$('hit').addEventListener('click', playSwing);
+// strike toggle: show/hide the strike-result panel so you can study the bare swing arc
+const readoutEl = document.querySelector('.readout');
+$('strikeBtn').addEventListener('click', () => {
+  const on = readoutEl.style.display !== 'none';
+  readoutEl.style.display = on ? 'none' : 'flex';
+  $('strikeBtn').setAttribute('aria-pressed', String(!on));
+});
+
+// ── 3D clubhead overlay (Three.js) ────────────────────────────────────────
+// tunable base orientation so the model's shaft points +Y and face toward +Z.
+// The OBJ already models the shaft along +Y and the clubface normal along +Z
+// (toe–heel on X), so the base is identity — placeClub() then spins the head about
+// the shaft (Y) for the face↔dtl view and aligns +Y to the on-screen shaft angle (Z).
+// This keeps the grooved face reading toward the ball at impact in BOTH views,
+// instead of the old -90°-about-X base which laid the head flat/edge-on.
+// the model's local axes (+Y shaft, +Z face, +X toe) map onto the swing-plane frame built
+// in placeClub, so the base starts at identity. Tune here (or live via __sa.base) only to
+// correct the model's intrinsic axes.
+const CLUB_BASE = { x: 0, y: 0, z: 0 };
+const ANCHOR_Y = 0.30;   // shift model up so the clubHEAD (not the shaft-inclusive centroid) rides the arc; tune live via __sa.anchor
+let clubObj = null, clubBaseY = 0;
+const clubCanvas = $('clubCanvas');
+let renderer3, scene3, cam3, clubGroup, clubOriented;
+
+const vbToPx = (x, y) => {
+  const vw = innerWidth, vh = innerHeight, s = Math.min(vw / VBW, vh / VBH); // match SVG preserveAspectRatio=meet
+  return { x: (vw - VBW * s) / 2 + x * s, y: (vh - VBH * s) / 2 + y * s, s };
+};
+function resizeClub() {
+  const vw = innerWidth, vh = innerHeight;
+  renderer3.setSize(vw, vh, false);
+  cam3 = new THREE.OrthographicCamera(0, vw, vh, 0, -3000, 3000); // y-up: top=vh, bottom=0
+  cam3.position.set(0, 0, 1000);
+}
+// hoisted: called from place() once clubReady
+function placeClub(headVb, theta) {
+  if (!clubGroup || !curBasis) return;
+  const px = vbToPx(headVb.x, headVb.y);
+  clubGroup.position.set(px.x, innerHeight - px.y, 0);
+  clubGroup.scale.setScalar(clubVbSize * px.s * (window.__clubMul || 1));
+  // Blade follows the arc TANGENT in full 3D — it tilts with the swing arc in both
+  // direction AND height (steep at the top, flat at the low point; arc 10° down → blade
+  // 10° tilted). heading = full tangent; sole-normal = world-up made perpendicular to the
+  // tangent (Gram-Schmidt) so the sole stays tangent to the arc.
+  const tanW = tangentAt(theta, state);
+  let head = _nrm(tanW);                                     // full 3D tangent (tilts with the arc)
+  if (!isFinite(head.x)) head = { x: 1, y: 0, z: 0 };
+  const up0 = { x: 0, y: 0, z: 1 };
+  const dUT = _dot(up0, head);
+  let up = _nrm({ x: up0.x - dUT * head.x, y: up0.y - dUT * head.y, z: up0.z - dUT * head.z });
+  if (!isFinite(up.x)) up = { x: 0, y: 0, z: 1 };
+  const side = _nrm(_crs(up, head));
+  const B = curBasis;
+  const cs = d => ({ x: _dot(d, B.right), y: _dot(d, B.upVec), z: -_dot(d, B.fwd) }); // ortho overlay: z→viewer
+  const Xc = cs(side), Yc = cs(up), Zc = cs(head);           // model +X→side, +Y→sole-up, +Z→face/heading (tangent)
+  const V = v => new THREE.Vector3(v.x, v.y, v.z).normalize();
+  clubGroup.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(V(Xc), V(Yc), V(Zc)));
+}
+function initClub() {
+  renderer3 = new THREE.WebGLRenderer({ canvas: clubCanvas, antialias: true, alpha: true });
+  renderer3.setPixelRatio(Math.min(devicePixelRatio, 2));
+  renderer3.toneMapping = THREE.ACESFilmicToneMapping; renderer3.toneMappingExposure = 1.05;
+  scene3 = new THREE.Scene();
+  const pmrem = new THREE.PMREMGenerator(renderer3);
+  scene3.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+  scene3.add(new THREE.AmbientLight(0xffffff, 0.3));
+  const key = new THREE.DirectionalLight(0xffffff, 2.2); key.position.set(3, 5, 4); scene3.add(key);
+  resizeClub();
+  const steel = new THREE.MeshStandardMaterial({ color: 0xc2c7cf, metalness: 1.0, roughness: 0.30, envMapIntensity: 1.15 });
+  new OBJLoader().load('./assets/iron_blade_7.obj', (obj) => {
+    obj.traverse(o => { if (o.isMesh) { o.material = steel; o.geometry.computeVertexNormals(); } });
+    const box = new THREE.Box3().setFromObject(obj);
+    const size = box.getSize(new THREE.Vector3()), maxDim = Math.max(size.x, size.y, size.z) || 1;
+    obj.scale.setScalar(1 / maxDim);
+    const box2 = new THREE.Box3().setFromObject(obj); obj.position.sub(box2.getCenter(new THREE.Vector3()));
+    clubObj = obj; clubBaseY = obj.position.y;
+    obj.position.y = clubBaseY + (window.__anchorY != null ? window.__anchorY : ANCHOR_Y); // pivot on the clubhead, not the shaft-inclusive centroid
+    clubOriented = new THREE.Group(); clubOriented.add(obj);
+    clubOriented.rotation.set(CLUB_BASE.x, CLUB_BASE.y, CLUB_BASE.z);
+    clubGroup = new THREE.Group(); clubGroup.add(clubOriented); scene3.add(clubGroup);
+    clubReady = true;
+    els.clubhead.style.display = 'none'; els.halo.style.display = 'none';  // 3D head replaces the dot
+    place(currentP());
+  }, undefined, () => { /* keep SVG dot if model fails */ });
+  renderer3.setAnimationLoop(() => { if (clubReady) renderer3.render(scene3, cam3); });
+}
+addEventListener('resize', () => { if (renderer3) resizeClub(); });
+initClub();
+// debug hooks for live orientation tuning from Playwright (no redeploy per tweak)
+window.__sa = {
+  freeze: (p = 0.5) => { if (swingTween) swingTween.kill(); anim.p = p; place(p); },
+  play: () => playSwing(),
+  base: (x, y, z) => { if (clubOriented) { clubOriented.rotation.set(x, y, z); place(currentP()); } },
+  zoff: (v) => { window.__zoff = v; place(currentP()); },
+  mul: (m) => { window.__clubMul = m; place(currentP()); },
+  anchor: (y) => { window.__anchorY = y; if (clubObj) { clubObj.position.y = clubBaseY + y; place(currentP()); } return y; },
+  // automated pipeline-alignment check: compares the arc point's true on-screen px (SVG getScreenCTM)
+  // against the 3D club's actual placed px. dpx≈0 means the overlay rides the arc with no drift.
+  checkAlign: (ps) => {
+    const arr = ps || [0, 0.2, 0.35, 0.5, 0.65, 0.8, 1];
+    const out = arr.map((p) => {
+      if (swingTween) swingTween.kill();
+      anim.p = p; place(p);
+      const idx = Math.max(0, Math.min(arcFit.length - 1, Math.round(p * (arcFit.length - 1))));
+      const a = arcFit[idx];
+      const ctm = els.arc.getScreenCTM();
+      const s = new DOMPoint(a.x, a.y).matrixTransform(ctm);
+      const cx = clubGroup.position.x, cy = innerHeight - clubGroup.position.y;
+      // orientation: blade heading (full tangent) screen-angle vs the arc's local screen tangent
+      const theta = -SWEEP + 2 * SWEEP * p;
+      const T = tangentAt(theta, state);
+      const hAng = Math.atan2(-_dot(T, curBasis.upVec), _dot(T, curBasis.right)) * 180 / Math.PI;
+      const j = Math.min(arcFit.length - 1, idx + 1), b = arcFit[j];
+      const aAng = Math.atan2(b.y - a.y, b.x - a.x) * 180 / Math.PI;
+      let dA = ((hAng - aAng) % 360 + 540) % 360 - 180;
+      return { p, dpx: +Math.hypot(s.x - cx, s.y - cy).toFixed(2), dAngle: +dA.toFixed(1) };
+    });
+    rest();
+    return { maxDpx: +Math.max(...out.map(o => o.dpx)).toFixed(2), maxDangle: +Math.max(...out.map(o => Math.abs(o.dAngle))).toFixed(1), samples: out };
+  },
+  state: () => ({ base: clubOriented ? clubOriented.rotation.toArray() : null, anchorY: window.__anchorY != null ? window.__anchorY : ANCHOR_Y, zoff: window.__zoff || 0, mul: window.__clubMul || 1, ready: clubReady }),
+  arrows: () => showImpactArrows(),   // debug: trigger impact emphasis arrows without a full swing
+};
+
+// ── first-run coach marks (Phase C) ───────────────────────────────────────
+const COACH_STEPS = [
+  { selector: '#viewBtn', title: 'Tilt the view', body: 'Switch between front-on and down-the-line to see the swing plane lean back.' },
+  { selector: '#tuneBtn', title: 'Adjust the swing', body: 'Open Parameters to change plane angle, swing direction and low point (ahead or behind the ball).' },
+  { selector: '#hit',     title: 'Watch the strike', body: 'Press play to run the swing in slow motion and read the path & attack angle at impact.' },
+];
+function runCoach() {
+  if (window.SA && SA.coachMarks) SA.coachMarks(COACH_STEPS, { storageKey: 'sa_coach_geo' });
+}
+$('helpBtn').addEventListener('click', runCoach);
+// run on first visit only (SA loaded with defer → wait for it if needed)
+function maybeFirstRun() {
+  if (!(window.SA && SA.coachMarks)) { setTimeout(maybeFirstRun, 60); return; }
+  if (!SA.seen('sa_coach_geo')) runCoach();
+}
+maybeFirstRun();
+</script>
+</body>
+</html>

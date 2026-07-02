@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2732" height="2732" viewBox="0 0 2732 2732">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0D1218"/>
+      <stop offset="100%" stop-color="#070A0D"/>
+    </linearGradient>
+    <linearGradient id="arcGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#0F8F8A"/>
+      <stop offset="55%" stop-color="#22E3D6"/>
+      <stop offset="100%" stop-color="#7CF5EC"/>
+    </linearGradient>
+    <radialGradient id="ballGrad" cx="35%" cy="32%" r="75%">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="55%" stop-color="#EAFFFC"/>
+      <stop offset="100%" stop-color="#BFE9E4"/>
+    </radialGradient>
+    <filter id="arcGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="20" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <rect x="0" y="0" width="2732" height="2732" fill="url(#bgGrad)"/>
+
+  <!-- Centered mark: the arc's own geometry spans roughly x=[200,922],
+       y=[192,784] (including glow bleed) with visual centroid near
+       (620,460) rather than the midpoint of its bounding box, because the
+       stroke is denser along the upper-right of the curve. Translating by
+       (746,806) puts that centroid at (1366,1266) — the horizontal center
+       of the 2732-wide canvas — so the mark and the wordmark below it
+       align on the same vertical axis. -->
+  <g transform="translate(746,806)">
+    <g filter="url(#arcGlow)">
+      <path d="M 246 730
+               C 246 520, 360 300, 620 246
+               C 760 218, 838 268, 866 356"
+            fill="none"
+            stroke="url(#arcGrad)"
+            stroke-width="46"
+            stroke-linecap="round"/>
+    </g>
+    <circle cx="866" cy="380" r="54" fill="url(#ballGrad)"/>
+    <circle cx="866" cy="380" r="54" fill="none" stroke="#0A0E12" stroke-width="4" opacity="0.25"/>
+    <g stroke="#7CF5EC" stroke-width="10" stroke-linecap="round" opacity="0.85">
+      <line x1="932" y1="330" x2="968" y2="304"/>
+      <line x1="946" y1="380" x2="988" y2="378"/>
+      <line x1="932" y1="430" x2="964" y2="454"/>
+    </g>
+    <circle cx="246" cy="730" r="22" fill="#22E3D6" opacity="0.9"/>
+  </g>
+
+  <!-- Wordmark, centered under the mark -->
+  <text x="1366" y="1680" text-anchor="middle"
+        font-family="-apple-system, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif"
+        font-size="86" font-weight="600" letter-spacing="6" fill="#EAFFFC" opacity="0.92">
+    STRIKEARC
+  </text>
+</svg>

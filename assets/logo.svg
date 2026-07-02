@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52" fill="none" role="img" aria-label="StrikeArc">
+  <!-- A-monogram: left stroke is a sweeping swing-arc up to the apex, inner vee
+       forms the A's peak and the right leg descends to the foot; glowing ball at
+       apex. Single two-subpath stroke so it can be drawn in one pass. -->
+  <path class="sa-arc" d="M11 45 C 16 26, 24 18, 35 15 M21 39 L 30 24 L 43 45"
+        stroke="currentColor" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle class="sa-ring" cx="37" cy="15" r="8.6" stroke="currentColor" stroke-width="1.2" opacity="0.4"/>
+  <circle class="sa-ball" cx="37" cy="15" r="5.2" fill="currentColor"/>
+</svg>

@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>StrikeArc — Launch Arrow Style Mock</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='16' height='16' fill='%23070a0e'/><circle cx='8' cy='8' r='3' fill='%2322E3D6'/></svg>" />
+<style>
+  :root {
+    --accent: #22E3D6;
+    --c-face: #ff6a78;   /* red */
+    --c-path: #7fc3ff;   /* blue */
+    --c-attack: #ff9ec2; /* pink */
+    --c-loft: #A66BFF;   /* violet */
+    --c-launch: #F4D000; /* yellow */
+    --panel: #0c1116;
+    --panel-2: #11181f;
+    --ink: #e8f0fb;
+    --ink-dim: #8a98a8;
+    --line: rgba(255,255,255,.07);
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    background:
+      radial-gradient(1200px 600px at 70% -10%, rgba(34,227,214,.08), transparent 60%),
+      radial-gradient(900px 500px at 10% 110%, rgba(166,107,255,.07), transparent 60%),
+      #070a0e;
+    color: var(--ink);
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 22px 22px 40px;
+  }
+  header.top {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px 20px;
+    margin-bottom: 16px;
+  }
+  .title {
+    font-size: 15px;
+    font-weight: 650;
+    letter-spacing: .02em;
+  }
+  .title .tag {
+    color: var(--accent);
+    font-weight: 700;
+  }
+  .sub {
+    font-size: 12px;
+    color: var(--ink-dim);
+    max-width: 560px;
+    line-height: 1.5;
+  }
+
+  /* Proposal toggle */
+  .toggle {
+    display: flex;
+    gap: 6px;
+    background: rgba(255,255,255,.03);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 5px;
+  }
+  .toggle button {
+    appearance: none;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--ink-dim);
+    font: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: .01em;
+    padding: 8px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    line-height: 1.2;
+    gap: 2px;
+    transition: background .15s, color .15s, border-color .15s;
+  }
+  .toggle button .pid { font-size: 11px; opacity: .7; }
+  .toggle button .pname { font-size: 12.5px; }
+  .toggle button:hover { color: var(--ink); background: rgba(255,255,255,.04); }
+  .toggle button.active {
+    color: #051014;
+    background: var(--c-launch);
+    border-color: rgba(244,208,0,.5);
+    box-shadow: 0 4px 16px rgba(244,208,0,.18);
+  }
+  .toggle button.active .pid { opacity: .85; }
+
+  /* Instrument panel */
+  .panel {
+    background:
+      linear-gradient(180deg, rgba(255,255,255,.02), transparent 30%),
+      var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    padding: 16px;
+    box-shadow: 0 30px 80px -40px rgba(0,0,0,.8), inset 0 1px 0 rgba(255,255,255,.03);
+  }
+  .lenses {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  @media (max-width: 880px) {
+    .lenses { grid-template-columns: 1fr; }
+  }
+  .lens {
+    position: relative;
+    background:
+      radial-gradient(120% 120% at 50% 0%, rgba(255,255,255,.025), transparent 55%),
+      var(--panel-2);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    overflow: hidden;
+  }
+  .lens .lens-head {
+    position: absolute;
+    top: 10px;
+    left: 12px;
+    z-index: 3;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--ink-dim);
+  }
+  .lens .lens-head .dot {
+    display: inline-block;
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--accent);
+    margin-right: 6px;
+    vertical-align: middle;
+    box-shadow: 0 0 8px var(--accent);
+  }
+  .lens svg { display: block; width: 100%; height: auto; }
+
+  /* legend inside lens */
+  .legend {
+    position: absolute;
+    bottom: 10px;
+    left: 12px;
+    right: 12px;
+    z-index: 3;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 14px;
+    font-size: 10.5px;
+    color: var(--ink-dim);
+  }
+  .legend span { display: inline-flex; align-items: center; gap: 5px; }
+  .legend i {
+    width: 16px; height: 0;
+    border-top-width: 3px;
+    border-top-style: solid;
+    border-radius: 2px;
+  }
+
+  /* caption */
+  .caption {
+    margin-top: 14px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 14px;
+    background: rgba(244,208,0,.05);
+    border: 1px solid rgba(244,208,0,.18);
+    border-radius: 12px;
+  }
+  .caption .chip {
+    flex: none;
+    font-size: 11px;
+    font-weight: 700;
+    color: #051014;
+    background: var(--c-launch);
+    padding: 4px 9px;
+    border-radius: 999px;
+    letter-spacing: .02em;
+    margin-top: 1px;
+  }
+  .caption .ctext { font-size: 12.5px; line-height: 1.55; color: var(--ink); }
+  .caption .ctext strong { color: var(--c-launch); font-weight: 650; }
+  .caption .ctext .dim { color: var(--ink-dim); }
+
+  .footnote {
+    margin-top: 12px;
+    font-size: 11px;
+    color: var(--ink-dim);
+    line-height: 1.5;
+  }
+  .footnote code {
+    color: var(--accent);
+    background: rgba(34,227,214,.07);
+    padding: 1px 5px;
+    border-radius: 5px;
+    font-size: 10.5px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <div class="title"><span class="tag">StrikeArc</span> · Impact — Launch-arrow style explorer</div>
+      <div class="sub">Pick a style for the derived <strong>launch</strong> arrows (the resulting direction the ball flies). They should read more subtle than the bold D-plane inputs, and run longer so they clearly read past the input tips.</div>
+    </div>
+    <div class="toggle" id="toggle" role="tablist" aria-label="Launch arrow proposals">
+      <button data-p="1" class="active" role="tab"><span class="pid">P1</span><span class="pname">Whisper line</span></button>
+      <button data-p="2" role="tab"><span class="pid">P2</span><span class="pname">Soft tracer</span></button>
+      <button data-p="3" role="tab"><span class="pid">P3</span><span class="pname">Fading needle</span></button>
+      <button data-p="4" role="tab"><span class="pid">P4</span><span class="pname">Glow tracer + dot</span></button>
+    </div>
+  </header>
+
+  <div class="panel">
+    <div class="lenses">
+      <!-- DIRECTION lens -->
+      <div class="lens">
+        <div class="lens-head"><span class="dot"></span>Direction · top-down</div>
+        <svg id="svgDir" viewBox="0 0 400 360" aria-label="Direction lens"></svg>
+        <div class="legend">
+          <span><i style="border-color:var(--c-face)"></i>Face</span>
+          <span><i style="border-color:var(--c-path)"></i>Path</span>
+          <span><i style="border-color:var(--c-launch)"></i>Launch</span>
+        </div>
+      </div>
+      <!-- HEIGHT lens -->
+      <div class="lens">
+        <div class="lens-head"><span class="dot"></span>Height · side-on</div>
+        <svg id="svgHt" viewBox="0 0 400 360" aria-label="Height lens"></svg>
+        <div class="legend">
+          <span><i style="border-color:var(--c-attack)"></i>Attack</span>
+          <span><i style="border-color:var(--c-loft)"></i>Dyn loft</span>
+          <span><i style="border-color:var(--c-launch)"></i>Launch</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="caption">
+      <div class="chip" id="capChip">P1</div>
+      <div class="ctext" id="capText"></div>
+    </div>
+
+    <div class="footnote">
+      Inputs solid &amp; bold (Direction tip <code>235</code>, Height tip <code>220</code>); launch arrows longer (tip <code>280</code>) and re-skinned by proposal.
+      Today's launch = <code>--c-launch #F4D000, 4px, dash 6 5</code>. All proposals are longer-than-input and subtler than today.
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var TOK = {
+    face: "#ff6a78",
+    path: "#7fc3ff",
+    attack: "#ff9ec2",
+    loft: "#A66BFF",
+    launch: "#F4D000",
+    accent: "#22E3D6"
+  };
+
+  var SVGNS = "http://www.w3.org/2000/svg";
+
+  // ---- proposal metadata ----
+  var PROPOSALS = {
+    1: {
+      name: "Whisper line",
+      rationale: "Thin 2px solid line in desaturated white at 45% — the quietest option. A tiny minimal arrowhead. Reads as a faint guide that never competes with the bold inputs."
+    },
+    2: {
+      name: "Soft tracer",
+      rationale: "Finer dashed line (2.5px, dash 4 6) at ~55% launch-yellow with a small head and faint glow. A cyan-tinted alt is available. Keeps the ‘dashed = derived’ language, just gentler."
+    },
+    3: {
+      name: "Fading needle",
+      rationale: "Long line with an opacity gradient that fades from the pivot toward the tip, ending in a small open chevron (not filled). Elegant and directional without a heavy head."
+    },
+    4: {
+      name: "Glow tracer + dot",
+      rationale: "Thin 2px softly glowing line ending in a small filled dot at the tip — a ball-tracer feel. No big arrowhead, the longest run. Subtle but unmistakably ‘where the ball goes’."
+    }
+  };
+
+  // ---- helpers ----
+  function el(name, attrs) {
+    var n = document.createElementNS(SVGNS, name);
+    if (attrs) for (var k in attrs) n.setAttribute(k, attrs[k]);
+    return n;
+  }
+  function clear(svg) { while (svg.firstChild) svg.removeChild(svg.firstChild); }
+
+  // hex -> rgba string
+  function rgba(hex, a) {
+    var h = hex.replace("#", "");
+    var r = parseInt(h.substr(0, 2), 16),
+        g = parseInt(h.substr(2, 2), 16),
+        b = parseInt(h.substr(4, 2), 16);
+    return "rgba(" + r + "," + g + "," + b + "," + a + ")";
+  }
+
+  // Endpoint of an arrow given pivot, angle (deg, 0 = "up"/forward), length.
+  // In top-down Direction, "up" the screen is downrange; angle in degrees,
+  // positive = to the right of target line.
+  function tipFrom(px, py, angDeg, len) {
+    var rad = (angDeg) * Math.PI / 180;
+    // up the screen = -y ; right = +x
+    return { x: px + Math.sin(rad) * len, y: py - Math.cos(rad) * len };
+  }
+
+  // bold input arrow (solid, with filled arrowhead)
+  function drawInputArrow(svg, px, py, ang, len, color, width, headId) {
+    var t = tipFrom(px, py, ang, len);
+    // glow underlay
+    svg.appendChild(el("line", {
+      x1: px, y1: py, x2: t.x, y2: t.y,
+      stroke: color, "stroke-width": width + 6,
+      "stroke-linecap": "round", opacity: 0.12
+    }));
+    var ln = el("line", {
+      x1: px, y1: py, x2: t.x, y2: t.y,
+      stroke: color, "stroke-width": width,
+      "stroke-linecap": "round",
+      "marker-end": "url(#" + headId + ")"
+    });
+    svg.appendChild(ln);
+    return t;
+  }
+
+  // a filled triangular marker for input heads
+  function defHead(defs, id, color, scale) {
+    var m = el("marker", {
+      id: id, viewBox: "0 0 10 10",
+      refX: 7, refY: 5,
+      markerWidth: scale, markerHeight: scale,
+      orient: "auto-start-reverse"
+    });
+    m.appendChild(el("path", { d: "M 0 0 L 10 5 L 0 10 z", fill: color }));
+    defs.appendChild(m);
+  }
+
+  // subtle gap field: low-alpha arc between two tip angles
+  function drawGapField(svg, px, py, angA, angB, radius) {
+    var steps = 26;
+    var lo = Math.min(angA, angB), hi = Math.max(angA, angB);
+    var d = "";
+    for (var i = 0; i <= steps; i++) {
+      var a = lo + (hi - lo) * (i / steps);
+      var p = tipFrom(px, py, a, radius);
+      d += (i === 0 ? "M " : "L ") + p.x.toFixed(1) + " " + p.y.toFixed(1) + " ";
+    }
+    // filled wedge back to pivot for the faint fan
+    var pA = tipFrom(px, py, lo, radius);
+    var pB = tipFrom(px, py, hi, radius);
+    var fan = "M " + px + " " + py + " L " + pA.x.toFixed(1) + " " + pA.y.toFixed(1) + " ";
+    for (var j = 0; j <= steps; j++) {
+      var aa = lo + (hi - lo) * (j / steps);
+      var pp = tipFrom(px, py, aa, radius);
+      fan += "L " + pp.x.toFixed(1) + " " + pp.y.toFixed(1) + " ";
+    }
+    fan += "Z";
+    svg.appendChild(el("path", {
+      d: fan, fill: rgba(TOK.accent, 0.05), stroke: "none"
+    }));
+    // the arc itself, slightly stronger
+    svg.appendChild(el("path", {
+      d: d, fill: "none",
+      stroke: rgba(TOK.accent, 0.22),
+      "stroke-width": 1.5,
+      "stroke-dasharray": "2 4"
+    }));
+  }
+
+  // pivot puck
+  function drawPivot(svg, px, py) {
+    svg.appendChild(el("circle", { cx: px, cy: py, r: 9, fill: rgba("#ffffff", 0.04) }));
+    svg.appendChild(el("circle", { cx: px, cy: py, r: 4.5, fill: "#0c1116", stroke: rgba("#ffffff", 0.25), "stroke-width": 1.5 }));
+    svg.appendChild(el("circle", { cx: px, cy: py, r: 1.6, fill: TOK.accent }));
+  }
+
+  // target-line reference (faint)
+  function drawRef(svg, px, py, ang, len) {
+    var t = tipFrom(px, py, ang, len + 24);
+    var b = tipFrom(px, py, ang + 180, 26);
+    svg.appendChild(el("line", {
+      x1: b.x, y1: b.y, x2: t.x, y2: t.y,
+      stroke: rgba("#ffffff", 0.10), "stroke-width": 1,
+      "stroke-dasharray": "1 6"
+    }));
+  }
+
+  // ---- LAUNCH arrow drawing per proposal ----
+  // p: proposal id, tint: 'yellow' (uses launch token)
+  function drawLaunch(svg, defs, idPrefix, px, py, ang, len, p) {
+    var t = tipFrom(px, py, ang, len);
+    var col = TOK.launch;
+
+    if (p === 1) {
+      // Whisper line — thin 2px solid desaturated white @45%, tiny minimal head
+      var c1 = "rgba(232,240,251,.45)";
+      var headId = idPrefix + "-h1";
+      var m = el("marker", { id: headId, viewBox: "0 0 10 10", refX: 6, refY: 5, markerWidth: 5, markerHeight: 5, orient: "auto-start-reverse" });
+      m.appendChild(el("path", { d: "M 0 1.5 L 9 5 L 0 8.5", fill: "none", stroke: c1, "stroke-width": 1.6, "stroke-linecap": "round", "stroke-linejoin": "round" }));
+      defs.appendChild(m);
+      svg.appendChild(el("line", {
+        x1: px, y1: py, x2: t.x, y2: t.y,
+        stroke: c1, "stroke-width": 2, "stroke-linecap": "round",
+        "marker-end": "url(#" + headId + ")"
+      }));
+    }
+    else if (p === 2) {
+      // Soft tracer — 2.5px finer dashes 4 6 @55% launch-yellow, small head + faint glow
+      var c2 = rgba(col, 0.55);
+      // faint glow underlay
+      svg.appendChild(el("line", {
+        x1: px, y1: py, x2: t.x, y2: t.y,
+        stroke: rgba(col, 0.14), "stroke-width": 6, "stroke-linecap": "round"
+      }));
+      var headId2 = idPrefix + "-h2";
+      var m2 = el("marker", { id: headId2, viewBox: "0 0 10 10", refX: 6.5, refY: 5, markerWidth: 6, markerHeight: 6, orient: "auto-start-reverse" });
+      m2.appendChild(el("path", { d: "M 0 1 L 9 5 L 0 9 z", fill: c2 }));
+      defs.appendChild(m2);
+      svg.appendChild(el("line", {
+        x1: px, y1: py, x2: t.x, y2: t.y,
+        stroke: c2, "stroke-width": 2.5, "stroke-linecap": "round",
+        "stroke-dasharray": "4 6",
+        "marker-end": "url(#" + headId2 + ")"
+      }));
+    }
+    else if (p === 3) {
+      // Fading needle — opacity gradient pivot->tip, small open chevron tip
+      var gradId = idPrefix + "-g3";
+      var lg = el("linearGradient", { id: gradId, gradientUnits: "userSpaceOnUse", x1: px, y1: py, x2: t.x, y2: t.y });
+      lg.appendChild(el("stop", { offset: "0%", "stop-color": col, "stop-opacity": "0.08" }));
+      lg.appendChild(el("stop", { offset: "55%", "stop-color": col, "stop-opacity": "0.55" }));
+      lg.appendChild(el("stop", { offset: "100%", "stop-color": col, "stop-opacity": "0.9" }));
+      defs.appendChild(lg);
+      svg.appendChild(el("line", {
+        x1: px, y1: py, x2: t.x, y2: t.y,
+        stroke: "url(#" + gradId + ")", "stroke-width": 2.4, "stroke-linecap": "round"
+      }));
+      // small OPEN chevron (not filled), oriented along the arrow
+      var back = tipFrom(px, py, ang, len - 11);
+      var perpL = tipFrom(back.x, back.y, ang - 90, 5.5);
+      // build chevron via two short strokes meeting at the tip
+      var leftA = tipFrom(px, py, ang, len - 12);
+      var off = 6;
+      var lx = tipFrom(leftA.x, leftA.y, ang - 90, off);
+      var rx = tipFrom(leftA.x, leftA.y, ang + 90, off);
+      svg.appendChild(el("path", {
+        d: "M " + lx.x.toFixed(1) + " " + lx.y.toFixed(1) + " L " + t.x.toFixed(1) + " " + t.y.toFixed(1) + " L " + rx.x.toFixed(1) + " " + rx.y.toFixed(1),
+        fill: "none", stroke: rgba(col, 0.9), "stroke-width": 2, "stroke-linecap": "round", "stroke-linejoin": "round"
+      }));
+    }
+    else if (p === 4) {
+      // Glow tracer + dot — thin 2px softly glowing line, small filled dot at tip, no head, longest
+      var fId = idPrefix + "-f4";
+      var f = el("filter", { id: fId, x: "-40%", y: "-40%", width: "180%", height: "180%" });
+      f.appendChild(el("feGaussianBlur", { in: "SourceGraphic", stdDeviation: "2.4" }));
+      defs.appendChild(f);
+      // soft glow underlay (blurred)
+      var glowLine = el("line", {
+        x1: px, y1: py, x2: t.x, y2: t.y,
+        stroke: rgba(col, 0.5), "stroke-width": 3, "stroke-linecap": "round",
+        filter: "url(#" + fId + ")"
+      });
+      svg.appendChild(glowLine);
+      // crisp core
+      svg.appendChild(el("line", {
+        x1: px, y1: py, x2: t.x, y2: t.y,
+        stroke: rgba(col, 0.7), "stroke-width": 2, "stroke-linecap": "round"
+      }));
+      // glowing dot at tip
+      svg.appendChild(el("circle", { cx: t.x, cy: t.y, r: 6, fill: rgba(col, 0.35), filter: "url(#" + fId + ")" }));
+      svg.appendChild(el("circle", { cx: t.x, cy: t.y, r: 3.4, fill: col }));
+      svg.appendChild(el("circle", { cx: t.x, cy: t.y, r: 1.4, fill: "#fffbe0" }));
+    }
+    return t;
+  }
+
+  // ---- scene builders ----
+  // DIRECTION lens (top-down). pivot ~(200,330)
+  function buildDirection(svg, p) {
+    clear(svg);
+    var defs = el("defs", {});
+    svg.appendChild(defs);
+    defHead(defs, "dir-face-h", TOK.face, 6.5);
+    defHead(defs, "dir-path-h", TOK.path, 6.5);
+
+    var px = 200, py = 330;
+    var gain = 2;
+    var faceDeg = -6, pathDeg = 4;
+    var faceAng = faceDeg * gain;   // -12
+    var pathAng = pathDeg * gain;   //  +8
+
+    // reference target line (straight up)
+    drawRef(svg, px, py, 0, 250);
+
+    // gap field between the two input tips
+    drawGapField(svg, px, py, faceAng, pathAng, 210);
+
+    // bold inputs (tip 235)
+    drawInputArrow(svg, px, py, faceAng, 235, TOK.face, 8, "dir-face-h");
+    drawInputArrow(svg, px, py, pathAng, 235, TOK.path, 8, "dir-path-h");
+
+    // launch resultant: 0.75*face + 0.25*path  (in same gained angle space)
+    var launchAng = 0.75 * faceAng + 0.25 * pathAng; // -7
+    drawLaunch(svg, defs, "dir", px, py, launchAng, 280, p);
+
+    drawPivot(svg, px, py);
+  }
+
+  // HEIGHT lens (side-on). pivot ~(80,250)
+  function buildHeight(svg, p) {
+    clear(svg);
+    var defs = el("defs", {});
+    svg.appendChild(defs);
+    defHead(defs, "ht-att-h", TOK.attack, 6.5);
+    defHead(defs, "ht-loft-h", TOK.loft, 6.5);
+
+    var px = 80, py = 250;
+    // In side-on, "0deg" = straight up the screen. We rotate so arrows fan to the
+    // upper-right (downrange + up). Use a base elevation so the fan sits in-frame.
+    var gain = 1;
+    var attackDeg = -3, loftDeg = 30;
+    // map: higher loft -> more vertical (smaller screen angle from horizontal).
+    // We'll express each as angle from the horizontal target line that goes right.
+    // Convert to our tipFrom convention (0 = up). angleFromUp = 90 - elevation.
+    var attackElev = 8 + attackDeg * gain;     // shallow, ~5 deg up
+    var loftElev = loftDeg * gain;             // 30 deg up
+    var attackAngUp = 90 - attackElev;         // ~85
+    var loftAngUp = 90 - loftElev;             // ~60
+
+    // ground / target reference (horizontal to the right)
+    drawRef(svg, px, py, 90, 250);
+
+    // gap field between attack and loft
+    drawGapField(svg, px, py, attackAngUp, loftAngUp, 200);
+
+    // bold inputs (tip 220)
+    drawInputArrow(svg, px, py, attackAngUp, 220, TOK.attack, 8, "ht-att-h");
+    drawInputArrow(svg, px, py, loftAngUp, 220, TOK.loft, 8, "ht-loft-h");
+
+    // launch resultant: 0.62*loft + 0.25*attack, renormalized between the pair
+    // weighted elevation
+    var launchElev = (0.62 * loftElev + 0.25 * attackElev) / (0.62 + 0.25);
+    var launchAngUp = 90 - launchElev;
+    drawLaunch(svg, defs, "ht", px, py, launchAngUp, 280, p);
+
+    drawPivot(svg, px, py);
+  }
+
+  // ---- state / wiring ----
+  var current = 1;
+  var svgDir = document.getElementById("svgDir");
+  var svgHt = document.getElementById("svgHt");
+  var capChip = document.getElementById("capChip");
+  var capText = document.getElementById("capText");
+  var toggle = document.getElementById("toggle");
+
+  function render(p) {
+    current = p;
+    buildDirection(svgDir, p);
+    buildHeight(svgHt, p);
+    var meta = PROPOSALS[p];
+    capChip.textContent = "P" + p;
+    capText.innerHTML = "<strong>" + meta.name + "</strong> — <span class=\"dim\">" + meta.rationale + "</span>";
+    // toggle active state
+    var btns = toggle.querySelectorAll("button");
+    for (var i = 0; i < btns.length; i++) {
+      var on = btns[i].getAttribute("data-p") === String(p);
+      btns[i].classList.toggle("active", on);
+      btns[i].setAttribute("aria-selected", on ? "true" : "false");
+    }
+  }
+
+  toggle.addEventListener("click", function (e) {
+    var b = e.target.closest("button");
+    if (!b) return;
+    render(parseInt(b.getAttribute("data-p"), 10));
+  });
+
+  // expose for headless verification
+  window.__renderProposal = render;
+  window.__getState = function () {
+    return {
+      current: current,
+      dirChildren: svgDir.childNodes.length,
+      htChildren: svgHt.childNodes.length
+    };
+  };
+
+  render(1);
+})();
+</script>
+</body>
+</html>

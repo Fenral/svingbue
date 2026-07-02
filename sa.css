@@ -1,0 +1,179 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   sa.css — StrikeArc shared infrastructure (FOUNDATION phase)
+   Linked from index.html, geometry.html, impact.html.
+   • Cross-document View Transitions (Chrome/Safari; falls back to instant nav)
+   • Scaffolding for the shared overlay/onboarding/coach-mark system (sa-firstrun.js)
+   Palette is inherited from each page's :root (--accent #22E3D6, --ink, --bg …);
+   fallbacks are provided so this file also works if a token is missing.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Cross-document View Transitions ─────────────────────────────────────── */
+@view-transition { navigation: auto; }
+
+/* Shared morph: the logo lockup and the module nav persist across navigation.
+   Tasteful default cross-fade with a slightly longer ease. */
+::view-transition-group(sa-logo),
+::view-transition-group(sa-nav){
+  animation-duration: .42s;
+  animation-timing-function: cubic-bezier(.2,.7,.2,1);
+}
+::view-transition-old(root),
+::view-transition-new(root){
+  animation-duration: .4s;
+  animation-timing-function: cubic-bezier(.2,.7,.2,1);
+}
+
+/* Reduced motion: keep the instant navigation, drop the animation. */
+@media (prefers-reduced-motion: reduce){
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*){
+    animation: none !important;
+  }
+}
+
+/* ── Shared overlay system (styled now; content wired by later phases) ───── */
+
+/* full-screen dim + backdrop blur behind onboarding / coach-marks */
+.sa-overlay{
+  position: fixed; inset: 0; z-index: 1000;
+  display: flex; align-items: center; justify-content: center;
+  padding: max(20px, env(safe-area-inset-top)) 20px max(20px, env(safe-area-inset-bottom));
+  background: rgba(5, 8, 11, .72);
+  -webkit-backdrop-filter: blur(var(--blur-overlay, 18px));
+  backdrop-filter: blur(var(--blur-overlay, 18px));
+  color: var(--ink, #e8f0fb);
+  font-family: "SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  opacity: 1;
+}
+.sa-overlay[hidden]{ display: none; }
+
+/* onboarding card */
+.sa-card{
+  position: relative;
+  width: min(440px, 92vw);
+  max-height: min(86vh, 560px);
+  display: flex; flex-direction: column; gap: 16px;
+  padding: clamp(20px, 4vw, 30px);
+  background: var(--panel, rgba(12, 20, 33, .92));
+  background-color: rgba(12, 20, 33, .94);
+  border: 1px solid var(--accent-line, rgba(34, 227, 214, .55));
+  border-radius: var(--radius-card, 16px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .06), 0 24px 60px -28px rgba(0, 0, 0, .85);
+}
+.sa-card .sa-card-art{
+  display: flex; align-items: center; justify-content: center;
+  min-height: 96px;
+  color: var(--accent, #22E3D6);
+}
+.sa-card .sa-card-art svg{ width: 64px; height: 64px; display: block; }
+.sa-card h2{
+  font-size: clamp(19px, 4.4vw, 23px); font-weight: 700; letter-spacing: -.01em; line-height: 1.1;
+}
+.sa-card p{
+  font-size: 14px; line-height: 1.55; color: var(--muted, #9aabc6); margin: 0;
+}
+.sa-card .sa-card-body{ flex: 1 1 auto; min-height: 0; }
+
+/* coach-mark bubble + arrow */
+.sa-coach{
+  position: fixed; z-index: 1002;
+  width: min(320px, 86vw);
+  display: flex; flex-direction: column; gap: 10px;
+  padding: 16px 18px;
+  background: var(--panel, rgba(12, 20, 33, .96));
+  background-color: rgba(12, 20, 33, .97);
+  border: 1px solid var(--accent-line, rgba(34, 227, 214, .55));
+  border-radius: var(--radius-control, 12px);
+  box-shadow: 0 18px 50px -20px rgba(0, 0, 0, .85);
+  color: var(--ink, #e8f0fb);
+}
+.sa-coach[hidden]{ display: none; }
+.sa-coach h3{ font-size: 15px; font-weight: 700; letter-spacing: -.005em; line-height: 1.2; }
+.sa-coach p{ font-size: 13px; line-height: 1.5; color: var(--muted, #9aabc6); margin: 0; }
+/* arrow — positioned/rotated inline by JS via --sa-arrow-* custom props */
+.sa-coach .sa-coach-arrow{
+  position: absolute; width: 14px; height: 14px;
+  background: rgba(12, 20, 33, .97);
+  border-left: 1px solid var(--accent-line, rgba(34, 227, 214, .55));
+  border-top: 1px solid var(--accent-line, rgba(34, 227, 214, .55));
+  transform: rotate(45deg);
+}
+
+/* spotlight cutout highlight — a ring + huge box-shadow dims everything else */
+.sa-spotlight{
+  position: fixed; z-index: 1001; pointer-events: none;
+  border-radius: 14px;
+  border: 2px solid var(--accent, #22E3D6);
+  box-shadow: 0 0 0 9999px rgba(5, 8, 11, .72), 0 0 22px rgba(34, 227, 214, .5);
+  transition: top .3s cubic-bezier(.2,.7,.2,1), left .3s cubic-bezier(.2,.7,.2,1),
+              width .3s cubic-bezier(.2,.7,.2,1), height .3s cubic-bezier(.2,.7,.2,1);
+}
+.sa-spotlight[hidden]{ display: none; }
+@media (prefers-reduced-motion: reduce){ .sa-spotlight{ transition: none; } }
+
+/* progress dots */
+.sa-dots{ display: flex; align-items: center; justify-content: center; gap: 8px; }
+.sa-dots .sa-dot{
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--muted, #9aabc6); opacity: .4;
+  transition: opacity .25s ease, transform .25s ease, background .25s ease;
+}
+.sa-dots .sa-dot.is-active{ background: var(--accent, #22E3D6); opacity: 1; transform: scale(1.25); }
+@media (prefers-reduced-motion: reduce){ .sa-dots .sa-dot{ transition: none; } }
+
+/* actions row + buttons */
+.sa-actions{
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  flex-wrap: wrap;
+}
+.sa-actions .sa-spacer{ flex: 1 1 auto; }
+.sa-btn{
+  -webkit-tap-highlight-color: transparent;
+  min-height: 44px; min-width: 44px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 0 18px; border-radius: var(--radius-pill, 999px);
+  font-family: inherit; font-size: 13px; font-weight: 700; letter-spacing: .02em;
+  line-height: 1; cursor: pointer;
+  border: 1px solid var(--line, rgba(255, 255, 255, .30));
+  background: rgba(10, 18, 30, .6); color: var(--ink, #e8f0fb);
+  transition: background .2s, border-color .2s, transform .08s, color .2s;
+}
+.sa-btn:hover{ background: rgba(255, 255, 255, .10); border-color: rgba(255, 255, 255, .42); }
+.sa-btn:active{ transform: translateY(1px); }
+.sa-btn:focus-visible{ outline: 2px solid var(--accent, #22E3D6); outline-offset: 2px; }
+/* primary (accent) — text on accent is near-black bg for AA */
+.sa-btn.sa-btn-primary{
+  background: var(--accent, #22E3D6); color: #06181b;
+  border-color: var(--accent, #22E3D6);
+}
+.sa-btn.sa-btn-primary:hover{ filter: brightness(1.06); background: var(--accent, #22E3D6); }
+/* quiet/ghost (Skip / Back) */
+.sa-btn.sa-btn-ghost{ background: transparent; border-color: transparent; color: var(--muted, #9aabc6); }
+.sa-btn.sa-btn-ghost:hover{ background: rgba(255, 255, 255, .07); color: var(--ink, #e8f0fb); }
+@media (prefers-reduced-motion: reduce){ .sa-btn{ transition: none; } }
+
+/* step counter (aria-live) inside coach bubble */
+.sa-step{ font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--accent, #22E3D6); }
+
+/* "?" replay affordance (used by Phases C/D) */
+.sa-help{
+  -webkit-tap-highlight-color: transparent;
+  width: 44px; height: 44px; border-radius: var(--radius-pill, 999px);
+  display: inline-flex; align-items: center; justify-content: center;
+  font-family: inherit; font-size: 16px; font-weight: 700; cursor: pointer;
+  background: rgba(10, 18, 30, .6); color: var(--accent, #22E3D6);
+  border: 1px solid var(--accent-line, rgba(34, 227, 214, .55));
+  transition: background .2s, border-color .2s;
+}
+.sa-help:hover{ background: var(--accent-soft, rgba(34, 227, 214, .16)); border-color: var(--accent, #22E3D6); }
+.sa-help:focus-visible{ outline: 2px solid var(--accent, #22E3D6); outline-offset: 2px; }
+
+/* overlay entrance motion (CSS path; JS prefers GSAP when present) */
+@media (prefers-reduced-motion: no-preference){
+  .sa-overlay.sa-anim{ animation: sa-fade .26s ease both; }
+  .sa-overlay.sa-anim .sa-card{ animation: sa-rise .3s cubic-bezier(.2,.7,.2,1) both; }
+  .sa-coach.sa-anim{ animation: sa-fade .22s ease both; }
+}
+@keyframes sa-fade{ from{ opacity: 0; } to{ opacity: 1; } }
+@keyframes sa-rise{ from{ opacity: 0; transform: translateY(14px) scale(.98); } to{ opacity: 1; transform: none; } }

@@ -1,0 +1,142 @@
+definitions:
+  bundle_id: &bundle_id no.svingbue.app
+  team_id: &team_id PL9G26C26C
+
+workflows:
+  ios-testflight:
+    name: StrikeArc — iOS TestFlight
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+
+    integrations:
+      # USER MUST CONFIGURE IN CODEMAGIC:
+      # Codemagic > Team settings > Integrations > App Store Connect ->
+      # add an API key there and name the integration exactly
+      # `app_store_connect` (the name referenced below). Codemagic then
+      # injects the key/issuer/key-id for both code signing and the
+      # TestFlight publish step — no secret values live in this file.
+      app_store_connect: app_store_connect
+
+    environment:
+      groups:
+        - app_store_connect   # env group name must match the integration above
+      vars:
+        BUNDLE_ID: *bundle_id
+        APP_STORE_APPLE_ID: $APP_STORE_APPLE_ID # optional: numeric ASC app id, set in Codemagic env vars if known
+        XCODE_WORKSPACE: "ios/App/App.xcworkspace"
+        XCODE_SCHEME: "App"
+      node: 20
+      xcode: latest
+      cocoapods: default
+
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: main
+          include: true
+      cancel_previous_builds: true
+
+    scripts:
+      - name: Install npm dependencies
+        script: |
+          npm ci
+
+      - name: Assemble www/ from web source (denylist mocks/tooling)
+        script: |
+          npm run copy-web
+
+      # ios/ is never committed (Windows dev machine can't generate it —
+      # needs Xcode/CocoaPods), so every CI run creates it fresh here.
+      - name: Add the iOS platform
+        script: |
+          npx cap add ios
+
+      - name: Patch Info.plist for landscape-only + display name
+        script: |
+          node scripts/ios-landscape.mjs
+
+      - name: Generate app icons/splash from resources/
+        script: |
+          npx @capacitor/assets generate --ios
+
+      - name: Sync web assets + plugins into the iOS project
+        script: |
+          npx cap sync ios
+
+      - name: CocoaPods install
+        script: |
+          cd ios/App && pod install
+
+      - name: Set build number from Codemagic build counter
+        script: |
+          cd ios/App
+          agvtool new-version -all "$BUILD_NUMBER"
+
+      - name: Set up code signing (automatic, via App Store Connect API key)
+        script: |
+          app-store-connect fetch-signing-files "$BUNDLE_ID" \
+            --type IOS_APP_STORE \
+            --create
+          keychain initialize
+          app-store-connect list-builds > /dev/null 2>&1 || true
+          keychain add-certificates
+          xcode-project use-profiles
+
+      - name: Build .ipa
+        script: |
+          xcode-project build-ipa \
+            --workspace "$XCODE_WORKSPACE" \
+            --scheme "$XCODE_SCHEME"
+
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+      - ios/App/build/**/*.dSYM.zip
+
+    publishing:
+      app_store_connect:
+        auth: integration
+        api_key: app_store_connect
+        submit_to_testflight: true
+        # USER MAY CONFIGURE: add a beta group name here once one exists in
+        # App Store Connect, e.g.:
+        # beta_groups:
+        #   - "Internal Testers"
+        expire_build_submitted_for_review: false
+
+# =============================================================================
+# USER MUST CONFIGURE IN CODEMAGIC (one-time setup, cannot be done from code):
+#
+# 1. App Store Connect API key integration
+#    - Codemagic > Team settings (or app settings) > Integrations >
+#      "App Store Connect" > add a new API key (generated in App Store
+#      Connect > Users and Access > Integrations > App Store Connect API).
+#    - Name this integration exactly `app_store_connect` — this file
+#      references that name in both `integrations.app_store_connect` and
+#      `publishing.app_store_connect.api_key`. Codemagic supplies the actual
+#      key/issuer ID/key ID at build time; nothing secret is stored here.
+#
+# 2. Connect the GitHub repo
+#    - Codemagic > Add application > connect the `Fenral/svingbue` GitHub
+#      repository so this codemagic.yaml is picked up.
+#
+# 3. Create the App Store Connect app record
+#    - App Store Connect > My Apps > "+" > New App, bundle ID `no.svingbue.app`
+#      (must already exist as an Identifier under the PL9G26C26C team in
+#      the Apple Developer portal — create it there first if it doesn't
+#      exist yet), platform iOS, name "StrikeArc".
+#    - Automatic signing above (`fetch-signing-files ... --create`) can
+#      create the App Store distribution certificate + provisioning profile
+#      for team PL9G26C26C on first run, but the App ID/app record itself
+#      must exist before the first TestFlight submission succeeds.
+#
+# 4. Trigger the workflow
+#    - Once 1–3 are done, push to `main` (or run `ios-testflight` manually
+#      from the Codemagic dashboard) to produce the first build and submit
+#      it to TestFlight.
+#
+# Everything else (npm deps, www/ assembly, `cap add ios`, plist patch,
+# icon generation, pod install, build number, signing, archive/build,
+# TestFlight publish) is fully automated by the steps above.
+# =============================================================================

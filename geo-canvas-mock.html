@@ -1,0 +1,703 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:,">
+<title>StrikeArc · Geometry 3D — art-direction gallery</title>
+<style>
+  :root{
+    --accent:#22E3D6;
+    --ink:#e8f0fb;
+    --muted:#9aabc6;
+    --bg:#0A0E12;
+    --panel:rgba(13,19,26,.72);
+    --stroke:rgba(34,227,214,.22);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;overflow:hidden;background:var(--bg)}
+  body{
+    font-family:"SF Pro Display",-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,system-ui,sans-serif;
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+  }
+  #c{position:fixed;inset:0;width:100%;height:100%;display:block}
+
+  /* ---------- header ---------- */
+  .hdr{position:fixed;top:14px;left:16px;z-index:5;pointer-events:none}
+  .hdr h1{font-size:13px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+  .hdr h1 b{color:var(--accent);font-weight:700}
+  #caption{margin-top:4px;font-size:15px;font-weight:600;letter-spacing:.02em;color:var(--ink)}
+
+  /* ---------- segmented controls ---------- */
+  .panel-tr{position:fixed;top:12px;right:12px;z-index:6;display:flex;flex-direction:column;gap:8px;align-items:flex-end}
+  .seg-row{display:flex;align-items:center;gap:8px}
+  .seg-title{font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);width:64px;text-align:right}
+  .seg{display:flex;background:var(--panel);border:1px solid var(--stroke);border-radius:12px;padding:3px;backdrop-filter:blur(10px)}
+  .seg button{
+    appearance:none;border:0;background:transparent;color:var(--muted);
+    min-height:44px;min-width:44px;padding:0 14px;border-radius:9px;
+    font:600 12px/1 inherit;font-family:inherit;letter-spacing:.03em;cursor:pointer;
+    transition:color .15s,background .15s;
+  }
+  .seg button[aria-pressed="true"]{background:rgba(34,227,214,.16);color:var(--accent)}
+  .seg button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+  /* ---------- sliders ---------- */
+  .panel-bl{
+    position:fixed;left:12px;bottom:12px;z-index:6;
+    background:var(--panel);border:1px solid var(--stroke);border-radius:16px;
+    padding:12px 16px;display:flex;flex-direction:column;gap:2px;backdrop-filter:blur(10px);
+    width:min(340px,42vw);
+  }
+  .sl{display:grid;grid-template-columns:86px 1fr 78px;align-items:center;gap:10px;min-height:44px}
+  .sl .nm{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+  .sl output{font-size:13px;font-weight:700;color:var(--accent);text-align:right;font-variant-numeric:tabular-nums}
+  input[type="range"]{
+    -webkit-appearance:none;appearance:none;width:100%;height:44px;background:transparent;cursor:pointer;
+  }
+  input[type="range"]::-webkit-slider-runnable-track{height:4px;border-radius:2px;background:rgba(154,171,198,.28)}
+  input[type="range"]::-webkit-slider-thumb{
+    -webkit-appearance:none;width:20px;height:20px;margin-top:-8px;border-radius:50%;
+    background:var(--accent);border:2px solid #0A0E12;box-shadow:0 0 10px rgba(34,227,214,.55);
+  }
+  input[type="range"]::-moz-range-track{height:4px;border-radius:2px;background:rgba(154,171,198,.28)}
+  input[type="range"]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:var(--accent);border:2px solid #0A0E12}
+  input[type="range"]:focus-visible{outline:2px solid var(--accent);outline-offset:-6px;border-radius:10px}
+
+  /* ---------- 3D-anchored labels ---------- */
+  .lbl{
+    position:fixed;z-index:4;pointer-events:none;white-space:nowrap;
+    font-size:12px;font-weight:700;letter-spacing:.04em;color:var(--ink);
+    background:rgba(10,14,18,.62);border:1px solid var(--stroke);border-radius:8px;
+    padding:3px 9px;transform:translate(-50%,-50%);
+    font-variant-numeric:tabular-nums;
+    text-shadow:0 1px 4px rgba(0,0,0,.6);
+  }
+  .lbl.accent{color:var(--accent)}
+  .lbl[hidden]{display:none}
+
+  @media (max-width:820px){
+    .seg button{padding:0 10px;font-size:11px}
+    .seg-title{display:none}
+    .panel-bl{width:min(300px,46vw);padding:8px 12px}
+    .sl{grid-template-columns:70px 1fr 64px;min-height:40px}
+    .hdr h1{font-size:11px}
+    #caption{font-size:13px}
+  }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+</head>
+<body>
+<canvas id="c" aria-label="3D swing geometry stage"></canvas>
+
+<header class="hdr">
+  <h1><b>StrikeArc</b> · Geometry 3D — art direction</h1>
+  <div id="caption" aria-live="polite">G1 Etched · L1 Bracket+glow</div>
+</header>
+
+<div class="panel-tr">
+  <div class="seg-row" role="group" aria-label="Glass variant">
+    <span class="seg-title" aria-hidden="true">Glass</span>
+    <div class="seg">
+      <button type="button" data-glass="G1" aria-pressed="true"  aria-label="Glass variant G1: Etched instrument">G1 Etched</button>
+      <button type="button" data-glass="G2" aria-pressed="false" aria-label="Glass variant G2: Holographic grid">G2 Holo grid</button>
+      <button type="button" data-glass="G3" aria-pressed="false" aria-label="Glass variant G3: Both">G3 Both</button>
+    </div>
+  </div>
+  <div class="seg-row" role="group" aria-label="Low point variant">
+    <span class="seg-title" aria-hidden="true">Lowpoint</span>
+    <div class="seg">
+      <button type="button" data-low="L1" aria-pressed="true"  aria-label="Low point variant L1: Bracket and valley glow">L1 Bracket+glow</button>
+      <button type="button" data-low="L2" aria-pressed="false" aria-label="Low point variant L2: Bracket only">L2 Bracket</button>
+      <button type="button" data-low="L3" aria-pressed="false" aria-label="Low point variant L3: Valley glow only">L3 Valley glow</button>
+    </div>
+  </div>
+  <div class="seg-row" role="group" aria-label="Camera view">
+    <span class="seg-title" aria-hidden="true">View</span>
+    <div class="seg">
+      <button type="button" data-cam="FACE" aria-pressed="true"  aria-label="Face-on camera">Face</button>
+      <button type="button" data-cam="DTL"  aria-pressed="false" aria-label="Down-the-line camera">DTL</button>
+    </div>
+  </div>
+</div>
+
+<div class="panel-bl">
+  <div class="sl">
+    <span class="nm" id="nmPlane">Plane</span>
+    <input type="range" id="sPlane" min="45" max="70" step="0.5" value="60" aria-label="Swing plane angle, 45 to 70 degrees">
+    <output id="oPlane" for="sPlane">60.0°</output>
+  </div>
+  <div class="sl">
+    <span class="nm" id="nmDir">Direction</span>
+    <input type="range" id="sDir" min="-8" max="8" step="0.5" value="-2" aria-label="Swing direction, minus 8 to plus 8 degrees">
+    <output id="oDir" for="sDir">−2.0°</output>
+  </div>
+  <div class="sl">
+    <span class="nm" id="nmLp">Low point</span>
+    <input type="range" id="sLp" min="-0.30" max="0.30" step="0.01" value="0.08" aria-label="Low point ahead or behind the ball, minus 30 to plus 30 centimetres">
+    <output id="oLp" for="sLp">+8 cm</output>
+  </div>
+</div>
+
+<div class="lbl accent" id="lblProt" hidden>60°</div>
+<div class="lbl accent" id="lblFan"  hidden>−2.0°</div>
+<div class="lbl"        id="lblBrk"  hidden>+8 cm ahead</div>
+
+<script type="module">
+import * as THREE from 'three';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import {
+  arcPosition, tangentAt, thetaAtImpact, planeBasis, lpWorld, effectiveLpx,
+  SWEEP_RAD, RADIUS, deg2rad
+} from './swing-parameters-and-impact.js';
+
+/* ============================== state ============================== */
+const state = {
+  view: 'face',
+  radius: RADIUS,
+  planeAngle: 60,
+  swingDirection: -2,
+  lowPoint: { x: 0.08, y: 0, z: 0.05 },
+};
+const ui = { glass: 'G1', low: 'L1', cam: 'FACE' };
+const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const MINUS = '−';
+
+/* ============================ renderer ============================= */
+const canvas = document.getElementById('c');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.05;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0A0E12);
+
+const pmrem = new THREE.PMREMGenerator(renderer);
+scene.environment = pmrem.fromScene(new RoomEnvironment(renderer), 0.04).texture;
+
+const camera = new THREE.PerspectiveCamera(35, window.innerWidth / window.innerHeight, 0.05, 60);
+camera.up.set(0, 0, 1); // Z-up world
+
+/* camera rig: spherical orbit around a look-target */
+const POSES = {
+  FACE: { az: -90,  el: 13, dist: 4.5, tx: 0.15, ty: 0, tz: 0.48 },
+  DTL:  { az: -180, el: 11, dist: 5.0, tx: 0.00, ty: 0, tz: 0.50 },
+};
+const rig = { ...POSES.FACE };
+function applyRig() {
+  const a = deg2rad(rig.az), e = deg2rad(rig.el);
+  camera.position.set(
+    rig.tx + rig.dist * Math.cos(e) * Math.cos(a),
+    rig.ty + rig.dist * Math.cos(e) * Math.sin(a),
+    rig.tz + rig.dist * Math.sin(e)
+  );
+  camera.lookAt(rig.tx, rig.ty, rig.tz);
+}
+applyRig();
+
+/* ============================ lighting ============================= */
+const key = new THREE.DirectionalLight(0xdfeaf6, 1.6);
+key.position.set(1.6, -2.6, 3.6);
+key.castShadow = true;
+key.shadow.mapSize.set(1024, 1024);
+key.shadow.camera.left = -2; key.shadow.camera.right = 2;
+key.shadow.camera.top = 2;  key.shadow.camera.bottom = -2;
+key.shadow.camera.near = 0.5; key.shadow.camera.far = 12;
+key.shadow.bias = -0.0004;
+scene.add(key);
+
+const hemi = new THREE.HemisphereLight(0x2b3947, 0x05070a, 0.55);
+hemi.position.set(0, 0, 1);
+scene.add(hemi);
+
+/* ====================== instrument stage floor ===================== */
+function makeFloorTexture() {
+  const S = 1024, half = S / 2, pxm = half / 6; // 6 m radius
+  const cv = document.createElement('canvas');
+  cv.width = cv.height = S;
+  const g = cv.getContext('2d');
+
+  const grad = g.createRadialGradient(half, half, 0, half, half, half);
+  grad.addColorStop(0, '#161b21');       // subtle charcoal centre
+  grad.addColorStop(0.55, '#10151a');
+  grad.addColorStop(0.85, '#0B0F14');
+  grad.addColorStop(1, '#0A0E12');       // near-black rim
+  g.fillStyle = grad;
+  g.fillRect(0, 0, S, S);
+
+  // radial vignette (extra rim darkening)
+  const vin = g.createRadialGradient(half, half, half * 0.55, half, half, half);
+  vin.addColorStop(0, 'rgba(0,0,0,0)');
+  vin.addColorStop(1, 'rgba(0,0,0,0.5)');
+  g.fillStyle = vin;
+  g.fillRect(0, 0, S, S);
+
+  // concentric distance rings (white-alpha .08)
+  g.strokeStyle = 'rgba(230,240,250,0.08)';
+  g.lineWidth = 1.5;
+  for (const r of [2.0, 3.5, 5.0]) {
+    g.beginPath();
+    g.arc(half, half, r * pxm, 0, Math.PI * 2);
+    g.stroke();
+  }
+
+  // measurement ticks along the target line (+X), every 0.25 m, taller each 1 m
+  g.fillStyle = 'rgba(230,240,250,0.25)';
+  for (let x = 0.25; x <= 5.25; x += 0.25) {
+    const isMajor = Math.abs(x - Math.round(x)) < 1e-6;
+    const len = (isMajor ? 0.15 : 0.065) * pxm;
+    const w = Math.max(1.5, 0.010 * pxm);
+    g.fillRect(half + x * pxm - w / 2, half - len / 2, w, len);
+  }
+
+  const tex = new THREE.CanvasTexture(cv);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.anisotropy = 8;
+  return tex;
+}
+const floor = new THREE.Mesh(
+  new THREE.CircleGeometry(6, 96),
+  new THREE.MeshStandardMaterial({ map: makeFloorTexture(), roughness: 0.95, metalness: 0.0 })
+);
+floor.receiveShadow = true;
+scene.add(floor);
+
+/* target line: thin emissive cyan quad along +X through the ball */
+const tlCore = new THREE.Mesh(
+  new THREE.PlaneGeometry(6.5, 0.012),
+  new THREE.MeshBasicMaterial({ color: 0x7ff4eb, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false })
+);
+tlCore.position.set(2.0, 0, 0.002);
+scene.add(tlCore);
+const tlGlow = new THREE.Mesh(
+  new THREE.PlaneGeometry(6.5, 0.07),
+  new THREE.MeshBasicMaterial({ color: 0x22E3D6, transparent: true, opacity: 0.14, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false })
+);
+tlGlow.position.set(2.0, 0, 0.0018);
+scene.add(tlGlow);
+
+/* ball */
+const ball = new THREE.Mesh(
+  new THREE.SphereGeometry(0.0213, 32, 24),
+  new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.35, metalness: 0.0 })
+);
+ball.position.set(0, 0, 0.0213);
+ball.castShadow = true;
+scene.add(ball);
+
+/* ========================= shared materials ======================== */
+const M = {
+  arcCore:  new THREE.MeshBasicMaterial({ vertexColors: true, toneMapped: false }),
+  arcGlow:  new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.22, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false }),
+  plane:    new THREE.MeshBasicMaterial({ color: 0x22E3D6, transparent: true, opacity: 0.04, side: THREE.DoubleSide, depthWrite: false, toneMapped: false }),
+  edgeCore: new THREE.MeshBasicMaterial({ color: 0xa9fdf5, toneMapped: false }),
+  edgeGlow: new THREE.MeshBasicMaterial({ color: 0x22E3D6, transparent: true, opacity: 0.38, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false }),
+  grid:     new THREE.LineBasicMaterial({ color: 0x7ff4eb, transparent: true, opacity: 0.28, depthWrite: false, toneMapped: false }),
+  protArc:  new THREE.LineBasicMaterial({ color: 0x8fd8d2, transparent: true, opacity: 0.45, toneMapped: false }),
+  protTick: new THREE.LineBasicMaterial({ color: 0xb8ece7, transparent: true, opacity: 0.6, toneMapped: false }),
+  protInd:  new THREE.MeshBasicMaterial({ color: 0x22E3D6, toneMapped: false }),
+  hinge:    new THREE.LineBasicMaterial({ color: 0x22E3D6, transparent: true, opacity: 0.5, toneMapped: false }),
+  fan:      new THREE.MeshBasicMaterial({ color: 0x22E3D6, transparent: true, opacity: 0.12, side: THREE.DoubleSide, depthWrite: false, toneMapped: false }),
+  fanEdge:  new THREE.LineBasicMaterial({ color: 0x7ff4eb, transparent: true, opacity: 0.55, toneMapped: false }),
+  pathTick: new THREE.LineBasicMaterial({ color: 0xe8f0fb, transparent: true, opacity: 0.35, toneMapped: false }),
+  plumb:    new THREE.LineDashedMaterial({ color: 0xe8f0fb, transparent: true, opacity: 0.85, dashSize: 0.018, gapSize: 0.012, toneMapped: false }),
+  bracket:  new THREE.LineBasicMaterial({ color: 0xe8f0fb, transparent: true, opacity: 0.8, toneMapped: false }),
+  marker:   new THREE.MeshBasicMaterial({ color: 0xffffff, toneMapped: false }),
+  ellipse:  null, // set after texture below
+};
+function makeSoftDiscTexture() {
+  const cv = document.createElement('canvas');
+  cv.width = cv.height = 128;
+  const g = cv.getContext('2d');
+  const gr = g.createRadialGradient(64, 64, 0, 64, 64, 64);
+  gr.addColorStop(0, 'rgba(0,0,0,0.55)');
+  gr.addColorStop(0.6, 'rgba(0,0,0,0.28)');
+  gr.addColorStop(1, 'rgba(0,0,0,0)');
+  g.fillStyle = gr;
+  g.fillRect(0, 0, 128, 128);
+  const t = new THREE.CanvasTexture(cv);
+  return t;
+}
+M.ellipse = new THREE.MeshBasicMaterial({ map: makeSoftDiscTexture(), transparent: true, depthWrite: false });
+
+/* ========================= dynamic geometry ======================== */
+const dyn = new THREE.Group();
+scene.add(dyn);
+let refs = {};
+
+const TUBE_SEG = 120, TUBE_RADIAL = 10;
+const C_A = new THREE.Color('#7ff4eb');
+const C_B = new THREE.Color('#15b9ad');
+const C_WARM = new THREE.Color('#fff1d6');
+
+class ArcCurve extends THREE.Curve {
+  getPoint(t, target = new THREE.Vector3()) {
+    const theta = -SWEEP_RAD + t * 2 * SWEEP_RAD;
+    const p = arcPosition(theta, state);
+    return target.set(p.x, p.y, p.z);
+  }
+}
+
+function paintTube(geom, warm) {
+  const count = geom.attributes.position.count;
+  const perRing = TUBE_RADIAL + 1;
+  const colors = new Float32Array(count * 3);
+  const c = new THREE.Color();
+  for (let i = 0; i < count; i++) {
+    const ring = Math.min(TUBE_SEG, Math.floor(i / perRing));
+    const t = ring / TUBE_SEG;
+    c.copy(C_A).lerp(C_B, t);
+    if (warm) {
+      const theta = -SWEEP_RAD + t * 2 * SWEEP_RAD;
+      const w = Math.max(0, 1 - Math.abs(theta) / 0.26);
+      if (w > 0) c.lerp(C_WARM, Math.min(1, w * 1.15));
+    }
+    colors[i * 3] = c.r; colors[i * 3 + 1] = c.g; colors[i * 3 + 2] = c.b;
+  }
+  geom.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+}
+
+function lineGeom(points) {
+  return new THREE.BufferGeometry().setFromPoints(points);
+}
+function segGeom(pairs) { // flat array of Vector3 pairs
+  return new THREE.BufferGeometry().setFromPoints(pairs);
+}
+
+const anchors = { prot: new THREE.Vector3(), fan: new THREE.Vector3(), brk: new THREE.Vector3() };
+const lblProt = document.getElementById('lblProt');
+const lblFan  = document.getElementById('lblFan');
+const lblBrk  = document.getElementById('lblBrk');
+const labelOn = { prot: false, fan: false, brk: false };
+let brkSign = 1;
+
+function clearDyn() {
+  dyn.traverse(o => { if (o.geometry) o.geometry.dispose(); });
+  dyn.clear();
+  refs = {};
+}
+
+function rebuild() {
+  clearDyn();
+
+  const lp = lpWorld(state);
+  const { u, m } = planeBasis(state.planeAngle, state.swingDirection);
+  const U = new THREE.Vector3(u.x, u.y, u.z);
+  const Mv = new THREE.Vector3(m.x, m.y, m.z);
+  const lpV = new THREE.Vector3(lp.x, lp.y, lp.z);
+  const lpG = new THREE.Vector3(lp.x, lp.y, 0);
+  const warm = (ui.low === 'L1' || ui.low === 'L3');
+
+  /* ---- swing arc: core tube + additive glow tube ---- */
+  const curve = new ArcCurve();
+  const coreGeo = new THREE.TubeGeometry(curve, TUBE_SEG, 0.006, TUBE_RADIAL, false);
+  paintTube(coreGeo, warm);
+  const core = new THREE.Mesh(coreGeo, M.arcCore);
+  const glowGeo = new THREE.TubeGeometry(curve, TUBE_SEG, 0.016, TUBE_RADIAL, false);
+  paintTube(glowGeo, warm);
+  const glow = new THREE.Mesh(glowGeo, M.arcGlow);
+  dyn.add(core, glow);
+  refs.arcCoreGeo = coreGeo; refs.arcGlowGeo = glowGeo;
+
+  /* ---- glass plane quad (hinged at the ground line through the low point) ---- */
+  const hw = state.radius * 0.98, down = state.radius * 0.04, top = state.radius * 1.15;
+  const P = (a, b) => new THREE.Vector3(
+    lp.x + a * u.x + b * m.x, lp.y + a * u.y + b * m.y, lp.z - state.lowPoint.z + a * u.z + b * m.z
+  ); // plane hinge sits on the ground (z=0), not lifted with lowPoint.z
+  const c0 = P(-hw, -down), c1 = P(hw, -down), c2 = P(hw, top), c3 = P(-hw, top);
+  const planeGeo = new THREE.BufferGeometry();
+  planeGeo.setFromPoints([c0, c1, c2, c0, c2, c3]);
+  planeGeo.computeVertexNormals();
+  refs.plane = new THREE.Mesh(planeGeo, M.plane);
+  dyn.add(refs.plane);
+
+  /* ---- G1: bright top-edge glow (thin emissive tube + additive halo) ---- */
+  refs.edge = new THREE.Group();
+  const edgeCurve = new THREE.LineCurve3(c3, c2);
+  refs.edge.add(new THREE.Mesh(new THREE.TubeGeometry(edgeCurve, 1, 0.006, 8, false), M.edgeCore));
+  refs.edge.add(new THREE.Mesh(new THREE.TubeGeometry(edgeCurve, 1, 0.020, 8, false), M.edgeGlow));
+  dyn.add(refs.edge);
+
+  /* ---- G2: holographic grid rungs on the plane ---- */
+  refs.grid = new THREE.Group();
+  const gridPts = [];
+  for (const f of [0.22, 0.46, 0.70, 0.94]) {           // 4 rungs
+    gridPts.push(P(-hw, top * f), P(hw, top * f));
+  }
+  gridPts.push(c0, c1, c1, c2, c2, c3, c3, c0);          // edge lines
+  refs.grid.add(new THREE.LineSegments(segGeom(gridPts), M.grid));
+  dyn.add(refs.grid);
+
+  /* ---- G1: hinge line on the ground = swing direction ---- */
+  refs.hinge = new THREE.Line(lineGeom([
+    new THREE.Vector3(lpG.x - U.x * 1.25, lpG.y - U.y * 1.25, 0.003),
+    new THREE.Vector3(lpG.x + U.x * 1.25, lpG.y + U.y * 1.25, 0.003),
+  ]), M.hinge);
+  dyn.add(refs.hinge);
+
+  /* ---- G1: etched protractor standing perpendicular at the hinge ---- */
+  refs.prot = new THREE.Group();
+  const psi = deg2rad(-state.swingDirection);
+  const pDir = new THREE.Vector3(-Math.sin(psi), Math.cos(psi), 0); // horizontal rise direction of the plane
+  const PR = 0.5;
+  const protPt = (aDeg, rad) => {
+    const a = deg2rad(aDeg);
+    return new THREE.Vector3(
+      lpG.x + rad * Math.cos(a) * pDir.x,
+      lpG.y + rad * Math.cos(a) * pDir.y,
+      rad * Math.sin(a)
+    );
+  };
+  const arcPts = [];
+  for (let a = 45; a <= 70; a += 1) arcPts.push(protPt(a, PR));
+  refs.prot.add(new THREE.Line(lineGeom(arcPts), M.protArc));
+  const tickPts = [];
+  for (let a = 45; a <= 70; a += 1) {
+    const major = a % 5 === 0;
+    tickPts.push(protPt(a, major ? PR - 0.035 : PR - 0.015), protPt(a, major ? PR + 0.035 : PR + 0.012));
+  }
+  refs.prot.add(new THREE.LineSegments(segGeom(tickPts), M.protTick));
+  const indCurve = new THREE.LineCurve3(protPt(state.planeAngle, 0.10), protPt(state.planeAngle, PR + 0.055));
+  refs.prot.add(new THREE.Mesh(new THREE.TubeGeometry(indCurve, 1, 0.004, 8, false), M.protInd));
+  dyn.add(refs.prot);
+  anchors.prot.copy(protPt(state.planeAngle, PR + 0.16));
+
+  /* ---- G1: compass fan on the ground at the ball (direction vs target line) ---- */
+  refs.fan = new THREE.Group();
+  const dirAng = Math.atan2(u.y, u.x); // hinge/swing direction vs +X
+  const FR = 0.72;
+  if (Math.abs(dirAng) > 1e-4) {
+    const steps = Math.max(2, Math.ceil(Math.abs(dirAng) / deg2rad(1)));
+    const verts = [0, 0, 0];
+    for (let i = 0; i <= steps; i++) {
+      const a = dirAng * (i / steps);
+      verts.push(Math.cos(a) * FR, Math.sin(a) * FR, 0);
+    }
+    const idx = [];
+    for (let i = 1; i <= steps; i++) idx.push(0, i, i + 1);
+    const fg = new THREE.BufferGeometry();
+    fg.setAttribute('position', new THREE.BufferAttribute(new Float32Array(verts), 3));
+    fg.setIndex(idx);
+    const fan = new THREE.Mesh(fg, M.fan);
+    fan.position.z = 0.004;
+    refs.fan.add(fan);
+  }
+  refs.fan.add(new THREE.Line(lineGeom([
+    new THREE.Vector3(0, 0, 0.005),
+    new THREE.Vector3(Math.cos(dirAng) * (FR + 0.18), Math.sin(dirAng) * (FR + 0.18), 0.005),
+  ]), M.fanEdge));
+  // honest club-path tick at impact (horizontal projection of the arc tangent)
+  const tg = tangentAt(thetaAtImpact(state), state);
+  const tLen = Math.hypot(tg.x, tg.y) || 1;
+  refs.fan.add(new THREE.Line(lineGeom([
+    new THREE.Vector3(0, 0, 0.005),
+    new THREE.Vector3((tg.x / tLen) * FR * 0.75, (tg.y / tLen) * FR * 0.75, 0.005),
+  ]), M.pathTick));
+  dyn.add(refs.fan);
+  const midA = dirAng === 0 ? 0 : dirAng * 0.5;
+  anchors.fan.set(Math.cos(midA) * (FR + 0.30), Math.sin(midA) * (FR + 0.30), 0.01);
+
+  /* ---- lowpoint: marker dot on the arc's true lowest point ---- */
+  refs.marker = new THREE.Mesh(new THREE.SphereGeometry(0.014, 20, 14), M.marker);
+  refs.marker.position.copy(lpV);
+  dyn.add(refs.marker);
+
+  /* ---- lowpoint: dashed plumb line down to the ground ---- */
+  const plumbGeo = lineGeom([lpV, lpG]);
+  refs.plumb = new THREE.Line(plumbGeo, M.plumb);
+  refs.plumb.computeLineDistances();
+  dyn.add(refs.plumb);
+
+  /* ---- lowpoint: measured bracket on the ground, ball -> low point ---- */
+  refs.bracket = new THREE.Group();
+  const off = -0.18, z = 0.004, tick = 0.05;
+  const A = new THREE.Vector3(0, off, z);
+  const B = new THREE.Vector3(lpG.x, lpG.y + off, z);
+  refs.bracket.add(new THREE.Line(lineGeom([A, B]), M.bracket));
+  refs.bracket.add(new THREE.LineSegments(segGeom([
+    new THREE.Vector3(A.x, A.y - tick, z), new THREE.Vector3(A.x, A.y + tick, z),
+    new THREE.Vector3(B.x, B.y - tick, z), new THREE.Vector3(B.x, B.y + tick, z),
+  ]), M.bracket));
+  dyn.add(refs.bracket);
+  brkSign = Math.sign(state.lowPoint.x) || 1;
+  anchors.brk.set(lpG.x + brkSign * 0.10, (lpG.y + off) - 0.12, 0.01);
+
+  /* ---- L3: soft shadow ellipse directly beneath the low point ---- */
+  refs.ellipse = new THREE.Mesh(new THREE.CircleGeometry(0.16, 40), M.ellipse);
+  refs.ellipse.scale.set(1.35, 0.62, 1);
+  refs.ellipse.position.set(lpG.x, lpG.y, 0.0025);
+  dyn.add(refs.ellipse);
+
+  applyVariants();
+  updateLabelsText();
+}
+
+/* ========================= variant plumbing ======================== */
+const GNAME = { G1: 'Etched', G2: 'Holo grid', G3: 'Both' };
+const LNAME = { L1: 'Bracket+glow', L2: 'Bracket', L3: 'Valley glow' };
+let planeBaseOpacity = 0.04, gridBaseOpacity = 0.28;
+
+function applyVariants() {
+  const g = ui.glass, l = ui.low;
+  const etched = (g === 'G1' || g === 'G3');
+  const gridded = (g === 'G2' || g === 'G3');
+
+  planeBaseOpacity = g === 'G1' ? 0.04 : g === 'G2' ? 0.08 : 0.06;
+  gridBaseOpacity = g === 'G3' ? 0.14 : 0.28;   // half strength on G3
+  M.plane.opacity = planeBaseOpacity;
+  M.grid.opacity = gridBaseOpacity;
+
+  refs.edge.visible = etched;
+  refs.prot.visible = etched;
+  refs.fan.visible = etched;
+  refs.hinge.visible = etched;
+  refs.grid.visible = gridded;
+
+  const measured = (l === 'L1' || l === 'L2');
+  refs.marker.visible = measured;
+  refs.plumb.visible = measured;
+  refs.bracket.visible = measured;
+  refs.ellipse.visible = (l === 'L3');
+
+  labelOn.prot = etched;
+  labelOn.fan = etched;
+  labelOn.brk = measured;
+  lblProt.hidden = !labelOn.prot;
+  lblFan.hidden = !labelOn.fan;
+  lblBrk.hidden = !labelOn.brk;
+
+  document.getElementById('caption').textContent =
+    `${g} ${GNAME[g]} · ${l} ${LNAME[l]}`;
+}
+
+function repaintWarm() {
+  const warm = (ui.low === 'L1' || ui.low === 'L3');
+  paintTube(refs.arcCoreGeo, warm);
+  paintTube(refs.arcGlowGeo, warm);
+}
+
+/* ============================ HTML labels =========================== */
+function fmtSigned(v, dec) {
+  const s = v < 0 ? MINUS : '+';
+  return (v === 0 ? '' : s) + Math.abs(v).toFixed(dec);
+}
+function updateLabelsText() {
+  lblProt.textContent = `${state.planeAngle.toFixed(0)}°`;
+  lblFan.textContent = `${fmtSigned(state.swingDirection, 1) || '0.0'}°`;
+  const cm = Math.round(state.lowPoint.x * 100);
+  lblBrk.textContent = cm === 0 ? '0 cm'
+    : cm > 0 ? `+${cm} cm ahead`
+    : `${MINUS}${Math.abs(cm)} cm behind`;
+}
+const _v = new THREE.Vector3();
+function placeLabel(el, anchor, on) {
+  if (!on) return;
+  _v.copy(anchor).project(camera);
+  if (_v.z > 1 || _v.z < -1) { el.style.display = 'none'; return; }
+  el.style.display = '';
+  const x = (_v.x * 0.5 + 0.5) * window.innerWidth;
+  const y = (-_v.y * 0.5 + 0.5) * window.innerHeight;
+  el.style.left = `${x.toFixed(1)}px`;
+  el.style.top = `${y.toFixed(1)}px`;
+}
+function placeLabels() {
+  placeLabel(lblProt, anchors.prot, labelOn.prot);
+  placeLabel(lblFan, anchors.fan, labelOn.fan);
+  placeLabel(lblBrk, anchors.brk, labelOn.brk);
+  // bracket label flips side with sign
+  lblBrk.style.transform = brkSign >= 0
+    ? 'translate(-18%,-50%)' : 'translate(-82%,-50%)';
+}
+
+/* ========================== shimmer pulse ========================== */
+let pulseTween = null;
+function shimmer() {
+  if (reducedMotion) return;
+  if (!(ui.glass === 'G2' || ui.glass === 'G3')) return;
+  const o = { v: 1.9 };
+  if (pulseTween) pulseTween.kill();
+  pulseTween = gsap.to(o, {
+    v: 1, duration: 0.6, ease: 'power2.out',
+    onUpdate: () => {
+      M.grid.opacity = gridBaseOpacity * o.v;
+      M.plane.opacity = planeBaseOpacity * Math.min(o.v, 1.6);
+    },
+    onComplete: () => { M.grid.opacity = gridBaseOpacity; M.plane.opacity = planeBaseOpacity; },
+  });
+}
+
+/* ============================== wiring ============================= */
+function segWire(attr, apply) {
+  document.querySelectorAll(`[data-${attr}]`).forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll(`[data-${attr}]`).forEach(b =>
+        b.setAttribute('aria-pressed', String(b === btn)));
+      apply(btn.dataset[attr]);
+    });
+  });
+}
+segWire('glass', v => { ui.glass = v; applyVariants(); repaintWarm(); });
+segWire('low',   v => { ui.low = v;   applyVariants(); repaintWarm(); });
+segWire('cam',   v => {
+  ui.cam = v;
+  const pose = POSES[v];
+  if (reducedMotion) { Object.assign(rig, pose); applyRig(); return; }
+  gsap.to(rig, { ...pose, duration: 1.1, ease: 'power2.inOut', onUpdate: applyRig });
+});
+
+const sPlane = document.getElementById('sPlane');
+const sDir = document.getElementById('sDir');
+const sLp = document.getElementById('sLp');
+const oPlane = document.getElementById('oPlane');
+const oDir = document.getElementById('oDir');
+const oLp = document.getElementById('oLp');
+
+function fmtDir(v) { return `${v < 0 ? MINUS : v > 0 ? '+' : ''}${Math.abs(v).toFixed(1)}°`; }
+function fmtLp(v) {
+  const cm = Math.round(v * 100);
+  return cm === 0 ? '0 cm' : `${cm < 0 ? MINUS : '+'}${Math.abs(cm)} cm`;
+}
+function onSlider() {
+  state.planeAngle = parseFloat(sPlane.value);
+  state.swingDirection = parseFloat(sDir.value);
+  state.lowPoint.x = parseFloat(sLp.value);
+  oPlane.textContent = `${state.planeAngle.toFixed(1)}°`;
+  oDir.textContent = fmtDir(state.swingDirection);
+  oLp.textContent = fmtLp(state.lowPoint.x);
+  rebuild();
+  shimmer();
+}
+sPlane.addEventListener('input', onSlider);
+sDir.addEventListener('input', onSlider);
+sLp.addEventListener('input', onSlider);
+
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+/* ============================== render ============================= */
+rebuild();
+onSlider(); // sync output labels with initial slider values
+renderer.setAnimationLoop(() => {
+  placeLabels();
+  renderer.render(scene, camera);
+});
+</script>
+</body>
+</html>

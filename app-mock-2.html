@@ -1,0 +1,1052 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="robots" content="noindex" />
+<title>StrikeArc — Tactile Glass · Interactive App Mock</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="preconnect" href="https://api.fontshare.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&display=swap" rel="stylesheet" />
+<link href="https://api.fontshare.com/v2/css?f[]=hanken-grotesk@400,500,600,700&display=swap" rel="stylesheet" />
+<style>
+/* ============================================================
+   TACTILE GLASS — StrikeArc app mock · Direction 2
+   Three screens (Menu · Geometry · Impact) as frosted glass
+   floating over a luminous dusk-teal → indigo atmosphere.
+   ============================================================ */
+:root{
+  --bg-0:#06121b; --bg-1:#0a1c29; --bg-2:#10283a; --indigo-deep:#161a44;
+  --cyan:#22E3D6; --cyan-soft:#7af3ec; --cyan-glow:rgba(34,227,214,.55);
+  --violet:#8b7bff; --violet-glow:rgba(139,123,255,.45); --amber:#ffb45c;
+  --ink:#f4fbff; --ink-2:#c4d8e4; --ink-3:#8ca4b4; --on-cyan:#04222a;
+
+  --glass-blur:22px; --glass-blur-strong:40px;
+  --glass-surface:rgba(255,255,255,.07); --glass-surface-2:rgba(255,255,255,.10);
+  --glass-surface-dark:rgba(8,20,30,.55); --glass-plate:rgba(8,18,28,.74);
+  --glass-border:rgba(255,255,255,.16); --glass-inset:inset 0 1px 0 0 rgba(255,255,255,.22);
+  --glass-shadow:0 24px 60px -24px rgba(0,0,0,.65);
+  --glass-shadow-soft:0 12px 36px -16px rgba(0,0,0,.55);
+
+  --display:"Bricolage Grotesque",serif;
+  --body:"Hanken Grotesk","Bricolage Grotesque",sans-serif;
+  --radius-s:12px; --radius:18px; --radius-l:26px; --radius-xl:34px;
+  --ease:cubic-bezier(.22,.61,.36,1); --ease-spring:cubic-bezier(.34,1.56,.64,1);
+
+  /* d-plane anatomy accents */
+  --c-face:#ff6a78; --c-path:#7fc3ff; --c-loft:#b58bff; --c-attack:#ff9ec2;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family:var(--body); color:var(--ink); background:var(--bg-1);
+  line-height:1.5; -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+  font-feature-settings:"ss01","cv01"; overflow:hidden; -webkit-tap-highlight-color:transparent;
+}
+
+/* ---------- Atmospheric luminous mesh ---------- */
+.atmosphere{ position:fixed; inset:0; z-index:-2;
+  background:
+    radial-gradient(120% 90% at 12% 8%, rgba(34,227,214,.16), transparent 55%),
+    radial-gradient(100% 80% at 88% 0%, rgba(139,123,255,.20), transparent 52%),
+    radial-gradient(120% 120% at 50% 110%, rgba(22,26,68,.85), transparent 60%),
+    linear-gradient(165deg, var(--bg-0), var(--bg-1) 45%, var(--bg-2)); }
+.orb{ position:fixed; border-radius:50%; z-index:-1; filter:blur(70px); opacity:.55;
+  pointer-events:none; will-change:transform; }
+.orb.a{ width:46vmax; height:46vmax; left:-12vmax; top:-12vmax;
+  background:radial-gradient(circle, var(--cyan-glow), transparent 65%);
+  animation:float1 18s var(--ease) infinite alternate; }
+.orb.b{ width:40vmax; height:40vmax; right:-10vmax; top:4vmax;
+  background:radial-gradient(circle, var(--violet-glow), transparent 65%);
+  animation:float2 22s var(--ease) infinite alternate; }
+.orb.c{ width:34vmax; height:34vmax; left:36vmax; bottom:-20vmax;
+  background:radial-gradient(circle, rgba(34,227,214,.30), transparent 70%);
+  animation:float1 26s var(--ease) infinite alternate-reverse; }
+@keyframes float1{ to{ transform:translate3d(6vmax,4vmax,0) scale(1.12);} }
+@keyframes float2{ to{ transform:translate3d(-5vmax,5vmax,0) scale(1.08);} }
+.grain{ position:fixed; inset:0; z-index:-1; pointer-events:none; opacity:.05;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+
+/* ---------- glass primitive ---------- */
+.glass{ position:relative; background:var(--glass-surface);
+  backdrop-filter:blur(var(--glass-blur)) saturate(1.4);
+  -webkit-backdrop-filter:blur(var(--glass-blur)) saturate(1.4);
+  border:1px solid var(--glass-border); box-shadow:var(--glass-shadow), var(--glass-inset);
+  border-radius:var(--radius-l); }
+.glass::before{ content:""; position:absolute; inset:0; border-radius:inherit; pointer-events:none;
+  background:linear-gradient(180deg, rgba(255,255,255,.14), transparent 26%); mix-blend-mode:screen; }
+
+/* ---------- app frame / screen stack ---------- */
+.app{ position:fixed; inset:0; display:flex; flex-direction:column; }
+.screen{ position:absolute; inset:0; display:flex; flex-direction:column;
+  padding:54px clamp(12px,2.4vw,30px) clamp(12px,2.2vh,26px);
+  opacity:0; visibility:hidden; transform:translateZ(-90px) scale(.965);
+  transition:opacity .42s var(--ease), transform .55s var(--ease), visibility .42s; }
+.screen.active{ opacity:1; visibility:visible; transform:none; }
+.screenwrap{ perspective:1300px; }
+
+/* ---------- translucent top nav ---------- */
+.topbar{ position:fixed; z-index:20; top:max(10px,env(safe-area-inset-top));
+  left:50%; transform:translateX(-50%); display:flex; align-items:center; gap:10px; }
+.brand{ display:inline-flex; align-items:center; gap:8px; padding:7px 14px 7px 11px;
+  border-radius:100px; background:var(--glass-surface-dark);
+  backdrop-filter:blur(var(--glass-blur)); -webkit-backdrop-filter:blur(var(--glass-blur));
+  border:1px solid var(--glass-border); box-shadow:var(--glass-inset); }
+.brand svg{ width:20px; height:20px; color:var(--cyan); flex:0 0 auto; }
+.brand .wd{ font-family:var(--display); font-weight:700; font-size:.86rem; letter-spacing:.04em; }
+.brand .wd .arc{ color:var(--cyan); }
+.nav{ display:flex; align-items:center; gap:5px; padding:6px; border-radius:100px;
+  background:var(--glass-surface-dark);
+  backdrop-filter:blur(var(--glass-blur)); -webkit-backdrop-filter:blur(var(--glass-blur));
+  border:1px solid var(--glass-border); box-shadow:var(--glass-inset); }
+.nav button{ font-family:var(--body); font-size:.82rem; font-weight:600; color:var(--ink-2);
+  background:transparent; border:0; cursor:pointer; padding:0 15px; min-height:40px;
+  display:inline-flex; align-items:center; border-radius:100px; transition:all .25s var(--ease); }
+.nav button:hover{ color:var(--ink); background:var(--glass-surface); }
+.nav button[aria-current="page"]{ color:var(--on-cyan);
+  background:linear-gradient(180deg,var(--cyan-soft),var(--cyan));
+  box-shadow:0 4px 16px -4px var(--cyan-glow); }
+
+.eyebrow{ font-family:var(--body); font-weight:600; font-size:.66rem; letter-spacing:.3em;
+  text-transform:uppercase; color:var(--cyan-soft); display:flex; align-items:center; gap:9px; }
+.eyebrow::before{ content:""; width:22px; height:1px; background:linear-gradient(90deg,var(--cyan),transparent); }
+
+/* ===================== MENU ===================== */
+#screen-menu{ justify-content:center; align-items:center; }
+.menu-inner{ width:100%; max-width:1040px; display:flex; flex-direction:column; gap:clamp(14px,3vh,28px);
+  align-items:center; text-align:center; }
+.menu-head h1{ font-family:var(--display); font-weight:800; letter-spacing:-.035em; line-height:.96;
+  font-size:clamp(2rem,6.4vw,4.2rem);
+  background:linear-gradient(180deg,#fff 30%, #aee9f0 75%, var(--cyan));
+  -webkit-background-clip:text; background-clip:text; color:transparent; }
+.menu-head h1 .em{ font-style:italic;
+  background:linear-gradient(110deg,var(--cyan),var(--cyan-soft) 60%, var(--violet));
+  -webkit-background-clip:text; background-clip:text; color:transparent; }
+.menu-head p{ margin-top:10px; color:var(--ink-2); font-size:clamp(.9rem,1.5vw,1.06rem); max-width:54ch; }
+.dests{ display:grid; grid-template-columns:1fr 1fr; gap:clamp(12px,2vw,20px); width:100%; }
+.dest{ position:relative; text-align:left; cursor:pointer; padding:clamp(18px,2.6vw,28px);
+  min-height:clamp(150px,30vh,230px); display:flex; flex-direction:column; justify-content:space-between;
+  background:var(--glass-surface-2); border:1px solid var(--glass-border);
+  border-radius:var(--radius-l); box-shadow:var(--glass-shadow), var(--glass-inset);
+  backdrop-filter:blur(var(--glass-blur-strong)) saturate(1.5);
+  -webkit-backdrop-filter:blur(var(--glass-blur-strong)) saturate(1.5);
+  transform-style:preserve-3d; transition:transform .25s var(--ease), box-shadow .3s var(--ease); overflow:hidden; }
+.dest:hover{ box-shadow:0 30px 70px -22px rgba(0,0,0,.7), 0 0 30px -8px var(--cyan-glow), var(--glass-inset); }
+.dest .glint{ position:absolute; inset:0; border-radius:inherit; pointer-events:none; opacity:0;
+  background:radial-gradient(160px 160px at var(--mx,30%) var(--my,20%), rgba(255,255,255,.22), transparent 60%);
+  mix-blend-mode:screen; transition:opacity .3s; }
+.dest:hover .glint{ opacity:1; }
+.dest .destsvg{ position:absolute; inset:0; width:100%; height:100%; opacity:.5; pointer-events:none;
+  transform:translateZ(10px); }
+.dest .tag{ position:relative; z-index:2; }
+.dest h2{ position:relative; z-index:2; font-family:var(--display); font-weight:800;
+  font-size:clamp(1.5rem,3.6vw,2.4rem); letter-spacing:-.02em; transform:translateZ(36px); }
+.dest .sub{ position:relative; z-index:2; color:var(--ink-2); font-size:.86rem; margin-top:2px; transform:translateZ(22px); }
+.dest .enter{ position:relative; z-index:2; align-self:flex-start; margin-top:14px;
+  display:inline-flex; align-items:center; gap:7px; min-height:40px; padding:9px 16px; border-radius:100px;
+  font-size:.72rem; letter-spacing:.12em; text-transform:uppercase; font-weight:700; color:var(--on-cyan);
+  background:linear-gradient(180deg,var(--cyan-soft),var(--cyan));
+  box-shadow:0 8px 22px -8px var(--cyan-glow); transform:translateZ(28px);
+  transition:transform .25s var(--ease-spring); }
+.dest:hover .enter{ transform:translateZ(28px) translateY(-2px); }
+.menu-meta{ display:flex; flex-wrap:wrap; gap:9px; justify-content:center; }
+.chiplet{ font-size:.72rem; color:var(--ink-2); padding:6px 12px; border-radius:100px;
+  background:var(--glass-surface); border:1px solid var(--glass-border); }
+.chiplet b{ color:var(--ink); font-weight:600; }
+
+/* ===================== shared instrument layout ===================== */
+.work{ flex:1 1 auto; display:flex; gap:clamp(8px,1.4vw,16px); min-height:0; }
+.stagecard{ position:relative; flex:1 1 0; min-width:0; border-radius:var(--radius-l); overflow:hidden;
+  background:var(--glass-surface); border:1px solid var(--glass-border);
+  box-shadow:var(--glass-shadow), var(--glass-inset);
+  backdrop-filter:blur(var(--glass-blur)) saturate(1.4);
+  -webkit-backdrop-filter:blur(var(--glass-blur)) saturate(1.4); display:flex; flex-direction:column; }
+.stagecard::before{ content:""; position:absolute; inset:0; border-radius:inherit; pointer-events:none;
+  background:linear-gradient(180deg, rgba(255,255,255,.12), transparent 22%); mix-blend-mode:screen; z-index:3; }
+.lenshead{ position:absolute; top:12px; left:16px; z-index:4; pointer-events:none; }
+.lenshead .h1{ font-size:.62rem; font-weight:800; letter-spacing:.16em; text-transform:uppercase; color:var(--ink); }
+.lenshead .h2{ font-size:.6rem; color:var(--ink-3); margin-top:1px; letter-spacing:.02em; }
+.stagecard svg.scene{ flex:1 1 auto; width:100%; height:100%; display:block; min-height:0; }
+
+/* side panel (glass) */
+.sidepanel{ flex:0 0 clamp(220px,26vw,300px); display:flex; flex-direction:column; gap:10px; min-height:0; }
+.gpanel{ padding:clamp(12px,1.6vw,18px); background:var(--glass-surface-2); border:1px solid var(--glass-border);
+  border-radius:var(--radius-l); box-shadow:var(--glass-shadow-soft), var(--glass-inset);
+  backdrop-filter:blur(var(--glass-blur-strong)) saturate(1.5);
+  -webkit-backdrop-filter:blur(var(--glass-blur-strong)) saturate(1.5); }
+.gpanel .ptitle{ font-size:.66rem; font-weight:700; letter-spacing:.16em; text-transform:uppercase;
+  color:var(--ink-3); margin-bottom:12px; display:flex; align-items:center; gap:8px; }
+
+/* sliders */
+.field{ margin-bottom:13px; } .field:last-child{ margin-bottom:0; }
+.field .toplabel{ display:flex; justify-content:space-between; align-items:baseline;
+  font-size:.78rem; color:var(--ink-2); margin-bottom:9px; }
+.field .toplabel b{ font-family:var(--display); color:var(--cyan); font-variant-numeric:tabular-nums; font-weight:600; }
+.field.fc-face .toplabel b{ color:var(--c-face); } .field.fc-path .toplabel b{ color:var(--c-path); }
+.field.fc-loft .toplabel b{ color:var(--c-loft); } .field.fc-attack .toplabel b{ color:var(--c-attack); }
+input[type=range]{ -webkit-appearance:none; appearance:none; width:100%; height:8px; border-radius:100px;
+  background:linear-gradient(90deg,var(--cyan) var(--p,50%), rgba(255,255,255,.13) var(--p,50%));
+  outline:none; cursor:pointer; }
+.field.fc-face input{ background:linear-gradient(90deg,var(--c-face) var(--p,50%), rgba(255,255,255,.13) var(--p,50%)); }
+.field.fc-path input{ background:linear-gradient(90deg,var(--c-path) var(--p,50%), rgba(255,255,255,.13) var(--p,50%)); }
+.field.fc-loft input{ background:linear-gradient(90deg,var(--c-loft) var(--p,50%), rgba(255,255,255,.13) var(--p,50%)); }
+.field.fc-attack input{ background:linear-gradient(90deg,var(--c-attack) var(--p,50%), rgba(255,255,255,.13) var(--p,50%)); }
+input[type=range]::-webkit-slider-thumb{ -webkit-appearance:none; width:24px; height:24px; border-radius:50%;
+  background:#fff; box-shadow:0 4px 14px -2px var(--cyan-glow), 0 0 0 4px rgba(34,227,214,.22);
+  cursor:grab; transition:transform .15s var(--ease-spring); }
+input[type=range]::-webkit-slider-thumb:active{ transform:scale(1.18); cursor:grabbing; }
+input[type=range]::-moz-range-thumb{ width:24px; height:24px; border:0; border-radius:50%; background:#fff;
+  box-shadow:0 4px 14px -2px var(--cyan-glow), 0 0 0 4px rgba(34,227,214,.22); cursor:grab; }
+
+/* buttons */
+.btn{ font-family:var(--body); font-weight:600; font-size:.86rem; min-height:46px; padding:0 20px;
+  border-radius:100px; border:1px solid transparent; display:inline-flex; align-items:center; justify-content:center;
+  gap:8px; cursor:pointer; transition:transform .25s var(--ease-spring), box-shadow .3s var(--ease), background .3s; }
+.btn:active{ transform:scale(.96); }
+.btn-primary{ color:var(--on-cyan); width:100%;
+  background:linear-gradient(180deg,var(--cyan-soft),var(--cyan));
+  box-shadow:0 8px 26px -6px var(--cyan-glow), var(--glass-inset); }
+.btn-primary:hover{ transform:translateY(-2px); box-shadow:0 14px 34px -6px var(--cyan-glow), var(--glass-inset); }
+.btn-ghost{ color:var(--ink); background:var(--glass-surface); border:1px solid var(--glass-border);
+  box-shadow:var(--glass-inset); }
+.btn-ghost:hover{ transform:translateY(-2px); background:var(--glass-surface-2); }
+
+/* readout tiles */
+.readtiles{ display:flex; flex-wrap:wrap; gap:9px; }
+.rtile{ flex:1 1 auto; min-width:84px; padding:11px 14px; border-radius:var(--radius); text-align:left;
+  background:var(--glass-surface); border:1px solid var(--glass-border); box-shadow:var(--glass-inset); }
+.rtile .k{ font-size:.6rem; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-3); }
+.rtile .v{ font-family:var(--display); font-weight:700; font-size:1.4rem; margin-top:3px;
+  font-variant-numeric:tabular-nums; line-height:1; }
+.rtile .v small{ font-size:.46em; color:var(--ink-3); font-weight:600; margin-left:2px; }
+.rtile .v.glow{ color:var(--cyan); text-shadow:0 0 16px var(--cyan-glow); }
+.rtile .v.amber{ color:var(--amber); }
+
+/* verdict badge (geometry) */
+.verdict{ display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+.verdict .dot{ width:12px; height:12px; border-radius:50%; background:var(--cyan); box-shadow:0 0 12px currentColor; }
+.verdict .band{ font-family:var(--display); font-weight:700; font-size:1.3rem; }
+.verdict .pct{ margin-left:auto; font-size:.78rem; color:var(--ink-3); font-variant-numeric:tabular-nums; }
+.tip{ font-size:.78rem; color:var(--ink-3); line-height:1.4; }
+
+/* ===================== IMPACT extras ===================== */
+.impact-top{ display:flex; align-items:center; gap:12px; margin-bottom:10px; flex-wrap:wrap; }
+.speedwrap{ flex:1 1 auto; display:flex; align-items:center; gap:12px; min-width:220px;
+  padding:9px 16px; border-radius:100px; background:var(--glass-surface-dark);
+  border:1px solid var(--glass-border); box-shadow:var(--glass-inset);
+  backdrop-filter:blur(var(--glass-blur)); -webkit-backdrop-filter:blur(var(--glass-blur)); }
+.speedwrap label{ font-size:.64rem; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-3); font-weight:600; white-space:nowrap; }
+.speedwrap input{ flex:1 1 auto; }
+.speedwrap .sv{ font-family:var(--display); font-weight:600; color:var(--cyan); font-variant-numeric:tabular-nums;
+  width:74px; text-align:right; white-space:nowrap; }
+.rail{ flex:0 0 auto; display:flex; align-items:stretch; gap:0; margin-top:clamp(8px,1.4vh,14px);
+  border-radius:var(--radius-l); overflow-x:auto; overflow-y:hidden; scrollbar-width:none;
+  background:var(--glass-surface); border:1px solid var(--glass-border); box-shadow:var(--glass-inset);
+  backdrop-filter:blur(var(--glass-blur)); -webkit-backdrop-filter:blur(var(--glass-blur)); }
+.rail::-webkit-scrollbar{ display:none; }
+.tcell{ position:relative; flex:1 1 0; min-width:max-content; display:flex; flex-direction:column;
+  justify-content:center; gap:3px; padding:12px 16px 13px; border-right:1px solid rgba(255,255,255,.06); }
+.tcell:last-child{ border-right:0; }
+.tcell .tn{ font-size:.6rem; letter-spacing:.13em; text-transform:uppercase; color:var(--ink-3); font-weight:600; }
+.tcell .tv{ font-family:var(--display); font-weight:700; font-variant-numeric:tabular-nums; line-height:1; }
+.tcell .tv small{ font-size:.46em; color:var(--ink-3); font-weight:600; margin-left:2px; }
+.tcell.hero{ flex:1.4 1 0; } .tcell.hero .tv{ font-size:1.7rem; color:var(--cyan); text-shadow:0 0 14px var(--cyan-glow); }
+.tcell.lg .tv{ font-size:1.3rem; } .tcell.sm .tv{ font-size:1.05rem; color:var(--ink-2); }
+
+/* ===================== FLIGHT OVERLAY ===================== */
+.flightScrim{ position:fixed; inset:0; z-index:40; display:flex; align-items:center; justify-content:center;
+  padding:18px; background:rgba(4,7,10,.6);
+  backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
+  opacity:0; visibility:hidden; transition:opacity .3s, visibility .3s; }
+.flightScrim.open{ opacity:1; visibility:visible; }
+.flightCard{ position:relative; width:min(92vw, calc(86vh * 16 / 9)); height:min(86vh, calc(92vw * 9 / 16));
+  border-radius:var(--radius-xl); overflow:hidden;
+  border:1px solid var(--glass-border); box-shadow:var(--glass-shadow), var(--glass-inset);
+  transform:scale(.96); transition:transform .3s var(--ease); }
+.flightScrim.open .flightCard{ transform:scale(1); }
+.flightCard svg{ position:absolute; inset:0; width:100%; height:100%; display:block; }
+.flightCarry{ position:absolute; top:13%; left:4%; z-index:5; pointer-events:none; line-height:1;
+  text-shadow:0 0 22px rgba(0,0,0,.7); }
+.flightCarry .num{ font-family:var(--display); font-weight:800; letter-spacing:-.03em; color:#fff;
+  font-size:clamp(28px,7vh,58px); font-variant-numeric:tabular-nums; text-shadow:0 0 26px var(--cyan-glow); }
+.flightCarry .num .u{ font-size:.4em; font-weight:700; color:var(--cyan); margin-left:3px; vertical-align:.2em; }
+.flightCarry .lab{ font-size:clamp(8px,1.5vh,11px); letter-spacing:.24em; text-transform:uppercase; color:var(--ink-3); margin-top:5px; }
+.flightCarry .offline{ margin-top:9px; font-family:var(--display); font-weight:700; font-variant-numeric:tabular-nums;
+  font-size:clamp(14px,3vh,22px); color:var(--cyan); }
+.flightCarry .offline .side{ font-size:.6em; color:#fff; margin-left:3px; letter-spacing:.06em; }
+.flightClose,.flightReplay{ position:absolute; top:12px; z-index:6; cursor:pointer; font-family:var(--body);
+  border:1px solid var(--glass-border); background:var(--glass-surface-dark); color:var(--ink);
+  backdrop-filter:blur(var(--glass-blur)); -webkit-backdrop-filter:blur(var(--glass-blur));
+  box-shadow:var(--glass-inset); display:inline-flex; align-items:center; gap:6px; }
+.flightClose{ right:12px; width:40px; height:40px; border-radius:50%; font-size:18px; justify-content:center; }
+.flightReplay{ right:60px; height:40px; padding:0 16px; border-radius:100px; color:var(--cyan);
+  border-color:var(--cyan-glow); font-weight:700; font-size:.78rem; letter-spacing:.04em; }
+.flightClose:hover,.flightReplay:hover{ background:var(--glass-surface-2); }
+.fStats{ position:absolute; left:4%; right:4%; bottom:4%; z-index:5; display:flex; gap:8px;
+  transition:opacity .5s var(--ease), transform .5s var(--ease); }
+.fStats.is-hidden{ opacity:0; transform:translateY(14px); pointer-events:none; }
+.fStats .fgrid{ flex:1 1 auto; display:grid; grid-template-columns:repeat(6,1fr); grid-template-rows:1fr 1fr; gap:7px; }
+.fchip{ padding:8px 11px 9px; border-radius:var(--radius-s); position:relative; overflow:hidden;
+  background:var(--glass-plate); border:1px solid var(--glass-border); box-shadow:var(--glass-inset);
+  backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); }
+.fchip .k{ font-size:clamp(7px,1vw,9px); letter-spacing:.06em; text-transform:uppercase; color:var(--ink-3); white-space:nowrap; }
+.fchip .v{ font-family:var(--display); font-weight:700; font-variant-numeric:tabular-nums; line-height:1; margin-top:3px;
+  font-size:clamp(13px,1.7vw,18px); white-space:nowrap; }
+.fchip .v small{ font-size:.5em; color:var(--ink-3); font-weight:600; margin-left:2px; }
+.fchip.hero .v{ color:var(--cyan); text-shadow:0 0 12px var(--cyan-glow); }
+
+/* hidden svg defs holder */
+.svgdefs{ position:absolute; width:0; height:0; }
+
+/* focus visibility */
+:focus-visible{ outline:2px solid var(--cyan); outline-offset:3px; border-radius:6px; }
+
+/* reduced motion */
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{ animation-duration:.001ms!important; animation-iteration-count:1!important;
+    transition-duration:.001ms!important; }
+  .orb{ animation:none!important; opacity:.4; }
+  .screen{ transition:none!important; }
+}
+/* portrait hint */
+.rotate{ position:fixed; inset:0; z-index:80; display:none; flex-direction:column; align-items:center;
+  justify-content:center; gap:14px; text-align:center; padding:24px;
+  background:radial-gradient(130% 120% at 50% -10%, var(--bg-2), var(--bg-0)); }
+.rotate .ico{ font-size:46px; }
+.rotate p{ font-size:15px; max-width:240px; color:var(--ink-2); }
+@media (orientation:portrait) and (max-width:760px){ .rotate{ display:flex; } }
+</style>
+</head>
+<body>
+<div class="atmosphere"></div>
+<div class="orb a"></div><div class="orb b"></div><div class="orb c"></div>
+<div class="grain"></div>
+
+<!-- hidden gradients -->
+<svg class="svgdefs" aria-hidden="true"><defs>
+  <linearGradient id="arcGrad" x1="0" y1="1" x2="1" y2="0">
+    <stop offset="0" stop-color="#8b7bff"/><stop offset="1" stop-color="#22E3D6"/>
+  </linearGradient>
+  <linearGradient id="planeGrad" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="rgba(255,255,255,.10)"/><stop offset="1" stop-color="rgba(120,190,255,.03)"/>
+  </linearGradient>
+  <radialGradient id="ballGrad" cx="38%" cy="32%" r="75%">
+    <stop offset="0" stop-color="#fff"/><stop offset=".7" stop-color="#e7ecf2"/><stop offset="1" stop-color="#b9c3cf"/>
+  </radialGradient>
+  <linearGradient id="tracerGrad" x1="0" y1="1" x2="0" y2="0">
+    <stop offset="0" stop-color="#22E3D6" stop-opacity=".15"/>
+    <stop offset=".5" stop-color="#22E3D6" stop-opacity=".95"/>
+    <stop offset="1" stop-color="#eafffb"/>
+  </linearGradient>
+  <linearGradient id="fgroundGrad" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#0c2a2a"/><stop offset="1" stop-color="#06281f"/>
+  </linearGradient>
+  <radialGradient id="landGlow" cx="50%" cy="50%" r="50%">
+    <stop offset="0" stop-color="#22E3D6" stop-opacity=".7"/><stop offset="1" stop-color="#22E3D6" stop-opacity="0"/>
+  </radialGradient>
+</defs></svg>
+
+<div class="app">
+
+  <!-- ===== TOP NAV ===== -->
+  <div class="topbar">
+    <span class="brand">
+      <svg viewBox="0 0 52 52" fill="none" aria-hidden="true"><path d="M11 45 C 16 26, 24 18, 35 15 M21 39 L 30 24 L 43 45" stroke="currentColor" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="37" cy="15" r="5.2" fill="currentColor"/></svg>
+      <span class="wd">Strike<span class="arc">Arc</span></span>
+    </span>
+    <nav class="nav" aria-label="StrikeArc screens">
+      <button data-go="menu" aria-current="page">Menu</button>
+      <button data-go="geometry">Geometry</button>
+      <button data-go="impact">Impact</button>
+    </nav>
+  </div>
+
+  <div class="screenwrap" style="position:absolute;inset:0">
+
+  <!-- ============ SCREEN: MENU ============ -->
+  <section class="screen active" id="screen-menu" role="region" aria-label="StrikeArc menu">
+    <div class="menu-inner">
+      <div class="menu-head">
+        <div class="eyebrow" style="justify-content:center">Tactile Glass · See the swing</div>
+        <h1>See how your<br><span class="em">swing arc</span> creates the strike.</h1>
+        <p>Two instruments floating in glass. Model the geometry of your swing, then read the strike and watch the shot fly.</p>
+      </div>
+
+      <div class="dests">
+        <button class="dest" data-go="geometry" aria-label="Geometry — model swing plane and arc">
+          <span class="glint"></span>
+          <svg class="destsvg" viewBox="0 0 400 230" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+            <polygon points="120,210 250,40 285,75 165,210" fill="url(#planeGrad)" stroke="rgba(255,255,255,.10)"/>
+            <path d="M40,212 C 130,120 230,70 360,96" fill="none" stroke="url(#arcGrad)" stroke-width="3" stroke-linecap="round" stroke-dasharray="3 8" opacity=".85" filter="drop-shadow(0 0 8px rgba(34,227,214,.5))"/>
+            <circle cx="360" cy="96" r="6" fill="#eafcff"/>
+          </svg>
+          <span class="tag eyebrow">Instrument 01</span>
+          <div>
+            <h2>Geometry</h2>
+            <div class="sub">Model swing plane &amp; arc</div>
+          </div>
+          <span class="enter">Enter <span aria-hidden="true">→</span></span>
+        </button>
+
+        <button class="dest" data-go="impact" aria-label="Impact — launch and ball flight">
+          <span class="glint"></span>
+          <svg class="destsvg" viewBox="0 0 400 230" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+            <path d="M30,205 C 150,70 270,40 380,70" fill="none" stroke="url(#tracerGrad)" stroke-width="3.5" stroke-linecap="round" filter="drop-shadow(0 0 9px rgba(34,227,214,.5))"/>
+            <circle cx="30" cy="205" r="6" fill="#8b7bff"/>
+            <circle cx="380" cy="70" r="7" fill="#eafcff" filter="drop-shadow(0 0 8px #22E3D6)"/>
+          </svg>
+          <span class="tag eyebrow">Instrument 02</span>
+          <div>
+            <h2>Impact</h2>
+            <div class="sub">Launch &amp; ball flight</div>
+          </div>
+          <span class="enter">Enter <span aria-hidden="true">→</span></span>
+        </button>
+      </div>
+
+      <div class="menu-meta">
+        <span class="chiplet">Display · <b>Bricolage Grotesque</b></span>
+        <span class="chiplet">Accent · <b>#22E3D6</b></span>
+        <span class="chiplet">Material · <b>Frosted glass</b></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SCREEN: GEOMETRY ============ -->
+  <section class="screen" id="screen-geometry" role="region" aria-label="Geometry — swing arc">
+    <div class="impact-top">
+      <div class="eyebrow">Geometry · Swing-arc model</div>
+    </div>
+    <div class="work">
+      <div class="stagecard">
+        <div class="lenshead"><div class="h1">Swing arc</div><div class="h2">Plane · arc · strike</div></div>
+        <svg class="scene" id="geoScene" viewBox="0 0 960 480" preserveAspectRatio="xMidYMid meet" role="img"
+          aria-label="Swing plane with a sweeping arc and a glowing ball at the strike point.">
+          <!-- ground line -->
+          <line x1="40" y1="392" x2="920" y2="392" stroke="rgba(255,255,255,.16)" stroke-width="1.5"/>
+          <text x="912" y="384" text-anchor="end" font-size="12" fill="#8ca4b4" font-family="Bricolage Grotesque" style="letter-spacing:.1em">GROUND</text>
+          <!-- tilted swing plane -->
+          <polygon id="geoPlane" fill="url(#planeGrad)" stroke="rgba(255,255,255,.13)" stroke-width="1" stroke-linejoin="round"/>
+          <g id="geoGrid" stroke="rgba(255,255,255,.05)" stroke-width="1"></g>
+          <line id="geoPlaneLine" stroke="rgba(255,255,255,.2)" stroke-width="2" stroke-dasharray="6 8"/>
+          <text id="geoPlaneLabel" font-size="13" fill="#8ca4b4" font-family="Bricolage Grotesque" style="font-variant-numeric:tabular-nums">60° plane</text>
+          <!-- arc glow underlay + arc -->
+          <path id="geoArcGlow" fill="none" stroke="#22E3D6" stroke-width="16" stroke-linecap="round" opacity=".22"/>
+          <path id="geoArc" fill="none" stroke="url(#arcGrad)" stroke-width="6" stroke-linecap="round"/>
+          <!-- low point marker -->
+          <line id="geoLpTick" stroke="rgba(255,255,255,.32)" stroke-width="1.5" stroke-dasharray="3 4"/>
+          <circle id="geoLpMark" r="5" fill="none" stroke="#ffd166" stroke-width="2"/>
+          <!-- impact bloom -->
+          <circle id="geoBloom" r="0" fill="none" stroke="#22E3D6" stroke-width="3" opacity="0"/>
+          <!-- shaft + clubhead -->
+          <line id="geoShaft" stroke="#cdd7e3" stroke-width="4" stroke-linecap="round"/>
+          <circle id="geoHalo" r="20" fill="#22E3D6" fill-opacity=".25"/>
+          <circle id="geoClub" r="11" fill="#fff"/>
+          <circle id="geoHub" r="5" fill="rgba(255,255,255,.5)"/>
+          <!-- ball -->
+          <ellipse id="geoBallShadow" rx="22" ry="6" fill="rgba(0,0,0,.35)"/>
+          <circle id="geoBall" r="15" fill="url(#ballGrad)"/>
+          <!-- attack/path chips inside canvas -->
+          <g id="geoChipAtk" transform="translate(372,18)">
+            <rect width="116" height="26" rx="8" fill="rgba(7,16,20,.78)" stroke="#ffb45c" stroke-opacity=".5"/>
+            <circle cx="14" cy="13" r="3.4" fill="#ffb45c"/>
+            <text x="26" y="14" font-size="13" font-weight="700" fill="#ffe0bb" font-family="Bricolage Grotesque" style="font-variant-numeric:tabular-nums" dominant-baseline="middle">ATTACK —</text>
+          </g>
+          <g id="geoChipPath" transform="translate(496,18)">
+            <rect width="116" height="26" rx="8" fill="rgba(7,16,20,.78)" stroke="#22E3D6" stroke-opacity=".5"/>
+            <circle cx="14" cy="13" r="3.4" fill="#22E3D6"/>
+            <text x="26" y="14" font-size="13" font-weight="700" fill="#bff6f1" font-family="Bricolage Grotesque" style="font-variant-numeric:tabular-nums" dominant-baseline="middle">PATH —</text>
+          </g>
+        </svg>
+      </div>
+
+      <aside class="sidepanel">
+        <div class="gpanel" style="flex:1 1 auto">
+          <div class="ptitle">Strike quality</div>
+          <div class="verdict"><span class="dot" id="geoDot"></span><span class="band" id="geoBand">Pure</span><span class="pct" id="geoPct">100%</span></div>
+          <p class="tip" id="geoTip">Low point just ahead of the ball — ball-first, crisp contact.</p>
+          <div class="readtiles" style="margin-top:14px">
+            <div class="rtile"><div class="k">Attack</div><div class="v amber" id="geoAtkV">−2.4<small>°</small></div></div>
+            <div class="rtile"><div class="k">Path</div><div class="v glow" id="geoPathV">+1.0<small>°</small></div></div>
+            <div class="rtile"><div class="k">Plane</div><div class="v" id="geoPlaneV">60<small>°</small></div></div>
+          </div>
+        </div>
+
+        <div class="gpanel">
+          <div class="ptitle">Plane &amp; arc</div>
+          <div class="field fc-path">
+            <label class="toplabel" for="g_plane">Plane tilt <b id="g_planeV">60°</b></label>
+            <input type="range" id="g_plane" min="45" max="70" step="1" value="60" aria-label="Swing plane tilt in degrees">
+          </div>
+          <div class="field">
+            <label class="toplabel" for="g_dir">Club path <b id="g_dirV">+1.0°</b></label>
+            <input type="range" id="g_dir" min="-8" max="8" step="0.5" value="1" aria-label="Club path direction in degrees">
+          </div>
+          <div class="field fc-attack">
+            <label class="toplabel" for="g_lpx">Low point <b id="g_lpxV">+4 cm</b></label>
+            <input type="range" id="g_lpx" min="-10" max="15" step="1" value="4" aria-label="Low point ahead or behind ball, centimetres">
+          </div>
+          <button class="btn btn-primary" id="g_play" style="margin-top:6px"><span aria-hidden="true">▶</span> Play swing</button>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ============ SCREEN: IMPACT ============ -->
+  <section class="screen" id="screen-impact" role="region" aria-label="Impact — D-plane instrument">
+    <div class="impact-top">
+      <div class="speedwrap">
+        <label for="i_speed">Club speed</label>
+        <input type="range" id="i_speed" min="40" max="130" step="1" value="90" aria-label="Club head speed in miles per hour">
+        <span class="sv" id="i_speedV">90 mph</span>
+      </div>
+      <button class="btn btn-primary" id="i_play" style="width:auto;padding:0 22px;flex:0 0 auto"><span aria-hidden="true">▶</span> Play flight</button>
+    </div>
+
+    <div class="work">
+      <!-- DIRECTION lens -->
+      <div class="stagecard">
+        <div class="lenshead"><div class="h1">Direction</div><div class="h2">Top-down · face &amp; path</div></div>
+        <svg class="scene" id="dirScene" viewBox="0 0 400 360" preserveAspectRatio="xMidYMid meet" role="img"
+          aria-label="Top-down view: target line ahead, with a red face arrow and a blue path arrow from the ball.">
+          <line x1="200" y1="330" x2="200" y2="42" stroke="rgba(34,227,214,.5)" stroke-width="1.5" stroke-dasharray="5 8"/>
+          <circle cx="200" cy="42" r="4" fill="none" stroke="#22E3D6" stroke-width="1.5" opacity=".8"/>
+          <text x="200" y="30" text-anchor="middle" font-size="9" fill="#8ca4b4" font-family="Bricolage Grotesque" style="letter-spacing:.1em">TARGET</text>
+          <path id="dirCone" fill="rgba(34,227,214,.06)"/>
+          <g id="g_path_a">
+            <line id="line_path" x1="200" y1="330" x2="200" y2="178" stroke="var(--c-path)" stroke-width="7" stroke-linecap="round"/>
+            <polygon id="head_path" points="200,162 184,192 200,183 216,192" fill="var(--c-path)"/>
+          </g>
+          <g id="g_face_a">
+            <line id="line_face" x1="200" y1="330" x2="200" y2="118" stroke="var(--c-face)" stroke-width="7" stroke-linecap="round"/>
+            <polygon id="head_face" points="200,102 184,132 200,123 216,132" fill="var(--c-face)"/>
+          </g>
+          <circle cx="200" cy="330" r="5.5" fill="#fff" opacity=".95"/>
+        </svg>
+        <div class="gpanel" style="border-radius:0;border:0;border-top:1px solid var(--glass-border);box-shadow:none;background:rgba(8,16,24,.4);padding:10px 14px">
+          <div style="display:flex;gap:14px">
+            <div class="field fc-face" style="flex:1;margin:0">
+              <label class="toplabel" for="s_face">Face <b id="v_face">−2.0°</b></label>
+              <input type="range" id="s_face" min="-20" max="20" step="0.1" value="-2" aria-label="Face angle in degrees">
+            </div>
+            <div class="field fc-path" style="flex:1;margin:0">
+              <label class="toplabel" for="s_path">Path <b id="v_path">+2.0°</b></label>
+              <input type="range" id="s_path" min="-20" max="20" step="0.1" value="2" aria-label="Club path in degrees">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- HEIGHT lens -->
+      <div class="stagecard">
+        <div class="lenshead"><div class="h1">Height</div><div class="h2">Side-on · attack &amp; loft</div></div>
+        <svg class="scene" id="htScene" viewBox="0 0 400 360" preserveAspectRatio="xMidYMid meet" role="img"
+          aria-label="Side-on view: ground line, with a pink attack arrow and a violet dynamic-loft arrow from impact.">
+          <line x1="30" y1="250" x2="380" y2="250" stroke="rgba(255,255,255,.18)" stroke-width="1.5"/>
+          <text x="372" y="266" text-anchor="end" font-size="9" fill="#8ca4b4" font-family="Bricolage Grotesque" style="letter-spacing:.1em">GROUND</text>
+          <g id="g_attack_a">
+            <line id="line_attack" x1="80" y1="250" x2="234" y2="250" stroke="var(--c-attack)" stroke-width="7" stroke-linecap="round"/>
+            <polygon id="head_attack" points="250,250 220,234 229,250 220,266" fill="var(--c-attack)"/>
+          </g>
+          <g id="g_loft_a">
+            <line id="line_loft" x1="80" y1="250" x2="298" y2="250" stroke="var(--c-loft)" stroke-width="7" stroke-linecap="round"/>
+            <polygon id="head_loft" points="314,250 284,234 293,250 284,266" fill="var(--c-loft)"/>
+          </g>
+          <circle cx="80" cy="250" r="5.5" fill="#fff" opacity=".95"/>
+        </svg>
+        <div class="gpanel" style="border-radius:0;border:0;border-top:1px solid var(--glass-border);box-shadow:none;background:rgba(8,16,24,.4);padding:10px 14px">
+          <div style="display:flex;gap:14px">
+            <div class="field fc-attack" style="flex:1;margin:0">
+              <label class="toplabel" for="s_attack">Attack <b id="v_attack">−3.0°</b></label>
+              <input type="range" id="s_attack" min="-15" max="15" step="0.1" value="-3" aria-label="Angle of attack in degrees">
+            </div>
+            <div class="field fc-loft" style="flex:1;margin:0">
+              <label class="toplabel" for="s_loft">Dyn loft <b id="v_loft">30.0°</b></label>
+              <input type="range" id="s_loft" min="0" max="60" step="0.1" value="30" aria-label="Dynamic loft in degrees">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- telemetry rail -->
+    <div class="rail" id="rail" role="group" aria-label="Live telemetry">
+      <div class="tcell hero"><span class="tn">Carry</span><span class="tv"><span id="dCarry">163</span><small>m</small></span></div>
+      <div class="tcell hero"><span class="tn">Ball speed</span><span class="tv"><span id="dBallSpd">128</span><small>mph</small></span></div>
+      <div class="tcell hero"><span class="tn">Smash</span><span class="tv"><span id="dSmash">1.42</span></span></div>
+      <div class="tcell lg"><span class="tn">Backspin</span><span class="tv"><span id="dSpin">5200</span><small>rpm</small></span></div>
+      <div class="tcell lg"><span class="tn">Launch</span><span class="tv"><span id="dLaunch">14.2</span><small>°</small></span></div>
+      <div class="tcell sm"><span class="tn">Spin loft</span><span class="tv"><span id="dSpinLoft">27.0</span><small>°</small></span></div>
+      <div class="tcell sm"><span class="tn">Apex</span><span class="tv"><span id="dApex">28</span><small>m</small></span></div>
+      <div class="tcell sm"><span class="tn">Launch dir</span><span class="tv"><span id="dLaunchDir">+0.8</span><small>°</small></span></div>
+      <div class="tcell sm"><span class="tn">Spin axis</span><span class="tv"><span id="dSpinAxis">−4</span><small>°</small></span></div>
+    </div>
+  </section>
+
+  </div><!-- /screenwrap -->
+</div><!-- /app -->
+
+<!-- ===== FLIGHT OVERLAY ===== -->
+<div class="flightScrim" id="flightScrim">
+  <div class="flightCard glass" id="flightCard" role="dialog" aria-modal="true" aria-label="Ball flight playback">
+    <button class="flightClose" id="flightClose" aria-label="Close flight playback">×</button>
+    <button class="flightReplay" id="flightReplay" type="button"><span aria-hidden="true">↻</span> Replay</button>
+    <div class="flightCarry" aria-hidden="true">
+      <div class="num"><span id="fCarryNum">0</span><span class="u">m</span></div>
+      <div class="lab">Total</div>
+      <div class="offline"><span id="fOffNum">0</span> m<span class="side" id="fOffSide">R</span></div>
+    </div>
+    <svg id="fScene" viewBox="0 0 960 540" preserveAspectRatio="xMidYMid slice" role="img"
+      aria-label="Driving range ball flight from tee to landing.">
+      <rect x="0" y="0" width="960" height="540" fill="#06121a"/>
+      <rect x="0" y="0" width="960" height="320" fill="url(#fgroundGrad)" opacity="0"/>
+      <!-- atmosphere wash -->
+      <rect x="0" y="0" width="960" height="540" fill="url(#planeGrad)" opacity=".5"/>
+      <!-- ground -->
+      <rect x="-200" y="300" width="1360" height="440" fill="url(#fgroundGrad)" opacity=".7"/>
+      <rect x="-200" y="298" width="1360" height="3" fill="rgba(34,227,214,.18)"/>
+      <!-- converging rails -->
+      <path d="M470,540 L455,300" fill="none" stroke="rgba(34,227,214,.14)" stroke-width="1.4"/>
+      <path d="M490,540 L505,300" fill="none" stroke="rgba(34,227,214,.14)" stroke-width="1.4"/>
+      <path d="M360,540 L430,300" fill="none" stroke="rgba(34,227,214,.08)" stroke-width="1.2"/>
+      <path d="M600,540 L530,300" fill="none" stroke="rgba(34,227,214,.08)" stroke-width="1.2"/>
+      <!-- tracer + ball -->
+      <path id="fTracer" fill="none" stroke="url(#tracerGrad)" stroke-width="5" stroke-linecap="round"
+        filter="drop-shadow(0 0 10px rgba(34,227,214,.55))"/>
+      <g id="fLand" opacity="0"><circle r="34" fill="url(#landGlow)"/>
+        <text y="-44" text-anchor="middle" fill="#fff" font-size="14" font-weight="700" font-family="Bricolage Grotesque">Carry</text></g>
+      <g id="fApex" opacity="0"><circle r="14" fill="url(#landGlow)"/>
+        <text y="-22" text-anchor="middle" fill="#22E3D6" font-size="12" font-weight="700" font-family="Bricolage Grotesque">Apex</text></g>
+      <circle id="fBall" r="7" fill="#fff" filter="drop-shadow(0 0 8px #22E3D6)" opacity="0"/>
+    </svg>
+    <div class="fStats is-hidden" id="fStats">
+      <div class="fgrid">
+        <div class="fchip hero"><div class="k">Carry</div><div class="v"><span id="fCarry">163</span><small>m</small></div></div>
+        <div class="fchip"><div class="k">Launch dir</div><div class="v"><span id="fLaunchDir">+0.8</span><small>°</small></div></div>
+        <div class="fchip"><div class="k">Launch ang</div><div class="v"><span id="fLaunchAng">14.2</span><small>°</small></div></div>
+        <div class="fchip hero"><div class="k">Ball speed</div><div class="v"><span id="fBallSpd">128</span><small>mph</small></div></div>
+        <div class="fchip"><div class="k">Backspin</div><div class="v"><span id="fSpin">5200</span><small>rpm</small></div></div>
+        <div class="fchip"><div class="k">Spin loft</div><div class="v"><span id="fSpinLoft">27.0</span><small>°</small></div></div>
+        <div class="fchip hero"><div class="k">Smash</div><div class="v" id="fSmash">1.42</div></div>
+        <div class="fchip"><div class="k">Apex</div><div class="v"><span id="fApexV">28</span><small>m</small></div></div>
+        <div class="fchip"><div class="k">Spin axis</div><div class="v"><span id="fSpinAxis">−4</span><small>°</small></div></div>
+        <div class="fchip"><div class="k">Club speed</div><div class="v"><span id="fClubSpd">90</span><small>mph</small></div></div>
+        <div class="fchip"><div class="k">Total</div><div class="v"><span id="fTotal">175</span><small>m</small></div></div>
+        <div class="fchip"><div class="k">Descent</div><div class="v"><span id="fDescent">42</span><small>°</small></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="rotate" role="status"><div class="ico" aria-hidden="true">📱</div><p>Rotate to landscape for the full instrument.</p></div>
+
+<script>
+(function(){
+  "use strict";
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var $ = function(id){ return document.getElementById(id); };
+
+  /* ============ NAV / SCREEN SWITCH (depth/parallax) ============ */
+  var screens = { menu:$('screen-menu'), geometry:$('screen-geometry'), impact:$('screen-impact') };
+  var navBtns = Array.prototype.slice.call(document.querySelectorAll('.nav button'));
+  var current = 'menu';
+  function go(name){
+    if(!screens[name] || name===current) return;
+    current = name;
+    Object.keys(screens).forEach(function(k){ screens[k].classList.toggle('active', k===name); });
+    navBtns.forEach(function(b){
+      var on = b.getAttribute('data-go')===name;
+      if(on) b.setAttribute('aria-current','page'); else b.removeAttribute('aria-current');
+    });
+    if(name==='geometry'){ geoRest(); geoRender(); }
+    if(name==='impact'){ impactRender(); }
+  }
+  document.querySelectorAll('[data-go]').forEach(function(el){
+    el.addEventListener('click', function(){ go(el.getAttribute('data-go')); });
+  });
+
+  /* hover-tilt + glint on menu destinations */
+  document.querySelectorAll('.dest').forEach(function(card){
+    if(reduce) return;
+    card.addEventListener('pointermove', function(e){
+      var r = card.getBoundingClientRect();
+      var x = (e.clientX-r.left)/r.width, y=(e.clientY-r.top)/r.height;
+      card.style.transform = 'perspective(1000px) rotateY('+((x-.5)*9).toFixed(2)+'deg) rotateX('+((.5-y)*9).toFixed(2)+'deg) translateZ(6px)';
+      card.style.setProperty('--mx',(x*100).toFixed(1)+'%');
+      card.style.setProperty('--my',(y*100).toFixed(1)+'%');
+    });
+    card.addEventListener('pointerleave', function(){ card.style.transform=''; });
+  });
+
+  /* subtle pointer parallax on orbs */
+  if(!reduce){
+    window.addEventListener('pointermove', function(e){
+      var dx=(e.clientX/window.innerWidth-.5), dy=(e.clientY/window.innerHeight-.5);
+      var a=document.querySelector('.orb.a'), b=document.querySelector('.orb.b');
+      if(a){ a.style.marginLeft=(dx*28)+'px'; a.style.marginTop=(dy*28)+'px'; }
+      if(b){ b.style.marginLeft=(dx*-24)+'px'; b.style.marginTop=(dy*-24)+'px'; }
+    });
+  }
+
+  function paintRange(el){
+    var min=+el.min, max=+el.max, p=((+el.value-min)/(max-min))*100;
+    el.style.setProperty('--p', p.toFixed(1)+'%');
+  }
+
+  /* ===================================================================
+     GEOMETRY — plausible swing-arc model (not real physics)
+     =================================================================== */
+  var geo = { plane:60, dir:1, lpx:4 };   // lpx in cm (ahead +/behind -)
+  var geoEls = {
+    plane:$('geoPlane'), grid:$('geoGrid'), planeLine:$('geoPlaneLine'), planeLabel:$('geoPlaneLabel'),
+    arc:$('geoArc'), arcGlow:$('geoArcGlow'), lpTick:$('geoLpTick'), lpMark:$('geoLpMark'),
+    bloom:$('geoBloom'), shaft:$('geoShaft'), halo:$('geoHalo'), club:$('geoClub'), hub:$('geoHub'),
+    ball:$('geoBall'), ballShadow:$('geoBallShadow'),
+    chipAtk:$('geoChipAtk').querySelector('text'), chipPath:$('geoChipPath').querySelector('text')
+  };
+  var GVBW=960, GVBH=480, groundY=392, ballX=560;
+  var arcPts=[], arcLen=0;
+
+  // build arc as a tilted ellipse sweep; plane tilt changes steepness & hub height
+  function geoBuild(){
+    var tilt = geo.plane;                          // 45..70
+    var lean = (tilt-45)/25;                       // 0..1
+    var hubX = ballX - 150 - geo.dir*10;
+    var hubY = groundY - 250 - lean*40;            // steeper plane → higher hub
+    var rx = 300 - lean*60;                        // radius along ground
+    var ry = 250 + lean*40;                        // radius vertical
+    var lowX = ballX + geo.lpx*3.0;                // low point offset by lpx (cm→px)
+    arcPts.length=0;
+    var i, N=120;
+    for(i=0;i<=N;i++){
+      var t = -1.15 + (2.3)*(i/N);                 // sweep angle
+      var x = lowX + Math.sin(t)*rx + geo.dir*6*Math.cos(t);
+      var y = (groundY-6) - (1-Math.cos(t))*ry*0.42 - Math.abs(geo.lpx)*0.0;
+      arcPts.push({x:x, y:y});
+    }
+    var d=''; arcPts.forEach(function(p,i){ d += (i===0?'M':'L')+p.x.toFixed(1)+' '+p.y.toFixed(1)+' '; });
+    geoEls.arc.setAttribute('d', d); geoEls.arcGlow.setAttribute('d', d);
+    arcLen = geoEls.arc.getTotalLength();
+    geoEls.arc.style.strokeDasharray = arcLen; geoEls.arcGlow.style.strokeDasharray = arcLen;
+
+    // plane polygon (a leaning glass quad through the hub toward the ground)
+    var topW = 80+lean*30;
+    var px1=hubX-topW, px2=hubX+topW, by1=ballX-90, by2=ballX+70;
+    geoEls.plane.setAttribute('points',
+      px1+','+hubY+' '+px2+','+hubY+' '+by2+','+groundY+' '+by1+','+groundY);
+    // grid lines on the plane
+    geoEls.grid.replaceChildren();
+    for(i=1;i<=4;i++){
+      var f=i/5;
+      var ax = px1+(by1-px1)*f, ay = hubY+(groundY-hubY)*f;
+      var bx = px2+(by2-px2)*f, byy = hubY+(groundY-hubY)*f;
+      var ln=document.createElementNS('http://www.w3.org/2000/svg','line');
+      ln.setAttribute('x1',ax); ln.setAttribute('y1',ay); ln.setAttribute('x2',bx); ln.setAttribute('y2',byy);
+      geoEls.grid.appendChild(ln);
+    }
+    geoEls.planeLine.setAttribute('x1',hubX); geoEls.planeLine.setAttribute('y1',hubY);
+    geoEls.planeLine.setAttribute('x2',(by1+by2)/2); geoEls.planeLine.setAttribute('y2',groundY);
+    geoEls.planeLabel.setAttribute('x', px1-2); geoEls.planeLabel.setAttribute('y', hubY-8);
+    geoEls.planeLabel.textContent = tilt+'° plane';
+
+    // low point marker + tick
+    var lowY = groundY-4;
+    geoEls.lpMark.setAttribute('cx',lowX); geoEls.lpMark.setAttribute('cy',lowY);
+    geoEls.lpTick.setAttribute('x1',lowX); geoEls.lpTick.setAttribute('y1',lowY);
+    geoEls.lpTick.setAttribute('x2',lowX); geoEls.lpTick.setAttribute('y2',groundY);
+
+    // ball + shadow + hub
+    geoEls.ball.setAttribute('cx',ballX); geoEls.ball.setAttribute('cy',groundY-15);
+    geoEls.ballShadow.setAttribute('cx',ballX); geoEls.ballShadow.setAttribute('cy',groundY+3);
+    geoEls.hub.setAttribute('cx',hubX); geoEls.hub.setAttribute('cy',hubY);
+    geoEls.shaft.setAttribute('x1',hubX); geoEls.shaft.setAttribute('y1',hubY);
+    geo._hub = {x:hubX,y:hubY};
+  }
+
+  // derive attack angle + path from plane/lpx (plausible mapping)
+  function geoImpact(){
+    var attack = -(geo.plane-45)*0.16 - (geo.lpx<0? (-geo.lpx*0.25):0) + (geo.lpx*0.06);
+    // ahead-of-ball (lpx>0) → more downward (steeper) on the way to low point
+    attack = -(2.0 + (geo.plane-60)*0.12 + (geo.lpx*0.10));
+    var path = geo.dir;
+    return { attack:attack, path:path };
+  }
+  function geoQuality(){
+    var di = geoImpact();
+    // pure when low point is slightly ahead (2..8cm) ; fat behind ; thin far ahead
+    var lp = geo.lpx, band, color, pct, tip;
+    if(lp < -2){ band='Fat'; color='#ff8a5c'; pct=Math.max(20,70+lp*4); tip='Low point behind the ball — turf first, heavy contact.'; }
+    else if(lp > 9){ band='Thin'; color='#ffd166'; pct=Math.max(35,95-(lp-9)*5); tip='Low point well ahead — caught thin, struck high on the ball.'; }
+    else if(lp >= 1 && lp <= 8){ band='Pure'; color='#22E3D6'; pct=Math.min(100, 92+lp); tip='Low point just ahead of the ball — ball-first, crisp contact.'; }
+    else { band='Solid'; color='#7af3ec'; pct=88; tip='Centred strike — clean contact, near the sweet spot.'; }
+    return { band:band, color:color, pct:Math.round(Math.min(100,pct)), tip:tip, attack:di.attack, path:di.path };
+  }
+  function geoRender(){
+    var q = geoQuality();
+    $('geoBand').textContent = q.band; $('geoBand').style.color = q.color;
+    $('geoDot').style.background = q.color; $('geoDot').style.color = q.color;
+    $('geoPct').textContent = q.pct+'%';
+    $('geoTip').textContent = q.tip;
+    var fa = function(v){ return (v>=0?'+':'−')+Math.abs(v).toFixed(1)+'°'; };
+    $('geoAtkV').innerHTML = (q.attack>=0?'+':'−')+Math.abs(q.attack).toFixed(1)+'<small>°</small>';
+    $('geoPathV').innerHTML = (q.path>=0?'+':'−')+Math.abs(q.path).toFixed(1)+'<small>°</small>';
+    $('geoPlaneV').innerHTML = geo.plane+'<small>°</small>';
+    geoEls.chipAtk.textContent = 'ATTACK '+fa(q.attack);
+    geoEls.chipPath.textContent = 'PATH '+fa(q.path);
+  }
+  function geoPlace(p){   // p 0..1 along arc
+    if(reduce){
+      geoEls.arc.style.strokeDashoffset = 0; geoEls.arcGlow.style.strokeDashoffset = 0;
+    } else {
+      geoEls.arc.style.strokeDashoffset = arcLen*(1-p);
+      geoEls.arcGlow.style.strokeDashoffset = arcLen*(1-p);
+    }
+    var idx = Math.max(0, Math.min(arcPts.length-1, Math.round(p*(arcPts.length-1))));
+    var pt = arcPts[idx]; if(!pt) return;
+    geoEls.club.setAttribute('cx',pt.x); geoEls.club.setAttribute('cy',pt.y);
+    geoEls.halo.setAttribute('cx',pt.x); geoEls.halo.setAttribute('cy',pt.y);
+    geoEls.shaft.setAttribute('x2',pt.x); geoEls.shaft.setAttribute('y2',pt.y);
+  }
+  function geoRest(){ geoBuild(); geoPlace(0.5); geoEls.arc.style.strokeDashoffset = 0; geoEls.arcGlow.style.strokeDashoffset = 0; }
+
+  // play swing animation with impact bloom
+  var geoAnimating=false;
+  function geoPlay(){
+    geoBuild(); geoRender();
+    if(geoAnimating) return;
+    if(reduce){ geoPlace(1); geoBloomPulse(); return; }
+    geoAnimating=true;
+    var start=null, dur=1400;
+    // impact happens roughly where low point is (~0.62 along sweep)
+    var impactP=0.62, bloomed=false;
+    function step(ts){
+      if(!start) start=ts;
+      var p=Math.min((ts-start)/dur,1);
+      var e = p<0.5 ? 2*p*p : 1-Math.pow(-2*p+2,2)/2;   // easeInOut
+      geoPlace(e);
+      if(!bloomed && e>=impactP){ bloomed=true; geoBloomPulse(); }
+      if(p<1) requestAnimationFrame(step);
+      else { geoAnimating=false; setTimeout(function(){ if(!geoAnimating) geoRest(); }, 600); }
+    }
+    requestAnimationFrame(step);
+  }
+  function geoBloomPulse(){
+    var b=geoEls.bloom, q=geoQuality();
+    var lowX = ballX + geo.lpx*3.0;
+    b.setAttribute('cx', lowX); b.setAttribute('cy', groundY-4); b.setAttribute('stroke', q.color);
+    if(reduce){ return; }
+    var s=null;
+    function bs(ts){ if(!s) s=ts; var p=Math.min((ts-s)/600,1);
+      b.setAttribute('r', (8 + p*70).toFixed(1)); b.setAttribute('opacity', (1-p).toFixed(2));
+      // brief ball flash
+      if(p<0.3){ geoEls.ball.setAttribute('fill', '#ffffff'); } else { geoEls.ball.setAttribute('fill','url(#ballGrad)'); }
+      if(p<1) requestAnimationFrame(bs); else b.setAttribute('opacity','0');
+    }
+    requestAnimationFrame(bs);
+  }
+
+  // geometry sliders
+  function bindGeo(id, key, fmt){
+    var el=$(id), out=$(id+'V');
+    function upd(){
+      geo[key] = +el.value; paintRange(el);
+      out.textContent = fmt(geo[key]);
+      geoBuild(); geoRender(); if(!geoAnimating) geoPlace(0.5);
+    }
+    el.addEventListener('input', upd); upd();
+  }
+  bindGeo('g_plane','plane', function(v){ return v+'°'; });
+  bindGeo('g_dir','dir', function(v){ return (v>=0?'+':'−')+Math.abs(v).toFixed(1)+'°'; });
+  bindGeo('g_lpx','lpx', function(v){ return (v>=0?'+':'−')+Math.abs(v)+' cm'; });
+  $('g_play').addEventListener('click', geoPlay);
+
+  /* ===================================================================
+     IMPACT — D-plane lenses + telemetry (plausible mock numbers)
+     =================================================================== */
+  var imp = { speed:90, face:-2, path:2, attack:-3, loft:30 };
+
+  // rotate an arrow group around the ball pivot
+  function setArrow(lineId, headId, pivot, deg, len, baseDir){
+    // baseDir: 'up' (dir scene) or 'right' (height scene)
+    var rad = deg*Math.PI/180;
+    var line=$(lineId), head=$(headId);
+    var x1=pivot.x, y1=pivot.y, x2, y2, hx, hy, ang;
+    if(baseDir==='up'){
+      x2 = x1 + Math.sin(rad)*len;
+      y2 = y1 - Math.cos(rad)*len;
+    } else {
+      x2 = x1 + Math.cos(rad)*len;
+      y2 = y1 - Math.sin(rad)*len;
+    }
+    line.setAttribute('x2', x2.toFixed(1)); line.setAttribute('y2', y2.toFixed(1));
+    line.setAttribute('x1', x1); line.setAttribute('y1', y1);
+    ang = Math.atan2(y2-y1, x2-x1);
+    var h=15;
+    var p1x=x2, p1y=y2;
+    var p2x=x2 - h*Math.cos(ang-0.5), p2y=y2 - h*Math.sin(ang-0.5);
+    var p3x=x2 - h*Math.cos(ang+0.5), p3y=y2 - h*Math.sin(ang+0.5);
+    var midx=x2 - h*0.6*Math.cos(ang), midy=y2 - h*0.6*Math.sin(ang);
+    head.setAttribute('points', p1x.toFixed(1)+','+p1y.toFixed(1)+' '+p2x.toFixed(1)+','+p2y.toFixed(1)+' '+
+      midx.toFixed(1)+','+midy.toFixed(1)+' '+p3x.toFixed(1)+','+p3y.toFixed(1));
+  }
+
+  // telemetry model: speed drives ball speed & carry; loft/attack drive launch/spin
+  function telemetry(){
+    var spinLoft = Math.max(2, imp.loft - imp.attack);          // dynamic loft minus attack
+    var smash = Math.max(1.12, Math.min(1.50, 1.52 - spinLoft*0.0055)); // higher spin loft → lower smash
+    var ballSpd = imp.speed * smash;
+    var launch = imp.loft*0.46 + imp.attack*0.25 + 1.5;
+    var spin = Math.round((spinLoft*210 + 400) / 50)*50;
+    var carry = Math.round(ballSpd*1.18 + launch*1.6 - spin*0.004);
+    carry = Math.max(40, carry);
+    var apex = Math.round(carry*0.17 + launch*0.4);
+    var faceToPath = imp.face - imp.path;
+    var launchDir = imp.path*0.85 + imp.face*0.15;
+    var spinAxis = Math.round(faceToPath*2.2);
+    var total = Math.round(carry*1.07);
+    var descent = Math.round(38 + spin*0.0009 + launch*0.2);
+    return {
+      carry:carry, ballSpd:Math.round(ballSpd), smash:smash, spin:spin, launch:launch,
+      spinLoft:spinLoft, apex:apex, launchDir:launchDir, spinAxis:spinAxis, total:total, descent:descent
+    };
+  }
+  function sgn(v,d){ d=(d==null?1:d); return (v>=0?'+':'−')+Math.abs(v).toFixed(d); }
+
+  function impactRender(){
+    // Direction lens (top-down): face & path arrows from ball pivot, base UP
+    var dirPivot={x:200,y:330};
+    setArrow('line_face','head_face', dirPivot, imp.face, 224, 'up');
+    setArrow('line_path','head_path', dirPivot, imp.path, 168, 'up');
+    // cone between face & path
+    var cone=$('dirCone');
+    var fr=imp.face*Math.PI/180, pr=imp.path*Math.PI/180;
+    var fx=200+Math.sin(fr)*210, fy=330-Math.cos(fr)*210;
+    var px=200+Math.sin(pr)*210, py=330-Math.cos(pr)*210;
+    cone.setAttribute('d','M200,330 L'+fx.toFixed(1)+','+fy.toFixed(1)+' L'+px.toFixed(1)+','+py.toFixed(1)+' Z');
+
+    // Height lens (side-on): attack & loft arrows from impact, base RIGHT
+    var htPivot={x:80,y:250};
+    setArrow('line_attack','head_attack', htPivot, imp.attack, 170, 'right');
+    setArrow('line_loft','head_loft', htPivot, imp.loft, 234, 'right');
+
+    // telemetry rail
+    var t=telemetry();
+    $('dCarry').textContent=t.carry; $('dBallSpd').textContent=t.ballSpd;
+    $('dSmash').textContent=t.smash.toFixed(2); $('dSpin').textContent=t.spin;
+    $('dLaunch').textContent=t.launch.toFixed(1); $('dSpinLoft').textContent=t.spinLoft.toFixed(1);
+    $('dApex').textContent=t.apex; $('dLaunchDir').textContent=sgn(t.launchDir,1);
+    $('dSpinAxis').textContent=(t.spinAxis>=0?'+':'−')+Math.abs(t.spinAxis);
+  }
+
+  // impact sliders
+  function bindImp(id, key, fmt){
+    var el=$(id), out=$('v_'+key);
+    function upd(){ imp[key]=+el.value; paintRange(el); if(out) out.textContent=fmt(imp[key]); impactRender(); }
+    el.addEventListener('input', upd); upd();
+  }
+  bindImp('s_face','face', function(v){ return sgn(v,1)+'°'; });
+  bindImp('s_path','path', function(v){ return sgn(v,1)+'°'; });
+  bindImp('s_attack','attack', function(v){ return sgn(v,1)+'°'; });
+  bindImp('s_loft','loft', function(v){ return v.toFixed(1)+'°'; });
+  (function(){
+    var el=$('i_speed'), out=$('i_speedV');
+    function upd(){ imp.speed=+el.value; paintRange(el); out.textContent=imp.speed+' mph'; impactRender(); }
+    el.addEventListener('input', upd); upd();
+  })();
+
+  /* ============ FLIGHT OVERLAY ============ */
+  var scrim=$('flightScrim'), fBall=$('fBall'), fTracer=$('fTracer'),
+      fLand=$('fLand'), fApex=$('fApex'), fStats=$('fStats');
+  var FVBW=960, FVBH=540;
+  var flightRAF=null;
+
+  function buildTrajectory(t){
+    // map carry & apex to screen: start bottom-center-ish, land downrange high (oblique)
+    var startX=480, startY=470;
+    var landX = 480 + (t.launchDir*9) + Math.min(120, (t.spinAxis*3));   // offline lateral
+    landX = Math.max(120, Math.min(840, landX));
+    var landY = 470 - Math.min(230, t.carry*1.05);                       // farther carry → higher up frame
+    var apexY = landY - Math.min(150, t.apex*3.0);                       // apex height
+    var apexX = (startX+landX)/2;
+    return { startX:startX, startY:startY, apexX:apexX, apexY:apexY, landX:landX, landY:landY };
+  }
+  function bezPoint(tr, u){
+    // quadratic bezier through apex
+    var mt=1-u;
+    var x = mt*mt*tr.startX + 2*mt*u*tr.apexX + u*u*tr.landX;
+    var y = mt*mt*tr.startY + 2*mt*u*tr.apexY + u*u*tr.landY;
+    return {x:x,y:y};
+  }
+  function openFlight(){
+    var t=telemetry(), tr=buildTrajectory(t);
+    // fill stat chips
+    $('fCarry').textContent=t.carry; $('fLaunchDir').textContent=sgn(t.launchDir,1);
+    $('fLaunchAng').textContent=t.launch.toFixed(1); $('fBallSpd').textContent=t.ballSpd;
+    $('fSpin').textContent=t.spin; $('fSpinLoft').textContent=t.spinLoft.toFixed(1);
+    $('fSmash').textContent=t.smash.toFixed(2); $('fApexV').textContent=t.apex;
+    $('fSpinAxis').textContent=(t.spinAxis>=0?'+':'−')+Math.abs(t.spinAxis);
+    $('fClubSpd').textContent=imp.speed; $('fTotal').textContent=t.total; $('fDescent').textContent=t.descent;
+    $('fOffNum').textContent=Math.abs(Math.round((tr.landX-480)/9));
+    $('fOffSide').textContent = (tr.landX>=480?'R':'L');
+    scrim.classList.add('open'); scrim.setAttribute('aria-hidden','false');
+    runFlight(t, tr);
+  }
+  function runFlight(t, tr){
+    if(flightRAF){ cancelAnimationFrame(flightRAF); flightRAF=null; }
+    fStats.classList.add('is-hidden');
+    fLand.setAttribute('opacity','0'); fApex.setAttribute('opacity','0');
+    fApex.setAttribute('transform','translate('+tr.apexX+','+tr.apexY+')');
+    fLand.setAttribute('transform','translate('+tr.landX+','+tr.landY+')');
+    $('fCarryNum').textContent='0';
+    if(reduce){
+      // static: draw whole tracer + show stats immediately
+      var d='M'+tr.startX+','+tr.startY;
+      for(var u=0;u<=1.001;u+=0.04){ var p=bezPoint(tr,u); d+=' L'+p.x.toFixed(1)+','+p.y.toFixed(1); }
+      fTracer.setAttribute('d', d); fTracer.style.strokeDasharray='none'; fTracer.style.strokeDashoffset='0';
+      var lp=bezPoint(tr,1); fBall.setAttribute('cx',lp.x); fBall.setAttribute('cy',lp.y); fBall.setAttribute('opacity','1');
+      fLand.setAttribute('opacity','1'); fApex.setAttribute('opacity','1');
+      $('fCarryNum').textContent=t.carry;
+      fStats.classList.remove('is-hidden');
+      return;
+    }
+    // animated: grow the tracer along the bezier, ball rides the tip
+    fBall.setAttribute('opacity','1');
+    var start=null, dur=1500, apexShown=false;
+    function step(ts){
+      if(!start) start=ts;
+      var p=Math.min((ts-start)/dur,1);
+      var e = 1-Math.pow(1-p,1.6);
+      var d='M'+tr.startX+','+tr.startY;
+      for(var u=0; u<=e+0.0001; u+=0.025){ var q=bezPoint(tr,u); d+=' L'+q.x.toFixed(1)+','+q.y.toFixed(1); }
+      fTracer.setAttribute('d', d);
+      var bp=bezPoint(tr, e);
+      fBall.setAttribute('cx', bp.x); fBall.setAttribute('cy', bp.y);
+      $('fCarryNum').textContent = Math.round(t.carry*e);
+      if(!apexShown && e>=0.5){ apexShown=true; fApex.setAttribute('opacity','1'); }
+      if(p<1){ flightRAF=requestAnimationFrame(step); }
+      else {
+        $('fCarryNum').textContent=t.carry;
+        fLand.setAttribute('opacity','1');
+        fStats.classList.remove('is-hidden');
+        flightRAF=null;
+      }
+    }
+    flightRAF=requestAnimationFrame(step);
+  }
+  function closeFlight(){
+    scrim.classList.remove('open'); scrim.setAttribute('aria-hidden','true');
+    if(flightRAF){ cancelAnimationFrame(flightRAF); flightRAF=null; }
+  }
+  $('i_play').addEventListener('click', openFlight);
+  $('flightClose').addEventListener('click', closeFlight);
+  $('flightReplay').addEventListener('click', function(){ var t=telemetry(); runFlight(t, buildTrajectory(t)); });
+  scrim.addEventListener('click', function(e){ if(e.target===scrim) closeFlight(); });
+  window.addEventListener('keydown', function(e){ if(e.key==='Escape' && scrim.classList.contains('open')) closeFlight(); });
+
+  /* init the off-screen instruments so first switch is correct */
+  geoRest(); geoRender(); impactRender();
+})();
+</script>
+</body>
+</html>

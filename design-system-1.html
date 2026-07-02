@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>StrikeArc — Precision Instrument · Direction 1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Azeret+Mono:wght@400;500;600;700&family=Archivo:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  /* ============================================================
+     STRIKEARC · "PRECISION INSTRUMENT" — Direction 1 of 3
+     Engineered launch-monitor aesthetic. Hairline grids,
+     tabular numerics, calm authority. Dark.
+     ============================================================ */
+  :root{
+    /* --- base surfaces --- */
+    --bg:        #0A0E12;   /* near-black base */
+    --bg-2:      #0b1220;   /* panel base */
+    --bg-3:      #0e1722;   /* raised tile */
+    --bg-4:      #10202c;   /* hover / pressed wells */
+
+    /* --- brand + data-signal hues --- */
+    --cyan:      #22E3D6;   /* StrikeArc brand / primary accent */
+    --cyan-deep: #06181b;   /* text-on-cyan */
+    --amber:     #FFB534;   /* data signal: gain / warm */
+    --magenta:   #FF4D8D;   /* data signal: fault / face-bias */
+
+    /* --- hairlines (white at low alpha) --- */
+    --rule:      rgba(232,240,251,.10);
+    --rule-2:    rgba(232,240,251,.06);
+    --rule-hot:  rgba(34,227,214,.42);
+    --glow-cyan: rgba(34,227,214,.20);
+
+    /* --- text --- */
+    --ink:       #e8f0fb;   /* primary slate-white */
+    --ink-dim:   #9aabc6;   /* secondary cool slate */
+    --ink-faint: #5d6e87;   /* labels / captions */
+
+    /* --- soft fills --- */
+    --cyan-soft: rgba(34,227,214,.10);
+    --amber-soft:rgba(255,181,52,.12);
+    --mag-soft:  rgba(255,77,141,.12);
+
+    /* --- type --- */
+    --f-display: "Chakra Petch", system-ui, sans-serif;
+    --f-mono:    "Azeret Mono", ui-monospace, monospace;
+    --f-body:    "Archivo", system-ui, sans-serif;
+
+    --ease:      cubic-bezier(.2,.9,.2,1);     /* mechanical, fast settle */
+    --ease-snap: cubic-bezier(.6,0,.1,1);      /* hairline reveal */
+  }
+
+  *{ box-sizing:border-box; }
+  html{ scroll-behavior:smooth; }
+  body{
+    margin:0;
+    background:
+      radial-gradient(1200px 600px at 78% -10%, rgba(34,227,214,.07), transparent 60%),
+      radial-gradient(900px 500px at -5% 110%, rgba(255,77,141,.05), transparent 55%),
+      var(--bg);
+    color:var(--ink);
+    font-family:var(--f-body);
+    font-size:15px;
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+    letter-spacing:.005em;
+    min-height:100vh;
+  }
+  /* hairline grid texture overlay */
+  body::before{
+    content:""; position:fixed; inset:0; z-index:0; pointer-events:none;
+    background-image:
+      linear-gradient(var(--rule-2) 1px, transparent 1px),
+      linear-gradient(90deg, var(--rule-2) 1px, transparent 1px);
+    background-size:48px 48px;
+    mask-image:radial-gradient(1100px 800px at 60% 0%, #000 30%, transparent 85%);
+    opacity:.5;
+  }
+  .shell{ position:relative; z-index:1; max-width:1240px; margin:0 auto; padding:32px 28px 80px; }
+
+  /* tiny technical caption / label */
+  .lbl{
+    font-family:var(--f-display); font-weight:600;
+    font-size:10.5px; letter-spacing:.22em; text-transform:uppercase;
+    color:var(--ink-faint);
+  }
+  .lbl.hot{ color:var(--cyan); }
+  .mono{ font-family:var(--f-mono); font-variant-numeric:tabular-nums; font-feature-settings:"tnum" 1; }
+
+  /* ---------- HEADER ---------- */
+  header.masthead{
+    position:relative;
+    border:1px solid var(--rule);
+    background:linear-gradient(180deg, rgba(14,23,34,.7), rgba(10,14,18,.4));
+    padding:30px 32px 28px;
+    overflow:hidden;
+  }
+  header.masthead::after{
+    content:""; position:absolute; left:0; right:0; bottom:0; height:1px;
+    background:linear-gradient(90deg, transparent, var(--cyan), transparent);
+    opacity:.6;
+  }
+  .crosshair{ position:absolute; top:14px; right:18px; display:flex; gap:10px; align-items:center; }
+  .crosshair .tick{ width:1px; height:14px; background:var(--rule); }
+  .brandrow{ display:flex; align-items:center; gap:14px; margin-bottom:18px; }
+  .mark{
+    width:38px; height:38px; flex:none; position:relative;
+    border:1.5px solid var(--cyan); border-radius:3px;
+    display:grid; place-items:center; background:var(--cyan-soft);
+    box-shadow:0 0 22px var(--glow-cyan), inset 0 0 18px rgba(34,227,214,.08);
+  }
+  .mark svg{ display:block; }
+  .brandrow .sub{ display:flex; flex-direction:column; gap:3px; }
+  .sysname{
+    font-family:var(--f-display); font-weight:700; line-height:.92;
+    font-size:clamp(40px, 7vw, 76px); letter-spacing:-.01em;
+    color:var(--ink); text-transform:uppercase;
+  }
+  .sysname b{ color:var(--cyan); -webkit-text-stroke:0; }
+  .personality{
+    font-family:var(--f-body); font-size:15px; color:var(--ink-dim);
+    max-width:62ch; margin-top:14px;
+  }
+  .personality .em{ color:var(--ink); }
+  .specchips{ display:flex; flex-wrap:wrap; gap:8px; margin-top:22px; }
+  .specchip{
+    font-family:var(--f-mono); font-size:11px; letter-spacing:.04em;
+    color:var(--ink-dim); padding:5px 10px; border:1px solid var(--rule);
+    background:rgba(10,18,30,.5); border-radius:2px;
+  }
+  .specchip span{ color:var(--cyan); }
+
+  /* ---------- SECTION SCAFFOLD ---------- */
+  section{ margin-top:44px; }
+  .sec-head{
+    display:flex; align-items:baseline; gap:14px; margin-bottom:18px;
+    border-bottom:1px solid var(--rule); padding-bottom:10px;
+  }
+  .sec-no{ font-family:var(--f-mono); font-size:11px; color:var(--cyan); letter-spacing:.1em; }
+  .sec-title{ font-family:var(--f-display); font-weight:600; font-size:15px; letter-spacing:.12em; text-transform:uppercase; color:var(--ink); }
+  .sec-desc{ font-size:12.5px; color:var(--ink-faint); margin-left:auto; font-family:var(--f-mono); }
+
+  /* ---------- COLOR TOKENS ---------- */
+  .swatches{ display:grid; grid-template-columns:repeat(auto-fill,minmax(168px,1fr)); gap:1px; background:var(--rule); border:1px solid var(--rule); }
+  .swatch{ background:var(--bg-2); padding:0; }
+  .swatch .chip{ height:84px; position:relative; border-bottom:1px solid var(--rule-2); }
+  .swatch .chip .ring{ position:absolute; left:12px; bottom:10px; width:18px; height:18px; border-radius:50%; border:1.5px solid rgba(255,255,255,.55); mix-blend-mode:overlay; }
+  .swatch .meta{ padding:11px 13px 13px; }
+  .swatch .name{ font-family:var(--f-display); font-weight:600; font-size:12px; letter-spacing:.04em; color:var(--ink); text-transform:uppercase; }
+  .swatch .hex{ font-family:var(--f-mono); font-size:11.5px; color:var(--ink-dim); margin-top:3px; }
+  .swatch .role{ font-size:11px; color:var(--ink-faint); margin-top:6px; line-height:1.4; }
+
+  /* ---------- TYPE SCALE ---------- */
+  .typegrid{ display:grid; grid-template-columns:1fr; gap:1px; background:var(--rule); border:1px solid var(--rule); }
+  .typerow{ background:var(--bg-2); padding:18px 22px; display:flex; align-items:baseline; gap:24px; flex-wrap:wrap; }
+  .typerow .spec-lbl{ flex:none; width:150px; }
+  .typerow .spec-lbl .k{ font-family:var(--f-mono); font-size:11px; color:var(--cyan); display:block; }
+  .typerow .spec-lbl .v{ font-family:var(--f-mono); font-size:10.5px; color:var(--ink-faint); display:block; margin-top:3px; }
+  .specimen{ flex:1; min-width:200px; color:var(--ink); }
+  .t-display{ font-family:var(--f-display); font-weight:700; font-size:54px; line-height:1; letter-spacing:-.01em; text-transform:uppercase; }
+  .t-headline{ font-family:var(--f-display); font-weight:600; font-size:30px; line-height:1.05; letter-spacing:.01em; }
+  .t-label{ font-family:var(--f-display); font-weight:600; font-size:13px; letter-spacing:.2em; text-transform:uppercase; color:var(--ink-dim); }
+  .t-body-s{ font-family:var(--f-body); font-size:14px; color:var(--ink-dim); }
+  .t-numeric{ font-family:var(--f-mono); font-weight:600; font-size:56px; line-height:1; letter-spacing:-.02em; color:var(--cyan); font-variant-numeric:tabular-nums; }
+  .t-numeric .u{ font-size:22px; color:var(--ink-dim); margin-left:6px; }
+  .t-numeric.amber{ color:var(--amber); }
+
+  /* ---------- COMPONENTS LAYOUT ---------- */
+  .comp-grid{ display:grid; grid-template-columns:repeat(12,1fr); gap:16px; }
+  .panel{
+    grid-column:span 6; border:1px solid var(--rule); background:var(--bg-2);
+    padding:20px 20px 22px; position:relative;
+  }
+  .panel.span4{ grid-column:span 4; }
+  .panel.span8{ grid-column:span 8; }
+  .panel.span12{ grid-column:span 12; }
+  .panel .cap{ display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; }
+  .panel .cap .corner{ font-family:var(--f-mono); font-size:10px; color:var(--ink-faint); }
+
+  /* buttons */
+  .btnrow{ display:flex; flex-wrap:wrap; gap:12px; align-items:center; }
+  .btn{
+    font-family:var(--f-display); font-weight:600; font-size:13px;
+    letter-spacing:.08em; text-transform:uppercase;
+    min-height:46px; padding:0 20px; border-radius:3px; cursor:pointer;
+    display:inline-flex; align-items:center; gap:9px;
+    border:1px solid var(--cyan); background:var(--cyan); color:var(--cyan-deep);
+    transition:transform .12s var(--ease), filter .12s var(--ease), box-shadow .2s var(--ease);
+    box-shadow:0 0 0 rgba(34,227,214,0);
+  }
+  .btn:hover{ filter:brightness(1.08); box-shadow:0 0 22px var(--glow-cyan); }
+  .btn:active{ transform:translateY(1px) scale(.99); }
+  .btn:focus-visible{ outline:2px solid var(--cyan); outline-offset:3px; }
+  .btn.ghost{ background:transparent; color:var(--cyan); border-color:var(--rule-hot); }
+  .btn.ghost:hover{ background:var(--cyan-soft); border-color:var(--cyan); box-shadow:none; }
+  .btn .dot{ width:6px; height:6px; border-radius:50%; background:currentColor; box-shadow:0 0 8px currentColor; }
+  .btn.count .val{ font-family:var(--f-mono); font-variant-numeric:tabular-nums; }
+
+  /* data tile / chip */
+  .tilewrap{ display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:12px; }
+  .tile{
+    border:1px solid var(--rule); background:linear-gradient(180deg, var(--bg-3), var(--bg-2));
+    padding:14px 14px 12px; position:relative; overflow:hidden;
+    transition:border-color .15s var(--ease), transform .15s var(--ease);
+  }
+  .tile:hover{ border-color:var(--rule-hot); transform:translateY(-2px); }
+  .tile .tl{ display:flex; justify-content:space-between; align-items:center; }
+  .tile .tval{ font-family:var(--f-mono); font-weight:600; font-size:30px; line-height:1; letter-spacing:-.02em; margin-top:10px; color:var(--ink); font-variant-numeric:tabular-nums; }
+  .tile .tval .u{ font-size:13px; color:var(--ink-faint); margin-left:3px; }
+  .tile.acc-cyan .tval{ color:var(--cyan); }
+  .tile.acc-amber .tval{ color:var(--amber); }
+  .tile.acc-mag  .tval{ color:var(--magenta); }
+  .tile .pin{ width:7px; height:7px; border-radius:50%; }
+  .acc-cyan .pin{ background:var(--cyan); box-shadow:0 0 8px var(--cyan); }
+  .acc-amber .pin{ background:var(--amber); box-shadow:0 0 8px var(--amber); }
+  .acc-mag .pin{ background:var(--magenta); box-shadow:0 0 8px var(--magenta); }
+  /* tiny range underline */
+  .tile .range{ margin-top:12px; height:3px; background:var(--rule); border-radius:2px; position:relative; }
+  .tile .range i{ position:absolute; top:-2px; width:7px; height:7px; border-radius:50%; background:currentColor; }
+  .acc-cyan .range{ color:var(--cyan); } .acc-amber .range{ color:var(--amber); } .acc-mag .range{ color:var(--magenta); }
+  .tile .range b{ position:absolute; top:0; bottom:0; opacity:.35; background:currentColor; border-radius:2px; }
+
+  /* segmented control */
+  .segmented{ display:inline-flex; border:1px solid var(--rule); border-radius:4px; background:var(--bg); padding:3px; gap:2px; }
+  .segmented button{
+    font-family:var(--f-display); font-weight:600; font-size:12px; letter-spacing:.08em; text-transform:uppercase;
+    min-height:40px; padding:0 16px; border:0; border-radius:3px; cursor:pointer;
+    background:transparent; color:var(--ink-dim);
+    transition:color .15s var(--ease), background .25s var(--ease);
+  }
+  .segmented button[aria-pressed="true"]{ background:var(--cyan-soft); color:var(--cyan); box-shadow:inset 0 0 0 1px var(--rule-hot); }
+  .segmented button:focus-visible{ outline:2px solid var(--cyan); outline-offset:2px; }
+
+  /* nav strip */
+  .navstrip{ display:flex; gap:0; border:1px solid var(--rule); border-radius:4px; overflow:hidden; }
+  .navstrip a{
+    flex:1; text-align:center; min-height:46px; display:flex; align-items:center; justify-content:center; gap:8px;
+    font-family:var(--f-display); font-weight:600; font-size:12px; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--ink-dim); text-decoration:none; border-right:1px solid var(--rule);
+    transition:background .2s var(--ease), color .2s var(--ease);
+  }
+  .navstrip a:last-child{ border-right:0; }
+  .navstrip a:hover{ color:var(--ink); background:rgba(34,227,214,.05); }
+  .navstrip a.on{ color:var(--cyan); background:var(--cyan-soft); }
+  .navstrip a:focus-visible{ outline:2px solid var(--cyan); outline-offset:-2px; }
+  .navstrip a .n{ font-family:var(--f-mono); font-size:10px; color:var(--ink-faint); }
+
+  /* toggle */
+  .togglerow{ display:flex; align-items:center; gap:14px; }
+  .toggle{ position:relative; width:60px; height:44px; min-height:44px; border:0; background:transparent; cursor:pointer; padding:0; flex:none; display:grid; place-items:center; }
+  .toggle::before{ content:""; position:absolute; left:3px; top:7px; width:54px; height:30px; border:1px solid var(--rule); border-radius:30px; background:var(--bg); transition:border-color .2s var(--ease), background .25s var(--ease); }
+  .toggle .knob{ position:absolute; top:10px; left:6px; width:22px; height:22px; border-radius:50%; background:var(--ink-dim); transition:transform .22s var(--ease), background .22s var(--ease); z-index:1; }
+  .toggle[aria-pressed="true"]::before{ background:var(--cyan-soft); border-color:var(--rule-hot); }
+  .toggle[aria-pressed="true"] .knob{ transform:translateX(24px); background:var(--cyan); box-shadow:0 0 10px var(--cyan); }
+  .toggle:focus-visible{ outline:2px solid var(--cyan); outline-offset:1px; border-radius:6px; }
+
+  /* slider */
+  .slider-block label{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:12px; }
+  .slider-block .sval{ font-family:var(--f-mono); font-weight:600; font-size:22px; color:var(--cyan); font-variant-numeric:tabular-nums; }
+  input[type=range].sa-range{ -webkit-appearance:none; appearance:none; width:100%; height:44px; min-height:44px; background:transparent; outline:none; cursor:pointer; margin:0; }
+  input[type=range].sa-range::-webkit-slider-runnable-track{ height:3px; background:var(--rule); border-radius:2px; }
+  input[type=range].sa-range::-moz-range-track{ height:3px; background:var(--rule); border-radius:2px; }
+  input[type=range].sa-range::-webkit-slider-thumb{ -webkit-appearance:none; appearance:none; width:18px; height:18px; margin-top:-7.5px; border-radius:50%; background:var(--cyan); border:3px solid var(--bg); box-shadow:0 0 0 1px var(--cyan), 0 0 14px var(--glow-cyan); cursor:pointer; transition:transform .1s var(--ease); }
+  input[type=range].sa-range::-webkit-slider-thumb:active{ transform:scale(1.18); }
+  input[type=range].sa-range::-moz-range-thumb{ width:18px; height:18px; border-radius:50%; background:var(--cyan); border:3px solid var(--bg); box-shadow:0 0 0 1px var(--cyan); cursor:pointer; }
+  input[type=range].sa-range:focus-visible{ outline:2px solid var(--cyan); outline-offset:6px; }
+  .ticks{ display:flex; justify-content:space-between; margin-top:8px; }
+  .ticks span{ font-family:var(--f-mono); font-size:10px; color:var(--ink-faint); }
+
+  /* gauge */
+  .gauge-wrap{ display:flex; align-items:center; gap:24px; flex-wrap:wrap; }
+  .gauge{ position:relative; width:168px; height:168px; flex:none; }
+  .gauge .readout{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+  .gauge .readout .g-val{ font-family:var(--f-mono); font-weight:600; font-size:34px; color:var(--cyan); line-height:1; font-variant-numeric:tabular-nums; }
+  .gauge .readout .g-unit{ font-family:var(--f-display); font-size:10px; letter-spacing:.2em; text-transform:uppercase; color:var(--ink-faint); margin-top:5px; }
+  .gauge-legend{ flex:1; min-width:160px; }
+  .gauge-legend .lg{ display:flex; align-items:center; gap:10px; padding:7px 0; border-bottom:1px solid var(--rule-2); }
+  .gauge-legend .lg .sw{ width:10px; height:10px; border-radius:2px; flex:none; }
+  .gauge-legend .lg .kv{ margin-left:auto; font-family:var(--f-mono); font-size:13px; color:var(--ink); font-variant-numeric:tabular-nums; }
+  .gauge-legend .lg .nm{ font-size:12px; color:var(--ink-dim); }
+
+  /* mini line chart */
+  .chart{ width:100%; height:120px; display:block; }
+  .chart-foot{ display:flex; justify-content:space-between; margin-top:8px; }
+  .chart-foot span{ font-family:var(--f-mono); font-size:10px; color:var(--ink-faint); }
+
+  /* ---------- APPLIED VIGNETTE ---------- */
+  .vignette{ border:1px solid var(--rule-hot); background:linear-gradient(180deg, rgba(14,23,34,.85), rgba(10,14,18,.6)); position:relative; overflow:hidden; }
+  .vignette::before{ content:""; position:absolute; top:0; left:0; right:0; height:1px; background:linear-gradient(90deg,transparent,var(--cyan),transparent); }
+  .vig-grid{ display:grid; grid-template-columns:1.15fr 1fr; }
+  .vig-left{ padding:24px 26px; border-right:1px solid var(--rule); }
+  .vig-right{ padding:24px 26px; display:flex; flex-direction:column; gap:14px; }
+  .vig-top{ display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:20px; }
+  .vig-club{ font-family:var(--f-display); font-weight:700; font-size:22px; letter-spacing:.02em; text-transform:uppercase; color:var(--ink); }
+  .vig-tag{ font-family:var(--f-mono); font-size:10px; color:var(--cyan); border:1px solid var(--rule-hot); padding:4px 8px; border-radius:2px; }
+  .vig-hero{ display:flex; align-items:flex-end; gap:6px; margin:6px 0 4px; }
+  .vig-hero .num{ font-family:var(--f-mono); font-weight:700; font-size:74px; line-height:.86; color:var(--cyan); letter-spacing:-.03em; font-variant-numeric:tabular-nums; text-shadow:0 0 30px var(--glow-cyan); }
+  .vig-hero .num.signed{ color:var(--amber); text-shadow:0 0 30px var(--amber-soft); }
+  .vig-hero .un{ font-family:var(--f-display); font-size:18px; color:var(--ink-dim); letter-spacing:.1em; text-transform:uppercase; padding-bottom:12px; }
+  .vig-sub{ font-family:var(--f-mono); font-size:12px; color:var(--ink-faint); }
+  .vig-readline{ display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--rule-2); }
+  .vig-readline .rk{ font-family:var(--f-display); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-faint); }
+  .vig-readline .rv{ font-family:var(--f-mono); font-size:15px; color:var(--ink); font-variant-numeric:tabular-nums; }
+  .vig-readline .rv.pos{ color:var(--cyan); } .vig-readline .rv.warn{ color:var(--magenta); }
+
+  /* D-plane mini instrument (SVG drawn) */
+  .dplane{ background:var(--bg); border:1px solid var(--rule); border-radius:4px; padding:14px; }
+
+  /* ---------- PRINCIPLES ---------- */
+  .principles{ display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:1px; background:var(--rule); border:1px solid var(--rule); }
+  .principle{ background:var(--bg-2); padding:18px 18px 20px; }
+  .principle .pno{ font-family:var(--f-mono); font-size:11px; color:var(--cyan); }
+  .principle h4{ font-family:var(--f-display); font-weight:600; font-size:13px; letter-spacing:.06em; text-transform:uppercase; margin:8px 0 6px; color:var(--ink); }
+  .principle p{ font-size:12.5px; color:var(--ink-dim); margin:0; line-height:1.5; }
+
+  footer.foot{ margin-top:48px; padding-top:18px; border-top:1px solid var(--rule); display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px; }
+  footer.foot .mono{ font-size:11px; color:var(--ink-faint); }
+
+  /* count-up reveal helper */
+  .reveal{ opacity:0; transform:translateY(8px); animation:rise .6s var(--ease) forwards; }
+  @keyframes rise{ to{ opacity:1; transform:none; } }
+
+  /* hairline sweep on section heads */
+  .sweep{ position:relative; overflow:hidden; }
+  .sweep::after{ content:""; position:absolute; left:-30%; top:0; bottom:0; width:30%; background:linear-gradient(90deg,transparent,rgba(34,227,214,.10),transparent); animation:sweep 3.4s var(--ease-snap) infinite; }
+  @keyframes sweep{ to{ left:130%; } }
+
+  @media (max-width:760px){
+    .panel, .panel.span4, .panel.span8, .panel.span12{ grid-column:span 12; }
+    .vig-grid{ grid-template-columns:1fr; }
+    .vig-left{ border-right:0; border-bottom:1px solid var(--rule); }
+    .typerow .spec-lbl{ width:100%; }
+    .t-display{ font-size:38px; } .t-numeric{ font-size:42px; }
+    .sysname{ font-size:44px; }
+  }
+
+  @media (prefers-reduced-motion:reduce){
+    *{ animation:none !important; transition:none !important; scroll-behavior:auto !important; }
+    .reveal{ opacity:1; transform:none; }
+    .sweep::after{ display:none; }
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- =========================================================
+       1 · HEADER
+       ========================================================= -->
+  <header class="masthead reveal">
+    <div class="crosshair" aria-hidden="true">
+      <span class="lbl">DIR 01 / 03</span>
+      <span class="tick"></span>
+      <span class="lbl hot mono">v1.0</span>
+    </div>
+    <div class="brandrow">
+      <div class="mark" aria-hidden="true">
+        <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+          <path d="M2 18 C 7 4, 15 4, 20 14" stroke="#22E3D6" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+          <circle cx="20" cy="14" r="2.4" fill="#22E3D6"/>
+          <path d="M2 18 L 6 18 M2 18 L 2 14" stroke="#22E3D6" stroke-width="1.2" opacity=".5"/>
+        </svg>
+      </div>
+      <div class="sub">
+        <span class="lbl">StrikeArc · Design System</span>
+        <span class="lbl hot">Precision Instrument</span>
+      </div>
+    </div>
+    <h1 class="sysname">Precision<br><b>Instrument</b></h1>
+    <p class="personality">
+      <span class="em">Read the swing like a launch monitor.</span> Hairline grids, exact tabular
+      numerics, and calm authority — every pixel reports a measurement, nothing decorates.
+      The arc and the strike, instrumented.
+    </p>
+    <div class="specchips" aria-hidden="true">
+      <span class="specchip">BASE <span>#0A0E12</span></span>
+      <span class="specchip">ACCENT <span>#22E3D6</span></span>
+      <span class="specchip">DISPLAY <span>Chakra Petch</span></span>
+      <span class="specchip">NUMERIC <span>Azeret Mono</span></span>
+      <span class="specchip">GRID <span>48 / hairline</span></span>
+    </div>
+  </header>
+
+  <!-- =========================================================
+       2 · COLOR TOKENS
+       ========================================================= -->
+  <section aria-labelledby="s-color">
+    <div class="sec-head sweep">
+      <span class="sec-no">02</span>
+      <h2 class="sec-title" id="s-color">Color Tokens</h2>
+      <span class="sec-desc">10 tokens · CSS variables</span>
+    </div>
+    <div class="swatches">
+      <div class="swatch"><div class="chip" style="background:#0A0E12"><span class="ring"></span></div><div class="meta"><div class="name">Base</div><div class="hex mono">#0A0E12</div><div class="role">App canvas / void</div></div></div>
+      <div class="swatch"><div class="chip" style="background:#0b1220"><span class="ring"></span></div><div class="meta"><div class="name">Panel</div><div class="hex mono">#0B1220</div><div class="role">Surface / cards</div></div></div>
+      <div class="swatch"><div class="chip" style="background:#10202c"><span class="ring"></span></div><div class="meta"><div class="name">Raised</div><div class="hex mono">#10202C</div><div class="role">Tiles / wells</div></div></div>
+      <div class="swatch"><div class="chip" style="background:#22E3D6"><span class="ring"></span></div><div class="meta"><div class="name">Cyan</div><div class="hex mono">#22E3D6</div><div class="role">Brand · primary accent</div></div></div>
+      <div class="swatch"><div class="chip" style="background:#FFB534"><span class="ring"></span></div><div class="meta"><div class="name">Amber</div><div class="hex mono">#FFB534</div><div class="role">Data signal · gain</div></div></div>
+      <div class="swatch"><div class="chip" style="background:#FF4D8D"><span class="ring"></span></div><div class="meta"><div class="name">Magenta</div><div class="hex mono">#FF4D8D</div><div class="role">Data signal · fault</div></div></div>
+      <div class="swatch"><div class="chip" style="background:#e8f0fb"><span class="ring"></span></div><div class="meta"><div class="name">Ink</div><div class="hex mono">#E8F0FB</div><div class="role">Primary text</div></div></div>
+      <div class="swatch"><div class="chip" style="background:#9aabc6"><span class="ring"></span></div><div class="meta"><div class="name">Ink Dim</div><div class="hex mono">#9AABC6</div><div class="role">Secondary text</div></div></div>
+      <div class="swatch"><div class="chip" style="background:#5d6e87"><span class="ring"></span></div><div class="meta"><div class="name">Ink Faint</div><div class="hex mono">#5D6E87</div><div class="role">Labels / captions</div></div></div>
+      <div class="swatch"><div class="chip" style="background:repeating-linear-gradient(90deg,rgba(232,240,251,.10) 0 1px,transparent 1px 7px),#0b1220"><span class="ring"></span></div><div class="meta"><div class="name">Hairline</div><div class="hex mono">#E8F0FB · 10%</div><div class="role">Rules / grid</div></div></div>
+    </div>
+  </section>
+
+  <!-- =========================================================
+       3 · TYPOGRAPHY
+       ========================================================= -->
+  <section aria-labelledby="s-type">
+    <div class="sec-head sweep">
+      <span class="sec-no">03</span>
+      <h2 class="sec-title" id="s-type">Typography Scale</h2>
+      <span class="sec-desc">Chakra Petch · Azeret Mono · Archivo</span>
+    </div>
+    <div class="typegrid">
+      <div class="typerow">
+        <div class="spec-lbl"><span class="k">DISPLAY</span><span class="v">Chakra Petch · 700 · 54</span></div>
+        <div class="specimen"><div class="t-display">Swing Arc</div></div>
+      </div>
+      <div class="typerow">
+        <div class="spec-lbl"><span class="k">HEADLINE</span><span class="v">Chakra Petch · 600 · 30</span></div>
+        <div class="specimen"><div class="t-headline">Impact &amp; ball flight</div></div>
+      </div>
+      <div class="typerow">
+        <div class="spec-lbl"><span class="k">LABEL</span><span class="v">Chakra Petch · 600 · 13 · .2em</span></div>
+        <div class="specimen"><div class="t-label">Club Path · Face Angle · AoA</div></div>
+      </div>
+      <div class="typerow">
+        <div class="spec-lbl"><span class="k">BODY</span><span class="v">Archivo · 400 · 14</span></div>
+        <div class="specimen"><div class="t-body-s">The arc you build is the strike you get — geometry decides direction, the strike decides spin.</div></div>
+      </div>
+      <div class="typerow">
+        <div class="spec-lbl"><span class="k">NUMERIC · LG</span><span class="v">Azeret Mono · 600 · 56 · tnum</span></div>
+        <div class="specimen"><div class="t-numeric">163<span class="u">m</span></div></div>
+      </div>
+      <div class="typerow">
+        <div class="spec-lbl"><span class="k">NUMERIC · SIGNED</span><span class="v">Azeret Mono · 600 · 56 · tnum</span></div>
+        <div class="specimen"><div class="t-numeric amber">+1.0<span class="u">°</span></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =========================================================
+       4 · CORE COMPONENTS
+       ========================================================= -->
+  <section aria-labelledby="s-comp">
+    <div class="sec-head sweep">
+      <span class="sec-no">04</span>
+      <h2 class="sec-title" id="s-comp">Core Components</h2>
+      <span class="sec-desc">interactive · in-style</span>
+    </div>
+    <div class="comp-grid">
+
+      <!-- buttons -->
+      <div class="panel span6">
+        <div class="cap"><span class="lbl">Buttons</span><span class="corner mono">BTN.01</span></div>
+        <div class="btnrow">
+          <button class="btn" id="armBtn"><span class="dot"></span>Arm Sensor</button>
+          <button class="btn ghost">Calibrate</button>
+          <button class="btn count" id="countBtn">Shots <span class="val mono" id="countVal">000</span></button>
+        </div>
+        <p class="t-body-s" style="margin:14px 0 0">Primary fills cyan; ghost rests on a hot hairline. The counter button counts up on press.</p>
+      </div>
+
+      <!-- segmented + nav -->
+      <div class="panel span6">
+        <div class="cap"><span class="lbl">Segmented · Nav Strip</span><span class="corner mono">NAV.01</span></div>
+        <div class="segmented" role="group" aria-label="View mode">
+          <button aria-pressed="true">Arc</button>
+          <button aria-pressed="false">Impact</button>
+          <button aria-pressed="false">Flight</button>
+        </div>
+        <div class="navstrip" style="margin-top:16px" role="navigation" aria-label="App sections">
+          <a href="#s-color" class="on">Menu <span class="n">01</span></a>
+          <a href="#s-type">Geometry <span class="n">02</span></a>
+          <a href="#s-comp">Impact <span class="n">03</span></a>
+        </div>
+      </div>
+
+      <!-- data tiles -->
+      <div class="panel span12">
+        <div class="cap"><span class="lbl">Data Tiles · Chips</span><span class="corner mono">TILE.01 — label · tabular value · range underline</span></div>
+        <div class="tilewrap">
+          <div class="tile acc-cyan"><div class="tl"><span class="lbl">Ball Speed</span><span class="pin"></span></div><div class="tval">241<span class="u">km/h</span></div><div class="range"><b style="left:8%;right:18%"></b><i style="left:72%"></i></div></div>
+          <div class="tile acc-cyan"><div class="tl"><span class="lbl">Carry</span><span class="pin"></span></div><div class="tval">163<span class="u">m</span></div><div class="range"><b style="left:20%;right:25%"></b><i style="left:58%"></i></div></div>
+          <div class="tile acc-amber"><div class="tl"><span class="lbl">Launch</span><span class="pin"></span></div><div class="tval">14.2<span class="u">°</span></div><div class="range"><b style="left:30%;right:30%"></b><i style="left:50%"></i></div></div>
+          <div class="tile acc-amber"><div class="tl"><span class="lbl">Spin</span><span class="pin"></span></div><div class="tval">2640<span class="u">rpm</span></div><div class="range"><b style="left:12%;right:40%"></b><i style="left:40%"></i></div></div>
+          <div class="tile acc-mag"><div class="tl"><span class="lbl">Face/Path</span><span class="pin"></span></div><div class="tval">−2.1<span class="u">°</span></div><div class="range"><b style="left:5%;right:55%"></b><i style="left:28%"></i></div></div>
+          <div class="tile acc-cyan"><div class="tl"><span class="lbl">Smash</span><span class="pin"></span></div><div class="tval">1.48<span class="u">·</span></div><div class="range"><b style="left:35%;right:10%"></b><i style="left:82%"></i></div></div>
+        </div>
+      </div>
+
+      <!-- gauge -->
+      <div class="panel span6">
+        <div class="cap"><span class="lbl">Gauge · Attack Angle</span><span class="corner mono">GAUGE.01</span></div>
+        <div class="gauge-wrap">
+          <div class="gauge">
+            <svg width="168" height="168" viewBox="0 0 168 168" aria-hidden="true">
+              <circle cx="84" cy="84" r="66" fill="none" stroke="rgba(232,240,251,.08)" stroke-width="10"/>
+              <circle id="gaugeArc" cx="84" cy="84" r="66" fill="none" stroke="#22E3D6" stroke-width="10"
+                      stroke-linecap="round" stroke-dasharray="414.7" stroke-dashoffset="414.7"
+                      transform="rotate(135 84 84)" style="filter:drop-shadow(0 0 8px rgba(34,227,214,.5))"/>
+              <g stroke="rgba(232,240,251,.18)" stroke-width="1">
+                <line x1="84" y1="18" x2="84" y2="26"/><line x1="150" y1="84" x2="142" y2="84"/>
+                <line x1="84" y1="150" x2="84" y2="142"/><line x1="18" y1="84" x2="26" y2="84"/>
+              </g>
+            </svg>
+            <div class="readout"><span class="g-val" id="gaugeVal">+4.6</span><span class="g-unit">Attack · deg</span></div>
+          </div>
+          <div class="gauge-legend">
+            <div class="lg"><span class="sw" style="background:#22E3D6"></span><span class="nm">Measured</span><span class="kv">+4.6°</span></div>
+            <div class="lg"><span class="sw" style="background:#FFB534"></span><span class="nm">Optimal band</span><span class="kv">+2 / +5</span></div>
+            <div class="lg"><span class="sw" style="background:rgba(232,240,251,.2)"></span><span class="nm">Range</span><span class="kv">−6 / +9</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- line chart -->
+      <div class="panel span6">
+        <div class="cap"><span class="lbl">Mini Chart · Carry Trend</span><span class="corner mono">CHART.01</span></div>
+        <svg class="chart" viewBox="0 0 320 120" preserveAspectRatio="none" aria-hidden="true">
+          <g stroke="rgba(232,240,251,.06)" stroke-width="1">
+            <line x1="0" y1="30" x2="320" y2="30"/><line x1="0" y1="60" x2="320" y2="60"/><line x1="0" y1="90" x2="320" y2="90"/>
+          </g>
+          <polyline fill="none" stroke="#22E3D6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+            points="6,92 44,78 82,84 120,60 158,66 196,42 234,50 272,30 312,38"
+            style="filter:drop-shadow(0 0 6px rgba(34,227,214,.45))"/>
+          <polygon fill="url(#cg)" opacity=".18"
+            points="6,92 44,78 82,84 120,60 158,66 196,42 234,50 272,30 312,38 312,120 6,120"/>
+          <defs><linearGradient id="cg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#22E3D6"/><stop offset="1" stop-color="transparent"/></linearGradient></defs>
+          <circle cx="272" cy="30" r="3.5" fill="#22E3D6"/>
+        </svg>
+        <div class="chart-foot"><span>S01</span><span>S05</span><span>S09 · 163m</span></div>
+      </div>
+
+      <!-- slider + toggle + card -->
+      <div class="panel span6">
+        <div class="cap"><span class="lbl">Slider · Swing Plane</span><span class="corner mono">SLIDER.01</span></div>
+        <div class="slider-block">
+          <label for="planeSlider"><span class="t-label">Plane Tilt</span><span class="sval" id="planeVal">58°</span></label>
+          <input type="range" min="40" max="75" value="58" step="1" class="sa-range" id="planeSlider" aria-describedby="planeVal" />
+          <div class="ticks"><span>40°</span><span>FLAT</span><span>STEEP</span><span>75°</span></div>
+        </div>
+      </div>
+
+      <div class="panel span6">
+        <div class="cap"><span class="lbl">Toggle · Card</span><span class="corner mono">TGL.01</span></div>
+        <div class="togglerow">
+          <button class="toggle" id="liveToggle" aria-pressed="true" aria-label="Live capture"><span class="knob"></span></button>
+          <div><div class="t-label" style="margin-bottom:2px">Live Capture</div><div class="t-body-s" id="liveState">Streaming · 240 fps</div></div>
+        </div>
+        <div style="margin-top:18px; border:1px solid var(--rule); border-radius:4px; padding:14px; background:var(--bg-3)">
+          <div class="lbl">Session Card</div>
+          <div style="display:flex; justify-content:space-between; align-items:baseline; margin-top:8px">
+            <span class="t-headline" style="font-size:22px">7-Iron</span>
+            <span class="mono" style="color:var(--cyan); font-size:18px">163 m</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- =========================================================
+       5 · APPLIED VIGNETTE
+       ========================================================= -->
+  <section aria-labelledby="s-applied">
+    <div class="sec-head sweep">
+      <span class="sec-no">05</span>
+      <h2 class="sec-title" id="s-applied">Applied · Impact Readout</h2>
+      <span class="sec-desc">system in context</span>
+    </div>
+    <div class="vignette">
+      <div class="vig-grid">
+        <div class="vig-left">
+          <div class="vig-top">
+            <div>
+              <div class="lbl hot">StrikeArc · Impact</div>
+              <div class="vig-club">7-Iron · Strike 09</div>
+            </div>
+            <span class="vig-tag mono">D-PLANE LOCK</span>
+          </div>
+          <div class="lbl">Carry</div>
+          <div class="vig-hero"><span class="num" id="vigCarry">163</span><span class="un">m</span></div>
+          <div class="vig-sub">241 km/h ball · 1.48 smash · 2640 rpm</div>
+
+          <div style="margin-top:22px">
+            <div class="vig-readline"><span class="rk">Club Path</span><span class="rv pos">+1.2° in→out</span></div>
+            <div class="vig-readline"><span class="rk">Face Angle</span><span class="rv">−0.9° closed</span></div>
+            <div class="vig-readline"><span class="rk">Face / Path</span><span class="rv warn">−2.1° draw</span></div>
+            <div class="vig-readline"><span class="rk">Attack Angle</span><span class="rv pos">+4.6° up</span></div>
+          </div>
+        </div>
+
+        <div class="vig-right">
+          <div class="lbl">D-Plane · Face vs Path</div>
+          <div class="dplane">
+            <svg width="100%" height="190" viewBox="0 0 280 190" aria-label="D-plane diagram: club path versus face angle">
+              <!-- target line + grid -->
+              <line x1="20" y1="150" x2="260" y2="150" stroke="rgba(232,240,251,.14)" stroke-width="1"/>
+              <line x1="140" y1="20" x2="140" y2="170" stroke="rgba(232,240,251,.08)" stroke-width="1" stroke-dasharray="3 4"/>
+              <text x="248" y="165" font-family="Azeret Mono" font-size="9" fill="#5d6e87">TGT</text>
+              <!-- path vector (cyan) in→out -->
+              <line x1="140" y1="150" x2="184" y2="46" stroke="#22E3D6" stroke-width="2" stroke-linecap="round" style="filter:drop-shadow(0 0 5px rgba(34,227,214,.5))"/>
+              <polygon points="184,46 178,56 189,57" fill="#22E3D6"/>
+              <text x="190" y="44" font-family="Azeret Mono" font-size="9" fill="#22E3D6">PATH +1.2</text>
+              <!-- face normal (magenta) slightly closed -->
+              <line x1="140" y1="150" x2="120" y2="52" stroke="#FF4D8D" stroke-width="2" stroke-linecap="round" style="filter:drop-shadow(0 0 5px rgba(255,77,141,.4))"/>
+              <polygon points="120,52 116,63 127,61" fill="#FF4D8D"/>
+              <text x="60" y="48" font-family="Azeret Mono" font-size="9" fill="#FF4D8D">FACE −0.9</text>
+              <!-- launch direction (amber, between) -->
+              <line x1="140" y1="150" x2="132" y2="74" stroke="#FFB534" stroke-width="1.4" stroke-dasharray="2 3"/>
+              <text x="100" y="86" font-family="Azeret Mono" font-size="8" fill="#FFB534">START</text>
+              <circle cx="140" cy="150" r="4" fill="#e8f0fb"/>
+            </svg>
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px">
+            <div class="tile acc-amber"><div class="tl"><span class="lbl">Launch</span><span class="pin"></span></div><div class="tval">14.2<span class="u">°</span></div></div>
+            <div class="tile acc-cyan"><div class="tl"><span class="lbl">Peak Ht</span><span class="pin"></span></div><div class="tval">28<span class="u">m</span></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =========================================================
+       6 · MOTION / PRINCIPLES
+       ========================================================= -->
+  <section aria-labelledby="s-motion">
+    <div class="sec-head sweep">
+      <span class="sec-no">06</span>
+      <h2 class="sec-title" id="s-motion">Motion Principles</h2>
+      <span class="sec-desc">mechanical · fast · honest</span>
+    </div>
+    <div class="principles">
+      <div class="principle"><div class="pno">P.01</div><h4>Mechanical Easing</h4><p>Fast settle, no bounce. cubic-bezier(.2,.9,.2,1). Motion reads as an instrument moving, not a toy.</p></div>
+      <div class="principle"><div class="pno">P.02</div><h4>Count The Numbers</h4><p>Numerics count up to their value. The measurement should feel earned, captured, locked.</p></div>
+      <div class="principle"><div class="pno">P.03</div><h4>Hairline Reveals</h4><p>Lines sweep and grids draw in. State changes ride the rule, never a fade-and-pop.</p></div>
+      <div class="principle"><div class="pno">P.04</div><h4>Signal, Not Sparkle</h4><p>Amber means gain, magenta means fault. Color is data — never used to decorate.</p></div>
+      <div class="principle"><div class="pno">P.05</div><h4>Calm Under Load</h4><p>Dense data, quiet surface. Restraint is the premium. ≥44px targets, focus always visible.</p></div>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <span class="mono lbl">STRIKEARC — PRECISION INSTRUMENT</span>
+    <span class="mono">DIRECTION 01 / 03 · #0A0E12 · #22E3D6 · CHAKRA PETCH / AZERET MONO</span>
+  </footer>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---- count-up helper ---- */
+  function countUp(el, to, dur, fmt){
+    if(reduce){ el.textContent = fmt(to); return; }
+    var start = performance.now();
+    function step(now){
+      var t = Math.min(1, (now-start)/dur);
+      var e = 1 - Math.pow(1-t, 3); // ease-out cubic
+      el.textContent = fmt(to*e);
+      if(t<1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+
+  /* ---- hero carry count-up on load ---- */
+  var vig = document.getElementById('vigCarry');
+  if(vig) countUp(vig, 163, 900, function(v){ return Math.round(v); });
+
+  /* ---- gauge sweep on load ---- */
+  var arc = document.getElementById('gaugeArc');
+  var gVal = document.getElementById('gaugeVal');
+  if(arc){
+    var circ = 414.7;           // full dash
+    var frac = 0.62;            // +4.6 within range
+    var target = circ*(1-frac*0.75);
+    if(reduce){ arc.style.strokeDashoffset = target; }
+    else {
+      requestAnimationFrame(function(){
+        arc.style.transition = 'stroke-dashoffset 1.1s cubic-bezier(.2,.9,.2,1)';
+        arc.style.strokeDashoffset = target;
+      });
+    }
+    if(gVal) countUp(gVal, 4.6, 1000, function(v){ return '+'+v.toFixed(1); });
+  }
+
+  /* ---- shots counter button ---- */
+  var countBtn = document.getElementById('countBtn');
+  var countVal = document.getElementById('countVal');
+  var shots = 0;
+  if(countBtn){
+    countBtn.addEventListener('click', function(){
+      shots++;
+      var from = shots-1;
+      countUp(countVal, shots, 350, function(v){
+        return String(Math.round(v)).padStart(3,'0');
+      });
+    });
+  }
+
+  /* ---- arm sensor button micro-state ---- */
+  var arm = document.getElementById('armBtn');
+  if(arm){
+    var armed = false;
+    arm.addEventListener('click', function(){
+      armed = !armed;
+      arm.innerHTML = armed
+        ? '<span class="dot" style="background:#FFB534;box-shadow:0 0 8px #FFB534"></span>Sensor Armed'
+        : '<span class="dot"></span>Arm Sensor';
+      arm.style.background = armed ? 'transparent' : '';
+      arm.style.color = armed ? '#22E3D6' : '';
+      arm.style.borderColor = armed ? 'var(--rule-hot)' : '';
+    });
+  }
+
+  /* ---- segmented control ---- */
+  document.querySelectorAll('.segmented').forEach(function(grp){
+    grp.querySelectorAll('button').forEach(function(b){
+      b.addEventListener('click', function(){
+        grp.querySelectorAll('button').forEach(function(x){ x.setAttribute('aria-pressed','false'); });
+        b.setAttribute('aria-pressed','true');
+      });
+    });
+  });
+
+  /* ---- live toggle ---- */
+  var tgl = document.getElementById('liveToggle');
+  var liveState = document.getElementById('liveState');
+  if(tgl){
+    tgl.addEventListener('click', function(){
+      var on = tgl.getAttribute('aria-pressed') !== 'true';
+      tgl.setAttribute('aria-pressed', on ? 'true' : 'false');
+      if(liveState) liveState.textContent = on ? 'Streaming · 240 fps' : 'Paused · buffer held';
+    });
+  }
+
+  /* ---- plane slider ---- */
+  var slider = document.getElementById('planeSlider');
+  var planeVal = document.getElementById('planeVal');
+  if(slider){
+    slider.addEventListener('input', function(){
+      planeVal.textContent = slider.value + '°';
+    });
+  }
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>StrikeArc</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2052%2052'%20fill='none'%3E%3Cpath%20d='M11%2045%20C%2016%2026,%2024%2018,%2035%2015%20M21%2039%20L%2030%2024%20L%2043%2045'%20stroke='%2322E3D6'%20stroke-width='4.2'%20stroke-linecap='round'%20stroke-linejoin='round'/%3E%3Ccircle%20cx='37'%20cy='15'%20r='5.2'%20fill='%2322E3D6'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://api.fontshare.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&display=swap" rel="stylesheet">
+<link href="https://api.fontshare.com/v2/css?f[]=hanken-grotesk@400,500,600,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./sa-glass.css">
+<style>
+  :root{
+    /* ── Tactile Glass — dusk palette + cyan/violet glow ── */
+    --accent:#22E3D6; --accent-soft:rgba(34,227,214,.16); --accent-line:rgba(34,227,214,.55);
+    --cyan-glow:rgba(34,227,214,.55);
+    --violet:#8b7bff; --violet-glow:rgba(139,123,255,.45);
+    --ink:#f4fbff; --muted:#c4d8e4; --on-cyan:#04222a;   /* AA-tuned text on glass */
+    --bg:#06121b; --bg-top:#0A1C29; --indigo-deep:#161a44;
+    /* --panel kept as a name but routed to a glass alpha */
+    --panel:var(--glass-plate); --line:rgba(255,255,255,.16);
+    --radius-pill:999px; --radius-card:16px; --radius-control:12px;
+    --blur-surface:10px; --blur-overlay:18px;
+    /* ── glass material tokens ── */
+    --glass-blur:22px;
+    --glass-surface:rgba(255,255,255,.07); --glass-surface-2:rgba(255,255,255,.10);
+    --glass-surface-dark:rgba(8,20,30,.55);
+    --glass-plate:rgba(8,18,28,.74);
+    --glass-alpha:rgba(255,255,255,.07);
+    --glass-border:rgba(255,255,255,.16);
+    --glass-sheen:linear-gradient(180deg,rgba(255,255,255,.14),transparent 26%);
+    --glass-glow:0 0 30px -8px var(--cyan-glow);
+    --glass-inset:inset 0 1px 0 0 rgba(255,255,255,.22);
+    --glass-shadow:0 24px 60px -24px rgba(0,0,0,.65);
+    /* ── type ── */
+    --display:"Bricolage Grotesque",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    --body:"Hanken Grotesk","Bricolage Grotesque",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;}
+  /* dusk atmosphere: cyan + violet luminous mesh over deep teal->indigo */
+  body{background:
+      radial-gradient(120% 90% at 12% 8%, rgba(34,227,214,.14), transparent 55%),
+      radial-gradient(100% 80% at 88% 0%, rgba(139,123,255,.18), transparent 52%),
+      radial-gradient(120% 120% at 50% 110%, rgba(22,26,68,.85), transparent 60%),
+      linear-gradient(165deg, var(--bg) 0%, var(--bg-top) 45%, #10283a 100%);
+    color:var(--ink);overflow:hidden;
+    font-family:var(--body);-webkit-font-smoothing:antialiased;}
+
+  /* one cohesive landscape scene fills the whole frame (cover, no crop on landscape) */
+  /* base linear-gradient sits UNDER the photo so labels keep contrast on any art */
+  /* KEEP the photo hero, but tone it into the dusk/glass palette with a
+     teal->indigo veil + soft cyan/violet glow stacked OVER the photo */
+  .shell{position:fixed;inset:0;height:100dvh;width:100vw;overflow:hidden;
+    background:
+      radial-gradient(120% 90% at 12% 8%, rgba(34,227,214,.18), transparent 52%),
+      radial-gradient(100% 80% at 90% 4%, rgba(139,123,255,.20), transparent 50%),
+      linear-gradient(165deg, rgba(6,18,27,.55) 0%, rgba(10,28,41,.34) 48%, rgba(22,26,68,.55) 100%),
+      url("./assets/home-diag-landscape.png") center/cover no-repeat,
+      linear-gradient(135deg, #06121b 0%, #0A1C29 55%, #161a44 100%);
+    background-color:#06121b;}
+
+  /* two equal-weight diagonal hit-zones, corner-to-corner */
+  .zone{position:absolute;inset:0;text-decoration:none;color:inherit;display:block;-webkit-tap-highlight-color:transparent;}
+  /* top-left triangle = Geometry, bottom-right triangle = Impact (equal area) */
+  .zone.geo{clip-path:polygon(0 0, 100% 0, 0 100%);view-transition-name:sa-zone-geo;}
+  .zone.imp{clip-path:polygon(100% 0, 100% 100%, 0 100%);view-transition-name:sa-zone-imp;}
+
+  .veil{position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .4s ease;background:rgba(5,8,11,.5);}
+  .scrim{position:absolute;inset:0;pointer-events:none;}
+  /* equal-strength scrims anchored at each zone's outer corner for legible labels */
+  .geo .scrim{background:radial-gradient(115% 115% at 0% 0%, rgba(7,10,13,.82), rgba(7,10,13,.12) 40%, transparent 58%);}
+  .imp .scrim{background:radial-gradient(115% 115% at 100% 100%, rgba(7,10,13,.82), rgba(7,10,13,.12) 40%, transparent 58%);}
+
+  .content{position:absolute;display:flex;flex-direction:column;padding:clamp(20px,4vw,52px);max-width:58%;}
+  .geo .content{top:40px;left:0;align-items:flex-start;text-align:left;}
+  .imp .content{bottom:0;right:0;align-items:flex-end;text-align:right;}
+  .tag{display:inline-flex;align-items:center;gap:8px;font-size:clamp(9px,1.1vw,11px);letter-spacing:.26em;text-transform:uppercase;
+    color:var(--accent);font-weight:600;margin-bottom:12px;}
+  .imp .tag{flex-direction:row-reverse;}
+  .tag .dot{width:5px;height:5px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent);}
+  /* identical type scale on both zones = equal prominence */
+  .label{font-size:clamp(34px,7vw,68px);font-weight:600;letter-spacing:.05em;line-height:1;
+    text-shadow:0 2px 30px rgba(0,0,0,.7);transition:transform .5s cubic-bezier(.2,.7,.2,1),color .3s;}
+  .sub{margin-top:11px;font-size:clamp(12px,1.7vw,16px);letter-spacing:.03em;color:var(--muted);max-width:24ch;}
+  /* persistent ENTER pill so each half reads as an equal tappable button */
+  .enter{margin-top:20px;display:inline-flex;align-items:center;gap:7px;min-height:44px;
+    font-size:clamp(10px,1.2vw,12px);letter-spacing:.16em;text-transform:uppercase;
+    color:var(--accent);font-weight:600;
+    background:var(--glass-surface);border:1px solid var(--glass-border);
+    backdrop-filter:blur(var(--glass-blur)) saturate(1.4);-webkit-backdrop-filter:blur(var(--glass-blur)) saturate(1.4);
+    box-shadow:var(--glass-inset),0 0 22px -8px var(--cyan-glow);
+    border-radius:var(--radius-pill);padding:11px 18px;opacity:.92;transition:background .3s ease,opacity .3s ease,transform .3s ease;}
+  .imp .enter{align-self:flex-end;flex-direction:row-reverse;}
+
+
+  .wordmark{position:absolute;z-index:8;top:max(16px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);
+    display:inline-flex;align-items:center;gap:9px;opacity:.92;pointer-events:none;
+    filter:drop-shadow(0 2px 18px rgba(0,0,0,.6));view-transition-name:sa-logo;}
+  .wordmark .sa-mark{flex:0 0 auto;width:clamp(20px,2.6vw,26px);height:clamp(20px,2.6vw,26px);color:var(--accent);}
+  .wordmark .sa-word{height:clamp(13px,1.7vw,16px);width:auto;display:block;}
+
+  /* hover/focus: dim the OTHER zone, lift this label */
+  .shell:has(.geo:hover) .imp .veil, .shell:has(.geo:focus-visible) .imp .veil,
+  .shell:has(.imp:hover) .geo .veil, .shell:has(.imp:focus-visible) .geo .veil{opacity:1;}
+  .zone:hover .label,.zone:focus-visible .label{color:#F2FFFD;transform:translateY(-3px);}
+  .zone:hover .enter,.zone:focus-visible .enter{opacity:1;background:var(--accent-soft);transform:translateY(-2px);}
+  .zone:focus-visible{outline:none;}
+  /* backdrop-proof DOUBLE ring: dark 1px under a 2px accent so it survives the photo */
+  .zone:focus-visible .ring{position:absolute;inset:0;
+    box-shadow:inset 0 0 0 1px rgba(0,0,0,.85), inset 0 0 0 3px var(--accent);}
+
+  /* ══ SHARED MODULE NAV — identical compact top-strip across screens ══ */
+  .topstrip{position:absolute;z-index:9;top:0;left:0;right:0;
+    flex:0 0 auto;display:flex;align-items:center;gap:10px;
+    height:40px;padding:0 max(12px,env(safe-area-inset-left));
+    border-bottom:1px solid var(--glass-border);
+    background:var(--glass-surface-dark, rgba(8,20,30,.55));
+    box-shadow:var(--glass-inset);
+    backdrop-filter:blur(var(--glass-blur)) saturate(1.4);-webkit-backdrop-filter:blur(var(--glass-blur)) saturate(1.4);}
+  .modnav{display:flex;align-items:center;gap:4px;view-transition-name:sa-nav}
+  .modnav a{
+    -webkit-tap-highlight-color:transparent;text-decoration:none;color:var(--muted);
+    border:1px solid transparent;border-radius:8px;
+    min-height:44px;display:inline-flex;align-items:center;justify-content:center;
+    font-size:11px;font-weight:600;line-height:1;padding:0 10px;
+    transition:background .2s,border-color .2s,color .2s;}
+  .modnav a.home{min-width:44px;padding:0;font-size:15px}
+  .modnav a:hover{background:rgba(255,255,255,.08);color:var(--ink)}
+  .modnav a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .modnav a[aria-current="page"]{color:var(--accent);border-color:var(--accent-line);background:var(--accent-soft)}
+
+  /* ══ BRAND SPLASH — brief, every open; tap anywhere to skip ══ */
+  .splash{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;
+    background:
+      radial-gradient(120% 90% at 12% 8%, rgba(34,227,214,.14), transparent 55%),
+      radial-gradient(100% 80% at 88% 0%, rgba(139,123,255,.18), transparent 52%),
+      linear-gradient(165deg, var(--bg) 0%, var(--bg-top) 45%, #161a44 100%);
+    -webkit-tap-highlight-color:transparent;cursor:default;}
+  .splash.is-hidden{opacity:0;pointer-events:none;}
+  .splash-lockup{display:inline-flex;flex-direction:column;align-items:center;gap:clamp(14px,3vh,22px);
+    filter:drop-shadow(0 4px 28px rgba(0,0,0,.6));}
+  .splash-mark{width:clamp(64px,12vw,92px);height:clamp(64px,12vw,92px);color:var(--accent);display:block;}
+  .splash-mark path{stroke-dasharray:96;stroke-dashoffset:0;}
+  .splash-word{height:clamp(20px,3.4vw,28px);width:auto;display:block;}
+  .splash-skip{position:absolute;width:1px;height:1px;margin:-1px;padding:0;border:0;
+    clip:rect(0 0 0 0);clip-path:inset(50%);overflow:hidden;white-space:nowrap;}
+
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important;}}
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="splash" id="saSplash" aria-hidden="true">
+    <div class="splash-lockup">
+      <svg class="splash-mark" viewBox="0 0 52 52" fill="none" aria-hidden="true">
+        <path d="M11 45 C 16 26, 24 18, 35 15 M21 39 L 30 24 L 43 45" stroke="currentColor" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle class="splash-ring" cx="37" cy="15" r="8.6" stroke="currentColor" stroke-width="1.2" opacity="0.4"/>
+        <circle class="splash-ball" cx="37" cy="15" r="5.2" fill="currentColor"/>
+      </svg>
+      <svg class="splash-word" viewBox="0 0 154 18" aria-hidden="true">
+        <text x="0" y="14" font-family="'SF Pro Display',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif"
+              font-size="15" font-weight="600" letter-spacing="2.2">
+          <tspan fill="#e8f0fb">STRIKE</tspan><tspan fill="#22E3D6">ARC</tspan>
+        </text>
+      </svg>
+    </div>
+    <button type="button" class="splash-skip" id="saSplashSkip">Skip intro</button>
+  </div>
+
+  <div class="topstrip">
+    <nav class="modnav" aria-label="Modules">
+      <a class="home" href="./index-glass.html" aria-current="page" aria-label="Home"><svg width="20" height="20" viewBox="0 0 52 52" fill="none" aria-hidden="true"><path d="M11 45 C 16 26, 24 18, 35 15 M21 39 L 30 24 L 43 45" stroke="currentColor" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="37" cy="15" r="5.2" fill="currentColor"/></svg></a>
+      <a class="tab" href="./geometry-glass.html">Geometry</a>
+      <a class="tab" href="./impact-glass.html">Impact</a>
+    </nav>
+  </div>
+
+  <a class="zone geo" href="./geometry-glass.html" aria-label="Geometry — Model swing plane and arc">
+    <span class="veil" aria-hidden="true"></span>
+    <span class="scrim" aria-hidden="true"></span>
+    <span class="ring" aria-hidden="true"></span>
+    <span class="content">
+      <span class="label">GEOMETRY</span>
+      <span class="sub">Model swing plane &amp; arc</span>
+      <span class="enter" aria-hidden="true">Enter →</span>
+    </span>
+  </a>
+
+  <a class="zone imp" href="./impact-glass.html" aria-label="Impact — Launch and ball flight">
+    <span class="veil" aria-hidden="true"></span>
+    <span class="scrim" aria-hidden="true"></span>
+    <span class="ring" aria-hidden="true"></span>
+    <span class="content">
+      <span class="label">IMPACT</span>
+      <span class="sub">Launch &amp; ball flight</span>
+      <span class="enter" aria-hidden="true">Enter →</span>
+    </span>
+  </a>
+
+  <h1 class="wordmark" aria-label="StrikeArc">
+    <svg class="sa-mark" viewBox="0 0 52 52" fill="none" aria-hidden="true">
+      <path d="M11 45 C 16 26, 24 18, 35 15 M21 39 L 30 24 L 43 45" stroke="currentColor" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="37" cy="15" r="8.6" stroke="currentColor" stroke-width="1.2" opacity="0.4"/>
+      <circle cx="37" cy="15" r="5.2" fill="currentColor"/>
+    </svg>
+    <svg class="sa-word" viewBox="0 0 154 18" aria-hidden="true">
+      <text x="0" y="14" font-family="'SF Pro Display',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif"
+            font-size="15" font-weight="600" letter-spacing="2.2">
+        <tspan fill="#e8f0fb">STRIKE</tspan><tspan fill="#22E3D6">ARC</tspan>
+      </text>
+    </svg>
+  </h1>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="./sa-firstrun.js" defer></script>
+<script>
+  /* ══ BRAND SPLASH (every open) → then first-run ONBOARDING ══
+     Splash: logo draws/scales/fades in (~1.0–1.3s) then fades out to reveal the
+     menu. Tap/click/key anywhere skips immediately. Reduced-motion: hold the
+     logo statically for a beat, no animation. Removed cleanly so it never blocks
+     interaction. After the splash, first run → SA.onboarding(...). */
+  window.addEventListener("load", function () {
+    var splash = document.getElementById("saSplash");
+    var skipBtn = document.getElementById("saSplashSkip");
+    if (!splash) { startOnboarding(); return; }
+
+    var reduced = false;
+    try { reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) {}
+    var hasGSAP = typeof gsap !== "undefined";
+    var done = false;
+
+    function startOnboarding() {
+      if (!window.SA || SA.seen("sa_onboarded")) return;
+      SA.onboarding([
+        {
+          title: "StrikeArc",
+          body: "See how your swing arc creates the strike.",
+          art: '<svg viewBox="0 0 52 52" fill="none" aria-hidden="true">'
+             + '<path d="M11 45 C 16 26, 24 18, 35 15 M21 39 L 30 24 L 43 45" stroke="currentColor" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>'
+             + '<circle cx="37" cy="15" r="8.6" stroke="currentColor" stroke-width="1.2" opacity="0.4"/>'
+             + '<circle cx="37" cy="15" r="5.2" fill="currentColor"/></svg>'
+        },
+        {
+          title: "Geometry",
+          body: "Model your swing plane & arc — shape the path your club travels into the ball.",
+          art: '<svg viewBox="0 0 52 52" fill="none" aria-hidden="true">'
+             + '<path d="M11 45 C 16 26, 24 18, 35 15" stroke="currentColor" stroke-width="3" stroke-linecap="round" opacity="0.85"/>'
+             + '<line x1="11" y1="45" x2="35" y2="15" stroke="currentColor" stroke-width="1" opacity="0.35" stroke-dasharray="3 4"/>'
+             + '<circle cx="11" cy="45" r="2.6" fill="currentColor" opacity="0.6"/>'
+             + '<circle cx="35" cy="15" r="4.4" fill="currentColor"/></svg>'
+        },
+        {
+          title: "Impact",
+          body: "See the shot — live ball flight & data the moment the club meets the ball.",
+          art: '<svg viewBox="0 0 52 52" fill="none" aria-hidden="true">'
+             + '<path d="M9 44 C 16 22, 28 14, 44 16" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" opacity="0.8"/>'
+             + '<circle cx="9" cy="44" r="3.4" fill="currentColor"/>'
+             + '<circle cx="27" cy="17" r="1.8" fill="currentColor" opacity="0.4"/>'
+             + '<circle cx="44" cy="16" r="4.2" fill="currentColor"/></svg>'
+        }
+      ], { storageKey: "sa_onboarded", onDone: function () {} });
+    }
+
+    function teardown() {
+      if (done) return;
+      done = true;
+      splash.removeEventListener("click", teardown);
+      window.removeEventListener("keydown", onKey, true);
+      var remove = function () {
+        if (splash.parentNode) splash.parentNode.removeChild(splash);
+        startOnboarding();
+      };
+      if (reduced || !hasGSAP) {
+        splash.classList.add("is-hidden");
+        remove();
+      } else {
+        gsap.to(splash, { opacity: 0, duration: 0.35, ease: "power1.in", onComplete: remove });
+      }
+    }
+
+    function onKey(e) {
+      // any key (besides modifier-only) skips; keeps splash non-focus-trapping
+      if (e.key === "Tab") return;
+      teardown();
+    }
+
+    splash.addEventListener("click", teardown);
+    window.addEventListener("keydown", onKey, true);
+    if (skipBtn) skipBtn.addEventListener("click", function (e) { e.stopPropagation(); teardown(); });
+
+    if (hasGSAP) {
+      var mm = gsap.matchMedia();
+      mm.add("(prefers-reduced-motion: no-preference)", function () {
+        var mark = splash.querySelector(".splash-mark");
+        var path = splash.querySelector(".splash-mark path");
+        var ball = splash.querySelector(".splash-ball");
+        var ring = splash.querySelector(".splash-ring");
+        var word = splash.querySelector(".splash-word");
+        var tl = gsap.timeline({ onComplete: teardown });
+        gsap.set(splash.querySelector(".splash-lockup"), { scale: 0.92, opacity: 0, transformOrigin: "50% 50%" });
+        if (path) {
+          var len = 0;
+          try { len = path.getTotalLength(); } catch (e) { len = 60; }
+          gsap.set(path, { strokeDasharray: len, strokeDashoffset: len });
+        }
+        if (ball) gsap.set(ball, { scale: 0, transformOrigin: "37px 15px" });
+        if (ring) gsap.set(ring, { opacity: 0 });
+        tl.to(splash.querySelector(".splash-lockup"), { scale: 1, opacity: 1, duration: 0.45, ease: "power2.out" });
+        if (path) tl.to(path, { strokeDashoffset: 0, duration: 0.55, ease: "power2.inOut" }, 0.1);
+        if (ball) tl.to(ball, { scale: 1, duration: 0.3, ease: "back.out(2)" }, 0.5);
+        if (ring) tl.to(ring, { opacity: 0.4, duration: 0.3, ease: "power1.out" }, 0.55);
+        if (word) tl.fromTo(word, { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: 0.35, ease: "power2.out" }, 0.35);
+        tl.to({}, { duration: 0.35 }); // hold a beat (~1.25s total before fade-out)
+        return function () { tl.kill(); };
+      });
+      mm.add("(prefers-reduced-motion: reduce)", function () {
+        // static logo for a beat, no animation
+        var t = setTimeout(teardown, 700);
+        return function () { clearTimeout(t); };
+      });
+    } else {
+      // no GSAP: show static, then reveal
+      setTimeout(teardown, reduced ? 600 : 1100);
+    }
+  });
+</script>
+<script>
+  /* Subtle, premium idle motion. Entirely gated by prefers-reduced-motion
+     via gsap.matchMedia() — transform/opacity only. */
+  window.addEventListener("load", function () {
+    if (typeof gsap === "undefined") return;
+
+    var mm = gsap.matchMedia();
+
+    mm.add("(prefers-reduced-motion: no-preference)", function () {
+      var pills   = gsap.utils.toArray(".enter");
+      var built   = [];
+
+      /* soft breathing glow on the two ENTER pills (opacity only, equal) */
+      if (pills.length) {
+        built.push(
+          gsap.to(pills, {
+            opacity: 1,
+            duration: 2.6,
+            ease: "sine.inOut",
+            repeat: -1,
+            yoyo: true,
+            stagger: { each: 0.6, from: "edges" }
+          })
+        );
+      }
+
+      /* cleanup if the media condition stops matching */
+      return function () {
+        built.forEach(function (t) { t && t.kill(); });
+        if (pills.length) gsap.set(pills, { clearProps: "opacity" });
+      };
+    });
+  });
+</script>
+</body>
+</html>

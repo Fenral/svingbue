@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="robots" content="noindex" />
+<title>D-plane Instrument — Impact arrows (presentation)</title>
+<!-- inline empty favicon so an embed/offline open never fires an external favicon.ico request -->
+<link rel="icon" href="data:," />
+<!--
+  SELF-CONTAINED presentation build of the dual-lens D-plane instrument.
+  Extracted from impact.html + impact-flight.js. NO external dependencies:
+  all CSS + JS + the ball-flight engine are inlined, system fonts only,
+  no CDN, no <script src>, no sa.css / sa-firstrun.js. Works from file://.
+  Drop into a slide / open directly / embed as an iframe — it just runs offline.
+-->
+<style>
+  :root{
+    --accent:#22E3D6; --accent-soft:rgba(34,227,214,.16); --accent-line:rgba(34,227,214,.55);
+    --ink:#e8f0fb; --muted:#9aabc6;
+    --bg:#0A0E12; --bg-top:#0b1220;
+    --panel:rgba(12,20,33,.72); --line:rgba(255,255,255,.30);
+    --radius-card:16px; --radius-control:12px;
+    --plate:#0E141C;
+    /* anatomy colours (warmed, ported from the app) */
+    --c-face:#E83B47; --c-path:#8FB4D4; --c-loft:#A66BFF; --c-attack:#FF7AA8; --c-launch:#F4D000;
+    --dim:0.55;
+    --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;overflow:hidden}
+  body{
+    background:radial-gradient(130% 120% at 50% -10%, var(--bg-top), var(--bg));
+    color:var(--ink);
+    font-family:var(--font);
+    -webkit-tap-highlight-color:transparent;
+  }
+  .app{position:fixed;inset:0;display:flex;flex-direction:column;overflow:hidden}
+
+  /* ══ THIN HEADER — club speed only ══════════════════════════════ */
+  .topstrip{
+    flex:0 0 auto;display:flex;align-items:center;gap:12px;
+    height:46px;padding:0 max(14px,env(safe-area-inset-left)) 0 max(14px,env(safe-area-inset-right));
+    border-bottom:1px solid rgba(255,255,255,.06);
+    background:linear-gradient(180deg, rgba(12,20,33,.55), rgba(10,14,18,.2));
+  }
+  .ts-title{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink);white-space:nowrap;flex:0 0 auto}
+  .ts-center{flex:1 1 auto;display:flex;align-items:center;justify-content:center;gap:10px;min-width:0}
+  .ts-center label{font-size:10px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);font-weight:600;white-space:nowrap}
+  .ts-center .speedwrap{display:flex;align-items:center;gap:10px;max-width:min(52vw,420px);width:100%}
+  .ts-center .speedwrap .rwrap{flex:1 1 auto;min-width:100px}
+  .ts-center .speedval{font-size:12px;font-weight:700;color:var(--accent);font-variant-numeric:tabular-nums;width:64px;text-align:right;white-space:nowrap}
+
+  /* ══ MAIN — two equal lens panels ═══════════════════════════════ */
+  .main{flex:1 1 auto;display:flex;gap:8px;padding:6px;min-height:0}
+  .lens{
+    position:relative;flex:1 1 0;min-width:0;border-radius:20px;
+    background:
+      radial-gradient(120% 90% at 50% 18%, rgba(34,227,214,.07), rgba(10,14,18,0) 62%),
+      #0A0E12;
+    border:1px solid rgba(255,255,255,.07);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.04), 0 14px 40px -22px rgba(0,0,0,.8);
+    display:flex;flex-direction:column;overflow:hidden;
+  }
+  .seam{flex:0 0 1px;align-self:stretch;background:linear-gradient(180deg, rgba(34,227,214,0), var(--accent-line), rgba(34,227,214,0))}
+  .lens .lenshead{position:absolute;top:9px;left:12px;z-index:3;pointer-events:none}
+  .lens .lenshead .lh1{font-size:10px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--ink)}
+  .lens .lenshead .lh2{font-size:9px;color:var(--muted);margin-top:1px;letter-spacing:.02em}
+  .lens svg{flex:1 1 auto;width:100%;height:100%;display:block;min-height:0}
+
+  /* docked mini-sliders at panel bottom */
+  .minidock{
+    flex:0 0 auto;display:flex;gap:10px;padding:5px 11px 6px;
+    border-top:1px solid rgba(255,255,255,.06);
+    background:linear-gradient(180deg, rgba(10,14,18,0), rgba(8,12,16,.5));
+  }
+  .mini{flex:1 1 0;min-width:0}
+  .mini .mtop{display:flex;justify-content:space-between;align-items:baseline;gap:6px;margin-bottom:3px}
+  .mini .mname{font-size:10px;font-weight:700;letter-spacing:.02em;display:inline-flex;align-items:center;gap:5px}
+  .mini .mname label{cursor:pointer}
+  .mini .mdot{width:8px;height:8px;border-radius:2px;flex:0 0 auto}
+  .mini .mval{font-size:11px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--ink)}
+
+  input[type=range]{width:100%;height:26px;cursor:pointer;accent-color:var(--accent);background:transparent}
+  input[type=range]:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:6px}
+  .mini.k-face .mname{color:#ffb0b6}
+  .mini.k-path .mname{color:#bcd6ea}
+  .mini.k-loft .mname{color:#cdb0ff}
+  .mini.k-attack .mname{color:#ffc0d4}
+
+  /* ══ PREMIUM CUSTOM RANGE SLIDERS ══════════════════════════════════
+     centre-origin (signed) or left-origin fill in the param colour, centre tick,
+     ~20px disc thumb that grows on :active, value bubble above the thumb on drag. */
+  .rwrap{position:relative;--rc:var(--accent)}
+  .rwrap input[type=range].premium-range{
+    -webkit-appearance:none;appearance:none;
+    width:100%;height:44px;
+    margin:0;cursor:pointer;background:transparent;
+  }
+  .rwrap input[type=range].premium-range::-webkit-slider-runnable-track{
+    height:5px;border-radius:999px;border:none;
+    background:var(--rf, rgba(255,255,255,.14));
+  }
+  .rwrap input[type=range].premium-range::-moz-range-track{
+    height:5px;border-radius:999px;border:none;
+    background:var(--rf, rgba(255,255,255,.14));
+  }
+  .rwrap input[type=range].premium-range::-moz-range-progress{
+    height:5px;border-radius:999px;background:transparent;
+  }
+  .rwrap input[type=range].premium-range::-webkit-slider-thumb{
+    -webkit-appearance:none;appearance:none;
+    width:20px;height:20px;border-radius:50%;margin-top:-7.5px;
+    background:var(--rc);
+    border:2px solid rgba(255,255,255,.92);
+    box-shadow:0 2px 7px rgba(0,0,0,.5), 0 0 0 4px color-mix(in srgb, var(--rc) 28%, transparent);
+    transition:transform .12s ease, box-shadow .12s ease;
+  }
+  .rwrap input[type=range].premium-range::-moz-range-thumb{
+    width:20px;height:20px;border-radius:50%;
+    background:var(--rc);
+    border:2px solid rgba(255,255,255,.92);
+    box-shadow:0 2px 7px rgba(0,0,0,.5), 0 0 0 4px color-mix(in srgb, var(--rc) 28%, transparent);
+    transition:transform .12s ease, box-shadow .12s ease;
+  }
+  .rwrap input[type=range].premium-range:active::-webkit-slider-thumb,
+  .rwrap input[type=range].premium-range.dragging::-webkit-slider-thumb{
+    transform:scale(1.25);
+    box-shadow:0 3px 11px rgba(0,0,0,.55), 0 0 0 6px color-mix(in srgb, var(--rc) 34%, transparent);
+  }
+  .rwrap input[type=range].premium-range:active::-moz-range-thumb,
+  .rwrap input[type=range].premium-range.dragging::-moz-range-thumb{
+    transform:scale(1.25);
+    box-shadow:0 3px 11px rgba(0,0,0,.55), 0 0 0 6px color-mix(in srgb, var(--rc) 34%, transparent);
+  }
+  .rwrap input[type=range].premium-range:focus-visible{outline:none}
+  .rwrap input[type=range].premium-range:focus-visible::-webkit-slider-thumb{
+    box-shadow:0 2px 7px rgba(0,0,0,.5), 0 0 0 3px #0A0E12, 0 0 0 6px var(--rc);
+  }
+  .rwrap input[type=range].premium-range:focus-visible::-moz-range-thumb{
+    box-shadow:0 2px 7px rgba(0,0,0,.5), 0 0 0 3px #0A0E12, 0 0 0 6px var(--rc);
+  }
+  .rwrap.signed::before{
+    content:"";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+    width:2px;height:11px;border-radius:2px;background:rgba(255,255,255,.42);
+    pointer-events:none;z-index:1;
+  }
+  .rwrap .rbubble{
+    position:absolute;top:-2px;left:0;transform:translate(-50%,-100%) scale(.9);
+    padding:2px 7px;border-radius:7px;white-space:nowrap;
+    font-size:11px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.25;
+    color:#fff;background:color-mix(in srgb, var(--rc) 66%, #0A0E12);
+    border:1px solid rgba(255,255,255,.28);
+    box-shadow:0 4px 12px rgba(0,0,0,.45);
+    opacity:0;pointer-events:none;z-index:3;
+    transition:opacity .16s ease, transform .16s ease;
+  }
+  .rwrap .rbubble::after{
+    content:"";position:absolute;left:50%;bottom:-4px;transform:translateX(-50%) rotate(45deg);
+    width:7px;height:7px;background:inherit;border-right:1px solid rgba(255,255,255,.28);
+    border-bottom:1px solid rgba(255,255,255,.28);
+  }
+  .rwrap.bubble-show .rbubble{opacity:1;transform:translate(-50%,-100%) scale(1)}
+  .rwrap.bubble-below .rbubble{top:auto;bottom:-2px;transform:translate(-50%,100%) scale(.9)}
+  .rwrap.bubble-below.bubble-show .rbubble{transform:translate(-50%,100%) scale(1)}
+  .rwrap.bubble-below .rbubble::after{
+    top:-4px;bottom:auto;
+    border-right:none;border-bottom:none;
+    border-left:1px solid rgba(255,255,255,.28);border-top:1px solid rgba(255,255,255,.28);
+  }
+  .mini.k-face  .rwrap{--rc:var(--c-face)}
+  .mini.k-path  .rwrap{--rc:var(--c-path)}
+  .mini.k-loft  .rwrap{--rc:var(--c-loft)}
+  .mini.k-attack .rwrap{--rc:var(--c-attack)}
+  .speedwrap .rwrap{--rc:var(--accent)}
+  @media (prefers-reduced-motion:reduce){
+    .rwrap input[type=range].premium-range::-webkit-slider-thumb{transition:none}
+    .rwrap input[type=range].premium-range::-moz-range-thumb{transition:none}
+    .rwrap input[type=range].premium-range:active::-webkit-slider-thumb,
+    .rwrap input[type=range].premium-range.dragging::-webkit-slider-thumb{transform:none}
+    .rwrap input[type=range].premium-range:active::-moz-range-thumb,
+    .rwrap input[type=range].premium-range.dragging::-moz-range-thumb{transform:none}
+    .rwrap .rbubble{transition:none}
+  }
+
+  /* SVG arrow groups */
+  .arrowG{transition:opacity .22s ease}
+  .arrowG.dim{opacity:var(--dim)}
+  .arrowG.dim .aline{stroke-dasharray:10 7}
+  .arrowG .aline{stroke-linecap:round}
+  .arrowG.grab{cursor:grab}
+  .arrowG.grab:active{cursor:grabbing}
+  @media (prefers-reduced-motion:reduce){ .arrowG{transition:none} }
+
+  /* DISPLAY-ONLY launch indicator arrows (derived result). PURELY VISUAL,
+     slimmer + dashed, subtle opacity, non-interactive, aria-hidden. */
+  .launchG{opacity:.92;pointer-events:none}
+  .launchG .lline,.launchG polygon{pointer-events:none}
+  .launchG .lline{stroke-linecap:round;stroke-dasharray:6 5}
+
+  /* value chip near arrow (chip-fade ALWAYS ON) */
+  .vchip{pointer-events:none;fill:rgba(14,20,28,.92);stroke:rgba(255,255,255,.18)}
+  .vchipText{font-size:17px;font-weight:800;font-variant-numeric:tabular-nums;font-family:inherit}
+  .vchipWrap{opacity:0;transition:opacity .26s ease}
+  .vchipWrap.show{opacity:1}
+  @media (prefers-reduced-motion:reduce){ .vchipWrap{transition:none} }
+
+  /* ══ LIVE ENGINE READOUT (compact) ══════════════════════════════ */
+  .readout{
+    flex:0 0 auto;display:flex;align-items:stretch;gap:2px;
+    height:78px;padding:0 max(6px,env(safe-area-inset-left)) max(0px,env(safe-area-inset-bottom)) max(6px,env(safe-area-inset-right));
+    border-top:1px solid rgba(255,255,255,.08);
+    background:linear-gradient(180deg, rgba(10,14,18,.3), rgba(8,12,16,.92));
+    overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-webkit-overflow-scrolling:touch;
+  }
+  .readout::-webkit-scrollbar{display:none}
+  .rcell{
+    position:relative;flex:1 1 0;min-width:max-content;
+    display:flex;flex-direction:column;align-items:flex-start;justify-content:center;
+    gap:3px;padding:0 15px;border-right:1px solid rgba(255,255,255,.05);
+    color:var(--ink);white-space:nowrap;
+  }
+  .rcell:last-child{border-right:none}
+  .rcell .rname{font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:600}
+  .rcell .rval{font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.01em;line-height:1.02;color:var(--ink);font-size:19px}
+  .rcell .rval .ru{font-size:.55em;font-weight:600;color:var(--muted);margin-left:2px;letter-spacing:0}
+  .rcell.hero .rval{font-size:26px}
+  .rcell.hero .rval .ru{color:var(--accent)}
+  .rcell .rname .est{color:#ffcf7a;opacity:.75;margin-left:3px;font-size:9px;letter-spacing:.04em}
+
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+
+  /* Responsive: keep it legible down to ~900px wide */
+  @media (max-width:1024px){
+    .rcell{padding:0 11px}
+    .rcell .rval{font-size:17px}
+    .rcell.hero .rval{font-size:22px}
+  }
+  @media (max-width:900px){
+    .topstrip{height:42px}
+    .readout{height:72px}
+  }
+
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+  <div class="app">
+
+    <!-- ══ THIN HEADER — CLUB SPEED ══ -->
+    <div class="topstrip">
+      <span class="ts-title">D-plane · See the Shot</span>
+      <div class="ts-center">
+        <div class="speedwrap">
+          <label for="s_speed">Club speed</label>
+          <input type="range" id="s_speed" min="40" max="130" step="1" value="90"
+                 aria-describedby="speed_help">
+          <span class="speedval" id="v_speed" aria-hidden="true">90 mph</span>
+          <span id="speed_help" class="sr-only">Global club-head speed in miles per hour. Drives ball speed and carry.</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ MAIN — two lens panels ══ -->
+    <div class="main">
+
+      <!-- LEFT — DIRECTION (top-down) -->
+      <section class="lens" id="lensDir" aria-label="Direction lens, top-down view">
+        <div class="lenshead"><div class="lh1">Direction</div><div class="lh2">Top-down · face &amp; path</div></div>
+        <svg id="svgDir" viewBox="0 0 400 360" preserveAspectRatio="xMidYMid meet" role="img"
+             aria-label="Top-down view from the ball. A vertical target line runs straight ahead. A red face arrow and a blue path arrow rotate from the ball to show clubface aim and swing direction.">
+          <defs>
+            <radialGradient id="dirGlow" cx="50%" cy="78%" r="60%">
+              <stop offset="0" stop-color="rgba(34,227,214,.10)"/><stop offset="1" stop-color="rgba(34,227,214,0)"/>
+            </radialGradient>
+          </defs>
+          <rect x="0" y="0" width="400" height="360" fill="url(#dirGlow)"/>
+          <!-- target line up from the ball -->
+          <line x1="200" y1="330" x2="200" y2="40" stroke="var(--accent-line)" stroke-width="1.5" stroke-dasharray="5 8"/>
+          <circle cx="200" cy="40" r="4" fill="none" stroke="var(--accent)" stroke-width="1.5" opacity=".8"/>
+          <text x="200" y="28" text-anchor="middle" font-size="9" fill="var(--muted)" style="font-family:inherit;letter-spacing:.1em">TARGET</text>
+          <!-- face↔path gap field (subtle, curved outer arc) -->
+          <path id="dirCone" fill="rgba(34,227,214,.04)" stroke="none"/>
+          <!-- ball -->
+          <circle cx="200" cy="330" r="5" fill="#fff" opacity=".9"/>
+          <!-- PATH arrow -->
+          <g class="arrowG" id="g_path" data-key="path" aria-hidden="true">
+            <line class="aline" id="line_path" x1="200" y1="330" x2="200" y2="111" stroke="var(--c-path)" stroke-width="7"/>
+            <polygon id="head_path" points="200,95 184,125 200,116 216,125" fill="var(--c-path)"/>
+          </g>
+          <!-- LAUNCH DIRECTION (derived). PURELY VISUAL indicator, aria-hidden. -->
+          <g class="launchG" id="g_launchDir" aria-hidden="true">
+            <line class="lline" id="line_launchDir" x1="200" y1="330" x2="200" y2="148" stroke="var(--c-launch)" stroke-width="4"/>
+            <polygon id="head_launchDir" points="200,132 188,158 200,150 212,158" fill="var(--c-launch)"/>
+          </g>
+          <!-- FACE arrow -->
+          <g class="arrowG" id="g_face" data-key="face" aria-hidden="true">
+            <line class="aline" id="line_face" x1="200" y1="330" x2="200" y2="111" stroke="var(--c-face)" stroke-width="7"/>
+            <polygon id="head_face" points="200,95 184,125 200,116 216,125" fill="var(--c-face)"/>
+          </g>
+          <!-- value chips (chip-fade ON) -->
+          <g class="vchipWrap" id="vchip_path" aria-hidden="true"><rect class="vchip" x="0" y="0" width="58" height="22" rx="6"/><text class="vchipText" x="0" y="0" text-anchor="middle" fill="var(--c-path)"></text></g>
+          <g class="vchipWrap" id="vchip_launchDir" data-launch="launchDir" aria-hidden="true"><rect class="vchip" x="0" y="0" width="58" height="22" rx="6"/><text class="vchipText" x="0" y="0" text-anchor="middle" fill="var(--c-launch)"></text></g>
+          <g class="vchipWrap" id="vchip_face" aria-hidden="true"><rect class="vchip" x="0" y="0" width="58" height="22" rx="6"/><text class="vchipText" x="0" y="0" text-anchor="middle" fill="var(--c-face)"></text></g>
+        </svg>
+        <div class="minidock">
+          <div class="mini k-face">
+            <div class="mtop"><span class="mname"><span class="mdot" style="background:var(--c-face)" aria-hidden="true"></span><label for="s_face">Face</label></span><span class="mval" id="v_face" aria-hidden="true">−2.0°</span></div>
+            <input type="range" id="s_face" min="-20" max="20" step="0.1" value="-2">
+          </div>
+          <div class="mini k-path">
+            <div class="mtop"><span class="mname"><span class="mdot" style="background:var(--c-path)" aria-hidden="true"></span><label for="s_path">Path</label></span><span class="mval" id="v_path" aria-hidden="true">+2.0°</span></div>
+            <input type="range" id="s_path" min="-20" max="20" step="0.1" value="2">
+          </div>
+        </div>
+      </section>
+
+      <div class="seam" aria-hidden="true"></div>
+
+      <!-- RIGHT — HEIGHT (side-on) -->
+      <section class="lens" id="lensHt" aria-label="Height lens, side-on view">
+        <div class="lenshead"><div class="lh1">Height</div><div class="lh2">Side-on · attack &amp; loft</div></div>
+        <svg id="svgHt" viewBox="0 0 400 360" preserveAspectRatio="xMidYMid meet" role="img"
+             aria-label="Side-on view. A ground line runs along the bottom. From the impact point, a pink attack arrow and a violet dynamic-loft arrow rotate to show the club's descent and delivered loft.">
+          <defs>
+            <radialGradient id="htGlow" cx="22%" cy="62%" r="70%">
+              <stop offset="0" stop-color="rgba(34,227,214,.10)"/><stop offset="1" stop-color="rgba(34,227,214,0)"/>
+            </radialGradient>
+          </defs>
+          <rect x="0" y="0" width="400" height="360" fill="url(#htGlow)"/>
+          <!-- ground line -->
+          <line x1="30" y1="250" x2="380" y2="250" stroke="rgba(255,255,255,.18)" stroke-width="1.5"/>
+          <text x="372" y="266" text-anchor="end" font-size="9" fill="var(--muted)" style="font-family:inherit;letter-spacing:.1em">GROUND</text>
+          <!-- impact point + ball -->
+          <circle cx="80" cy="250" r="5" fill="#fff" opacity=".9"/>
+          <!-- attack↔loft gap field (subtle, curved outer arc) — behind the arrows -->
+          <path id="htCone" fill="rgba(34,227,214,.04)" stroke="none"/>
+          <!-- ATTACK arrow -->
+          <g class="arrowG" id="g_attack" data-key="attack" aria-hidden="true">
+            <line class="aline" id="line_attack" x1="80" y1="250" x2="284" y2="250" stroke="var(--c-attack)" stroke-width="7"/>
+            <polygon id="head_attack" points="300,250 270,234 279,250 270,266" fill="var(--c-attack)"/>
+          </g>
+          <!-- LAUNCH ANGLE (derived). PURELY VISUAL indicator, aria-hidden. -->
+          <g class="launchG" id="g_launchAng" aria-hidden="true">
+            <line class="lline" id="line_launchAng" x1="80" y1="250" x2="264" y2="250" stroke="var(--c-launch)" stroke-width="4"/>
+            <polygon id="head_launchAng" points="280,250 254,238 262,250 254,262" fill="var(--c-launch)"/>
+          </g>
+          <!-- DYNAMIC LOFT arrow -->
+          <g class="arrowG" id="g_loft" data-key="loft" aria-hidden="true">
+            <line class="aline" id="line_loft" x1="80" y1="250" x2="284" y2="250" stroke="var(--c-loft)" stroke-width="7"/>
+            <polygon id="head_loft" points="300,250 270,234 279,250 270,266" fill="var(--c-loft)"/>
+          </g>
+          <g class="vchipWrap" id="vchip_attack" aria-hidden="true"><rect class="vchip" x="0" y="0" width="58" height="22" rx="6"/><text class="vchipText" x="0" y="0" text-anchor="middle" fill="var(--c-attack)"></text></g>
+          <g class="vchipWrap" id="vchip_launchAng" data-launch="launchAng" aria-hidden="true"><rect class="vchip" x="0" y="0" width="58" height="22" rx="6"/><text class="vchipText" x="0" y="0" text-anchor="middle" fill="var(--c-launch)"></text></g>
+          <g class="vchipWrap" id="vchip_loft" aria-hidden="true"><rect class="vchip" x="0" y="0" width="58" height="22" rx="6"/><text class="vchipText" x="0" y="0" text-anchor="middle" fill="var(--c-loft)"></text></g>
+        </svg>
+        <div class="minidock">
+          <div class="mini k-attack">
+            <div class="mtop"><span class="mname"><span class="mdot" style="background:var(--c-attack)" aria-hidden="true"></span><label for="s_attack">Attack</label></span><span class="mval" id="v_attack" aria-hidden="true">−3.0°</span></div>
+            <input type="range" id="s_attack" min="-15" max="15" step="0.1" value="-3">
+          </div>
+          <div class="mini k-loft">
+            <div class="mtop"><span class="mname"><span class="mdot" style="background:var(--c-loft)" aria-hidden="true"></span><label for="s_loft">Dyn loft</label></span><span class="mval" id="v_loft" aria-hidden="true">30.0°</span></div>
+            <input type="range" id="s_loft" min="0" max="60" step="0.1" value="30">
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ══ LIVE ENGINE READOUT — solveFlight(state) key outputs ══ -->
+    <div class="readout" id="readout" role="group" aria-label="Live engine outputs">
+      <!-- cells injected by script -->
+    </div>
+    <div class="sr-only" id="readoutLive" aria-live="polite" aria-atomic="true"></div>
+  </div>
+
+<script>
+"use strict";
+/* ════════════════════════════════════════════════════════════════
+   IMPACT / BALL-FLIGHT ENGINE — inlined from impact-flight.js.
+   Pure functions, no deps (TrackMan / D-plane model).
+   All ESTIMATE / SOURCED flags are preserved from the source.
+   ════════════════════════════════════════════════════════════════ */
+const deg2rad = d => (d * Math.PI) / 180;
+const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+
+// ── Fitted / sourced constants ──
+const START_FACE_W_BASE = 0.90;
+const START_FACE_W_SLOPE = 0.005;
+const START_FACE_W_MIN = 0.60;
+const START_FACE_W_MAX = 0.88;
+const LAUNCH_LOFT_W = 0.62;
+const LAUNCH_ATTACK_W = 0.25;
+const SPIN_AXIS_GAIN = 1.5;   // ESTIMATE (calibrated)
+const AXIS_MAX = 38;          // ESTIMATE (deg ceiling for a realistic spin-axis tilt)
+
+const CLUBS = {
+  '7iron': { smash: 1.33, spinK: 1.8 },   // ESTIMATE (7-iron typical)
+};
+const DEFAULT_CLUB = '7iron';
+
+const CURVE_FACTOR = 0.50;       // ESTIMATE
+const OFFLINE_CAP_FRAC = 0.55;   // ESTIMATE
+const CARRY_MAX = 195;           // ESTIMATE (yd)
+const CARRY_TAU = 56;            // ESTIMATE (mph)
+const APEX_MAX = 38;             // ESTIMATE (yd)
+const APEX_TAU = 75;             // ESTIMATE (mph)
+
+function solveFlight(input){
+  const clubPath = +input.clubPath || 0;
+  const faceAngle = +input.faceAngle || 0;
+  const attackAngle = +input.attackAngle || 0;
+  const dynamicLoft = +input.dynamicLoft || 0;
+  const clubSpeed = +input.clubSpeed || 0;
+
+  const club = CLUBS[input.club] ? input.club : DEFAULT_CLUB;
+  const preset = CLUBS[club];
+
+  // SOURCED: start direction blend (face-dominant, loft-dependent weight).
+  const faceW = clamp(
+    START_FACE_W_BASE - dynamicLoft * START_FACE_W_SLOPE,
+    START_FACE_W_MIN, START_FACE_W_MAX
+  );
+  const startDirection = faceW * faceAngle + (1 - faceW) * clubPath;
+
+  // SOURCED: spin loft = dynamicLoft - attackAngle.
+  const spinLoft = dynamicLoft - attackAngle;
+
+  // SOURCED: launch angle blend (dynamic-loft-dominant, small attack term).
+  const launchAngle = LAUNCH_LOFT_W * dynamicLoft + LAUNCH_ATTACK_W * attackAngle;
+
+  // ESTIMATE: spin axis ≈ gain * (face - path), clamped to ±AXIS_MAX.
+  const faceToPath = faceAngle - clubPath;
+  const spinAxis = clamp(SPIN_AXIS_GAIN * faceToPath, -AXIS_MAX, AXIS_MAX);
+
+  // ESTIMATE: ball speed via smash factor.
+  const ballSpeed = clubSpeed * preset.smash;
+
+  // ESTIMATE: drag-saturated carry + apex (concave, plateauing).
+  const carry = CARRY_MAX * (1 - Math.exp(-ballSpeed / CARRY_TAU));
+  const apex = APEX_MAX * (1 - Math.exp(-ballSpeed / APEX_TAU));
+
+  // ESTIMATE: landing/descent angle.
+  const landingAngle = clamp(
+    45 + (spinLoft - 25) * 0.5 + (launchAngle - 14) * 0.6,
+    35, 62
+  );
+
+  // ESTIMATE: offline = carry * sin(spinAxis) * curveFactor, hard-capped.
+  const offline = clamp(
+    carry * Math.sin(deg2rad(spinAxis)) * CURVE_FACTOR,
+    -OFFLINE_CAP_FRAC * carry, OFFLINE_CAP_FRAC * carry
+  );
+
+  const rollFrac = clamp(0.04 - (landingAngle - 45) * 0.0015, 0.012, 0.055);
+  const total = carry + carry * rollFrac;
+  const curve = offline;
+
+  const SPIN_RPM_K = preset.spinK;
+  const backspin = clamp(Math.abs(spinLoft) * ballSpeed * SPIN_RPM_K, 1500, 9000);
+  const smash = clubSpeed > 0 ? ballSpeed / clubSpeed : 0;
+
+  return {
+    clubPath, faceAngle, attackAngle, dynamicLoft, clubSpeed,
+    startDirection, spinLoft, launchAngle, spinAxis, ballSpeed,
+    carry, apex, landingAngle, offline, total, curve, backspin, smash, faceToPath,
+    startFaceW: faceW, launchLoftW: LAUNCH_LOFT_W, launchAttackW: LAUNCH_ATTACK_W,
+    shape: shapeLabel(startDirection, spinAxis),
+  };
+}
+
+function shapeLabel(startDirection, spinAxis){
+  const faceToPath = spinAxis / SPIN_AXIS_GAIN;
+  const gap = Math.abs(faceToPath);
+  const STRAIGHT_GAP = 0.75, BIG_GAP = 6;
+  let curve;
+  if (gap < STRAIGHT_GAP) curve = 'Straight';
+  else if (faceToPath > 0) curve = gap > BIG_GAP ? 'Slice' : 'Fade';
+  else curve = gap > BIG_GAP ? 'Hook' : 'Draw';
+  let start;
+  if (Math.abs(startDirection) < 1.5) start = '';
+  else start = startDirection > 0 ? 'Push ' : 'Pull ';
+  if (curve === 'Straight') return start ? start.trim() : 'Straight';
+  return (start + curve).trim();
+}
+
+/* ════════════════════════════════════════════════════════════════
+   INSTRUMENT — dual-lens D-plane arrows, sliders, drag, readout.
+   ════════════════════════════════════════════════════════════════ */
+const $ = id => document.getElementById(id);
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const YD2M = 0.9144;
+const f1 = v => (v>=0?'+':'') + v.toFixed(1);
+
+// ── live club state (standalone defaults) ──
+const state = { clubSpeed: 90, faceAngle: -2, clubPath: 2, attackAngle: -3, dynamicLoft: 30 };
+
+// ── ARROW ROTATION — one consistent visual gain per lens ──
+const GAIN_DIR = 2.0;
+const GAIN_HEIGHT = 1.0;
+const ROT = {
+  face:   v => -v * GAIN_DIR * (Math.PI/180),
+  path:   v => -v * GAIN_DIR * (Math.PI/180),
+  launchDir: v => -v * GAIN_DIR * (Math.PI/180),
+  attack: v => -v * GAIN_HEIGHT * (Math.PI/180),
+  loft:   v => -v * GAIN_HEIGHT * (Math.PI/180),
+  launchAng: v => -v * GAIN_HEIGHT * (Math.PI/180),
+};
+const ARROW_GAIN = { face:GAIN_DIR, path:GAIN_DIR, attack:GAIN_HEIGHT, loft:GAIN_HEIGHT };
+const DIR_PIVOT = { x:200, y:330 };
+const HT_PIVOT  = { x:80,  y:250 };
+
+const ARROWS = {
+  path:   { lens:'dir', pivot:DIR_PIVOT, tipLen:235, group:'g_path' },
+  face:   { lens:'dir', pivot:DIR_PIVOT, tipLen:235, group:'g_face' },
+  attack: { lens:'ht',  pivot:HT_PIVOT,  tipLen:220, group:'g_attack' },
+  loft:   { lens:'ht',  pivot:HT_PIVOT,  tipLen:220, group:'g_loft' },
+};
+const ARROW_STATE_KEY = { path:'clubPath', face:'faceAngle', attack:'attackAngle', loft:'dynamicLoft' };
+
+// DISPLAY-ONLY launch indicators — derived from solveFlight(state).
+const LAUNCH = {
+  launchDir: { lens:'dir', pivot:DIR_PIVOT, tipLen:198, group:'g_launchDir', solveKey:'startDirection', fmt:'signed' },
+  launchAng: { lens:'ht',  pivot:HT_PIVOT,  tipLen:200, group:'g_launchAng', solveKey:'launchAngle',    fmt:'plain'  },
+};
+
+const visAngle = { path:0, face:0, attack:0, loft:0, launchDir:0, launchAng:0 };
+const targetAngle = { path:0, face:0, attack:0, loft:0, launchDir:0, launchAng:0 };
+
+function computeTarget(key){
+  if (LAUNCH[key]){
+    const v = solveFlight(state)[LAUNCH[key].solveKey];
+    targetAngle[key] = ROT[key](v);
+    return;
+  }
+  const v = state[ARROW_STATE_KEY[key]];
+  targetAngle[key] = ROT[key](v);
+}
+
+const arrowMeta = key => ARROWS[key] || LAUNCH[key];
+
+function applyArrowTransform(key){
+  const a = arrowMeta(key);
+  const ang = visAngle[key] * 180/Math.PI;
+  $(a.group).setAttribute('transform', `rotate(${ang.toFixed(2)} ${a.pivot.x} ${a.pivot.y})`);
+}
+
+const LENS_ARROWS = {
+  dir: ['face','path','launchDir'],
+  ht:  ['attack','loft','launchAng'],
+};
+
+const placedChipBoxes = { dir: [], ht: [] };
+function rectsOverlap(a,b){ return a.x < b.x+b.w && a.x+a.w > b.x && a.y < b.y+b.h && a.y+a.h > b.y; }
+
+function placeChip(key){
+  const a = arrowMeta(key);
+  const baseAngle = a.lens==='dir' ? -90 : 0;
+  const ownDeg = baseAngle + visAngle[key]*180/Math.PI;
+  const w = 66, hh = 27;
+  const pivot = a.pivot;
+  const sibs = (LENS_ARROWS[a.lens] || []).map(k => {
+    const m = arrowMeta(k);
+    const ang = (baseAngle + visAngle[k]*180/Math.PI) * Math.PI/180;
+    return { x2: pivot.x + Math.cos(ang)*m.tipLen, y2: pivot.y + Math.sin(ang)*m.tipLen };
+  });
+  function segRect(x1,y1,x2,y2, rx,ry,rw,rh){
+    if ((x1>=rx&&x1<=rx+rw&&y1>=ry&&y1<=ry+rh) || (x2>=rx&&x2<=rx+rw&&y2>=ry&&y2<=ry+rh)) return true;
+    const edges=[[rx,ry,rx+rw,ry],[rx+rw,ry,rx+rw,ry+rh],[rx+rw,ry+rh,rx,ry+rh],[rx,ry+rh,rx,ry]];
+    function ix(ax,ay,bx,by,cx2,cy2,dx,dy){
+      const d=(bx-ax)*(dy-cy2)-(by-ay)*(dx-cx2); if(!d) return false;
+      const t=((cx2-ax)*(dy-cy2)-(cy2-ay)*(dx-cx2))/d;
+      const u=((cx2-ax)*(by-ay)-(cy2-ay)*(bx-ax))/d;
+      return t>=0&&t<=1&&u>=0&&u<=1;
+    }
+    return edges.some(e=>ix(x1,y1,x2,y2,e[0],e[1],e[2],e[3]));
+  }
+  const others = placedChipBoxes[a.lens] || [];
+  function score(cx,cy){
+    const box = { x:cx-w/2, y:cy-hh/2, w, h:hh };
+    const inFrame = box.x>=2 && box.x+w<=398 && box.y>=2 && box.y+hh<=358;
+    const hitsLine = sibs.some(s => segRect(pivot.x,pivot.y,s.x2,s.y2, box.x, box.y, w, hh));
+    const hitsChip = others.some(o => rectsOverlap(box, o));
+    return { inFrame, clear: !hitsLine && !hitsChip };
+  }
+  const rad = ownDeg * Math.PI/180;
+  const cos = Math.cos(rad), sin = Math.sin(rad);
+  const baseReach = a.tipLen + (LAUNCH[key] ? 40 : 30);
+  const px = -sin, py = cos;
+  let tx = pivot.x + cos*baseReach, ty = pivot.y + sin*baseReach, chosen = false, firstInFrame = null;
+  outer:
+  for (const perp of [0, 22, -22, 40, -40, 58, -58]){
+    for (let step=0; step<=11; step++){
+      const reach = baseReach + step*14;
+      const cx = pivot.x + cos*reach + px*perp;
+      const cy = pivot.y + sin*reach + py*perp;
+      const s = score(cx, cy);
+      if (s.inFrame && !firstInFrame) firstInFrame = { cx, cy };
+      if (s.inFrame && s.clear){ tx = cx; ty = cy; chosen = true; break outer; }
+    }
+  }
+  if (!chosen && firstInFrame){ tx = firstInFrame.cx; ty = firstInFrame.cy; }
+  const wrap = $('vchip_'+key);
+  const rect = wrap.querySelector('rect');
+  const txt  = wrap.querySelector('text');
+  if (LAUNCH[key]){
+    const v = solveFlight(state)[LAUNCH[key].solveKey];
+    txt.textContent = (LAUNCH[key].fmt==='signed' ? f1(v)+'°' : v.toFixed(1)+'°');
+  } else {
+    const v = state[ARROW_STATE_KEY[key]];
+    txt.textContent = (key==='loft' ? v.toFixed(1)+'°' : f1(v)+'°');
+  }
+  const cx = Math.max(w/2 + 2, Math.min(tx, 400 - w/2 - 2));
+  const cy = Math.max(hh/2 + 2, Math.min(ty, 360 - hh/2 - 2));
+  rect.setAttribute('x', cx - w/2); rect.setAttribute('y', cy - 14);
+  rect.setAttribute('width', w);
+  rect.setAttribute('height', hh);
+  txt.setAttribute('x', cx); txt.setAttribute('y', cy + 5);
+  (placedChipBoxes[a.lens] || (placedChipBoxes[a.lens]=[])).push({ x:cx-w/2, y:cy-hh/2, w, h:hh });
+}
+
+// ── render loop (rAF) eases visAngle → targetAngle ──
+let rafPending = false;
+function scheduleRender(){
+  if (rafPending) return;
+  rafPending = true;
+  requestAnimationFrame(tick);
+}
+function tick(){
+  rafPending = false;
+  let stillEasing = false;
+  placedChipBoxes.dir = []; placedChipBoxes.ht = [];
+  for (const key of Object.keys(ARROWS)){
+    if (reduce){
+      visAngle[key] = targetAngle[key];
+    } else {
+      const d = targetAngle[key] - visAngle[key];
+      if (Math.abs(d) > 0.0004){
+        visAngle[key] += d * 0.28;
+        stillEasing = true;
+      } else {
+        visAngle[key] = targetAngle[key];
+      }
+    }
+    applyArrowTransform(key);
+    if (activeKey === key) placeChip(key);
+  }
+  for (const key of Object.keys(LAUNCH)){
+    if (reduce){
+      visAngle[key] = targetAngle[key];
+    } else {
+      const d = targetAngle[key] - visAngle[key];
+      if (Math.abs(d) > 0.0004){
+        visAngle[key] += d * 0.28;
+        stillEasing = true;
+      } else {
+        visAngle[key] = targetAngle[key];
+      }
+    }
+    applyArrowTransform(key);
+    if (activeLaunch === key) placeChip(key);
+  }
+  drawCone();
+  if (stillEasing) scheduleRender();
+}
+
+// ── SUBTLE CURVED GAP FIELD between two arrows (both lenses) ──
+function buildWedge(pathId, pivot, baseDeg, keyA, keyB, r){
+  const angA = (baseDeg + visAngle[keyA]*180/Math.PI) * Math.PI/180;
+  const angB = (baseDeg + visAngle[keyB]*180/Math.PI) * Math.PI/180;
+  const ax = pivot.x + Math.cos(angA)*r, ay = pivot.y + Math.sin(angA)*r;
+  const bx = pivot.x + Math.cos(angB)*r, by = pivot.y + Math.sin(angB)*r;
+  let dDeg = (visAngle[keyB] - visAngle[keyA]) * 180/Math.PI;
+  while (dDeg > 180) dDeg -= 360; while (dDeg <= -180) dDeg += 360;
+  const sweep = dDeg >= 0 ? 1 : 0;
+  $(pathId).setAttribute('d',
+    `M ${pivot.x} ${pivot.y} L ${ax.toFixed(1)} ${ay.toFixed(1)} `
+    + `A ${r} ${r} 0 0 ${sweep} ${bx.toFixed(1)} ${by.toFixed(1)} Z`);
+}
+function drawCone(){
+  buildWedge('dirCone', DIR_PIVOT, -90, 'face', 'path', ARROWS.face.tipLen);
+  buildWedge('htCone',  HT_PIVOT,    0, 'attack', 'loft', ARROWS.loft.tipLen);
+}
+
+/* ════════════════════════════════════════════════════════════════
+   LIVE ENGINE READOUT — compact grid of key solveFlight outputs.
+   Shows "the engine in the background" running live off the sliders.
+   ════════════════════════════════════════════════════════════════ */
+const fmtDeg = v => f1(v)+'°';
+const fmtLoftStr = v => v.toFixed(1)+'°';
+const fmtSpeed = v => Math.round(v)+' mph';
+const mFromYd = yd => Math.round(yd*YD2M);
+
+// key: label, size, and how to read the value + unit from a flight object.
+const READOUT_CELLS = [
+  { key:'launchDir', name:'Launch dir',   value:f=>({v:f1(f.startDirection), u:'°'}) },
+  { key:'launchAng', name:'Launch angle', value:f=>({v:f.launchAngle.toFixed(1), u:'°'}) },
+  { key:'spinLoft',  name:'Spin loft',    est:true, value:f=>({v:f.spinLoft.toFixed(1), u:'°'}) },
+  { key:'backspin',  name:'Backspin',     est:true, value:f=>({v:Math.round(f.backspin), u:'rpm'}) },
+  { key:'ballSpeed', name:'Ball speed',   size:'hero', est:true, value:f=>({v:Math.round(f.ballSpeed), u:'mph'}) },
+  { key:'carry',     name:'Carry',        size:'hero', est:true, value:f=>({v:mFromYd(f.carry), u:'m'}) },
+  { key:'apex',      name:'Apex',         est:true, value:f=>({v:mFromYd(f.apex), u:'m'}) },
+  { key:'shape',     name:'Shape',        value:f=>({v:f.shape}) },
+];
+
+const readoutEls = {};
+function buildReadout(){
+  const rail = $('readout');
+  READOUT_CELLS.forEach(c => {
+    const cell = document.createElement('div');
+    cell.className = 'rcell' + (c.size==='hero' ? ' hero' : '');
+    const nm = document.createElement('div');
+    nm.className = 'rname';
+    nm.textContent = c.name;
+    if (c.est){ const e=document.createElement('span'); e.className='est'; e.textContent='≈'; e.title='Illustrative estimate, not measured data'; nm.appendChild(e); }
+    const val = document.createElement('div');
+    val.className = 'rval';
+    cell.appendChild(nm); cell.appendChild(val);
+    rail.appendChild(cell);
+    readoutEls[c.key] = val;
+  });
+}
+function renderReadout(flight){
+  READOUT_CELLS.forEach(c => {
+    const r = c.value(flight);
+    let html = String(r.v);
+    if (r.u) html += '<span class="ru">'+r.u+'</span>';
+    readoutEls[c.key].innerHTML = html;
+  });
+  // one quiet live-region summary for screen readers
+  const live = $('readoutLive');
+  if (live){
+    live.textContent =
+      `Launch direction ${f1(flight.startDirection)} degrees, launch angle ${flight.launchAngle.toFixed(1)} degrees, `+
+      `ball speed ${Math.round(flight.ballSpeed)} mph, carry ${mFromYd(flight.carry)} metres, shape ${flight.shape}.`;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════
+   CHIP-FADE behaviour (ALWAYS ON)
+   ════════════════════════════════════════════════════════════════ */
+let activeKey = null;
+let activeLaunch = null;
+let holdTimer = null;
+const LAUNCH_FOR_KEY = { face:'launchDir', path:'launchDir', attack:'launchAng', loft:'launchAng' };
+
+function setActive(key){
+  activeKey = key;
+  activeLaunch = LAUNCH_FOR_KEY[key] || null;
+  clearTimeout(holdTimer);
+  Object.keys(ARROWS).forEach(k=>{
+    $(ARROWS[k].group).classList.toggle('dim', k!==key);
+  });
+  Object.keys(ARROWS).forEach(k=>{
+    $('vchip_'+k).classList.toggle('show', k===key);
+  });
+  Object.keys(LAUNCH).forEach(k=>{
+    $('vchip_'+k).classList.toggle('show', k===activeLaunch);
+  });
+  placedChipBoxes.dir = []; placedChipBoxes.ht = [];
+  placeChip(key);
+  if (activeLaunch) placeChip(activeLaunch);
+}
+function releaseActive(){
+  if (activeKey===null) return;
+  if (reduce){ clearChipState(); return; }
+  holdTimer = setTimeout(()=>{ clearChipState(); }, 1500);
+}
+function clearChipState(){
+  activeKey = null;
+  activeLaunch = null;
+  Object.keys(ARROWS).forEach(k=>{
+    $(ARROWS[k].group).classList.remove('dim');
+    $('vchip_'+k).classList.remove('show');
+  });
+  Object.keys(LAUNCH).forEach(k=>{
+    $('vchip_'+k).classList.remove('show');
+  });
+}
+
+/* ════════════════════════════════════════════════════════════════
+   RECOMPUTE — every change → solveFlight → arrows + readout
+   ════════════════════════════════════════════════════════════════ */
+function recomputeAngles(){ Object.keys(ARROWS).forEach(computeTarget); Object.keys(LAUNCH).forEach(computeTarget); }
+function updateLensAria(){
+  $('svgDir').setAttribute('aria-label',
+    `Top-down direction view. Clubface aim ${fmtDeg(state.faceAngle)} and swing path ${fmtDeg(state.clubPath)} relative to the target line (negative is left, positive is right).`);
+  $('svgHt').setAttribute('aria-label',
+    `Side-on height view. Angle of attack ${fmtDeg(state.attackAngle)} and dynamic loft ${fmtLoftStr(state.dynamicLoft)} at impact (negative attack is descending).`);
+}
+function recompute(){
+  recomputeAngles();
+  scheduleRender();
+  updateLensAria();
+  renderReadout(solveFlight(state));
+}
+
+let pending = false;
+function applyLive(){
+  if (pending) return; pending=true;
+  requestAnimationFrame(()=>{ pending=false; recompute(); });
+}
+
+function bind(id, key, fmt, arrowKey){
+  const el=$(id), out=$('v_'+id.slice(2));
+  const sync=()=>{
+    const txt = fmt(+el.value);
+    if (out) out.textContent = txt;
+  };
+  el.addEventListener('input', ()=>{ state[key]=+el.value; sync();
+    if (arrowKey) setActive(arrowKey);
+    applyLive();
+  });
+  if (arrowKey){
+    const rel = ()=> releaseActive();
+    el.addEventListener('change', rel);
+    el.addEventListener('pointerup', rel);
+    el.addEventListener('blur', rel);
+  }
+  return sync;
+}
+
+const syncs = [
+  bind('s_speed', 'clubSpeed',   fmtSpeed,    null),
+  bind('s_face',  'faceAngle',   fmtDeg,      'face'),
+  bind('s_path',  'clubPath',    fmtDeg,      'path'),
+  bind('s_attack','attackAngle', fmtDeg,      'attack'),
+  bind('s_loft',  'dynamicLoft', fmtLoftStr,  'loft'),
+];
+
+function decorateAria(){
+  const map = { s_speed:['Club speed',fmtSpeed], s_face:['Face angle',fmtDeg],
+    s_path:['Club path',fmtDeg], s_attack:['Attack angle',fmtDeg],
+    s_loft:['Dynamic loft',fmtLoftStr] };
+  Object.entries(map).forEach(([id,[nm,fmt]])=>{
+    const el=$(id);
+    const set=()=> el.setAttribute('aria-valuetext', nm+' '+fmt(+el.value));
+    set(); el.addEventListener('input', set);
+  });
+}
+
+/* ════════════════════════════════════════════════════════════════
+   PREMIUM CUSTOM SLIDERS — centre-origin fill + tick + grow + bubble
+   ════════════════════════════════════════════════════════════════ */
+const TRACK_BASE = 'rgba(255,255,255,.14)';
+const PREMIUM = {
+  s_face:   { signed:true,  fmt:fmtDeg },
+  s_path:   { signed:true,  fmt:fmtDeg },
+  s_attack: { signed:true,  fmt:fmtDeg },
+  s_loft:   { signed:false, fmt:fmtLoftStr },
+  s_speed:  { signed:false, fmt:fmtSpeed, below:true },
+};
+function setupPremiumSliders(){
+  Object.entries(PREMIUM).forEach(([id, cfg])=>{
+    const el = $(id); if (!el) return;
+    el.classList.add('premium-range');
+    const wrap = document.createElement('div');
+    wrap.className = 'rwrap' + (cfg.signed ? ' signed' : '') + (cfg.below ? ' bubble-below' : '');
+    el.parentNode.insertBefore(wrap, el);
+    wrap.appendChild(el);
+    const bubble = document.createElement('span');
+    bubble.className = 'rbubble'; bubble.setAttribute('aria-hidden','true');
+    wrap.appendChild(bubble);
+
+    const frac = () => {
+      const min=+el.min, max=+el.max;
+      return (max===min) ? 0 : ( (+el.value - min) / (max - min) );
+    };
+    const paint = () => {
+      const t = Math.max(0, Math.min(1, frac())) * 100;
+      let g;
+      if (cfg.signed){
+        const c = 50;
+        if (t >= c){
+          g = `linear-gradient(90deg, ${TRACK_BASE} 0 ${c}%, var(--rc) ${c}% ${t}%, ${TRACK_BASE} ${t}% 100%)`;
+        } else {
+          g = `linear-gradient(90deg, ${TRACK_BASE} 0 ${t}%, var(--rc) ${t}% ${c}%, ${TRACK_BASE} ${c}% 100%)`;
+        }
+      } else {
+        g = `linear-gradient(90deg, var(--rc) 0 ${t}%, ${TRACK_BASE} ${t}% 100%)`;
+      }
+      el.style.setProperty('--rf', g);
+    };
+    const THUMB = 20;
+    const placeBubble = () => {
+      const w = el.clientWidth || el.getBoundingClientRect().width || 1;
+      const f = Math.max(0, Math.min(1, frac()));
+      const x = THUMB/2 + f * (w - THUMB);
+      bubble.style.left = x + 'px';
+      bubble.textContent = cfg.fmt(+el.value);
+    };
+    const refresh = () => { paint(); placeBubble(); };
+    refresh();
+
+    let bubbleTimer = null;
+    const showBubble = () => { clearTimeout(bubbleTimer); wrap.classList.add('bubble-show','dragging'); };
+    const hideBubbleSoon = () => {
+      wrap.classList.remove('dragging');
+      clearTimeout(bubbleTimer);
+      bubbleTimer = setTimeout(()=> wrap.classList.remove('bubble-show'), 700);
+    };
+    el.addEventListener('input', ()=>{ refresh(); showBubble(); });
+    el.addEventListener('pointerdown', showBubble);
+    el.addEventListener('pointerup', hideBubbleSoon);
+    el.addEventListener('pointercancel', hideBubbleSoon);
+    el.addEventListener('keydown', showBubble);
+    el.addEventListener('keyup', hideBubbleSoon);
+    el.addEventListener('blur', ()=>{ wrap.classList.remove('dragging','bubble-show'); });
+    window.addEventListener('resize', refresh);
+    el._premiumRefresh = refresh;
+  });
+}
+
+/* ════════════════════════════════════════════════════════════════
+   TWO-WAY ARROWS (ALWAYS ON) — pointer-drag an arrow to rotate it.
+   The docked sliders are THE accessible/keyboard control; the arrows
+   are aria-hidden pointer enhancements that round-trip to the sliders.
+   ════════════════════════════════════════════════════════════════ */
+function setupArrowDrag(svgId){
+  const svg = $(svgId);
+  let dragKey = null;
+
+  function svgPoint(evt){
+    const r = svg.getBoundingClientRect();
+    const vb = svg.viewBox.baseVal;
+    const x = (evt.clientX - r.left) / r.width * vb.width;
+    const y = (evt.clientY - r.top) / r.height * vb.height;
+    return { x, y };
+  }
+
+  svg.addEventListener('pointerdown', e=>{
+    const g = e.target.closest('.arrowG');
+    if (!g) return;
+    dragKey = g.dataset.key;
+    svg.setPointerCapture?.(e.pointerId);
+    setActive(dragKey);
+    e.preventDefault();
+    moveTo(e);
+  });
+  svg.addEventListener('pointermove', e=>{
+    if (!dragKey) return;
+    moveTo(e);
+  });
+  function endDrag(){
+    if (!dragKey) return;
+    dragKey=null;
+    releaseActive();
+  }
+  svg.addEventListener('pointerup', endDrag);
+  svg.addEventListener('pointercancel', endDrag);
+
+  function moveTo(e){
+    const a = ARROWS[dragKey];
+    const p = svgPoint(e);
+    const dx = p.x - a.pivot.x, dy = p.y - a.pivot.y;
+    const ptrDeg = Math.atan2(dy, dx) * 180/Math.PI;
+    const baseDeg = a.lens==='dir' ? -90 : 0;
+    let rotDeg = ptrDeg - baseDeg;
+    while (rotDeg>180) rotDeg-=360; while (rotDeg<-180) rotDeg+=360;
+    let valDeg = -rotDeg;
+    const sk = ARROW_STATE_KEY[dragKey];
+    valDeg = valDeg / ARROW_GAIN[dragKey];
+    const el = $('s_'+dragKey);
+    const v = clamp(valDeg, +el.min, +el.max);
+    state[sk] = v;
+    el.value = v;
+    if (el._premiumRefresh) el._premiumRefresh();   // keep the track fill in sync
+    el.dispatchEvent(new Event('input'));
+  }
+}
+setupArrowDrag('svgDir');
+setupArrowDrag('svgHt');
+
+function setArrowAffordance(){
+  Object.keys(ARROWS).forEach(k=> $(ARROWS[k].group).classList.add('grab'));
+}
+
+/* ════════════════════════════════════════════════════════════════
+   INIT
+   ════════════════════════════════════════════════════════════════ */
+(function init(){
+  $('s_speed').value=state.clubSpeed; $('s_face').value=state.faceAngle;
+  $('s_path').value=state.clubPath; $('s_attack').value=state.attackAngle; $('s_loft').value=state.dynamicLoft;
+  syncs.forEach(s=>s());
+  decorateAria();
+  setupPremiumSliders();
+  buildReadout();
+  recomputeAngles();
+  Object.keys(ARROWS).forEach(k=>{ visAngle[k]=targetAngle[k]; applyArrowTransform(k); });
+  Object.keys(LAUNCH).forEach(k=>{ visAngle[k]=targetAngle[k]; applyArrowTransform(k); placeChip(k); });
+  drawCone();
+  updateLensAria();
+  renderReadout(solveFlight(state));
+  setArrowAffordance();
+})();
+
+// tiny dev hook for headless verification
+window.__impact = { state, solve:()=>solveFlight(state), visAngle, targetAngle, get activeKey(){return activeKey;} };
+</script>
+</body>
+</html>
