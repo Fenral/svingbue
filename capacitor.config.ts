@@ -15,7 +15,10 @@ import type { CapacitorConfig } from '@capacitor/cli';
 // Store builds must be fully self-contained (no dependency on a dev machine
 // being reachable), so the app always loads the bundled `www/` contents.
 const config: CapacitorConfig = {
-  appId: 'no.svingbue.app',
+  // Takes over the existing StrikeArc app record (ASC Apple ID 6768449250,
+  // team PL9G26C26C) — the native svingbue build supersedes the React/Vite
+  // strikearc-3.0 build on TestFlight. Same bundle id as strikearc-3.0.
+  appId: 'no.strikearc.app',
   appName: 'StrikeArc',
   webDir: 'www',
   server: {

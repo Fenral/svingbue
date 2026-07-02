@@ -1,28 +1,43 @@
+# Codemagic iOS workflow for StrikeArc — NATIVE (svingbue) build.
+#
+# Wraps the static web app (index/geometry/impact + geo3d/vendor/assets)
+# in a Capacitor 7 iOS shell, landscape-locked, and ships it to TestFlight
+# on the EXISTING StrikeArc app record (ASC Apple ID 6768449250, bundle
+# no.strikearc.app, team PL9G26C26C). This build supersedes the React/Vite
+# strikearc-3.0 build on TestFlight — chosen by Sivert 2026-07-03.
+#
+# Signing/publish machinery mirrors the proven strikearc-3.0 pipeline
+# (same app record, same ryddy-asc-key), adapted for the static-web +
+# landscape + CocoaPods (Capacitor 7 → .xcworkspace) shape of svingbue.
+#
+# Setup status:
+#   1. ASC API key integration `ryddy-asc-key` (Key JQVPW4D944) — ✅ reused.
+#   2. GitHub repo Fenral/svingbue connected as iOS app — ✅ done.
+#   3. App record no.strikearc.app (Apple ID 6768449250) — ✅ already exists.
+#   → No manual Apple steps remain. Push to main (or run manually) to build.
+
 definitions:
-  bundle_id: &bundle_id no.svingbue.app
+  bundle_id: &bundle_id no.strikearc.app
   team_id: &team_id PL9G26C26C
 
 workflows:
   ios-testflight:
-    name: StrikeArc — iOS TestFlight
+    name: StrikeArc — iOS TestFlight (native)
     instance_type: mac_mini_m2
     max_build_duration: 60
 
     integrations:
-      # USER MUST CONFIGURE IN CODEMAGIC:
-      # Codemagic > Team settings > Integrations > App Store Connect ->
-      # add an API key there and name the integration exactly
-      # `app_store_connect` (the name referenced below). Codemagic then
-      # injects the key/issuer/key-id for both code signing and the
-      # TestFlight publish step — no secret values live in this file.
-      app_store_connect: app_store_connect
+      # Reuses the existing team-level App Store Connect API key
+      # `ryddy-asc-key` (Key ID JQVPW4D944) — same key that already signs +
+      # publishes strikearc, strikearc-3.0, wool-app and ryddy for team
+      # PL9G26C26C. Codemagic injects key/issuer/key-id for both signing
+      # and the TestFlight publish step; no secrets live in this file.
+      app_store_connect: ryddy-asc-key
 
     environment:
-      groups:
-        - app_store_connect   # env group name must match the integration above
       vars:
         BUNDLE_ID: *bundle_id
-        APP_STORE_APPLE_ID: $APP_STORE_APPLE_ID # optional: numeric ASC app id, set in Codemagic env vars if known
+        APP_STORE_APPLE_ID: 6768449250   # existing StrikeArc ASC app id
         XCODE_WORKSPACE: "ios/App/App.xcworkspace"
         XCODE_SCHEME: "App"
       node: 20
@@ -35,6 +50,7 @@ workflows:
       branch_patterns:
         - pattern: main
           include: true
+          source: true
       cancel_previous_builds: true
 
     scripts:
@@ -50,37 +66,115 @@ workflows:
       # needs Xcode/CocoaPods), so every CI run creates it fresh here.
       - name: Add the iOS platform
         script: |
-          npx cap add ios
-
-      - name: Patch Info.plist for landscape-only + display name
-        script: |
-          node scripts/ios-landscape.mjs
-
-      - name: Generate app icons/splash from resources/
-        script: |
-          npx @capacitor/assets generate --ios
+          if [ ! -d "ios" ]; then
+            npx cap add ios
+          fi
 
       - name: Sync web assets + plugins into the iOS project
         script: |
           npx cap sync ios
 
+      - name: Patch Info.plist for landscape-only + display name
+        script: |
+          # Must run AFTER cap sync (cap add/sync own Info.plist). Idempotent.
+          node scripts/ios-landscape.mjs
+
+      - name: Inject Info.plist export-compliance answer
+        script: |
+          # Auto-answer Apple's "Missing Compliance" question. StrikeArc only
+          # uses HTTPS via system APIs + Web Audio, which are exempt per
+          # 740.17(b)(1) of the US Export Administration Regulations. ios/ is
+          # gitignore'd + regenerated each run, so the injection lives here.
+          PLIST="ios/App/App/Info.plist"
+          /usr/libexec/PlistBuddy -c "Delete :ITSAppUsesNonExemptEncryption" "$PLIST" 2>/dev/null || true
+          /usr/libexec/PlistBuddy -c "Add :ITSAppUsesNonExemptEncryption bool false" "$PLIST"
+          echo "✓ ITSAppUsesNonExemptEncryption=false injected."
+
+      - name: Generate app icons/splash from resources/
+        script: |
+          # resources/icon.png (1024²) + resources/splash.png (2732²) are the
+          # sources — capacitor-assets fans them out to every iOS size after
+          # the platform exists.
+          npx capacitor-assets generate --ios --iconBackgroundColor "#0A0E12"
+
       - name: CocoaPods install
         script: |
+          # Capacitor 7 iOS uses CocoaPods; the build targets the WORKSPACE.
+          # cap sync already runs pod install, but do it explicitly for safety.
           cd ios/App && pod install
 
-      - name: Set build number from Codemagic build counter
+      - name: Set marketing version from package.json
         script: |
           cd ios/App
-          agvtool new-version -all "$BUILD_NUMBER"
+          VERSION=$(node -p "require('../../package.json').version")
+          echo "Setting marketing version to $VERSION"
+          agvtool new-marketing-version "$VERSION"
 
-      - name: Set up code signing (automatic, via App Store Connect API key)
+      - name: Set build number (one above latest TestFlight build)
         script: |
-          app-store-connect fetch-signing-files "$BUNDLE_ID" \
-            --type IOS_APP_STORE \
-            --create
+          # This Codemagic app's build counter is independent of strikearc-3.0's,
+          # so a fixed offset can't guarantee we beat the existing highest
+          # CFBundleVersion on no.strikearc.app. Query ASC for the latest and
+          # add 1 — bulletproof regardless of which pipeline built last.
+          set +e
+          LATEST=$(app-store-connect get-latest-testflight-build-number "$APP_STORE_APPLE_ID" 2>/dev/null)
+          set -e
+          if ! printf '%s' "$LATEST" | grep -Eq '^[0-9]+$'; then
+            echo "Could not read latest build number (got '$LATEST') — falling back to 0."
+            LATEST=0
+          fi
+          NEXT=$((LATEST + 1))
+          echo "Latest TestFlight build: $LATEST → setting CFBundleVersion=$NEXT"
+          cd ios/App
+          agvtool new-version -all "$NEXT"
+
+      - name: Initialize keychain
+        script: |
           keychain initialize
-          app-store-connect list-builds > /dev/null 2>&1 || true
+
+      - name: Generate certificate private key
+        script: |
+          set -ex
+          openssl genrsa -out /tmp/cert_private_key.pem 2048
+
+      - name: Revoke old Distribution certs (cert-quota maintenance)
+        script: |
+          set +e
+          # Apple's quota is 2 active Distribution certs per team. Codemagic
+          # generates a NEW private key each build → existing certs have no
+          # matching local key → unusable → quota fills up. Auto-revoke so
+          # `fetch-signing-files --create` always has headroom. Safe: App
+          # Store IPAs stay valid post-revoke (cert only signs new IPAs).
+          for CERT_TYPE in DISTRIBUTION IOS_DISTRIBUTION; do
+            echo "==== Listing $CERT_TYPE certs ===="
+            JSON=$(app-store-connect certificates list --type "$CERT_TYPE" --json 2>/dev/null || echo "[]")
+            CERT_IDS=$(echo "$JSON" | jq -r '.[]? | .id // empty' 2>/dev/null || true)
+            if [ -z "$CERT_IDS" ]; then
+              echo "No $CERT_TYPE certs to revoke."
+              continue
+            fi
+            for CERT_ID in $CERT_IDS; do
+              echo "Revoking $CERT_TYPE cert: $CERT_ID"
+              app-store-connect certificates delete "$CERT_ID" --ignore-not-found || true
+            done
+          done
+          set -e
+
+      - name: Fetch signing files (create cert + profile)
+        script: |
+          set -ex
+          app-store-connect fetch-signing-files "$BUNDLE_ID" \
+            --certificate-key=@file:/tmp/cert_private_key.pem \
+            --type IOS_APP_STORE \
+            --create \
+            --verbose
+
+      - name: Add certificates to keychain
+        script: |
           keychain add-certificates
+
+      - name: Use profiles in Xcode project
+        script: |
           xcode-project use-profiles
 
       - name: Build .ipa
@@ -92,51 +186,13 @@ workflows:
     artifacts:
       - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
-      - ios/App/build/**/*.dSYM.zip
+      - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.dSYM.zip
 
     publishing:
       app_store_connect:
         auth: integration
-        api_key: app_store_connect
         submit_to_testflight: true
-        # USER MAY CONFIGURE: add a beta group name here once one exists in
-        # App Store Connect, e.g.:
+        # Add a beta group name here once one exists in App Store Connect:
         # beta_groups:
         #   - "Internal Testers"
         expire_build_submitted_for_review: false
-
-# =============================================================================
-# USER MUST CONFIGURE IN CODEMAGIC (one-time setup, cannot be done from code):
-#
-# 1. App Store Connect API key integration
-#    - Codemagic > Team settings (or app settings) > Integrations >
-#      "App Store Connect" > add a new API key (generated in App Store
-#      Connect > Users and Access > Integrations > App Store Connect API).
-#    - Name this integration exactly `app_store_connect` — this file
-#      references that name in both `integrations.app_store_connect` and
-#      `publishing.app_store_connect.api_key`. Codemagic supplies the actual
-#      key/issuer ID/key ID at build time; nothing secret is stored here.
-#
-# 2. Connect the GitHub repo
-#    - Codemagic > Add application > connect the `Fenral/svingbue` GitHub
-#      repository so this codemagic.yaml is picked up.
-#
-# 3. Create the App Store Connect app record
-#    - App Store Connect > My Apps > "+" > New App, bundle ID `no.svingbue.app`
-#      (must already exist as an Identifier under the PL9G26C26C team in
-#      the Apple Developer portal — create it there first if it doesn't
-#      exist yet), platform iOS, name "StrikeArc".
-#    - Automatic signing above (`fetch-signing-files ... --create`) can
-#      create the App Store distribution certificate + provisioning profile
-#      for team PL9G26C26C on first run, but the App ID/app record itself
-#      must exist before the first TestFlight submission succeeds.
-#
-# 4. Trigger the workflow
-#    - Once 1–3 are done, push to `main` (or run `ios-testflight` manually
-#      from the Codemagic dashboard) to produce the first build and submit
-#      it to TestFlight.
-#
-# Everything else (npm deps, www/ assembly, `cap add ios`, plist patch,
-# icon generation, pod install, build number, signing, archive/build,
-# TestFlight publish) is fully automated by the steps above.
-# =============================================================================

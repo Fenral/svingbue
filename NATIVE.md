@@ -10,9 +10,12 @@ This folder is **both**:
    to TestFlight entirely by Codemagic (cloud Mac) — this machine is
    Windows, so nothing native-Xcode-shaped is ever generated or run here.
 
-- **App ID:** `no.svingbue.app`
+- **App ID:** `no.strikearc.app` (takes over the existing StrikeArc app
+  record, ASC Apple ID `6768449250`; supersedes the React/Vite
+  `strikearc-3.0` build on TestFlight — decided 2026-07-03)
 - **App name:** StrikeArc
 - **Apple Team ID:** `PL9G26C26C`
+- **ASC API key:** reuses the existing `ryddy-asc-key` (Key ID `JQVPW4D944`)
 
 ## How the two uses coexist (`www/` approach)
 
@@ -60,30 +63,33 @@ CI run regenerates it from scratch, then:
 | `codemagic.yaml` | `ios-testflight` workflow: npm ci → copy-web → cap add ios → plist patch → assets generate → cap sync → pod install → build number → sign → build ipa → publish to TestFlight |
 | `.gitignore` | Ignores `node_modules/`, `www/`, generated `ios/` artifacts, build outputs |
 
-## What you (the user) still need to do manually
+## Setup status (2026-07-03) — nothing manual left
 
-Nothing in this scaffold can create Codemagic/Apple Developer account
-resources from a local machine — these are one-time setup steps in the
-Codemagic dashboard and Apple Developer / App Store Connect:
+Because this build **takes over the existing `no.strikearc.app` record**,
+every account-side resource already exists — there are no manual Apple or
+Codemagic setup steps remaining:
 
-1. **Create an App Store Connect API key integration named `app_store_connect`**
-   in Codemagic (Team settings → Integrations → App Store Connect → add
-   key, generated from App Store Connect → Users and Access → Integrations
-   → App Store Connect API). `codemagic.yaml` references this integration
-   by name only — no secret values live in this repo.
-2. **Connect the `Fenral/svingbue` GitHub repo to Codemagic** (Add
-   application → select the repo) so `codemagic.yaml` is picked up.
-3. **Create the App ID `no.svingbue.app`** under Apple Developer Team
-   `PL9G26C26C` (Certificates, Identifiers & Profiles → Identifiers), if it
-   doesn't already exist — automatic signing can create the certificate/
-   profile, but not the App ID itself.
-4. **Create the App Store Connect app record** for `no.svingbue.app` (My
-   Apps → "+" → New App, platform iOS, name "StrikeArc") — the TestFlight
-   publish step needs this to exist before the first submission succeeds.
-5. **Trigger the `ios-testflight` workflow** — push to `main`, or start it
-   manually from the Codemagic dashboard — once 1–4 are done.
+1. ✅ **ASC API key integration** — reuses the existing team-level
+   `ryddy-asc-key` (Key ID `JQVPW4D944`), already connected under Codemagic
+   → Team settings → Integrations → Developer Portal. `codemagic.yaml`
+   references it by name only; no secrets live in this repo.
+2. ✅ **GitHub repo connected** — `Fenral/svingbue` added as an iOS app in
+   Codemagic.
+3. ✅ **App ID `no.strikearc.app`** — already registered under team
+   `PL9G26C26C` (created for strikearc-3.0).
+4. ✅ **App Store Connect app record** — already exists (Apple ID
+   `6768449250`, name "StrikeArc"). Automatic signing
+   (`fetch-signing-files … --create`) refreshes the cert/profile each run.
+5. **Trigger the `ios-testflight` workflow** — push to `main` (auto-trigger)
+   or start it manually from the Codemagic dashboard.
 
-Everything else (dependency install, `www/` assembly, iOS project
-generation, orientation/display-name patch, icon/splash generation, pod
-install, build numbering, code signing, archive, and TestFlight upload) is
-fully automated by `codemagic.yaml`.
+The build number is set to **one above the latest TestFlight build** on the
+record (queried live via `get-latest-testflight-build-number`), so the
+native build always registers as the newest one for testers regardless of
+strikearc-3.0's separate build counter.
+
+Everything (dependency install, `www/` assembly, iOS project generation,
+orientation/display-name patch, export-compliance answer, icon/splash
+generation, pod install, build numbering, cert-quota maintenance, code
+signing, archive, and TestFlight upload) is fully automated by
+`codemagic.yaml`.
