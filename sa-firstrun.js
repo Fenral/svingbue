@@ -311,7 +311,11 @@
     }
 
     function onKey(e) {
-      if (e.key === "Escape") { e.preventDefault(); finish(); return; }
+      // stopPropagation: this coach listener is document-CAPTURE; impact.html's
+      // onFlightKey is document-BUBBLE on the same node, so stopping propagation
+      // here prevents Escape from ALSO closing the flight overlay behind the
+      // ghost coach bubble (ghost-lab step 1).
+      if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); finish(); return; }
       if (e.key === "ArrowRight") { e.preventDefault(); idx < steps.length - 1 ? go(idx + 1) : finish(); return; }
       if (e.key === "ArrowLeft") { e.preventDefault(); go(idx - 1); return; }
       trapFocus(bubble, e);

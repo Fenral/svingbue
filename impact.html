@@ -499,6 +499,24 @@
   .ghostClear::after{content:"";position:absolute;inset:-5px;border-radius:999px} /* ≥44px hit target */
   .ghostClear:hover{background:rgba(255,255,255,.12);color:var(--ink)}
   .ghostClear:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  /* ── GHOST LAB: legend column (pin + per-ghost chips), below the top pill row ── */
+  .fLegend{position:absolute;top:calc(max(10px,env(safe-area-inset-top)) + 46px);right:max(10px,env(safe-area-inset-right));
+    z-index:6;display:flex;flex-direction:column;gap:8px;align-items:flex-end}
+  .fChip{position:relative;height:36px;padding:0 12px;border-radius:999px;
+    border:1px solid rgba(159,178,200,.5);background:rgba(10,18,30,.7);color:var(--ghost);
+    font-size:12px;font-weight:700;line-height:1;cursor:pointer;font-family:inherit;letter-spacing:.03em;
+    display:inline-flex;align-items:center;gap:7px;font-variant-numeric:tabular-nums}
+  .fChip::after{content:"";position:absolute;left:0;right:0;top:-4px;bottom:-4px;border-radius:999px} /* 44px hit target; 8px gap keeps neighbours clear */
+  .fChip:hover{background:rgba(159,178,200,.14)}
+  .fChip:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .fChip .dashSwatch{flex:0 0 auto;display:block}
+  /* hidden-ghost state is NOT colour-only: strikethrough + dimmed swatch + aria-pressed */
+  .fChip-ghost[aria-pressed="false"]{color:var(--muted);border-color:var(--line)}
+  .fChip-ghost[aria-pressed="false"] .cl,.fChip-ghost[aria-pressed="false"] .cd{text-decoration:line-through}
+  .fChip-ghost[aria-pressed="false"] .dashSwatch{opacity:.35}
+  /* pinned state is NOT colour-only: label text changes Pin → <carry>m */
+  .fChip-pin[aria-pressed="true"]{color:#E8F0FB;border-color:rgba(232,240,251,.6)}
+  .fChip-pin .pinGlyph{font-size:14px;line-height:1}
   /* ── STAGE 3: "what changed" micro-label under the left hero stack ── */
   .fDelta{position:absolute;left:max(3.4%,env(safe-area-inset-left));top:calc(15% + clamp(84px,19vh,118px));z-index:5;pointer-events:none;
     display:flex;flex-direction:column;gap:3px;max-width:46%;
@@ -905,6 +923,11 @@
       <!-- STAGE 3: ghost toggle (aria-pressed, default ON) + clear-history control -->
       <button class="ghostPill" id="fGhostPill" type="button" aria-pressed="true"><span class="gdot" aria-hidden="true"></span> Ghosts</button>
       <button class="ghostClear" id="fGhostClear" type="button" aria-label="Clear ghosts">×</button>
+      <!-- GHOST LAB: pin-baseline + per-ghost legend chips (built by buildGhostLegend) -->
+      <div class="fLegend" id="fGhostLegend" role="group" aria-label="Shot comparison">
+        <button class="fChip fChip-pin" id="fPinBtn" type="button" aria-pressed="false"
+          aria-label="Pin current shot as baseline"><span class="pinGlyph" aria-hidden="true">⊙</span><span id="fPinTxt">Pin</span></button>
+      </div>
       <!-- LEFT HERO STACK (Layout B): big TOTAL count-up + offline only.
            Visual hero is aria-hidden (updates every frame); #fCarryLive is the ONLY live region. -->
       <div class="flightCarry" aria-hidden="true">
@@ -2864,10 +2887,13 @@ const fDeltaEl=document.getElementById('fDelta');
 //   (same params) NEVER capture — they bump replayCount for stage-4 haptics.
 // ════════════════════════════════════════════════════════════════
 const GHOST_MAX = 3;
-const GHOST_OPS = [.35, .22, .14];        // newest → oldest ghost opacity
-const ghosts = [];                        // {id, ts, params, flight}
+const GHOST_OPS  = [.50, .34, .22];       // newest → oldest ghost opacity (raised: .14 was invisible on the dark range)
+const GHOST_DASH = ['none', '7 5', '2.5 4.5'];   // per-slot stroke-dasharray: A solid, B dashed, C dotted
+const GHOST_LETTER = ['A', 'B', 'C'];
+const ghosts = [];                        // {id, ts, params, flight, hidden?}
 let ghostId = 0;
 let ghostsVisible = true;                 // "Ghosts" pill state (default ON)
+let fBaseline = null;                     // pinned baseline {params, flight} — lives OUTSIDE the FIFO, never evicted
 let lastFlown = null;                     // {params, flight} of the last flown shot
 let replayCount = 0;                      // replays of the CURRENT param-set
 
@@ -2885,8 +2911,10 @@ function noteFlight(){
     replayCount++;                        // replay: never captures a ghost
     return false;
   }
-  // params changed → the PREVIOUS shot becomes a ghost (dedupe vs ghosts[0])
-  if (lastFlown && !(ghosts[0] && sameParams(ghosts[0].params, lastFlown.params))){
+  // params changed → the PREVIOUS shot becomes a ghost (dedupe vs ghosts[0] AND
+  // vs the pinned baseline, which is stored separately and must not double-capture)
+  if (lastFlown && !(ghosts[0] && sameParams(ghosts[0].params, lastFlown.params))
+               && !(fBaseline && sameParams(fBaseline.params, lastFlown.params))){
     ghosts.unshift({ id: ++ghostId, ts: Date.now(), params: lastFlown.params, flight: lastFlown.flight });
     if (ghosts.length > GHOST_MAX) ghosts.pop();   // cap 3 — drop oldest
   }
@@ -2923,12 +2951,13 @@ const PARAM_META = {
   clubSpeed:   { label:'Speed',  color:'var(--accent)',   fmt:v=>Math.round(v)+' mph' },
 };
 function deltaContent(){
-  if (!ghosts.length || !lastFlown) return null;
-  const g = ghosts[0];
+  // Compare against the PINNED baseline when one is set, else the newest ghost.
+  const g = fBaseline || ghosts[0];
+  if (!g || !lastFlown) return null;
   const changed = PARAM_KEYS.filter(k => lastFlown.params[k] !== g.params[k]);
   let cause;
   if (!changed.length){
-    cause = 'Same delivery as previous';
+    cause = fBaseline ? 'Same delivery as pinned' : 'Same delivery as previous';
   } else if (changed.length <= 2){
     cause = changed.map(k => {
       const m = PARAM_META[k];
@@ -2936,8 +2965,10 @@ function deltaContent(){
            + `${m.label} ${m.fmt(g.params[k])} → ${m.fmt(lastFlown.params[k])}`;
     }).join('<span class="sep">·</span>');
   } else {
-    cause = 'Δ vs previous';
+    cause = fBaseline ? 'Δ vs pin' : 'Δ vs previous';
   }
+  // when comparing to the pin, prefix a ⊙ glyph + SR-only clause so the reference is unambiguous
+  if (fBaseline) cause = '<span aria-hidden="true">⊙</span><span class="sr-only">vs pinned baseline </span>' + cause;
   const cf = lastFlown.flight, gf = g.flight;
   const dTot   = Math.round(cf.total*YD2M) - Math.round(gf.total*YD2M);
   const dCurve = Math.round(Math.abs(cf.curve*YD2M)) - Math.round(Math.abs(gf.curve*YD2M));
@@ -2974,38 +3005,133 @@ function buildGhostLayer(){
   const host = FX.ghosts;
   host.innerHTML = '';
   const ns = 'http://www.w3.org/2000/svg';
+
+  // small shared builder for a landing badge (dark plate + text) on a group
+  const addBadge = (grp, land, lbl, fill) => {
+    const w = lbl.length*5.6 + 10;
+    const rect = document.createElementNS(ns,'rect');
+    rect.setAttribute('x',(land.x+6).toFixed(1)); rect.setAttribute('y',(land.y+4).toFixed(1));
+    rect.setAttribute('width', w.toFixed(0)); rect.setAttribute('height','14'); rect.setAttribute('rx','4');
+    rect.setAttribute('fill','rgba(8,16,20,.78)'); rect.setAttribute('stroke', fill==='#E8F0FB' ? 'rgba(232,240,251,.35)' : 'rgba(159,178,200,.30)');
+    grp.appendChild(rect);
+    const t = document.createElementNS(ns,'text');
+    t.setAttribute('x',(land.x+6+w/2).toFixed(1)); t.setAttribute('y',(land.y+14.5).toFixed(1));
+    t.setAttribute('text-anchor','middle'); t.setAttribute('font-size','9');
+    t.setAttribute('font-weight','700'); t.setAttribute('font-family','inherit');
+    t.setAttribute('fill', fill);
+    t.textContent = lbl;
+    grp.appendChild(t);
+  };
+
+  // BASELINE first (bottom of the stack) — white dashed, ⊙ badge, never evicted.
+  if (fBaseline){
+    const bs = shotFromFlight(fBaseline.flight);
+    const grp = document.createElementNS(ns,'g');
+    grp.setAttribute('class','ghostShot');
+    grp.setAttribute('data-baseline','1');
+    grp.setAttribute('opacity','.55'); grp.dataset.op = .55;
+    const p = document.createElementNS(ns,'path');
+    p.setAttribute('d', buildAirPath(bs));
+    p.setAttribute('fill','none'); p.setAttribute('stroke','#E8F0FB');
+    p.setAttribute('stroke-width','2.2'); p.setAttribute('stroke-linecap','round');
+    p.setAttribute('stroke-dasharray','10 6');
+    grp.appendChild(p);
+    const land = project(bs.carryM, 0, lateralAt(bs.carryM, bs));
+    const dot = document.createElementNS(ns,'circle');
+    dot.setAttribute('cx', land.x.toFixed(1)); dot.setAttribute('cy', land.y.toFixed(1));
+    dot.setAttribute('r','2.6'); dot.setAttribute('fill','#E8F0FB');
+    grp.appendChild(dot);
+    addBadge(grp, land, '⊙ ' + Math.round(bs.carryM) + ' m', '#E8F0FB');
+    host.appendChild(grp);
+  }
+
   for (let i = ghosts.length - 1; i >= 0; i--){          // oldest first → newest on top
     const gs = shotFromFlight(ghosts[i].flight);
     const grp = document.createElementNS(ns,'g');
     grp.setAttribute('class','ghostShot');
     grp.setAttribute('opacity', GHOST_OPS[i]);
     grp.dataset.op = GHOST_OPS[i];
+    grp.dataset.gid = ghosts[i].id;
+    if (ghosts[i].hidden) grp.style.display = 'none';
     const p = document.createElementNS(ns,'path');
     p.setAttribute('d', buildAirPath(gs));
     p.setAttribute('fill','none'); p.setAttribute('stroke','#9FB2C8');
     p.setAttribute('stroke-width','2'); p.setAttribute('stroke-linecap','round');
+    if (GHOST_DASH[i] !== 'none') p.setAttribute('stroke-dasharray', GHOST_DASH[i]);
     grp.appendChild(p);
     const land = project(gs.carryM, 0, lateralAt(gs.carryM, gs));
     const dot = document.createElementNS(ns,'circle');
     dot.setAttribute('cx', land.x.toFixed(1)); dot.setAttribute('cy', land.y.toFixed(1));
     dot.setAttribute('r','2.6'); dot.setAttribute('fill','#9FB2C8');
     grp.appendChild(dot);
-    const lbl = Math.round(gs.carryM) + ' m';
-    const w = lbl.length*5.6 + 10;
-    const rect = document.createElementNS(ns,'rect');
-    rect.setAttribute('x',(land.x+6).toFixed(1)); rect.setAttribute('y',(land.y+4).toFixed(1));
-    rect.setAttribute('width', w.toFixed(0)); rect.setAttribute('height','14'); rect.setAttribute('rx','4');
-    rect.setAttribute('fill','rgba(8,16,20,.78)'); rect.setAttribute('stroke','rgba(159,178,200,.30)');
-    grp.appendChild(rect);
-    const t = document.createElementNS(ns,'text');
-    t.setAttribute('x',(land.x+6+w/2).toFixed(1)); t.setAttribute('y',(land.y+14.5).toFixed(1));
-    t.setAttribute('text-anchor','middle'); t.setAttribute('font-size','9');
-    t.setAttribute('font-weight','700'); t.setAttribute('font-family','inherit');
-    t.setAttribute('fill','#9FB2C8');
-    t.textContent = lbl;
-    grp.appendChild(t);
+    // identity badge: slot letter + the FIRST changed param vs the live shot + carry
+    const changed = lastFlown ? PARAM_KEYS.filter(k => ghosts[i].params[k] !== lastFlown.params[k]) : [];
+    const pTxt = changed.length ? PARAM_META[changed[0]].label + ' ' + PARAM_META[changed[0]].fmt(ghosts[i].params[changed[0]]) : '';
+    const lbl = GHOST_LETTER[i] + (pTxt ? ' · ' + pTxt : '') + ' · ' + Math.round(gs.carryM) + ' m';
+    addBadge(grp, land, lbl, '#9FB2C8');
     host.appendChild(grp);
   }
+  buildGhostLegend();
+}
+
+// ── GHOST LAB: legend column — pin button state + one chip per ghost.
+//    Chips rebuilt on every fBuild; focus is restored by data-gid so a
+//    keyboard user mid-legend never drops to <body>.
+function setPinUI(){
+  const btn = $('fPinBtn'); if (!btn) return;
+  const on = !!fBaseline;
+  btn.setAttribute('aria-pressed', String(on));
+  const carry = on ? Math.round(shotFromFlight(fBaseline.flight).carryM) : null;
+  $('fPinTxt').textContent = on ? carry + 'm' : 'Pin';
+  // stable action-phrase name; aria-pressed alone carries the toggle state
+  // (APG: don't flip BOTH name-verb and pressed — that double-signals SR users)
+  btn.setAttribute('aria-label', on ? ('Baseline pinned, ' + carry + ' metres. Toggle baseline') : 'Pin current shot as baseline');
+}
+function buildGhostLegend(){
+  const host = $('fGhostLegend'); if (!host) return;
+  const ae = document.activeElement;
+  const focusGid = (ae && ae.classList && ae.classList.contains('fChip-ghost')) ? ae.dataset.gid : null;
+  const hadGhostFocus = !!focusGid;
+  host.querySelectorAll('.fChip-ghost').forEach(n => n.remove());
+  ghosts.forEach((g, i) => {
+    const gs = shotFromFlight(g.flight);
+    const changed = lastFlown ? PARAM_KEYS.filter(k => g.params[k] !== lastFlown.params[k]) : [];
+    const pTxt = changed.length ? PARAM_META[changed[0]].label + ' ' + PARAM_META[changed[0]].fmt(g.params[changed[0]]) : '';
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'fChip fChip-ghost'; b.dataset.gid = g.id;
+    b.setAttribute('aria-pressed', String(!g.hidden));
+    // the changed-param is ONLY in the scene badge (decorative svg), so the
+    // chip name is the sole accessible carrier of WHICH param differs (WCAG 1.1.1)
+    b.setAttribute('aria-label', 'Ghost ' + GHOST_LETTER[i] + (pTxt ? ', ' + pTxt : '') + ', ' + Math.round(gs.carryM) + ' metres. Show or hide');
+    const dash = GHOST_DASH[i] === 'none' ? '' : ' stroke-dasharray="' + GHOST_DASH[i] + '"';
+    b.innerHTML = '<svg class="dashSwatch" width="18" height="6" aria-hidden="true">'
+      + '<line x1="1" y1="3" x2="17" y2="3" stroke="#9FB2C8" stroke-width="2" stroke-linecap="round"' + dash + '/></svg>'
+      + '<span class="cl">' + GHOST_LETTER[i] + '</span><span class="cd">' + Math.round(gs.carryM) + 'm</span>';
+    host.appendChild(b);
+  });
+  setPinUI();
+  // restore keyboard focus after the rebuild: the same ghost if it survives,
+  // else the nearest remaining ghost chip, else the pin button — never <body>.
+  if (hadGhostFocus){
+    const again = host.querySelector('[data-gid="' + focusGid + '"]')
+               || host.querySelector('.fChip-ghost')
+               || $('fPinBtn');
+    if (again) again.focus({ preventScroll:true });
+  }
+}
+
+// ── GHOST LAB: one-time coach mark the first time a ghost exists (key
+//    'sa_coach_flight_ghost'). Fired from revealData so it never covers the
+//    flight itself; guarded so resize/speed re-renders can't stack bubbles.
+let ghostCoach = null;
+function maybeGhostCoach(){
+  if (ghostCoach || !ghosts.length) return;
+  const SA = window.SA;
+  if (!SA || typeof SA.coachMarks !== 'function' || SA.seen('sa_coach_flight_ghost')) return;
+  ghostCoach = SA.coachMarks(
+    [{ selector: '#fGhostLegend', title: 'Compare shots',
+       body: 'Grey ghosts are your previous shots. Pin one as your baseline; tap A, B, C to show or hide each.' }],
+    { storageKey: 'sa_coach_flight_ghost', onDone(){ ghostCoach = null; } });
 }
 
 // CHANGE 1 — reveal the bottom frame (chips) only after the ball lands
@@ -3026,6 +3152,7 @@ function revealData(immediate){ fBottomEl.classList.remove('is-hidden'); fBottom
   // STAGE 3 — the "what changed" micro-label follows +150ms after the reveal
   // (immediate + static under reduced-motion / static renders)
   showDeltaLabel(!!immediate);
+  maybeGhostCoach();
 }
 
 function drawRails(){
@@ -3096,9 +3223,13 @@ function buildLateralRefs(){
 
 function fBuild(){
   resizeScene();        // FULL-BLEED: match viewBox aspect to the card before projecting
-  // STAGE 3 — shared camera: fit covers the live shot AND every ghost, so all
-  // paths are comparable in ONE camera (ghosts always fully in frame).
-  computeModel(ghosts.map(g => shotFromFlight(g.flight)));
+  // STAGE 3 — shared camera: fit covers the live shot AND every ghost AND the
+  // pinned baseline, so all paths are comparable in ONE camera (never fit only
+  // VISIBLE paths — a hidden ghost must still hold the frame so toggling it
+  // doesn't make every other path jump).
+  const extraShots = ghosts.map(g => shotFromFlight(g.flight));
+  if (fBaseline) extraShots.push(shotFromFlight(fBaseline.flight));
+  computeModel(extraShots);
   // re-centre the tee marker to TEE_X (dynamic on resize) and the raised baseline
   fTeeShadow.setAttribute('cx', TEE_X); fTeeShadow.setAttribute('cy', yBottom);
   fTeeRing.setAttribute('cx', TEE_X);   fTeeRing.setAttribute('cy', yBottom);
@@ -3246,7 +3377,7 @@ const AIR  = 1.55*2.6;      // air phase duration (≈ existing airDur)
 const ROLL = 0.7*2.6;       // roll phase duration (≈ existing roll duration)
 const GHOST_PRE = 0.3;      // ghost fade-in pre-roll before T0
 const RECEDE_OP = 0.35;     // overlay pills recede to this during the shot
-const overlayPills = () => ['flightReplay','flightClose','fGhostPill','fGhostClear'].map($);
+const overlayPills = () => ['flightReplay','flightClose','fGhostPill','fGhostClear','fGhostLegend'].map($);
 
 // clear any stage-2 choreography residue (killed timeline / static render):
 // pills back to full opacity, camera-dip transform + transition cleared.
@@ -3325,7 +3456,7 @@ function fPlay(){
   // T0 (launch) sits after an optional ghost pre-roll so ghosts fade in at
   // T0−0.3, BEFORE the muzzle flash. Replays keep the same T0 (ghost count is
   // unchanged on replay) so same params → identical run.
-  const T0 = ghosts.length ? GHOST_PRE : 0;
+  const T0 = (ghosts.length || fBaseline) ? GHOST_PRE : 0;
   const trajL = trajLen;                          // cached for the per-frame math
   fTL = gsap.timeline();
 
@@ -3625,6 +3756,7 @@ function closeFlight(){
   if (fTL) fTL.kill();
   resetChoreo();        // stage 2: no dim pills / stuck camera dip on reopen
   hideDeltaLabel();
+  if (ghostCoach){ try { ghostCoach.close(); } catch(e){} ghostCoach = null; }
   stopAmbient();
   document.removeEventListener('keydown', onFlightKey);
   if (lastFocus && lastFocus.isConnected && lastFocus.focus) lastFocus.focus();
@@ -3703,10 +3835,29 @@ fGhostPillEl.addEventListener('click', ()=>{
 });
 fGhostClearEl.addEventListener('click', ()=>{
   ghosts.length = 0;
+  fBaseline = null; buildGhostLegend();   // GHOST LAB: clear also drops the pin + its chips (buildGhostLegend → setPinUI)
   if (FX.ghosts) FX.ghosts.innerHTML = '';
   hideDeltaLabel(); fDeltaEl.hidden = true;
   // refit the shared camera when idle (never mid-flight); focus stays on the button
   if (flightScrim.classList.contains('open') && (!fTL || !fTL.isActive())) renderStatic();
+});
+
+// ── GHOST LAB: pin toggle + per-ghost show/hide (delegated — chips are rebuilt) ──
+$('fPinBtn').addEventListener('click', ()=>{
+  fBaseline = fBaseline ? null : (lastFlown ? { params: lastFlown.params, flight: lastFlown.flight } : null);
+  setPinUI();
+  saHaptics.selectionChanged();
+  // re-render statically so the baseline path appears/disappears + the Δ-label re-anchors
+  if (flightScrim.classList.contains('open') && (!fTL || !fTL.isActive())) renderStatic();
+});
+$('fGhostLegend').addEventListener('click', (e)=>{
+  const btn = e.target.closest('.fChip-ghost'); if (!btn) return;
+  const g = ghosts.find(x => String(x.id) === btn.dataset.gid); if (!g) return;
+  g.hidden = !g.hidden;
+  btn.setAttribute('aria-pressed', String(!g.hidden));
+  const grp = FX.ghosts && FX.ghosts.querySelector('[data-gid="' + g.id + '"]');
+  if (grp) grp.style.display = g.hidden ? 'none' : '';
+  saHaptics.selectionChanged();
 });
 
 // ── CLUB-SPEED bar inside the flight overlay (left column) ──
@@ -3944,7 +4095,7 @@ $('fSpeedUp').addEventListener('click', ()=> saHaptics.selectionChanged());
 // tiny dev hook for headless verification
 window.__impact = { state, solve:()=>solveFlight(state), visAngle, targetAngle,
   get activeKey(){return activeKey;}, get fTL(){return fTL;}, get ambient(){return ambient;},
-  get ghosts(){return ghosts;}, get replayCount(){return replayCount;}, get lastFlown(){return lastFlown;},
+  get ghosts(){return ghosts;}, get baseline(){return fBaseline;}, get replayCount(){return replayCount;}, get lastFlown(){return lastFlown;},
   haptics: saHaptics,
   focus: __impactFocusHook };   // STAGE 4 — test hook (+ FOCUS-MODES hook)
 </script>
