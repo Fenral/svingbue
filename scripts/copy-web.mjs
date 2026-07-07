@@ -6,7 +6,8 @@
 // must keep serving index.html/geometry.html/impact.html and every sibling
 // dev-mock file exactly as-is), so we do NOT point Capacitor at the repo
 // root. Instead this script copies only the "shipping" web assets into a
-// disposable `www/` folder that mirrors the production trio of pages.
+// disposable `www/` folder that mirrors the three real app pages + the
+// paywall's terms/privacy pages.
 //
 // Run: node scripts/copy-web.mjs   (also wired as `npm run copy-web`)
 //
@@ -26,7 +27,10 @@ const ROOT = join(__dirname, '..');
 const WWW = join(ROOT, 'www');
 
 // --- 1. Explicit allowlist: the only HTML pages that ship in the native app.
-const ALLOWED_HTML_FILES = ['index.html', 'geometry.html', 'impact.html'];
+// terms.html + privacy.html: linked from the paywall's legal row
+// (sa-paywall.js → ./terms.html / ./privacy.html) — Apple requires these to
+// resolve inside the native app, so they ship alongside the three app pages.
+const ALLOWED_HTML_FILES = ['index.html', 'geometry.html', 'impact.html', 'terms.html', 'privacy.html'];
 
 // --- 2. Explicit allowlist: asset/module directories copied wholesale.
 const ALLOWED_DIRS = ['vendor', 'assets', 'geo3d'];

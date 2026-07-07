@@ -301,5 +301,17 @@
     <a href="./index.html">Home</a>
   </nav>
 </footer>
+<script>
+  /* Progressive Back: when reached from within the app (e.g. the paywall's
+     legal link), the top "Back" link returns to the referring page via
+     history.back() — where sa-paywall.js re-opens the paywall it was on
+     (sa_pw_reopen flag). Direct hits / no-JS fall back to the href (index). */
+  (function () {
+    var back = document.querySelector('a.back');
+    if (back && document.referrer && window.history.length > 1) {
+      back.addEventListener('click', function (e) { e.preventDefault(); window.history.back(); });
+    }
+  })();
+</script>
 </body>
 </html>

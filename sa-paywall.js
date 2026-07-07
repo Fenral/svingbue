@@ -455,14 +455,116 @@ restoreBtn.addEventListener('click', async () => {
   }
 });
 
-// Terms/Privacy are real same-webview navigations (./terms.html, ./privacy.html)
-// — no click handler needed; termsLink/privacyLink are kept as named locals
-// above only to document that they exist and are wired via their href.
-void termsLink;
-void privacyLink;
+// Terms/Privacy are real same-webview navigations (./terms.html, ./privacy.html).
+// Before leaving, remember to re-open the paywall when the user comes BACK via
+// the legal pages' in-page Back link — otherwise a native user (no browser
+// chrome) who taps Terms lands on a dead-end and loses the paywall they were on.
+// The pages' Back link uses history.back(); on return this module re-opens.
+function rememberReopen(){ try { sessionStorage.setItem('sa_pw_reopen', currentSource || '1'); } catch (e) {} }
+termsLink.addEventListener('click', rememberReopen);
+privacyLink.addEventListener('click', rememberReopen);
+
+// On return from a legal page (fresh load OR bfcache restore), re-open the
+// paywall if we flagged it on the way out.
+function maybeReopenFromLegal(){
+  let flag = null;
+  try { flag = sessionStorage.getItem('sa_pw_reopen'); } catch (e) { flag = null; }
+  if (!flag) return;
+  try { sessionStorage.removeItem('sa_pw_reopen'); } catch (e) {}
+  openPaywall(flag === '1' ? 'legal-return' : flag);
+}
+window.addEventListener('pageshow', maybeReopenFromLegal);
 
 // Convenience for console testing on web (mirrors sa-iap.js's window.__sa.*).
 if (typeof window !== 'undefined') {
   window.__sa = window.__sa || {};
   window.__sa.paywall = { open: openPaywall, close: closePaywall };
 }
+
+/* ── REVIEWER / DEBUG TRIGGER ────────────────────────────────────────────────
+   Two discreet, zero-UI ways to force-open this paywall WITHOUT consuming any
+   of the 10 free shots (App Review needs a direct path — see
+   docs/app-review-notes.md):
+     1. URL param  ?sa_debug=paywall  → opens on load (web builds / probes).
+     2. Long-press (1.5 s) on the "?" Help button (#helpBtn on impact.html and
+        geometry.html) → works in the native app, where there is no URL bar.
+   Neither path reads or writes sa-shots state — gate logic for normal users
+   is byte-identical. No on-screen affordance is added (P1: say less). */
+const REVIEWER_LONG_PRESS_MS = 1500;
+const REVIEWER_SLOP_PX = 12;
+
+(function initReviewerTrigger() {
+  // (1) URL param — open once the page has fully loaded.
+  let fromUrl = false;
+  try {
+    fromUrl = new URLSearchParams(window.location.search).get('sa_debug') === 'paywall';
+  } catch (e) { fromUrl = false; }
+  if (fromUrl) {
+    const openNow = () => openPaywall('reviewer-url');
+    if (document.readyState === 'complete') setTimeout(openNow, 0);
+    else window.addEventListener('load', openNow, { once: true });
+  }
+
+  // (2) Long-press on #helpBtn.
+  const btn = document.getElementById('helpBtn');
+  if (!btn) return; // page without a Help button — the URL param still works
+
+  // iOS long-press otherwise selects the "?" glyph / shows the callout.
+  btn.style.webkitUserSelect = 'none';
+  btn.style.userSelect = 'none';
+  btn.style.webkitTouchCallout = 'none';
+
+  let timer = null;
+  let startX = 0;
+  let startY = 0;
+  let suppressNextClick = false;
+
+  function cancelPress() {
+    if (timer) { clearTimeout(timer); timer = null; }
+  }
+
+  btn.addEventListener('pointerdown', (e) => {
+    if (!e.isPrimary) return;
+    startX = e.clientX; startY = e.clientY;
+    cancelPress();
+    timer = setTimeout(() => {
+      timer = null;
+      // The release still dispatches a click (which the pages wire to the
+      // walkthrough replay) — swallow exactly that one. openPaywall() inerts
+      // the button synchronously, so the click usually never dispatches; the
+      // flag is belt-and-suspenders, self-clearing so it can't eat a later
+      // legitimate Help tap.
+      suppressNextClick = true;
+      setTimeout(() => { suppressNextClick = false; }, 800);
+      openPaywall('reviewer');
+    }, REVIEWER_LONG_PRESS_MS);
+  });
+  btn.addEventListener('pointermove', (e) => {
+    if (timer && (Math.abs(e.clientX - startX) > REVIEWER_SLOP_PX ||
+                  Math.abs(e.clientY - startY) > REVIEWER_SLOP_PX)) cancelPress();
+  });
+  btn.addEventListener('pointerup', cancelPress);
+  btn.addEventListener('pointercancel', cancelPress);
+  btn.addEventListener('pointerleave', cancelPress);
+
+  // Android Chrome fires contextmenu on touch long-press — keep it silent
+  // while a press is being timed or right after it completed.
+  btn.addEventListener('contextmenu', (e) => {
+    if (timer || suppressNextClick) e.preventDefault();
+  });
+
+  // Swallow the post-long-press click at the DOCUMENT capture phase. NOTE:
+  // at the target element, listeners run in REGISTRATION order regardless of
+  // the capture flag, and the pages registered their click→walkthrough
+  // handler first (impact.html ~:4210, geometry.html :1434) — so a capture
+  // listener on the button itself would fire too late. Document capture runs
+  // strictly before any target listener.
+  document.addEventListener('click', (e) => {
+    if (!suppressNextClick) return;
+    if (e.target === btn || btn.contains(e.target)) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    suppressNextClick = false; // one-shot
+  }, true);
+})();
