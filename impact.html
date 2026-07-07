@@ -1627,7 +1627,7 @@ const CELLS = [
     desc:'The gap between where the clubface points and the direction the club is swinging. This gap is what tilts the spin axis and makes the ball curve.',
     formula:f=>[{t:'face '+f1(f.faceAngle),cls:f.faceAngle>=0?'pos':'neg'},{op:'−'},{t:'path '+f1(f.clubPath),cls:f.clubPath>=0?'neg':'pos'}],
     sourcenote:'Face minus path — the single biggest driver of curve.' },
-  { key:'start', home:'dir', name:'Start dir', size:'lg', plane:'H', est:false,
+  { key:'start', home:'dir', name:'Launch dir', size:'lg', plane:'H', est:false,
     value:f=>({v:f1(f.startDirection)+'°'}),
     ring:{lo:-25,hi:25, signed:true, get:f=>f.startDirection},
     desc:'The direction the ball sets off in — dominated by where the face points.',
@@ -1807,7 +1807,7 @@ const FCELLS = [
     desc:'How far the ball flies through the air before it lands.',
     formula:f=>[{t:'172 yd'},{op:'×'},{t:'ballSpeed/120',cls:'pos'},{op:'→ m'}],
     honesty: honestyEst+' Carry is scaled from a tour 7-iron reference by ball speed.' },
-  { key:'launchDir', name:'Start Dir', plane:'H',
+  { key:'launchDir', name:'Launch Dir', plane:'H',
     value:f=>({v:f1(f.startDirection)+'°'}),
     ring:{lo:-25,hi:25, signed:true, get:f=>f.startDirection},
     desc:'The direction the ball sets off in — dominated by where the face points.',
@@ -2093,7 +2093,9 @@ const PARAM_INFO = {
     headVal:f=>sdeg(state.faceAngle-state.clubPath),
     desc:'The gap between where the clubface points and the direction the club is swinging at impact. This gap is what tilts the spin axis and makes the ball curve.',
     diagram:DIAGRAMS.faceToPath, drivers:DRIVERS.faceToPath },
-  launchDir: { name:'Start direction', plane:'H',
+  // One quantity, ONE name: the yellow arrow's .launchTag says "Launch dir",
+  // so its card + popover do too (Fable audit #6a — was "Start direction").
+  launchDir: { name:'Launch direction', plane:'H',
     headVal:f=>sdeg(f.startDirection),
     desc:'Where the ball starts its flight, relative to the target line. Mostly set by the clubface, with a smaller contribution from the swing path.',
     diagram:DIAGRAMS.launchDir, drivers:DRIVERS.launchDir },
@@ -2674,17 +2676,27 @@ function renderPredictor(flight){
 
 // ── LAUNCH-DIR bend (replaces the old curve line) ───────────────
 // The launch-dir arrow curves toward the spin side. Its group is already
-// rotated to the START direction (applyArrowTransform), so this bend — driven
-// by solveFlight().spinAxis (+ = right/fade) — rides on top: the shaft leaves
-// the ball on the start-line, then curves late, exactly like real ball flight.
-const LB_GAIN = 2.6;   // px of lateral tip offset per degree of spin axis
-const LB_MAX  = 40;    // clamp (px) — keeps a "liten bøy", never a hook
+// rotated to the START direction — exactly predictorAngles().startVis, since
+// ROT.launchDir uses the same GAIN_DIR — so the bend is derived from the SAME
+// geometry as the predictor dot: the tip offset is chosen so the shaft's end
+// tangent aims at the finish heading (finishVis). This makes the bend
+// carry-aware (FIX G: curve grows with carry², not just face-to-path) and
+// keeps the yellow arrow + cyan dot telling one consistent story. For the
+// quadratic M P0 Q C T with C straight above the pivot at half-length, the
+// end tangent is (T−C), so tan(delta) = b / (LB_L/2)  →  b = (LB_L/2)·tan(delta).
 const LB_L    = 198;   // shaft length pivot→tip (matches LAUNCH.launchDir.tipLen)
+const LB_SOFT = 44;    // tanh soft-clamp on the tip offset (px) — same shape as xOf()
 function renderLaunchBend(flight){
   const P = DIR_PIVOT;                       // {x:200, y:330}
   const tipY = P.y - LB_L;                   // 132
-  let b = (flight.spinAxis || 0) * LB_GAIN;
-  if (b >  LB_MAX) b =  LB_MAX; else if (b < -LB_MAX) b = -LB_MAX;
+  const { startVis, finishVis } = predictorAngles(flight);
+  // delta = finish heading relative to the (already-rotated) shaft, visual space.
+  // Clamp before tan() so a pathological offline/start combo can't flip sign
+  // past 90°; the tanh soft-cap below is what actually bounds the visual.
+  let delta = finishVis - startVis;
+  if (delta >  1.1) delta =  1.1; else if (delta < -1.1) delta = -1.1;
+  const raw = (LB_L / 2) * Math.tan(delta);
+  const b = LB_SOFT * Math.tanh(raw / LB_SOFT);
   const Cx = P.x, Cy = P.y - LB_L * 0.5;     // control straight above → leaves straight, curves late
   const Tx = P.x + b, Ty = tipY;
   const path = $('line_launchDir');
@@ -4049,10 +4061,12 @@ $('fSpeedUp').addEventListener('click', ()=> saHaptics.selectionChanged());
   // same for the display-only launch indicators + place their persistent chips
   Object.keys(LAUNCH).forEach(k=>{ visAngle[k]=targetAngle[k]; applyArrowTransform(k); placeChip(k); });
   drawCone();
-  updateLensAria();
-  const initFlight = solveFlight(state);
-  renderRail(initFlight);
-  renderPredictor(initFlight);
+  // Full first-paint render: recompute() covers rail + predictor AND the
+  // pieces the old init missed (renderLaunchBend, updateCoachLines,
+  // updateMiniArrows, syncChipValues) — without it the bent launch-dir arrow
+  // stayed straight and both coach lines showed "Main cause: —" until the
+  // first slider touch (Fable audit finding #2).
+  recompute();
   setArrowAffordance();
   requestAnimationFrame(updateRailScrollHints);
 
@@ -4087,7 +4101,7 @@ $('fSpeedUp').addEventListener('click', ()=> saHaptics.selectionChanged());
   const STEPS = [
     { selector: '#stage',
       title: 'Both lenses at once',
-      body: 'Direction (left, top-down) shows face, path and where the ball starts and curves. Launch (right, side-on) shows attack, loft and how high it flies — you see both together.' },
+      body: 'Direction (left, top-down) shows face and path. Launch (right, side-on) shows attack and loft. The yellow arrow starts where the ball launches — its bend shows which way spin curves the shot.' },
     { selector: '#lensDir .minidock',
       title: 'Shape the shot',
       body: 'Adjust Face & Path here to aim the clubface and swing direction — they set how the ball starts and curves.' },

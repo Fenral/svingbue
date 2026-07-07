@@ -236,17 +236,32 @@
       var vw = global.innerWidth, vh = global.innerHeight;
       var below = (r.bottom + 14 + bh) <= vh;
       var top = below ? (r.bottom + 14) : (r.top - 14 - bh);
+      // CLAMP into the viewport: a full-viewport target (e.g. impact.html's
+      // "#stage" dual-lens step) has no room above OR below, which used to
+      // push the whole card off-screen (measured top=-193 at 844x390 — title,
+      // body and the Next/Skip buttons all unreachable). When clamped, the
+      // card overlaps the spotlighted region (unavoidable) and the arrow is
+      // hidden because it would point at nothing meaningful.
+      var maxTop = vh - bh - 10;
+      var clamped = false;
+      if (top > maxTop) { top = maxTop; clamped = true; }
+      if (top < 10) { top = 10; clamped = true; }
       var left = r.left + r.width / 2 - bw / 2;
       left = Math.max(10, Math.min(left, vw - bw - 10));
       bubble.style.top = top + "px";
       bubble.style.left = left + "px";
 
-      // arrow
-      var ax = r.left + r.width / 2 - left - 7;
-      ax = Math.max(12, Math.min(ax, bw - 26));
-      arrow.style.left = ax + "px";
-      if (below) { arrow.style.top = "-7px"; arrow.style.bottom = ""; arrow.style.transform = "rotate(45deg)"; }
-      else { arrow.style.bottom = "-7px"; arrow.style.top = ""; arrow.style.transform = "rotate(225deg)"; }
+      // arrow (hidden when the card had to be clamped into the viewport)
+      if (clamped) {
+        arrow.style.display = "none";
+      } else {
+        arrow.style.display = "";
+        var ax = r.left + r.width / 2 - left - 7;
+        ax = Math.max(12, Math.min(ax, bw - 26));
+        arrow.style.left = ax + "px";
+        if (below) { arrow.style.top = "-7px"; arrow.style.bottom = ""; arrow.style.transform = "rotate(45deg)"; }
+        else { arrow.style.bottom = "-7px"; arrow.style.top = ""; arrow.style.transform = "rotate(225deg)"; }
+      }
     }
 
     function render() {
