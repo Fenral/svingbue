@@ -845,7 +845,7 @@
              lens's static aria-label so screen readers get a calm, single update. -->
         <div class="sr-only" id="predLive" aria-live="polite" aria-atomic="true"></div>
         <svg id="svgDir" viewBox="0 0 400 360" preserveAspectRatio="xMidYMid meet" role="img"
-             aria-label="Top-down view from the ball. A vertical target line runs straight ahead. A red face arrow and a blue path arrow rotate from the ball to show clubface aim and swing direction. A cyan marker shows the predicted landing position.">
+             aria-label="Top-down view from the ball. A vertical target line runs straight ahead. A red face arrow and a blue path arrow rotate from the ball to show clubface aim and swing direction. A yellow launch arrow shows the start line, bending toward the spin side. A cyan marker shows the predicted landing position.">
           <defs>
             <!-- userSpaceOnUse so the glow stays anchored to the ball/target axis even
                  though fitLenses() widens the background rect to the live viewBox -->
@@ -1253,7 +1253,7 @@
         </div>
         <div class="fData" role="group" aria-label="Shot data">
           <button class="cell hero" type="button" id="fcell_carry" aria-haspopup="dialog" aria-expanded="false" aria-controls="pop"><div class="k">Carry</div><div class="valrow"><div class="v"><span id="dCarry">0</span><small>m</small></div></div><span class="rng" aria-hidden="true"><i class="fill"></i></span></button>
-          <button class="cell" type="button" id="fcell_launchDir" aria-haspopup="dialog" aria-expanded="false" aria-controls="pop"><div class="k">Start Dir</div><div class="valrow"><div class="v"><span id="dLaunchDir">0.0</span><small>°</small></div></div><span class="rng" aria-hidden="true"><i class="fill"></i></span></button>
+          <button class="cell" type="button" id="fcell_launchDir" aria-haspopup="dialog" aria-expanded="false" aria-controls="pop"><div class="k">Launch Dir</div><div class="valrow"><div class="v"><span id="dLaunchDir">0.0</span><small>°</small></div></div><span class="rng" aria-hidden="true"><i class="fill"></i></span></button>
           <button class="cell" type="button" id="fcell_spinAxis" aria-haspopup="dialog" aria-expanded="false" aria-controls="pop"><div class="k">Spin Axis</div><div class="valrow"><div class="v"><span id="dSpinAxis">0</span><small>°</small></div></div><span class="rng" aria-hidden="true"><i class="fill"></i></span></button>
           <button class="cell" type="button" id="fcell_curve" aria-haspopup="dialog" aria-expanded="false" aria-controls="pop"><div class="k">Curve</div><div class="valrow"><div class="v"><span id="dCurve">0.0</span><small>m</small></div></div><span class="rng" aria-hidden="true"><i class="fill"></i></span></button>
           <button class="cell" type="button" id="fcell_launchAngle" aria-haspopup="dialog" aria-expanded="false" aria-controls="pop"><div class="k">Launch Ang</div><div class="valrow"><div class="v"><span id="dLaunchAng">0.0</span><small>°</small></div></div><span class="rng" aria-hidden="true"><i class="fill"></i></span></button>
@@ -1632,7 +1632,7 @@ const CELLS = [
     ring:{lo:-25,hi:25, signed:true, get:f=>f.startDirection},
     desc:'The direction the ball sets off in — dominated by where the face points.',
     formula:f=>[{t:'0.75 · face',cls:f.faceAngle>=0?'pos':'neg'},{op:'+'},{t:'0.25 · path',cls:f.clubPath>=0?'pos':'neg'}],
-    sourcenote:'Sourced rule of thumb: start direction ≈ 75% face, 25% path.' },
+    sourcenote:'Sourced rule of thumb: launch direction ≈ 75% face, 25% path.' },
   { key:'spinAxis', home:'dir', name:'Spin axis', size:'lg', plane:'H', est:true,
     value:f=>({v:(f.spinAxis>=0?'+':'')+Math.round(f.spinAxis)+'°'}),
     ring:{lo:-25,hi:25, signed:true, get:f=>f.spinAxis},
@@ -1812,7 +1812,7 @@ const FCELLS = [
     ring:{lo:-25,hi:25, signed:true, get:f=>f.startDirection},
     desc:'The direction the ball sets off in — dominated by where the face points.',
     formula:f=>[{t:'0.75 · face',cls:f.faceAngle>=0?'pos':'neg'},{op:'+'},{t:'0.25 · path',cls:f.clubPath>=0?'pos':'neg'}],
-    sourcenote:'Sourced rule of thumb: start direction ≈ 75% face, 25% path.' },
+    sourcenote:'Sourced rule of thumb: launch direction ≈ 75% face, 25% path.' },
   { key:'launchAngle', name:'Launch Ang', plane:'V',
     value:f=>({v:f.launchAngle.toFixed(1)+'°'}),
     ring:{lo:0,hi:30, get:f=>f.launchAngle},
@@ -1869,8 +1869,8 @@ const FCELLS = [
     sourcenote:'A bigger gap between face and path tilts the spin axis more, so the ball curves more.' },
   { key:'shape', name:'Shape', plane:'H',
     value:f=>({v:f.shape || '—'}),
-    desc:'The qualitative shot shape, read from the start direction and the tilt of the spin axis.',
-    formula:f=>[{t:'start dir',cls:f.startDirection>=0?'pos':'neg'},{op:'+'},{t:'spin axis',cls:f.spinAxis>=0?'pos':'neg'},{op:'→ label'}],
+    desc:'The qualitative shot shape, read from the launch direction and the tilt of the spin axis.',
+    formula:f=>[{t:'launch dir',cls:f.startDirection>=0?'pos':'neg'},{op:'+'},{t:'spin axis',cls:f.spinAxis>=0?'pos':'neg'},{op:'→ label'}],
     sourcenote:'Illustrative thresholds map start + curve to draw/fade/hook/slice.' },
 ];
 (function buildFlightCells(){
@@ -2075,8 +2075,8 @@ const DRIVERS = {
   landAngle: [ { label:'Club speed (via apex, dominant at range extremes)', dir:'up' }, { label:'Spin loft', dir:'up' }, { label:'Launch angle', dir:'up' } ],
   total:     [ { label:'Land angle (steeper = less roll)', dir:'down' }, { label:'Carry', dir:'up' } ],
   curve:     [ { label:'Spin axis (face-to-path)', dir:'up' }, { label:'Carry length', dir:'up' } ],
-  offline:   [ { label:'Start direction (face/path)', dir:'up' }, { label:'Curve', dir:'up' } ],
-  shape:     [ { label:'Start direction', dir:'up' }, { label:'Face-to-path gap', dir:'up' } ],
+  offline:   [ { label:'Launch direction (face/path)', dir:'up' }, { label:'Curve', dir:'up' } ],
+  shape:     [ { label:'Launch direction', dir:'up' }, { label:'Face-to-path gap', dir:'up' } ],
 };
 
 // ════════════════════════════════════════════════════════════════
@@ -2113,7 +2113,7 @@ const PARAM_INFO = {
     diagram:DIAGRAMS.offline, drivers:DRIVERS.offline },
   shape: { name:'Shape', plane:'H',
     headVal:f=>f.shape || '—',
-    desc:'The qualitative shot shape, read from the start direction and the tilt of the spin axis.',
+    desc:'The qualitative shot shape, read from the launch direction and the tilt of the spin axis.',
     diagram:DIAGRAMS.shape, drivers:DRIVERS.shape },
   launchAng: { name:'Launch angle', plane:'V',
     headVal:f=>udeg(f.launchAngle),
@@ -2411,9 +2411,9 @@ function recomputeAngles(){ Object.keys(ARROWS).forEach(computeTarget); Object.k
 // keep each lens SVG's aria-label in sync with the live data it depicts
 function updateLensAria(){
   $('svgDir').setAttribute('aria-label',
-    `Top-down direction view. Clubface aim ${fmtDeg(state.faceAngle)} and swing path ${fmtDeg(state.clubPath)} relative to the target line (negative is left, positive is right). A cyan marker shows the predicted landing position.`);
+    `Top-down direction view. Clubface aim ${fmtDeg(state.faceAngle)} and swing path ${fmtDeg(state.clubPath)} relative to the target line (negative is left, positive is right). A yellow launch arrow shows the start line, bending toward the spin side. A cyan marker shows the predicted landing position.`);
   $('svgHt').setAttribute('aria-label',
-    `Side-on height view. Angle of attack ${fmtDeg(state.attackAngle)} and dynamic loft ${fmtLoftStr(state.dynamicLoft)} at impact (negative attack is descending).`);
+    `Side-on height view. Angle of attack ${fmtDeg(state.attackAngle)} and dynamic loft ${fmtLoftStr(state.dynamicLoft)} at impact (negative attack is descending). A yellow arrow shows the launch angle.`);
 }
 
 // ════════════════════════════════════════════════════════════════
@@ -2446,8 +2446,8 @@ function updateMiniArrows(){
 const CUES = {
   faceOpen:   'Face open to path — the ball starts right of the swing line and tends to curve further right.',
   faceClosed: 'Face closed to path — the ball starts left of the swing line and tends to curve further left.',
-  pathLeft:   'Path swings left (out-to-in) — this steers the start direction left of target.',
-  pathRight:  'Path swings right (in-to-out) — this steers the start direction right of target.',
+  pathLeft:   'Path swings left (out-to-in) — this steers the launch direction left of target.',
+  pathRight:  'Path swings right (in-to-out) — this steers the launch direction right of target.',
   attackDown: 'Downward attack — a steeper descent adds spin loft and launches the ball higher and shorter.',
   attackUp:   'Upward attack — a shallower or ascending strike lowers spin loft for a flatter, hotter flight.',
   loftHigh:   'High dynamic loft — more effective loft at impact climbs the ball steeply.',
@@ -4067,6 +4067,11 @@ $('fSpeedUp').addEventListener('click', ()=> saHaptics.selectionChanged());
   // stayed straight and both coach lines showed "Main cause: —" until the
   // first slider touch (Fable audit finding #2).
   recompute();
+  // …but cancel the predictor's debounced settle ANNOUNCEMENT that recompute
+  // scheduled: announcing "Predicted finish on line" ~800ms after load — with
+  // no user action, right while the first-run coach dialog is being read —
+  // is noise. Interaction-driven announcements are untouched (a11y delta #3).
+  clearTimeout(predAnnounceTimer);
   setArrowAffordance();
   requestAnimationFrame(updateRailScrollHints);
 
