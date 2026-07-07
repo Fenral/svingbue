@@ -107,9 +107,14 @@
 .sa-pw-tier .sa-pw-tsub{ font-size: 11px; color: var(--pw-muted-2); margin-top: 1px; display: block; }
 .sa-pw-tier .sa-pw-price{ font-size: 15px; font-weight: 700; color: var(--pw-ink); white-space: nowrap; text-align: right; }
 .sa-pw-tier .sa-pw-price small{ display: block; font-size: 10px; font-weight: 500; color: var(--pw-muted-2); }
-/* decoy (monthly) sits muted + smaller */
-.sa-pw-tier.sa-pw-decoy .sa-pw-box{ opacity: .72; }
+/* decoy (monthly) sits muted + smaller. NOTE: the box no longer gets a blanket
+   opacity — that composited .sa-pw-tsub/.sa-pw-price small down to 3.25:1
+   against the near-black card (fails WCAG AA 4.5:1 for text). Name/price stay
+   full-strength; only the two already-muted sub-lines get an explicit AA-safe
+   color instead of an opacity cut. */
 .sa-pw-tier.sa-pw-decoy .sa-pw-name{ font-weight: 500; }
+.sa-pw-tier.sa-pw-decoy .sa-pw-tsub,
+.sa-pw-tier.sa-pw-decoy .sa-pw-price small{ color: #9aabc6; } /* 5.30:1 on --pw-bg */
 /* hero (annual) */
 .sa-pw-tier.sa-pw-hero .sa-pw-box{ border-color: rgba(34,227,214,.45); background: var(--pw-card-hi); }
 .sa-pw-badge{
@@ -148,8 +153,12 @@
 
 .sa-pw-fineprint{ color: var(--pw-muted-2); font-size: 10.5px; text-align: center; margin-top: 2px; line-height: 1.3; }
 
+/* min-height reserves the row's space when empty (no layout shift), so the
+   :empty{display:none} shortcut some earlier versions of this rule used is
+   NOT here — that would hide the aria-live region's content on some timing
+   paths and silently swallow the "purchase didn't complete" / "no purchase
+   found" announcements. */
 .sa-pw-status{ min-height: 14px; text-align: center; font-size: 11px; color: #ffb0a0; margin: 2px 0 0; }
-.sa-pw-status:empty{ display: none; }
 
 .sa-pw-legal{ display: flex; flex-wrap: wrap; gap: 14px; justify-content: center; margin-top: 2px; }
 .sa-pw-legal .sa-pw-link{

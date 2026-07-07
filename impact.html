@@ -831,7 +831,7 @@
     </div>
 
     <!-- ══ MAIN — FOCUS-MODE STAGE ══ -->
-    <div class="main" id="stage">
+    <main class="main" id="stage">
 
     <!-- ═══ DIRECTION FOCUS ═══ -->
     <div class="focusPanel active" id="panelDir" data-focus="direction">
@@ -959,8 +959,14 @@
           </g>
         </svg>
         <div class="mp-chips">
-          <span class="chip" id="chipAttack" role="link" tabindex="0"><span class="ck"><span class="cdot" style="background:var(--c-attack)" aria-hidden="true"></span>Attack</span><span class="cv" id="chipAttackVal">−3.0°</span></span>
-          <span class="chip" id="chipDynLoft" role="link" tabindex="0"><span class="ck"><span class="cdot" style="background:var(--c-loft)" aria-hidden="true"></span>Dyn loft</span><span class="cv" id="chipDynLoftVal">30.0°</span></span>
+          <!-- DUAL-LENS: this mini-panel is now display:none (its hero lens is
+               always shown alongside), and its chips can never receive focus
+               again — role/tabindex removed (they were an invalid focusable-
+               nested-in-<button> pattern). rotMini()/syncChipValues() still
+               target these ids for the (currently invisible) live-value text
+               only, unchanged. -->
+          <span class="chip" id="chipAttack"><span class="ck"><span class="cdot" style="background:var(--c-attack)" aria-hidden="true"></span>Attack</span><span class="cv" id="chipAttackVal">−3.0°</span></span>
+          <span class="chip" id="chipDynLoft"><span class="ck"><span class="cdot" style="background:var(--c-loft)" aria-hidden="true"></span>Dyn loft</span><span class="cv" id="chipDynLoftVal">30.0°</span></span>
         </div>
       </button>
     </div>
@@ -984,8 +990,8 @@
           </g>
         </svg>
         <div class="mp-chips">
-          <span class="chip" id="chipFace" role="link" tabindex="0"><span class="ck"><span class="cdot" style="background:var(--c-face)" aria-hidden="true"></span>Face</span><span class="cv" id="chipFaceVal">−2.0°</span></span>
-          <span class="chip" id="chipPath" role="link" tabindex="0"><span class="ck"><span class="cdot" style="background:var(--c-path)" aria-hidden="true"></span>Path</span><span class="cv" id="chipPathVal">+2.0°</span></span>
+          <span class="chip" id="chipFace"><span class="ck"><span class="cdot" style="background:var(--c-face)" aria-hidden="true"></span>Face</span><span class="cv" id="chipFaceVal">−2.0°</span></span>
+          <span class="chip" id="chipPath"><span class="ck"><span class="cdot" style="background:var(--c-path)" aria-hidden="true"></span>Path</span><span class="cv" id="chipPathVal">+2.0°</span></span>
         </div>
       </button>
 
@@ -1069,7 +1075,7 @@
         </div>
       </section>
     </div>
-  </div>
+  </main>
 
   <!-- rail cell buttons for parameters with no dedicated hero card in either
        focus (Ball speed, Backspin) are built directly into #secChipsLaunch by
@@ -3853,6 +3859,17 @@ function openFlight(){
   $('fSpeedRange').value = state.clubSpeed;
   $('fSpeedV').textContent = Math.round(state.clubSpeed);
   $('fSpeedRange')._premiumRefresh && $('fSpeedRange')._premiumRefresh();
+  // Make the base instrument (top strip + both lenses) inert while the
+  // overlay is open — without this, Tab could escape flightCard into the two
+  // full lenses behind the scrim with no visible focus ring (dual-lens made
+  // this worse: twice the stray tab stops of the old single-lens layout).
+  // NOTE: target these two elements specifically, NOT `.app` — #flightScrim
+  // itself is a CHILD of .app (confirmed by measuring the live DOM), so
+  // inert-ing `.app` would inert the overlay it's supposed to protect.
+  const topstripEl = document.querySelector('.topstrip');
+  const stageEl = document.getElementById('stage');
+  if (topstripEl) topstripEl.inert = true;
+  if (stageEl) stageEl.inert = true;
   flightScrim.classList.add('open');
   document.addEventListener('keydown', onFlightKey);
   $('flightClose').focus({preventScroll:true});
@@ -3866,12 +3883,16 @@ function openFlight(){
 }
 function closeFlight(){
   flightScrim.classList.remove('open');
+  const topstripEl = document.querySelector('.topstrip');
+  const stageEl = document.getElementById('stage');
+  if (topstripEl) topstripEl.inert = false;
+  if (stageEl) stageEl.inert = false;
   if (fTL) fTL.kill();
   resetChoreo();        // stage 2: no dim pills / stuck camera dip on reopen
   hideDeltaLabel();
   stopAmbient();
   document.removeEventListener('keydown', onFlightKey);
-  if (lastFocus && lastFocus.focus) lastFocus.focus();
+  if (lastFocus && lastFocus.isConnected && lastFocus.focus) lastFocus.focus();
   // FOCUS-MODES: return the segmented control + stage to whichever focus was
   // active before Flight was opened (default Direction if none recorded).
   setFocus(preFlightFocus || 'direction', { skipFlightOpen:true, immediate:true });
@@ -4110,7 +4131,14 @@ $('fSpeedUp').addEventListener('click', ()=> saHaptics.selectionChanged());
     activeCoach = SA.coachMarks(steps, {
       storageKey: COACH_KEY,
       onStep(i){ coachIdx = startIndex + i; },   // track live position for resume-after-portrait
-      onDone(){ activeCoach = null; coachArmed = false; coachIdx = 0; }
+      onDone(){
+        activeCoach = null; coachArmed = false; coachIdx = 0;
+        // the tour's own close/focus-return can land on a spotlighted node
+        // that then re-hides (e.g. a mini-panel), dropping focus to <body>.
+        // Land somewhere always-present and useful instead.
+        const speed = $('s_speed');
+        if (speed) speed.focus({ preventScroll:true });
+      }
     });
   }
 

@@ -92,7 +92,10 @@ function buildHook() {
   pill.textContent = 'PRO';
   brand.append(wordmark, pill);
 
-  const h1 = el('h1', 'sa-pw-title', { id: 'sa-pw-title' });
+  // h2, not h1: the host page (impact.html/geometry.html) already has an h1.
+  // tabindex="-1" makes it a valid initial-focus target per APG dialog pattern
+  // (a static, non-interactive element) without adding it to the Tab order.
+  const h1 = el('h2', 'sa-pw-title', { id: 'sa-pw-title', tabindex: '-1' });
   h1.appendChild(document.createTextNode("You've played your "));
   const accent = el('span', 'sa-pw-accent');
   accent.textContent = '10 free shots';
@@ -119,7 +122,7 @@ function buildHook() {
   foot.textContent = 'One instrument. Every ball-flight law, made visible.';
 
   hook.append(brand, h1, sub, features, foot);
-  return hook;
+  return { hook, titleEl: h1 };
 }
 
 // ── build: ladder (right column — plans + CTA + legal) ──────────────────────
@@ -196,9 +199,9 @@ function buildLadder() {
   const restoreBtn = el('button', 'sa-pw-link', { type: 'button' });
   restoreBtn.textContent = 'Restore Purchases';
   const termsLink = el('a', 'sa-pw-link', { href: './terms.html' });
-  termsLink.textContent = 'Terms';
+  termsLink.textContent = 'Terms of Use';
   const privacyLink = el('a', 'sa-pw-link', { href: './privacy.html' });
-  privacyLink.textContent = 'Privacy';
+  privacyLink.textContent = 'Privacy Policy';
   legal.append(restoreBtn, termsLink, privacyLink);
 
   form.append(cta, fineprint, status, legal);
@@ -219,18 +222,18 @@ function buildOverlay() {
   closeBtn.textContent = '✕';
 
   const main = el('main', 'sa-pw-main');
-  const hook = buildHook();
+  const { hook, titleEl } = buildHook();
   const laddered = buildLadder();
   main.append(hook, laddered.ladder);
 
   card.append(closeBtn, main);
   scrim.appendChild(card);
 
-  return Object.assign({ scrim, card, closeBtn }, laddered);
+  return Object.assign({ scrim, card, closeBtn, titleEl }, laddered);
 }
 
 const {
-  scrim, card, closeBtn, tierInputs, priceEls, cta, status, restoreBtn, termsLink, privacyLink,
+  scrim, card, closeBtn, titleEl, tierInputs, priceEls, cta, status, restoreBtn, termsLink, privacyLink,
 } = buildOverlay();
 
 // Mount immediately (module scripts run after the DOM is parsed, but guard
@@ -286,7 +289,7 @@ function trapFocus(e) {
       e.preventDefault();
       last.focus();
     }
-  } else if (document.activeElement === last) {
+  } else if (document.activeElement === last || !card.contains(document.activeElement)) {
     e.preventDefault();
     first.focus();
   }
@@ -307,25 +310,78 @@ function onScrimClick(e) {
 scrim.addEventListener('click', onScrimClick);
 closeBtn.addEventListener('click', () => closePaywall());
 
+// ── background inertness ────────────────────────────────────────────────
+// aria-modal alone is unreliable (historically ignored by some AT in virtual-
+// cursor mode) — `inert` is the robust way to keep the rest of the page out
+// of the accessibility tree and off the Tab order while the dialog is open.
+let inertedSiblings = [];
+function setBackgroundInert(on) {
+  if (on) {
+    inertedSiblings = Array.prototype.slice.call(document.body.children)
+      .filter((n) => n !== scrim && !n.inert);
+    inertedSiblings.forEach((n) => { n.inert = true; });
+  } else {
+    inertedSiblings.forEach((n) => { n.inert = false; });
+    inertedSiblings = [];
+  }
+}
+
+// ── initial-focus helper (see the MEASURED BUG note inside openPaywall) ────
+const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+function focusAfterOpenTransition(target) {
+  const doFocus = () => { try { target.focus({ preventScroll: true }); } catch (e) { /* ignore */ } };
+  if (reduceMotion) {
+    // sa-paywall.css strips the transition entirely under reduced motion —
+    // "open" is visible/opaque the instant the class is added, so a single
+    // frame is enough (no transition to wait out).
+    requestAnimationFrame(doFocus);
+    return;
+  }
+  let done = false;
+  const finish = () => {
+    if (done) return;
+    done = true;
+    scrim.removeEventListener('transitionend', onEnd);
+    doFocus();
+  };
+  const onEnd = (e) => { if (e.target === scrim) finish(); };
+  scrim.addEventListener('transitionend', onEnd);
+  setTimeout(finish, 300); // safety net — matches + slightly exceeds the .25s CSS duration
+}
+
 // ── open / close ────────────────────────────────────────────────────────
 /**
  * Open the paywall. `source` is an optional string identifying what triggered
  * it (e.g. 'shot-gate', 'menu') — used only for a debug log line.
  */
 export async function openPaywall(source) {
+  if (scrim.classList.contains('open')) return; // already open — ignore re-entrant calls
   const gen = ++openGen;
   currentSource = source || null;
   lastFocus = document.activeElement;
   status.textContent = '';
   refreshCtaLabel(); // show fallback/last-known pricing instantly, no flash of "Unlock Pro"
+  setBackgroundInert(true);
   scrim.classList.add('open');
   document.addEventListener('keydown', onKeydown);
   console.debug('[paywall] open', { source: currentSource });
 
-  const focusTarget = tierInputs[selectedTier] || closeBtn;
-  requestAnimationFrame(() => {
-    try { focusTarget.focus({ preventScroll: true }); } catch (e) { /* ignore */ }
-  });
+  // Initial focus goes to the (static, tabindex="-1") title, per the APG
+  // dialog pattern — so AT announces the headline + pitch before the plan
+  // list, instead of jumping straight to "Annual, radio, 2 of 3".
+  //
+  // MEASURED BUG: .sa-pw-scrim fades in via a .25s opacity/visibility
+  // transition (sa-paywall.css). Calling .focus() a single rAF after adding
+  // the "open" class silently no-ops — verified against a live page: the
+  // element only becomes reliably focusable once that transition has
+  // actually finished, not merely scheduled. A single requestAnimationFrame
+  // (or even a forced synchronous reflow) fires well before that. Wait for
+  // the real transitionend instead, with a safety-net timeout matching the
+  // CSS duration (covers prefers-reduced-motion, where the transition is
+  // removed entirely and transitionend never fires — the timeout is what
+  // actually delivers focus in that case, immediately since it still fires
+  // on schedule with no transition running).
+  focusAfterOpenTransition(titleEl);
 
   let offerings = null;
   try { offerings = await saIap.getOfferings(); } catch (e) { offerings = null; }
@@ -344,12 +400,13 @@ export function closePaywall() {
   if (!scrim.classList.contains('open')) return;
   openGen++; // invalidate any in-flight getOfferings() from this open
   scrim.classList.remove('open');
+  setBackgroundInert(false);
   document.removeEventListener('keydown', onKeydown);
   status.textContent = '';
   const toFocus = lastFocus;
   lastFocus = null;
   currentSource = null;
-  if (toFocus && typeof toFocus.focus === 'function') {
+  if (toFocus && toFocus.isConnected && typeof toFocus.focus === 'function') {
     try { toFocus.focus({ preventScroll: true }); } catch (e) { /* ignore */ }
   }
 }

@@ -195,9 +195,12 @@
       role: "dialog", "aria-modal": "true"
     });
     var arrow = el("div", "sa-coach-arrow", { "aria-hidden": "true" });
+    // step/h/p are each their own aria-live region: after the FIRST render,
+    // focus stays on whichever Next/Back button was clicked (not on the
+    // bubble), so without aria-live here a step's title+body change silently.
     var step = el("div", "sa-step", { "aria-live": "polite", "aria-atomic": "true" });
-    var h = el("h3", null, { id: "sa-coach-title" });
-    var p = el("p");
+    var h = el("h3", null, { id: "sa-coach-title", "aria-live": "polite", "aria-atomic": "true" });
+    var p = el("p", null, { "aria-live": "polite", "aria-atomic": "true" });
     bubble.setAttribute("aria-labelledby", "sa-coach-title");
 
     var actions = el("div", "sa-actions");
