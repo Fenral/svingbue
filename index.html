@@ -186,21 +186,16 @@
      Splash: logo draws/scales/fades in (~1.0–1.3s) then fades out to reveal the
      menu. Tap/click/key anywhere skips immediately. Reduced-motion: hold the
      logo statically for a beat, no animation. Removed cleanly so it never blocks
-     interaction. After the splash, first run → SA.onboarding(...). */
+     interaction. */
   window.addEventListener("load", function () {
     var splash = document.getElementById("saSplash");
     var skipBtn = document.getElementById("saSplashSkip");
-    if (!splash) { startOnboarding(); return; }
+    if (!splash) return;
 
     var reduced = false;
     try { reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) {}
     var hasGSAP = typeof gsap !== "undefined";
     var done = false;
-
-    function startOnboarding() {
-      /* Onboarding intro removed — the diagonal Geometry/Impact menu is intuitive enough.
-         Splash logo + the Geometry/Impact coach marks are kept. */
-    }
 
     function teardown() {
       if (done) return;
@@ -209,7 +204,6 @@
       window.removeEventListener("keydown", onKey, true);
       var remove = function () {
         if (splash.parentNode) splash.parentNode.removeChild(splash);
-        startOnboarding();
       };
       if (reduced || !hasGSAP) {
         splash.classList.add("is-hidden");

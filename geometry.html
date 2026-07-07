@@ -62,7 +62,7 @@
   .label{font-size:12px;fill:var(--muted);font-family:inherit;font-variant-numeric:tabular-nums}
 
   /* FACE-ZOOM band-label chip: dark plate, fades in during the zoom
-     detour (reuses the app's panel/blur/radius tokens; see .readout/.tune). */
+     detour (reuses the app's panel/blur/radius tokens; see .tune). */
   .facezoom-chip{
     position:fixed;left:50%;bottom:max(18px,env(safe-area-inset-bottom));z-index:6;
     transform:translateX(-50%) translateY(6px);
@@ -124,9 +124,6 @@
   .sa-nudge[hidden]{display:none}
 
   /* overlays */
-  .title{position:fixed;top:max(10px,env(safe-area-inset-top));left:max(14px,env(safe-area-inset-left));z-index:3;pointer-events:none}
-  .title h1{font-size:14px;font-weight:700;letter-spacing:-.01em}
-  .title p{color:var(--muted);font-size:11px;margin-top:1px}
 
   /* ── module nav (top-left, thin strip — shared with Impact) ──── */
   .modnav{position:fixed;top:max(8px,env(safe-area-inset-top));left:max(10px,env(safe-area-inset-left));z-index:5;
@@ -163,21 +160,6 @@
   #hit{color:var(--accent);border-color:var(--accent-line)}
   #hit:hover{background:var(--accent-soft);border-color:var(--accent)}
 
-  /* strike readout */
-  .readout{
-    position:fixed;left:max(14px,env(safe-area-inset-left));bottom:max(14px,env(safe-area-inset-bottom));z-index:3;
-    width:min(42vw,300px);background:var(--panel);-webkit-backdrop-filter:blur(var(--blur-surface));backdrop-filter:blur(var(--blur-surface));
-    border:1px solid var(--line);border-radius:var(--radius-card);padding:12px 14px;display:flex;gap:12px;align-items:flex-start;
-    box-shadow:inset 0 1px 0 rgba(255,255,255,.06), 0 14px 40px -22px rgba(0,0,0,.8);
-  }
-  .readout .col{flex:1;min-width:0}
-  .verdict{display:flex;align-items:center;gap:8px}
-  .verdict .dot{width:12px;height:12px;border-radius:var(--radius-pill);background:var(--muted);flex:none;box-shadow:0 0 10px currentColor}
-  .verdict #band{font-size:18px;font-weight:700;letter-spacing:-.01em}
-  .verdict #pct{margin-left:auto;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
-  #tip{font-size:11.5px;color:var(--muted);margin-top:4px;line-height:1.35}
-  .ballcloseup{width:84px;height:84px;flex:none}
-
   /* ── STRIKE DETAIL inset (2026-07-03 redesign) — the real 3D club/ball/
      low-point rendered big via a second scissored viewport (geo3d/scene.js +
      geo3d/insetview.js), with a DOM annotation overlay on top. Styled to
@@ -208,7 +190,7 @@
     padding:9px 11px 7px;
     background:linear-gradient(180deg, rgba(13,20,26,.98), rgba(13,20,26,.94));
   }
-  .strike-detail .ttl{font-size:10px;font-weight:700;letter-spacing:.15em;color:var(--muted);text-transform:uppercase}
+  .strike-detail .ttl{font-size:11px;font-weight:700;letter-spacing:.15em;color:var(--muted);text-transform:uppercase}
   .strike-detail .chip{
     display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;
     padding:3px 9px;border-radius:999px;white-space:nowrap;
@@ -217,7 +199,7 @@
   .strike-detail .chip .pct{opacity:.75;font-weight:600}
   .strike-detail .viewport{position:relative;width:100%;aspect-ratio:340/196}
   .strike-detail .viewport svg{position:absolute;inset:0;width:100%;height:100%;display:block;pointer-events:none}
-  .sd-lb{font:700 10px/1 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;fill:var(--accent);font-variant-numeric:tabular-nums;paint-order:stroke;stroke:#0A0E12;stroke-width:2.5px;stroke-linejoin:round}
+  .sd-lb{font:700 12px/1 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;fill:var(--accent);font-variant-numeric:tabular-nums;paint-order:stroke;stroke:#0A0E12;stroke-width:2.5px;stroke-linejoin:round}
   .sd-lb-soil{fill:#c9a878}
   .strike-detail .foot{
     padding:7px 11px 9px;font-size:11px;color:var(--muted);line-height:1.35;
@@ -339,7 +321,6 @@
   .rotate p{font-size:15px;max-width:240px}
   @keyframes tilt{0%,100%{transform:rotate(-12deg)}50%{transform:rotate(78deg)}}
   @media (orientation:portrait){.rotate{display:flex}}
-  @media (max-width:560px){.readout{width:min(50vw,260px)}}
   @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
   .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
 </style>
@@ -391,23 +372,6 @@
     <button id="helpBtn" class="sa-help" aria-label="Replay the walkthrough" title="Help">?</button>
   </div>
 
-  <aside class="readout" aria-live="polite" aria-label="Strike result">
-    <div class="col">
-      <div class="verdict"><span class="dot" id="dot"></span><span id="band">Pure</span><span id="pct">100%</span></div>
-      <p id="tip">—</p>
-    </div>
-    <svg class="ballcloseup" viewBox="0 0 120 120" aria-hidden="true">
-      <defs>
-        <radialGradient id="ballGrad" cx="38%" cy="32%" r="75%">
-          <stop offset="0" stop-color="#ffffff"/><stop offset="0.7" stop-color="#e7ecf2"/><stop offset="1" stop-color="#b9c3cf"/>
-        </radialGradient>
-      </defs>
-      <line x1="6" y1="100" x2="114" y2="100" stroke="rgba(255,255,255,.25)" stroke-width="2"/>
-      <circle cx="60" cy="66" r="34" fill="url(#ballGrad)"/>
-      <line id="cuLine" x1="14" y1="66" x2="106" y2="66" stroke="var(--muted)" stroke-width="3" stroke-linecap="round"/>
-      <text id="cuLabel" x="60" y="116" text-anchor="middle" class="label" font-size="11">center</text>
-    </svg>
-  </aside>
 
   <!-- STRIKE DETAIL inset (2026-07-03) — real 3D club/ball/low-point via a
        second scissored viewport (geo3d/insetview.js), annotated live. -->
@@ -744,24 +708,15 @@ function updateStrikeDetail(stateRef) {
       `<line x1="${leftX.toFixed(1)}" y1="${topY.toFixed(1)}" x2="${rightX.toFixed(1)}" y2="${topY.toFixed(1)}" stroke="${accent}" stroke-width="1.4"/>`,
       `<path d="M${(leftX - 7).toFixed(1)} ${topY.toFixed(1)} L${leftX.toFixed(1)} ${(topY - 3.5).toFixed(1)} L${leftX.toFixed(1)} ${(topY + 3.5).toFixed(1)} Z" fill="${accent}"/>`,
       `<path d="M${(rightX + 7).toFixed(1)} ${topY.toFixed(1)} L${rightX.toFixed(1)} ${(topY - 3.5).toFixed(1)} L${rightX.toFixed(1)} ${(topY + 3.5).toFixed(1)} Z" fill="${accent}"/>`,
-      `<rect x="${(midX - 22).toFixed(1)}" y="${(topY - 20).toFixed(1)}" width="44" height="15" rx="4" fill="#0A0E12" stroke="rgba(34,227,214,.4)"/>`,
-      `<text x="${midX.toFixed(1)}" y="${(topY - 8.5).toFixed(1)}" text-anchor="middle" class="sd-lb">${cmLabel}</text>`
+      `<rect x="${(midX - 24).toFixed(1)}" y="${(topY - 21).toFixed(1)}" width="48" height="17" rx="4" fill="#0A0E12" stroke="rgba(34,227,214,.4)"/>`,
+      `<text x="${midX.toFixed(1)}" y="${(topY - 9).toFixed(1)}" text-anchor="middle" class="sd-lb">${cmLabel}</text>`
     );
   }
 
-  // (b) LOW POINT label — the 3D scene already shows a bright marker sphere
-  // (lowpoint.js's yellow marker) at this exact position; a second glyph
-  // drawn on top of it here would just clutter a spot that's already tightly
-  // packed with the club/ball, so this only adds a small leader dot + the
-  // text label, offset clear of the cluster.
-  if (!pLp.behind) {
-    const ly = pLp.y + 17;
-    parts.push(
-      `<line x1="${pLp.x.toFixed(1)}" y1="${pLp.y.toFixed(1)}" x2="${pLp.x.toFixed(1)}" y2="${(ly - 5).toFixed(1)}" stroke="${accent}" stroke-width="1" opacity=".75"/>`,
-      `<circle cx="${pLp.x.toFixed(1)}" cy="${pLp.y.toFixed(1)}" r="2" fill="${accent}"/>`,
-      `<text x="${pLp.x.toFixed(1)}" y="${(ly + 7).toFixed(1)}" text-anchor="${sdAnchorFor(pLp.x, rect.w)}" class="sd-lb">LOW POINT</text>`
-    );
-  }
+  // (LOW POINT text label removed in the density-diet: the 3D scene already
+  // shows a bright yellow marker sphere (lowpoint.js) at this exact position,
+  // and the cm number on the dimension line above names the distance — a
+  // second "LOW POINT" glyph just cluttered the tight club/ball cluster.)
 
   // (c) strike-height label — the 3D ball already carries a contact-height
   // ring (geometry.html's ballTick); this adds the exact "N mm high/low"
@@ -799,24 +754,11 @@ const els = {
 // ── strike readout ──────────────────────────────────────────────────────
 function renderReadout() {
   const sq = strikeQuality(state);
-  $('band').textContent = sq.band;
-  $('band').style.color = sq.textColor;   // band TEXT uses textColor
-  $('dot').style.color = sq.color; $('dot').style.background = sq.color;
-  $('pct').textContent = sq.pct + '%';
-  $('tip').textContent = sq.tip;
-
-  // ball close-up: contact height marker (offsetRatio +1 top, -1 bottom)
-  const cuCenterY = 66, cuR = 34;
-  const ratio = Math.max(-1.6, Math.min(1.6, strikeQuality(state).offsetRatio));
-  const y = cuCenterY - ratio * cuR;
-  $('cuLine').setAttribute('y1', y.toFixed(1)); $('cuLine').setAttribute('y2', y.toFixed(1));
-  $('cuLine').setAttribute('stroke', sq.color);
-  // FIX J — exact mm value from clubBallContact(state).offset, replacing the
-  // old center/top/bottom word: "+8 mm high" / "−5 mm low" / "center"
-  // (|offset·1000| < 1.5 → "center"); turf-first strikes keep that prefix.
-  const offsetMm = clubBallContact(state).offset * 1000;
-  const mmWord = Math.abs(offsetMm) < 1.5 ? 'center' : (offsetMm > 0 ? `+${offsetMm.toFixed(0)} mm high` : `−${Math.abs(offsetMm).toFixed(0)} mm low`);
-  $('cuLabel').textContent = sq.clubZ < 0 ? `turf first, ${mmWord}` : mmWord;
+  // The visible strike verdict now lives ONLY in the 3D strike-detail inset
+  // (#sdChip band/pct + #sdFoot sentence + the ballTick ring / mm callout);
+  // the old duplicate .readout prose panel was removed (density-diet). This
+  // function keeps the sr-only #sceneData live region + the persistent HUD
+  // chips in sync with the sliders.
 
   // live numeric alternative to the chart (a11y) — keeps the screen-reader text in sync with the data
   const di = deriveImpact(state);
@@ -840,7 +782,7 @@ const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 // ── fade the control surfaces during play for a clean ball-strike view ────
 // The HUD chips stay visible during play (matches the old in-canvas chips).
-const CONTROL_SEL = '.controls, .readout, .tune, .modnav, .title, .strike-detail';
+const CONTROL_SEL = '.controls, .tune, .modnav, .strike-detail';
 function controlsVisible(show) {
   const nodes = document.querySelectorAll(CONTROL_SEL);
   if (reduce) { nodes.forEach(n => { n.style.opacity = show ? '' : '0'; n.style.pointerEvents = show ? '' : 'none'; }); return; }
@@ -1128,11 +1070,21 @@ $('hit').addEventListener('click', () => {
   saShots.recordShot(); // one PLAYED swing = one shot
   refreshNudge();
 });
-// strike toggle: show/hide the strike-result panel so you can study the bare swing arc
-const readoutEl = document.querySelector('.readout');
+// strike toggle: show/hide the strike-detail inset so you can study the bare swing arc
+const strikeDetailEl = $('strikeDetail');
 $('strikeBtn').addEventListener('click', () => {
-  const on = readoutEl.style.display !== 'none';
-  readoutEl.style.display = on ? 'none' : 'flex';
+  const on = strikeDetailEl.style.display !== 'none';
+  if (on) {
+    strikeDetailEl.style.display = 'none';
+    // zero the scissor rect: w/h clamp to 1 inside setRect, and renderPass()
+    // skips when w<2 — otherwise the inset keeps painting a ghost 3D square
+    // into the canvas region where the card used to be.
+    if (inset3d) inset3d.setRect({ x: 0, y: 0, w: 0, h: 0 });
+  } else {
+    strikeDetailEl.style.display = '';
+    updateInsetRect();   // re-measure the card's viewport
+  }
+  if (sa3d) sa3d.invalidate();
   $('strikeBtn').setAttribute('aria-pressed', String(!on));
 });
 

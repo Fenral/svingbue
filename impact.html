@@ -71,31 +71,6 @@
   .ts-center .speedwrap .rwrap{flex:1 1 auto;min-width:60px}
   .ts-center .speedval{font-size:12px;font-weight:700;color:var(--accent);font-variant-numeric:tabular-nums;width:60px;text-align:right;white-space:nowrap}
 
-  /* ══ FOCUS-MODE SEGMENTED CONTROL — sits centred in the top strip,
-     alongside the club-speed slider (which stays in .ts-center). ══ */
-  .segwrap{flex:0 1 auto;display:flex;justify-content:center;min-width:0}
-  .seg{
-    display:inline-flex;align-items:stretch;gap:2px;padding:3px;
-    background:rgba(10,16,24,.6);border:1px solid rgba(255,255,255,.10);
-    border-radius:var(--radius-pill);
-  }
-  .seg button{
-    appearance:none;font-family:inherit;cursor:pointer;border:1px solid transparent;
-    background:transparent;color:var(--muted);position:relative;
-    height:30px;min-width:66px;padding:0 12px;border-radius:999px;
-    font-size:11px;font-weight:700;letter-spacing:.03em;
-    display:inline-flex;align-items:center;justify-content:center;gap:5px;
-    transition:background .18s,color .18s,border-color .18s;
-  }
-  /* visual pill stays 30px (fits the thin top strip); the hit target is
-     expanded to >=44px via a transparent pseudo-element pad, matching the
-     app's ghostPill/ghostClear convention for compact controls. */
-  .seg button::after{content:"";position:absolute;left:0;right:0;top:50%;height:44px;transform:translateY(-50%)}
-  .seg button .sk{width:6px;height:6px;border-radius:2px;flex:0 0 auto;opacity:.7}
-  .seg button:hover{color:var(--ink);background:rgba(255,255,255,.06)}
-  .seg button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-  .seg button[aria-pressed="true"]{color:#04140f;background:var(--accent);border-color:var(--accent)}
-  .seg button[aria-pressed="true"] .sk{background:#04140f;opacity:1}
 
   .ts-right{flex:0 0 auto;display:flex;align-items:center;gap:8px}
   /* size the shared "?" help affordance to fit the thin top strip; the visual
@@ -133,8 +108,6 @@
     transition:opacity .25s ease, transform .25s ease;
   }
   .focusPanel.active{display:flex;opacity:1;transform:scale(1)}
-  /* mini-panels retired in dual-lens: each panel is now ONLY its hero lens */
-  .focusPanel .miniPanel{display:none}
   @media (prefers-reduced-motion:reduce){ .focusPanel{transition:none} }
 
   /* hero lens (~74%) — the large, focused instrument view. LENS-DOMINANCE
@@ -153,19 +126,7 @@
     display:flex;flex-direction:column;overflow:hidden;
   }
   .heroLens .lenshead{position:absolute;top:6px;left:10px;z-index:3;pointer-events:none}
-  .heroLens .lenshead .lh1{font-size:9px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--ink)}
-  .heroLens .lenshead .lh2{font-size:8px;color:var(--muted);margin-top:1px;letter-spacing:.02em}
-  /* LAUNCH tag — a persistent legend chip that names the YELLOW arrow in each
-     lens (LAUNCH DIR in Direction, LAUNCH ANGLE in Height), so the derived
-     launch indicator is never mistaken for an input arrow. Top-right corner,
-     clear of the top-left lenshead and the fan of arrows from the pivot. */
-  .heroLens .launchTag{
-    position:absolute;top:6px;right:8px;z-index:3;pointer-events:none;
-    display:inline-flex;align-items:center;gap:5px;
-    font-size:8.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--c-launch);
-    background:rgba(10,14,18,.62);border:1px solid rgba(244,208,0,.34);border-radius:6px;padding:3px 6px;
-  }
-  .heroLens .launchTag i{width:12px;height:3px;border-radius:2px;background:var(--c-launch);display:inline-block;flex:0 0 auto}
+  .heroLens .lenshead .lh1{font-size:10.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--ink)}
   /* the SVG gets flex:1 1 auto with min-height:0 so it is the ONE element
      that absorbs/gives back space as the compact chrome around it shrinks —
      this is what lets the lens claim the freed-up height. */
@@ -180,10 +141,10 @@
   }
   .mini{flex:1 1 0;min-width:0}
   .mini .mtop{display:flex;justify-content:space-between;align-items:baseline;gap:6px;margin-bottom:0}
-  .mini .mname{font-size:9.5px;font-weight:700;letter-spacing:.02em;display:inline-flex;align-items:center;gap:5px}
+  .mini .mname{font-size:11px;font-weight:700;letter-spacing:.02em;display:inline-flex;align-items:center;gap:5px}
   .mini .mname label{cursor:pointer}
   .mini .mdot{width:7px;height:7px;border-radius:2px;flex:0 0 auto}
-  .mini .mval{font-size:10.5px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--ink)}
+  .mini .mval{font-size:12.5px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--ink)}
 
   input[type=range]{width:100%;height:18px;cursor:pointer;accent-color:var(--accent);background:transparent}
   input[type=range]:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:6px}
@@ -198,7 +159,7 @@
      the touch target padded out to >=44px via a transparent ::after pad
      (same convention as .seg button / .playpill elsewhere in this file)
      rather than by inflating the visual box. */
-  .heroResults{flex:0 0 auto;display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:0 10px 0}
+  .heroResults{flex:0 0 auto;display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:0 10px 0}
   .mcard{
     height:48px;padding:5px 9px;border-radius:10px;position:relative;
     background:linear-gradient(180deg, rgba(22,34,50,.7), rgba(12,19,29,.7));
@@ -214,8 +175,8 @@
   .mcard:hover{border-color:rgba(255,255,255,.18);background:linear-gradient(180deg, rgba(26,40,58,.78), rgba(14,22,33,.78))}
   .mcard:active,.mcard[aria-expanded="true"]{transform:scale(.97);border-color:rgba(255,255,255,.2)}
   .mcard:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-  .mcard .mk{font-size:9px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .mcard .mv{font-size:16px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--accent);letter-spacing:-.01em;white-space:nowrap}
+  .mcard .mk{font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .mcard .mv{font-size:19px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--accent);letter-spacing:-.01em;white-space:nowrap}
   .mcard .mv small{font-size:.55em;color:var(--muted);font-weight:600;margin-left:2px}
 
   /* coach line — main cause + coach cue, one compact line under the hero
@@ -232,46 +193,12 @@
   .coachLine .cue{color:var(--muted)}
   .coachDot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent);flex:0 0 auto;margin-right:2px}
 
-  /* mini side panel (~30%) — the OTHER lens, compact + live, tap to switch focus */
-  .miniPanel{
-    flex:1 1 0;min-width:0;border-radius:18px;position:relative;
-    background:linear-gradient(180deg, rgba(20,32,48,.6), rgba(11,17,26,.7));
-    border:1px solid rgba(255,255,255,.08);
-    display:flex;flex-direction:column;overflow:hidden;
-    cursor:pointer;appearance:none;font-family:inherit;color:inherit;text-align:left;padding:0;
-    transition:border-color .15s ease, background .15s ease;
-  }
-  .miniPanel:hover{border-color:rgba(255,255,255,.18);background:linear-gradient(180deg, rgba(24,38,56,.68), rgba(13,20,30,.78))}
-  .miniPanel:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-  .miniPanel .mp-head{padding:7px 10px 0;display:flex;align-items:baseline;justify-content:space-between;gap:6px}
-  .miniPanel .mp-h1{font-size:9px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
-  .miniPanel .mp-cta{font-size:8.5px;font-weight:700;color:var(--accent);letter-spacing:.02em;white-space:nowrap}
-  .miniPanel svg{flex:1 1 auto;width:100%;min-height:0;display:block;pointer-events:none}
-  .miniPanel .mp-chips{flex:0 0 auto;display:flex;gap:6px;padding:0 8px 8px}
-  .chip{
-    flex:1 1 0;min-width:0;min-height:44px;display:flex;flex-direction:column;justify-content:center;gap:2px;
-    padding:6px 10px;border-radius:12px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);
-    cursor:pointer;appearance:none;font-family:inherit;color:inherit;text-align:left;
-    transition:background .15s ease, border-color .15s ease, transform .1s ease;
-  }
-  .chip:hover{background:rgba(255,255,255,.09);border-color:rgba(255,255,255,.18)}
-  .chip:active{transform:scale(.97)}
-  .chip:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-  .chip .ck{font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:700;display:flex;align-items:center;gap:4px}
-  .chip .ck .cdot{width:6px;height:6px;border-radius:2px;flex:0 0 auto}
-  .chip .cv{font-size:15px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--ink)}
-  /* REBALANCE: the old secondary chip row (Ball speed / Backspin / Carry) is
-     retired — its cells now render as compact cards INSIDE the Launch hero
-     strip (7 columns, rules below), so the whole row's height goes to the
-     lens. The empty host div stays in the DOM; hide it entirely. */
-  .secChips{display:none}
-  /* DUAL-LENS: the Launch panel is now a half-width column, so its 7 cells
-     (4 hero + 3 secondary) wrap into a 4-up grid (two rows) instead of one
-     cramped 7-up row. */
-  #heroResultsLaunch{grid-template-columns:repeat(4,1fr);gap:5px}
+  /* DENSITY-DIET: the Launch panel's 6 cells (3 hero + 3 secondary) form two
+     clean rows of 3 — same 3-up grid as Direction, bigger type (step 3/4). */
+  #heroResultsLaunch{grid-template-columns:repeat(3,1fr);gap:5px}
   #heroResultsLaunch .mcard{padding:5px 7px;border-radius:9px}
-  #heroResultsLaunch .mcard .mv{font-size:15px}
-  #heroResultsLaunch .mcard .mk{font-size:8.5px;letter-spacing:.03em}
+  #heroResultsLaunch .mcard .mv{font-size:18px}
+  #heroResultsLaunch .mcard .mk{font-size:10px;letter-spacing:.03em}
 
   /* ══ PREMIUM CUSTOM RANGE SLIDERS ══════════════════════════════════
      Applied to s_face / s_path / s_attack / s_loft / s_speed (+ fSpeedRange).
@@ -280,20 +207,12 @@
        painted as a layered linear-gradient set live by JS on `input`.
      • centre tick at 0 for the ± sliders.
      • ~20px disc thumb in the param colour + ring + shadow, grows ×1.25 on :active.
-     • hit area sized per host: the top-strip speed slider keeps the full
-       ≥44px box (plenty of room in the 40px strip... via its own wrapper);
-       the docked minidock sliders (Direction/Launch focus) are a REBALANCE
-       casualty — they're a secondary/enhancement control (dragging the
-       lens arrows directly is the primary interaction per the arrowG
-       aria-hidden pointer-enhancement comments below), so their hit height
-       is trimmed to 36px to free vertical budget for the lens above them.
-       Still comfortably tappable (36px ≈ Apple's 2020 HIG minimum) and the
-       20px thumb + ring stays fully inside it.
+     • hit area: full ≥44px box on every host (density-diet 2026-07: the 36px "REBALANCE casualty" trim is reverted).
      Each slider sets:  --rc (param colour), --rf (fill geometry gradient). */
   .rwrap{position:relative;--rc:var(--accent)}
   .rwrap input[type=range].premium-range{
     -webkit-appearance:none;appearance:none;
-    width:100%;height:36px;
+    width:100%;height:44px;
     margin:0;cursor:pointer;background:transparent;
     /* the visible track + fill is painted on a 5px-tall band centred vertically,
        via a background-image set by JS (--rf) over the base track. */
@@ -457,55 +376,6 @@
     #predCurveG #predCurve{opacity:.18}
   }
 
-  /* ══ BOTTOM TELEMETRY RAIL (full width) ═════════════════════════ */
-  .rail{
-    flex:0 0 auto;display:flex;align-items:stretch;gap:2px;
-    height:84px;padding:0 max(6px,env(safe-area-inset-left)) max(0px,env(safe-area-inset-bottom)) max(6px,env(safe-area-inset-right));
-    border-top:1px solid rgba(255,255,255,.08);
-    background:linear-gradient(180deg, rgba(10,14,18,.3), rgba(8,12,16,.92));
-    overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-webkit-overflow-scrolling:touch;
-  }
-  .rail::-webkit-scrollbar{display:none}
-  /* right-edge fade hint when more cells are hidden beyond the viewport (set by JS) */
-  .rail.scroll-r{
-    -webkit-mask-image:linear-gradient(90deg, #000 calc(100% - 34px), transparent 100%);
-    mask-image:linear-gradient(90deg, #000 calc(100% - 34px), transparent 100%);
-  }
-  .rail.scroll-r.scroll-l{
-    -webkit-mask-image:linear-gradient(90deg, transparent 0, #000 34px, #000 calc(100% - 34px), transparent 100%);
-    mask-image:linear-gradient(90deg, transparent 0, #000 34px, #000 calc(100% - 34px), transparent 100%);
-  }
-  /* A2 CLEAN — label-above / value-below column with a thin range underline */
-  .tcell{
-    position:relative;
-    flex:1 1 0;min-width:max-content;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;
-    gap:2px;padding:0 14px 9px;border-right:1px solid rgba(255,255,255,.05);
-    background:transparent;border-top:none;border-bottom:none;border-left:none;
-    color:var(--ink);cursor:pointer;font-family:inherit;text-align:left;
-    transition:background .15s;white-space:nowrap;
-  }
-  .tcell:last-child{border-right:none}
-  .tcell:hover{background:rgba(255,255,255,.04)}
-  .tcell:focus-visible{outline:2px solid var(--accent);outline-offset:-2px;border-radius:8px}
-  .tcell[aria-expanded="true"]{background:var(--accent-soft)}
-  .tcell .ttext{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:2px;min-width:0}
-  .tcell .tname{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:600;order:-1}
-  .tcell .tval{font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.01em;line-height:1.02;color:var(--ink)}
-  .tcell .tval .tu{font-size:.5em;font-weight:600;color:var(--muted);margin-left:2px;letter-spacing:0}
-  /* hierarchy: hero + large vs small */
-  .tcell.hero{flex:1.5 1 0}
-  .tcell.hero .tval{font-size:32px}
-  .tcell.hero .tname{font-size:12px}
-  .tcell.hero .tval .tu{color:var(--accent)}
-  .tcell.lg .tval{font-size:24px}
-  .tcell.sm .tval{font-size:18px;color:#cfdcee}
-  /* A2 range underline on the rail (same treatment as the flight grid) */
-  .tcell .rng{position:absolute;left:14px;right:14px;bottom:5px;height:2px;border-radius:2px;
-    background:rgba(255,255,255,.10);display:block}
-  .tcell .rng .fill{position:absolute;top:0;bottom:0;border-radius:2px;background:var(--accent);width:0;
-    transition:width .55s cubic-bezier(.2,.7,.2,1)}
-  .tcell[data-signed] .rng .fill{background:rgba(34,227,214,.7)}
-  @media (prefers-reduced-motion:reduce){ .tcell .rng .fill{transition:none} }
 
   /* ══ GLASS EXPLAINER POPOVER (STAGE 7 — three-section redesign) ══
      Sections: WHAT IT IS (plain-language) / HOW IT'S CREATED (mini SVG
@@ -782,8 +652,6 @@
   @media (max-width:960px){
     .ts-title{display:none}                          /* "See the Shot" — least essential at this width */
     .modnav a.tab{padding:0 6px;font-size:10px}
-    .seg button{min-width:0;padding:0 8px;font-size:10px;gap:3px}
-    .seg button .sk{width:5px;height:5px}
     .ts-center .speedwrap{max-width:min(22vw,150px)}
     .ts-center label{display:none}                    /* keep the live mph value, drop the "Club speed" label */
     .playpill{padding:0 9px;font-size:10px;gap:4px}
@@ -838,8 +706,7 @@
 
       <!-- HERO — DIRECTION (top-down) -->
       <section class="heroLens" id="lensDir" aria-label="Direction lens, top-down view">
-        <div class="lenshead"><div class="lh1">Direction</div><div class="lh2">Top-down · face &amp; path</div></div>
-        <div class="launchTag" aria-hidden="true"><i></i>Launch dir</div>
+        <div class="lenshead"><div class="lh1">Direction</div></div>
         <!-- STAGE 6 — landing-predictor live region: announces the predicted finish
              on settle (debounced ~800ms after the last input), separate from the
              lens's static aria-label so screen readers get a calm, single update. -->
@@ -939,61 +806,10 @@
         </div>
       </section>
 
-      <!-- MINI — LAUNCH (compact schematic, live, tap to switch focus).
-           Simplified small-viewBox arrows (attackMini/loftMini) mirror the
-           hero Launch lens's angles but are their OWN non-interactive nodes
-           (pointer-events:none via .miniPanel svg), so they never collide
-           with the hero's interactive ids. -->
-      <button type="button" class="miniPanel" id="mpLaunch" aria-label="Launch mini panel — tap to switch focus to Launch">
-        <div class="mp-head"><span class="mp-h1">Launch</span><span class="mp-cta">Tap to focus →</span></div>
-        <svg viewBox="0 0 200 200" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
-          <line x1="18" y1="150" x2="188" y2="150" stroke="rgba(255,255,255,.16)" stroke-width="1.5"/>
-          <circle cx="40" cy="150" r="4" fill="#fff" opacity=".85"/>
-          <g id="g_attackMini">
-            <line id="line_attackMini" x1="40" y1="150" x2="140" y2="150" stroke="var(--c-attack)" stroke-width="5" stroke-linecap="round"/>
-            <polygon id="head_attackMini" points="152,150 132,138 138,150 132,162" fill="var(--c-attack)"/>
-          </g>
-          <g id="g_loftMini">
-            <line id="line_loftMini" x1="40" y1="150" x2="140" y2="150" stroke="var(--c-loft)" stroke-width="5" stroke-linecap="round"/>
-            <polygon id="head_loftMini" points="152,150 132,138 138,150 132,162" fill="var(--c-loft)"/>
-          </g>
-        </svg>
-        <div class="mp-chips">
-          <!-- DUAL-LENS: this mini-panel is now display:none (its hero lens is
-               always shown alongside), and its chips can never receive focus
-               again — role/tabindex removed (they were an invalid focusable-
-               nested-in-<button> pattern). rotMini()/syncChipValues() still
-               target these ids for the (currently invisible) live-value text
-               only, unchanged. -->
-          <span class="chip" id="chipAttack"><span class="ck"><span class="cdot" style="background:var(--c-attack)" aria-hidden="true"></span>Attack</span><span class="cv" id="chipAttackVal">−3.0°</span></span>
-          <span class="chip" id="chipDynLoft"><span class="ck"><span class="cdot" style="background:var(--c-loft)" aria-hidden="true"></span>Dyn loft</span><span class="cv" id="chipDynLoftVal">30.0°</span></span>
-        </div>
-      </button>
     </div>
 
     <!-- ═══ LAUNCH FOCUS ═══ -->
     <div class="focusPanel active" id="panelLaunch" data-focus="launch">
-
-      <!-- MINI — DIRECTION (compact, live, tap to switch focus) -->
-      <button type="button" class="miniPanel" id="mpDir" aria-label="Direction mini panel — tap to switch focus to Direction">
-        <div class="mp-head"><span class="mp-h1">Direction</span><span class="mp-cta">Tap to focus →</span></div>
-        <svg viewBox="0 0 400 360" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
-          <line x1="200" y1="330" x2="200" y2="40" stroke="rgba(255,255,255,.16)" stroke-width="1.5" stroke-dasharray="5 8"/>
-          <circle cx="200" cy="330" r="5" fill="#fff" opacity=".85"/>
-          <g id="g_pathMini">
-            <line id="line_pathMini" x1="200" y1="330" x2="200" y2="150" stroke="var(--c-path)" stroke-width="7" stroke-linecap="round"/>
-            <polygon id="head_pathMini" points="200,120 176,158 200,146 224,158" fill="var(--c-path)"/>
-          </g>
-          <g id="g_faceMini">
-            <line id="line_faceMini" x1="200" y1="330" x2="200" y2="150" stroke="var(--c-face)" stroke-width="7" stroke-linecap="round"/>
-            <polygon id="head_faceMini" points="200,120 176,158 200,146 224,158" fill="var(--c-face)"/>
-          </g>
-        </svg>
-        <div class="mp-chips">
-          <span class="chip" id="chipFace"><span class="ck"><span class="cdot" style="background:var(--c-face)" aria-hidden="true"></span>Face</span><span class="cv" id="chipFaceVal">−2.0°</span></span>
-          <span class="chip" id="chipPath"><span class="ck"><span class="cdot" style="background:var(--c-path)" aria-hidden="true"></span>Path</span><span class="cv" id="chipPathVal">+2.0°</span></span>
-        </div>
-      </button>
 
       <!-- HERO — LAUNCH (side-on). This is THE interactive height lens — keeps
            every original id (svgHt/g_attack/g_loft/htCone/s_attack/s_loft/
@@ -1001,8 +817,7 @@
            and chip-fade JS drives it unchanged; it is simply re-homed from the
            old fixed right-hand panel into the Launch focus's hero slot. -->
       <section class="heroLens" id="lensHt" aria-label="Launch lens, side-on view">
-        <div class="lenshead"><div class="lh1">Launch</div><div class="lh2">Side-on · attack &amp; dyn loft</div></div>
-        <div class="launchTag" aria-hidden="true"><i></i>Launch angle</div>
+        <div class="lenshead"><div class="lh1">Launch</div></div>
         <svg id="svgHt" viewBox="0 0 400 360" preserveAspectRatio="xMidYMid meet" role="img"
              aria-label="Side-on view. A ground line runs along the bottom. From the impact point, a pink attack arrow and a violet dynamic-loft arrow rotate to show the club's descent and delivered loft.">
           <defs>
@@ -1054,33 +869,9 @@
         </div>
         <!-- HERO CARDS — Launch (max 4): re-homed rail cells, same popover wiring -->
         <div class="heroResults" id="heroResultsLaunch" role="group" aria-label="Launch results — tap any value for an explanation"></div>
-        <!-- SECONDARY — Ball speed + Backspin (vertical-plane adjacent, still clickable→popover) -->
-        <div class="secChips" id="secChipsLaunch"></div>
-        <div class="coachWrap">
-          <div class="coachLine"><span class="coachDot" aria-hidden="true"></span><span class="cause" id="causeLaunch">Main cause: —</span><span class="cue" id="cueLaunch"></span></div>
-        </div>
-      </section>
-    </div>
-
-    <!-- ═══ FLIGHT FOCUS ═══ (selecting this segment opens the existing Play-flight
-         overlay; this panel is a lightweight resting state shown only if the
-         overlay is dismissed without picking another segment) -->
-    <div class="focusPanel" id="panelFlight" data-focus="flight">
-      <section class="heroLens" aria-label="Flight" style="flex:1 1 auto;align-items:center;justify-content:center">
-        <div class="lenshead"><div class="lh1">Flight</div><div class="lh2">Play-flight overlay</div></div>
-        <div style="flex:1 1 auto;display:flex;align-items:center;justify-content:center">
-          <button type="button" class="playpill" id="segFlightPlay" style="height:52px;padding:0 26px;font-size:14px">
-            <span class="pico" aria-hidden="true">▶</span> Play flight
-          </button>
-        </div>
       </section>
     </div>
   </main>
-
-  <!-- rail cell buttons for parameters with no dedicated hero card in either
-       focus (Ball speed, Backspin) are built directly into #secChipsLaunch by
-       script; the legacy full-width rail strip no longer renders. -->
-  <div id="rail" hidden aria-hidden="true"></div>
 
   <!-- ══ GLASS POPOVER (single reused node) — STAGE 7 three-section body ══ -->
   <div class="pop" id="pop" role="dialog" aria-modal="false" aria-labelledby="popHeadName" hidden>
@@ -1621,12 +1412,6 @@ function fmtMfromYd(yd){ return Math.round(yd*YD2M); }
 // row ('sec'). size stays 'hero'|'lg'|'sm' only for legacy popover styling
 // hooks (unused visually now — the .mcard style is uniform per the mock).
 const CELLS = [
-  { key:'faceToPath', home:'dir', name:'Face-to-path', size:'lg', plane:'H', est:false,
-    value:f=>({v:f1(state.faceAngle-state.clubPath)+'°'}),
-    ring:{lo:-25,hi:25, signed:true, get:()=>state.faceAngle-state.clubPath},
-    desc:'The gap between where the clubface points and the direction the club is swinging. This gap is what tilts the spin axis and makes the ball curve.',
-    formula:f=>[{t:'face '+f1(f.faceAngle),cls:f.faceAngle>=0?'pos':'neg'},{op:'−'},{t:'path '+f1(f.clubPath),cls:f.clubPath>=0?'neg':'pos'}],
-    sourcenote:'Face minus path — the single biggest driver of curve.' },
   { key:'start', home:'dir', name:'Launch dir', size:'lg', plane:'H', est:false,
     value:f=>({v:f1(f.startDirection)+'°'}),
     ring:{lo:-25,hi:25, signed:true, get:f=>f.startDirection},
@@ -1663,12 +1448,6 @@ const CELLS = [
     desc:'How fast the ball spins backward — backspin is what holds it up in the air.',
     formula:f=>[{t:'spinLoft '+Math.round(f.spinLoft)+'°',cls:'pos'},{op:'×'},{t:'ballSpeed'},{op:'×'},{t:'k'}],
     honesty: honestyEst+' Backspin uses an illustrative spinLoft·ballSpeed rpm model.' },
-  { key:'spinLoft', home:'launch', name:'Spin loft', size:'sm', plane:'V', est:false,
-    value:f=>({v:Math.round(f.spinLoft)+'°'}),
-    ring:{lo:5,hi:40, get:f=>f.spinLoft},
-    desc:'The angle between where the face points and where the head is moving. More spin loft = a higher, softer shot.',
-    formula:f=>[{t:'dynLoft '+f.dynamicLoft.toFixed(0),cls:'pos'},{op:'−'},{t:'attack '+f1(f.attackAngle),cls:f.attackAngle>=0?'neg':'pos'}],
-    sourcenote:'Sourced: spin loft = dynamic loft − attack angle.' },
   { key:'apex', home:'launch', name:'Apex', size:'sm', plane:'V', est:true,
     value:f=>({v:Math.round(f.apex*YD2M)+' m'}),
     ring:{lo:0,hi:45, get:f=>f.apex*YD2M},
@@ -1688,9 +1467,9 @@ const CELLS = [
     formula:f=>[{t:'172 yd'},{op:'×'},{t:'ballSpeed/120',cls:'pos'},{op:'→ m'}],
     honesty: honestyEst+' Carry is scaled from a tour 7-iron reference by ball speed.' },
 ];
-const DIR_CELLS = CELLS.filter(c=>c.home==='dir');       // face-to-path, start, spinAxis, curve (4)
-// display order matches the approved mock: Spin loft, Launch, Apex, Land angle
-const LAUNCH_ORDER = ['spinLoft','launch','apex','land'];
+const DIR_CELLS = CELLS.filter(c=>c.home==='dir');       // start, spinAxis, curve (3)
+// display order matches the approved mock: Launch, Apex, Land angle
+const LAUNCH_ORDER = ['launch','apex','land'];
 const LAUNCH_CELLS = LAUNCH_ORDER.map(k => CELLS.find(c=>c.key===k));
 const SEC_CELLS = CELLS.filter(c=>c.home==='sec');        // ballSpeed, backspin, carry — secondary chips
 
@@ -1758,21 +1537,6 @@ function buildHeroCard(c){
   const nm = document.createElement('div'); nm.className='mk'; nm.textContent = c.name;
   const vl = document.createElement('div'); vl.className='mv';
   btn.append(nm, vl);
-  btn.addEventListener('click', () => togglePopover(c.key));
-  cellEls[c.key] = { btn, valEl: vl, barFill: null, def: c };
-  return btn;
-}
-function buildSecChip(c){
-  const btn = document.createElement('button');
-  btn.className = 'chip';
-  btn.type = 'button';
-  btn.id = 'cell_'+c.key;
-  btn.setAttribute('aria-haspopup','dialog');
-  btn.setAttribute('aria-expanded','false');
-  btn.setAttribute('aria-controls','pop');
-  const ck = document.createElement('span'); ck.className='ck'; ck.textContent = c.name;
-  const vl = document.createElement('span'); vl.className='cv';
-  btn.append(ck, vl);
   btn.addEventListener('click', () => togglePopover(c.key));
   cellEls[c.key] = { btn, valEl: vl, barFill: null, def: c };
   return btn;
@@ -2093,8 +1857,7 @@ const PARAM_INFO = {
     headVal:f=>sdeg(state.faceAngle-state.clubPath),
     desc:'The gap between where the clubface points and the direction the club is swinging at impact. This gap is what tilts the spin axis and makes the ball curve.',
     diagram:DIAGRAMS.faceToPath, drivers:DRIVERS.faceToPath },
-  // One quantity, ONE name: the yellow arrow's .launchTag says "Launch dir",
-  // so its card + popover do too (Fable audit #6a — was "Start direction").
+  // One quantity, ONE name: card + popover both say "Launch direction" (Fable audit #6a).
   launchDir: { name:'Launch direction', plane:'H',
     headVal:f=>sdeg(f.startDirection),
     desc:'Where the ball starts its flight, relative to the target line. Mostly set by the clubface, with a smaller contribution from the swing path.',
@@ -2197,11 +1960,6 @@ const FLIGHT_TO_BREAKDOWN = {
   f_spinAxis:'bd_spinAxis', f_shape:'bd_shape',
 };
 Object.entries(FLIGHT_TO_BREAKDOWN).forEach(([c,t])=> redirectCell(c, t));
-
-// no-op kept as a stable hook name: the permanent scrollable rail strip is
-// gone (superseded by the per-focus hero-card rows, which never overflow —
-// max 4 cards / row per the density guardrail), so there is nothing to scroll.
-function updateRailScrollHints(){}
 
 function renderRail(flight){
   CELLS.forEach(c => {
@@ -2417,39 +2175,18 @@ function updateLensAria(){
 }
 
 // ════════════════════════════════════════════════════════════════
-//  FOCUS-MODE MINI-PANEL SCHEMATIC ARROWS (decorative, small viewBox 0..200)
-//   Ported from impact-focus-mock.html's updateMiniArrows(): a simplified,
-//   non-interactive echo of whichever lens ISN'T the current hero, so the
-//   mini panel still reads live while compact. Independent nodes from the
-//   hero's g_attack/g_loft/g_face/g_path (no shared ids, so no interference
-//   with drag/haptics/chip-fade on the hero arrows).
-// ════════════════════════════════════════════════════════════════
-function rotMini(id, pivot, angDeg){
-  const el = $(id); if (!el) return;
-  el.setAttribute('transform', `rotate(${angDeg.toFixed(2)} ${pivot.x} ${pivot.y})`);
-}
-function updateMiniArrows(){
-  // Launch mini (attack/loft), pivot 40,150 base 0 (points right)
-  rotMini('g_attackMini', {x:40,y:150}, -state.attackAngle * 1.4);
-  rotMini('g_loftMini', {x:40,y:150}, -state.dynamicLoft * 1.4 * 0.55);
-  // Direction mini (face/path), pivot 200,330 base -90 (points up)
-  rotMini('g_pathMini', {x:200,y:330}, state.clubPath * 1.4);
-  rotMini('g_faceMini', {x:200,y:330}, state.faceAngle * 1.4);
-}
-
-// ════════════════════════════════════════════════════════════════
 //  MAIN-CAUSE GENERATOR + COACH-CUE LIBRARY
 //   Ported verbatim (rule logic) from impact-focus-mock.html. Produces a
 //   short "Main cause: …" line + a longer coaching cue, shared across the
 //   Direction/Launch coach lines AND the flight overlay's fDelta area.
 // ════════════════════════════════════════════════════════════════
 const CUES = {
-  faceOpen:   'Face open to path — the ball starts right of the swing line and tends to curve further right.',
-  faceClosed: 'Face closed to path — the ball starts left of the swing line and tends to curve further left.',
-  pathLeft:   'Path swings left (out-to-in) — this steers the launch direction left of target.',
-  pathRight:  'Path swings right (in-to-out) — this steers the launch direction right of target.',
-  attackDown: 'Downward attack — a steeper descent adds spin loft and launches the ball higher and shorter.',
-  attackUp:   'Upward attack — a shallower or ascending strike lowers spin loft for a flatter, hotter flight.',
+  faceOpen:   'Face open to path — starts right, curves further right.',
+  faceClosed: 'Face closed to path — starts left, curves further left.',
+  pathLeft:   'Path swings left (out-to-in) — start line pulls left.',
+  pathRight:  'Path swings right (in-to-out) — start line pushes right.',
+  attackDown: 'Steep downward attack — more spin loft, higher and shorter.',
+  attackUp:   'Upward attack — less spin loft, flatter and hotter.',
   loftHigh:   'High dynamic loft — more effective loft at impact climbs the ball steeply.',
   loftLow:    'Low dynamic loft — less effective loft at impact keeps the ball flight low and driving.',
   spinLoftHigh: 'High spin loft drives a tall, soft landing shot.',
@@ -2491,24 +2228,12 @@ function secondaryCue(){
   if (state.dynamicLoft <= 18) return CUES.loftLow;
   return '';
 }
-// mini-panel chip value labels (chipFaceVal / chipPathVal / chipAttackVal /
-// chipDynLoftVal) — kept in sync alongside the docked-slider mval labels.
-function syncChipValues(){
-  const cf=$('chipFaceVal'), cp=$('chipPathVal'), ca=$('chipAttackVal'), cl=$('chipDynLoftVal');
-  if (cf) cf.textContent = fmtDeg(state.faceAngle);
-  if (cp) cp.textContent = fmtDeg(state.clubPath);
-  if (ca) ca.textContent = fmtDeg(state.attackAngle);
-  if (cl) cl.textContent = fmtLoftStr(state.dynamicLoft);
-}
 function updateCoachLines(f){
   const mc = mainCause(f);
   const sec = secondaryCue();
   const causeDir = $('causeDir'), cueDir = $('cueDir');
-  const causeLaunch = $('causeLaunch'), cueLaunch = $('cueLaunch');
   if (causeDir) causeDir.textContent = mc.cause;
   if (cueDir) cueDir.textContent = mc.cue || sec;
-  if (causeLaunch) causeLaunch.textContent = mc.cause;
-  if (cueLaunch) cueLaunch.textContent = sec || mc.cue;
   // flight-overlay coach cue (near the fDelta micro-label) — same content
   const flightCue = $('flightCoachCue');
   if (flightCue) flightCue.textContent = mc.cue || sec;
@@ -2717,8 +2442,6 @@ function recompute(){
   renderRail(flight);
   renderPredictor(flight);
   renderLaunchBend(flight);
-  updateMiniArrows();
-  syncChipValues();
   updateCoachLines(flight);
 }
 
@@ -3950,34 +3673,6 @@ function setFocus(next, opts){
 }
 $('segFlightPlay') && $('segFlightPlay').addEventListener('click', openFlight);
 
-// mini-panel taps (click anywhere on the panel) switch focus
-$('mpLaunch').addEventListener('click', () => setFocus('launch'));
-$('mpDir').addEventListener('click', () => setFocus('direction'));
-
-// chips inside mini panels also switch focus. Click already bubbles up to the
-// miniPanel button (chips live inside it visually but are separate elements
-// positioned over it — actually siblings inside the same button in our
-// markup? No: chips are inside .mp-chips which is a DIRECT child of the
-// miniPanel <button>, so a click on a chip already bubbles to the miniPanel's
-// click handler above. We only need an explicit Enter/Space handler for the
-// chips themselves since they are <span role="link" tabindex="0">, not
-// native buttons (native buttons already fire click on Enter/Space, but
-// these are spans so keyboard activation needs to be wired manually).
-function chipActivate(chipId, targetFocus){
-  const el = $(chipId);
-  if (!el) return;
-  el.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' || e.key === ' '){
-      e.preventDefault();
-      setFocus(targetFocus);
-    }
-  });
-}
-chipActivate('chipAttack', 'launch');
-chipActivate('chipDynLoft', 'launch');
-chipActivate('chipFace', 'direction');
-chipActivate('chipPath', 'direction');
-
 // test hook object built here, attached to window.__impact.focus at the
 // bottom of this script (merged into the single window.__impact assignment
 // so neither hook clobbers the other).
@@ -4062,10 +3757,9 @@ $('fSpeedUp').addEventListener('click', ()=> saHaptics.selectionChanged());
   Object.keys(LAUNCH).forEach(k=>{ visAngle[k]=targetAngle[k]; applyArrowTransform(k); placeChip(k); });
   drawCone();
   // Full first-paint render: recompute() covers rail + predictor AND the
-  // pieces the old init missed (renderLaunchBend, updateCoachLines,
-  // updateMiniArrows, syncChipValues) — without it the bent launch-dir arrow
-  // stayed straight and both coach lines showed "Main cause: —" until the
-  // first slider touch (Fable audit finding #2).
+  // pieces the old init missed (renderLaunchBend, updateCoachLines) — without
+  // it the bent launch-dir arrow stayed straight and the coach line showed
+  // "Main cause: —" until the first slider touch (Fable audit finding #2).
   recompute();
   // …but cancel the predictor's debounced settle ANNOUNCEMENT that recompute
   // scheduled: announcing "Predicted finish on line" ~800ms after load — with
@@ -4073,7 +3767,6 @@ $('fSpeedUp').addEventListener('click', ()=> saHaptics.selectionChanged());
   // is noise. Interaction-driven announcements are untouched (a11y delta #3).
   clearTimeout(predAnnounceTimer);
   setArrowAffordance();
-  requestAnimationFrame(updateRailScrollHints);
 
   // ?play=1 — the Geometry "Ball flight →" deep-link auto-opens the overlay once.
   const params = new URLSearchParams(location.search);
@@ -4106,7 +3799,7 @@ $('fSpeedUp').addEventListener('click', ()=> saHaptics.selectionChanged());
   const STEPS = [
     { selector: '#stage',
       title: 'Both lenses at once',
-      body: 'Direction (left, top-down) shows face and path. Launch (right, side-on) shows attack and loft. The yellow arrow starts where the ball launches — its bend shows which way spin curves the shot.' },
+      body: 'Direction (left) shows face & path from above; Launch (right) shows attack & loft from the side.' },
     { selector: '#lensDir .minidock',
       title: 'Shape the shot',
       body: 'Adjust Face & Path here to aim the clubface and swing direction — they set how the ball starts and curves.' },
