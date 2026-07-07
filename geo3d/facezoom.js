@@ -62,7 +62,7 @@
  * runs skip both (no ball/face contact to reveal — see the isWhiffRun guard
  * in freeze()).
  */
-import * as THREE from 'three';
+import * as THREE from '../vendor/three/build/three.module.js';
 import { clubBallContact, strikeQuality, BALL_RADIUS_M } from '../swing-parameters-and-impact.js';
 
 const RING_RADIUS_M = 0.012;      // ~12mm — bumped (was 5mm) for legibility at the FIX N wider/closer 3/4 framing;

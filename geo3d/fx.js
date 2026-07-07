@@ -19,7 +19,7 @@
  *    downswing than fireImpact()'s ball-contact burst — the whole point is
  *    the temporal ordering (ground first, ball second) on Duff/Fat strikes.
  */
-import * as THREE from 'three';
+import * as THREE from '../vendor/three/build/three.module.js';
 import { BALL_RADIUS_M } from '../swing-parameters-and-impact.js';
 
 // ── seeded RNG (mulberry32) — deterministic replay for identical settings ──

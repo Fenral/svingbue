@@ -8,6 +8,7 @@
 <title>See the Shot — Live D-plane Instrument</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2052%2052'%20fill='none'%3E%3Cpath%20d='M11%2045%20C%2016%2026,%2024%2018,%2035%2015%20M21%2039%20L%2030%2024%20L%2043%2045'%20stroke='%2322E3D6'%20stroke-width='4.2'%20stroke-linecap='round'%20stroke-linejoin='round'/%3E%3Ccircle%20cx='37'%20cy='15'%20r='5.2'%20fill='%2322E3D6'/%3E%3C/svg%3E" />
 <link rel="stylesheet" href="./sa.css" />
+<link rel="stylesheet" href="./sa-paywall.css" />
 <style>
   :root{
     --accent:#22E3D6; --accent-soft:rgba(34,227,214,.16); --accent-line:rgba(34,227,214,.55);
@@ -36,7 +37,7 @@
   /* ══ TOP STRIP (thin ~32–40px) ══════════════════════════════════ */
   .topstrip{
     flex:0 0 auto;display:flex;align-items:center;gap:10px;
-    height:40px;padding:0 max(10px,env(safe-area-inset-left)) 0 max(12px,env(safe-area-inset-right));
+    height:40px;padding:0 max(12px,env(safe-area-inset-right)) 0 max(12px,env(safe-area-inset-left));
     border-bottom:1px solid rgba(255,255,255,.06);
     background:linear-gradient(180deg, rgba(12,20,33,.55), rgba(10,14,18,.2));
   }
@@ -121,13 +122,19 @@
      Replaces the old fixed two-lens layout. Each focus is a full-stage
      panel; only the active one is laid out (others are display:none via
      .active), matching the mock's 70/30 hero-lens + mini-panel weighting. */
-  .main{flex:1 1 auto;position:relative;padding:2px;min-height:0;display:flex}
+  /* DUAL-LENS: Direction + Launch panels are BOTH shown at once (side by side),
+     so the opposite lens's arrows are always visible (Sivert's redesign). Flight
+     stays a separate overlay (#flightScrim), reached via the top-strip Play-flight
+     button — the old [Direction|Launch|Flight] toggle + mini-panels are retired. */
+  .main{flex:1 1 auto;position:relative;padding:2px;min-height:0;display:flex;gap:6px}
   .focusPanel{
-    display:none;flex:1 1 auto;gap:6px;min-height:0;
+    display:none;flex:1 1 0;gap:6px;min-height:0;min-width:0;
     opacity:0;transform:scale(.985);
     transition:opacity .25s ease, transform .25s ease;
   }
   .focusPanel.active{display:flex;opacity:1;transform:scale(1)}
+  /* mini-panels retired in dual-lens: each panel is now ONLY its hero lens */
+  .focusPanel .miniPanel{display:none}
   @media (prefers-reduced-motion:reduce){ .focusPanel{transition:none} }
 
   /* hero lens (~74%) — the large, focused instrument view. LENS-DOMINANCE
@@ -137,7 +144,7 @@
      (68%→74%) at the expense of the mini side panel, which only needs to
      read as a small live preview, not a second hero. */
   .heroLens{
-    flex:0 0 74%;min-width:0;border-radius:20px;position:relative;
+    flex:1 1 auto;min-width:0;border-radius:20px;position:relative;
     background:
       radial-gradient(120% 90% at 50% 18%, rgba(34,227,214,.07), rgba(10,14,18,0) 62%),
       #0A0E12;
@@ -148,6 +155,17 @@
   .heroLens .lenshead{position:absolute;top:6px;left:10px;z-index:3;pointer-events:none}
   .heroLens .lenshead .lh1{font-size:9px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--ink)}
   .heroLens .lenshead .lh2{font-size:8px;color:var(--muted);margin-top:1px;letter-spacing:.02em}
+  /* LAUNCH tag — a persistent legend chip that names the YELLOW arrow in each
+     lens (LAUNCH DIR in Direction, LAUNCH ANGLE in Height), so the derived
+     launch indicator is never mistaken for an input arrow. Top-right corner,
+     clear of the top-left lenshead and the fan of arrows from the pivot. */
+  .heroLens .launchTag{
+    position:absolute;top:6px;right:8px;z-index:3;pointer-events:none;
+    display:inline-flex;align-items:center;gap:5px;
+    font-size:8.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--c-launch);
+    background:rgba(10,14,18,.62);border:1px solid rgba(244,208,0,.34);border-radius:6px;padding:3px 6px;
+  }
+  .heroLens .launchTag i{width:12px;height:3px;border-radius:2px;background:var(--c-launch);display:inline-block;flex:0 0 auto}
   /* the SVG gets flex:1 1 auto with min-height:0 so it is the ONE element
      that absorbs/gives back space as the compact chrome around it shrinks —
      this is what lets the lens claim the freed-up height. */
@@ -247,9 +265,10 @@
      strip (7 columns, rules below), so the whole row's height goes to the
      lens. The empty host div stays in the DOM; hide it entirely. */
   .secChips{display:none}
-  /* Launch strip carries 7 compact cells (4 hero + 3 secondary) in ONE slim
-     row — slightly tighter type/padding than the 4-up Direction strip. */
-  #heroResultsLaunch{grid-template-columns:repeat(7,1fr);gap:5px}
+  /* DUAL-LENS: the Launch panel is now a half-width column, so its 7 cells
+     (4 hero + 3 secondary) wrap into a 4-up grid (two rows) instead of one
+     cramped 7-up row. */
+  #heroResultsLaunch{grid-template-columns:repeat(4,1fr);gap:5px}
   #heroResultsLaunch .mcard{padding:5px 7px;border-radius:9px}
   #heroResultsLaunch .mcard .mv{font-size:15px}
   #heroResultsLaunch .mcard .mk{font-size:8.5px;letter-spacing:.03em}
@@ -580,6 +599,18 @@
   .flightReplay::after{content:"";position:absolute;left:0;right:0;top:50%;height:46px;transform:translateY(-50%)} /* ≥44px hit target */
   .flightReplay:hover{background:var(--accent-soft);border-color:var(--accent)}
   .flightReplay:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  /* ── MONETIZATION: discreet "N free shots left" nudge — top-center, clear
+       of the top-left carry hero and the top-right pill stack. Toggled via
+       the [hidden] attribute (not display, so the base rule never fights the
+       UA [hidden]{display:none} — see :not([hidden]) below); text is set by
+       refreshNudge(). Static (non-live-region) — aria-hidden, no announcements
+       on every play. */
+  .saNudge{position:absolute;top:max(10px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);
+    z-index:6;height:28px;padding:0 14px;border-radius:999px;
+    border:1px solid var(--accent-line);background:rgba(10,18,30,.7);color:var(--accent);
+    font-size:11px;font-weight:700;line-height:1;letter-spacing:.04em;font-family:inherit;
+    white-space:nowrap;pointer-events:none}
+  .saNudge:not([hidden]){display:flex;align-items:center;justify-content:center}
   /* ── STAGE 3: ghost toggle pill + clear control (same pill family as Replay) ── */
   .ghostPill{position:absolute;top:max(10px,env(safe-area-inset-top));right:calc(max(10px,env(safe-area-inset-right)) + 142px);z-index:6;height:36px;padding:0 15px;border-radius:999px;
     border:1px solid rgba(159,178,200,.5);background:rgba(10,18,30,.7);color:var(--ghost);
@@ -743,8 +774,12 @@
      they collide (mirrors the density guardrail already applied in
      impact-focus-mock.html's own ≤800px block). Shrink the least-critical
      text first: the "Geometry" nav label, the speed number label, the
-     segmented control's padding, then the Play-flight button's label. */
-  @media (max-width:800px){
+     segmented control's padding, then the Play-flight button's label.
+     Breakpoint 960 (not 800): on-device the landscape safe-area insets shrink
+     the CONTENT box ~90px below the viewport width, so a 844–932px phone still
+     needs this compact layout — otherwise the full layout overflows the
+     notch-padded strip and the items overlap. */
+  @media (max-width:960px){
     .ts-title{display:none}                          /* "See the Shot" — least essential at this width */
     .modnav a.tab{padding:0 6px;font-size:10px}
     .seg button{min-width:0;padding:0 8px;font-size:10px;gap:3px}
@@ -775,13 +810,9 @@
           <a class="tab" href="#" aria-current="page">Impact</a>
         </nav>
       </div>
-      <div class="segwrap">
-        <div class="seg" role="group" aria-label="Focus mode">
-          <button type="button" id="segDir" aria-pressed="true"><span class="sk" aria-hidden="true" style="background:var(--c-path)"></span>Direction</button>
-          <button type="button" id="segLaunch" aria-pressed="false"><span class="sk" aria-hidden="true" style="background:var(--c-attack)"></span>Launch</button>
-          <button type="button" id="segFlight" aria-pressed="false"><span class="sk" aria-hidden="true" style="background:var(--accent)"></span>Flight</button>
-        </div>
-      </div>
+      <!-- DUAL-LENS: the [Direction|Launch|Flight] focus toggle is retired — both
+           lenses are shown at once and Flight opens via the Play-flight button. -->
+
       <div class="ts-center">
         <div class="speedwrap">
           <label for="s_speed">Club speed</label>
@@ -808,6 +839,7 @@
       <!-- HERO — DIRECTION (top-down) -->
       <section class="heroLens" id="lensDir" aria-label="Direction lens, top-down view">
         <div class="lenshead"><div class="lh1">Direction</div><div class="lh2">Top-down · face &amp; path</div></div>
+        <div class="launchTag" aria-hidden="true"><i></i>Launch dir</div>
         <!-- STAGE 6 — landing-predictor live region: announces the predicted finish
              on settle (debounced ~800ms after the last input), separate from the
              lens's static aria-label so screen readers get a calm, single update. -->
@@ -869,9 +901,15 @@
           <!-- LAUNCH DIRECTION (derived 0.75·face+0.25·path). PURELY VISUAL:
                decorative indicator only — no role/tabindex/hit-rect, aria-hidden.
                Still NON-draggable (no data-key). Explanation lives on the rail. -->
+          <!-- LAUNCH DIR — a curved shaft that BENDS toward the spin side
+               (fade→right / draw→left). The bend's size + sign are set live from
+               solveFlight().spinAxis in renderLaunchBend(); the group itself is
+               rotated to the START direction by applyArrowTransform, so the bend
+               rides on top = physically honest (starts on the start-line, curves
+               with the spin). Replaces the old separate curve line. -->
           <g class="launchG" id="g_launchDir" aria-hidden="true">
-            <line class="lline" id="line_launchDir" x1="200" y1="330" x2="200" y2="148" stroke="var(--c-launch)" stroke-width="5.5"/>
-            <polygon id="head_launchDir" points="200,132 188,158 200,150 212,158" fill="var(--c-launch)"/>
+            <path class="lline" id="line_launchDir" d="M200,330 Q200,231 200,132" fill="none" stroke="var(--c-launch)" stroke-width="5.5" stroke-linecap="round"/>
+            <polygon id="head_launchDir" points="0,0 -12,26 0,18 12,26" fill="var(--c-launch)" transform="translate(200,132)"/>
           </g>
           <!-- FACE arrow (pointer enhancement; the docked slider is the accessible control) -->
           <g class="arrowG" id="g_face" data-key="face" aria-hidden="true">
@@ -928,7 +966,7 @@
     </div>
 
     <!-- ═══ LAUNCH FOCUS ═══ -->
-    <div class="focusPanel" id="panelLaunch" data-focus="launch">
+    <div class="focusPanel active" id="panelLaunch" data-focus="launch">
 
       <!-- MINI — DIRECTION (compact, live, tap to switch focus) -->
       <button type="button" class="miniPanel" id="mpDir" aria-label="Direction mini panel — tap to switch focus to Direction">
@@ -958,6 +996,7 @@
            old fixed right-hand panel into the Launch focus's hero slot. -->
       <section class="heroLens" id="lensHt" aria-label="Launch lens, side-on view">
         <div class="lenshead"><div class="lh1">Launch</div><div class="lh2">Side-on · attack &amp; dyn loft</div></div>
+        <div class="launchTag" aria-hidden="true"><i></i>Launch angle</div>
         <svg id="svgHt" viewBox="0 0 400 360" preserveAspectRatio="xMidYMid meet" role="img"
              aria-label="Side-on view. A ground line runs along the bottom. From the impact point, a pink attack arrow and a violet dynamic-loft arrow rotate to show the club's descent and delivered loft.">
           <defs>
@@ -1062,6 +1101,10 @@
     <div class="flightCard" id="flightCard" role="dialog" aria-modal="true" aria-label="Ball flight playback">
       <button class="flightClose" id="flightClose" aria-label="Close flight playback">×</button>
       <button class="flightReplay" id="flightReplay" type="button"><span aria-hidden="true">↻</span> Replay</button>
+      <!-- MONETIZATION: discreet free-shots-remaining nudge (hidden by default;
+           refreshNudge() shows it only in the last 1-2 free shots). Static text,
+           not a live region — aria-hidden so it never spams a screen reader. -->
+      <div class="saNudge" id="saNudge" hidden aria-hidden="true"></div>
       <!-- STAGE 3: ghost toggle (aria-pressed, default ON) + clear-history control -->
       <button class="ghostPill" id="fGhostPill" type="button" aria-pressed="true"><span class="gdot" aria-hidden="true"></span> Ghosts</button>
       <button class="ghostClear" id="fGhostClear" type="button" aria-label="Clear ghosts">×</button>
@@ -1226,7 +1269,11 @@
 <script type="module">
 import { solveFlight, clamp } from './impact-flight.js';
 import saHaptics from './sa-haptics.js';
+import * as saShots from './sa-shots.js';
+import * as saIap from './sa-iap.js';
+import { openPaywall } from './sa-paywall.js';
 window.saHaptics = saHaptics;   // expose for non-module scripts / tests
+saIap.init();   // MONETIZATION — sync RevenueCat "pro" entitlement at boot (no-op on web build)
 
 const $ = id => document.getElementById(id);
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -2471,7 +2518,7 @@ const PRED_Y = 52;              // far-zone screen-Y (near the TARGET marker, y=
 const PRED_X0 = 200;             // centre-line screen-X (ball is at x=200)
 const PRED_HALF_RANGE_M = 30;    // metres of offline mapped to the lens's usable half-width
 const PRED_HALF_PX = 150;        // px half-width available either side of centre (soft-clamped)
-const PRED_CURVE = true;         // ── curve hint (PRED_CURVE): flip to false to fully remove the shot-shape line ──
+const PRED_CURVE = false;        // ── curve hint (PRED_CURVE): OFF — the bent launch-dir arrow now carries shot-shape/spin; predictor dot keeps the offline reference ──
 const PRED_REST_DELAY_MS = 1200; // ms after the LAST input before the predictor eases to its faint resting state
 const PRED_BALL_Y = 330;         // lens ball-Y (arrows' pivot) — start of the curve hint
 const PRED_CURVE_N = 24;         // curve-hint sample count (cheap polyline rebuild per render)
@@ -2619,6 +2666,30 @@ function renderPredictor(flight){
   }, 800);
 }
 
+// ── LAUNCH-DIR bend (replaces the old curve line) ───────────────
+// The launch-dir arrow curves toward the spin side. Its group is already
+// rotated to the START direction (applyArrowTransform), so this bend — driven
+// by solveFlight().spinAxis (+ = right/fade) — rides on top: the shaft leaves
+// the ball on the start-line, then curves late, exactly like real ball flight.
+const LB_GAIN = 2.6;   // px of lateral tip offset per degree of spin axis
+const LB_MAX  = 40;    // clamp (px) — keeps a "liten bøy", never a hook
+const LB_L    = 198;   // shaft length pivot→tip (matches LAUNCH.launchDir.tipLen)
+function renderLaunchBend(flight){
+  const P = DIR_PIVOT;                       // {x:200, y:330}
+  const tipY = P.y - LB_L;                   // 132
+  let b = (flight.spinAxis || 0) * LB_GAIN;
+  if (b >  LB_MAX) b =  LB_MAX; else if (b < -LB_MAX) b = -LB_MAX;
+  const Cx = P.x, Cy = P.y - LB_L * 0.5;     // control straight above → leaves straight, curves late
+  const Tx = P.x + b, Ty = tipY;
+  const path = $('line_launchDir');
+  if (path) path.setAttribute('d', `M${P.x},${P.y} Q${Cx},${Cy.toFixed(1)} ${Tx.toFixed(1)},${Ty}`);
+  const head = $('head_launchDir');
+  if (head){                                 // orient the head along the end tangent (T − C)
+    const deg = Math.atan2(Tx - Cx, -(Ty - Cy)) * 180 / Math.PI;
+    head.setAttribute('transform', `translate(${Tx.toFixed(1)},${Ty}) rotate(${deg.toFixed(2)})`);
+  }
+}
+
 function recompute(){
   recomputeAngles();
   scheduleRender();
@@ -2627,6 +2698,7 @@ function recompute(){
   const flight = solveFlight(state);
   renderRail(flight);
   renderPredictor(flight);
+  renderLaunchBend(flight);
   updateMiniArrows();
   syncChipValues();
   updateCoachLines(flight);
@@ -3082,6 +3154,23 @@ function noteFlight(){
   return true;
 }
 
+// ── MONETIZATION: "N free shots left" nudge pill (top-center of the flight
+//    overlay) — shown only in the tail of the free window (saShots.shouldNudge()).
+//    refreshNudge() is called once on load (below) and after every counted
+//    shot (see fPlay's isNewRun branch).
+const saNudgeEl = $('saNudge');
+function refreshNudge(){
+  if (!saNudgeEl) return;
+  if (saShots.shouldNudge()){
+    const n = saShots.remaining();
+    saNudgeEl.textContent = n === 1 ? '1 free shot left' : (n + ' free shots left');
+    saNudgeEl.hidden = false;
+  } else {
+    saNudgeEl.hidden = true;
+  }
+}
+refreshNudge();   // on load
+
 // ── "what changed" micro-label content: cause (param delta vs ghosts[0]) +
 //    effect (total / curve delta vs ghosts[0].flight). NEVER colour alone:
 //    improvements get ✓, worsenings get →, distance keeps an explicit sign.
@@ -3428,11 +3517,17 @@ function resetChoreo(){
 }
 
 function fPlay(){
+  // MONETIZATION — gate a genuinely NEW shot once the free-shot limit is hit.
+  // Replays of the identical param-set (drag/replay button with no change)
+  // stay free, exactly like ghost-capture's own new-vs-replay accounting below.
+  const wouldBeNew = !(lastFlown && sameParams(lastFlown.params, paramsSnapshot()));
+  if (wouldBeNew && saShots.shouldGate()){ openPaywall('impact'); return; }
   if (fTL) fTL.kill();
   resetChoreo();
   // STAGE 3 — capture/replay accounting BEFORE the camera fit, so a freshly
   // captured ghost is part of this run's shared camera. Replays never capture.
   const isNewRun = noteFlight();
+  if (isNewRun){ saShots.recordShot(); refreshNudge(); }
   fBuild();
   // STAGE 4 — haptics beat classification for THIS run, decided once up front:
   //   • notify('success') is gated on the TRUE first play only (replayCount === 0).
@@ -3796,35 +3891,30 @@ $('flightClose').addEventListener('click', closeFlight);
 let focus = 'direction';
 let preFlightFocus = 'direction';
 const focusPanels = { direction: $('panelDir'), launch: $('panelLaunch'), flight: $('panelFlight') };
+// DUAL-LENS: the segmented [Direction|Launch|Flight] control is gone; these
+// stay defined (guarded) only so any residual setSegPressed call is a no-op.
 const segBtns = { direction: $('segDir'), launch: $('segLaunch'), flight: $('segFlight') };
 function setSegPressed(key){
-  Object.entries(segBtns).forEach(([k, btn]) => btn.setAttribute('aria-pressed', k === key ? 'true' : 'false'));
+  Object.entries(segBtns).forEach(([k, btn]) => { if (btn) btn.setAttribute('aria-pressed', k === key ? 'true' : 'false'); });
 }
 function setFocus(next, opts){
   opts = opts || {};
   if (next === 'flight' && !opts.skipFlightOpen){
-    // Flight is not a laid-out panel of its own — selecting it opens the
-    // existing Play-flight overlay exactly as the old Play-flight button did.
-    setSegPressed('flight');
+    // Flight is an overlay, not a laid-out panel — selecting it opens the
+    // existing Play-flight overlay exactly as the Play-flight button does.
     openFlight();
     return;
   }
-  if (next === focus && !opts.immediate) return;
-  const changed = next !== focus;
   focus = next;
-  setSegPressed(next);
-  Object.entries(focusPanels).forEach(([key, el]) => {
-    if (!el) return;
-    el.classList.toggle('active', key === next);
-  });
-  // LENS-DOMINANCE REBALANCE: the newly-shown lens had a 0×0 rect while its
-  // panel was display:none, so re-derive its viewBox now that it is laid out.
+  // DUAL-LENS: Direction + Launch instrument lenses are ALWAYS both active
+  // (side by side); the Flight panel is vestigial and stays hidden. This makes
+  // the opposite lens's arrows always visible (Sivert's redesign).
+  if (focusPanels.direction) focusPanels.direction.classList.add('active');
+  if (focusPanels.launch)    focusPanels.launch.classList.add('active');
+  if (focusPanels.flight)    focusPanels.flight.classList.remove('active');
+  // both lenses may have gone from 0×0 (hidden) to laid out — re-fit viewBoxes.
   requestAnimationFrame(fitLenses);
-  if (changed && !opts.silent) saHaptics.selectionChanged();
 }
-$('segDir').addEventListener('click', () => setFocus('direction'));
-$('segLaunch').addEventListener('click', () => setFocus('launch'));
-$('segFlight').addEventListener('click', () => setFocus('flight'));
 $('segFlightPlay') && $('segFlightPlay').addEventListener('click', openFlight);
 
 // mini-panel taps (click anywhere on the panel) switch focus
@@ -3893,9 +3983,14 @@ fGhostClearEl.addEventListener('click', ()=>{
 
 // ── CLUB-SPEED bar inside the flight overlay (left column) ──
 // Changing it updates clubSpeed (other D-plane params stay from instrument
-// state), keeps the top-strip slider in sync, then RE-SOLVES + REPLAYS.
+// state), keeps the top-strip slider in sync, and REDRAWS THE TRAJECTORY
+// STATICALLY (live) — it does NOT re-run the launch→land animation. That lets
+// you step/drag freely to the speed you want; the explicit Replay button (or
+// reduced-motion) is the only thing that animates. (Bug fix: the ± steppers
+// used to replay the ~4s shot on every click — "you could only change one mph
+// before it re-visualised and interrupted you".)
 const fSpeedRange = $('fSpeedRange'), fSpeedV = $('fSpeedV');
-function applyFlightSpeed(v, replay){
+function applyFlightSpeed(v){
   v = clamp(Math.round(v), +fSpeedRange.min, +fSpeedRange.max);
   state.clubSpeed = v;
   fSpeedRange.value = v;
@@ -3904,12 +3999,13 @@ function applyFlightSpeed(v, replay){
   // keep the live dual-lens instrument's club-speed slider + label in sync
   const main = $('s_speed');
   if (main && +main.value !== v){ main.value = v; main.dispatchEvent(new Event('input')); }
-  if (replay) fPlay();   // fPlay handles reduced-motion + ghost/replay accounting
+  // live static redraw of the new trajectory (no animation) while overlay is open
+  if (flightScrim.classList.contains('open')) renderStatic();
 }
-fSpeedRange.addEventListener('input', ()=>{ applyFlightSpeed(+fSpeedRange.value, false); });
-fSpeedRange.addEventListener('change', ()=>{ applyFlightSpeed(+fSpeedRange.value, true); });
-$('fSpeedDown').addEventListener('click', ()=>{ applyFlightSpeed(+fSpeedRange.value - 1, true); });
-$('fSpeedUp').addEventListener('click', ()=>{ applyFlightSpeed(+fSpeedRange.value + 1, true); });
+fSpeedRange.addEventListener('input', ()=>{ applyFlightSpeed(+fSpeedRange.value); });
+fSpeedRange.addEventListener('change', ()=>{ applyFlightSpeed(+fSpeedRange.value); });
+$('fSpeedDown').addEventListener('click', ()=>{ applyFlightSpeed(+fSpeedRange.value - 1); });
+$('fSpeedUp').addEventListener('click', ()=>{ applyFlightSpeed(+fSpeedRange.value + 1); });
 // STAGE 4 — haptics: flight club-speed control follows the same slider
 // protocol (pointerdown→selectionStart, whole-mph crossings→tick, pointerup→
 // selectionEnd); the ± steppers each fire one selectionChanged per press.
@@ -3968,15 +4064,15 @@ $('fSpeedUp').addEventListener('click', ()=> saHaptics.selectionChanged());
 
   const COACH_KEY = 'sa_coach_impact';
   const STEPS = [
-    { selector: '.seg',
-      title: 'Three ways to focus',
-      body: 'Switch between Direction, Launch and Flight — each focus zooms in on the controls and results that matter for that part of the shot.' },
+    { selector: '#stage',
+      title: 'Both lenses at once',
+      body: 'Direction (left, top-down) shows face, path and where the ball starts and curves. Launch (right, side-on) shows attack, loft and how high it flies — you see both together.' },
     { selector: '#lensDir .minidock',
       title: 'Shape the shot',
       body: 'Adjust Face & Path here to aim the clubface and swing direction — they set how the ball starts and curves.' },
-    { selector: '#mpLaunch',
+    { selector: '#lensHt .minidock',
       title: 'Launch & spin',
-      body: 'Tap this panel to switch to Launch focus, where you can set Attack & Dyn loft to change how high it launches and how much it spins.' },
+      body: 'Set Attack & Dyn loft here to change how high the ball launches and how much it spins.' },
     { selector: '#s_speed',
       title: 'Set your club speed',
       body: 'Drag the club-speed slider — it drives ball speed and carry distance.' },
@@ -4007,9 +4103,9 @@ $('fSpeedUp').addEventListener('click', ()=> saHaptics.selectionChanged());
     if (activeCoach || flightOpen()) return;             // base instrument only
     const steps = STEPS.slice(startIndex);
     if (!steps.length) return;
-    // every STEPS selector lives in the Direction focus panel (the mini-panel
-    // step points AT the Launch mini-panel, reachable from Direction) — force
-    // Direction focus first so a "?" replay from Launch still finds its targets.
+    // DUAL-LENS: both instrument lenses are always laid out, so every STEPS
+    // selector is present. setFocus is a no-op guard that just ensures both
+    // panels are active before the walkthrough spotlights them.
     if (typeof setFocus === 'function') setFocus('direction');
     activeCoach = SA.coachMarks(steps, {
       storageKey: COACH_KEY,

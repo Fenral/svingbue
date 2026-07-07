@@ -7,8 +7,8 @@
  * Z-UP world: +X = target line, +Y = away from camera (face-on), +Z = up.
  * Metres. Ground = XY plane at z=0. Matches swing-parameters-and-impact.js.
  */
-import * as THREE from 'three';
-import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import * as THREE from '../vendor/three/build/three.module.js';
+import { RoomEnvironment } from '../vendor/three/examples/jsm/environments/RoomEnvironment.js';
 import { BALL_RADIUS_M, deg2rad } from '../swing-parameters-and-impact.js';
 
 // ── render-on-demand bookkeeping ──────────────────────────────────────────
@@ -43,8 +43,8 @@ export function createScene(canvas) {
   // FIX M rail-clearance matrix (900×470/740×416, FACE+DTL) and arc-top
   // clipping at 740×416 — both still pass at the new distance.
   const POSES = {
-    face: { az: -70.375, el: 13, dist: 3.601875, tx: 0.06, ty: 0, tz: 0.865 },
-    dtl: { az: -144.75, el: 11, dist: 4.154375, tx: 0, ty: 1.2, tz: 0.7 },
+    face: { az: -70.375, el: 13, dist: 2.72, tx: 0.06, ty: 0, tz: 0.5 },   // #4c: aim LOWER (tz 0.865→0.5) to hero the impact zone (ball/club/low-point) instead of the plane centre
+    dtl: { az: -144.75, el: 11, dist: 3.05, tx: 0, ty: 1.2, tz: 0.42 },     // #4c: same — drop look-at toward the ground/impact
   };
   const rig = { ...POSES.face };
   // FIX M — target offset: shifts ONLY the look-at point (not the camera
@@ -136,6 +136,13 @@ export function createScene(canvas) {
   // ── render-on-demand ────────────────────────────────────────────────────
   let dirty = true;
   let raf = 0;
+  // STRIKE-DETAIL INSET (2026-07-03) — a second scissored viewport rendered
+  // right after the main camera's pass, driven entirely by geo3d/insetview.js
+  // (camera/hide-list/rect all live there; this hook just calls it at the
+  // right moment). Stays render-on-demand: insetPass only ever runs as part
+  // of renderIfDirty(), never on its own timer, so idle stays idle.
+  let insetPass = null;
+  function setInsetPass(fn) { insetPass = fn; }
   function invalidate() { dirty = true; scheduleFrame(); }
   function scheduleFrame() {
     if (raf) return;
@@ -147,6 +154,7 @@ export function createScene(canvas) {
     resizeIfNeeded();
     renderer.render(scene, camera);
     window.__sa3d.renderCount++;
+    if (insetPass) insetPass(renderer, scene, canvas);
   }
   function resizeIfNeeded() {
     const w = canvas.clientWidth, h = canvas.clientHeight;
@@ -193,6 +201,7 @@ export function createScene(canvas) {
     targetOffset, setTargetOffset,
     invalidate, startTicking, stopTicking,
     targetLine, floor, ball,
+    setInsetPass,
     get renderer() { return renderer; },
   };
 }

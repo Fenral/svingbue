@@ -15,7 +15,7 @@
  *
  * Z-UP world, metres — matches swing-parameters-and-impact.js.
  */
-import * as THREE from 'three';
+import * as THREE from '../vendor/three/build/three.module.js';
 import { tangentAt, thetaAtImpact, BALL_RADIUS_M } from '../swing-parameters-and-impact.js';
 
 // FIX P3 (owner: "the delivery arrow was never implemented" — it was, just too

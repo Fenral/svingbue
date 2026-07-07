@@ -5,11 +5,14 @@
  * and lpWorld(state) — geometry itself never rebuilt, only the group's matrix.
  * Brief shimmer pulse on slider change (skipped under reduced-motion).
  */
-import * as THREE from 'three';
+import * as THREE from '../vendor/three/build/three.module.js';
 import { planeBasis, lpWorld, deg2rad } from '../swing-parameters-and-impact.js';
 
-const PLANE_OPACITY = 0.08;
-const GRID_OPACITY = 0.28;
+// #4 redesign: the swing plane must stay arc-sized (it contains the arc) but
+// visually RECEDE so the impact zone (ball/club/low-point) is the hero — Sivert:
+// "glasset er for stort". Fill + grid demoted to a subtle backdrop.
+const PLANE_OPACITY = 0.04;
+const GRID_OPACITY = 0.16;
 const RUNG_FRACS = [0.22, 0.46, 0.70, 0.94];
 
 export function createPlane(state) {

@@ -6,7 +6,7 @@
  * Color gradient #7ff4eb -> #15b9ad along vUv.x (sweep parameter).
  * Buffers are preallocated once; slider input rewrites positions in place.
  */
-import * as THREE from 'three';
+import * as THREE from '../vendor/three/build/three.module.js';
 import { arcPosition, SWEEP_RAD } from '../swing-parameters-and-impact.js';
 
 const TUBE_SEG = 140, TUBE_RADIAL = 8;

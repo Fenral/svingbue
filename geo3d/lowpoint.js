@@ -7,7 +7,7 @@
  * The warm valley-glow hotspot itself lives in arc.js (setLowestSegmentGlow),
  * driven here via the theta of the arc's true lowest point.
  */
-import * as THREE from 'three';
+import * as THREE from '../vendor/three/build/three.module.js';
 import { lpWorld, arcPosition, effectiveLpx, SWEEP_RAD } from '../swing-parameters-and-impact.js';
 
 const ACCENT = 0xffd166; // existing lowpoint accent hue, unchanged

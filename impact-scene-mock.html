@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#0A0E12" />
+<title>StrikeArc — Impact scene redesign (mock)</title>
+<style>
+  :root{
+    --bg:#0A0E12; --bg2:#0d141a; --accent:#22E3D6; --ink:#E9F1F4; --muted:#9FB2C8; --muted2:#7e8b96;
+    --c-face:#E83B47; --c-path:#8FB4D4; --c-loft:#A66BFF; --c-attack:#FF7AA8; --c-launch:#F4D000;
+    --line:rgba(255,255,255,.09); --good:#4ADE80; --bad:#F87171;
+    font-synthesis:none;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:radial-gradient(120% 130% at 50% -10%,#10161d,var(--bg)); color:var(--ink);
+    font-family:-apple-system,"SF Pro Text","Segoe UI",Roboto,system-ui,sans-serif;-webkit-font-smoothing:antialiased;
+    padding:18px 16px 40px}
+  .wrap{max-width:1120px;margin:0 auto}
+  .head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:4px}
+  h1{font-size:clamp(17px,2.6vw,23px);font-weight:700;letter-spacing:-.01em}
+  .sub{color:var(--muted);font-size:13px;max-width:80ch;margin:6px 0 14px}
+  .sub b{color:var(--ink)}
+
+  /* two lenses side by side (landscape) */
+  .lenses{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media (max-width:680px){.lenses{grid-template-columns:1fr}}
+  .lens{background:linear-gradient(180deg,#0e151b,#0b1014);border:1px solid var(--line);border-radius:16px;
+    overflow:hidden;position:relative}
+  .lens .lhead{display:flex;align-items:center;justify-content:space-between;padding:10px 13px 6px}
+  .lens .ltitle{font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+  .lens .lview{font-size:10px;letter-spacing:.06em;color:var(--muted2);text-transform:uppercase}
+  .lens svg{width:100%;height:auto;display:block}
+  /* arrow legend row under each lens */
+  .legend{display:flex;flex-wrap:wrap;gap:6px 12px;padding:6px 13px 12px}
+  .lg{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:600}
+  .lg i{width:12px;height:3px;border-radius:2px;display:inline-block}
+  .lg .val{color:var(--muted);font-weight:700;font-variant-numeric:tabular-nums}
+
+  svg text{font-family:inherit}
+  .alab{font:800 11px/1 -apple-system,system-ui,sans-serif;letter-spacing:.02em}
+  .aval{font:800 12px/1 -apple-system,system-ui,sans-serif;font-variant-numeric:tabular-nums}
+  .amut{font:600 9.5px/1 -apple-system,system-ui,sans-serif;fill:var(--muted2);letter-spacing:.08em}
+
+  /* chips row */
+  .chips{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-top:14px}
+  @media (max-width:680px){.chips{grid-template-columns:repeat(2,1fr)}}
+  .chip{background:var(--bg2);border:1px solid var(--line);border-radius:11px;padding:8px 11px}
+  .chip .k{font-size:10px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted2)}
+  .chip .v{font-size:15px;font-weight:800;font-variant-numeric:tabular-nums;margin-top:2px}
+  .chip .v small{font-size:.62em;color:var(--muted);font-weight:600;margin-left:2px}
+  .cyan{color:var(--accent)}
+
+  .note{margin-top:18px;color:var(--muted2);font-size:12px;line-height:1.5}
+  .note b{color:var(--muted)}
+  .diff{margin-top:12px;display:flex;flex-direction:column;gap:5px}
+  .diff div{font-size:12.5px;color:var(--muted)}
+  .diff .ok::before{content:"✓ ";color:var(--good);font-weight:800}
+  .diff .rm::before{content:"✕ ";color:var(--bad);font-weight:800}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head"><h1>Impact scene — redesign mock</h1></div>
+  <p class="sub"><b>Begge linsene synlige samtidig</b> (ikke fokus-modus som skjuler den andre). Venstre = <b>Direction</b> (topp-ned), høyre = <b>Height</b> (side-på). Den <span style="color:var(--c-launch)">gule pila</span> er merket <b>LAUNCH DIR</b> / <b>LAUNCH ANGLE</b>. Kurvestreken er borte — i stedet <b>bøyer launch-dir-pila seg</b> mot skruretningen; <b>offline-referansen</b> viser hvor mye. Statisk mock (portes til å oppdatere live med sliderne).</p>
+
+  <div class="lenses">
+    <!-- ══════════ DIRECTION (top-down) ══════════ -->
+    <div class="lens">
+      <div class="lhead"><span class="ltitle">Direction</span><span class="lview">top-down</span></div>
+      <svg viewBox="0 0 360 300" role="img" aria-label="Direction lens, top down: face open, path further right, launch direction bends right (fade) finishing 8 metres right">
+        <!-- target line -->
+        <line x1="180" y1="278" x2="180" y2="24" stroke="#2a3440" stroke-width="2" stroke-dasharray="3 6"/>
+        <text x="186" y="30" class="amut">TARGET</text>
+        <!-- offline finish reference (top) -->
+        <line x1="120" y1="46" x2="240" y2="46" stroke="#1e2833" stroke-width="1"/>
+        <circle cx="216" cy="46" r="5" fill="var(--accent)"/>
+        <line x1="180" y1="41" x2="180" y2="51" stroke="var(--muted2)" stroke-width="1"/>
+        <text x="216" y="38" class="aval" fill="var(--accent)" text-anchor="middle">8 m R</text>
+        <text x="150" y="60" class="amut" text-anchor="end">offline finish</text>
+        <!-- ball -->
+        <circle cx="180" cy="258" r="10" fill="#f3f7f9"/><circle cx="180" cy="258" r="10" fill="none" stroke="#c7d2d8"/>
+        <!-- PATH arrow (further right, +6°) -->
+        <line x1="180" y1="258" x2="243" y2="92" stroke="var(--c-path)" stroke-width="8" stroke-linecap="round"/>
+        <polygon points="248,80 231,96 244,92 244,105" fill="var(--c-path)"/>
+        <text x="255" y="96" class="alab" fill="var(--c-path)">PATH</text><text x="255" y="109" class="aval" fill="var(--c-path)">+6°</text>
+        <!-- FACE arrow (open, +2°) -->
+        <line x1="180" y1="258" x2="210" y2="86" stroke="var(--c-face)" stroke-width="8" stroke-linecap="round"/>
+        <polygon points="212,74 199,96 210,90 219,99" fill="var(--c-face)"/>
+        <text x="150" y="86" class="alab" fill="var(--c-face)" text-anchor="end">FACE</text><text x="150" y="99" class="aval" fill="var(--c-face)" text-anchor="end">+2°</text>
+        <!-- LAUNCH DIR (yellow) — starts on the face line, then BENDS toward spin (fade → right) -->
+        <path d="M180 258 Q 202 150, 214 96 Q 220 70, 236 54" fill="none" stroke="var(--c-launch)" stroke-width="6" stroke-linecap="round"/>
+        <polygon points="240,50 223,60 236,58 232,71" fill="var(--c-launch)"/>
+        <text x="128" y="150" class="alab" fill="var(--c-launch)" text-anchor="end">LAUNCH DIR</text>
+        <text x="128" y="163" class="amut" text-anchor="end" fill="var(--c-launch)" style="opacity:.85">starts on face · bends = spin</text>
+      </svg>
+      <div class="legend">
+        <span class="lg" style="color:var(--c-face)"><i style="background:var(--c-face)"></i>Face <span class="val">+2°</span></span>
+        <span class="lg" style="color:var(--c-path)"><i style="background:var(--c-path)"></i>Path <span class="val">+6°</span></span>
+        <span class="lg" style="color:var(--c-launch)"><i style="background:var(--c-launch)"></i>Launch dir <span class="val">+3°</span></span>
+      </div>
+    </div>
+
+    <!-- ══════════ HEIGHT (side-on) ══════════ -->
+    <div class="lens">
+      <div class="lhead"><span class="ltitle">Height</span><span class="lview">side-on</span></div>
+      <svg viewBox="0 0 360 300" role="img" aria-label="Height lens, side on: attack angle down 3 degrees, dynamic loft, launch angle up 14 degrees">
+        <!-- ground -->
+        <line x1="20" y1="250" x2="344" y2="250" stroke="#2c2a24" stroke-width="6"/><line x1="20" y1="246" x2="344" y2="246" stroke="#3f5136" stroke-width="2"/>
+        <text x="338" y="241" class="amut" text-anchor="end">GROUND →</text>
+        <!-- ball -->
+        <circle cx="120" cy="232" r="10" fill="#f3f7f9"/><circle cx="120" cy="232" r="10" fill="none" stroke="#c7d2d8"/>
+        <!-- ATTACK arrow (club coming down, -3°) -->
+        <line x1="52" y1="196" x2="150" y2="242" stroke="var(--c-attack)" stroke-width="7" stroke-linecap="round"/>
+        <polygon points="160,247 138,240 148,244 141,232" fill="var(--c-attack)"/>
+        <text x="46" y="192" class="alab" fill="var(--c-attack)" text-anchor="end">ATTACK</text><text x="46" y="205" class="aval" fill="var(--c-attack)" text-anchor="end">−3°</text>
+        <!-- DYN LOFT (face loft wedge) -->
+        <line x1="120" y1="232" x2="150" y2="150" stroke="var(--c-loft)" stroke-width="6" stroke-linecap="round" opacity=".9"/>
+        <polygon points="153,140 138,158 150,152 156,164" fill="var(--c-loft)"/>
+        <text x="164" y="150" class="alab" fill="var(--c-loft)">DYN LOFT</text><text x="164" y="163" class="aval" fill="var(--c-loft)">30°</text>
+        <!-- LAUNCH ANGLE (yellow) up 14° -->
+        <line x1="120" y1="232" x2="300" y2="150" stroke="var(--c-launch)" stroke-width="6" stroke-linecap="round"/>
+        <polygon points="312,145 289,148 300,150 292,161" fill="var(--c-launch)"/>
+        <text x="250" y="196" class="alab" fill="var(--c-launch)">LAUNCH ANGLE</text><text x="250" y="209" class="aval" fill="var(--c-launch)">14°</text>
+        <!-- launch angle arc -->
+        <path d="M168 232 A 48 48 0 0 0 156 214" fill="none" stroke="var(--c-launch)" stroke-width="1.5" opacity=".6"/>
+      </svg>
+      <div class="legend">
+        <span class="lg" style="color:var(--c-attack)"><i style="background:var(--c-attack)"></i>Attack <span class="val">−3°</span></span>
+        <span class="lg" style="color:var(--c-loft)"><i style="background:var(--c-loft)"></i>Dyn loft <span class="val">30°</span></span>
+        <span class="lg" style="color:var(--c-launch)"><i style="background:var(--c-launch)"></i>Launch angle <span class="val">14°</span></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- data chips (unchanged concept) -->
+  <div class="chips">
+    <div class="chip"><div class="k">Carry</div><div class="v cyan">163<small>m</small></div></div>
+    <div class="chip"><div class="k">Start dir</div><div class="v">+3°<small>R</small></div></div>
+    <div class="chip"><div class="k">Spin axis</div><div class="v">6°<small>R</small></div></div>
+    <div class="chip"><div class="k">Curve</div><div class="v">8<small>m R</small></div></div>
+    <div class="chip"><div class="k">Launch ang</div><div class="v">14°</div></div>
+    <div class="chip"><div class="k">Spin loft</div><div class="v">33°</div></div>
+    <div class="chip"><div class="k">Backspin</div><div class="v">7300<small>rpm</small></div></div>
+    <div class="chip"><div class="k">Ball speed</div><div class="v">132<small>mph</small></div></div>
+  </div>
+
+  <div class="diff">
+    <div class="ok">Begge linsene alltid synlige — du ser retning OG høyde samtidig, med alle piler + etiketter</div>
+    <div class="ok">Gul pil eksplisitt merket «LAUNCH DIR» (topp-ned) og «LAUNCH ANGLE» (side-på)</div>
+    <div class="ok">Launch-dir-pila BØYER seg mot skruretningen (fade → høyre / draw → venstre); offline-ref «8 m R» beholdt</div>
+    <div class="rm">Egen kurvestrek fjernet (bøyen + offline-tallet bærer samme info tydeligere)</div>
+  </div>
+
+  <p class="note"><b>Åpen for justering:</b> plassering av launch-etikettene, hvor kraftig bøyen skal være (visuell gain), om chips skal stå under begge linser eller til siden, og om Height-linsa skal vise spin-loft-kilen eksplisitt. Si fra, så itererer jeg før port.</p>
+</div>
+</body>
+</html>

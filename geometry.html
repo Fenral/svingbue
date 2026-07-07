@@ -7,6 +7,7 @@
 <title>Swing-arc simulator</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2052%2052'%20fill='none'%3E%3Cpath%20d='M11%2045%20C%2016%2026,%2024%2018,%2035%2015%20M21%2039%20L%2030%2024%20L%2043%2045'%20stroke='%2322E3D6'%20stroke-width='4.2'%20stroke-linecap='round'%20stroke-linejoin='round'/%3E%3Ccircle%20cx='37'%20cy='15'%20r='5.2'%20fill='%2322E3D6'/%3E%3C/svg%3E" />
 <link rel="stylesheet" href="./sa.css" />
+<link rel="stylesheet" href="./sa-paywall.css" />
 <style>
   :root{
     --accent:#22E3D6; --accent-soft:rgba(34,227,214,.16); --accent-line:rgba(34,227,214,.55);
@@ -108,6 +109,20 @@
   .hud-chip.path{border-color:rgba(34,227,214,.5);color:#bff6f1}
   .hud-chip.path .sw{background:#22E3D6}
 
+  /* freemium "N free shots left" nudge pill — discreet, top-centre, clear of
+     the hud-chips row above it. Shown only in the tail (1-2) of the free
+     window (saShots.shouldNudge()); a plain visible pill, not aria-live, so
+     it never spams a screen reader on every play (see refreshNudge()). */
+  .sa-nudge{
+    position:fixed;left:50%;top:max(42px,calc(env(safe-area-inset-top) + 42px));z-index:3;
+    transform:translateX(-50%);
+    background:rgba(7,12,18,.86);-webkit-backdrop-filter:blur(var(--blur-surface));backdrop-filter:blur(var(--blur-surface));
+    border:1px solid var(--accent-line);border-radius:var(--radius-pill);
+    padding:5px 14px;font-size:11px;font-weight:700;letter-spacing:.02em;color:var(--accent);
+    white-space:nowrap;pointer-events:none;
+  }
+  .sa-nudge[hidden]{display:none}
+
   /* overlays */
   .title{position:fixed;top:max(10px,env(safe-area-inset-top));left:max(14px,env(safe-area-inset-left));z-index:3;pointer-events:none}
   .title h1{font-size:14px;font-weight:700;letter-spacing:-.01em}
@@ -162,6 +177,55 @@
   .verdict #pct{margin-left:auto;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
   #tip{font-size:11.5px;color:var(--muted);margin-top:4px;line-height:1.35}
   .ballcloseup{width:84px;height:84px;flex:none}
+
+  /* ── STRIKE DETAIL inset (2026-07-03 redesign) — the real 3D club/ball/
+     low-point rendered big via a second scissored viewport (geo3d/scene.js +
+     geo3d/insetview.js), with a DOM annotation overlay on top. Styled to
+     match impact-inset-mock.html's .inset. Placed bottom-RIGHT (not the
+     mock's bottom-left) because .readout already occupies bottom-left in
+     this app — the mock was drawn against a blank backdrop with no existing
+     panel there. */
+  /* NOTE: the outer card has NO background of its own (only a border/shadow
+     frame) — the .viewport strip in the middle must show the WebGL inset
+     render straight through to the shared #scene3d canvas underneath (z-index
+     0, below this card's z-index 3). Giving the CARD itself an opaque/near-
+     opaque background would paint over that canvas region regardless of what
+     .viewport's own background is, since a transparent child still reveals
+     its PARENT's background, not what's further behind in the stacking
+     context. So only the header (.top) and footer (.foot) — which sit above/
+     below the viewport, not over it — carry a solid dark plate; overflow:
+     hidden on the card clips those two plates to the card's rounded corners
+     (this has no effect on the canvas, which isn't a descendant of the card). */
+  .strike-detail{
+    position:fixed;right:max(14px,env(safe-area-inset-right));bottom:max(14px,env(safe-area-inset-bottom));z-index:3;
+    width:clamp(220px,32vw,320px);
+    border:1px solid rgba(34,227,214,.28);border-radius:var(--radius-card);
+    box-shadow:0 18px 50px -20px rgba(0,0,0,.85);
+    overflow:hidden;
+  }
+  .strike-detail .top{
+    display:flex;align-items:center;justify-content:space-between;gap:8px;
+    padding:9px 11px 7px;
+    background:linear-gradient(180deg, rgba(13,20,26,.98), rgba(13,20,26,.94));
+  }
+  .strike-detail .ttl{font-size:10px;font-weight:700;letter-spacing:.15em;color:var(--muted);text-transform:uppercase}
+  .strike-detail .chip{
+    display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;
+    padding:3px 9px;border-radius:999px;white-space:nowrap;
+    background:rgba(74,222,128,.12);color:#4ADE80;border:1px solid rgba(74,222,128,.3);
+  }
+  .strike-detail .chip .pct{opacity:.75;font-weight:600}
+  .strike-detail .viewport{position:relative;width:100%;aspect-ratio:340/196}
+  .strike-detail .viewport svg{position:absolute;inset:0;width:100%;height:100%;display:block;pointer-events:none}
+  .sd-lb{font:700 10px/1 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;fill:var(--accent);font-variant-numeric:tabular-nums;paint-order:stroke;stroke:#0A0E12;stroke-width:2.5px;stroke-linejoin:round}
+  .sd-lb-soil{fill:#c9a878}
+  .strike-detail .foot{
+    padding:7px 11px 9px;font-size:11px;color:var(--muted);line-height:1.35;
+    background:linear-gradient(0deg, rgba(10,14,18,.98), rgba(10,14,18,.94));
+  }
+  .strike-detail .foot b{color:var(--ink)}
+  .strike-detail .foot .sd-turf{color:#c9a878;font-weight:700}
+  @media (max-width:760px){.strike-detail{width:clamp(200px,40vw,280px)}}
 
   /* tune rail — slim bottom-docked strip, full width minus safe-area, ONE row
      of all 4 sliders side-by-side. Replaces the old bottom-right sheet. */
@@ -299,6 +363,9 @@
     <span class="hud-chip path" id="chipPath"><span class="sw"></span><span id="chipPathTx">PATH —</span></span>
   </div>
 
+  <!-- freemium nudge pill: "N free shots left" — hidden unless saShots.shouldNudge() -->
+  <div class="sa-nudge" id="saNudge" hidden aria-hidden="true"></div>
+
   <p id="sceneData" class="sr-only" aria-live="polite" aria-atomic="true">Swing arc loading.</p>
   <p id="faceZoomLive" class="sr-only" aria-live="polite" aria-atomic="true"></p>
 
@@ -341,6 +408,19 @@
       <text id="cuLabel" x="60" y="116" text-anchor="middle" class="label" font-size="11">center</text>
     </svg>
   </aside>
+
+  <!-- STRIKE DETAIL inset (2026-07-03) — real 3D club/ball/low-point via a
+       second scissored viewport (geo3d/insetview.js), annotated live. -->
+  <div class="strike-detail" id="strikeDetail" role="group" aria-label="Strike detail">
+    <div class="top">
+      <span class="ttl" aria-hidden="true">Strike detail</span>
+      <span class="chip" id="sdChip"><span id="sdChipBand">Pure</span> <span class="pct" id="sdChipPct">100%</span></span>
+    </div>
+    <div class="viewport" id="sdViewport">
+      <svg id="sdAnnot" viewBox="0 0 340 196" aria-hidden="true"></svg>
+    </div>
+    <p class="foot" id="sdFoot"><b>Pure</b></p>
+  </div>
 
   <div class="tune" id="tune" hidden>
     <h2>Parameters</h2>
@@ -385,17 +465,17 @@
 
 <script src="./vendor/gsap/gsap.min.js"></script>
 <script src="./sa-firstrun.js" defer></script>
-<script type="importmap">
-{ "imports": {
-  "three": "./vendor/three/build/three.module.js",
-  "three/addons/": "./vendor/three/examples/jsm/"
-}}
-</script>
 <script type="module">
-import * as THREE from 'three';
+// NOTE: relative imports (not a bare 'three' + import map) — the import map
+// is not honoured in the native Capacitor WKWebView, which crashed the whole
+// 3D module and left Geometry blank. Every geo3d module + the vendored three
+// addons were rewired to relative paths to match. Do NOT reintroduce a bare
+// specifier here or in geo3d/*.js.
+import * as THREE from './vendor/three/build/three.module.js';
 import {
   RADIUS, deg2rad, arcPosition, tangentAt, thetaAtImpact,
   strikeQuality, deriveImpact, clubBallContact, BALL_RADIUS_M,
+  lpWorld, effectiveLpx,
 } from './swing-parameters-and-impact.js';
 import saHaptics from './sa-haptics.js';
 window.saHaptics = saHaptics;   // expose for non-module scripts / tests
@@ -403,10 +483,16 @@ import { createScene } from './geo3d/scene.js';
 import { createArc } from './geo3d/arc.js';
 import { createPlane } from './geo3d/plane.js';
 import { createLowpoint } from './geo3d/lowpoint.js';
-import { createGroundContact } from './geo3d/groundcontact.js';
+import { createGroundContact, groundCrossingTheta0 } from './geo3d/groundcontact.js';
 import { createClub } from './geo3d/club.js';
 import { createTimeline3d } from './geo3d/timeline.js';
 import { createDelivery } from './geo3d/delivery.js';
+import { createInsetView } from './geo3d/insetview.js';
+// Freemium gate: relative imports only (never a bare specifier / import map —
+// see the NOTE above, same rule applies to these modules).
+import * as saShots from './sa-shots.js';
+import * as saIap from './sa-iap.js';
+import { openPaywall } from './sa-paywall.js';
 
 const $ = id => document.getElementById(id);
 
@@ -421,6 +507,7 @@ const reduceMotion3d = matchMedia('(prefers-reduced-motion: reduce)').matches;
 let sa3d = null;   // { scene, camera, rig, POSES, applyRig, renderer, invalidate, startTicking, stopTicking }
 let arc3d = null, plane3d = null, lp3d = null, gc3d = null, club3d = null, timeline3d = null, delivery3d = null;
 let ballTick = null; // FIX J — contact-height tick/ring on the 3D ball
+let inset3d = null;  // STRIKE-DETAIL inset — second scissored viewport (geo3d/insetview.js)
 
 function makeBallTick() {
   // short horizontal tick on the ball's camera-facing side (a thin flattened
@@ -452,6 +539,13 @@ function init3d() {
   plane3d.group.__invalidate = sa3d.invalidate;
   delivery3d.group.__invalidate = sa3d.invalidate;
   club3d.loadPromise.then(() => sa3d.invalidate());
+
+  // STRIKE-DETAIL inset — second scissored viewport, same scene/renderer.
+  // Only the glass plane + target line are hidden for this pass (see
+  // geo3d/insetview.js file header for why the rest stays).
+  inset3d = createInsetView({ hideNodes: () => [plane3d.group, sa3d.targetLine] });
+  sa3d.setInsetPass((renderer, scene, canvas) => inset3d.renderPass(renderer, scene, canvas));
+  updateInsetRect();
 
   // 3D swing timeline (trail/divot/flash + club/arc placement).
   // controlsVisible is a hoisted function declared later in this module —
@@ -486,11 +580,29 @@ function init3d() {
   sa3d.invalidate();
 
   // resize keeps the canvas in sync with the viewport (render-on-demand: just invalidate)
-  addEventListener('resize', () => sa3d.invalidate());
+  addEventListener('resize', () => { updateInsetRect(); sa3d.invalidate(); });
 
   // context-loss recovery already wired inside createScene(); force one more
   // render once restored so the scene isn't left blank.
   canvas3d.addEventListener('webglcontextrestored', () => sa3d.invalidate());
+}
+
+// STRIKE-DETAIL inset — measures the #sdViewport card sub-panel's on-screen
+// rect (CSS px) relative to the full-bleed #scene3d canvas, converts to the
+// gl viewport/scissor convention (origin bottom-left), and keeps the
+// annotation SVG's viewBox in lockstep (1 unit = 1 CSS px) so projectToInset()
+// values can be used directly as SVG coordinates with no further offset math.
+function updateInsetRect() {
+  if (!inset3d) return;
+  const vp = $('sdViewport'), canvas3d = $('scene3d');
+  if (!vp || !canvas3d) return;
+  const vr = vp.getBoundingClientRect(), cr = canvas3d.getBoundingClientRect();
+  if (vr.width < 2 || vr.height < 2) return;
+  const x = vr.left - cr.left;
+  const y = cr.bottom - vr.bottom; // gl viewport/scissor measure y from the BOTTOM
+  inset3d.setRect({ x, y, w: vr.width, h: vr.height });
+  const svg = $('sdAnnot');
+  if (svg) svg.setAttribute('viewBox', `0 0 ${vr.width.toFixed(1)} ${vr.height.toFixed(1)}`);
 }
 
 function rebuild3d() {
@@ -503,6 +615,7 @@ function rebuild3d() {
   if (club3d) club3d.updateAddress(state);   // address pose follows the sliders live
   if (delivery3d) delivery3d.update(state);  // delivery arrow direction follows the sliders live
   updateBallTick(state);
+  if (inset3d) { inset3d.updatePose(state); updateStrikeDetail(state); }
   // keep the arc fully inked while idle (only the swing timeline draws it in
   // progressively); avoids a stale partial-ink look if sliders are dragged
   // after a swing without pressing Hit again.
@@ -530,6 +643,153 @@ function updateBallTick(stateRef) {
   ballTick.rotation.set(Math.PI / 2, 0, -Math.PI * 0.275); // face -Y, centre the arc slice
   ballTick.material.color.set(sq.color);
   ballTick.visible = true;
+}
+
+// ── STRIKE DETAIL inset — header chip + footer caption + live SVG
+// annotations (hero ball->low-point dimension line, LOW POINT marker,
+// strike-height tick/label, optional turf label). All values are read
+// straight from the same swing-parameters-and-impact.js functions the rest
+// of the readout already uses (strikeQuality/clubBallContact/effectiveLpx),
+// so nothing here can disagree with the readout/ball-closeup numbers. ────────
+function hexToRgba(hex, alpha) {
+  const h = hex.replace('#', '');
+  const r = parseInt(h.substring(0, 2), 16), g = parseInt(h.substring(2, 4), 16), b = parseInt(h.substring(4, 6), 16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+
+// Chooses a text-anchor so a label near the LEFT/RIGHT edge of the inset
+// grows INWARD instead of clipping past the SVG viewBox (which clips by
+// default) — matters at extreme slider values where the low-point/turf
+// points can sit close to the frame edge. `preferred` is the anchor used
+// everywhere else (away from the edges).
+function sdAnchorFor(x, rectW, preferred = 'middle') {
+  if (x < rectW * 0.16) return 'start';
+  if (x > rectW * 0.84) return 'end';
+  return preferred;
+}
+
+const _sdBall = new THREE.Vector3();
+const _sdLp = new THREE.Vector3();
+const _sdContact = new THREE.Vector3();
+const _sdEntry = new THREE.Vector3();
+
+function updateStrikeDetail(stateRef) {
+  const card = $('strikeDetail');
+  if (!card || !inset3d) return;
+  const sq = strikeQuality(stateRef);
+  const ct = clubBallContact(stateRef);
+  const cmVal = Math.round(effectiveLpx(stateRef) * 100);
+  const mmVal = Math.round(ct.offset * 1000);
+
+  // header chip: band + pct, coloured per band (textColor = the AA-checked
+  // per-band text colour already used by renderReadout()'s #band).
+  $('sdChipBand').textContent = sq.band;
+  $('sdChipPct').textContent = sq.pct + '%';
+  const chipEl = $('sdChip');
+  chipEl.style.color = sq.textColor;
+  chipEl.style.background = hexToRgba(sq.color, 0.14);
+  chipEl.style.borderColor = hexToRgba(sq.color, 0.4);
+
+  // footer caption + optional turf line (FIX J — only when the low point
+  // dips below ground, i.e. Fat/Duff).
+  const cmText = cmVal === 0 ? 'at the ball' : (cmVal > 0 ? `${cmVal} cm ahead` : `${Math.abs(cmVal)} cm behind`);
+  const mmText = Math.abs(mmVal) < 1.5 ? 'centered' : (mmVal > 0 ? `${mmVal} mm high` : `${Math.abs(mmVal)} mm low`);
+  const theta0 = groundCrossingTheta0(stateRef);
+  let turfText = null;
+  if (theta0 != null) {
+    const entry = arcPosition(-theta0, stateRef);
+    const turfCm = Math.round(entry.x * 100);
+    turfText = turfCm <= 0 ? `turf ${Math.abs(turfCm)} cm before ball` : `turf ${turfCm} cm after ball`;
+  }
+  $('sdFoot').innerHTML = `<b>${sq.band}</b> — low point <b>${cmText}</b>, strike <b>${mmText}</b> on the face.`
+    + (turfText ? ` <span class="sd-turf">${turfText}</span>` : '');
+
+  // a11y [a11y-lead]: the group keeps a STATIC aria-label ("Strike detail");
+  // the live readout is the visible #sdFoot sentence (announced when the SR
+  // user browses into the group). We deliberately do NOT push to an aria-live
+  // region (it spammed the SR on every slider tick) nor mutate the group name
+  // (which would double-announce against the footer). The "at the ball of the
+  // ball" 0cm bug + missing pct in the old summary are moot now.
+
+  // ── live SVG annotations, projected via the inset's own camera ──────────
+  const rect = inset3d.getRect();
+  const svg = $('sdAnnot');
+  if (!svg || rect.w < 4 || rect.h < 4) return;
+
+  _sdBall.set(0, 0, BALL_RADIUS_M);
+  const lp = lpWorld(stateRef);
+  _sdLp.set(lp.x, lp.y, lp.z);
+  const clampedOffset = Math.max(-BALL_RADIUS_M * 0.95, Math.min(BALL_RADIUS_M * 0.95, ct.offset));
+  _sdContact.set(0, -BALL_RADIUS_M, BALL_RADIUS_M + clampedOffset);
+
+  const pBall = inset3d.projectToInset(_sdBall);
+  const pLp = inset3d.projectToInset(_sdLp);
+  const pContact = inset3d.projectToInset(_sdContact);
+
+  const accent = '#22E3D6';
+  const parts = [];
+
+  // (a) hero dimension line: ball -> low point, labelled with the cm value
+  // (SAME number effectiveLpx(state) already gives the readout/tip). Pinned
+  // near the TOP of the frame (with a floor for very-small separations) so it
+  // clears the club/ball cluster rather than sitting right on top of it.
+  if (!pBall.behind && !pLp.behind) {
+    const topY = Math.max(20, Math.min(pBall.y, pLp.y) - 36);
+    const leftX = Math.min(pBall.x, pLp.x), rightX = Math.max(pBall.x, pLp.x);
+    const midX = (pBall.x + pLp.x) / 2;
+    const cmLabel = cmVal === 0 ? '0 cm' : `${Math.abs(cmVal)} cm`;
+    parts.push(
+      `<line x1="${pBall.x.toFixed(1)}" y1="${pBall.y.toFixed(1)}" x2="${pBall.x.toFixed(1)}" y2="${topY.toFixed(1)}" stroke="${accent}" stroke-width="1" stroke-dasharray="2 3" opacity=".55"/>`,
+      `<line x1="${pLp.x.toFixed(1)}" y1="${pLp.y.toFixed(1)}" x2="${pLp.x.toFixed(1)}" y2="${topY.toFixed(1)}" stroke="${accent}" stroke-width="1" stroke-dasharray="2 3" opacity=".55"/>`,
+      `<line x1="${leftX.toFixed(1)}" y1="${topY.toFixed(1)}" x2="${rightX.toFixed(1)}" y2="${topY.toFixed(1)}" stroke="${accent}" stroke-width="1.4"/>`,
+      `<path d="M${(leftX - 7).toFixed(1)} ${topY.toFixed(1)} L${leftX.toFixed(1)} ${(topY - 3.5).toFixed(1)} L${leftX.toFixed(1)} ${(topY + 3.5).toFixed(1)} Z" fill="${accent}"/>`,
+      `<path d="M${(rightX + 7).toFixed(1)} ${topY.toFixed(1)} L${rightX.toFixed(1)} ${(topY - 3.5).toFixed(1)} L${rightX.toFixed(1)} ${(topY + 3.5).toFixed(1)} Z" fill="${accent}"/>`,
+      `<rect x="${(midX - 22).toFixed(1)}" y="${(topY - 20).toFixed(1)}" width="44" height="15" rx="4" fill="#0A0E12" stroke="rgba(34,227,214,.4)"/>`,
+      `<text x="${midX.toFixed(1)}" y="${(topY - 8.5).toFixed(1)}" text-anchor="middle" class="sd-lb">${cmLabel}</text>`
+    );
+  }
+
+  // (b) LOW POINT label — the 3D scene already shows a bright marker sphere
+  // (lowpoint.js's yellow marker) at this exact position; a second glyph
+  // drawn on top of it here would just clutter a spot that's already tightly
+  // packed with the club/ball, so this only adds a small leader dot + the
+  // text label, offset clear of the cluster.
+  if (!pLp.behind) {
+    const ly = pLp.y + 17;
+    parts.push(
+      `<line x1="${pLp.x.toFixed(1)}" y1="${pLp.y.toFixed(1)}" x2="${pLp.x.toFixed(1)}" y2="${(ly - 5).toFixed(1)}" stroke="${accent}" stroke-width="1" opacity=".75"/>`,
+      `<circle cx="${pLp.x.toFixed(1)}" cy="${pLp.y.toFixed(1)}" r="2" fill="${accent}"/>`,
+      `<text x="${pLp.x.toFixed(1)}" y="${(ly + 7).toFixed(1)}" text-anchor="${sdAnchorFor(pLp.x, rect.w)}" class="sd-lb">LOW POINT</text>`
+    );
+  }
+
+  // (c) strike-height label — the 3D ball already carries a contact-height
+  // ring (geometry.html's ballTick); this adds the exact "N mm high/low"
+  // callout (hidden on Whiff — no ball contact to mark) with a short leader
+  // out to the side so it doesn't sit on top of the LOW POINT label.
+  if (sq.band !== 'Whiff' && !pContact.behind) {
+    const mx = pContact.x + 20, my = pContact.y - 14;
+    parts.push(
+      `<line x1="${pContact.x.toFixed(1)}" y1="${pContact.y.toFixed(1)}" x2="${(mx - 3).toFixed(1)}" y2="${(my + 3).toFixed(1)}" stroke="${accent}" stroke-width="1" opacity=".75"/>`,
+      `<circle cx="${pContact.x.toFixed(1)}" cy="${pContact.y.toFixed(1)}" r="2" fill="${accent}"/>`,
+      `<text x="${mx.toFixed(1)}" y="${my.toFixed(1)}" text-anchor="${sdAnchorFor(mx, rect.w, 'start')}" class="sd-lb">${mmText === 'centered' ? 'center' : mmText}</text>`
+    );
+  }
+
+  // (d) optional turf entry marker/label (Fat/Duff only)
+  if (theta0 != null && turfText) {
+    const entry = arcPosition(-theta0, stateRef);
+    _sdEntry.set(entry.x, entry.y, 0);
+    const pEntry = inset3d.projectToInset(_sdEntry);
+    if (!pEntry.behind) {
+      parts.push(
+        `<circle cx="${pEntry.x.toFixed(1)}" cy="${pEntry.y.toFixed(1)}" r="3" fill="#9a7b52"/>`,
+        `<text x="${pEntry.x.toFixed(1)}" y="${(pEntry.y - 8).toFixed(1)}" text-anchor="${sdAnchorFor(pEntry.x, rect.w)}" class="sd-lb sd-lb-soil">${turfText}</text>`
+      );
+    }
+  }
+
+  svg.innerHTML = parts.join('');
 }
 
 const els = {
@@ -580,7 +840,7 @@ const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 // ── fade the control surfaces during play for a clean ball-strike view ────
 // The HUD chips stay visible during play (matches the old in-canvas chips).
-const CONTROL_SEL = '.controls, .readout, .tune, .modnav, .title';
+const CONTROL_SEL = '.controls, .readout, .tune, .modnav, .title, .strike-detail';
 function controlsVisible(show) {
   const nodes = document.querySelectorAll(CONTROL_SEL);
   if (reduce) { nodes.forEach(n => { n.style.opacity = show ? '' : '0'; n.style.pointerEvents = show ? '' : 'none'; }); return; }
@@ -844,11 +1104,29 @@ $('viewBtn').addEventListener('click', () => {
   state.view = to;
   animate3dView(to);
 });
+// freemium "N free shots left" pill — visible only in the tail of the free
+// window (saShots.shouldNudge()); toggled on load and after every counted play.
+function refreshNudge() {
+  const el = $('saNudge');
+  if (!el) return;
+  if (saShots.shouldNudge()) {
+    const n = saShots.remaining();
+    el.textContent = n === 1 ? '1 free shot left' : `${n} free shots left`;
+    el.hidden = false;
+  } else {
+    el.hidden = true;
+  }
+}
+
 $('hit').addEventListener('click', () => {
-  saHaptics.impact('medium');
   // Hit plays the full 3D swing timeline; the readout/band logic is driven
   // by the sliders (state), not by which swing animation ran.
-  if (timeline3d) timeline3d.play();
+  if (timeline3d && timeline3d.isPlaying()) return; // a running swing never double-counts
+  if (saShots.shouldGate()) { openPaywall('geometry'); return; }
+  saHaptics.impact('medium');
+  timeline3d.play();
+  saShots.recordShot(); // one PLAYED swing = one shot
+  refreshNudge();
 });
 // strike toggle: show/hide the strike-result panel so you can study the bare swing arc
 const readoutEl = document.querySelector('.readout');
@@ -859,8 +1137,14 @@ $('strikeBtn').addEventListener('click', () => {
 });
 
 init3d();
+saIap.init();     // no-op on web; wires RevenueCat entitlement on native
+refreshNudge();   // reflect any shots already used this session on load
 // debug hooks for live orientation tuning from Playwright (no redeploy per tweak)
-window.__sa = {
+// NOTE: merge (not overwrite) — sa-iap.js/sa-paywall.js already populated
+// window.__sa.iap / window.__sa.paywall as a side effect of being imported
+// (module dependencies evaluate before this script's own body runs), so a
+// plain `window.__sa = {...}` here would clobber them.
+window.__sa = Object.assign(window.__sa || {}, {
   haptics: saHaptics,   // STAGE 4 — test hook
   // 3D bedrock debug/verification hooks
   three: {
@@ -924,6 +1208,26 @@ window.__sa = {
       labelStruck: () => { const el = $('gc3dLabel'); return el ? el.classList.contains('is-struck') : null; },
       headZ: () => (club3d ? club3d.group.position.z : null),
       divotActiveCount: () => (timeline3d ? timeline3d.fx.divot.activeCount : null),
+    },
+    // STRIKE-DETAIL inset verification hooks (2026-07-03)
+    inset: {
+      rect: () => (inset3d ? inset3d.getRect() : null),
+      cameraPos: () => (inset3d ? inset3d.camera.position.toArray() : null),
+      cameraFov: () => (inset3d ? inset3d.camera.fov : null),
+      chipText: () => { const b = $('sdChipBand'), p = $('sdChipPct'); return b && p ? `${b.textContent} ${p.textContent}` : null; },
+      footText: () => { const el = $('sdFoot'); return el ? el.textContent : null; },
+      ariaLabel: () => { const el = $('strikeDetail'); return el ? el.getAttribute('aria-label') : null; },
+      cardRect: () => { const el = $('strikeDetail'); return el ? el.getBoundingClientRect().toJSON() : null; },
+      viewportRect: () => { const el = $('sdViewport'); return el ? el.getBoundingClientRect().toJSON() : null; },
+      annotSvgHtml: () => { const el = $('sdAnnot'); return el ? el.innerHTML : null; },
+      // debug-only: project an arbitrary world point into the inset's local px
+      projectWorld: (x, y, z) => (inset3d ? inset3d.projectToInset(new THREE.Vector3(x, y, z)) : null),
+      // debug-only: re-measure #sdViewport and re-render (for manual CSS-size
+      // experiments in devtools without a real window resize event).
+      refreshRect: () => { updateInsetRect(); if (sa3d) sa3d.invalidate(); },
+      // debug-only: force an arbitrary rect (bypasses DOM measurement) for
+      // isolating rect-math vs render-pass bugs.
+      debugSetRect: (x, y, w, h) => { if (inset3d) { inset3d.setRect({ x, y, w, h }); sa3d.invalidate(); } },
     },
     // FIX J — ball-strike tick/ring verification hooks
     ballTick: {
@@ -1050,7 +1354,7 @@ window.__sa = {
       soleErr45: +soleErr45.toFixed(3), soleErr70: +soleErr70.toFixed(3), pass,
     };
   },
-};
+});
 
 // ── first-run coach marks (Phase C) ───────────────────────────────────────
 //   GATING (landscape-forced app): the walkthrough must never appear until

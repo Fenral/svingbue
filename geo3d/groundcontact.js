@@ -35,7 +35,7 @@
  * trigger point (p_entry, from entry = arcPosition(-theta0)) without a live
  * gc3d instance or duplicating this closed form.
  */
-import * as THREE from 'three';
+import * as THREE from '../vendor/three/build/three.module.js';
 import { lpWorld, arcPosition, deg2rad } from '../swing-parameters-and-impact.js';
 
 const SOIL = 0x8a5a2b; // clearly distinct from the yellow (0xffd166) lpx bracket

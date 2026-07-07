@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#0A0E12" />
+<title>StrikeArc — Paywall mock</title>
+<style>
+  :root{
+    --bg:#0A0E12;
+    --bg-2:#0d141a;
+    --cyan:#22E3D6;
+    --cyan-dim:#1aa89f;
+    --ink:#E9F1F4;
+    --muted:#9FB2C8;
+    --muted-2:#7e8b96;   /* AA on near-black even at small sizes (~5.5:1) */
+    --line:rgba(255,255,255,.09);
+    --card:rgba(255,255,255,.035);
+    --card-hi:rgba(34,227,214,.07);
+    --radius:16px;
+    --gap:clamp(10px,2.2vh,20px);
+    font-synthesis:none;
+    -webkit-text-size-adjust:100%;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:-apple-system,"SF Pro Text","SF Pro Display","Segoe UI",Roboto,system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    line-height:1.35;
+    overflow-x:hidden;
+  }
+  /* ---- phone frame (landscape) ---- */
+  .stage{
+    min-height:100%;
+    display:flex;flex-direction:column;align-items:center;
+    gap:14px;padding:22px 16px 40px;
+  }
+  .device{
+    width:min(96vw,860px);
+    aspect-ratio:19.5/9;               /* iPhone landscape */
+    border-radius:26px;
+    background:
+      radial-gradient(120% 140% at 82% 18%, rgba(34,227,214,.10), transparent 46%),
+      radial-gradient(130% 130% at 12% 92%, rgba(34,227,214,.05), transparent 50%),
+      var(--bg);
+    border:1px solid var(--line);
+    box-shadow:0 30px 80px -30px rgba(0,0,0,.9), inset 0 0 0 1px rgba(255,255,255,.02);
+    position:relative;overflow:hidden;
+    display:flex;
+  }
+  /* faint ball-flight arc motif */
+  .device .arc{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;opacity:.5}
+  .paywall{
+    position:relative;z-index:2;flex:1;
+    display:grid;grid-template-columns:minmax(0,0.86fr) minmax(0,1fr);
+    gap:clamp(14px,3vw,40px);
+    padding:clamp(16px,3.4vh,30px) clamp(18px,3vw,38px);
+  }
+
+  /* ---- left: the hook ---- */
+  .hook{display:flex;flex-direction:column;justify-content:center;min-width:0}
+  .brand{display:flex;align-items:center;gap:8px;margin-bottom:auto}
+  .wordmark{font-weight:700;letter-spacing:.22em;font-size:12px;color:var(--ink)}
+  .pro-pill{
+    font-size:10px;font-weight:700;letter-spacing:.14em;color:var(--bg);
+    background:var(--cyan);border-radius:999px;padding:2px 7px;
+  }
+  .hook h1{
+    font-size:clamp(18px,3.4vh,27px);font-weight:700;letter-spacing:-.01em;
+    margin:14px 0 8px;line-height:1.12;max-width:15ch;
+  }
+  .hook h1 .accent{color:var(--cyan)}
+  .sub{color:var(--muted);font-size:clamp(12px,1.7vh,14px);max-width:30ch;margin-bottom:14px}
+  .features{list-style:none;display:flex;flex-direction:column;gap:clamp(6px,1.3vh,11px);margin-top:2px}
+  .features li{display:flex;align-items:center;gap:10px;font-size:clamp(12px,1.7vh,14px);color:#cdd8de}
+  .features svg{flex:none;width:16px;height:16px;color:var(--cyan)}
+  .brand-foot{margin-top:auto;color:var(--muted-2);font-size:11px;padding-top:12px}
+
+  /* ---- right: the ladder ---- */
+  .ladder{display:flex;flex-direction:column;justify-content:center;gap:clamp(8px,1.5vh,12px);min-width:0}
+  fieldset{border:0;display:flex;flex-direction:column;gap:clamp(8px,1.5vh,12px)}
+  legend{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+  .tier{position:relative;display:block;cursor:pointer}
+  .tier input{position:absolute;opacity:0;width:0;height:0}
+  .tier .box{
+    display:flex;align-items:center;justify-content:space-between;gap:12px;
+    min-height:52px;padding:11px 15px;border-radius:14px;
+    background:var(--card);border:1px solid var(--line);
+    transition:border-color .15s, background .15s, box-shadow .15s;
+  }
+  .tier .t-name{font-size:14px;font-weight:600;color:var(--ink)}
+  .tier .t-sub{font-size:11px;color:var(--muted-2);margin-top:1px}
+  .tier .t-price{font-size:15px;font-weight:700;color:var(--ink);white-space:nowrap;text-align:right}
+  .tier .t-price small{display:block;font-size:10px;font-weight:500;color:var(--muted-2)}
+  /* decoy (monthly) sits muted + smaller */
+  .tier.decoy .box{opacity:.72}
+  .tier.decoy .t-name{font-weight:500}
+  /* hero (annual) */
+  .tier.hero .box{border-color:rgba(34,227,214,.45);background:var(--card-hi)}
+  .badge{
+    position:absolute;top:-9px;left:14px;z-index:3;
+    font-size:9.5px;font-weight:800;letter-spacing:.1em;color:var(--bg);
+    background:var(--cyan);border-radius:999px;padding:3px 9px;
+  }
+  .save{color:var(--cyan);font-weight:600}
+  /* selected state */
+  .tier input:checked + .box{
+    border-color:var(--cyan);
+    box-shadow:0 0 0 1px var(--cyan), 0 8px 30px -12px rgba(34,227,214,.4);
+    background:var(--card-hi);
+  }
+  .tier input:focus-visible + .box{outline:2px solid var(--cyan);outline-offset:2px}
+  .radio{
+    flex:none;width:19px;height:19px;border-radius:999px;border:1.5px solid var(--muted-2);
+    display:grid;place-items:center;transition:border-color .15s;
+  }
+  .tier input:checked + .box .radio{border-color:var(--cyan)}
+  .tier input:checked + .box .radio::after{content:"";width:10px;height:10px;border-radius:999px;background:var(--cyan)}
+  .tier .left{display:flex;align-items:center;gap:12px;min-width:0}
+
+  .cta{
+    margin-top:4px;width:100%;min-height:50px;border:0;border-radius:14px;cursor:pointer;
+    background:linear-gradient(180deg,#2ff0e2,#18c8bc);color:#04211f;
+    font-size:15px;font-weight:700;letter-spacing:.01em;
+    box-shadow:0 10px 30px -10px rgba(34,227,214,.55);
+    transition:transform .1s, box-shadow .15s;
+  }
+  .cta:active{transform:translateY(1px)}
+  .fineprint{color:var(--muted-2);font-size:10.5px;text-align:center;margin-top:2px;line-height:1.3}
+  .legal{display:flex;gap:14px;justify-content:center;margin-top:2px}
+  .legal a{color:var(--muted);font-size:11px;text-decoration:none;border-bottom:1px solid transparent;padding:2px 0}
+  .legal a:hover,.legal a:focus-visible{color:var(--ink);border-bottom-color:var(--muted)}
+  .close{
+    position:absolute;top:12px;right:14px;z-index:4;width:38px;height:38px;border-radius:999px;
+    background:rgba(255,255,255,.06);border:1px solid var(--line);color:var(--muted);
+    font-size:15px;display:grid;place-items:center;cursor:pointer;line-height:1;
+  }
+
+  /* ---- annotation strip (the pre-wall nudge) ---- */
+  .notes{width:min(96vw,860px);display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .note{
+    background:var(--bg-2);border:1px solid var(--line);border-radius:14px;padding:14px 16px;
+  }
+  .note h3{font-size:12px;font-weight:700;letter-spacing:.04em;color:var(--muted);text-transform:uppercase;margin-bottom:10px}
+  .note p{font-size:12.5px;color:var(--muted);line-height:1.45}
+  .nudge{
+    display:inline-flex;align-items:center;gap:8px;background:rgba(34,227,214,.1);
+    border:1px solid rgba(34,227,214,.35);color:var(--ink);
+    border-radius:999px;padding:8px 14px;font-size:13px;font-weight:600;margin-bottom:10px;
+  }
+  .nudge b{color:var(--cyan)}
+  .caption{width:min(96vw,860px);text-align:center;color:var(--muted-2);font-size:12px}
+  @media (max-width:560px){
+    .device{aspect-ratio:auto;min-height:78vh}
+    .notes{grid-template-columns:1fr}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+  <div class="stage">
+    <p class="caption">StrikeArc — <b>landscape</b> paywall (mock · no payment wired)</p>
+
+    <div class="device">
+      <svg class="arc" viewBox="0 0 860 397" preserveAspectRatio="none" aria-hidden="true">
+        <path d="M-20 360 C 240 360, 470 120, 900 60" fill="none" stroke="url(#g)" stroke-width="2" stroke-dasharray="2 7" stroke-linecap="round"/>
+        <circle cx="900" cy="60" r="4" fill="#22E3D6"/>
+        <defs><linearGradient id="g" x1="0" y1="1" x2="1" y2="0">
+          <stop offset="0" stop-color="#22E3D6" stop-opacity="0"/>
+          <stop offset="1" stop-color="#22E3D6" stop-opacity=".5"/>
+        </linearGradient></defs>
+      </svg>
+
+      <button class="close" aria-label="Close" title="Dismissable — but playing stays locked">✕</button>
+
+      <main class="paywall">
+        <!-- LEFT: hook -->
+        <section class="hook" aria-labelledby="pw-title">
+          <div class="brand">
+            <span class="wordmark">STRIKEARC</span>
+            <span class="pro-pill">PRO</span>
+          </div>
+          <h1 id="pw-title">You've played your <span class="accent">10 free shots</span>.</h1>
+          <p class="sub">Keep exploring exactly how every swing shapes the shot.</p>
+          <ul class="features">
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg> Unlimited shots &amp; swings</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg> Full 3D flight replay</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg> Compare shots with ghosts</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg> Every parameter unlocked</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg> Face-zoom impact replay</li>
+          </ul>
+          <p class="brand-foot">One instrument. Every ball-flight law, made visible.</p>
+        </section>
+
+        <!-- RIGHT: ladder -->
+        <section class="ladder">
+          <form>
+            <fieldset>
+              <legend>Choose a plan</legend>
+
+              <label class="tier decoy">
+                <input type="radio" name="plan" value="monthly">
+                <span class="box">
+                  <span class="left">
+                    <span class="radio" aria-hidden="true"></span>
+                    <span><span class="t-name">Monthly</span><span class="t-sub">Billed every month</span></span>
+                  </span>
+                  <span class="t-price">kr 59<small>/ month</small></span>
+                </span>
+              </label>
+
+              <label class="tier hero">
+                <span class="badge" aria-hidden="true">BEST VALUE</span>
+                <input type="radio" name="plan" value="annual" checked>
+                <span class="box">
+                  <span class="left">
+                    <span class="radio" aria-hidden="true"></span>
+                    <span><span class="t-name">Annual</span><span class="t-sub"><span class="save">Save 79%</span> vs monthly</span></span>
+                  </span>
+                  <span class="t-price">kr 149<small>/ year</small></span>
+                </span>
+              </label>
+
+              <label class="tier">
+                <input type="radio" name="plan" value="lifetime">
+                <span class="box">
+                  <span class="left">
+                    <span class="radio" aria-hidden="true"></span>
+                    <span><span class="t-name">Lifetime</span><span class="t-sub">Pay once — yours forever</span></span>
+                  </span>
+                  <span class="t-price">kr 349<small>one-time</small></span>
+                </span>
+              </label>
+            </fieldset>
+
+            <button type="button" class="cta">Unlock Pro</button>
+            <p class="fineprint">Annual &amp; Monthly auto-renew until cancelled in Settings. Lifetime is a one-time purchase.</p>
+            <p class="legal">
+              <a href="#">Restore Purchases</a>
+              <a href="#">Terms</a>
+              <a href="#">Privacy</a>
+            </p>
+          </form>
+        </section>
+      </main>
+    </div>
+
+    <!-- annotations -->
+    <div class="notes">
+      <div class="note">
+        <h3>Before the wall — the hidden counter</h3>
+        <div class="nudge">⛳ <span><b>2</b> free shots left</span></div>
+        <p>The 10-shot counter stays hidden while they play freely. Around shot&nbsp;8 a discreet pill appears — generous feel early, urgency right before the wall.</p>
+      </div>
+      <div class="note">
+        <h3>Why this shape</h3>
+        <p>No trial: the 10 free shots <em>are</em> the trial. Annual is the hero (front-loaded revenue), Monthly is a priced-high decoy that makes “Save 79%” land, Lifetime catches the subscription-averse golfer. Hard wall on shot&nbsp;#11 = pay to continue.</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Minimal: reflect selected plan in the CTA label (mock feel only).
+    var labels = { monthly:"Continue — kr 59/mo", annual:"Unlock Pro — kr 149/yr", lifetime:"Unlock Pro — kr 349 once" };
+    var cta = document.querySelector(".cta");
+    document.querySelectorAll('input[name="plan"]').forEach(function(r){
+      r.addEventListener("change", function(){ cta.textContent = labels[r.value] || "Unlock Pro"; });
+    });
+  </script>
+</body>
+</html>

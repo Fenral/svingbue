@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#0A0E12" />
+<title>StrikeArc — Reel storyboards</title>
+<style>
+  :root{
+    --bg:#0A0E12; --bg-2:#0d141a;
+    --cyan:#22E3D6; --cyan-dim:#158e86;
+    --ink:#E9F1F4; --muted:#9FB2C8; --muted-2:#7e8b96;
+    --hook:#F4C64E;        /* warm "myth" accent */
+    --bad:#F0685E; --good:#4ADE80;
+    --line:rgba(255,255,255,.09);
+    font-synthesis:none;-webkit-text-size-adjust:100%;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    background:var(--bg);color:var(--ink);
+    font-family:-apple-system,"SF Pro Text","Segoe UI",Roboto,system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;line-height:1.4;padding:28px 16px 64px;
+  }
+  .wrap{max-width:1180px;margin:0 auto}
+  header{display:flex;flex-direction:column;gap:8px;margin-bottom:8px}
+  .brand{display:flex;align-items:center;gap:9px}
+  .wordmark{font-weight:700;letter-spacing:.24em;font-size:13px}
+  .pro{font-size:10px;font-weight:800;letter-spacing:.12em;color:var(--bg);background:var(--cyan);border-radius:999px;padding:2px 7px}
+  h1{font-size:clamp(20px,3.4vw,30px);font-weight:700;letter-spacing:-.01em;margin-top:6px}
+  .sub{color:var(--muted);font-size:14px;max-width:70ch}
+  .gate{display:inline-flex;align-items:center;gap:8px;margin-top:8px;font-size:12px;color:var(--muted-2);
+        background:var(--bg-2);border:1px solid var(--line);border-radius:999px;padding:6px 12px}
+  .note{color:var(--muted-2);font-size:12px;margin-top:6px}
+
+  .scenario{margin-top:40px;border-top:1px solid var(--line);padding-top:26px}
+  .scenario .tag{font-size:11px;font-weight:800;letter-spacing:.14em;color:var(--cyan);text-transform:uppercase}
+  .scenario h2{font-size:clamp(17px,2.6vw,22px);font-weight:700;margin:8px 0 4px;max-width:40ch}
+  .verdict{font-size:12.5px;color:var(--muted);margin-bottom:18px}
+  .verdict b{color:var(--good)}
+  .verdict .warn{color:var(--hook)}
+
+  .reel{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+  @media (max-width:720px){.reel{grid-template-columns:1fr 1fr}}
+  @media (max-width:480px){.reel{grid-template-columns:1fr}}
+  .frame{
+    position:relative;aspect-ratio:9/16;border-radius:16px;overflow:hidden;
+    background:radial-gradient(120% 90% at 50% 0%, #10181f, var(--bg));
+    border:1px solid var(--line);display:flex;flex-direction:column;
+    padding:18px 16px;
+  }
+  .beat{position:absolute;top:12px;left:14px;font-size:10px;font-weight:800;letter-spacing:.12em;color:var(--muted-2)}
+  .mk{position:absolute;top:12px;right:14px;font-size:9px;font-weight:700;letter-spacing:.2em;color:var(--muted-2)}
+  .frame .body{margin-top:auto;margin-bottom:auto;display:flex;flex-direction:column;gap:12px;align-items:flex-start}
+  .kicker{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted-2)}
+  .big{font-size:clamp(18px,2.4vw,23px);font-weight:800;line-height:1.1;letter-spacing:-.01em}
+  .big .h{color:var(--hook)} .big .c{color:var(--cyan)} .big .g{color:var(--good)} .big .b{color:var(--bad)}
+  .cross{color:var(--bad);font-weight:800}
+  .foot{margin-top:auto;font-size:12px;color:var(--muted)}
+  svg.diagram{width:100%;height:auto;margin:2px 0}
+  .lbl{font:600 10px/1 -apple-system,system-ui,sans-serif;fill:var(--muted)}
+  .lbl-c{fill:var(--cyan)} .lbl-h{fill:var(--hook)} .lbl-b{fill:var(--bad)} .lbl-i{fill:var(--ink)}
+
+  .caption{margin-top:16px;background:var(--bg-2);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+  .caption h3{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted-2);margin-bottom:6px}
+  .caption p{font-size:13.5px;color:var(--ink)}
+  .caption .tags{color:var(--cyan);font-size:12px;margin-top:6px}
+  footer{margin-top:44px;border-top:1px solid var(--line);padding-top:18px;color:var(--muted-2);font-size:13px}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand"><span class="wordmark">STRIKEARC</span><span class="pro">REELS</span></div>
+    <h1>Ball-flight myths, revealed — Reel storyboards</h1>
+    <p class="sub">Each scenario becomes one vertical Reel: <b>myth hook → StrikeArc reveal → punchline</b>. The reveal frame is a screen-recording of the live app; the schematics below stand in for it.</p>
+    <span class="gate">🔒 Content bank — nothing posts until StrikeArc is live on App Store <b>and</b> Google Play.</span>
+    <p class="note">Storyboards 1–2 of the launch series. Brand = svingbue cyan on near-black. English UI.</p>
+  </header>
+
+  <!-- ================= SCENARIO 1 ================= -->
+  <section class="scenario">
+    <div class="tag">Reel 01 · Spin</div>
+    <h2>“Hitting up lowers your spin” — not by itself.</h2>
+    <p class="verdict"><span class="warn">Sharpened:</span> spin = <b>spin loft</b> (dynamic loft − attack angle). Attack angle IS in the equation — but chasing it fails because golfers add loft while hitting up, cancelling it. The reliable lever is dynamic loft.</p>
+    <div class="reel">
+      <!-- Beat 1 -->
+      <div class="frame"><span class="beat">HOOK</span><span class="mk">0:00</span>
+        <div class="body">
+          <span class="kicker">The range myth</span>
+          <div class="big">“Just hit <span class="h">UP</span> on it to kill your spin.”</div>
+          <div style="font-size:13px;color:var(--muted)">Sound familiar? <span class="cross">✕</span> Half-true at best.</div>
+        </div>
+        <div class="foot">Swipe → what actually controls spin.</div>
+      </div>
+      <!-- Beat 2: reveal diagram (spin loft wedge) -->
+      <div class="frame"><span class="beat">REVEAL</span><span class="mk">0:03</span>
+        <div class="body">
+          <span class="kicker">Spin loft = the gap</span>
+          <svg class="diagram" viewBox="0 0 220 150" role="img" aria-label="Side view: the wedge between attack angle and dynamic loft is spin loft">
+            <line x1="12" y1="120" x2="208" y2="120" stroke="#2a3440" stroke-width="2"/>
+            <circle cx="70" cy="113" r="7" fill="#e9f1f4"/>
+            <!-- attack angle line -->
+            <line x1="30" y1="128" x2="150" y2="98" stroke="var(--muted)" stroke-width="2.5" stroke-linecap="round"/>
+            <!-- dynamic loft line -->
+            <line x1="30" y1="128" x2="150" y2="52" stroke="var(--cyan)" stroke-width="2.5" stroke-linecap="round"/>
+            <!-- wedge fill -->
+            <path d="M30 128 L150 98 L150 52 Z" fill="rgba(34,227,214,.14)"/>
+            <text x="156" y="100" class="lbl">attack</text>
+            <text x="156" y="54" class="lbl lbl-c">dynamic loft</text>
+            <text x="96" y="88" class="lbl lbl-c" style="font-weight:800">SPIN LOFT</text>
+          </svg>
+          <div style="font-size:13px;color:var(--muted)">Spin follows this wedge — <span class="c" style="color:var(--cyan)">dynamic loft − attack</span>.</div>
+        </div>
+      </div>
+      <!-- Beat 3: payoff -->
+      <div class="frame"><span class="beat">PAYOFF</span><span class="mk">0:07</span>
+        <div class="body">
+          <span class="kicker">The trap &amp; the fix</span>
+          <div class="big">Hit up <span class="h">+ add loft</span> → wedge <span class="h">unchanged</span>.</div>
+          <div class="big">Cut <span class="c">loft</span> → wedge shrinks → <span class="g">spin drops</span>.</div>
+        </div>
+        <div class="foot"><b style="color:var(--cyan)">Chase spin loft, not attack angle.</b></div>
+      </div>
+    </div>
+    <div class="caption">
+      <h3>Caption</h3>
+      <p>You don’t lower spin by hitting up — you lower it by shrinking your <b>spin loft</b>. Hit up and add loft, and the wedge never changes. The real lever is dynamic loft. Stop chasing attack angle. 🎯</p>
+      <p class="tags">#golf #golfswing #ballflight #trackman #golftips #spinloft #golfcoach #strikearc</p>
+    </div>
+  </section>
+
+  <!-- ================= SCENARIO 2 ================= -->
+  <section class="scenario">
+    <div class="tag">Reel 02 · Curve</div>
+    <h2>Your face can be OPEN to the target — and still hook.</h2>
+    <p class="verdict"><b>Bulletproof as stated.</b> Start line ≈ face. Curve ≈ face − <b>path</b> (never face − target). Face open to target but closed to path = hook.</p>
+    <div class="reel">
+      <!-- Beat 1 -->
+      <div class="frame"><span class="beat">HOOK</span><span class="mk">0:00</span>
+        <div class="body">
+          <span class="kicker">The assumption</span>
+          <div class="big">“Hooking it? Your face must be <span class="b">closed</span>.”</div>
+          <div style="font-size:13px;color:var(--muted)"><span class="cross">✕</span> It can point <span class="h">right of your target</span> and still hook.</div>
+        </div>
+        <div class="foot">Swipe → proof.</div>
+      </div>
+      <!-- Beat 2: top-down diagram -->
+      <div class="frame"><span class="beat">REVEAL</span><span class="mk">0:03</span>
+        <div class="body">
+          <span class="kicker">Top-down · right-handed</span>
+          <svg class="diagram" viewBox="0 0 200 170" role="img" aria-label="Top down: face open to target, path further right, ball starts right and hooks left">
+            <!-- target line -->
+            <line x1="100" y1="160" x2="100" y2="14" stroke="#2a3440" stroke-width="2" stroke-dasharray="4 5"/>
+            <text x="104" y="20" class="lbl">target</text>
+            <circle cx="100" cy="150" r="6" fill="#e9f1f4"/>
+            <!-- path arrow (+6, further right) -->
+            <line x1="100" y1="150" x2="150" y2="40" stroke="var(--muted)" stroke-width="2.5"/>
+            <text x="150" y="44" class="lbl">path +6°</text>
+            <!-- face arrow (+2, open to target) -->
+            <line x1="100" y1="150" x2="122" y2="36" stroke="var(--hook)" stroke-width="2.5"/>
+            <text x="116" y="32" class="lbl lbl-h">face +2° (open)</text>
+            <!-- ball flight: starts right then hooks left -->
+            <path d="M100 150 C 120 96, 118 60, 78 30" fill="none" stroke="var(--cyan)" stroke-width="3" stroke-linecap="round"/>
+            <circle cx="78" cy="30" r="4" fill="var(--cyan)"/>
+            <text x="24" y="30" class="lbl lbl-c">hooks left</text>
+          </svg>
+          <div style="font-size:13px;color:var(--muted)">Face <span class="h" style="color:var(--hook)">right of target</span>, path further right → face <b>closed to path</b>.</div>
+        </div>
+      </div>
+      <!-- Beat 3 -->
+      <div class="frame"><span class="beat">PAYOFF</span><span class="mk">0:07</span>
+        <div class="body">
+          <span class="kicker">The law</span>
+          <div class="big">Start = <span class="c">face</span>.<br>Curve = <span class="c">face − path</span>.</div>
+          <div style="font-size:13px;color:var(--muted)">Your curve never signs toward your <span class="h">target</span> — only your <span class="c">path</span>.</div>
+        </div>
+        <div class="foot"><b style="color:var(--cyan)">Open to target ≠ open to path.</b></div>
+      </div>
+    </div>
+    <div class="caption">
+      <h3>Caption</h3>
+      <p>Your clubface can point <b>right of your target</b> and the ball still hooks. Why? Curve is set by face-to-<b>path</b>, never face-to-target. Face +2°, path +6° → the ball starts right and banana’s left. 🍌</p>
+      <p class="tags">#golf #ballflightlaws #golfswing #draw #golfcoach #facetopath #golftips #strikearc</p>
+    </div>
+  </section>
+
+  <footer>
+    Storyboards 1–2 of the launch series. Feed me more scenarios — each becomes a Reel here. Final Reels swap the schematics for screen-recordings of the live StrikeArc app.
+  </footer>
+</div>
+</body>
+</html>

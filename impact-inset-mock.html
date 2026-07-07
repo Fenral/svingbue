@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#0A0E12" />
+<title>StrikeArc — Strike-detail inset mock</title>
+<style>
+  :root{
+    --bg:#0A0E12; --bg2:#0d141a; --cyan:#22E3D6; --ink:#E9F1F4;
+    --muted:#9FB2C8; --muted2:#7e8b96; --line:rgba(255,255,255,.09);
+    --good:#4ADE80; --warn:#F4C64E; --bad:#F0685E;
+    --soil:#9a7b52; --turf:#3f5136;
+    font-synthesis:none;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:radial-gradient(120% 120% at 20% 0%, #10161d, var(--bg)); color:var(--ink);
+    font-family:-apple-system,"SF Pro Text","Segoe UI",Roboto,system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased; padding:26px 16px 60px; min-height:100vh}
+  .wrap{max-width:1080px;margin:0 auto}
+  h1{font-size:clamp(18px,3vw,26px);font-weight:700;letter-spacing:-.01em}
+  .sub{color:var(--muted);font-size:13.5px;margin:6px 0 4px;max-width:74ch}
+  .note{color:var(--muted2);font-size:12px}
+
+  /* the mock "geometry screen" backdrop so the inset is seen in context */
+  .stage{margin-top:20px;position:relative;border-radius:16px;overflow:hidden;border:1px solid var(--line);
+    aspect-ratio:19.5/9;background:
+      radial-gradient(120% 150% at 60% 10%, #0f161c, #0A0E12 60%);
+    display:flex;align-items:center;justify-content:center}
+  .stage .ctx{position:absolute;inset:0;opacity:.5}
+  .stage .ctxlabel{position:absolute;top:12px;left:16px;font-size:11px;letter-spacing:.14em;color:var(--muted2);text-transform:uppercase}
+
+  /* ── the STRIKE DETAIL inset card ── */
+  .inset{position:absolute;left:14px;bottom:14px;width:min(46%,360px);
+    background:linear-gradient(180deg, rgba(13,20,26,.96), rgba(10,14,18,.96));
+    border:1px solid rgba(34,227,214,.28);border-radius:14px;
+    box-shadow:0 18px 50px -20px rgba(0,0,0,.85), inset 0 0 0 1px rgba(255,255,255,.02);
+    padding:11px 13px 12px;backdrop-filter:blur(3px)}
+  .inset .top{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+  .inset .ttl{font-size:10.5px;font-weight:700;letter-spacing:.16em;color:var(--muted);text-transform:uppercase}
+  .chip{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;
+    padding:3px 9px;border-radius:999px;background:rgba(74,222,128,.12);color:var(--good);border:1px solid rgba(74,222,128,.3)}
+  .chip .pct{color:var(--muted);font-weight:600}
+  svg.diagram{width:100%;height:auto;display:block}
+  .foot{margin-top:6px;font-size:11.5px;color:var(--muted);line-height:1.3}
+  .foot b{color:var(--ink)}
+
+  /* variant row */
+  .variants{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:26px}
+  @media (max-width:760px){.variants{grid-template-columns:1fr}}
+  .card{background:var(--bg2);border:1px solid var(--line);border-radius:14px;padding:12px 13px}
+  .card h3{font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+
+  .cap{width:100%;max-width:1080px;margin:0 auto;text-align:left}
+  /* svg label helpers */
+  .lb{font:600 10px/1 -apple-system,system-ui,sans-serif;fill:var(--muted)}
+  .lb-c{fill:var(--cyan)} .lb-i{fill:var(--ink)} .lb-w{fill:var(--warn)} .lb-b{fill:var(--bad)}
+  .dim{stroke:var(--cyan);stroke-width:1.4}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap cap">
+  <h1>Strike-detail inset — mock</h1>
+  <p class="sub">A dedicated impact card so the two-scale problem is solved: the main 3D view keeps the arc + plane as <em>context</em>, and this card shows the <b>impact big &amp; labelled</b> — blade, ball, low-point, and the <b>ball→low-point distance as a dimensioned line with the cm value</b>. It updates live from the engine (band, strike-height mm, low-point cm). Below: how it sits in the corner of Geometry, then how it adapts across Pure / Fat / Thin.</p>
+  <p class="note">Schematic mock — final version renders from clubBallContact()/groundcontact() values. Colours = StrikeArc cyan on near-black.</p>
+</div>
+
+<!-- inset shown in the geometry-screen corner -->
+<div class="wrap">
+  <div class="stage">
+    <span class="ctxlabel">main 3D view — arc + plane (context)</span>
+    <svg class="ctx" viewBox="0 0 860 397" preserveAspectRatio="none" aria-hidden="true">
+      <!-- faint arc + plane suggestion -->
+      <path d="M120 300 C 320 300, 520 150, 780 90" fill="none" stroke="#22E3D6" stroke-width="2.5" opacity=".5"/>
+      <polygon points="300,120 720,70 760,250 340,300" fill="rgba(34,227,214,.035)" stroke="rgba(127,244,235,.14)"/>
+      <circle cx="360" cy="292" r="7" fill="#e9f1f4"/>
+    </svg>
+    <!-- the inset -->
+    <div class="inset" role="group" aria-label="Strike detail: pure strike, low point 8 cm ahead of ball, 5 mm low on the face">
+      <div class="top"><span class="ttl">Strike detail</span><span class="chip">Pure <span class="pct">81%</span></span></div>
+      <svg class="diagram" viewBox="0 0 340 180" role="img" aria-label="Side view: club descends, contacts the ball first, low point 8 cm ahead of the ball; strike is 5 mm low on the face">
+        <!-- ground / turf -->
+        <line x1="14" y1="128" x2="326" y2="128" stroke="#2c2a24" stroke-width="7" stroke-linecap="round"/>
+        <line x1="14" y1="124" x2="326" y2="124" stroke="#3f5136" stroke-width="2"/>
+        <!-- target direction -->
+        <text x="300" y="119" class="lb" text-anchor="end">target →</text>
+        <!-- swing arc through impact, dipping to the low point AHEAD of the ball -->
+        <path d="M40 40 C 120 96, 168 118, 205 122 C 232 125, 250 126, 258 124" fill="none" stroke="rgba(34,227,214,.35)" stroke-width="2.5"/>
+        <path d="M258 124 C 268 122, 292 118, 320 96" fill="none" stroke="rgba(34,227,214,.35)" stroke-width="2.5" stroke-dasharray="1 5"/>
+        <!-- club blade at impact contacting the ball's back -->
+        <g transform="translate(150,86) rotate(20)">
+          <rect x="0" y="0" width="34" height="30" rx="3" fill="#c3ccd2" stroke="#7d8790" stroke-width="1"/>
+          <rect x="0" y="0" width="34" height="7" rx="3" fill="#e6edf1"/>
+        </g>
+        <!-- ball, sitting on the ground, LARGE + clear -->
+        <circle cx="205" cy="105" r="21" fill="#f3f7f9"/>
+        <circle cx="205" cy="105" r="21" fill="none" stroke="#c7d2d8" stroke-width="1"/>
+        <!-- strike-height indicator on the ball (5 mm LOW = below equator) -->
+        <line x1="186" y1="112" x2="224" y2="112" stroke="#22E3D6" stroke-width="2"/>
+        <circle cx="205" cy="112" r="2.6" fill="#22E3D6"/>
+        <text x="231" y="115" class="lb lb-c" style="font-weight:800">−5 mm</text>
+        <text x="231" y="126" class="lb">low on face</text>
+        <!-- LOW POINT marker (bright, clear) ahead of ball -->
+        <path d="M262 124 l-5 -9 l10 0 z" fill="#22E3D6"/>
+        <circle cx="262" cy="124" r="2.5" fill="#0A0E12" stroke="#22E3D6" stroke-width="1.5"/>
+        <text x="262" y="150" class="lb lb-c" text-anchor="middle" style="font-weight:800">LOW POINT</text>
+        <!-- DIMENSION line ball → low point (the hero measurement) -->
+        <g>
+          <line x1="205" y1="105" x2="205" y2="70" stroke="#22E3D6" stroke-width="1" stroke-dasharray="2 3" opacity=".6"/>
+          <line x1="262" y1="124" x2="262" y2="70" stroke="#22E3D6" stroke-width="1" stroke-dasharray="2 3" opacity=".6"/>
+          <line x1="205" y1="74" x2="262" y2="74" class="dim"/>
+          <path d="M205 74 l7 -3.2 l0 6.4 z" fill="#22E3D6"/>
+          <path d="M262 74 l-7 -3.2 l0 6.4 z" fill="#22E3D6"/>
+          <rect x="216" y="62" width="35" height="16" rx="4" fill="#0A0E12" stroke="rgba(34,227,214,.4)"/>
+          <text x="233" y="74" class="lb lb-c" text-anchor="middle" style="font-weight:800;font-size:11px">8 cm</text>
+        </g>
+      </svg>
+      <p class="foot"><b>Ball-first, descending</b> — low point <b>8 cm ahead</b>, strike <b>5 mm low</b> on the face.</p>
+    </div>
+  </div>
+</div>
+
+<!-- adaptation across bands -->
+<div class="wrap">
+  <div class="variants">
+    <div class="card">
+      <h3>Pure</h3>
+      <svg viewBox="0 0 300 150" role="img" aria-label="Pure: low point 8 cm ahead of the ball">
+        <line x1="10" y1="112" x2="290" y2="112" stroke="#2c2a24" stroke-width="6"/><line x1="10" y1="109" x2="290" y2="109" stroke="#3f5136" stroke-width="2"/>
+        <path d="M30 40 C 110 92, 150 106, 178 108 C 208 110, 236 104, 274 84" fill="none" stroke="rgba(34,227,214,.35)" stroke-width="2.4"/>
+        <circle cx="178" cy="92" r="18" fill="#f3f7f9" stroke="#c7d2d8"/>
+        <line x1="162" y1="98" x2="194" y2="98" stroke="#22E3D6" stroke-width="2"/>
+        <path d="M225 109 l-5 -9 l10 0 z" fill="#22E3D6"/><text x="225" y="132" class="lb lb-c" text-anchor="middle" style="font-weight:800">LOW PT</text>
+        <line x1="178" y1="70" x2="225" y2="70" class="dim"/><path d="M178 70 l6 -3 l0 6 z" fill="#22E3D6"/><path d="M225 70 l-6 -3 l0 6 z" fill="#22E3D6"/>
+        <text x="201" y="64" class="lb lb-c" text-anchor="middle" style="font-weight:800">8 cm ahead</text>
+      </svg>
+    </div>
+    <div class="card">
+      <h3>Fat — low point behind</h3>
+      <svg viewBox="0 0 300 150" role="img" aria-label="Fat: low point 6 cm behind the ball, turf first">
+        <line x1="10" y1="112" x2="290" y2="112" stroke="#2c2a24" stroke-width="6"/><line x1="10" y1="109" x2="290" y2="109" stroke="#3f5136" stroke-width="2"/>
+        <path d="M26 84 C 70 104, 96 109, 120 109 C 160 110, 210 92, 270 46" fill="none" stroke="rgba(240,104,94,.4)" stroke-width="2.4"/>
+        <!-- divot before ball -->
+        <path d="M96 109 q10 8 22 0" fill="none" stroke="#9a7b52" stroke-width="3"/>
+        <circle cx="196" cy="86" r="18" fill="#f3f7f9" stroke="#c7d2d8"/>
+        <path d="M120 109 l-5 -9 l10 0 z" fill="#F0685E"/><text x="120" y="132" class="lb lb-b" text-anchor="middle" style="font-weight:800">LOW PT</text>
+        <line x1="120" y1="70" x2="196" y2="70" class="dim" style="stroke:#F0685E"/><path d="M120 70 l6 -3 l0 6 z" fill="#F0685E"/><path d="M196 70 l-6 -3 l0 6 z" fill="#F0685E"/>
+        <text x="158" y="64" class="lb lb-b" text-anchor="middle" style="font-weight:800">6 cm behind</text>
+      </svg>
+    </div>
+    <div class="card">
+      <h3>Thin — high on face</h3>
+      <svg viewBox="0 0 300 150" role="img" aria-label="Thin: struck high on the face, low point well ahead">
+        <line x1="10" y1="112" x2="290" y2="112" stroke="#2c2a24" stroke-width="6"/><line x1="10" y1="109" x2="290" y2="109" stroke="#3f5136" stroke-width="2"/>
+        <path d="M34 52 C 120 96, 160 104, 190 104 C 224 104, 250 100, 276 92" fill="none" stroke="rgba(244,198,78,.4)" stroke-width="2.4"/>
+        <circle cx="190" cy="90" r="18" fill="#f3f7f9" stroke="#c7d2d8"/>
+        <!-- strike HIGH (above equator) -->
+        <line x1="174" y1="82" x2="206" y2="82" stroke="#F4C64E" stroke-width="2"/><text x="212" y="85" class="lb lb-w" style="font-weight:800">+6 mm</text>
+        <path d="M244 109 l-5 -9 l10 0 z" fill="#22E3D6"/><text x="244" y="132" class="lb lb-c" text-anchor="middle" style="font-weight:800">LOW PT</text>
+        <line x1="190" y1="66" x2="244" y2="66" class="dim"/><path d="M190 66 l6 -3 l0 6 z" fill="#22E3D6"/><path d="M244 66 l-6 -3 l0 6 z" fill="#22E3D6"/>
+        <text x="217" y="60" class="lb lb-c" text-anchor="middle" style="font-weight:800">9 cm ahead</text>
+      </svg>
+    </div>
+  </div>
+  <p class="note" style="margin-top:14px">Same card, three strikes — the <b style="color:var(--cyan)">dimensioned ball→low-point line</b> + the LOW POINT marker read instantly in every case (green/red/amber follows the band). The live version reads real cm + mm from the engine and moves the low-point marker + strike-height with the sliders.</p>
+</div>
+</body>
+</html>

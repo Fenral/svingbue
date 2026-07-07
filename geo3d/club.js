@@ -68,9 +68,9 @@
  * full diagnosis and why the target is faceAnchor-relative, not literal
  * ground (world Z=0), so Fat/Thin (state.lowPoint.z) keeps working.
  */
-import * as THREE from 'three';
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
+import * as THREE from '../vendor/three/build/three.module.js';
+import { GLTFLoader } from '../vendor/three/examples/jsm/loaders/GLTFLoader.js';
+import { MeshoptDecoder } from '../vendor/three/examples/jsm/libs/meshopt_decoder.module.js';
 import { arcPosition, shaftPivot, tangentAt, thetaAtImpact, deg2rad } from '../swing-parameters-and-impact.js';
 
 const GLB_URL = new URL('../assets/club7.glb', import.meta.url).href;

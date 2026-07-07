@@ -45,7 +45,7 @@
  * club3d.update directly, bypassing placeAt entirely, so it still verifies
  * the true unclamped math).
  */
-import * as THREE from 'three';
+import * as THREE from '../vendor/three/build/three.module.js';
 import { thetaAtImpact, strikeQuality, lpWorld, arcPosition, SWEEP_RAD, BALL_RADIUS_M } from '../swing-parameters-and-impact.js';
 import { hashSeed, createFx } from './fx.js';
 import { createFaceZoom, APPROACH_P_DELTA } from './facezoom.js';
