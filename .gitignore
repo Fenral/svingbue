@@ -37,3 +37,8 @@ build/
 
 # Local backups tool sometimes creates
 .sa-backups/
+
+# Store-upload screenshots — large, regeneratable outputs of
+# `npm run shots` (scripts/store-screenshots.mjs). Kept OUT of git so they
+# never bloat CI checkouts; regenerate locally before each store upload.
+store-assets/

@@ -41,7 +41,7 @@ const ALLOWED_DIRS = ['vendor', 'assets', 'geo3d'];
 //     accidentally recursing into them from the root sweep below).
 const DENYLIST_DIRS = new Set([
   'node_modules', 'ios', 'android', 'www', 'tools', 'docs', 'scripts',
-  '.git', '.sa-backups', '.vercel', 'resources',
+  '.git', '.sa-backups', '.vercel', 'resources', 'store-assets',
 ]);
 
 // --- 4. Top-level files that must NEVER be copied, matched by exact name,

@@ -8,6 +8,7 @@
     "build": "node build-club-glb.mjs"
   },
   "devDependencies": {
+    "playwright-core": "^1.49.0",
     "@gltf-transform/cli": "^4.4.0",
     "@gltf-transform/core": "^4.4.0",
     "@gltf-transform/extensions": "^4.4.0",
