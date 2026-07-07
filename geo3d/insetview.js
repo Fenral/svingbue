@@ -125,16 +125,24 @@ export function createInsetView({ hideNodes } = {}) {
    * Render the SAME scene a second time into a scissored rect using the inset
    * camera. Called from scene.js's renderIfDirty() right after the main
    * camera's render — never schedules its own frame.
+   *
+   * PIXEL-RATIO CONTRACT (bug fixed 2026-07-08): three.js's setViewport/
+   * setScissor take CSS px and multiply by the renderer's pixelRatio
+   * INTERNALLY (vendor/three/build/three.module.js:28887/28909 —
+   * `_viewport.multiplyScalar(_pixelRatio)`). The old code pre-multiplied the
+   * rect by getPixelRatio() itself → DOUBLE-scaled on any DPR>1 device: the
+   * inset drew 2-3× too big in the wrong place (a "ghost club" mid-screen),
+   * and the restore call passed BUFFER px (canvasEl.width) → the MAIN
+   * camera's viewport was corrupted to pr× the canvas after the first inset
+   * pass, cramming the whole swing-arc scene into one corner. Invisible on
+   * desktop (DPR 1 → ×1 twice); broke every real phone. All coords below are
+   * CSS px, full stop.
    */
-  function renderPass(renderer, scene, canvasEl) {
-    const pr = renderer.getPixelRatio();
-    const x = Math.round(rect.x * pr);
-    const y = Math.round(rect.y * pr);
-    const w = Math.round(rect.w * pr);
-    const h = Math.round(rect.h * pr);
-    if (w < 2 || h < 2) return;
+  const _cssSize = new THREE.Vector2();
+  function renderPass(renderer, scene /* , canvasEl (unused — CSS size comes from the renderer) */) {
+    if (rect.w < 2 || rect.h < 2) return;
 
-    camera.aspect = w / h;
+    camera.aspect = rect.w / rect.h;
     camera.updateProjectionMatrix();
 
     const nodes = resolveHideNodes();
@@ -142,8 +150,8 @@ export function createInsetView({ hideNodes } = {}) {
     nodes.forEach((n) => { n.visible = false; });
 
     renderer.setScissorTest(true);
-    renderer.setViewport(x, y, w, h);
-    renderer.setScissor(x, y, w, h);
+    renderer.setViewport(rect.x, rect.y, rect.w, rect.h);
+    renderer.setScissor(rect.x, rect.y, rect.w, rect.h);
     // wipe the corner's leftover MAIN-camera color/depth before drawing this
     // pass's own — without this, stale depth values from the main camera's
     // (unrelated) perspective can incorrectly occlude/clip the inset's
@@ -151,7 +159,10 @@ export function createInsetView({ hideNodes } = {}) {
     renderer.clear(true, true, true);
     renderer.render(scene, camera);
     renderer.setScissorTest(false);
-    renderer.setViewport(0, 0, canvasEl.width, canvasEl.height);
+    // restore the FULL-canvas viewport in CSS px (renderer.getSize returns the
+    // css size passed to setSize) so the next main-camera render is correct.
+    renderer.getSize(_cssSize);
+    renderer.setViewport(0, 0, _cssSize.x, _cssSize.y);
 
     nodes.forEach((n, i) => { n.visible = prevVisible[i]; });
   }

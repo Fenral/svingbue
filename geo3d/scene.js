@@ -152,6 +152,12 @@ export function createScene(canvas) {
     if (!dirty) return;
     dirty = false;
     resizeIfNeeded();
+    // Defense in depth (2026-07-08): never trust the viewport left behind by a
+    // previous frame's extra passes (the strike-detail inset scissors its own
+    // viewport and restores after — a bug there once corrupted every
+    // subsequent main render on DPR>1 phones). CSS px; three.js applies the
+    // pixel ratio internally.
+    renderer.setViewport(0, 0, canvas.clientWidth || 1, canvas.clientHeight || 1);
     renderer.render(scene, camera);
     window.__sa3d.renderCount++;
     if (insetPass) insetPass(renderer, scene, canvas);

@@ -179,7 +179,10 @@
      hidden on the card clips those two plates to the card's rounded corners
      (this has no effect on the canvas, which isn't a descendant of the card). */
   .strike-detail{
-    position:fixed;right:max(14px,env(safe-area-inset-right));bottom:max(14px,env(safe-area-inset-bottom));z-index:3;
+    /* bottom-LEFT (2026-07-08, Sivert): on phone-wide aspects the club/ball/
+       impact end of the arc composes centre-right — the card lives on the
+       emptier left so it never covers the money shot. */
+    position:fixed;left:max(14px,env(safe-area-inset-left));bottom:max(14px,env(safe-area-inset-bottom));z-index:3;
     width:clamp(220px,32vw,320px);
     border:1px solid rgba(34,227,214,.28);border-radius:var(--radius-card);
     box-shadow:0 18px 50px -20px rgba(0,0,0,.85);
@@ -545,6 +548,19 @@ function init3d() {
 
   // resize keeps the canvas in sync with the viewport (render-on-demand: just invalidate)
   addEventListener('resize', () => { updateInsetRect(); sa3d.invalidate(); });
+
+  // The inset's scissor rect mirrors the CARD's on-screen geometry, which can
+  // shift after the initial measure without a window resize: web fonts landing
+  // (the foot sentence re-wraps → card height changes) or the card's own
+  // content growing (e.g. the turf line appearing). Re-measure on BOTH — a
+  // stale rect draws the zoomed club offset from the card frame (2026-07-08).
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(() => { updateInsetRect(); sa3d.invalidate(); });
+  }
+  if (typeof ResizeObserver === 'function') {
+    const sdCard = $('strikeDetail');
+    if (sdCard) new ResizeObserver(() => { updateInsetRect(); sa3d.invalidate(); }).observe(sdCard);
+  }
 
   // context-loss recovery already wired inside createScene(); force one more
   // render once restored so the scene isn't left blank.
