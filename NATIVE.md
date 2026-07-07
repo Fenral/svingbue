@@ -54,7 +54,7 @@ CI run regenerates it from scratch, then:
 
 | File | Purpose |
 |---|---|
-| `package.json` | Capacitor CLI + core/ios/app/haptics/screen-orientation deps, `copy-web`/`sync` scripts |
+| `package.json` | Capacitor CLI + core/ios/android/app/haptics/screen-orientation deps, `copy-web`/`sync`/`sync:android` scripts |
 | `capacitor.config.ts` | `appId`, `appName`, `webDir: 'www'`, no live-reload server |
 | `scripts/copy-web.mjs` | Assembles `www/` (allowlist HTML + dirs, denylist mocks/tooling) |
 | `scripts/ios-landscape.mjs` | Patches `Info.plist` post-`cap add ios` (landscape-only, full screen, display name) |
@@ -62,6 +62,24 @@ CI run regenerates it from scratch, then:
 | `resources/splash.svg`, `resources/splash.png` (2732²) | Launch screen source |
 | `codemagic.yaml` | `ios-testflight` workflow: npm ci → copy-web → cap add ios → plist patch → assets generate → cap sync → pod install → build number → sign → build ipa → publish to TestFlight |
 | `.gitignore` | Ignores `node_modules/`, `www/`, generated `ios/` artifacts, build outputs |
+
+## Android (debug APK via GitHub Actions)
+
+Mirrors the iOS approach: the `android/` platform dir is **never
+committed** — `.github/workflows/android-debug.yml` regenerates it fresh on
+every push to `main` (`npx cap add android`), then:
+
+1. Patches `android/app/src/main/AndroidManifest.xml` for landscape-only
+   (`android:screenOrientation="sensorLandscape"` on `.MainActivity`) via
+   `scripts/android-landscape.mjs`.
+2. Generates icons/splash from `resources/` (`--assetPath resources` —
+   required because the repo root's `assets/` dir is the tool's default).
+3. Builds an **unsigned debug APK** (`gradlew assembleDebug`) and uploads it
+   as the `strikearc-android-debug` artifact (14-day retention).
+
+Deliberately out of scope until launch: keystore signing, Play Console
+listing, release publish (Sivert-only external steps). iOS CI stays on
+Codemagic; Android CI is GitHub Actions to keep Codemagic minutes for iOS.
 
 ## Setup status (2026-07-03) — nothing manual left
 

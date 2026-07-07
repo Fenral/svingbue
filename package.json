@@ -5,9 +5,11 @@
   "description": "StrikeArc (svingbue) native packaging scaffold — Capacitor wrapper around the static web app for iOS/TestFlight builds via Codemagic.",
   "scripts": {
     "copy-web": "node scripts/copy-web.mjs",
-    "sync": "cap sync ios"
+    "sync": "cap sync ios",
+    "sync:android": "cap sync android"
   },
   "dependencies": {
+    "@capacitor/android": "^7.6.7",
     "@capacitor/app": "^7.0.0",
     "@capacitor/core": "^7.0.0",
     "@capacitor/haptics": "^7.0.0",

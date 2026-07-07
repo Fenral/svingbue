@@ -1,0 +1,79 @@
+# Android debug APK for StrikeArc (svingbue).
+#
+# Scope: UNSIGNED debug build only — proves the Android Capacitor platform
+# assembles and packages the web app. Keystore signing + Play Console
+# publish are deliberately out of scope (Sivert-only external steps).
+#
+# The android/ platform dir is never committed; this workflow generates it
+# fresh every run (`npx cap add android`), exactly like codemagic.yaml does
+# for ios/. iOS CI stays on Codemagic; Android CI lives here (free minutes).
+name: Android debug APK
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - 'tools/**'
+      - 'codemagic.yaml'
+  workflow_dispatch:
+
+concurrency:
+  group: android-debug-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      # Capacitor 7's Android template (AGP 8.7.x / Gradle 8.11) targets Java 21.
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      - name: Assemble www/ from web source (denylist mocks/tooling)
+        run: npm run copy-web
+
+      - name: Add the Android platform (never committed — generated fresh)
+        run: |
+          if [ ! -d "android" ]; then
+            npx cap add android
+          fi
+
+      - name: Sync web assets + plugins into the Android project
+        run: npx cap sync android
+
+      - name: Patch AndroidManifest.xml for landscape-only
+        run: node scripts/android-landscape.mjs
+
+      - name: Generate app icons/splash from resources/
+        # --assetPath resources is REQUIRED here: the repo root also has an
+        # assets/ dir (web images), which is @capacitor/assets' default
+        # source path — without the flag it would look in the wrong folder.
+        run: npx capacitor-assets generate --android --assetPath resources --iconBackgroundColor "#0A0E12"
+
+      - name: Build debug APK
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: strikearc-android-debug
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 14
