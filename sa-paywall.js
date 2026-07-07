@@ -470,6 +470,11 @@ function maybeReopenFromLegal(){
   let flag = null;
   try { flag = sessionStorage.getItem('sa_pw_reopen'); } catch (e) { flag = null; }
   if (!flag) return;
+  // Only honour the flag when we actually arrived FROM a legal page (Back).
+  // If the user detoured via the footer "Home" link instead, the flag would
+  // otherwise linger and spuriously reopen the paywall on a later visit.
+  const ref = document.referrer || '';
+  if (!/\/(terms|privacy)\.html(\?|#|$)/.test(ref)) return;
   try { sessionStorage.removeItem('sa_pw_reopen'); } catch (e) {}
   openPaywall(flag === '1' ? 'legal-return' : flag);
 }

@@ -312,6 +312,14 @@
       back.addEventListener('click', function (e) { e.preventDefault(); window.history.back(); });
     }
   })();
+
+  /* Skip-link focus fix for WebKit/WKWebView (the native engine): activating a
+     skip link scrolls but doesn't move keyboard/AT focus unless the target is
+     focusable — give <main> tabindex=-1 so focus lands there. */
+  (function () {
+    var main = document.getElementById('main');
+    if (main && !main.hasAttribute('tabindex')) main.setAttribute('tabindex', '-1');
+  })();
 </script>
 </body>
 </html>
