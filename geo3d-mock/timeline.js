@@ -47,6 +47,12 @@
  */
 import * as THREE from '../vendor/three/build/three.module.js';
 import { thetaAtImpact, strikeQuality, lpWorld, arcPosition, SWEEP_RAD, BALL_RADIUS_M } from '../swing-parameters-and-impact.js';
+// MOCK round 3 (task 2): impact fx follow the SIDE-LAYER display bands so the
+// choreography can never contradict the displayed verdict (e.g. a topped
+// strike — engine "Whiff" for clubZ ∈ (1.4r, 2r] — is real contact and fires
+// the Thin choreography). computeGroundStrikeTrigger keeps the engine bands:
+// it gates on the PHYSICAL ground crossing, not on a displayed label.
+import { strikeDisplay } from './strikedisplay.js';
 import { hashSeed, createFx } from './fx.js';
 import { createFaceZoom, APPROACH_P_DELTA } from './facezoom.js';
 import { groundCrossingTheta0 } from './groundcontact.js';
@@ -258,13 +264,13 @@ export function createTimeline3d({ state, sa3d, arc3d, club3d, getReduced, contr
   function doImpactFx(reduced) {
     if (impactFired) return;
     impactFired = true;
-    const sq = strikeQuality(state);
+    const disp = strikeDisplay(state); // ROUND 3: display-honest fx band
     const { lpV, ballV } = worldLpAndBall();
     saHaptics.impact('heavy');
-    const { shakeMs } = fx.fireImpact(sq.band, {
+    const { shakeMs } = fx.fireImpact(disp.fxBand, {
       lpV, ballV, seed: seedFor(), reduced, camera: sa3d.camera, invalidate: sa3d.invalidate,
     });
-    if (sq.band === 'Thin' && !reduced) {
+    if (disp.fxBand === 'Thin' && !reduced) {
       // quick ball scale-pop — flash already fired; a tiny extra pulse reads as a "pop"
       if (window.gsap) {
         window.gsap.fromTo(fx.flash.mesh.scale, { x: 0.3, y: 0.3 }, { x: 0.9, y: 0.9, duration: 0.1, yoyo: true, repeat: 1 });
@@ -343,10 +349,10 @@ export function createTimeline3d({ state, sa3d, arc3d, club3d, getReduced, contr
     // (instruction 4: "the static end-state may still show the divot
     // trench") — fire it directly, instantly, same as fireImpact below.
     if (groundStrike) doGroundStrikeFx(groundStrike.pEntry, true);
-    const sq = strikeQuality(state);
-    if (sq.band !== 'Whiff') {
+    const disp = strikeDisplay(state); // ROUND 3: display-honest fx band
+    if (disp.contact) {
       const { lpV, ballV } = worldLpAndBall();
-      fx.fireImpact(sq.band, { lpV, ballV, seed: seedFor(), reduced: true, camera: sa3d.camera, invalidate: sa3d.invalidate });
+      fx.fireImpact(disp.fxBand, { lpV, ballV, seed: seedFor(), reduced: true, camera: sa3d.camera, invalidate: sa3d.invalidate });
     }
     saHaptics.impact('heavy');
     setPhase('idle');

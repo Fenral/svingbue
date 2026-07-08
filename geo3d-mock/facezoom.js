@@ -63,7 +63,12 @@
  * in freeze()).
  */
 import * as THREE from '../vendor/three/build/three.module.js';
-import { clubBallContact, strikeQuality, BALL_RADIUS_M } from '../swing-parameters-and-impact.js';
+import { clubBallContact, BALL_RADIUS_M } from '../swing-parameters-and-impact.js';
+// MOCK round 3 (tasks 1+2): the chip/announce/marker verdict comes from the
+// SIDE-LAYER display classification (band label alone, no % — and "no
+// contact"/the Whiff camera branch only when the face truly clears the
+// ball). The engine stays byte-identical; see strikedisplay.js.
+import { strikeDisplay } from './strikedisplay.js';
 
 const RING_RADIUS_M = 0.012;      // ~12mm — bumped (was 5mm) for legibility at the FIX N wider/closer 3/4 framing;
                                    // the old dead-on 0.35m pose read the ring fine at 5mm, but the new oblique 3/4
@@ -226,8 +231,9 @@ const HINT_DELAY_MS = 600;        // real time before the "tap to continue" hint
 const IDLE_FALLBACK_MS = 8000;    // real time before auto-continuing if the user never taps (never feel stuck)
 const PULSE_MS = 400;
 
-const BAND_LABEL = { Duff: 'DUFF', Fat: 'LOW ON FACE', Pure: 'PURE', Thin: 'HIGH ON FACE', Whiff: 'WHIFF' };
-const BAND_ANNOUNCE = { Duff: 'duff', Fat: 'low on face', Pure: 'pure', Thin: 'high on face', Whiff: 'whiff' };
+// MOCK round 3 (tasks 1+2): BAND_LABEL/BAND_ANNOUNCE are gone — the chip
+// shows strikeDisplay(state).chip (corrected band label ALONE, no "· N%")
+// and announces strikeDisplay(state).announce.
 
 // clamp the marker offset to a sane on-blade range (roughly the blade's own
 // face height) so extreme Fat/Duff/Thin contact doesn't place the ring
@@ -826,19 +832,19 @@ export function createFaceZoom({ sa3d, club3d, chipEl, liveEl, hintEl, dismissEl
     // the duration of the closeup (covers both the normal and Whiff branches).
     hideSceneNodes();
 
-    const sq = strikeQuality(state);
-    isWhiffRun = sq.band === 'Whiff';
+    const disp = strikeDisplay(state);
+    isWhiffRun = !disp.contact; // ROUND 3: ball-framing branch ONLY on a real miss
 
     lastContact.active = true;
-    lastContact.band = sq.band;
-    lastContact.pct = sq.pct;
+    lastContact.band = disp.band;
+    lastContact.pct = disp.pct;
 
     if (isWhiffRun) {
       clearMarker();
       lastContact.offsetM = null;
       lastContact.offsetRatio = null;
     } else {
-      const { offsetM } = placeMarker(state, sq);
+      const { offsetM } = placeMarker(state, disp);
       lastContact.offsetM = offsetM;
       lastContact.offsetRatio = clubBallContact(state).offsetRatio;
     }
@@ -881,8 +887,8 @@ export function createFaceZoom({ sa3d, club3d, chipEl, liveEl, hintEl, dismissEl
       // frozen-frame track applied (retrack/test path; the normal flow only
       // reaches the frozen branch once per freeze). No-op when none applied.
       if (stage === 'frozen') restoreCosmeticLevel();
-      const sq = strikeQuality(state);
-      const { offsetM } = placeMarker(state, sq);
+      const disp = strikeDisplay(state);
+      const { offsetM } = placeMarker(state, disp);
       lastContact.offsetM = offsetM;
       lastContact.offsetRatio = clubBallContact(state).offsetRatio;
       const contactWorld = worldFacePoint(Math.max(-MARKER_CLAMP_M, Math.min(MARKER_CLAMP_M, offsetM)));
@@ -946,10 +952,10 @@ export function createFaceZoom({ sa3d, club3d, chipEl, liveEl, hintEl, dismissEl
     stage = 'frozen';
     trackCameraToState(state); // final snap: freeze frame must match the TRUE-impact club pose exactly
 
-    const sq = strikeQuality(state);
-    setChip(BAND_LABEL[sq.band] + ' · ' + sq.pct + '%', sq.textColor);
+    const disp = strikeDisplay(state);
+    setChip(disp.chip, disp.textColor); // ROUND 3: band label alone — no %
     showChip();
-    announceOnce('Strike: ' + BAND_ANNOUNCE[sq.band] + ', ' + sq.pct + ' percent');
+    announceOnce('Strike: ' + disp.announce);
     if (!isWhiffRun) {
       pulseMarker();
       // FIX P4 — ghost the ball + lift the blade only on real contact (Whiff
@@ -986,16 +992,16 @@ export function createFaceZoom({ sa3d, club3d, chipEl, liveEl, hintEl, dismissEl
 
   /** Reduced-motion path: show the chip statically after the swing completes, no camera/zoom. */
   function showStaticChip(state) {
-    const sq = strikeQuality(state);
+    const disp = strikeDisplay(state);
     lastContact.active = false; // no zoom happened
-    lastContact.band = sq.band;
-    lastContact.pct = sq.pct;
-    lastContact.offsetM = sq.band === 'Whiff' ? null : clubBallContact(state).offset;
-    lastContact.offsetRatio = sq.band === 'Whiff' ? null : clubBallContact(state).offsetRatio;
-    setChip(BAND_LABEL[sq.band] + ' · ' + sq.pct + '%', sq.textColor);
+    lastContact.band = disp.band;
+    lastContact.pct = disp.pct;
+    lastContact.offsetM = disp.contact ? clubBallContact(state).offset : null;
+    lastContact.offsetRatio = disp.contact ? clubBallContact(state).offsetRatio : null;
+    setChip(disp.chip, disp.textColor); // ROUND 3: band label alone — no %
     showChip();
     announced = false;
-    announceOnce('Strike: ' + BAND_ANNOUNCE[sq.band] + ', ' + sq.pct + ' percent');
+    announceOnce('Strike: ' + disp.announce);
     clearMarker();
   }
 

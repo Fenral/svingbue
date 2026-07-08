@@ -64,6 +64,29 @@
        9. Carousel tabs show LIVE VALUES at all times (two-line tabs:
           label + value, updated on every input, value ≥10px on the dark
           plate, folded into each tab's accessible name).
+     ROUND 3 (2026-07-09, owner-testing feedback):
+      10. STRIKE VERDICT HONESTY: every displayed band label now comes from
+          geo3d-mock/strikedisplay.js (side layer; the engine stays byte-
+          identical). Fixes two confirmed defects: a near-sole contact
+          (clubZ≈0, "21 mm low") read PURE, and clubZ ∈ (1.4r, 2.0r] read
+          "WHIFF · no contact" while the contact line was drawn ON the ball.
+          Now: very-low → Thin, top-quarter → Topped, and "no contact" only
+          when the face truly clears the ball (clubZ > 2r). The "· N%" is
+          REMOVED from every band display (task 1; pct is still computed for
+          the ball-tick colour ramp, never shown).
+      11. Tabs are LABEL-ONLY (the round-2 live values + the row's persistent
+          label/value duplicated the highlighted tab — removed); the numeric
+          value now appears only on the slider bubble while adjusting (plus
+          aria-valuetext). A 5th "Ball position" tab/slider replaces the
+          draggable #ballHandle (removed entirely — the slider carries the
+          keyboard path, so no a11y regression); the ball mesh still moves
+          via the same stance-frame shift.
+      12. ARC-EXIT stream split into TWO labelled particle streams from the
+          impact point: PATH (ground-projected club-path direction, cyan,
+          matches the PATH chip) and ATTACK (full delivery direction whose
+          pitch IS the attack angle, orange, matches the ATTACK chip), each
+          with a 10px "Path"/"Attack" cue on a dark plate. Reduced motion →
+          two static directional streaks + the labels. Still DOM/CSS only.
      3D modules are the geo3d-mock/ copies (production geo3d/ untouched).
      ═══════════════════════════════════════════════════════════════════════ -->
 <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2052%2052'%20fill='none'%3E%3Cpath%20d='M11%2045%20C%2016%2026,%2024%2018,%2035%2015%20M21%2039%20L%2030%2024%20L%2043%2045'%20stroke='%2322E3D6'%20stroke-width='4.2'%20stroke-linecap='round'%20stroke-linejoin='round'/%3E%3Ccircle%20cx='37'%20cy='15'%20r='5.2'%20fill='%2322E3D6'/%3E%3C/svg%3E" />
@@ -173,46 +196,64 @@
     100%{transform:scale(1)}
   }
 
-  /* MOCK round 2 (challenge 2) — ARC-EXIT PARTICLE STREAM. Replaces both the
-     old chip-trail AND the 3D delivery arrow (demoted: never added to the
-     scene in this mock). A handful of small ink-white dots flow OUT OF the
-     swing arc at the impact zone, along the live resultant attack+path
-     (delivery) direction. DOM/CSS only: spawn points + direction are
-     re-projected (world→screen) on every rebuild/slider input; the motion is
-     pure CSS keyframes, so the 3D renderer stays render-on-demand
-     (renderCount static at idle). Neutral white-ish alpha — cyan stays
-     reserved for the ball; the stream shows the RESULTANT only, the HUD
-     chips carry the numbers. Reduced motion: the global animation kill hides
-     the moving dots and a static directional gradient streak (.hint) shows
-     instead. document.hidden pauses the loop (JS toggles .paused). */
+  /* MOCK round 3 (task 4) — DUAL ATTACK/PATH PARTICLE STREAMS. The round-2
+     single resultant stream did not read as two vectors; now TWO labelled
+     streams emit from the impact point simultaneously:
+       .st.path — dots along the GROUND-PROJECTED club-path direction (the
+                  horizontal left/right-of-target sense), cyan (#22E3D6 — the
+                  same anatomy colour as the PATH hud chip; the dots hug the
+                  ground away from the bright arc, so figure/ground survives);
+       .st.atk  — dots along the FULL delivery direction (same azimuth, but
+                  carrying the vertical pitch = the attack angle), orange
+                  (#ffb347 — the ATTACK chip colour).
+     Each stream carries a tiny 10px "Path"/"Attack" cue on a dark plate.
+     DOM/CSS only: origin + per-stream direction are re-projected (world →
+     screen) on every rebuild/slider input/camera orbit; motion is pure CSS
+     keyframes (renderer stays render-on-demand). Both dot colours are ≥3:1
+     non-text contrast on the #0A0E12 scene. Reduced motion: dots hidden, a
+     static directional gradient streak per stream (.hint) + the labels stay.
+     document.hidden pauses the loop (JS toggles .paused). */
   .arc-stream{position:fixed;left:0;top:0;z-index:2;pointer-events:none;width:0;height:0}
+  .arc-stream .st{position:absolute;left:0;top:0;width:0;height:0}
   .arc-stream i{
-    position:absolute;left:0;top:0;width:5px;height:5px;margin:-2.5px 0 0 -2.5px;border-radius:50%;
-    background:rgba(232,240,251,.92);box-shadow:0 0 6px rgba(232,240,251,.3);
-    opacity:0;animation:arcStreamFlow 2.6s linear infinite;
+    position:absolute;left:0;top:0;width:6px;height:6px;margin:-3px 0 0 -3px;border-radius:50%;
+    opacity:0;animation:arcStreamFlow 2.4s linear infinite;
   }
-  .arc-stream i:nth-child(even){width:3.5px;height:3.5px;margin:-1.75px 0 0 -1.75px}
-  .arc-stream i:nth-child(2){animation-delay:.37s}
-  .arc-stream i:nth-child(3){animation-delay:.74s}
-  .arc-stream i:nth-child(4){animation-delay:1.11s}
-  .arc-stream i:nth-child(5){animation-delay:1.48s}
-  .arc-stream i:nth-child(6){animation-delay:1.85s}
-  .arc-stream i:nth-child(7){animation-delay:2.22s}
+  .arc-stream i:nth-child(even){width:4px;height:4px;margin:-2px 0 0 -2px}
+  .arc-stream i:nth-child(2){animation-delay:.48s}
+  .arc-stream i:nth-child(3){animation-delay:.96s}
+  .arc-stream i:nth-child(4){animation-delay:1.44s}
+  .arc-stream i:nth-child(5){animation-delay:1.92s}
+  .arc-stream .st.path i{background:#22E3D6;box-shadow:0 0 6px rgba(34,227,214,.4)}
+  .arc-stream .st.atk i{background:#ffb347;box-shadow:0 0 6px rgba(255,179,71,.4)}
   @keyframes arcStreamFlow{
-    0%{transform:translate(var(--sx,0px),var(--sy,0px)) scale(1);opacity:0}
-    10%{opacity:.34}
-    70%{opacity:.12}
-    100%{transform:translate(calc(var(--sx,0px) + var(--dx,60px)),calc(var(--sy,0px) + var(--dy,-14px))) scale(.4);opacity:0}
+    0%{transform:translate(0px,0px) scale(1);opacity:0}
+    12%{opacity:.95}
+    70%{opacity:.4}
+    100%{transform:translate(var(--dx,60px),var(--dy,0px)) scale(.45);opacity:0}
   }
+  .arc-stream .lbl{
+    position:absolute;left:0;top:0;
+    transform:translate(var(--lx,0px),var(--ly,0px)) translate(-50%,-50%);
+    font-style:normal;font-weight:700;font-size:10px;line-height:1;letter-spacing:.08em;
+    text-transform:uppercase;white-space:nowrap;
+    background:rgba(7,12,18,.78);border-radius:6px;padding:3px 6px;
+  }
+  .arc-stream .st.path .lbl{color:#7CF4EA;border:1px solid rgba(34,227,214,.35)}
+  .arc-stream .st.atk .lbl{color:#FFD9A3;border:1px solid rgba(255,179,71,.4)}
+  /* degenerate foreshortening (e.g. path pointing at the camera in DTL):
+     hide the label rather than stack it on the ball */
+  .arc-stream .st.short .lbl{display:none}
   .arc-stream.paused i{animation-play-state:paused}
   .arc-stream .hint{display:none}
   @media (prefers-reduced-motion:reduce){
     .arc-stream i{display:none}
     .arc-stream .hint{
-      display:block;position:absolute;left:0;top:-1px;width:42px;height:2px;border-radius:1px;
-      background:linear-gradient(90deg, rgba(232,240,251,0), rgba(232,240,251,.55));
+      display:block;position:absolute;left:0;top:-1px;width:46px;height:2px;border-radius:1px;
       transform:rotate(var(--ang,0deg));transform-origin:0 50%;
     }
+    .arc-stream .st.path .hint{background:linear-gradient(90deg, rgba(34,227,214,0), rgba(34,227,214,.9))}
+    .arc-stream .st.atk .hint{background:linear-gradient(90deg, rgba(255,179,71,0), rgba(255,179,71,.9))}
   }
 
   /* freemium "N free shots left" nudge pill */
@@ -284,7 +325,7 @@
     padding:3px 9px;border-radius:999px;white-space:nowrap;
     background:rgba(74,222,128,.12);color:#4ADE80;border:1px solid rgba(74,222,128,.3);
   }
-  .strike-detail .chip .pct{opacity:.75;font-weight:600}
+  /* MOCK round 3 (task 1): the chip shows the band label ALONE — no % */
   /* MOCK round 2 (challenge 1a): the viewport no longer reveals a 3D pass —
      it is a self-contained 2D SVG schematic, so it now carries its OWN dark
      plate (previously it had to stay transparent for the scissored WebGL
@@ -320,39 +361,26 @@
     display:flex;gap:12px;align-items:center;
   }
   .ctabs{display:flex;gap:4px;flex:none}
-  /* MOCK round 2 (challenge 3) — tabs carry LIVE DATA at all times (all four,
-     not just the active one): two lines, param label on top + current value
-     underneath, updated on every input. Value line ≥10px; the value text is
-     ink (#e8f0fb) on the dark rail plate (≥4.5:1 — the muted #9aabc6 label
-     also passes). Both lines are text content, so each tab's accessible name
-     naturally folds the value in ("Plane 60°"). 44px targets preserved. */
+  /* MOCK round 3 (task 3) — tabs are LABEL-ONLY: the round-2 live tab values
+     PLUS the row's persistent label/value repeated the same number in two
+     places; the aria-pressed highlight alone marks the active parameter and
+     the numeric value now lives only on the slider bubble while adjusting
+     (and in aria-valuetext). 44px targets preserved. */
   .ctab{
-    width:auto;min-width:44px;height:44px;padding:0 9px;border-radius:10px;
+    width:auto;min-width:44px;height:44px;padding:0 10px;border-radius:10px;
     background:transparent;border:1px solid transparent;color:var(--muted);
-    display:inline-flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:2px;
-    font-size:11px;font-weight:700;letter-spacing:.05em;white-space:nowrap;
+    display:inline-flex;align-items:center;justify-content:center;
+    font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;
+    line-height:1;white-space:nowrap;
   }
-  .ctab .tl{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;line-height:1}
-  .ctab .tv{font-size:11px;font-weight:700;line-height:1;color:var(--ink);font-variant-numeric:tabular-nums;letter-spacing:0}
   .ctab:hover{background:rgba(255,255,255,.08);color:var(--ink);border-color:transparent}
   .ctab[aria-pressed="true"]{color:var(--accent);border-color:var(--accent-line);background:var(--accent-soft)}
-  .ctab[aria-pressed="true"] .tv{color:var(--accent)}
   .crows{flex:1;min-width:0}
   .row{display:none}
   .row.active{display:flex;align-items:center;gap:10px}
-  .row .top{
-    display:flex;justify-content:space-between;align-items:baseline;gap:6px;width:154px;flex:none;
-    font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);font-weight:700;
-    white-space:nowrap;overflow:hidden;
-  }
-  .row .top label{overflow:hidden;text-overflow:ellipsis}
-  .row .top .val{color:var(--rng,var(--accent));font-variant-numeric:tabular-nums;font-weight:700;flex:none}
   .row.active .slider{flex:1;min-width:0}
   @media (max-width:900px){
-    .ctab{padding:0 6px;font-size:10px}
-    .ctab .tl{font-size:9px}
-    .ctab .tv{font-size:10px}   /* value stays ≥10px (challenge 3 constraint) */
-    .row .top{width:116px;font-size:10px}
+    .ctab{padding:0 7px;font-size:10px}
   }
 
   /* ── premium custom range slider (unchanged from geometry.html) ───────── */
@@ -426,32 +454,9 @@
     .slider .bubble{transition:none}
   }
 
-  /* ── MOCK ball-position handle — direct manipulation in the scene. 44×44
-     hit area, keyboard-operable (role=slider), dark plate, ink identity
-     (cyan stays reserved for the live ball itself). Positioned via JS
-     projection just below the ball's ground point. ─────────────────────── */
-  .ball-handle{
-    position:fixed;z-index:3;width:44px;height:44px;margin:-22px 0 0 -22px;
-    display:flex;align-items:center;justify-content:center;
-    background:rgba(7,12,18,.78);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
-    border:1px solid rgba(232,240,251,.5);border-radius:999px;color:var(--ink);
-    cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;
-  }
-  .ball-handle:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-  .ball-handle.dragging{cursor:grabbing;border-color:rgba(232,240,251,.95);background:rgba(15,24,34,.92)}
-  .ball-handle svg{width:22px;height:22px;pointer-events:none}
-  .ball-handle .hbubble{
-    position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);
-    background:var(--ink);color:#06121a;font-size:11px;font-weight:700;line-height:1;
-    font-variant-numeric:tabular-nums;white-space:nowrap;
-    padding:4px 7px;border-radius:7px;box-shadow:0 4px 12px -3px rgba(0,0,0,.7);
-    opacity:0;pointer-events:none;transition:opacity .15s ease;
-  }
-  .ball-handle .hbubble::after{
-    content:"";position:absolute;top:100%;left:50%;transform:translateX(-50%);
-    border:4px solid transparent;border-top-color:var(--ink);
-  }
-  .ball-handle.show-bubble .hbubble{opacity:1}
+  /* MOCK round 3 (task 3): the draggable ball-position handle is REMOVED —
+     ball position is now the 5th carousel tab/slider (same stance-frame
+     shift; the slider carries the keyboard path, so no a11y regression). */
 
   /* rotate hint */
   .rotate{position:fixed;inset:0;z-index:9;display:none;flex-direction:column;align-items:center;justify-content:center;
@@ -482,12 +487,22 @@
     <span class="hud-chip path" id="chipPath"><span class="sw"></span><span>PATH</span> <span class="num" id="chipPathNum">—</span></span>
   </div>
 
-  <!-- MOCK round 2 — arc-exit particle stream: dots flow OUT OF the swing arc
-       at the impact zone along the live resultant delivery direction (replaces
-       the chip-trail + the demoted 3D delivery arrow). -->
+  <!-- MOCK round 3 — DUAL attack/path particle streams from the impact point:
+       PATH = ground-projected club-path direction (cyan, PATH-chip colour),
+       ATTACK = full delivery direction incl. the vertical attack pitch
+       (orange, ATTACK-chip colour). Each stream carries a tiny label cue;
+       reduced motion shows a static streak per stream instead of dots. -->
   <div class="arc-stream" id="arcStream" aria-hidden="true">
-    <i></i><i></i><i></i><i></i><i></i><i></i><i></i>
-    <b class="hint"></b>
+    <span class="st path" id="streamPath">
+      <i></i><i></i><i></i><i></i><i></i>
+      <b class="lbl">Path</b>
+      <u class="hint"></u>
+    </span>
+    <span class="st atk" id="streamAtk">
+      <i></i><i></i><i></i><i></i><i></i>
+      <b class="lbl">Attack</b>
+      <u class="hint"></u>
+    </span>
   </div>
 
   <!-- freemium nudge pill -->
@@ -523,7 +538,7 @@
   <div class="strike-detail" id="strikeDetail" role="group" aria-labelledby="sdTtl">
     <div class="top">
       <span class="ttl" id="sdTtl">Strike detail</span>
-      <span class="chip" id="sdChip"><span id="sdChipBand">Pure</span> <span class="pct" id="sdChipPct">100%</span></span>
+      <span class="chip" id="sdChip"><span id="sdChipBand">Pure</span></span>
     </div>
     <div class="viewport" id="sdViewport">
       <svg id="sdAnnot" viewBox="0 0 340 196" aria-hidden="true">
@@ -538,32 +553,21 @@
     <p class="foot" id="sdFoot"><b>Pure</b></p>
   </div>
 
-  <!-- MOCK — draggable/keyboard ball-position handle (positioned via JS) -->
-  <div class="ball-handle" id="ballHandle" role="slider" tabindex="0"
-       aria-label="Ball position" aria-orientation="horizontal"
-       aria-valuemin="-10" aria-valuemax="10" aria-valuenow="0" aria-valuetext="centre">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-      <path d="M8.5 7.5 4 12l4.5 4.5"/><path d="M15.5 7.5 20 12l-4.5 4.5"/><circle cx="12" cy="12" r="2.2" fill="currentColor" stroke="none"/>
-    </svg>
-    <span class="hbubble" aria-hidden="true">centre</span>
-  </div>
-
-  <!-- MOCK — slim always-visible carousel rail: ONE slider at a time -->
+  <!-- MOCK — slim always-visible carousel rail: ONE slider at a time.
+       ROUND 3 (task 3): tabs are LABEL-ONLY (aria-pressed highlight = the
+       active indicator; the value lives on the slider bubble/aria-valuetext
+       while adjusting) and a 5th BALL POSITION tab/slider replaces the old
+       draggable in-scene handle. -->
   <div class="tune" id="tune">
-    <!-- MOCK round 2 (challenge 3): every tab shows its LIVE value at all
-         times (label + value = the tab's text = its accessible name). -->
     <div class="ctabs" id="ctabs" role="group" aria-label="Swing parameter">
-      <!-- NOTE: the single space between the two spans is deliberate — it is
-           whitespace-only (not rendered as a flex item) but keeps the tab's
-           accessible name readable: "Plane 60°", not "Plane60°". -->
-      <button type="button" class="ctab" id="tab_plane" aria-pressed="true" aria-controls="row_plane"><span class="tl">Plane</span> <span class="tv" id="tv_plane">—</span></button>
-      <button type="button" class="ctab" id="tab_dir" aria-pressed="false" aria-controls="row_dir"><span class="tl">Direction</span> <span class="tv" id="tv_dir">—</span></button>
-      <button type="button" class="ctab" id="tab_lpx" aria-pressed="false" aria-controls="row_lpx"><span class="tl">Low point</span> <span class="tv" id="tv_lpx">—</span></button>
-      <button type="button" class="ctab" id="tab_lpz" aria-pressed="false" aria-controls="row_lpz"><span class="tl">Depth</span> <span class="tv" id="tv_lpz">—</span></button>
+      <button type="button" class="ctab" id="tab_plane" aria-pressed="true" aria-controls="row_plane">Plane</button>
+      <button type="button" class="ctab" id="tab_dir" aria-pressed="false" aria-controls="row_dir">Direction</button>
+      <button type="button" class="ctab" id="tab_lpx" aria-pressed="false" aria-controls="row_lpx">Low point</button>
+      <button type="button" class="ctab" id="tab_lpz" aria-pressed="false" aria-controls="row_lpz">Depth</button>
+      <button type="button" class="ctab" id="tab_bp" aria-pressed="false" aria-controls="row_bp">Ball position</button>
     </div>
     <div class="crows">
       <div class="row active" id="row_plane">
-        <div class="top"><label for="s_plane">Plane</label><span class="val" id="v_plane"></span></div>
         <div class="slider" data-origin="left" style="--rng:#22E3D6">
           <div class="ticks" aria-hidden="true"></div>
           <input type="range" id="s_plane" min="45" max="70" step="1" aria-label="Plane angle">
@@ -571,7 +575,6 @@
         </div>
       </div>
       <div class="row" id="row_dir">
-        <div class="top"><label for="s_dir">Direction</label><span class="val" id="v_dir"></span></div>
         <div class="slider" data-origin="center" style="--rng:#22E3D6">
           <div class="ticks" aria-hidden="true"></div>
           <input type="range" id="s_dir" min="-8" max="8" step="0.5" aria-label="Swing direction">
@@ -579,7 +582,6 @@
         </div>
       </div>
       <div class="row" id="row_lpx">
-        <div class="top"><label for="s_lpx">Low point</label><span class="val" id="v_lpx"></span></div>
         <div class="slider" data-origin="center" data-ticks="cm" style="--rng:#ffd166">
           <div class="ticks" aria-hidden="true"></div>
           <input type="range" id="s_lpx" min="-0.30" max="0.30" step="0.005" aria-label="Low point, ahead or behind the ball">
@@ -587,11 +589,17 @@
         </div>
       </div>
       <div class="row" id="row_lpz">
-        <div class="top"><label for="s_lpz">Depth</label><span class="val" id="v_lpz"></span></div>
         <div class="slider" data-origin="center" data-ticks="cm" style="--rng:#ffb347">
           <div class="ticks" aria-hidden="true"></div>
           <input type="range" id="s_lpz" min="-0.20" max="0.20" step="0.002" aria-label="Strike depth, fat or thin">
           <span class="bubble" id="b_lpz" aria-hidden="true"></span>
+        </div>
+      </div>
+      <div class="row" id="row_bp">
+        <div class="slider" data-origin="center" data-ticks="cm" style="--rng:#e8f0fb">
+          <div class="ticks" aria-hidden="true"></div>
+          <input type="range" id="s_bp" min="-0.10" max="0.10" step="0.005" aria-label="Ball position, forward or back in the stance">
+          <span class="bubble" id="b_bp" aria-hidden="true"></span>
         </div>
       </div>
     </div>
@@ -619,6 +627,7 @@ import {
 } from './swing-parameters-and-impact.js';
 import saHaptics from './sa-haptics.js';
 window.saHaptics = saHaptics;   // expose for non-module scripts / tests
+import { strikeDisplay } from './geo3d-mock/strikedisplay.js';
 import { createScene } from './geo3d-mock/scene.js';
 import { createArc } from './geo3d-mock/arc.js';
 import { createPlane } from './geo3d-mock/plane.js';
@@ -758,7 +767,7 @@ function init3d() {
   rebuild3d();
   sa3d.invalidate();
 
-  addEventListener('resize', () => { refreshSchematic(); sa3d.invalidate(); placeBallHandle(); updateStream(); restyleActiveSlider(); });
+  addEventListener('resize', () => { refreshSchematic(); sa3d.invalidate(); updateStream(); restyleActiveSlider(); });
 
   // Re-measure the schematic when the CARD's geometry shifts without a
   // window resize (font load re-wrap, turf line appearing) — mirrors
@@ -806,7 +815,6 @@ function rebuild3d() {
     arc3d.coreMat.uniforms.uProgress.value = 1;
     arc3d.glowMat.uniforms.uProgress.value = 1;
   }
-  placeBallHandle();
   updateStream();
   sa3d.invalidate();
 }
@@ -822,20 +830,22 @@ const _tickRed = new THREE.Color('#DC2626');
 const _tickCol = new THREE.Color();
 function updateBallTick(stateRef) {
   if (!ballTick) return;
-  const sq = strikeQuality(stateRef);
-  if (sq.band === 'Whiff') { ballTick.visible = false; return; }
+  // ROUND 3 (task 2): the DISPLAY classification decides visibility + band
+  // floors — the ring hides only on a genuine miss (face clears the ball).
+  const disp = strikeDisplay(stateRef);
+  if (!disp.contact) { ballTick.visible = false; return; }
   const ct = clubBallContact(stateRef);
   const clampedOffset = Math.max(-BALL_RADIUS_M * 0.95, Math.min(BALL_RADIUS_M * 0.95, ct.offset));
   const contactZ = BALL_RADIUS_M + clampedOffset; // world Z of the contact point on the ball
   ballTick.position.set(0, -BALL_RADIUS_M * 0.985, contactZ);
   ballTick.rotation.set(Math.PI / 2, 0, -Math.PI * 0.35); // face -Y, centre the wider arc slice
-  // severity 0..1 from pct (magnitude of "how far from Pure"), with per-band
-  // FLOORS so the ring can never read pure-green while the verdict is a bad
-  // band (pct is generous just across the Pure/Fat boundary — a 85%-pct Fat
-  // would otherwise show a greener ring than a 75%-pct Pure).
-  let t = Math.min(1, Math.max(0, 1 - sq.pct / 100)); // 0 = perfect, 1 = worst
-  if (sq.band === 'Thin' || sq.band === 'Fat') t = Math.max(t, 0.45);
-  else if (sq.band === 'Duff') t = Math.max(t, 0.85);
+  // severity 0..1 from pct (magnitude of "how far from Pure" — computed by
+  // the engine, never displayed), with per-DISPLAY-band FLOORS so the ring
+  // can never read pure-green while the verdict is a bad band.
+  let t = Math.min(1, Math.max(0, 1 - disp.pct / 100)); // 0 = perfect, 1 = worst
+  if (disp.band === 'Thin' || disp.band === 'Fat') t = Math.max(t, 0.45);
+  else if (disp.band === 'Top') t = Math.max(t, 0.7);
+  else if (disp.band === 'Duff') t = Math.max(t, 0.85);
   if (t < 0.5) _tickCol.copy(_tickGreen).lerp(_tickAmber, t * 2);
   else _tickCol.copy(_tickAmber).lerp(_tickRed, (t - 0.5) * 2);
   ballTick.material.color.copy(_tickCol);
@@ -876,17 +886,18 @@ function sdAnchorFor(x, rectW, preferred = 'middle') {
 function updateStrikeDetail(stateRef) {
   const card = $('strikeDetail');
   if (!card) return;
-  const sq = strikeQuality(stateRef);
+  // ROUND 3 (tasks 1+2): band label + colours come from the side-layer
+  // display classification (no % anywhere; "no contact" only on a real miss).
+  const disp = strikeDisplay(stateRef);
   const ct = clubBallContact(stateRef);
   const cmVal = Math.round(effectiveLpx(stateRef) * 100);
   const mmVal = Math.round(ct.offset * 1000);
 
-  $('sdChipBand').textContent = sq.band;
-  $('sdChipPct').textContent = sq.pct + '%';
+  $('sdChipBand').textContent = disp.label;
   const chipEl = $('sdChip');
-  chipEl.style.color = sq.textColor;
-  chipEl.style.background = hexToRgba(sq.color, 0.14);
-  chipEl.style.borderColor = hexToRgba(sq.color, 0.4);
+  chipEl.style.color = disp.textColor;
+  chipEl.style.background = hexToRgba(disp.color, 0.14);
+  chipEl.style.borderColor = hexToRgba(disp.color, 0.4);
 
   const cmText = cmVal === 0 ? 'at the ball' : (cmVal > 0 ? `${cmVal} cm ahead` : `${Math.abs(cmVal)} cm behind`);
   const mmText = Math.abs(mmVal) < 1.5 ? 'centered' : (mmVal > 0 ? `${mmVal} mm high` : `${Math.abs(mmVal)} mm low`);
@@ -897,7 +908,10 @@ function updateStrikeDetail(stateRef) {
     const turfCm = Math.round(entry.x * 100);
     turfText = turfCm <= 0 ? `turf ${Math.abs(turfCm)} cm before ball` : `turf ${turfCm} cm after ball`;
   }
-  $('sdFoot').innerHTML = `<b>${sq.band}</b> — low point <b>${cmText}</b>, strike <b>${mmText}</b> on the face.`
+  const strikePart = disp.contact
+    ? `strike <b>${mmText}</b> on the face.`
+    : `club passes <b>${Math.max(1, Math.round(disp.missMm))} mm above the ball</b> — no contact.`;
+  $('sdFoot').innerHTML = `<b>${disp.label}</b> — low point <b>${cmText}</b>, ${strikePart}`
     + (turfText ? ` <span class="sd-turf">${turfText}</span>` : '');
 
   const draw = $('sdDraw');
@@ -996,14 +1010,15 @@ function updateStrikeDetail(stateRef) {
   parts.push(`<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${cR.toFixed(1)}" fill="url(#sdBallGrad)"/>`);
   const ratio = Math.max(-1.45, Math.min(1.45, ct.offsetRatio));
   const cyLine = cy - ratio * cR;
-  if (sq.band === 'Whiff') {
-    parts.push(`<line x1="${(cx - cR - 7).toFixed(1)}" y1="${cyLine.toFixed(1)}" x2="${(cx + cR + 7).toFixed(1)}" y2="${cyLine.toFixed(1)}" stroke="${sq.color}" stroke-width="2" stroke-dasharray="4 4" stroke-linecap="round"/>`);
+  if (!disp.contact) {
+    // real miss only: dashed line ABOVE the ball (ratio > 1 by construction)
+    parts.push(`<line x1="${(cx - cR - 7).toFixed(1)}" y1="${cyLine.toFixed(1)}" x2="${(cx + cR + 7).toFixed(1)}" y2="${cyLine.toFixed(1)}" stroke="${disp.color}" stroke-width="2" stroke-dasharray="4 4" stroke-linecap="round"/>`);
   } else {
-    parts.push(`<line x1="${(cx - cR - 7).toFixed(1)}" y1="${cyLine.toFixed(1)}" x2="${(cx + cR + 7).toFixed(1)}" y2="${cyLine.toFixed(1)}" stroke="${sq.color}" stroke-width="2.5" stroke-linecap="round"/>`);
+    parts.push(`<line x1="${(cx - cR - 7).toFixed(1)}" y1="${cyLine.toFixed(1)}" x2="${(cx + cR + 7).toFixed(1)}" y2="${cyLine.toFixed(1)}" stroke="${disp.color}" stroke-width="2.5" stroke-linecap="round"/>`);
   }
-  const mmShort = sq.band === 'Whiff' ? 'no contact'
+  const mmShort = !disp.contact ? 'no contact'
     : (Math.abs(mmVal) < 1.5 ? 'center' : (mmVal > 0 ? `+${mmVal} mm high` : `−${Math.abs(mmVal)} mm low`));
-  parts.push(`<text x="${cx.toFixed(1)}" y="${(h - 7).toFixed(1)}" text-anchor="middle" class="sd-lb" style="fill:${sq.textColor}">${mmShort}</text>`);
+  parts.push(`<text x="${cx.toFixed(1)}" y="${(h - 7).toFixed(1)}" text-anchor="middle" class="sd-lb" style="fill:${disp.textColor}">${mmShort}</text>`);
 
   draw.innerHTML = parts.join('');
 }
@@ -1047,7 +1062,9 @@ const fmtSigned = v => (v >= 0 ? '+' : '−') + Math.abs(v).toFixed(1) + '°';
 
 // ── strike readout: sr-only live region + HUD chips ───────────────────────
 function renderReadout() {
-  const sq = strikeQuality(engineState);
+  // ROUND 3 (tasks 1+2): the live region announces the corrected DISPLAY
+  // band (no % — pct is computed but never shown).
+  const disp = strikeDisplay(engineState);
   const di = deriveImpact(engineState);
 
   // live numeric alternative (a11y): the mock REMOVED the visible low-point
@@ -1062,7 +1079,7 @@ function renderReadout() {
   // the inset (#sdFoot / ring position) — announce them here too so the live
   // region carries full visual parity.
   const mmVal2 = Math.round(clubBallContact(engineState).offset * 1000);
-  const mmDesc = sq.band === 'Whiff' ? 'no contact'
+  const mmDesc = !disp.contact ? 'no contact, the club passes above the ball'
     : (Math.abs(mmVal2) < 1.5 ? 'centered on the face' : `${Math.abs(mmVal2)} mm ${mmVal2 > 0 ? 'high' : 'low'} on the face`);
   const theta0R = groundCrossingTheta0(engineState);
   let turfDesc = '';
@@ -1072,7 +1089,7 @@ function renderReadout() {
     turfDesc = ` Turf contact ${Math.abs(turfCmR)} cm ${turfCmR <= 0 ? 'before' : 'after'} the ball.`;
   }
   $('sceneData').textContent =
-    `Strike ${sq.band}, ${sq.pct}%. Plane angle ${state.planeAngle} degrees. ` +
+    `Strike ${disp.label}. Plane angle ${state.planeAngle} degrees. ` +
     `Attack angle ${di.attackAngle.toFixed(1)} degrees ${di.attackAngle >= 0 ? 'up' : 'down'}. ` +
     `Club path ${di.clubPath.toFixed(1)} degrees. Low point ${lpDesc}. Ball position ${bpDesc}. ` +
     `Strike ${mmDesc}.` + turfDesc;
@@ -1091,7 +1108,7 @@ renderReadout();
 // sign-coloured values would drop to ~2:1 contrast; fading them with the rest
 // keeps the low-alpha resting plate AND the AA contrast (values are static
 // mid-swing anyway).
-const CONTROL_SEL = '.controls, .tune, .modnav, .strike-detail, .ball-handle, .arc-stream, .hud-chips';
+const CONTROL_SEL = '.controls, .tune, .modnav, .strike-detail, .arc-stream, .hud-chips';
 // a11y (Major 2): faded controls must leave the tab order — opacity:0 alone
 // keeps them focusable/operable invisibly. On hide-complete we set
 // visibility:hidden; if focus is inside a hidden control we stash it and park
@@ -1149,7 +1166,7 @@ function animate3dView(toView) {
     Object.assign(sa3d.rig, pose);
     sa3d.applyRig();
     sa3d.invalidate();
-    placeBallHandle(); updateStream();
+    updateStream();
     if (gc3d) gc3d.update(engineState, sa3d.camera, $('scene3d'));
     return;
   }
@@ -1157,7 +1174,7 @@ function animate3dView(toView) {
   sa3d.startTicking();
   viewTween3d = gsap.to(sa3d.rig, {
     ...pose, duration: 0.7, ease: 'power2.inOut',
-    onUpdate: () => { sa3d.applyRig(); placeBallHandle(); updateStream(); },
+    onUpdate: () => { sa3d.applyRig(); updateStream(); },
     onComplete: () => {
       viewTween3d = null; sa3d.stopTicking();
       if (gc3d) gc3d.update(engineState, sa3d.camera, $('scene3d'));
@@ -1209,21 +1226,23 @@ function styleSlider(el) {
   box.style.setProperty('--o', oPct + '%');
 }
 // haptics: pointerdown→selectionStart, whole-degree/cm crossings→tick(key),
-// pointerup→selectionEnd; strikeQuality band change→band(key) beats the tick.
+// pointerup→selectionEnd; DISPLAY band change→band(key) beats the tick
+// (ROUND 3: the user feels the band the labels actually show).
 const HAPTIC_GRAIN = { s_plane: v => Math.round(v), s_dir: v => Math.round(v),
-  s_lpx: v => Math.round(v * 100), s_lpz: v => Math.round(v * 100) };
+  s_lpx: v => Math.round(v * 100), s_lpz: v => Math.round(v * 100),
+  s_bp: v => Math.round(v * 100) };
 function wireSliderHaptics(el, hapticKey) {
   let lastGrain = null, lastBand = null;
   const grain = HAPTIC_GRAIN[el.id];
   el.addEventListener('pointerdown', () => {
     lastGrain = grain(+el.value);
-    lastBand = strikeQuality(engineState).band;
+    lastBand = strikeDisplay(engineState).band;
     saHaptics.selectionStart();
   });
   el.addEventListener('input', () => {
     const g = grain(+el.value);
     if (lastGrain === null) lastGrain = g;
-    const band = strikeQuality(engineState).band;
+    const band = strikeDisplay(engineState).band;
     if (lastBand === null) lastBand = band;
     if (band !== lastBand) {
       lastBand = band;
@@ -1239,26 +1258,16 @@ function wireSliderHaptics(el, hapticKey) {
   el.addEventListener('pointercancel', end);
 }
 
-// MOCK round 2 (challenge 3) — compact per-tab value formatters. Low point
-// uses the same ahead/behind convention as its slider bubble; Depth uses a
-// signed cm (matching its centre-origin slider); Direction always signed.
-const TAB_FMT = {
-  s_plane: v => v.toFixed(0) + '°',
-  s_dir: v => (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v).toFixed(1) + '°',
-  s_lpx: v => { const cm = Math.round(v * 100); return cm === 0 ? 'at ball' : `${Math.abs(cm)} cm ${cm > 0 ? 'ahead' : 'behind'}`; },
-  s_lpz: v => { const cm = Math.round(v * 100); return (cm > 0 ? '+' : cm < 0 ? '−' : '') + Math.abs(cm) + ' cm'; },
-};
-
+// ROUND 3 (task 3): tabs are label-only — no per-tab value formatters. The
+// value surfaces are the slider BUBBLE (while adjusting) + aria-valuetext.
 function bind(id, get, fmt) {
-  const el = $(id), out = $('v_' + id.slice(2));
+  const el = $(id);
   const box = el.closest('.slider');
   const bubble = box ? box.querySelector('.bubble') : null;
-  const tabVal = $('tv_' + id.slice(2)); // challenge 3 — live value on the tab
   const sync = () => {
     const txt = fmt(+el.value);
-    out.textContent = txt; el.setAttribute('aria-valuetext', txt);
+    el.setAttribute('aria-valuetext', txt);
     if (bubble) bubble.textContent = txt;
-    if (tabVal) tabVal.textContent = TAB_FMT[id](+el.value);
     styleSlider(el);
   };
   // NOTE (mock): syncEngine() runs SYNCHRONOUSLY here (not deferred to the
@@ -1288,10 +1297,14 @@ const syncers = [
   bind('s_dir', v => state.swingDirection = v, v => (v > 0 ? '+' : '') + v.toFixed(1) + '° ' + (Math.abs(v) < 0.1 ? '' : v > 0 ? 'in-out' : 'out-in')),
   bind('s_lpx', v => state.lowPoint.x = v, v => Math.abs(v * 100).toFixed(0) + ' cm ' + (v >= 0 ? 'ahead' : 'behind')),
   bind('s_lpz', v => state.lowPoint.z = v, v => v >= 0 ? (v * 100).toFixed(0) + ' cm above' : Math.abs(v * 100).toFixed(0) + ' cm below'),
+  // ROUND 3 (task 3) — ball position joins the carousel; drives the same
+  // stance-frame shift the removed drag handle did (rebuild3d reads
+  // state.ballPosition for shift3d/ball mesh). 0 = centre of the stance.
+  bind('s_bp', v => state.ballPosition = v, v => { const cm = Math.round(v * 100); return cm === 0 ? 'centre' : `${Math.abs(cm)} cm ${cm > 0 ? 'forward' : 'back'}`; }),
 ];
 
 // ── ghost arc (frozen snapshot on drag start) + shimmer on release ─────────
-['s_plane', 's_dir', 's_lpx', 's_lpz'].forEach(id => {
+['s_plane', 's_dir', 's_lpx', 's_lpz', 's_bp'].forEach(id => {
   const el = $(id);
   el.addEventListener('pointerdown', () => {
     if (!arc3d) return;
@@ -1314,6 +1327,7 @@ const syncers = [
 // set slider positions from state
 $('s_plane').value = state.planeAngle;
 $('s_dir').value = state.swingDirection; $('s_lpx').value = state.lowPoint.x; $('s_lpz').value = state.lowPoint.z;
+$('s_bp').value = state.ballPosition;
 syncers.forEach(s => s());
 
 // ── MOCK carousel: one visible slider at a time, switched via tab buttons ──
@@ -1322,6 +1336,7 @@ const TAB_MAP = [
   { tab: 'tab_dir', row: 'row_dir', slider: 's_dir' },
   { tab: 'tab_lpx', row: 'row_lpx', slider: 's_lpx' },
   { tab: 'tab_lpz', row: 'row_lpz', slider: 's_lpz' },
+  { tab: 'tab_bp', row: 'row_bp', slider: 's_bp' },
 ];
 let activeTabId = 'tab_plane';
 function selectTab(tabId, { haptic = true } = {}) {
@@ -1344,27 +1359,18 @@ function restyleActiveSlider() {
 selectTab('tab_plane', { haptic: false });
 writeSwingState();   // seed shared state so Impact reflects the current swing immediately
 
-// ── MOCK ball-position handle: projection placement + drag + keyboard ─────
-function updateHandleAria() {
-  const el = $('ballHandle'); if (!el) return;
-  const cm = state.ballPosition * 100;
-  const cmRound = Math.round(cm * 10) / 10;
-  el.setAttribute('aria-valuenow', String(cmRound));
-  const txt = Math.abs(cm) < 0.25 ? 'centre' : `${Math.abs(cmRound)} cm ${cm > 0 ? 'forward' : 'back'}`;
-  el.setAttribute('aria-valuetext', txt);
-  const hb = el.querySelector('.hbubble');
-  if (hb) hb.textContent = txt;
-}
-function setBallPosition(v, { haptic = true } = {}) {
+// ── ROUND 3 (task 3): the draggable/keyboard ball-position HANDLE is gone —
+// the s_bp carousel slider owns the interaction (bind() wires state +
+// haptics + bubble + aria). setBallPosition survives as the programmatic
+// path (__sa.mock hook) and drives the slider so every surface stays synced.
+function setBallPosition(v) {
   const nv = Math.max(BALLPOS_MIN, Math.min(BALLPOS_MAX, v));
-  const prevCm = Math.round(state.ballPosition * 100);
   state.ballPosition = nv;
+  $('s_bp').value = nv;
   syncEngine();
-  if (haptic && Math.round(nv * 100) !== prevCm) saHaptics.tick('ballpos'); // per-cm detent
-  updateHandleAria();
+  syncers.forEach(s => s());
   applyLive();
 }
-const HANDLE_DROP_PX = 38;
 const _hv = new THREE.Vector3();
 function projectToScreen(x, y, z) {
   const rect = $('scene3d').getBoundingClientRect();
@@ -1378,107 +1384,60 @@ function projectToScreen(x, y, z) {
     y: rect.top + (-_hv.y * 0.5 + 0.5) * rect.height,
   };
 }
-function placeBallHandle() {
-  const el = $('ballHandle');
-  if (!el || !sa3d) return;
-  const p = projectToScreen(state.ballPosition, 0, 0);
-  el.style.left = p.x.toFixed(1) + 'px';
-  el.style.top = (p.y + HANDLE_DROP_PX).toFixed(1) + 'px';
-}
-function pxPerMetreAtBall() {
-  const a = projectToScreen(state.ballPosition, 0, 0);
-  const b = projectToScreen(state.ballPosition + 0.05, 0, 0);
-  return (b.x - a.x) / 0.05;
-}
-(function wireBallHandle() {
-  const el = $('ballHandle');
-  let dragging = false, startPx = 0, startVal = 0, ppm = 500, bubbleT = null;
-  const showBubble = () => { clearTimeout(bubbleT); el.classList.add('show-bubble'); };
-  const hideBubbleSoon = () => { bubbleT = setTimeout(() => el.classList.remove('show-bubble'), 650); };
-  el.addEventListener('pointerdown', (e) => {
-    if (!sa3d) return;
-    dragging = true; startPx = e.clientX; startVal = state.ballPosition;
-    ppm = pxPerMetreAtBall();
-    // guard the DTL-ish degenerate case (target line nearly along the view
-    // axis → few px per metre): clamp so a drag can't fling the value.
-    if (!isFinite(ppm) || Math.abs(ppm) < 60) ppm = (ppm < 0 ? -60 : 60);
-    try { el.setPointerCapture(e.pointerId); } catch (err) { /* synthetic/test pointers have no active id */ }
-    el.classList.add('dragging');
-    showBubble();
-    saHaptics.selectionStart();
-    e.preventDefault();
-  });
-  el.addEventListener('pointermove', (e) => {
-    if (!dragging) return;
-    setBallPosition(startVal + (e.clientX - startPx) / ppm);
-  });
-  const end = () => {
-    if (!dragging) return;
-    dragging = false;
-    el.classList.remove('dragging');
-    hideBubbleSoon();
-    saHaptics.selectionEnd();
-  };
-  el.addEventListener('pointerup', end);
-  el.addEventListener('pointercancel', end);
-  el.addEventListener('focus', showBubble);
-  el.addEventListener('blur', () => el.classList.remove('show-bubble'));
-  el.addEventListener('keydown', (e) => {
-    // a11y (Major 2): the handle is faded+hidden during swing playback — a
-    // keyboard nudge then would silently shift the scene under the timeline.
-    if (timeline3d && timeline3d.isPlaying()) return;
-    let d = null;
-    if (e.key === 'ArrowRight' || e.key === 'ArrowUp') d = BALLPOS_STEP;
-    else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') d = -BALLPOS_STEP;
-    else if (e.key === 'PageUp') d = 0.02;
-    else if (e.key === 'PageDown') d = -0.02;
-    else if (e.key === 'Home') { setBallPosition(BALLPOS_MIN); showBubble(); hideBubbleSoon(); e.preventDefault(); return; }
-    else if (e.key === 'End') { setBallPosition(BALLPOS_MAX); showBubble(); hideBubbleSoon(); e.preventDefault(); return; }
-    if (d !== null) { setBallPosition(state.ballPosition + d); showBubble(); hideBubbleSoon(); e.preventDefault(); }
-  });
-})();
-updateHandleAria();
-
-// ── MOCK round 2 (challenge 2) — ARC-EXIT PARTICLE STREAM (DOM/CSS only).
-// Spawn points sit ON the swing arc just before the impact zone (engine
-// arcPosition at thetaAtImpact − {0.16, 0.08, 0} rad, stance-shifted), and
-// every particle travels along the live RESULTANT delivery direction
-// (delivery3d.dir() = normalize(tangentAt(thetaAtImpact))) — attack+path
-// combined; no colour split, the chips carry the numbers. All positions are
-// re-projected here on every rebuild/slider input/camera move; the motion
-// itself is pure CSS keyframes (renderer stays render-on-demand). ──────────
-const STREAM_SPAWN_DTHETA = [0.16, 0.08, 0];
+// ── MOCK round 3 (task 4) — DUAL ATTACK/PATH PARTICLE STREAMS (DOM/CSS only).
+// Both streams emit FROM the impact point (engine arcPosition(thetaAtImpact),
+// stance-shifted — horizontally AT the ball per FIX L) and are decomposed
+// from the same live engine direction the round-2 resultant used
+// (delivery3d.dir() = normalize(tangentAt(thetaAtImpact))):
+//   PATH   — the GROUND-PROJECTED direction (d.x, d.y, 0 normalized): the
+//            club-path azimuth, flowing along the turf (cyan, PATH chip hue);
+//   ATTACK — the full 3D direction (same azimuth + the vertical pitch, which
+//            IS the attack angle; descending strikes flow visibly downward)
+//            (orange, ATTACK chip hue).
+// Each stream sets its own --dx/--dy (dot travel), --ang (reduced-motion
+// static streak) and --lx/--ly (the 10px "Path"/"Attack" label cue, placed
+// ~72% along the travel). Everything is re-projected (world→screen) on every
+// rebuild/slider input/camera orbit; motion is pure CSS keyframes, so the
+// renderer stays render-on-demand. A stream foreshortened to <30px on screen
+// (e.g. path pointing at the camera in DTL) hides its label (.short). ──────
 const STREAM_TRAVEL_M = 0.5;
+const STREAM_MIN_LABEL_PX = 30;
 function updateStream() {
   const el = $('arcStream');
   if (!el || !sa3d) return;
   const th0 = thetaAtImpact(engineState);
   const impact = arcPosition(th0, engineState); // engine frame: horizontally AT the ball (FIX L)
-  const bp = projectToScreen(impact.x + state.ballPosition, impact.y, Math.max(impact.z, 0) + 0.004);
+  const ox = impact.x + state.ballPosition, oy = impact.y;
+  const ozContact = Math.max(impact.z, 0) + 0.004; // contact height (attack stream origin)
+  const ozGround = 0.004;                          // turf level (path stream origin)
+  const bp = projectToScreen(ox, oy, ozContact);
   el.style.left = bp.x.toFixed(1) + 'px';
   el.style.top = bp.y.toFixed(1) + 'px';
   const d = delivery3d ? delivery3d.dir() : { x: 1, y: 0, z: 0 };
-  const t = projectToScreen(
-    impact.x + state.ballPosition + d.x * STREAM_TRAVEL_M,
-    impact.y + d.y * STREAM_TRAVEL_M,
-    Math.max(impact.z, 0) + 0.004 + d.z * STREAM_TRAVEL_M
-  );
-  const dx = t.x - bp.x, dy = t.y - bp.y;
-  el.style.setProperty('--dx', dx.toFixed(1) + 'px');
-  el.style.setProperty('--dy', dy.toFixed(1) + 'px');
-  el.style.setProperty('--ang', (Math.atan2(dy, dx) * 180 / Math.PI).toFixed(1) + 'deg');
-  // per-particle spawn offsets: cycle the dots across the arc spawn points
-  const offs = STREAM_SPAWN_DTHETA.map((dth) => {
-    const p = arcPosition(th0 - dth, engineState);
-    const sp = projectToScreen(p.x + state.ballPosition, p.y, Math.max(p.z, 0) + 0.004);
-    return { x: sp.x - bp.x, y: sp.y - bp.y };
-  });
-  const dots = el.querySelectorAll('i');
-  dots.forEach((dot, i) => {
-    const o = offs[i % offs.length];
-    dot.style.setProperty('--sx', o.x.toFixed(1) + 'px');
-    dot.style.setProperty('--sy', o.y.toFixed(1) + 'px');
-  });
+  const hm = Math.hypot(d.x, d.y) || 1;
+  // PATH lives ON the ground plane (it is the ground-projected component);
+  // ATTACK leaves the contact point itself. The vertical origin split keeps
+  // the two streams tellable-apart even at near-zero attack angles, and the
+  // staggered label fractions stop the two cues from stacking.
+  const STREAMS = [
+    { id: 'streamPath', dir: { x: d.x / hm, y: d.y / hm, z: 0 }, oz: ozGround, frac: 0.55 },
+    { id: 'streamAtk', dir: d, oz: ozContact, frac: 0.95 },
+  ];
+  for (const cfg of STREAMS) {
+    const st = $(cfg.id);
+    if (!st) continue;
+    const s0 = projectToScreen(ox, oy, cfg.oz);
+    const t = projectToScreen(ox + cfg.dir.x * STREAM_TRAVEL_M, oy + cfg.dir.y * STREAM_TRAVEL_M, cfg.oz + cfg.dir.z * STREAM_TRAVEL_M);
+    const dx = t.x - s0.x, dy = t.y - s0.y;
+    st.style.left = (s0.x - bp.x).toFixed(1) + 'px';
+    st.style.top = (s0.y - bp.y).toFixed(1) + 'px';
+    st.style.setProperty('--dx', dx.toFixed(1) + 'px');
+    st.style.setProperty('--dy', dy.toFixed(1) + 'px');
+    st.style.setProperty('--ang', (Math.atan2(dy, dx) * 180 / Math.PI).toFixed(1) + 'deg');
+    st.style.setProperty('--lx', (dx * cfg.frac).toFixed(1) + 'px');
+    st.style.setProperty('--ly', (dy * cfg.frac).toFixed(1) + 'px');
+    st.classList.toggle('short', Math.hypot(dx, dy) < STREAM_MIN_LABEL_PX);
+  }
 }
 // pause the ambient loop while the tab is hidden (challenge 2 constraint)
 document.addEventListener('visibilitychange', () => {
@@ -1602,7 +1561,7 @@ window.__sa = Object.assign(window.__sa || {}, {
       rect: () => { const el = $('sdViewport'); if (!el) return null; const r = el.getBoundingClientRect(); return { x: r.left, y: r.top, w: r.width, h: r.height }; },
       cameraPos: () => null,
       cameraFov: () => null,
-      chipText: () => { const b = $('sdChipBand'), p = $('sdChipPct'); return b && p ? `${b.textContent} ${p.textContent}` : null; },
+      chipText: () => { const b = $('sdChipBand'); return b ? b.textContent : null; }, // ROUND 3: band label alone (no %)
       footText: () => { const el = $('sdFoot'); return el ? el.textContent : null; },
       ariaLabel: () => { const el = $('strikeDetail'); return el ? el.getAttribute('aria-label') : null; },
       cardRect: () => { const el = $('strikeDetail'); return el ? el.getBoundingClientRect().toJSON() : null; },
@@ -1804,15 +1763,8 @@ window.__sa = Object.assign(window.__sa || {}, {
       atkClasses: els.chipAtk.className, pathClasses: els.chipPath.className,
       atkText: els.chipAtkNum.textContent, pathText: els.chipPathNum.textContent,
     }),
-    handleRect: () => { const el = $('ballHandle'); return el ? el.getBoundingClientRect().toJSON() : null; },
-    handleAria: () => {
-      const el = $('ballHandle');
-      return el ? {
-        role: el.getAttribute('role'), now: el.getAttribute('aria-valuenow'),
-        min: el.getAttribute('aria-valuemin'), max: el.getAttribute('aria-valuemax'),
-        text: el.getAttribute('aria-valuetext'), label: el.getAttribute('aria-label'),
-      } : null;
-    },
+    // ROUND 3 (task 3): handleRect/handleAria are GONE with the drag handle;
+    // ball position is asserted through the s_bp slider + shiftX/ballMeshX.
     shiftX: () => (shift3d ? shift3d.position.x : null),
     ballMeshX: () => (sa3d && sa3d.ball ? sa3d.ball.position.x : null),
     // ── MOCK round 2 — acceptance-grid hooks (challenge 1b) ────────────────
@@ -1822,11 +1774,29 @@ window.__sa = Object.assign(window.__sa || {}, {
       if (dir != null) { state.swingDirection = dir; $('s_dir').value = dir; }
       if (lpx != null) { state.lowPoint.x = lpx; $('s_lpx').value = lpx; }
       if (lpz != null) { state.lowPoint.z = lpz; $('s_lpz').value = lpz; }
-      if (bp != null) state.ballPosition = Math.max(BALLPOS_MIN, Math.min(BALLPOS_MAX, bp));
+      if (bp != null) {
+        state.ballPosition = Math.max(BALLPOS_MIN, Math.min(BALLPOS_MAX, bp));
+        $('s_bp').value = state.ballPosition;
+      }
       syncEngine();
       syncers.forEach(s => s());
-      updateHandleAria();
       renderReadout(); writeSwingState(); rebuild3d();
+    },
+    // ROUND 3 (task 2) — acceptance hook: engine numbers vs the DISPLAY
+    // classification vs what the inset actually shows, in one read.
+    strike: () => {
+      const disp = strikeDisplay(engineState);
+      const ct = clubBallContact(engineState);
+      return {
+        clubZmm: +(ct.clubZ * 1000).toFixed(1),
+        offsetMm: +(ct.offset * 1000).toFixed(1),
+        offsetRatio: +ct.offsetRatio.toFixed(3),
+        engineBand: strikeQuality(engineState).band,
+        band: disp.band, label: disp.label, contact: disp.contact,
+        chipText: $('sdChipBand') ? $('sdChipBand').textContent : null,
+        chipHasPct: $('sdChip') ? /%/.test($('sdChip').textContent) : null,
+        footText: $('sdFoot') ? $('sdFoot').textContent : null,
+      };
     },
     // impactMetrics: place the club at the TRUE impact frame (pure arc pose —
     // exactly what playback shows at impact, blend=1) and measure:
@@ -1884,17 +1854,25 @@ window.__sa = Object.assign(window.__sa || {}, {
     streamVars: () => {
       const el = $('arcStream');
       if (!el) return null;
-      const cs = el.style;
+      const read = (id) => {
+        const st = $(id);
+        if (!st) return null;
+        const cs = st.style;
+        return {
+          dx: cs.getPropertyValue('--dx'), dy: cs.getPropertyValue('--dy'),
+          ang: cs.getPropertyValue('--ang'), lx: cs.getPropertyValue('--lx'), ly: cs.getPropertyValue('--ly'),
+          short: st.classList.contains('short'),
+          label: (st.querySelector('.lbl') || {}).textContent || null,
+          dots: st.querySelectorAll('i').length,
+        };
+      };
       return {
-        left: cs.left, top: cs.top, dx: cs.getPropertyValue('--dx'), dy: cs.getPropertyValue('--dy'),
-        ang: cs.getPropertyValue('--ang'), paused: el.classList.contains('paused'),
-        dots: el.querySelectorAll('i').length,
+        left: el.style.left, top: el.style.top, paused: el.classList.contains('paused'),
+        path: read('streamPath'), attack: read('streamAtk'),
       };
     },
-    tabValues: () => ({
-      plane: $('tv_plane').textContent, dir: $('tv_dir').textContent,
-      lpx: $('tv_lpx').textContent, lpz: $('tv_lpz').textContent,
-    }),
+    // ROUND 3 (task 3): tabs are label-only; expose the labels for asserts.
+    tabLabels: () => Array.from(document.querySelectorAll('.ctab')).map(b => b.textContent.trim()),
     // debug (freeze-pose diagnosis). floor + fx added for the FIX Q2
     // hide-list assert (both join faceZoomHideNodes — see its doc comment).
     nodeVis: () => ({
@@ -1965,8 +1943,7 @@ window.__sa = Object.assign(window.__sa || {}, {
 // for the mock's carousel + ball handle (tuneBtn no longer exists). ────────
 const COACH_STEPS = [
   { selector: '#viewBtn', title: 'Tilt the view', body: 'Switch between front-on and down-the-line to see the swing plane lean back.' },
-  { selector: '#ctabs',   title: 'Adjust the swing', body: 'Pick a parameter — Plane, Direction, Low point or Depth — and drag its slider.' },
-  { selector: '#ballHandle', title: 'Move the ball', body: 'Drag the handle under the ball to move it forward or back in your stance.' },
+  { selector: '#ctabs',   title: 'Adjust the swing', body: 'Pick a parameter — Plane, Direction, Low point, Depth or Ball position — and drag its slider.' },
   { selector: '#hit',     title: 'Watch the strike', body: 'Press play to run the swing in slow motion and read the path & attack angle at impact.' },
 ];
 const COACH_SETTLE_MS = 600;
