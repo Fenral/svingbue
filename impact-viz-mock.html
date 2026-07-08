@@ -61,7 +61,7 @@
     --blur-surface:10px; --blur-overlay:18px;
     --plate:#0E141C;
     /* anatomy colours (ported hexApprox from direction-height-arrows-layout.ts) */
-    --c-face:#E83B47; --c-path:#8FB4D4; --c-loft:#A66BFF; --c-attack:#FF7AA8; --c-launch:#F4D000;
+    --c-face:#EE4954; --c-path:#8FB4D4; --c-loft:#A66BFF; --c-attack:#FF7AA8; --c-launch:#F4D000;
     /* outcome/ghost tokens (stage 3+; stage 5 uses them more) */
     --good:#4ADE80; --warn:#FBBF24; --bad:#F87171; --ghost:#9FB2C8;
     --dim:0.55;
@@ -616,9 +616,20 @@
   .fDelta .dl2{font-size:clamp(10px,1.9vh,12.5px);font-weight:700;font-variant-numeric:tabular-nums;
     display:flex;flex-wrap:wrap;gap:5px;line-height:1.35}
   /* FOCUS-MODES: coach-cue line (shares the fDelta reveal, same styling
-     family as the coachLine .cue on the base instrument) */
-  .fDelta .dl3{font-size:clamp(9.5px,1.7vh,11.5px);font-weight:500;color:var(--muted);
-    line-height:1.35;margin-top:1px;max-width:32ch}
+     family as the coachLine .cue on the base instrument).
+     L1b FIX: #flightCoachCue is now a SIBLING of #fDelta, not a descendant
+     (see the HTML comment by its markup), so this can no longer be scoped
+     ".fDelta .dl3" — it's its own standalone rule, positioned to land in the
+     exact same spot #fDelta's flex-column used to put it: #fDelta's own
+     top/left, plus the dl1 chip-chain's line height (clamp(10px,1.9vh,12.5px)
+     × line-height 1.35) plus the 3px flex gap the two used to share. */
+  .fDeltaCue{position:absolute;left:max(3.4%,env(safe-area-inset-left));z-index:5;pointer-events:none;
+    top:calc(15% + clamp(84px,19vh,118px) + clamp(16.5px,2.565vh,19.9px));
+    text-shadow:0 0 14px rgba(0,0,0,.6);
+    transition:opacity .3s ease, transform .3s ease;
+    font-size:clamp(9.5px,1.7vh,11.5px);font-weight:500;color:var(--muted);
+    line-height:1.35;max-width:32ch}
+  .fDeltaCue.is-hidden{opacity:0;transform:translateY(6px)}
   .fDelta .sep{color:var(--muted)}
   .fDelta .neu{color:var(--ink)}
   .fDelta .good{color:var(--good)}
@@ -646,7 +657,14 @@
      device's home-indicator / rounded-corner area on a future native shell. */
   .fBottom{position:absolute;z-index:5;
     left:max(3.4%,env(safe-area-inset-left));right:max(3.4%,env(safe-area-inset-right));
-    bottom:max(3.4%,env(safe-area-inset-bottom));
+    /* K5 FIX: .chipScroll's padding grew 3px→6px top+bottom (below) so the
+       first/last chip's focus ring stops getting clipped by the container
+       edge / overpainted by the edge-fade. That adds 3px more bottom padding
+       inside the (bottom-anchored) box, which would push the visible chip
+       row 3px further from the viewport edge than before — pull the box's
+       own bottom offset in by that same 3px so the chip row's on-screen
+       position is unchanged; only the invisible breathing room grew. */
+    bottom:calc(max(3.4%,env(safe-area-inset-bottom)) - 3px);
     display:flex;align-items:stretch;gap:8px;
     /* CHANGE 1: revealed only AFTER the ball lands (fade + slide-up) */
     transition:opacity .5s ease, transform .5s ease}
@@ -789,13 +807,23 @@
     text-transform:uppercase;font-size:.82em;margin-right:4px}
   /* delta label drops a touch to clear the taller hero stack */
   .fDelta{top:calc(15% + clamp(100px,22vh,136px))}
+  /* L1b FIX: matching override for the now-standalone coach cue (see base
+     .fDeltaCue rule) so it keeps landing directly under the taller hero
+     stack's delta line here too. */
+  .fDeltaCue{top:calc(15% + clamp(100px,22vh,136px) + clamp(16.5px,2.565vh,19.9px))}
 
   /* ── move 1: THE CHIP ROW (replaces the fSpeed block + 4×2 grid) ── */
   .fBottom{display:block;position:absolute}
   .chipScroll{overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;
     scrollbar-width:none;overscroll-behavior-x:contain;border-radius:16px;
-    /* right padding creates the partial-chip peek + keeps the last chip clear of the fade */
-    padding:3px 26px 3px 3px;scroll-padding:0 26px}
+    /* K5 FIX: was 3px 26px 3px 3px — the 3px left/top/bottom padding clipped
+       the focus ring on the first chip, and the left edge-fade (30px wide,
+       decorative, see .fBottom::before below) painted straight over what
+       little ring room there was. Symmetric 6px/26px gives the ring room on
+       every side and enough left padding to clear the fade. Compensating
+       3px shaved off .fBottom's own bottom offset above keeps the chip
+       row's on-screen position unchanged despite the taller box. */
+    padding:6px 26px;scroll-padding:0 26px}
   .chipScroll::-webkit-scrollbar{display:none}
   .chipRow{display:flex;gap:8px;width:max-content;align-items:stretch}
   /* edge fades — scroll affordance (decorative, pointer-events none) */
@@ -1182,11 +1210,20 @@
       <div class="fDelta is-hidden" id="fDelta" aria-live="polite" hidden>
         <div class="dl1 chipChain" id="fDeltaCause" aria-hidden="true"></div>
         <span class="sr-only" id="fDeltaSR"></span>
-        <!-- FOCUS-MODES: the same main-cause coach cue shown on the Direction/
-             Launch coach lines, live-updated with state (see updateCoachLines
-             in the instrument script). Sits directly under the delta line. -->
-        <div class="dl3" id="flightCoachCue"></div>
       </div>
+      <!-- FOCUS-MODES: the same main-cause coach cue shown on the Direction/
+           Launch coach lines, live-updated with state (see updateCoachLines
+           in the instrument script). Sits directly under the delta line.
+           L1b FIX: moved OUT of #fDelta (a SIBLING, not a child) — #fDelta is
+           an aria-live region and this cue used to be written exactly once at
+           init, so it stayed permanently stale after any tuning while sitting
+           inside the live region (visually contradicting the fresh chips
+           above it). It is NOT itself a live region: it's refreshed visually
+           by updateCoachLines() on every renderStatic() (see there), and its
+           hidden/is-hidden state is kept in lockstep with #fDelta's by
+           hideDeltaLabel()/showDeltaLabel() so it still only shows when a
+           reference outcome exists. -->
+      <div class="dl3 fDeltaCue" id="flightCoachCue"></div>
       <div class="sr-only" id="fCarryLive" aria-live="polite" aria-atomic="true"></div>
 
       <svg id="fScene" viewBox="0 0 960 540" preserveAspectRatio="xMidYMid slice" role="img"
@@ -1225,7 +1262,7 @@
                the "plate pattern" that guarantees contrast on the photo -->
           <radialGradient id="ovPlateG" cx="50%" cy="50%" r="50%">
             <stop offset="0" stop-color="#04090d" stop-opacity=".72"/>
-            <stop offset=".72" stop-color="#04090d" stop-opacity=".5"/>
+            <stop offset=".9" stop-color="#04090d" stop-opacity=".5"/>
             <stop offset="1" stop-color="#04090d" stop-opacity="0"/>
           </radialGradient>
         </defs>
@@ -1423,7 +1460,9 @@ window.saHaptics = saHaptics;   // expose for non-module scripts / tests
 saIap.init();   // MONETIZATION — sync RevenueCat "pro" entitlement at boot (no-op on web build)
 
 const $ = id => document.getElementById(id);
-const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const reduceMq = matchMedia('(prefers-reduced-motion: reduce)');
+let reduce = reduceMq.matches;
+reduceMq.addEventListener('change', e => { reduce = e.matches; });   // contrast#5 fix: live-update, not a one-time snapshot
 const YD2M = 0.9144;
 const f1 = v => (v>=0?'+':'') + v.toFixed(1);
 
@@ -3268,6 +3307,7 @@ const fGrid=$('fGrid'), fLatRef=$('fLatRef'), fCentre=$('fCentre'), fRailL=$('fR
 const fTeeShadow=$('fTeeShadow'), fTeeRing=$('fTeeRing');
 const fBottomEl=document.querySelector('.fBottom');
 const fDeltaEl=document.getElementById('fDelta');
+const flightCueEl=document.getElementById('flightCoachCue');   // L1b fix: now a sibling of fDeltaEl, tracked separately
 
 // ════════════════════════════════════════════════════════════════
 //  STAGE 3 — GHOST / REPLAY SYSTEM (the pedagogy)
@@ -3460,12 +3500,15 @@ const DELTA_DELAY = 150;                  // ms after data-reveal (stage-2 beat 
 function hideDeltaLabel(){
   clearTimeout(deltaTimer); deltaTimer = null;
   fDeltaEl.classList.add('is-hidden');
+  flightCueEl.classList.add('is-hidden');   // L1b fix: keep the (now-sibling) coach cue's visibility in lockstep
 }
 function showDeltaLabel(immediate){
   clearTimeout(deltaTimer); deltaTimer = null;
   const c = outcomeContent();
-  if (!c){ fDeltaEl.hidden = true; fDeltaEl.classList.add('is-hidden'); return; }
+  if (!c){ fDeltaEl.hidden = true; fDeltaEl.classList.add('is-hidden');
+    flightCueEl.hidden = true; flightCueEl.classList.add('is-hidden'); return; }
   fDeltaEl.hidden = false;
+  flightCueEl.hidden = false;
   const apply = ()=>{
     $('fDeltaCause').innerHTML = c.chipsHTML;   // move 3: visual chip-chain (aria-hidden subtree)
     // VIZ MOCK: while a live-tune drag is in progress (srHold) the visible
@@ -3473,6 +3516,7 @@ function showDeltaLabel(immediate){
     // settle timer (scheduleTuneSettle) writes the composed sentence ONCE.
     if (!srHold) $('fDeltaSR').textContent = c.sentence;
     fDeltaEl.classList.remove('is-hidden');
+    flightCueEl.classList.remove('is-hidden');
   };
   if (immediate || reduce) apply();
   else deltaTimer = setTimeout(apply, DELTA_DELAY);
@@ -3822,6 +3866,12 @@ function maybeGhostCoach(){
 function hideData(){ hideDeltaLabel();
   hideOutcomeStrip(); hideConnector();  // OUTCOME MOCK: strip + connector follow the data beat
   gsap.set(fLandAngMark,{opacity:0});   // land-angle plate resets with the rest of the data beat
+  // K1 FIX: inert BEFORE the reduce early-return so both paths cover it — the
+  // chips must stop being focusable/operable the instant the flight starts,
+  // even under reduced motion where the visual is-hidden/aria-hidden below
+  // never runs (there's no animated flight to hide the chips FROM in that
+  // case, but a keyboard user must still be unable to Tab into them here).
+  fBottomEl.inert = true;
   if(reduce) return; fBottomEl.classList.add('is-hidden'); fBottomEl.setAttribute('aria-hidden','true');
   // hold all flight underlines empty so they animate from 0 on the next reveal
   FCELLS.forEach(c=>{ if(!c.ring) return; const reg=cellEls['f_'+c.key]; if(!reg||!reg.barFill) return;
@@ -3829,7 +3879,9 @@ function hideData(){ hideDeltaLabel();
     reg.barFill.style.width='0%';
     void reg.barFill.getBoundingClientRect(); reg.barFill.style.transition=''; });
 }
-function revealData(immediate){ fBottomEl.classList.remove('is-hidden'); fBottomEl.removeAttribute('aria-hidden');
+function revealData(immediate){
+  fBottomEl.inert = false;   // K1 FIX: unconditional — safe even when hideData() early-returned under reduce
+  fBottomEl.classList.remove('is-hidden'); fBottomEl.removeAttribute('aria-hidden');
   // flight underlines fill in along with the values; static/reduced-motion snaps to final
   fillFlightRings(!reduce);
   // land-angle plate reveals WITH the data beat (same timing as the chip grid)
@@ -4003,7 +4055,10 @@ function announceCarry(v){
   const off = fModel ? fModel.offlineM : 0;
   const offAbs = Math.round(Math.abs(off));
   const offTxt = offAbs >= 1 ? `, ${offAbs} meters ${off >= 0 ? 'right' : 'left'} of centre` : ', on line';
-  $('fCarryLive').textContent = `${Math.round(v)} meters total${offTxt}${shape ? ' — ' + shape : ''}`;
+  const msg = `${Math.round(v)} meters total${offTxt}${shape ? ' — ' + shape : ''}`;
+  const live = $('fCarryLive');
+  if (live.textContent === msg) return;   // opportunistic fix: no redundant re-announce on resize/ghost-clear/pin-toggle
+  live.textContent = msg;
 }
 
 function updateData(){
@@ -4062,6 +4117,11 @@ function renderStatic(){
   // during live-tune drags (srHold) and flushed once on settle.
   setCarry(fModel.totalM);
   if (!srHold) announceCarry(fModel.totalM);
+  // L1b FIX: refresh the coach cue (+ the causeDir/cueDir coach line) from the
+  // CURRENT flight every static redraw — this is the only place that can go
+  // stale otherwise: fModel.f is already solved above (fBuild()->computeModel()
+  // ran a couple of lines up), so reuse it instead of a redundant solveFlight(state).
+  updateCoachLines(fModel.f);
   revealData(true);   // ?play / reduced-motion: data panel + micro-label immediately, no motion
 }
 
@@ -4506,7 +4566,7 @@ fGhostClearEl.addEventListener('click', ()=>{
   ghosts.length = 0;
   fBaseline = null; buildGhostLegend();   // GHOST LAB: clear also drops the pin + its chips (buildGhostLegend → setPinUI)
   if (FX.ghosts) FX.ghosts.innerHTML = '';
-  hideDeltaLabel(); fDeltaEl.hidden = true;
+  hideDeltaLabel(); fDeltaEl.hidden = true; flightCueEl.hidden = true;
   hideOutcomeStrip(); hideConnector();   // OUTCOME MOCK: no reference left → no outcome UI
   // refit the shared camera when idle (never mid-flight); focus stays on the button
   if (flightScrim.classList.contains('open') && (!fTL || !fTL.isActive())) renderStatic();
@@ -4732,11 +4792,22 @@ function updateInputChips(){
       aria = cfg.label + ' ' + cfg.fmt(v) + '. Opens editor';
     }
     el.innerHTML = html;
-    $('icell_'+cfg.key).setAttribute('aria-label', aria);
+    // A2 FIX: while an arrow-drag or slider-drag is live AND this chip holds
+    // focus, skip the rewrite — otherwise the focused chip's aria-label (and
+    // whatever the AT is mid-announcing) gets clobbered at pointermove rate.
+    const chip = $('icell_'+cfg.key);
+    const midDrag = (ovDragKey || tunePointerDown) && chip === document.activeElement;
+    if (!midDrag && chip.getAttribute('aria-label') !== aria) chip.setAttribute('aria-label', aria);
   });
 }
 
 function openTune(key){
+  // K1 FIX: belt-and-braces guard — the chips are inert while a flight is
+  // animating (see hideData/revealData), so this should already be
+  // unreachable via a real Tab+Enter, but never let a tune surface open
+  // over a live flight (e.g. a stray/synthetic activation racing the
+  // reveal beat).
+  if (fTL && fTL.isActive()) return;
   // ── MONETIZATION (locked decision): in PRODUCTION any live-tune surface on
   //    the flight screen is Pro-gated — "Tune = Pro". Free tier keeps Play /
   //    Replay / ghosts / pin; opening ANY input editor requires the
@@ -4777,6 +4848,10 @@ function openTune(key){
 }
 function closeTune(immediate, returnFocus){
   if (!tuneKey) return;
+  // K4 FIX: captured BEFORE tuneKey is nulled — an outside tap (e.g. on the
+  // empty scene) closes the dock while focus is still inside it, and
+  // focus would otherwise drop silently to <body>.
+  const focusWasInside = tuneDock.contains(document.activeElement);
   clearTimeout(tuneFadeTimer); tuneFadeTimer = null;
   const chip = $('icell_'+tuneKey);
   chipExpanded(tuneKey, false);
@@ -4786,7 +4861,16 @@ function closeTune(immediate, returnFocus){
   const hide = ()=>{ if (!tuneKey){ tuneDock.hidden = true; tuneDock.classList.remove('fading'); } };
   if (immediate || reduce) hide();
   else { tuneDock.classList.add('fading'); setTimeout(hide, 320); }
-  if (returnFocus && chip) chip.focus({ preventScroll:true });
+  // K4 FIX: return focus to the summoning chip whenever the caller asked for
+  // it OR focus was about to be stranded inside the (closing) dock. The rAF +
+  // activeElement re-check lets a tap on a genuinely focusable target (e.g.
+  // the Replay button) keep the focus it naturally received instead of us
+  // yanking it back to the chip.
+  if ((returnFocus || focusWasInside) && chip){
+    requestAnimationFrame(()=>{
+      if (document.activeElement === document.body || tuneDock.contains(document.activeElement)) chip.focus({ preventScroll:true });
+    });
+  }
 }
 function onTuneOutside(e){
   if (!tuneKey) return;
@@ -4891,6 +4975,7 @@ wireSliderHaptics(twRange, 'wind');
     tdRange.min = cfg.min; tdRange.max = cfg.max; tdRange.step = cfg.step;
     tdRange.value = state[cfg.state];
     tdRange.setAttribute('aria-label', cfg.aria);
+    tuneDock.setAttribute('aria-label', 'Adjust ' + cfg.aria);   // A1 FIX: dock's own label was left on the old param after a retarget
     syncDockUI();
   }
   function moveTo(e){
@@ -4946,7 +5031,12 @@ wireSliderHaptics(twRange, 'wind');
   });
   row.addEventListener('focusin', e=>{
     const b = e.target.closest('.chip');
-    if (b) b.scrollIntoView({ block:'nearest', inline:'nearest' });
+    if (!b) return;
+    // K2 FIX: re-sync roving tabindex on ANY way focus can land on a chip
+    // (Tab/Shift-Tab from outside, programmatic focus, not just arrow-walk)
+    // so the roving index never desyncs from where focus actually is.
+    row.querySelectorAll('.chip').forEach(c => c.tabIndex = (c === b ? 0 : -1));
+    b.scrollIntoView({ block:'nearest', inline:'nearest' });
   });
 })();
 
