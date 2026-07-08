@@ -728,9 +728,25 @@ function init3d() {
     faceZoomLiveEl: $('faceZoomLive'),
     faceZoomHintEl: $('faceZoomHint'),
     faceZoomDismissEl: canvas3d,
+    // FIX Q2 (owner case: "Impact må vise køllen parallell til bakken", the
+    // LOW ON FACE freeze) — the FLOOR disc + the whole fx group join the
+    // hide-list. Diagnosis: on Fat/Duff strikes the club is genuinely dug
+    // below z=0 at the impact frame, so the freeze camera used to dive BELOW
+    // ground to keep the head visible past the opaque floor disc — and that
+    // under-sole, grazing-light view is exactly what read as "klubbhodet
+    // roterert" in the owner's screenshot (the projected toe–heel axis itself
+    // measured level; see facezoom.js FIX Q2 doc). With the floor hidden for
+    // the duration of the zoom the camera can stay at a sane height (see
+    // facezoom.js FREEZE_CAM_MIN_Z) with the whole head visible against the
+    // void — which is also what the freeze acceptance list ("only club +
+    // ball + marker + chip visible") always described. fx.group (trail +
+    // divot + flash + spray) replaces the old trail-only entry for the same
+    // reason: a divot trench floating in the void without its floor reads
+    // broken; everything is snapshot-restored by the hide-list mechanism on
+    // endHold/reset, so the trench still shows on the turf after the swing.
     faceZoomHideNodes: () => [
       arc3d.group, plane3d.group, lp3d.group, gc3d.group, delivery3d.group,
-      sa3d.targetLine, timeline3d ? timeline3d.fx.trail.mesh : null,
+      sa3d.targetLine, sa3d.floor, timeline3d ? timeline3d.fx.group : null,
     ].filter(Boolean),
     faceZoomHideLabels: [$('gc3dLabel')],
     groundStrikeLabelEl: $('gc3dLabel'),
@@ -1638,6 +1654,140 @@ window.__sa = Object.assign(window.__sa || {}, {
         const el = $('scene3d');
         if (el) el.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, cancelable: true }));
       },
+      // FIX Q (owner: "Impact må vise køllen parallell til bakken") — headless
+      // verify hooks for the freeze-camera re-tune. setFreezeOverrides/retrack
+      // let a test iterate camera azimuth/dist/up/roll against an ALREADY
+      // frozen frame without re-running a whole swing per candidate (see
+      // facezoom.js's _setFreezeOverrides/retrack doc comments). soleSlope
+      // projects a toe/heel point pair (built from club3d's own toe-heel axis
+      // + face-centre — see its own doc comment below for why, incl. two
+      // rejected earlier approaches) through the LIVE camera, so it reads
+      // whatever pose is actually applied (tuned constants OR a live
+      // override) — this is the literal on-screen read, not a re-derivation
+      // of the formula. markerVsBall compares the REAL contact-marker's screen position
+      // against the REAL ball's projected screen disc (radius approximated by
+      // projecting a world-vertical BALL_RADIUS_M offset — camera has no roll
+      // beyond FIX Q's small leveling tilt, so this stays a good proxy).
+      setFreezeOverrides: (opts) => { if (timeline3d) timeline3d.faceZoom._setFreezeOverrides(opts || {}); },
+      getFreezeOverrides: () => (timeline3d ? timeline3d.faceZoom._getFreezeOverrides() : null),
+      retrack: () => { if (timeline3d) timeline3d.faceZoom.retrack(engineState); },
+      soleSlope: () => {
+        // FIX Q — two earlier approaches were tried and rejected (see git
+        // history / task report): (1) bbox-corner combinations (extreme X,
+        // global min Y) landed in EMPTY SPACE below the rendered clubhead for
+        // this rounded casting — a bbox corner isn't guaranteed to be ON the
+        // surface. (2) scanning raw mesh vertices for the lowest-Y "bottom
+        // rim" band also floated off-silhouette — from this near-face-on
+        // freeze angle the true sole surface is nearly edge-on/self-occluded,
+        // so its own vertices don't project inside the visible face outline.
+        // Both were geometrically "correct" (real points on/near the mesh)
+        // but didn't correspond to what a viewer actually reads as "the
+        // club's line" in this shot.
+        //
+        // This version instead reuses the SAME toe–heel axis + face-centre
+        // point club3d's own poseDebug()/checkAlign3d/impactMetrics already
+        // treat as authoritative: poseDebug().toeAxis (blade local +X in
+        // world — explicitly documented in club.js as "the owner's lie angle
+        // (visible in face view)") and poseDebug().faceCentreWorld (the
+        // blade's visual face-centre — the same point the ball-centring
+        // assert already validates as reading correctly on screen). A
+        // synthetic toe/heel pair is built by walking ± the blade's own
+        // physical half-width (measured from bladeMesh's local bbox, so it's
+        // not an arbitrary length) along toeAxis from that centre — this
+        // draws a line THROUGH the visible face along the exact axis whose
+        // world-horizontality is already the established physics fact (FACTS:
+        // 0.000° at azimuth 0), so its on-screen slope is precisely the
+        // perspective-framing artifact this fix targets, anchored at a point
+        // that's actually on the rendered face.
+        if (!club3d || !club3d.loaded || !club3d.bladeMesh || !club3d.poseDebug || !sa3d) return null;
+        const pd = club3d.poseDebug();
+        if (!pd || !pd.faceCentreWorld || !pd.toeAxis) return null;
+        const mesh = club3d.bladeMesh;
+        if (!mesh.geometry.boundingBox) mesh.geometry.computeBoundingBox();
+        const bb = mesh.geometry.boundingBox;
+        const halfWidth = ((bb.max.x - bb.min.x) * mesh.scale.x) / 2;
+        const c = pd.faceCentreWorld, t = pd.toeAxis;
+        const aWorld = { x: c[0] + t[0] * halfWidth, y: c[1] + t[1] * halfWidth, z: c[2] + t[2] * halfWidth };
+        const bWorld = { x: c[0] - t[0] * halfWidth, y: c[1] - t[1] * halfWidth, z: c[2] - t[2] * halfWidth };
+        const aS = projectToScreen(aWorld.x, aWorld.y, aWorld.z);
+        const bS = projectToScreen(bWorld.x, bWorld.y, bWorld.z);
+        let slopeDeg = Math.atan2(aS.y - bS.y, aS.x - bS.x) * 180 / Math.PI;
+        if (slopeDeg > 90) slopeDeg -= 180;
+        if (slopeDeg < -90) slopeDeg += 180;
+        return { slopeDeg: +slopeDeg.toFixed(3), a: aS, b: bS, aWorld: [aWorld.x, aWorld.y, aWorld.z], bWorld: [bWorld.x, bWorld.y, bWorld.z], halfWidthMm: +(halfWidth * 1000).toFixed(1) };
+      },
+      // debug-only (visual self-check, not part of the assert surface): drop
+      // two small unshaded spheres at the exact world points soleSlope()
+      // measures (red=+toeAxis side, blue=−toeAxis side, from faceCentreWorld)
+      // so a screenshot can be eyeballed against the numeric slope. This is
+      // what caught the two earlier rejected approaches (bbox corners, then
+      // raw bottom-rim vertices) floating off the visible clubhead silhouette
+      // — see soleSlope()'s doc comment. Idempotent — calling with on=false
+      // removes them; safe to leave in the codebase (no-ops unless explicitly
+      // invoked).
+      _debugSoleDots: (() => {
+        let dots = null;
+        return (on) => {
+          if (!sa3d) return null;
+          if (dots) { sa3d.scene.remove(dots.a, dots.b); dots.a.geometry.dispose(); dots.a.material.dispose(); dots.b.geometry.dispose(); dots.b.material.dispose(); dots = null; }
+          if (!on) { sa3d.invalidate(); return null; }
+          const s = window.__sa.three.faceZoom.soleSlope();
+          if (!s) return null;
+          const geo = new THREE.SphereGeometry(0.006, 12, 12);
+          const matA = new THREE.MeshBasicMaterial({ color: 0xff2d2d, depthTest: false, depthWrite: false, toneMapped: false });
+          const matB = new THREE.MeshBasicMaterial({ color: 0x2d7bff, depthTest: false, depthWrite: false, toneMapped: false });
+          const a = new THREE.Mesh(geo, matA); a.position.set(s.aWorld[0], s.aWorld[1], s.aWorld[2]); a.renderOrder = 999;
+          const b = new THREE.Mesh(geo.clone(), matB); b.position.set(s.bWorld[0], s.bWorld[1], s.bWorld[2]); b.renderOrder = 999;
+          sa3d.scene.add(a, b);
+          dots = { a, b };
+          sa3d.invalidate();
+          return { aScreen: s.a, bScreen: s.b };
+        };
+      })(),
+      // debug-only generic probes (diagnosis; not part of the assert surface):
+      // projectWorldPoint — world (x,y,z) → CSS-px screen coords via the LIVE
+      // camera (same projectToScreen the other hooks use). bladeLocalToWorld —
+      // a point in the blade node's LOCAL frame → world, through the live
+      // blade.matrixWorld (includes lie rotation + sole-height nudge + any
+      // cosmetic freeze rotation). bladeMeshBBox — the bladeMesh local-geometry
+      // bbox (min/max + mesh pos/scale) so probes can build feature lines
+      // (leading edge, topline, groove rows) in blade-local terms.
+      projectWorldPoint: (x, y, z) => (sa3d ? projectToScreen(x, y, z) : null),
+      bladeLocalToWorld: (x, y, z) => {
+        if (!club3d || !club3d.blade) return null;
+        club3d.blade.updateWorldMatrix(true, false);
+        const v = new THREE.Vector3(x, y, z).applyMatrix4(club3d.blade.matrixWorld);
+        return [v.x, v.y, v.z];
+      },
+      bladeMeshBBox: () => {
+        if (!club3d || !club3d.bladeMesh) return null;
+        const mesh = club3d.bladeMesh;
+        if (!mesh.geometry.boundingBox) mesh.geometry.computeBoundingBox();
+        const bb = mesh.geometry.boundingBox;
+        return { min: bb.min.toArray(), max: bb.max.toArray(), meshPos: mesh.position.toArray(), meshScale: mesh.scale.toArray() };
+      },
+      markerVsBall: () => {
+        if (!sa3d || !timeline3d) return null;
+        const fz = timeline3d.faceZoom;
+        if (!fz.marker.visible) return { markerVisible: false };
+        const mv = new THREE.Vector3(); fz.marker.getWorldPosition(mv);
+        const markerS = projectToScreen(mv.x, mv.y, mv.z);
+        let ballS = null, ballRadiusPx = null, distPx = null, marginPx = null;
+        if (sa3d.ball) {
+          const bv = new THREE.Vector3(); sa3d.ball.getWorldPosition(bv);
+          ballS = projectToScreen(bv.x, bv.y, bv.z);
+          const topS = projectToScreen(bv.x, bv.y, bv.z + BALL_RADIUS_M);
+          ballRadiusPx = Math.hypot(topS.x - ballS.x, topS.y - ballS.y);
+          distPx = Math.hypot(markerS.x - ballS.x, markerS.y - ballS.y);
+          marginPx = distPx - ballRadiusPx;
+        }
+        return {
+          markerVisible: true, markerScreen: markerS, ballScreen: ballS,
+          ballRadiusPx: ballRadiusPx == null ? null : +ballRadiusPx.toFixed(2),
+          distPx: distPx == null ? null : +distPx.toFixed(2),
+          marginPx: marginPx == null ? null : +marginPx.toFixed(2),
+        };
+      },
     },
   },
   // MOCK-specific verification hooks
@@ -1745,13 +1895,16 @@ window.__sa = Object.assign(window.__sa || {}, {
       plane: $('tv_plane').textContent, dir: $('tv_dir').textContent,
       lpx: $('tv_lpx').textContent, lpz: $('tv_lpz').textContent,
     }),
-    // debug (freeze-pose diagnosis)
+    // debug (freeze-pose diagnosis). floor + fx added for the FIX Q2
+    // hide-list assert (both join faceZoomHideNodes — see its doc comment).
     nodeVis: () => ({
       arc: arc3d ? arc3d.group.visible : null,
       plane: plane3d ? plane3d.group.visible : null,
       lp: lp3d ? lp3d.group.visible : null,
       delivery: delivery3d ? delivery3d.group.visible : null,
       targetLine: sa3d ? sa3d.targetLine.visible : null,
+      floor: sa3d ? sa3d.floor.visible : null,
+      fx: timeline3d ? timeline3d.fx.group.visible : null,
     }),
     camPos: () => (sa3d ? sa3d.camera.position.toArray() : null),
     camFov: () => (sa3d ? sa3d.camera.fov : null),

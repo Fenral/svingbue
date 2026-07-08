@@ -104,9 +104,106 @@ const FACE_ZOOM_FOV = 20;
 // a full plane; up=0 (camera height == contact-point height) is what
 // actually keeps the WHOLE face square in frame. Tuned by headless
 // screenshot iteration (see task report for the discarded candidates).
-const FREEZE_AZIMUTH_DEG = 15;
+// FIX Q (2026-07-08, owner: "Impact må vise køllen parallell til bakken" —
+// screenshot evidence) — the FIX P4 pose above (az 15°/dist 0.45/up 0) is a
+// CAMERA-FRAMING bug, not a physics one: checkAlign3d/impactMetrics confirm
+// the club's toe–heel lie axis is already world-horizontal (0.000° across the
+// full plane×dir×lpx×lpz grid — dynamic lie compensation + grounded-address
+// landed separately). A world-horizontal line does NOT generally project as a
+// horizontal SCREEN line under a yawed perspective camera — the two endpoints
+// (toe/heel) sit at different DEPTHS from the camera once the view has any
+// azimuth, so perspective division gives them different screen-Y even though
+// their world-Z is identical. That's what read as "tilted" in the owner's
+// screenshot. Confirmed empirically (geometry-mock.html's __sa.three.faceZoom
+// .soleSlope() hook, which projects a toe/heel pair built by walking ± the
+// blade's own physical half-width along poseDebug().toeAxis from
+// poseDebug().faceCentreWorld — the SAME toe-heel axis + face-centre point
+// club3d's own checkAlign3d/impactMetrics already treat as authoritative —
+// through the LIVE freeze camera; an earlier bbox-corner version of this hook
+// was rejected after _debugSoleDots() screenshots showed those corners
+// floating in empty space below the rendered clubhead, off the visible
+// silhouette — see that hook's doc comment): at azimuth=0 the residual slope
+// is 0.000° for every non-Whiff cell tested (the physics fact holds), and
+// grows ~linearly with azimuth from there, with a PER-CELL slope/azimuth
+// ratio that varies in both sign and magnitude across plane/dir/lpx/ballPos
+// (measured across a 24-cell sweep — the 16 plane/dir/lpx/ballPos extreme
+// corners + default + 8 more plane/dir/ballPos combinations). FREEZE_AZIMUTH
+// was pulled down 15°→10°, shrinking that per-cell spread proportionally
+// while barely moving marker/ball screen separation (measured: moving azimuth
+// 0→32° at fixed dist/up shifts the marker-to-ball screen distance by under
+// 1px — azimuth is NOT the lever for marker legibility, see FREEZE_UP's own
+// doc comment above for why dist/up were left alone; azimuth is kept modest,
+// not zeroed, purely so the face still reads with depth/a 3/4 angle rather
+// than a flat dead-on card).
+//
+// FIX Q2 (2026-07-08, follow-up on the owner's EXACT reported case — LOW ON
+// FACE, i.e. lpz varied, which the FIX Q calibration grid held at default) —
+// two more findings, and FIX Q's static roll replaced by a DYNAMIC per-shot
+// solve:
+//
+// (a) UNDERGROUND CAMERA. On Fat/Duff strikes the club is genuinely dug below
+// z=0 at the impact frame, and FREEZE_UP=0 anchors the camera at CONTACT
+// height — which for a low contact put the camera ~5cm BELOW GROUND, looking
+// up at the head's underside with grazing light (measured for the owner's
+// case: camPos.z=−0.049 while the projected toe–heel axis itself measured
+// level at −1.1° — so what read as "rotated 20-30°" in the owner's
+// screenshot was this under-sole viewpoint + lighting, NOT an axis tilt).
+// FREEZE_CAM_MIN_Z now clamps the freeze camera's world height to never sink
+// below ~ground level. The floor disc is hidden for the duration of the zoom
+// (see geometry-mock.html's faceZoomHideNodes FIX Q2 comment) so the
+// above-ground camera no longer loses the dug head behind the opaque floor —
+// which also finally matches the freeze acceptance list ("only club + ball +
+// marker + chip visible during the zoom"). The default cell measured
+// camPos.z=−0.0005, above the clamp — its framing is untouched by (a).
+//
+// (b) DYNAMIC LEVELING (replaces FIX Q's static FREEZE_ROLL_DEG=−0.15°). The
+// per-cell residual slope varies with EVERY parameter (incl. lpz, which the
+// static roll's calibration grid didn't sweep), so one fixed roll can only
+// centre a measured range, never zero each shot. The freeze now SOLVES the
+// leveling per shot: project the toe–heel line (blade.matrixWorld local +X
+// through the contact point, ± the blade's physical half-width) with the
+// freeze camera at roll=0, read its screen slope s0, and cancel it. Camera
+// roll about the view (optical) axis rotates the projected image RIGIDLY —
+// the camera aims exactly at the contact point, so slope(r) = s0 − r holds
+// exactly (relation verified empirically during FIX Q tuning) and r = s0
+// zeroes the read in one step, no iteration. Preferred path: pure camera
+// roll (honest — a view change only, club untouched). If |s0| >
+// FREEZE_ROLL_MAX_DEG (10° — beyond that the rolled view starts visibly
+// tilting the scene around the club), the roll is clamped there and the
+// RESIDUAL is applied as a COSMETIC rotation of club3d.group around the same
+// optical axis THROUGH the contact point (exact for the same rigid-image-
+// rotation reason; the pivot keeps the marker + ball contact seam fixed on
+// screen). That rotation is pure view-time presentation: applied at the
+// freeze only, snapshot-restored on endHold/reset/retrack, and the resumed
+// timeline's placeAt() re-poses the club from the true arc math every frame
+// anyway. Owner precedent for the cosmetic simplification: FIX K.3 ("ball
+// always horizontally centred in the clubhead" — this close-up teaches
+// strike HEIGHT, not orientation).
+//
+// Whiff runs are UNCHANGED by all of this — the isWhiffRun branch of
+// trackCameraToState() uses the APPROACH constants and never freezes on a
+// contact view; no club-ball contact exists for a "sole parallel to the
+// ground" read to apply to.
+const FREEZE_AZIMUTH_DEG = 10;
 const FREEZE_DIST = 0.45;
 const FREEZE_UP = 0;
+const FREEZE_CAM_MIN_Z = -0.005;  // m — freeze camera world-height floor (~ground level, FIX Q2a); rescues low-contact cells without moving the default cell (measured −0.0005)
+const FREEZE_ROLL_MAX_DEG = 10;   // deg — max camera roll for the dynamic leveling (FIX Q2b); excess goes to the cosmetic model rotation instead
+
+// FIX Q — test-only overrides for the freeze pose (azimuth/dist/up/roll),
+// mirroring the existing hintDelayMs/idleFallbackMs override pattern below.
+// null = tuned constant / dynamic behavior. rollDeg override (a number)
+// FORCES that fixed camera roll and disables the FIX Q2 dynamic leveling
+// solve entirely (both the roll solve and the cosmetic-rotation fallback) —
+// that's what before/after comparison screenshots use. Lets headless
+// screenshot iteration (geometry-mock.html's __sa hooks) re-tune the
+// ALREADY-frozen frame live (via retrack()) without re-running a full swing
+// per candidate.
+let freezeAzimuthOverride = null;
+let freezeDistOverride = null;
+let freezeUpOverride = null;
+let freezeRollOverride = null;
+let freezeMaxRollOverride = null; // test-only cap override for FREEZE_ROLL_MAX_DEG — lets specs force the cosmetic model-rotation fallback (FIX Q2b) without needing a >10°-slope cell
 const BALL_GHOST_OPACITY = 0.22;
 const BALL_GHOST_MS = 220;        // ball opacity tween duration (ghost-in AND restore)
 const BLADE_EMISSIVE_LIFT = 0x141414; // slight brightness lift on the blade during freeze (restored after)
@@ -367,8 +464,8 @@ export function createFaceZoom({ sa3d, club3d, chipEl, liveEl, hintEl, dismissEl
   // is still opaque while the club is still travelling toward it).
   function faceZoomCameraOffset(useFreezePose) {
     const faceN = worldFaceNormal();
-    const az = useFreezePose ? FREEZE_AZIMUTH_DEG : FACE_ZOOM_AZIMUTH_DEG;
-    const dist = useFreezePose ? FREEZE_DIST : FACE_ZOOM_DIST;
+    const az = useFreezePose ? (freezeAzimuthOverride ?? FREEZE_AZIMUTH_DEG) : FACE_ZOOM_AZIMUTH_DEG;
+    const dist = useFreezePose ? (freezeDistOverride ?? FREEZE_DIST) : FACE_ZOOM_DIST;
     return faceN.clone()
       .applyAxisAngle(_worldUp, THREEns.MathUtils.degToRad(az))
       .multiplyScalar(dist);
@@ -376,29 +473,153 @@ export function createFaceZoom({ sa3d, club3d, chipEl, liveEl, hintEl, dismissEl
 
   /** Compute (not apply) the current face-zoom camera pose for the given contact point. */
   function faceZoomCameraPose(contactWorld, useFreezePose) {
-    const up = useFreezePose ? FREEZE_UP : FACE_ZOOM_UP;
+    const up = useFreezePose ? (freezeUpOverride ?? FREEZE_UP) : FACE_ZOOM_UP;
     const camPos = contactWorld.clone()
       .add(faceZoomCameraOffset(useFreezePose))
       .add(new THREEns.Vector3(0, 0, up));
+    // FIX Q2a — the freeze camera never sinks below ~ground level (see the
+    // FREEZE_CAM_MIN_Z doc block above: an under-sole grazing viewpoint is
+    // what actually read as "club rotated" in the owner's LOW ON FACE
+    // screenshot). Freeze pose only; the approach's own up=0.16 already keeps
+    // it well above ground.
+    if (useFreezePose) camPos.z = Math.max(camPos.z, FREEZE_CAM_MIN_Z);
     return camPos;
   }
 
-  /** Apply a camera pose (position + lookAt) without touching savedRig/savedFov bookkeeping. */
-  function applyCamPose(camPos, aimWorld) {
+  // FIX Q — the freeze-stage roll (see the FIX Q2b doc block above): rotate
+  // the WORLD-up reference used to build the camera's screen-space "up"
+  // around the camera's own view (forward) axis by rollDeg degrees before
+  // lookAt. This is a pure view-space tilt — it only ever changes what reads
+  // as "level" on screen, never the club/ball/scene geometry. rollDeg=0 (the
+  // APPROACH stage, always) reproduces the original cam.up.set(0,0,1)
+  // exactly.
+  function rolledUp(camPos, aimWorld, rollDeg) {
+    if (!rollDeg) return new THREEns.Vector3(0, 0, 1);
+    const forward = aimWorld.clone().sub(camPos).normalize();
+    return new THREEns.Vector3(0, 0, 1).applyAxisAngle(forward, THREEns.MathUtils.degToRad(rollDeg));
+  }
+
+  // ── FIX Q2b — dynamic per-shot leveling of the freeze read (see the doc
+  // block at the FREEZE_* constants). All helpers here are freeze-stage-only.
+  let appliedFreezeRollDeg = 0;   // camera roll actually applied at the current freeze (debug/report)
+  let appliedModelLevelDeg = 0;   // cosmetic model rotation actually applied (debug/report; 0 = camera roll sufficed)
+  let cosmeticLevel = null;       // { pos, quat } snapshot of club3d.group taken BEFORE the cosmetic rotation (null = none applied)
+
+  /** World direction of the blade's toe–heel axis (blade local +X — includes
+   * the live lie compensation, i.e. the axis whose world-horizontality is the
+   * established physics fact). Falls back to the group/swing-basis X while
+   * the GLB placeholder is showing. */
+  function toeAxisWorld() {
+    const node = club3d.blade || club3d.group;
+    node.updateWorldMatrix(true, false);
+    const e = node.matrixWorld.elements;
+    const l = Math.hypot(e[0], e[1], e[2]) || 1;
+    return new THREEns.Vector3(e[0] / l, e[1] / l, e[2] / l);
+  }
+  /** Physical half-width of the blade casting (m), from its local-geometry
+   * bbox — the same measurement geometry-mock.html's soleSlope assert uses. */
+  function bladeHalfWidthM() {
+    const mesh = club3d.bladeMesh;
+    if (mesh && mesh.geometry) {
+      if (!mesh.geometry.boundingBox) mesh.geometry.computeBoundingBox();
+      const bb = mesh.geometry.boundingBox;
+      return ((bb.max.x - bb.min.x) * mesh.scale.x) / 2;
+    }
+    return 0.045; // placeholder fallback (~ real casting half-width)
+  }
+  /** World position of the blade's visual face centre (bbox centre through
+   * the live mesh matrixWorld — same point club.js's poseDebug()
+   * faceCentreWorld reports). null while the placeholder is showing. Used as
+   * the leveling measurement ANCHOR: parallel world lines project with
+   * slightly different slopes under perspective depending on where they
+   * cross the view, and the acceptance assert (geometry-mock.html soleSlope)
+   * measures the toe–heel line through THIS point — measuring anywhere else
+   * (e.g. the contact point, tried first) leaves an anchor-mismatch residual
+   * of up to ~1° after the solve. Camera roll shifts ALL projected slopes
+   * equally (rigid image rotation), so solving on the assert's own anchor
+   * zeroes the assert exactly. */
+  function bladeFaceCentreWorld() {
+    const mesh = club3d.bladeMesh;
+    if (!mesh || !mesh.geometry) return null;
+    if (!mesh.geometry.boundingBox) mesh.geometry.computeBoundingBox();
+    mesh.updateWorldMatrix(true, false);
+    return mesh.geometry.boundingBox.getCenter(new THREEns.Vector3()).applyMatrix4(mesh.matrixWorld);
+  }
+  /** Screen slope (deg, y-down screen convention) of the toe–heel line
+   * through `anchor`, projected with the camera AS CURRENTLY POSED. */
+  function projectedToeSlopeDeg(anchor) {
+    const toe = toeAxisWorld();
+    const h = bladeHalfWidthM();
+    const cam = sa3d.camera;
+    cam.updateMatrixWorld(true);
+    const a = anchor.clone().addScaledVector(toe, h).project(cam);
+    const b = anchor.clone().addScaledVector(toe, -h).project(cam);
+    const dx = (a.x - b.x) * cam.aspect; // NDC → pixel-proportional (W = aspect·H)
+    const dy = -(a.y - b.y);             // NDC y-up → screen y-down
+    let deg = Math.atan2(dy, dx) * 180 / Math.PI;
+    if (deg > 90) deg -= 180;
+    if (deg < -90) deg += 180;
+    return deg;
+  }
+  /** Undo the FIX Q2b cosmetic model rotation (exact snapshot restore).
+   * Idempotent; also self-healing in the normal flow — the resumed timeline's
+   * placeAt() re-poses club3d.group from the true arc math every frame. */
+  function restoreCosmeticLevel() {
+    if (!cosmeticLevel) return;
+    club3d.group.position.copy(cosmeticLevel.pos);
+    club3d.group.quaternion.copy(cosmeticLevel.quat);
+    club3d.group.updateWorldMatrix(true, true);
+    cosmeticLevel = null;
+    appliedModelLevelDeg = 0;
+    sa3d.invalidate();
+  }
+  /** FIX Q2b fallback — rotate club3d.group by `residualDeg` (screen-space
+   * degrees) around the camera's optical axis THROUGH the aim/contact point.
+   * Because the camera looks straight at that pivot, the club's projection
+   * rotates rigidly by exactly that angle while the contact point (marker +
+   * ball seam) stays fixed on screen. Cosmetic and freeze-only — snapshot is
+   * restored on endHold/reset/retrack. */
+  function applyCosmeticLevel(aimWorld, residualDeg) {
+    const grp = club3d.group;
+    cosmeticLevel = { pos: grp.position.clone(), quat: grp.quaternion.clone() };
+    const cam = sa3d.camera;
+    const f = aimWorld.clone().sub(cam.position).normalize(); // optical axis (camera → aim)
+    // screen-space rotation by +θ adds +θ to a measured atan2(dy,dx) slope;
+    // to CANCEL residualDeg the club must rotate by −residualDeg on screen.
+    // A right-handed rotation about f (which points AWAY from the camera)
+    // by +θ reads as +θ in y-down screen coords (verified empirically via
+    // the soleSlope assert), so the world angle is simply −residualDeg.
+    const theta = THREEns.MathUtils.degToRad(-residualDeg);
+    const parent = grp.parent;
+    parent.updateWorldMatrix(true, false);
+    const inv = parent.matrixWorld.clone().invert();
+    const pivotLocal = aimWorld.clone().applyMatrix4(inv);
+    const axisLocal = f.clone().transformDirection(inv);
+    const q = new THREEns.Quaternion().setFromAxisAngle(axisLocal, theta);
+    grp.quaternion.premultiply(q);
+    grp.position.sub(pivotLocal).applyQuaternion(q).add(pivotLocal);
+    grp.updateWorldMatrix(true, true);
+    appliedModelLevelDeg = residualDeg;
+    sa3d.invalidate();
+  }
+
+  /** Apply a camera pose (position + lookAt) without touching savedRig/savedFov bookkeeping.
+   * rollDeg (FIX Q, optional) tilts cam.up around the view axis — freeze-stage-only, see rolledUp(). */
+  function applyCamPose(camPos, aimWorld, rollDeg) {
     const cam = sa3d.camera;
     cam.position.copy(camPos);
-    cam.up.set(0, 0, 1);
+    cam.up.copy(rolledUp(camPos, aimWorld, rollDeg));
     cam.lookAt(aimWorld);
     sa3d.invalidate();
   }
 
   /** Hard-cut the camera into the face-zoom pose (or ball-framing pose for Whiff). Saves rig/fov for cutOut(). */
-  function cutIn(contactWorld, aimWorld, useFreezePose) {
+  function cutIn(contactWorld, aimWorld, useFreezePose, rollDeg) {
     const cam = sa3d.camera;
     savedRig = { ...sa3d.rig };
     savedFov = cam.fov;
 
-    applyCamPose(faceZoomCameraPose(contactWorld, useFreezePose), aimWorld);
+    applyCamPose(faceZoomCameraPose(contactWorld, useFreezePose), aimWorld, rollDeg);
     cam.fov = FACE_ZOOM_FOV;
     cam.updateProjectionMatrix();
     sa3d.invalidate();
@@ -564,6 +785,8 @@ export function createFaceZoom({ sa3d, club3d, chipEl, liveEl, hintEl, dismissEl
     if (fallbackTimer) { fallbackTimer.kill(); fallbackTimer = null; }
     unbindDismiss();
     cutOut();
+    restoreCosmeticLevel(); // FIX Q2b — undo the freeze-only cosmetic leveling BEFORE the swing resumes (placeAt would overwrite it anyway; this makes it explicit + immediate)
+    appliedFreezeRollDeg = 0;
     unghostBall(window.gsap, getReduced()); // FIX P4 — restore the ball to fully opaque on resume
     restoreBladeEmissive();
     restoreSceneNodes(); // FIX K.1 — bring back arc/plane/lowpoint/groundcontact/delivery/target-line/trail
@@ -653,6 +876,11 @@ export function createFaceZoom({ sa3d, club3d, chipEl, liveEl, hintEl, dismissEl
       sa3d.camera.updateProjectionMatrix();
       sa3d.invalidate();
     } else {
+      // FIX Q2b — measurements (and the cosmetic fallback) must always start
+      // from the club's TRUE physics pose: undo any leveling a previous
+      // frozen-frame track applied (retrack/test path; the normal flow only
+      // reaches the frozen branch once per freeze). No-op when none applied.
+      if (stage === 'frozen') restoreCosmeticLevel();
       const sq = strikeQuality(state);
       const { offsetM } = placeMarker(state, sq);
       lastContact.offsetM = offsetM;
@@ -661,10 +889,30 @@ export function createFaceZoom({ sa3d, club3d, chipEl, liveEl, hintEl, dismissEl
       // FIX P4 — the frozen stage uses the tighter, closer-to-dead-on freeze
       // pose (ball is ghosted by now so it doesn't need the wider 3/4 berth).
       const useFreezePose = stage === 'frozen';
+      // pose at roll=0 first — the FIX Q2b dynamic solve below measures the
+      // projected slope against this un-rolled view. The moving APPROACH
+      // stage always stays roll=0/cam.up=world-up (no leveling mid-motion).
       if (!savedRig) {
-        cutIn(contactWorld, contactWorld, useFreezePose); // first frame: also saves rig/fov + sets fov
+        cutIn(contactWorld, contactWorld, useFreezePose, 0); // first frame: also saves rig/fov + sets fov
       } else {
-        applyCamPose(faceZoomCameraPose(contactWorld, useFreezePose), contactWorld);
+        applyCamPose(faceZoomCameraPose(contactWorld, useFreezePose), contactWorld, 0);
+      }
+      if (useFreezePose) {
+        // ── FIX Q2b — dynamic per-shot leveling (see the FREEZE_* doc block).
+        let roll = 0, residual = 0;
+        if (freezeRollOverride != null) {
+          roll = freezeRollOverride; // test override: fixed roll, dynamic solve disabled
+        } else {
+          // measure on the face-centre anchor (falls back to the contact
+          // point pre-GLB) — see bladeFaceCentreWorld()'s doc comment.
+          const s0 = projectedToeSlopeDeg(bladeFaceCentreWorld() || contactWorld);
+          const maxRoll = freezeMaxRollOverride ?? FREEZE_ROLL_MAX_DEG;
+          roll = Math.max(-maxRoll, Math.min(maxRoll, s0));
+          residual = s0 - roll; // beyond the camera-roll budget → cosmetic model rotation
+        }
+        if (roll) applyCamPose(faceZoomCameraPose(contactWorld, true), contactWorld, roll);
+        appliedFreezeRollDeg = roll;
+        if (residual) applyCosmeticLevel(contactWorld, residual);
       }
     }
   }
@@ -768,6 +1016,8 @@ export function createFaceZoom({ sa3d, club3d, chipEl, liveEl, hintEl, dismissEl
       // cameraBaseRig itself).
       if (savedRig) { Object.assign(sa3d.rig, savedRig); sa3d.applyRig(); }
       if (savedFov != null) { sa3d.camera.fov = savedFov; sa3d.camera.updateProjectionMatrix(); }
+      restoreCosmeticLevel(); // FIX Q2b — a kill-and-replace mid-freeze must also undo the cosmetic leveling (the replacement swing re-poses from address)
+      appliedFreezeRollDeg = 0;
       resumeSwingTween(false); // NOT revive — caller already killed this exact tween; don't resurrect it (see resumeSwingTween doc)
       restoreSceneNodes(); // FIX K.1 — kill-and-replace mid-zoom must also restore hidden nodes
       // FIX P4 — a re-Hit mid-FREEZE must un-ghost the ball/restore the blade
@@ -830,15 +1080,52 @@ export function createFaceZoom({ sa3d, club3d, chipEl, liveEl, hintEl, dismissEl
       if (typeof h === 'number') hintDelayMs = h;
       if (typeof i === 'number') idleFallbackMs = i;
     },
+    // FIX Q — test-only: override the FREEZE pose's azimuth/dist/up/roll
+    // (null clears an individual override, falling back to the tuned
+    // FREEZE_* constant). Combined with retrack() below, this lets headless
+    // screenshot iteration re-pose the camera against an ALREADY-frozen frame
+    // — no need to re-run a full swing per candidate. Persists across swings
+    // (same pattern as _setTestDelays) until explicitly cleared.
+    _setFreezeOverrides: ({ azimuthDeg, dist, up, rollDeg, maxRollDeg } = {}) => {
+      if (azimuthDeg !== undefined) freezeAzimuthOverride = azimuthDeg;
+      if (dist !== undefined) freezeDistOverride = dist;
+      if (up !== undefined) freezeUpOverride = up;
+      if (rollDeg !== undefined) freezeRollOverride = rollDeg;
+      if (maxRollDeg !== undefined) freezeMaxRollOverride = maxRollDeg;
+    },
+    _getFreezeOverrides: () => ({
+      azimuthDeg: freezeAzimuthOverride, dist: freezeDistOverride,
+      up: freezeUpOverride, rollDeg: freezeRollOverride, maxRollDeg: freezeMaxRollOverride,
+    }),
+    // FIX Q — test-only: re-run the camera/marker track against the CURRENT
+    // club pose (a no-op on the engine/timeline — just recomputes + reapplies
+    // the camera pose using whatever overrides are active). Safe to call
+    // anytime club3d/sa3d exist; most useful while stage()==='frozen' (the
+    // pose stays screenshot-stable) to iterate camera numbers live.
+    retrack: (state) => trackCameraToState(state),
     // debug-only: camera/marker world pose for azimuth/distance tuning (screenshot iteration).
     _debugPose: () => ({
       camPos: sa3d.camera.position.toArray(),
+      camUp: sa3d.camera.up.toArray(),
       camFov: sa3d.camera.fov,
       markerWorld: (() => { const v = new THREEns.Vector3(); marker.getWorldPosition(v); return v.toArray(); })(),
       faceNormal: worldFaceNormal().toArray(),
       azimuthDeg: FACE_ZOOM_AZIMUTH_DEG, dist: FACE_ZOOM_DIST, up: FACE_ZOOM_UP,
       // FIX P4 — freeze-stage pose + ball-ghost/blade-lift diagnostics.
-      freezeAzimuthDeg: FREEZE_AZIMUTH_DEG, freezeDist: FREEZE_DIST, freezeUp: FREEZE_UP,
+      freezeAzimuthDeg: freezeAzimuthOverride ?? FREEZE_AZIMUTH_DEG,
+      freezeDist: freezeDistOverride ?? FREEZE_DIST,
+      freezeUp: freezeUpOverride ?? FREEZE_UP,
+      // FIX Q2 — dynamic-leveling diagnostics: the camera roll actually
+      // applied at the current freeze (solved per shot, or the fixed
+      // rollDeg override), the cosmetic model rotation applied when the
+      // roll budget was exceeded (0 = camera roll sufficed), whether a
+      // cosmetic snapshot is currently held, and the cam-height floor.
+      appliedFreezeRollDeg: +appliedFreezeRollDeg.toFixed(3),
+      appliedModelLevelDeg: +appliedModelLevelDeg.toFixed(3),
+      cosmeticLevelActive: !!cosmeticLevel,
+      freezeCamMinZ: FREEZE_CAM_MIN_Z,
+      freezeRollMaxDeg: FREEZE_ROLL_MAX_DEG,
+      rollOverride: freezeRollOverride,
       ballOpacity: sa3d.ball ? sa3d.ball.material.opacity : null,
       ballTransparent: sa3d.ball ? sa3d.ball.material.transparent : null,
       ballDepthWrite: sa3d.ball ? sa3d.ball.material.depthWrite : null,
