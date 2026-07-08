@@ -87,6 +87,27 @@
           pitch IS the attack angle, orange, matches the ATTACK chip), each
           with a 10px "Path"/"Attack" cue on a dark plate. Reduced motion →
           two static directional streaks + the labels. Still DOM/CSS only.
+     ROUND 4 (2026-07-09, owner direction: "trenger ikke chips … men STREKER
+     som viser retningen attack og path har ut av svingbuen, akkurat ved
+     balltreff, videre utover BILDET (ikke ut av bildet)"):
+      13. The ATTACK/PATH value chips (hud-chips + wiring) and the round-3
+          particle streams (#arcStream) are REMOVED — replaced by two clean
+          DELIVERY LINES on a fixed full-viewport SVG overlay (#deliveryLines):
+          ATTACK = the arc's TRUE 3D tangent at impact,
+          normalize(tangentAt(thetaAtImpact(state))) — yaw = club path, pitch
+          = attack angle, 1:1 honest, "the direction the swing arc has exactly
+          at ball impact"; PATH = the same tangent GROUND-PROJECTED onto the
+          turf (pure club-path heading). The angular gap between the two lines
+          reads as the attack angle. Implemented in SCREEN SPACE: impact point
+          + a near-plane-clamped far point are projected through the live
+          camera and the segment is CLIPPED to the frame (small margin +
+          carousel-rail clearance) — the lines run across the image but never
+          off it, at any parameter setting. Values live ONLY in #sceneData
+          (in words) + the slider bubbles; tiny 10px "Path"/"Attack" text tags
+          (no plates, no read-outs). Re-projected on every slider input /
+          camera orbit / resize; pure DOM writes (render-on-demand intact);
+          fades with the controls during playback (CONTROL_SEL); reduced
+          motion = the same static lines (nothing animates).
      3D modules are the geo3d-mock/ copies (production geo3d/ untouched).
      ═══════════════════════════════════════════════════════════════════════ -->
 <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2052%2052'%20fill='none'%3E%3Cpath%20d='M11%2045%20C%2016%2026,%2024%2018,%2035%2015%20M21%2039%20L%2030%2024%20L%2043%2045'%20stroke='%2322E3D6'%20stroke-width='4.2'%20stroke-linecap='round'%20stroke-linejoin='round'/%3E%3Ccircle%20cx='37'%20cy='15'%20r='5.2'%20fill='%2322E3D6'/%3E%3C/svg%3E" />
@@ -158,103 +179,41 @@
   .facezoom-hint.is-visible{opacity:1;transform:translateX(-50%) translateY(0)}
   @media (prefers-reduced-motion:reduce){.facezoom-hint{transition:none}}
 
-  /* persistent ATTACK/PATH readout chips — MOCK: semi-transparent + blurred
-     plate so the arc reads through, sign-coloured NUMBER (negative red /
-     positive blue — the explicit +/− sign stays in the text, colour is never
-     the only carrier), per-chip tick-flash + sign-flip pulse (CSS only). */
-  .hud-chips{
-    position:fixed;top:max(10px,env(safe-area-inset-top));left:50%;z-index:3;
-    transform:translateX(-50%);display:flex;gap:8px;pointer-events:none;
+  /* MOCK round 4 — DELIVERY LINES ('streker', owner direction 2026-07-09).
+     The ATTACK/PATH value chips + the round-3 particle streams are replaced
+     by two clean lines on a fixed full-viewport SVG overlay (#deliveryLines):
+       .ln.atk  — the arc's TRUE 3D tangent at impact (pitch = attack angle),
+                  SOLID orange #ffb347 (the established attack hue; ≥3:1
+                  non-text contrast on the #0A0E12 scene);
+       .ln.path — its GROUND PROJECTION on the turf (pure club-path heading),
+                  DASHED #4FA8FF — NOT cyan: the path line diverges from the
+                  bright cyan target line by only a few degrees by
+                  construction, so a cyan line would merge with it (the
+                  documented FIX P3 failure mode); dashes additionally mark it
+                  as the projected component (solid = the real club
+                  direction), so colour is never the only carrier.
+     Both lines are cased in a dark halo stroke so they stay legible across
+     the bright cyan arc / white ball / floor grid. Tiny 10px "Path"/"Attack"
+     text tags (halo-stroked text, NO plates, NO value read-outs — the owner
+     asked the chips away; values live in #sceneData in words + the slider
+     bubbles). Endpoints are set from JS in screen space (projected +
+     frame-clipped); nothing here animates, so reduced motion needs no
+     special case — the lines are shown statically either way (the global
+     reduced-motion rule also kills the drag-emphasis transition). */
+  .delivery-lines{position:fixed;inset:0;width:100%;height:100%;z-index:2;pointer-events:none}
+  .delivery-lines line{stroke-linecap:round}
+  .delivery-lines .halo{stroke:rgba(7,12,18,.7);stroke-width:5.5}
+  .delivery-lines .halo.path{stroke-dasharray:7 5}
+  .delivery-lines .ln{transition:opacity .18s ease}
+  .delivery-lines .ln.path{stroke:#4FA8FF;stroke-width:2;stroke-dasharray:7 5;opacity:.9}
+  .delivery-lines .ln.atk{stroke:#ffb347;stroke-width:2.5;opacity:.95}
+  .delivery-lines.dragging .ln{opacity:1}
+  .delivery-lines .tag{
+    font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+    paint-order:stroke;stroke:#0A0E12;stroke-width:3px;stroke-linejoin:round;
   }
-  .hud-chip{
-    display:inline-flex;align-items:center;gap:8px;height:24px;padding:0 10px;
-    border-radius:7px;background:rgba(7,16,20,.62);border:1px solid;
-    -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
-    font-size:12px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap;
-  }
-  .hud-chip .sw{width:6.4px;height:6.4px;border-radius:50%;flex:none}
-  .hud-chip.atk{border-color:rgba(255,179,71,.5);color:#ffe0bb}
-  .hud-chip.atk .sw{background:#ffb347}
-  .hud-chip.path{border-color:rgba(34,227,214,.5);color:#bff6f1}
-  .hud-chip.path .sw{background:#22E3D6}
-  .hud-chip .num{display:inline-block;font-variant-numeric:tabular-nums}
-  .hud-chip .num.neg{color:#ff5c5c}
-  .hud-chip .num.pos{color:#4FA8FF}
-  /* tick-flash: the chip's OWN rounded whole-degree value changed */
-  .hud-chip.tick-flash .num{animation:chipTick .3s ease-out}
-  @keyframes chipTick{
-    0%{transform:scale(1.22);filter:brightness(1.7)}
-    100%{transform:scale(1);filter:none}
-  }
-  /* sign-pulse: the chip's OWN value flipped sign — bigger, whole-chip pulse */
-  .hud-chip.sign-pulse{animation:chipPulse .5s cubic-bezier(.34,1.4,.4,1)}
-  .hud-chip.sign-pulse .num{animation:chipTick .5s ease-out}
-  @keyframes chipPulse{
-    0%{transform:scale(1)}
-    30%{transform:scale(1.16)}
-    60%{transform:scale(.97)}
-    100%{transform:scale(1)}
-  }
-
-  /* MOCK round 3 (task 4) — DUAL ATTACK/PATH PARTICLE STREAMS. The round-2
-     single resultant stream did not read as two vectors; now TWO labelled
-     streams emit from the impact point simultaneously:
-       .st.path — dots along the GROUND-PROJECTED club-path direction (the
-                  horizontal left/right-of-target sense), cyan (#22E3D6 — the
-                  same anatomy colour as the PATH hud chip; the dots hug the
-                  ground away from the bright arc, so figure/ground survives);
-       .st.atk  — dots along the FULL delivery direction (same azimuth, but
-                  carrying the vertical pitch = the attack angle), orange
-                  (#ffb347 — the ATTACK chip colour).
-     Each stream carries a tiny 10px "Path"/"Attack" cue on a dark plate.
-     DOM/CSS only: origin + per-stream direction are re-projected (world →
-     screen) on every rebuild/slider input/camera orbit; motion is pure CSS
-     keyframes (renderer stays render-on-demand). Both dot colours are ≥3:1
-     non-text contrast on the #0A0E12 scene. Reduced motion: dots hidden, a
-     static directional gradient streak per stream (.hint) + the labels stay.
-     document.hidden pauses the loop (JS toggles .paused). */
-  .arc-stream{position:fixed;left:0;top:0;z-index:2;pointer-events:none;width:0;height:0}
-  .arc-stream .st{position:absolute;left:0;top:0;width:0;height:0}
-  .arc-stream i{
-    position:absolute;left:0;top:0;width:6px;height:6px;margin:-3px 0 0 -3px;border-radius:50%;
-    opacity:0;animation:arcStreamFlow 2.4s linear infinite;
-  }
-  .arc-stream i:nth-child(even){width:4px;height:4px;margin:-2px 0 0 -2px}
-  .arc-stream i:nth-child(2){animation-delay:.48s}
-  .arc-stream i:nth-child(3){animation-delay:.96s}
-  .arc-stream i:nth-child(4){animation-delay:1.44s}
-  .arc-stream i:nth-child(5){animation-delay:1.92s}
-  .arc-stream .st.path i{background:#22E3D6;box-shadow:0 0 6px rgba(34,227,214,.4)}
-  .arc-stream .st.atk i{background:#ffb347;box-shadow:0 0 6px rgba(255,179,71,.4)}
-  @keyframes arcStreamFlow{
-    0%{transform:translate(0px,0px) scale(1);opacity:0}
-    12%{opacity:.95}
-    70%{opacity:.4}
-    100%{transform:translate(var(--dx,60px),var(--dy,0px)) scale(.45);opacity:0}
-  }
-  .arc-stream .lbl{
-    position:absolute;left:0;top:0;
-    transform:translate(var(--lx,0px),var(--ly,0px)) translate(-50%,-50%);
-    font-style:normal;font-weight:700;font-size:10px;line-height:1;letter-spacing:.08em;
-    text-transform:uppercase;white-space:nowrap;
-    background:rgba(7,12,18,.78);border-radius:6px;padding:3px 6px;
-  }
-  .arc-stream .st.path .lbl{color:#7CF4EA;border:1px solid rgba(34,227,214,.35)}
-  .arc-stream .st.atk .lbl{color:#FFD9A3;border:1px solid rgba(255,179,71,.4)}
-  /* degenerate foreshortening (e.g. path pointing at the camera in DTL):
-     hide the label rather than stack it on the ball */
-  .arc-stream .st.short .lbl{display:none}
-  .arc-stream.paused i{animation-play-state:paused}
-  .arc-stream .hint{display:none}
-  @media (prefers-reduced-motion:reduce){
-    .arc-stream i{display:none}
-    .arc-stream .hint{
-      display:block;position:absolute;left:0;top:-1px;width:46px;height:2px;border-radius:1px;
-      transform:rotate(var(--ang,0deg));transform-origin:0 50%;
-    }
-    .arc-stream .st.path .hint{background:linear-gradient(90deg, rgba(34,227,214,0), rgba(34,227,214,.9))}
-    .arc-stream .st.atk .hint{background:linear-gradient(90deg, rgba(255,179,71,0), rgba(255,179,71,.9))}
-  }
+  .delivery-lines .tag.path{fill:#A9CFFF}
+  .delivery-lines .tag.atk{fill:#FFD9A3}
 
   /* freemium "N free shots left" nudge pill */
   .sa-nudge{
@@ -480,30 +439,21 @@
   <div class="facezoom-chip" id="faceZoomChip" aria-hidden="true"></div>
   <div class="facezoom-hint" id="faceZoomHint" role="status" aria-live="polite">Tap to continue ▸</div>
 
-  <!-- persistent ATTACK/PATH readout chips (DOM, top-centre) — MOCK: numbers
-       sign-coloured, per-chip tick/pulse animations. sr info lives in #sceneData. -->
-  <div class="hud-chips" aria-hidden="true">
-    <span class="hud-chip atk" id="chipAtk"><span class="sw"></span><span>ATTACK</span> <span class="num" id="chipAtkNum">—</span></span>
-    <span class="hud-chip path" id="chipPath"><span class="sw"></span><span>PATH</span> <span class="num" id="chipPathNum">—</span></span>
-  </div>
-
-  <!-- MOCK round 3 — DUAL attack/path particle streams from the impact point:
-       PATH = ground-projected club-path direction (cyan, PATH-chip colour),
-       ATTACK = full delivery direction incl. the vertical attack pitch
-       (orange, ATTACK-chip colour). Each stream carries a tiny label cue;
-       reduced motion shows a static streak per stream instead of dots. -->
-  <div class="arc-stream" id="arcStream" aria-hidden="true">
-    <span class="st path" id="streamPath">
-      <i></i><i></i><i></i><i></i><i></i>
-      <b class="lbl">Path</b>
-      <u class="hint"></u>
-    </span>
-    <span class="st atk" id="streamAtk">
-      <i></i><i></i><i></i><i></i><i></i>
-      <b class="lbl">Attack</b>
-      <u class="hint"></u>
-    </span>
-  </div>
+  <!-- MOCK round 4 — DELIVERY LINES: two clean 'streker' out of the swing arc
+       at the impact point. ATTACK (solid orange) = the arc's true 3D tangent
+       at impact; PATH (dashed blue) = its ground projection on the turf; the
+       angular gap between them reads as the attack angle. Halos first (they
+       merge into one dark casing), then path, then attack, then the tags —
+       so both coloured strokes stay visible where the lines converge at the
+       ball. Decorative: values are announced in #sceneData. -->
+  <svg class="delivery-lines" id="deliveryLines" aria-hidden="true">
+    <line id="dlPathHalo" class="halo path" visibility="hidden"/>
+    <line id="dlAtkHalo" class="halo" visibility="hidden"/>
+    <line id="dlPath" class="ln path" visibility="hidden"/>
+    <line id="dlAtk" class="ln atk" visibility="hidden"/>
+    <text id="dlPathTag" class="tag path" text-anchor="middle" visibility="hidden">Path</text>
+    <text id="dlAtkTag" class="tag atk" text-anchor="middle" visibility="hidden">Attack</text>
+  </svg>
 
   <!-- freemium nudge pill -->
   <div class="sa-nudge" id="saNudge" hidden aria-hidden="true"></div>
@@ -767,7 +717,7 @@ function init3d() {
   rebuild3d();
   sa3d.invalidate();
 
-  addEventListener('resize', () => { refreshSchematic(); sa3d.invalidate(); updateStream(); restyleActiveSlider(); });
+  addEventListener('resize', () => { refreshSchematic(); sa3d.invalidate(); updateDeliveryLines(); restyleActiveSlider(); });
 
   // Re-measure the schematic when the CARD's geometry shifts without a
   // window resize (font load re-wrap, turf line appearing) — mirrors
@@ -815,7 +765,7 @@ function rebuild3d() {
     arc3d.coreMat.uniforms.uProgress.value = 1;
     arc3d.glowMat.uniforms.uProgress.value = 1;
   }
-  updateStream();
+  updateDeliveryLines();
   sa3d.invalidate();
 }
 
@@ -1023,44 +973,10 @@ function updateStrikeDetail(stateRef) {
   draw.innerHTML = parts.join('');
 }
 
-const els = {
-  chipAtk: $('chipAtk'), chipAtkNum: $('chipAtkNum'),
-  chipPath: $('chipPath'), chipPathNum: $('chipPathNum'),
-};
-
-// ── MOCK chip animation state: per-chip, purely off its OWN value (the
-// physics couples Plane/Direction/Lowpoint, so no attribution is attempted).
-// tick-flash on whole-degree change, sign-pulse on sign flip (pulse beats the
-// coincident tick). Counters are exposed via window.__sa.mock for tests.
-const chipAnim = {
-  atk: { round: null, sign: null, ticks: 0, pulses: 0 },
-  path: { round: null, sign: null, ticks: 0, pulses: 0 },
-};
-function retriggerClass(el, cls) {
-  el.classList.remove('tick-flash', 'sign-pulse');
-  void el.offsetWidth; // restart CSS animation
-  el.classList.add(cls);
-}
-function updateChip(cs, v, chipEl, numEl) {
-  numEl.textContent = fmtSigned(v);
-  const neg = v < 0;
-  numEl.classList.toggle('neg', neg);
-  numEl.classList.toggle('pos', !neg);
-  const rounded = Math.round(v);
-  const sign = v < 0 ? -1 : 1;
-  if (cs.sign !== null && sign !== cs.sign) {
-    cs.pulses++;
-    if (!reduce) retriggerClass(chipEl, 'sign-pulse');
-  } else if (cs.round !== null && rounded !== cs.round) {
-    cs.ticks++;
-    if (!reduce) retriggerClass(chipEl, 'tick-flash');
-  }
-  cs.round = rounded; cs.sign = sign;
-}
-
-const fmtSigned = v => (v >= 0 ? '+' : '−') + Math.abs(v).toFixed(1) + '°';
-
-// ── strike readout: sr-only live region + HUD chips ───────────────────────
+// ── strike readout: sr-only live region ───────────────────────────────────
+// ROUND 4: the ATTACK/PATH value chips are GONE and the delivery lines are
+// decorative (aria-hidden) — this region is now the ONLY carrier of the
+// attack-angle and club-path VALUES, spelled out in words. Do not delete.
 function renderReadout() {
   // ROUND 3 (tasks 1+2): the live region announces the corrected DISPLAY
   // band (no % — pct is computed but never shown).
@@ -1088,14 +1004,15 @@ function renderReadout() {
     const turfCmR = Math.round(entryR.x * 100);
     turfDesc = ` Turf contact ${Math.abs(turfCmR)} cm ${turfCmR <= 0 ? 'before' : 'after'} the ball.`;
   }
+  // ROUND 4: direction words (up/down, in-to-out/out-to-in) instead of bare
+  // signed numbers — the values must read unambiguously as speech.
+  const atkDir = Math.abs(di.attackAngle) < 0.05 ? 'level' : (di.attackAngle > 0 ? 'up' : 'down');
+  const pathDir = Math.abs(di.clubPath) < 0.05 ? 'neutral' : (di.clubPath > 0 ? 'in to out' : 'out to in');
   $('sceneData').textContent =
     `Strike ${disp.label}. Plane angle ${state.planeAngle} degrees. ` +
-    `Attack angle ${di.attackAngle.toFixed(1)} degrees ${di.attackAngle >= 0 ? 'up' : 'down'}. ` +
-    `Club path ${di.clubPath.toFixed(1)} degrees. Low point ${lpDesc}. Ball position ${bpDesc}. ` +
+    `Attack angle ${Math.abs(di.attackAngle).toFixed(1)} degrees ${atkDir}. ` +
+    `Club path ${Math.abs(di.clubPath).toFixed(1)} degrees ${pathDir}. Low point ${lpDesc}. Ball position ${bpDesc}. ` +
     `Strike ${mmDesc}.` + turfDesc;
-
-  updateChip(chipAnim.atk, di.attackAngle, els.chipAtk, els.chipAtkNum);
-  updateChip(chipAnim.path, di.clubPath, els.chipPath, els.chipPathNum);
 }
 
 // ── init ──────────────────────────────────────────────────────────────────
@@ -1103,12 +1020,10 @@ const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 renderReadout();
 
 // ── fade the control surfaces during play for a clean ball-strike view ────
-// a11y (Major 1): .hud-chips is IN this list — during playback/face-zoom the
-// white ball fills the frame behind the semi-transparent chip plates and the
-// sign-coloured values would drop to ~2:1 contrast; fading them with the rest
-// keeps the low-alpha resting plate AND the AA contrast (values are static
-// mid-swing anyway).
-const CONTROL_SEL = '.controls, .tune, .modnav, .strike-detail, .arc-stream, .hud-chips';
+// ROUND 4: .delivery-lines joins the hide-list (replacing .arc-stream +
+// .hud-chips, both gone) — the lines fade out with the other overlays during
+// playback/face-zoom and come back when the controls do.
+const CONTROL_SEL = '.controls, .tune, .modnav, .strike-detail, .delivery-lines';
 // a11y (Major 2): faded controls must leave the tab order — opacity:0 alone
 // keeps them focusable/operable invisibly. On hide-complete we set
 // visibility:hidden; if focus is inside a hidden control we stash it and park
@@ -1166,7 +1081,7 @@ function animate3dView(toView) {
     Object.assign(sa3d.rig, pose);
     sa3d.applyRig();
     sa3d.invalidate();
-    updateStream();
+    updateDeliveryLines();
     if (gc3d) gc3d.update(engineState, sa3d.camera, $('scene3d'));
     return;
   }
@@ -1174,7 +1089,7 @@ function animate3dView(toView) {
   sa3d.startTicking();
   viewTween3d = gsap.to(sa3d.rig, {
     ...pose, duration: 0.7, ease: 'power2.inOut',
-    onUpdate: () => { sa3d.applyRig(); updateStream(); },
+    onUpdate: () => { sa3d.applyRig(); updateDeliveryLines(); },
     onComplete: () => {
       viewTween3d = null; sa3d.stopTicking();
       if (gc3d) gc3d.update(engineState, sa3d.camera, $('scene3d'));
@@ -1304,23 +1219,30 @@ const syncers = [
 ];
 
 // ── ghost arc (frozen snapshot on drag start) + shimmer on release ─────────
+// ROUND 4: while dragging, the delivery lines get a subtle emphasis
+// (.dragging → full stroke opacity, CSS only; the global reduced-motion rule
+// kills the transition so it snaps there).
+const dlDragging = (on) => { const el = $('deliveryLines'); if (el) el.classList.toggle('dragging', on); };
 ['s_plane', 's_dir', 's_lpx', 's_lpz', 's_bp'].forEach(id => {
   const el = $(id);
   el.addEventListener('pointerdown', () => {
     if (!arc3d) return;
     arc3d.snapshotGhost();
     sa3d.invalidate();
+    dlDragging(true);
     if (delivery3d) delivery3d.setDragging(true, window.gsap, reduceMotion3d);
   });
   el.addEventListener('pointerup', () => {
     if (!arc3d) return;
     arc3d.fadeGhost(window.gsap, reduceMotion3d);
     if (plane3d) plane3d.shimmer(window.gsap, reduceMotion3d);
+    dlDragging(false);
     if (delivery3d) delivery3d.setDragging(false, window.gsap, reduceMotion3d);
   });
   el.addEventListener('pointercancel', () => {
     if (!arc3d) return;
     arc3d.fadeGhost(window.gsap, reduceMotion3d);
+    dlDragging(false);
     if (delivery3d) delivery3d.setDragging(false, window.gsap, reduceMotion3d);
   });
 });
@@ -1384,66 +1306,122 @@ function projectToScreen(x, y, z) {
     y: rect.top + (-_hv.y * 0.5 + 0.5) * rect.height,
   };
 }
-// ── MOCK round 3 (task 4) — DUAL ATTACK/PATH PARTICLE STREAMS (DOM/CSS only).
-// Both streams emit FROM the impact point (engine arcPosition(thetaAtImpact),
-// stance-shifted — horizontally AT the ball per FIX L) and are decomposed
-// from the same live engine direction the round-2 resultant used
-// (delivery3d.dir() = normalize(tangentAt(thetaAtImpact))):
-//   PATH   — the GROUND-PROJECTED direction (d.x, d.y, 0 normalized): the
-//            club-path azimuth, flowing along the turf (cyan, PATH chip hue);
-//   ATTACK — the full 3D direction (same azimuth + the vertical pitch, which
-//            IS the attack angle; descending strikes flow visibly downward)
-//            (orange, ATTACK chip hue).
-// Each stream sets its own --dx/--dy (dot travel), --ang (reduced-motion
-// static streak) and --lx/--ly (the 10px "Path"/"Attack" label cue, placed
-// ~72% along the travel). Everything is re-projected (world→screen) on every
-// rebuild/slider input/camera orbit; motion is pure CSS keyframes, so the
-// renderer stays render-on-demand. A stream foreshortened to <30px on screen
-// (e.g. path pointing at the camera in DTL) hides its label (.short). ──────
-const STREAM_TRAVEL_M = 0.5;
-const STREAM_MIN_LABEL_PX = 30;
-function updateStream() {
-  const el = $('arcStream');
-  if (!el || !sa3d) return;
+// ── MOCK round 4 — DELIVERY LINES ('streker', owner direction 2026-07-09).
+// Two clean lines out of the swing arc at the impact point (engine
+// arcPosition(thetaAtImpact), stance-shifted — horizontally AT the ball per
+// FIX L), replacing the round-3 particle streams AND the value chips:
+//   ATTACK — the arc's TRUE 3D tangent at impact,
+//            normalize(tangentAt(thetaAtImpact(state))) — yaw = club path,
+//            pitch = attack angle, no visual gain (1:1 honest): "the
+//            direction the swing arc has exactly at ball impact";
+//   PATH   — the same tangent GROUND-PROJECTED onto the turf (z dropped,
+//            renormalized): the pure club-path heading. The angular GAP
+//            between the two lines reads as the attack angle.
+// SCREEN-SPACE clamping (A5): the impact point + a far point along each
+// world direction are projected through the live camera — the far point is
+// first clamped against the camera's near plane so it can never flip behind
+// the eye (path can point AT the camera in FACE view at out-to-in settings)
+// — then the 2D segment is clipped to the frame rect (small margin; the
+// bottom edge additionally clears the carousel rail). A straight 3D ray
+// projects to a straight 2D segment, so direction is always exact and the
+// length is dynamic: across the image, never off it. Under strong DTL
+// foreshortening the segment honestly shortens toward its vanishing point
+// and the tag hides below DL_MIN_TAG_PX. Re-projected on every slider
+// input / camera orbit / resize; pure DOM attribute writes — no scene
+// objects, no renders (render-on-demand stays intact), nothing animates
+// (reduced motion shows the identical static lines).
+const DL_FAR_M = 30;          // far-point distance: "across the image", frame-clipped
+const DL_MARGIN = 10;         // frame inset, px
+const DL_RAIL_CLEAR = 8;      // extra clearance above the carousel rail, px
+const DL_MIN_TAG_PX = 48;     // hide a line's tag when its visible run is shorter
+const DL_NEAR_M = 0.25;       // min depth in front of the camera for the far point
+const _dlFwd = new THREE.Vector3();
+// Liang–Barsky segment/rect clip → clipped segment or null when fully outside.
+function clipSegToRect(p0, p1, r) {
+  let t0 = 0, t1 = 1;
+  const dx = p1.x - p0.x, dy = p1.y - p0.y;
+  const p = [-dx, dx, -dy, dy];
+  const q = [p0.x - r.x0, r.x1 - p0.x, p0.y - r.y0, r.y1 - p0.y];
+  for (let i = 0; i < 4; i++) {
+    if (Math.abs(p[i]) < 1e-9) { if (q[i] < 0) return null; continue; }
+    const t = q[i] / p[i];
+    if (p[i] < 0) { if (t > t1) return null; if (t > t0) t0 = t; }
+    else { if (t < t0) return null; if (t < t1) t1 = t; }
+  }
+  return { x0: p0.x + t0 * dx, y0: p0.y + t0 * dy, x1: p0.x + t1 * dx, y1: p0.y + t1 * dy };
+}
+// far point = origin + dir·t with t clamped so the point stays ≥ DL_NEAR_M in
+// front of the camera (projection through/behind the eye plane flips signs).
+function dlFarPoint(o, dir) {
+  sa3d.camera.getWorldDirection(_dlFwd);
+  const cp = sa3d.camera.position;
+  const depth0 = (o.x - cp.x) * _dlFwd.x + (o.y - cp.y) * _dlFwd.y + (o.z - cp.z) * _dlFwd.z;
+  const dd = dir.x * _dlFwd.x + dir.y * _dlFwd.y + dir.z * _dlFwd.z;
+  let t = DL_FAR_M;
+  if (dd < -1e-9) {
+    const tNear = (DL_NEAR_M - depth0) / dd; // t where the ray crosses the near guard
+    if (tNear > 0.05) t = Math.min(t, tNear * 0.98);
+  }
+  return { x: o.x + dir.x * t, y: o.y + dir.y * t, z: o.z + dir.z * t };
+}
+function updateDeliveryLines() {
+  const svg = $('deliveryLines');
+  if (!svg || !sa3d) return;
   const th0 = thetaAtImpact(engineState);
   const impact = arcPosition(th0, engineState); // engine frame: horizontally AT the ball (FIX L)
   const ox = impact.x + state.ballPosition, oy = impact.y;
-  const ozContact = Math.max(impact.z, 0) + 0.004; // contact height (attack stream origin)
-  const ozGround = 0.004;                          // turf level (path stream origin)
-  const bp = projectToScreen(ox, oy, ozContact);
-  el.style.left = bp.x.toFixed(1) + 'px';
-  el.style.top = bp.y.toFixed(1) + 'px';
-  const d = delivery3d ? delivery3d.dir() : { x: 1, y: 0, z: 0 };
-  const hm = Math.hypot(d.x, d.y) || 1;
-  // PATH lives ON the ground plane (it is the ground-projected component);
-  // ATTACK leaves the contact point itself. The vertical origin split keeps
-  // the two streams tellable-apart even at near-zero attack angles, and the
-  // staggered label fractions stop the two cues from stacking.
-  const STREAMS = [
-    { id: 'streamPath', dir: { x: d.x / hm, y: d.y / hm, z: 0 }, oz: ozGround, frac: 0.55 },
-    { id: 'streamAtk', dir: d, oz: ozContact, frac: 0.95 },
+  const ozContact = Math.max(impact.z, 0) + 0.004; // contact height (attack line origin)
+  const ozGround = 0.004;                          // turf level (path line origin)
+  const t = tangentAt(th0, engineState);           // A3 — the true impact tangent
+  const tlen = Math.hypot(t.x, t.y, t.z) || 1;
+  const d = { x: t.x / tlen, y: t.y / tlen, z: t.z / tlen };
+  const hm = Math.hypot(d.x, d.y);
+  const dg = hm > 1e-6 ? { x: d.x / hm, y: d.y / hm, z: 0 } : { x: 1, y: 0, z: 0 }; // A4 — ground projection
+  // frame rect: small margin all around; bottom additionally clears the
+  // always-visible carousel rail (measured live so safe-area insets count —
+  // visibility:hidden during playback still keeps the layout box).
+  const tuneEl = $('tune');
+  const railTop = tuneEl ? tuneEl.getBoundingClientRect().top : (innerHeight - 66);
+  const rect = {
+    x0: DL_MARGIN, y0: DL_MARGIN,
+    x1: innerWidth - DL_MARGIN,
+    y1: Math.min(innerHeight - DL_MARGIN, railTop - DL_RAIL_CLEAR),
+  };
+  // The vertical origin split (turf vs contact height) keeps the two lines
+  // tellable-apart at near-zero attack; the staggered tag fractions + the
+  // opposite perpendicular sides stop the two tags from stacking when the
+  // lines nearly coincide.
+  const LINES = [
+    { line: 'dlPath', halo: 'dlPathHalo', tag: 'dlPathTag', o: { x: ox, y: oy, z: ozGround }, dir: dg, frac: 0.60, side: 1 },
+    { line: 'dlAtk', halo: 'dlAtkHalo', tag: 'dlAtkTag', o: { x: ox, y: oy, z: ozContact }, dir: d, frac: 0.85, side: -1 },
   ];
-  for (const cfg of STREAMS) {
-    const st = $(cfg.id);
-    if (!st) continue;
-    const s0 = projectToScreen(ox, oy, cfg.oz);
-    const t = projectToScreen(ox + cfg.dir.x * STREAM_TRAVEL_M, oy + cfg.dir.y * STREAM_TRAVEL_M, cfg.oz + cfg.dir.z * STREAM_TRAVEL_M);
-    const dx = t.x - s0.x, dy = t.y - s0.y;
-    st.style.left = (s0.x - bp.x).toFixed(1) + 'px';
-    st.style.top = (s0.y - bp.y).toFixed(1) + 'px';
-    st.style.setProperty('--dx', dx.toFixed(1) + 'px');
-    st.style.setProperty('--dy', dy.toFixed(1) + 'px');
-    st.style.setProperty('--ang', (Math.atan2(dy, dx) * 180 / Math.PI).toFixed(1) + 'deg');
-    st.style.setProperty('--lx', (dx * cfg.frac).toFixed(1) + 'px');
-    st.style.setProperty('--ly', (dy * cfg.frac).toFixed(1) + 'px');
-    st.classList.toggle('short', Math.hypot(dx, dy) < STREAM_MIN_LABEL_PX);
+  for (const cfg of LINES) {
+    const ln = $(cfg.line), halo = $(cfg.halo), tag = $(cfg.tag);
+    if (!ln) continue;
+    const p0 = projectToScreen(cfg.o.x, cfg.o.y, cfg.o.z);
+    const fp = dlFarPoint(cfg.o, cfg.dir);
+    const p1 = projectToScreen(fp.x, fp.y, fp.z);
+    const seg = clipSegToRect(p0, p1, rect);
+    for (const el of [ln, halo]) {
+      if (!el) continue;
+      if (!seg) { el.setAttribute('visibility', 'hidden'); continue; }
+      el.removeAttribute('visibility');
+      el.setAttribute('x1', seg.x0.toFixed(1)); el.setAttribute('y1', seg.y0.toFixed(1));
+      el.setAttribute('x2', seg.x1.toFixed(1)); el.setAttribute('y2', seg.y1.toFixed(1));
+    }
+    if (!tag) continue;
+    const len = seg ? Math.hypot(seg.x1 - seg.x0, seg.y1 - seg.y0) : 0;
+    if (!seg || len < DL_MIN_TAG_PX) { tag.setAttribute('visibility', 'hidden'); continue; }
+    tag.removeAttribute('visibility');
+    const ux = (seg.x1 - seg.x0) / len, uy = (seg.y1 - seg.y0) / len;
+    let px = -uy, py = ux;                       // unit perpendicular
+    if (cfg.side * py < 0) { px = -px; py = -py; } // attack above the line, path below
+    const tx = seg.x0 + (seg.x1 - seg.x0) * cfg.frac + px * 11;
+    const ty = seg.y0 + (seg.y1 - seg.y0) * cfg.frac + py * 11 + 3.5; // +3.5 ≈ half cap height
+    tag.setAttribute('x', Math.max(rect.x0 + 22, Math.min(rect.x1 - 22, tx)).toFixed(1));
+    tag.setAttribute('y', Math.max(rect.y0 + 9, Math.min(rect.y1 - 3, ty)).toFixed(1));
   }
 }
-// pause the ambient loop while the tab is hidden (challenge 2 constraint)
-document.addEventListener('visibilitychange', () => {
-  const el = $('arcStream');
-  if (el) el.classList.toggle('paused', document.hidden);
-});
 
 // ── controls ──────────────────────────────────────────────────────────────
 $('viewBtn').addEventListener('click', () => {
@@ -1758,11 +1736,6 @@ window.__sa = Object.assign(window.__sa || {}, {
     thetaAtImpact: () => thetaAtImpact(engineState),
     activeTab: () => activeTabId,
     selectTab: (id) => selectTab(id),
-    chipAnim: () => ({
-      atk: { ...chipAnim.atk }, path: { ...chipAnim.path },
-      atkClasses: els.chipAtk.className, pathClasses: els.chipPath.className,
-      atkText: els.chipAtkNum.textContent, pathText: els.chipPathNum.textContent,
-    }),
     // ROUND 3 (task 3): handleRect/handleAria are GONE with the drag handle;
     // ball position is asserted through the s_bp slider + shiftX/ballMeshX.
     shiftX: () => (shift3d ? shift3d.position.x : null),
@@ -1851,24 +1824,36 @@ window.__sa = Object.assign(window.__sa || {}, {
       };
     },
     addressBlend: () => (timeline3d ? timeline3d._internal.addressBlend.b : null),
-    streamVars: () => {
-      const el = $('arcStream');
-      if (!el) return null;
-      const read = (id) => {
-        const st = $(id);
-        if (!st) return null;
-        const cs = st.style;
+    // ROUND 4 — delivery-line verification hook: endpoints (CSS px), screen
+    // angle, visible length, tag state per line + the clip frame used.
+    deliveryLines: () => {
+      const svg = $('deliveryLines');
+      if (!svg) return null;
+      const read = (lnId, tagId) => {
+        const ln = $(lnId), tag = $(tagId);
+        if (!ln) return null;
+        const x1 = +ln.getAttribute('x1'), y1 = +ln.getAttribute('y1');
+        const x2 = +ln.getAttribute('x2'), y2 = +ln.getAttribute('y2');
         return {
-          dx: cs.getPropertyValue('--dx'), dy: cs.getPropertyValue('--dy'),
-          ang: cs.getPropertyValue('--ang'), lx: cs.getPropertyValue('--lx'), ly: cs.getPropertyValue('--ly'),
-          short: st.classList.contains('short'),
-          label: (st.querySelector('.lbl') || {}).textContent || null,
-          dots: st.querySelectorAll('i').length,
+          visible: ln.getAttribute('visibility') !== 'hidden',
+          x1, y1, x2, y2,
+          angleDeg: +(Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI).toFixed(2),
+          lengthPx: +Math.hypot(x2 - x1, y2 - y1).toFixed(1),
+          tagVisible: tag ? tag.getAttribute('visibility') !== 'hidden' : null,
+          tagText: tag ? tag.textContent : null,
+          tagX: tag ? +tag.getAttribute('x') : null,
+          tagY: tag ? +tag.getAttribute('y') : null,
         };
       };
+      const tuneEl = $('tune');
       return {
-        left: el.style.left, top: el.style.top, paused: el.classList.contains('paused'),
-        path: read('streamPath'), attack: read('streamAtk'),
+        path: read('dlPath', 'dlPathTag'),
+        attack: read('dlAtk', 'dlAtkTag'),
+        dragging: svg.classList.contains('dragging'),
+        frame: {
+          w: innerWidth, h: innerHeight, margin: DL_MARGIN,
+          railTop: tuneEl ? tuneEl.getBoundingClientRect().top : null,
+        },
       };
     },
     // ROUND 3 (task 3): tabs are label-only; expose the labels for asserts.
@@ -1944,7 +1929,7 @@ window.__sa = Object.assign(window.__sa || {}, {
 const COACH_STEPS = [
   { selector: '#viewBtn', title: 'Tilt the view', body: 'Switch between front-on and down-the-line to see the swing plane lean back.' },
   { selector: '#ctabs',   title: 'Adjust the swing', body: 'Pick a parameter — Plane, Direction, Low point, Depth or Ball position — and drag its slider.' },
-  { selector: '#hit',     title: 'Watch the strike', body: 'Press play to run the swing in slow motion and read the path & attack angle at impact.' },
+  { selector: '#hit',     title: 'Watch the strike', body: 'Press play to run the swing in slow motion and see the club meet the ball at impact.' },
 ];
 const COACH_SETTLE_MS = 600;
 
