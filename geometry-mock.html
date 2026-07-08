@@ -886,10 +886,24 @@ function renderReadout() {
     : (Math.abs(effCm) + ' cm ' + (effCm > 0 ? 'ahead of the ball' : 'behind the ball'));
   const bpCm = Math.round(state.ballPosition * 100);
   const bpDesc = bpCm === 0 ? 'centre' : (Math.abs(bpCm) + ' cm ' + (bpCm > 0 ? 'forward' : 'back'));
+  // a11y (Minor 3): the strike height (mm on face) + turf entry are visible in
+  // the inset (#sdFoot / ring position) — announce them here too so the live
+  // region carries full visual parity.
+  const mmVal2 = Math.round(clubBallContact(engineState).offset * 1000);
+  const mmDesc = sq.band === 'Whiff' ? 'no contact'
+    : (Math.abs(mmVal2) < 1.5 ? 'centered on the face' : `${Math.abs(mmVal2)} mm ${mmVal2 > 0 ? 'high' : 'low'} on the face`);
+  const theta0R = groundCrossingTheta0(engineState);
+  let turfDesc = '';
+  if (theta0R != null) {
+    const entryR = arcPosition(-theta0R, engineState);
+    const turfCmR = Math.round(entryR.x * 100);
+    turfDesc = ` Turf contact ${Math.abs(turfCmR)} cm ${turfCmR <= 0 ? 'before' : 'after'} the ball.`;
+  }
   $('sceneData').textContent =
     `Strike ${sq.band}, ${sq.pct}%. Plane angle ${state.planeAngle} degrees. ` +
     `Attack angle ${di.attackAngle.toFixed(1)} degrees ${di.attackAngle >= 0 ? 'up' : 'down'}. ` +
-    `Club path ${di.clubPath.toFixed(1)} degrees. Low point ${lpDesc}. Ball position ${bpDesc}.`;
+    `Club path ${di.clubPath.toFixed(1)} degrees. Low point ${lpDesc}. Ball position ${bpDesc}. ` +
+    `Strike ${mmDesc}.` + turfDesc;
 
   updateChip(chipAnim.atk, di.attackAngle, els.chipAtk, els.chipAtkNum);
   updateChip(chipAnim.path, di.clubPath, els.chipPath, els.chipPathNum);
@@ -900,14 +914,56 @@ const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 renderReadout();
 
 // ── fade the control surfaces during play for a clean ball-strike view ────
-const CONTROL_SEL = '.controls, .tune, .modnav, .strike-detail, .ball-handle, .chip-trail';
+// a11y (Major 1): .hud-chips is IN this list — during playback/face-zoom the
+// white ball fills the frame behind the semi-transparent chip plates and the
+// sign-coloured values would drop to ~2:1 contrast; fading them with the rest
+// keeps the low-alpha resting plate AND the AA contrast (values are static
+// mid-swing anyway).
+const CONTROL_SEL = '.controls, .tune, .modnav, .strike-detail, .ball-handle, .chip-trail, .hud-chips';
+// a11y (Major 2): faded controls must leave the tab order — opacity:0 alone
+// keeps them focusable/operable invisibly. On hide-complete we set
+// visibility:hidden; if focus is inside a hidden control we stash it and park
+// focus on <body>, restoring it when the controls come back.
+let stashedFocus = null;
 function controlsVisible(show) {
   const nodes = document.querySelectorAll(CONTROL_SEL);
-  if (reduce) { nodes.forEach(n => { n.style.opacity = show ? '' : '0'; n.style.pointerEvents = show ? '' : 'none'; }); return; }
+  const hideDone = (n) => {
+    n.style.visibility = 'hidden';
+  };
+  const preHide = () => {
+    const ae = document.activeElement;
+    if (ae && ae !== document.body && [...nodes].some(n => n.contains(ae))) {
+      stashedFocus = ae;
+      ae.blur();
+    }
+  };
+  const postShow = () => {
+    if (stashedFocus && stashedFocus.isConnected) {
+      try { stashedFocus.focus({ preventScroll: true }); } catch (e) {}
+    }
+    stashedFocus = null;
+  };
+  if (show) nodes.forEach(n => { n.style.visibility = ''; });
+  else preHide();
+  if (reduce) {
+    nodes.forEach(n => {
+      n.style.opacity = show ? '' : '0';
+      n.style.pointerEvents = show ? '' : 'none';
+      if (!show) hideDone(n);
+    });
+    if (show) postShow();
+    if (delivery3d) delivery3d.setVisible(show, gsap, reduceMotion3d);
+    return;
+  }
+  let pending = nodes.length;
   nodes.forEach(n => {
     gsap.to(n, { opacity: show ? 1 : 0, duration: show ? 0.4 : 0.3, ease: show ? 'power2.out' : 'power1.in',
       onStart: () => { if (!show) n.style.pointerEvents = 'none'; },
-      onComplete: () => { if (show) { n.style.pointerEvents = ''; n.style.opacity = ''; } } });
+      onComplete: () => {
+        if (show) { n.style.pointerEvents = ''; n.style.opacity = ''; }
+        else hideDone(n);
+        if (show && --pending === 0) postShow();
+      } });
   });
   if (delivery3d) delivery3d.setVisible(show, gsap, reduceMotion3d);
 }
@@ -1023,7 +1079,12 @@ function bind(id, get, fmt) {
   };
   // NOTE (mock): syncEngine() runs SYNCHRONOUSLY here (not deferred to the
   // applyLive rAF) so the haptics listener below reads a fresh engineState.
-  el.addEventListener('input', () => { get(+el.value); syncEngine(); sync(); applyLive(); });
+  // a11y (Major 2): ignore input while a swing plays — the controls are faded
+  // out then, and a state change under the running timeline desyncs the scene.
+  el.addEventListener('input', () => {
+    if (timeline3d && timeline3d.isPlaying()) return;
+    get(+el.value); syncEngine(); sync(); applyLive();
+  });
   if (box) {
     let bubbleT = null;
     const showBubble = () => { clearTimeout(bubbleT); box.classList.add('show-bubble'); };
@@ -1179,6 +1240,9 @@ function pxPerMetreAtBall() {
   el.addEventListener('focus', showBubble);
   el.addEventListener('blur', () => el.classList.remove('show-bubble'));
   el.addEventListener('keydown', (e) => {
+    // a11y (Major 2): the handle is faded+hidden during swing playback — a
+    // keyboard nudge then would silently shift the scene under the timeline.
+    if (timeline3d && timeline3d.isPlaying()) return;
     let d = null;
     if (e.key === 'ArrowRight' || e.key === 'ArrowUp') d = BALLPOS_STEP;
     else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') d = -BALLPOS_STEP;
