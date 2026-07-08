@@ -743,12 +743,11 @@
   .fSpeed .ctrl .rwrap{flex:1 1 auto;min-width:0}
 
   /* CHANGE 2: lateral side references (STAGE 5 — demoted to white-alpha neutral:
-     reference geometry, not live-ball data; labels keep a touch more alpha for AA)
-     + offline badge (STAGE 5 keeps the offline badge cyan — it IS live-ball data) */
+     reference geometry, not live-ball data; labels keep a touch more alpha for AA).
+     ROUND 4: the in-canvas offline badge is gone (canvas = apex label only);
+     offline lives in the left hero + the bottom dashboard. */
   #fLatRef line{stroke:rgba(230,240,250,.20)}
   #fLatRef text{fill:rgba(230,240,250,.55);font-family:inherit;font-weight:600}
-  #fOfflineBox{fill:rgba(8,16,20,.72);stroke:rgba(34,227,214,.28)}
-  #fOfflineTxt{fill:#22E3D6;font-family:inherit;font-weight:700}
 
   /* ── rotate hint (portrait) ── */
   .rotate{position:fixed;inset:0;z-index:60;display:none;flex-direction:column;align-items:center;justify-content:center;
@@ -796,45 +795,61 @@
   /* the flight scene IS the page — always open, no scrim transition */
   .flightScrim{opacity:1;visibility:visible;transition:none}
   .flightCard{transform:none;transition:none}
-  /* close button removed → the pill cluster shifts into the corner */
-  .flightReplay{right:max(10px,env(safe-area-inset-right))}
-  .ghostPill{right:calc(max(10px,env(safe-area-inset-right)) + 98px)}
-  .ghostClear{right:calc(max(10px,env(safe-area-inset-right)) + 184px)}
+  /* ROUND 4 (owner): INPUT/OUTPUT ZONE SPLIT. The 6 input chips move to a
+     full-width strip along the TOP edge (.fTop); every other top-anchored
+     overlay (outcome strip / Replay+Ghosts pills / legend / nudge / hero)
+     drops below it via ONE shared clearance, so the input strip never
+     collides with the outcome strip or the right-hand controls. */
+  .flightCard{--fstrip-clear:calc(max(4px,env(safe-area-inset-top)) + 66px)}
+  .flightReplay{right:max(10px,env(safe-area-inset-right));top:var(--fstrip-clear)}
+  .ghostPill{right:calc(max(10px,env(safe-area-inset-right)) + 98px);top:var(--fstrip-clear)}
+  .ghostClear{right:calc(max(10px,env(safe-area-inset-right)) + 184px);top:var(--fstrip-clear)}
+  .fLegend{top:calc(var(--fstrip-clear) + 46px)}
+  .saNudge{top:var(--fstrip-clear)}
+  .outcomeStrip{top:var(--fstrip-clear)}
+  .outcomeStrip.below-nudge{top:calc(var(--fstrip-clear) + 34px)}
+  /* hero stack (Total / Carry / Offline) drops below the input strip */
+  .flightCarry{top:calc(var(--fstrip-clear) + 12px)}
   /* hero stack: small Carry sub-line between TOTAL and offline */
   .flightCarry .carrySub{margin-top:7px;font-size:clamp(10px,2vh,13px);font-weight:700;
     color:var(--ink);font-variant-numeric:tabular-nums;letter-spacing:.02em}
   .flightCarry .carrySub .cl{color:var(--muted);font-weight:600;letter-spacing:.14em;
     text-transform:uppercase;font-size:.82em;margin-right:4px}
-  /* delta label drops a touch to clear the taller hero stack */
-  .fDelta{top:calc(15% + clamp(100px,22vh,136px))}
-  /* L1b FIX: matching override for the now-standalone coach cue (see base
-     .fDeltaCue rule) so it keeps landing directly under the taller hero
-     stack's delta line here too. */
-  .fDeltaCue{top:calc(15% + clamp(100px,22vh,136px) + clamp(16.5px,2.565vh,19.9px))}
+  /* ROUND 4: the visible cause chip-chain + coach-cue line are REMOVED
+     (owner: they landed on top of other things). #fDelta stays in the DOM
+     as the ONE aria-live region carrying the composed coaching sentence
+     (#fDeltaSR, sr-only) — announced on settle exactly as before. */
 
-  /* ── move 1: THE CHIP ROW (replaces the fSpeed block + 4×2 grid) ── */
-  .fBottom{display:block;position:absolute}
+  /* ── ZONE 1 (TOP) — THE INPUT STRIP (round 4; was the bottom chip row).
+     The 6 INPUT chips in one horizontally scrollable full-width strip along
+     the TOP edge, under the safe area. Same chips, same tap→tune-dock
+     behaviour, same roving-tabindex toolbar + the K2/K5 focus handling.
+     Hidden + inert during an animated flight (K1), revealed at the data
+     beat. The OUTPUT chips left the row: results live on the bottom
+     dashboard (.fDash) now. ── */
+  .fTop{position:absolute;z-index:6;left:0;right:0;top:0;
+    padding-top:max(4px,env(safe-area-inset-top));
+    background:linear-gradient(180deg, rgba(5,10,14,.94) 0%, rgba(5,10,14,.74) 72%, rgba(5,10,14,0) 100%);
+    transition:opacity .5s ease, transform .5s ease}
+  .fTop.is-hidden{opacity:0;transform:translateY(-10px);pointer-events:none}
   .chipScroll{overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;
-    scrollbar-width:none;overscroll-behavior-x:contain;border-radius:16px;
-    /* K5 FIX: was 3px 26px 3px 3px — the 3px left/top/bottom padding clipped
-       the focus ring on the first chip, and the left edge-fade (30px wide,
-       decorative, see .fBottom::before below) painted straight over what
-       little ring room there was. Symmetric 6px/26px gives the ring room on
-       every side and enough left padding to clear the fade. Compensating
-       3px shaved off .fBottom's own bottom offset above keeps the chip
-       row's on-screen position unchanged despite the taller box. */
-    padding:6px 26px;scroll-padding:0 26px}
+    scrollbar-width:none;overscroll-behavior-x:contain;
+    /* K5 (carried over): ≥6px vertical + 26px horizontal padding so the
+       first/last chip's focus ring clears the container edge and the
+       decorative edge fades. */
+    padding:6px max(26px,env(safe-area-inset-right)) 8px max(26px,env(safe-area-inset-left));
+    scroll-padding:0 26px}
   .chipScroll::-webkit-scrollbar{display:none}
   .chipRow{display:flex;gap:8px;width:max-content;align-items:stretch}
   /* edge fades — scroll affordance (decorative, pointer-events none) */
-  .fBottom::before,.fBottom::after{content:"";position:absolute;top:0;bottom:0;width:30px;
-    z-index:2;pointer-events:none;border-radius:16px}
-  .fBottom::before{left:0;background:linear-gradient(90deg, rgba(4,10,14,.72), rgba(4,10,14,0))}
-  .fBottom::after{right:0;background:linear-gradient(270deg, rgba(4,10,14,.72), rgba(4,10,14,0))}
+  .fTop::before,.fTop::after{content:"";position:absolute;top:0;bottom:0;width:26px;
+    z-index:2;pointer-events:none}
+  .fTop::before{left:0;background:linear-gradient(90deg, rgba(4,10,14,.72), rgba(4,10,14,0))}
+  .fTop::after{right:0;background:linear-gradient(270deg, rgba(4,10,14,.72), rgba(4,10,14,0))}
   .chip{appearance:none;font-family:inherit;cursor:pointer;position:relative;flex:0 0 auto;
-    display:flex;align-items:center;gap:7px;min-height:48px;padding:6px 13px;color:var(--ink);
+    display:flex;align-items:center;gap:7px;min-height:44px;padding:5px 12px;color:var(--ink);
     background:linear-gradient(180deg, rgba(22,34,50,.88), rgba(12,19,29,.88));
-    border:1px solid rgba(255,255,255,.12);border-radius:13px;
+    border:1px solid rgba(255,255,255,.12);border-radius:12px;
     box-shadow:0 6px 16px rgba(0,0,0,.32), inset 0 1px 0 rgba(255,255,255,.06);
     backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
     transition:transform .12s ease, border-color .15s ease, background .15s ease}
@@ -843,32 +858,68 @@
   .chip:focus-visible{outline:3px solid #fff;outline-offset:2px}
   .chip .ck{font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);
     font-weight:700;white-space:nowrap;line-height:1}
-  .chip .cv{font-size:16px;font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap;
+  .chip .cv{font-size:15px;font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap;
     line-height:1;letter-spacing:-.01em}
-  .chip .cv small{font-size:.6em;color:var(--muted);font-weight:600;margin-left:2px}
-  .chip .cbody{display:flex;flex-direction:column;gap:4px;align-items:flex-start}
+  .chip .cv small{font-size:10px;color:var(--muted);font-weight:600;margin-left:2px}
+  .chip .cbody{display:flex;flex-direction:column;gap:3px;align-items:flex-start}
   /* INPUT chips: coloured dot + coloured baseline + tune glyph — visibly a control */
   .chip.input{border-color:rgba(255,255,255,.18)}
-  .chip.input::after{content:"";position:absolute;left:11px;right:11px;bottom:5px;height:2.5px;
+  .chip.input::after{content:"";position:absolute;left:11px;right:11px;bottom:4px;height:2.5px;
     border-radius:2px;background:var(--pc,var(--accent));opacity:.85}
   .chip.input .cdot{width:8px;height:8px;border-radius:50%;background:var(--pc,var(--accent));
     flex:0 0 auto;box-shadow:0 0 8px color-mix(in srgb, var(--pc,var(--accent)) 60%, transparent)}
   .chip.input .tglyph{color:var(--muted);flex:0 0 auto;display:flex;align-items:center}
   .chip.input[aria-expanded="true"]{border-color:var(--pc,var(--accent));
     background:linear-gradient(180deg, rgba(28,42,60,.92), rgba(14,22,33,.92))}
-  /* OUTPUT chips: muted, chevron → explainer */
-  .chip.output .chev{color:var(--muted);font-weight:800;font-size:13px;opacity:.6;line-height:1}
-  .chip .esttag{font-size:8px;font-weight:800;letter-spacing:.08em;color:var(--warn);
+  .chip .esttag{font-size:10px;font-weight:800;letter-spacing:.08em;color:var(--warn);
     border:1px solid rgba(251,191,36,.5);border-radius:4px;padding:1px 4px;line-height:1}
 
-  /* ── move 2: TUNE DOCK — a full-width bottom bar that REPLACES the chip
-     row in place while editing ("the chip becomes its editor"), so the scene
-     + the transient trio stay fully unobstructed above it. ── */
+  /* ── ZONE 3 (BOTTOM) — OUTPUT DASHBOARD (round 4). Read-only result
+     plates in two labelled buckets: HORIZONTAL (side/direction plane):
+     Offline, Curve. VERTICAL (height/distance plane): Launch angle, Apex,
+     Land angle, Spin loft, Carry, Total. NOT a live region and NOT
+     focusable — values update silently on every input; the outcome strip +
+     #fDeltaSR remain the only announcers. Hidden until the data-reveal
+     beat; the tune dock opens ABOVE it (never over it) so the outputs are
+     always visible while dragging — "the output lies on the slider". ── */
+  .fDash{position:absolute;z-index:5;
+    left:max(12px,env(safe-area-inset-left));right:max(12px,env(safe-area-inset-right));
+    bottom:max(10px,env(safe-area-inset-bottom));
+    display:flex;align-items:stretch;gap:8px;
+    transition:opacity .5s ease, transform .5s ease}
+  .fDash.is-hidden{opacity:0;transform:translateY(12px);pointer-events:none}
+  .dashGroup{border-radius:14px;padding:6px 12px 8px;min-width:0;
+    background:linear-gradient(180deg, rgba(20,32,48,.9), rgba(11,17,26,.9));
+    border:1px solid rgba(255,255,255,.12);
+    box-shadow:0 8px 22px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,255,255,.06);
+    backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px)}
+  .dashGroup.h{flex:0 0 auto}
+  .dashGroup.v{flex:1 1 auto}
+  .dgLab{font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--muted);margin-bottom:4px;white-space:nowrap;line-height:1.1}
+  .dgTiles{display:flex;gap:14px;justify-content:space-between;min-width:0}
+  .dTile{display:flex;flex-direction:column;gap:2px;min-width:0}
+  .dTile .dk{font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;
+    color:var(--muted);white-space:nowrap;line-height:1.1}
+  .dTile .dv{font-size:15.5px;font-weight:800;font-variant-numeric:tabular-nums;
+    color:var(--ink);white-space:nowrap;letter-spacing:-.01em;line-height:1.1}
+  .dTile .dv small{font-size:10.5px;color:var(--muted);font-weight:600;margin-left:1px}
+  /* distance emphasis inside Vertical (owner's nod): Carry/Total in the
+     live-ball cyan — every plate here IS live-shot data, so the colour law
+     (cyan = live ball + its data only) holds. */
+  .dTile.dist .dv{color:var(--accent);text-shadow:0 0 12px rgba(34,227,214,.3)}
+  @media (prefers-reduced-motion:reduce){ .fTop,.fDash{transition:none} }
+
+  /* ── move 2: TUNE DOCK — a full-width transient editor bar. ROUND 4: it
+     opens ABOVE the bottom OUTPUT dashboard (never over it) so the golfer
+     watches the results change directly under the slider while dragging.
+     --dash-clear = the dashboard's live height + gap, measured by
+     placeDock() (CSS fallback 72px). ── */
   .tuneDock{position:absolute;z-index:7;
-    left:max(3.4%,env(safe-area-inset-left));right:max(3.4%,env(safe-area-inset-right));
-    bottom:max(3.4%,env(safe-area-inset-bottom));
+    left:max(12px,env(safe-area-inset-left));right:max(12px,env(safe-area-inset-right));
+    bottom:calc(max(10px,env(safe-area-inset-bottom)) + var(--dash-clear,72px));
     display:flex;align-items:center;gap:12px;
-    padding:8px 13px;border-radius:16px;
+    padding:5px 13px;border-radius:16px;
     background:rgba(10,17,24,.94);border:1px solid rgba(255,255,255,.18);
     box-shadow:0 14px 34px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.07);
     backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
@@ -880,7 +931,7 @@
   .tuneDock .tdName{font-size:10.5px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;
     color:var(--pc,var(--accent));white-space:nowrap}
   .tuneDock .tdVal{font-size:16px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--ink);white-space:nowrap}
-  .tuneDock .tdEst{align-self:flex-start;font-size:8.5px;font-weight:800;letter-spacing:.08em;color:var(--warn);
+  .tuneDock .tdEst{align-self:flex-start;font-size:10px;font-weight:800;letter-spacing:.08em;color:var(--warn);
     border:1px solid rgba(251,191,36,.5);border-radius:4px;padding:1.5px 5px;line-height:1}
   .tuneDock #tdParamCtrl{flex:1 1 auto;min-width:0}
   .tuneDock #tdWindCtrl{flex:1 1 auto;min-width:0}
@@ -922,9 +973,11 @@
   .ovTrio .ovChip text{font-size:17px;font-weight:800;font-variant-numeric:tabular-nums;font-family:inherit}
   @media (prefers-reduced-motion:reduce){ .ovTrio{transition:none} }
 
-  /* ── move 4: wind scene tag (decorative — the chip carries the value) ── */
-  .windTag{position:absolute;z-index:5;left:max(3.4%,env(safe-area-inset-left));
-    bottom:calc(max(3.4%,env(safe-area-inset-bottom)) + 74px);
+  /* ── move 4: wind scene tag (decorative — the chip carries the value).
+     ROUND 4: sits just above the output dashboard, left side; hidden while
+     the tune dock is open (the dock lands in the same band). ── */
+  .windTag{position:absolute;z-index:5;left:max(12px,env(safe-area-inset-left));
+    bottom:calc(max(10px,env(safe-area-inset-bottom)) + var(--dash-clear,72px));
     height:26px;padding:0 11px;border-radius:999px;pointer-events:none;
     border:1px solid rgba(251,191,36,.45);background:rgba(10,17,24,.8);color:var(--warn);
     font-size:10.5px;font-weight:700;letter-spacing:.04em;white-space:nowrap;
@@ -1164,6 +1217,29 @@
   <div class="flightScrim" id="flightScrim">
     <!-- VIZ MOCK: the scene is the PAGE — no dialog role, no close button. -->
     <div class="flightCard" id="flightCard" aria-label="Ball flight range">
+      <!-- ══ ROUND 4 ZONE 1 — INPUT STRIP (top edge): the 6 input chips,
+           built by buildChipRow() into #chipRow (roving tabindex toolbar,
+           tap → tune dock). FIRST in the DOM so the tab/reading order is
+           inputs → outcome strip → right-hand controls → scene. ══ -->
+      <div class="fTop is-hidden" id="fInputStrip">
+        <div class="chipScroll" id="chipScroll">
+          <div class="chipRow" id="chipRow" role="toolbar" aria-orientation="horizontal"
+               aria-label="Shot inputs. Each chip opens an editor. Use left and right arrow keys to move"></div>
+        </div>
+      </div>
+      <!-- OUTCOME MOCK move 1: outcome strip — the WHOLE strip is the expand
+           button (≥44px, aria-expanded). ROUND 4: placed right after the
+           input strip in the DOM (inputs → outcome → controls tab order).
+           Icons are aria-hidden; the button's aria-label composes the
+           factual outcome + the reference. -->
+      <button class="outcomeStrip is-hidden" id="outcomeStrip" type="button" hidden
+              aria-expanded="false" aria-controls="osPanel">
+        <span class="osLine"><span class="osLab">Total</span><span class="osVal neu" id="osTotVal">+0 m</span></span>
+        <span class="osLine"><span class="osIco good" id="osLatIco" aria-hidden="true">✓</span><span class="osVal neu" id="osLatVal">0 m</span><span class="osLab" id="osLatLab">closer to line</span></span>
+      </button>
+      <!-- expanded view: the full coaching sentence, visually (same text the
+           #fDelta live region announces — this panel is NOT a live region) -->
+      <div class="osPanel" id="osPanel" hidden></div>
       <button class="flightReplay" id="flightReplay" type="button"><span aria-hidden="true">↻</span> Replay</button>
       <!-- MONETIZATION: discreet free-shots-remaining nudge (hidden by default;
            refreshNudge() shows it only in the last 1-2 free shots). Static text,
@@ -1177,19 +1253,6 @@
         <button class="fChip fChip-pin" id="fPinBtn" type="button" aria-pressed="false"
           aria-label="Pin current shot as baseline"><span class="pinGlyph" aria-hidden="true">⊙</span><span id="fPinTxt">Pin</span></button>
       </div>
-      <!-- OUTCOME MOCK move 1: outcome strip — the WHOLE strip is the expand
-           button (≥44px, aria-expanded). Placed in DOM AFTER the legend so it
-           lands after the legend chips in the overlay's tab order. Icons are
-           aria-hidden; the button's aria-label composes the factual outcome +
-           the reference, so the name never depends on colour or glyphs. -->
-      <button class="outcomeStrip is-hidden" id="outcomeStrip" type="button" hidden
-              aria-expanded="false" aria-controls="osPanel">
-        <span class="osLine"><span class="osLab">Total</span><span class="osVal neu" id="osTotVal">+0 m</span></span>
-        <span class="osLine"><span class="osIco good" id="osLatIco" aria-hidden="true">✓</span><span class="osVal neu" id="osLatVal">0 m</span><span class="osLab" id="osLatLab">closer to line</span></span>
-      </button>
-      <!-- expanded view: the full coaching sentence, visually (same text the
-           #fDelta live region announces — this panel is NOT a live region) -->
-      <div class="osPanel" id="osPanel" hidden></div>
       <!-- LEFT HERO STACK (Layout B): big TOTAL count-up + offline only.
            Visual hero is aria-hidden (updates every frame); #fCarryLive is the ONLY live region. -->
       <div class="flightCarry" aria-hidden="true">
@@ -1201,29 +1264,14 @@
       </div>
       <!-- move 4: wind scene tag — decorative duplicate of the wind chip's value -->
       <div class="windTag" id="windTag" hidden aria-hidden="true"></div>
-      <!-- STAGE 3 → OUTCOME MOCK move 3: the micro-label's plain-text cause line
-           is now the CAUSE CHIP-CHAIN (visual, aria-hidden — chips inside an
-           aria-hidden subtree are never announced by the live region). The old
-           dl2 effect line is ABSORBED by the outcome strip (move 1). #fDelta
-           stays the ONE aria-live region: what it announces per landing is the
-           composed coaching sentence written into #fDeltaSR. -->
+      <!-- ROUND 4: the VISIBLE cause chip-chain (#fDeltaCause) + coach-cue
+           line (#flightCoachCue) are REMOVED (owner: they landed on top of
+           other things). #fDelta remains the ONE aria-live region: on settle
+           it still announces the SAME composed coaching sentence via
+           #fDeltaSR (sr-only) — no screen-reader information was lost. -->
       <div class="fDelta is-hidden" id="fDelta" aria-live="polite" hidden>
-        <div class="dl1 chipChain" id="fDeltaCause" aria-hidden="true"></div>
         <span class="sr-only" id="fDeltaSR"></span>
       </div>
-      <!-- FOCUS-MODES: the same main-cause coach cue shown on the Direction/
-           Launch coach lines, live-updated with state (see updateCoachLines
-           in the instrument script). Sits directly under the delta line.
-           L1b FIX: moved OUT of #fDelta (a SIBLING, not a child) — #fDelta is
-           an aria-live region and this cue used to be written exactly once at
-           init, so it stayed permanently stale after any tuning while sitting
-           inside the live region (visually contradicting the fresh chips
-           above it). It is NOT itself a live region: it's refreshed visually
-           by updateCoachLines() on every renderStatic() (see there), and its
-           hidden/is-hidden state is kept in lockstep with #fDelta's by
-           hideDeltaLabel()/showDeltaLabel() so it still only shows when a
-           reference outcome exists. -->
-      <div class="dl3 fDeltaCue" id="flightCoachCue"></div>
       <div class="sr-only" id="fCarryLive" aria-live="polite" aria-atomic="true"></div>
 
       <svg id="fScene" viewBox="0 0 960 540" preserveAspectRatio="xMidYMid slice" role="img"
@@ -1302,40 +1350,34 @@
           <!-- OUTCOME MOCK move 2: landing connector — REFERENCE GEOMETRY
                (never cyan): neutral white-alpha dashed line from the reference
                landing point (pin, else newest ghost) to the live landing
-               point, lateral-Δ badge at its midpoint. Drawn on at the reveal
-               beat (grows ref→live); static under reduced motion. -->
+               point. Drawn on at the reveal beat (grows ref→live); static
+               under reduced motion. ROUND 4: the midpoint Δ badge is gone
+               (canvas = apex label only — the Δ answer lives in the outcome
+               strip); the line stays as neutral geometry. -->
           <g id="fConnG" opacity="0" aria-hidden="true">
             <line id="fConnLine" stroke="rgba(230,240,250,.5)" stroke-width="1.5" stroke-dasharray="4 4" stroke-linecap="round"/>
-            <g id="fConnBadge"></g>
           </g>
-          <!-- apex marker -->
+          <!-- apex marker — ROUND 4: the label is the ONE in-canvas label kept.
+               fBuild() flips it below the crest (fApexStem mirrors) whenever
+               the default above-the-crest plate would hide behind the
+               top-centre outcome strip. -->
           <g id="fApexMark" opacity="0">
             <circle id="fApexHalo" r="16" fill="url(#fapexGlow)"/>
             <circle r="4.5" fill="none" stroke="#22E3D6" stroke-width="2"/>
-            <line x1="0" y1="-9" x2="0" y2="-26" stroke="#22E3D6" stroke-width="1.2" opacity=".7"/>
-            <g transform="translate(0,-30)">
+            <line id="fApexStem" x1="0" y1="-9" x2="0" y2="-26" stroke="#22E3D6" stroke-width="1.2" opacity=".7"/>
+            <g id="fApexLblG" transform="translate(0,-30)">
               <rect x="-40" y="-15" width="80" height="18" rx="5" fill="rgba(8,16,20,.72)" stroke="rgba(34,227,214,.22)"/>
               <text id="fApexTxt" x="0" y="-2" text-anchor="middle" fill="#22E3D6" font-size="11" font-weight="700" font-family="inherit">Apex</text>
             </g>
           </g>
-          <!-- landing marker -->
+          <!-- landing marker — ROUND 4: dot + splash ring ONLY (geometry).
+               The carry plate, offline badge and land-angle plate are gone:
+               "canvas = apex label only" — those numbers live in the left
+               hero + the bottom dashboard now. -->
           <g id="fLandMark" opacity="0">
             <!-- subtle, PERSISTENT ground splash ring at the landing point (no pulse) -->
             <ellipse id="fSplash" cx="0" cy="0" rx="13" ry="4.5" fill="none" stroke="#22E3D6" stroke-width="1.4" opacity=".42"/>
             <circle r="3.6" fill="#22E3D6"/>
-            <rect id="fLandBox" x="6" y="-22" width="62" height="17" rx="5" fill="rgba(8,16,20,.72)" stroke="rgba(34,227,214,.22)"/>
-            <text id="fLandTxt" x="37" y="-10" text-anchor="middle" fill="#fff" font-size="10" font-weight="700" font-family="inherit">Carry</text>
-            <!-- offline side badge: "NN m R" / "NN m L" (right = positive) -->
-            <g id="fOffline" opacity="0">
-              <rect id="fOfflineBox" x="6" y="-3" width="56" height="16" rx="5"/>
-              <text id="fOfflineTxt" x="34" y="9" text-anchor="middle" font-size="9.5">—</text>
-            </g>
-            <!-- land-angle plate: "↘ 55°" — reveals WITH the data beat, offset
-                 below/right of the carry plate + offline badge so it never collides -->
-            <g id="fLandAngMark" opacity="0">
-              <rect id="fLandAngBox" x="6" y="16" width="52" height="17" rx="5" fill="rgba(8,16,20,.72)" stroke="rgba(34,227,214,.22)"/>
-              <text id="fLandAngTxt" x="32" y="28" text-anchor="middle" fill="#9FE6DF" font-size="10" font-weight="700" font-family="inherit">↘ 0°</text>
-            </g>
           </g>
           <!-- teal colour grade overlay (above scene, below HUD) -->
           <rect id="fTealOverlay" x="0" y="0" width="960" height="540" fill="url(#ftealGrade)" pointer-events="none"/>
@@ -1396,16 +1438,30 @@
         </g>
       </svg>
 
-      <!-- ══ VIZ MOCK move 1 — THE CHIP ROW: one horizontally scrollable row
-           along the bottom. INPUT chips (editable — open the tune dock +
-           scene overlay) come first; OUTPUT chips (open the glass explainer)
-           follow. Buttons are built by buildChipRow() so values/aria stay in
-           sync via updateData(). Roving tabindex + arrow keys; edge fades +
-           partial-chip peek signal the scroll. Reveals AFTER landing. ══ -->
-      <div class="fBottom is-hidden">
-        <div class="chipScroll" id="chipScroll">
-          <div class="chipRow" id="chipRow" role="toolbar" aria-orientation="horizontal"
-               aria-label="Shot parameters. Inputs open an editor; results open an explanation. Use left and right arrow keys to move"></div>
+      <!-- ══ ROUND 4 ZONE 3 — OUTPUT DASHBOARD (bottom): read-only result
+           plates, grouped HORIZONTAL vs VERTICAL. Values are written by
+           updateDash() on every solve (live during tuning). Non-focusable,
+           NOT a live region; last in the DOM reading order. The visible
+           bucket titles are aria-hidden — each group's role=group aria-label
+           carries the same name, so it isn't read twice. ══ -->
+      <div class="fDash is-hidden" id="fDash" role="group" aria-label="Shot result">
+        <div class="dashGroup h" role="group" aria-label="Result — horizontal">
+          <div class="dgLab" aria-hidden="true">Horizontal</div>
+          <div class="dgTiles">
+            <div class="dTile"><span class="dk">Offline</span><span class="dv" id="dv_offline">—</span></div>
+            <div class="dTile"><span class="dk">Curve</span><span class="dv" id="dv_curve">—</span></div>
+          </div>
+        </div>
+        <div class="dashGroup v" role="group" aria-label="Result — vertical">
+          <div class="dgLab" aria-hidden="true">Vertical</div>
+          <div class="dgTiles">
+            <div class="dTile"><span class="dk">Launch angle</span><span class="dv" id="dv_launchAng">—</span></div>
+            <div class="dTile"><span class="dk">Apex</span><span class="dv" id="dv_apex">—</span></div>
+            <div class="dTile"><span class="dk">Land angle</span><span class="dv" id="dv_landAng">—</span></div>
+            <div class="dTile"><span class="dk">Spin loft</span><span class="dv" id="dv_spinLoft">—</span></div>
+            <div class="dTile dist"><span class="dk">Carry</span><span class="dv" id="dv_carry">—</span></div>
+            <div class="dTile dist"><span class="dk">Total</span><span class="dv" id="dv_total">—</span></div>
+          </div>
         </div>
       </div>
       <!-- move 2: TUNE DOCK — one shared transient editor, re-targeted per input
@@ -2056,7 +2112,10 @@ const INPUT_CHIPS = [
 ];
 const INPUT_BY_KEY = {};
 INPUT_CHIPS.forEach(c => INPUT_BY_KEY[c.key] = c);
-const OUTPUT_KEYS = ['ballSpeed','launchDir','launchAngle','spinAxis','curve','backspin','shape'];
+// ROUND 4: the OUTPUT chips left the chip row — results render on the
+// read-only bottom dashboard (updateDash). FCELLS stays as the meta source
+// for value formats; the explainer popovers for outputs are dormant on this
+// screen (flagged in the round report as a possible follow-up).
 
 (function buildChipRow(){
   const row = $('chipRow');
@@ -2075,23 +2134,6 @@ const OUTPUT_KEYS = ['ballSpeed','launchDir','launchAngle','spinAxis','curve','b
       + '<span class="cbody"><span class="ck">' + cfg.label + (cfg.est ? ' <span class="esttag">EST</span>' : '') + '</span>'
       + '<span class="cv" id="iv_' + cfg.key + '">—</span></span>' + tuneGlyph;
     btn.addEventListener('click', () => openTune(cfg.key));
-    row.appendChild(btn);
-  });
-  OUTPUT_KEYS.forEach(k => {
-    const c = FCELLS.find(x => x.key === k);
-    if (!c) return;
-    const key = 'f_' + c.key;
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'chip output';
-    btn.id = 'fcell_' + c.key;
-    btn.setAttribute('aria-haspopup', 'dialog');
-    btn.setAttribute('aria-expanded', 'false');
-    btn.setAttribute('aria-controls', 'pop');
-    btn.innerHTML = '<span class="cbody"><span class="ck">' + c.name + '</span><span class="cv"></span></span>'
-      + '<span class="chev" aria-hidden="true">›</span>';
-    btn.addEventListener('click', () => togglePopover(key));
-    cellEls[key] = { btn, valEl: btn.querySelector('.cv'), barFill: null, def: c };
     row.appendChild(btn);
   });
   // roving tabindex — ONE tab stop for the whole row
@@ -2684,9 +2726,8 @@ function updateCoachLines(f){
   const causeDir = $('causeDir'), cueDir = $('cueDir');
   if (causeDir) causeDir.textContent = mc.cause;
   if (cueDir) cueDir.textContent = mc.cue || sec;
-  // flight-overlay coach cue (near the fDelta micro-label) — same content
-  const flightCue = $('flightCoachCue');
-  if (flightCue) flightCue.textContent = mc.cue || sec;
+  // ROUND 4: the flight overlay's visible coach-cue line is removed — the
+  // coaching content reaches SR users via the composed #fDeltaSR sentence.
 }
 
 // ════════════════════════════════════════════════════════════════
@@ -3159,7 +3200,11 @@ const PE_A = 2.2;          // perspective recession density (denser near horizon
 const GROUND_K = 0.86;     // fraction of (yBottom..yH) reached at f=1 (lands BELOW horizon)
 let TEE_X = 480;           // re-centred on resize to VB.w/2
 const LAT_PX = 300;        // lateral half-width near the tee (grid + rails)
-const TOP_MARGIN = 92;     // px reserved at top for the apex orb + label
+const TOP_MARGIN = 150;    // px reserved at top for the apex orb + label.
+                           // ROUND 4: raised 92→150 so the apex LABEL (the one
+                           // in-canvas label that survives) clears the new
+                           // full-width top input strip (~81 viewBox units on
+                           // a 375px-tall phone) with margin.
 const APEX_AT = 0.50;      // apex as a fraction of carry
 // WIDER BOW: screen-space lateral budget for the side-curve. Raised from the
 // mock's 150 to 290 so climb & descent visibly separate into a pretty arc while
@@ -3300,14 +3345,13 @@ function buildAirPath(shot){
 
 const fTracer=$('fTracer'), fTracerCore=$('fTracerCore'), fTrail=$('fTrail'), fRoll=$('fRoll');
 const fApexMark=$('fApexMark'), fApexTxt=$('fApexTxt');
-const fLandMark=$('fLandMark'), fLandTxt=$('fLandTxt'), fSplash=$('fSplash');
-const fOffline=$('fOffline'), fOfflineTxt=$('fOfflineTxt');
-const fLandAngMark=$('fLandAngMark'), fLandAngTxt=$('fLandAngTxt');
+const fLandMark=$('fLandMark'), fSplash=$('fSplash');   // ROUND 4: landing plates (carry/offline/land-angle) removed — dot + splash only
 const fGrid=$('fGrid'), fLatRef=$('fLatRef'), fCentre=$('fCentre'), fRailL=$('fRailL'), fRailR=$('fRailR');
 const fTeeShadow=$('fTeeShadow'), fTeeRing=$('fTeeRing');
-const fBottomEl=document.querySelector('.fBottom');
+// ROUND 4 zone split: the INPUT strip (top) + OUTPUT dashboard (bottom)
+const fTopEl=document.getElementById('fInputStrip');
+const fDashEl=document.getElementById('fDash');
 const fDeltaEl=document.getElementById('fDelta');
-const flightCueEl=document.getElementById('flightCoachCue');   // L1b fix: now a sibling of fDeltaEl, tracked separately
 
 // ════════════════════════════════════════════════════════════════
 //  STAGE 3 — GHOST / REPLAY SYSTEM (the pedagogy)
@@ -3500,23 +3544,22 @@ const DELTA_DELAY = 150;                  // ms after data-reveal (stage-2 beat 
 function hideDeltaLabel(){
   clearTimeout(deltaTimer); deltaTimer = null;
   fDeltaEl.classList.add('is-hidden');
-  flightCueEl.classList.add('is-hidden');   // L1b fix: keep the (now-sibling) coach cue's visibility in lockstep
 }
+// ROUND 4: the visible cause chip-chain is gone — this now ONLY maintains
+// the composed coaching sentence in #fDeltaSR inside the #fDelta live region
+// (same content, same settle timing, srHold gating unchanged), so screen
+// readers keep the full "what changed → outcome" story.
 function showDeltaLabel(immediate){
   clearTimeout(deltaTimer); deltaTimer = null;
   const c = outcomeContent();
-  if (!c){ fDeltaEl.hidden = true; fDeltaEl.classList.add('is-hidden');
-    flightCueEl.hidden = true; flightCueEl.classList.add('is-hidden'); return; }
+  if (!c){ fDeltaEl.hidden = true; fDeltaEl.classList.add('is-hidden'); return; }
   fDeltaEl.hidden = false;
-  flightCueEl.hidden = false;
   const apply = ()=>{
-    $('fDeltaCause').innerHTML = c.chipsHTML;   // move 3: visual chip-chain (aria-hidden subtree)
-    // VIZ MOCK: while a live-tune drag is in progress (srHold) the visible
-    // chips update every event but the ONE live region stays quiet — the
-    // settle timer (scheduleTuneSettle) writes the composed sentence ONCE.
+    // VIZ MOCK: while a live-tune drag is in progress (srHold) the ONE live
+    // region stays quiet — the settle timer (scheduleTuneSettle) writes the
+    // composed sentence ONCE.
     if (!srHold) $('fDeltaSR').textContent = c.sentence;
     fDeltaEl.classList.remove('is-hidden');
-    flightCueEl.classList.remove('is-hidden');
   };
   if (immediate || reduce) apply();
   else deltaTimer = setTimeout(apply, DELTA_DELAY);
@@ -3602,13 +3645,11 @@ outcomeStripEl.addEventListener('click', ()=>{
 });
 
 // ════════════════════════════════════════════════════════════════
-//  OUTCOME MOCK move 4 — landing-badge collision dodge (placeChip()'s
-//  collision idea ported to addBadge). A per-build registry of placed badge
-//  boxes is seeded with the LIVE landing marker's three plates (carry /
-//  offline / land-angle — the cluster anchored at landScreen), then every
-//  ghost/baseline badge and the connector's midpoint badge steps VERTICALLY
-//  (down first, then up, 17px steps) until its box clears everything already
-//  placed. Geometry/camera never moves — only badge plates shift.
+//  OUTCOME MOCK move 4 — landing-badge collision dodge. ROUND 4: DORMANT.
+//  Every in-canvas badge (carry/offline/land-angle plates, ghost/baseline
+//  tags, before-trace ↺, connector Δ) was removed per "canvas = apex label
+//  only" — nothing calls dodgeBadgeY right now. The machinery is kept so a
+//  future in-canvas label can re-join the dodge set.
 // ════════════════════════════════════════════════════════════════
 let badgeBoxes = [];
 const BADGE_PAD = 4;   // breathing room so near-touching plates also dodge
@@ -3618,18 +3659,13 @@ function badgeOverlap(a, b){
 }
 function resetBadgeBoxes(){
   badgeBoxes = [];
-  if (landScreen){
-    badgeBoxes.push({ x:landScreen.x+6, y:landScreen.y-22, w:62, h:17 });  // carry plate (fLandBox)
-    badgeBoxes.push({ x:landScreen.x+6, y:landScreen.y-3,  w:56, h:16 });  // offline badge (fOfflineBox)
-    badgeBoxes.push({ x:landScreen.x+6, y:landScreen.y+16, w:52, h:17 });  // land-angle plate (fLandAngBox)
-  }
-  // the bottom data frame (.fBottom) is a virtual obstacle: a badge dodged
-  // DOWN must never end up hidden behind the chip grid. Convert its live
-  // client top into scene-viewBox Y (height is fixed at 540).
+  // the bottom OUTPUT dashboard is a virtual obstacle: a (future) badge
+  // dodged DOWN must never end up hidden behind it. Convert its live client
+  // top into scene-viewBox Y (height is fixed at 540).
   const card = $('flightCard');
   const ch = card ? card.clientHeight : 0;
-  if (fBottomEl && ch > 0){
-    const fb = fBottomEl.getBoundingClientRect();
+  if (fDashEl && ch > 0){
+    const fb = fDashEl.getBoundingClientRect();
     if (fb.height > 0) badgeBoxes.push({ x:-2000, y:(fb.top/ch)*540, w:8000, h:800 });
   }
 }
@@ -3646,36 +3682,17 @@ function dodgeBadgeY(box){
 }
 
 // ── ghost rendering — solid ghost-grey strokes in #fGhosts (below the live
-//    tracer), each with a small landing dot + metre label on a dark plate.
-//    Rebuilt on every fBuild so ghosts share the CURRENT camera fit.
+//    tracer), each with a small landing dot. Rebuilt on every fBuild so
+//    ghosts share the CURRENT camera fit. ROUND 4: the in-scene identity/
+//    metre badges are gone ("canvas = apex label only") — the legend chips
+//    (right) remain the identity + carry carrier, visually AND accessibly.
 function buildGhostLayer(){
   if (!FX.built || !FX.ghosts) return;
   const host = FX.ghosts;
   host.innerHTML = '';
   const ns = 'http://www.w3.org/2000/svg';
 
-  // small shared builder for a landing badge (dark plate + text) on a group.
-  // OUTCOME MOCK move 4: the badge's Y now goes through dodgeBadgeY() so it
-  // vertically offsets instead of overlapping a close neighbour.
-  const addBadge = (grp, land, lbl, fill) => {
-    const w = lbl.length*5.6 + 10;
-    const bx = land.x + 6;
-    const by = dodgeBadgeY({ x:bx, y:land.y + 4, w, h:14 });
-    const rect = document.createElementNS(ns,'rect');
-    rect.setAttribute('x', bx.toFixed(1)); rect.setAttribute('y', by.toFixed(1));
-    rect.setAttribute('width', w.toFixed(0)); rect.setAttribute('height','14'); rect.setAttribute('rx','4');
-    rect.setAttribute('fill','rgba(8,16,20,.78)'); rect.setAttribute('stroke', fill==='#E8F0FB' ? 'rgba(232,240,251,.35)' : 'rgba(159,178,200,.30)');
-    grp.appendChild(rect);
-    const t = document.createElementNS(ns,'text');
-    t.setAttribute('x',(bx+w/2).toFixed(1)); t.setAttribute('y',(by+10.5).toFixed(1));
-    t.setAttribute('text-anchor','middle'); t.setAttribute('font-size','9');
-    t.setAttribute('font-weight','700'); t.setAttribute('font-family','inherit');
-    t.setAttribute('fill', fill);
-    t.textContent = lbl;
-    grp.appendChild(t);
-  };
-
-  // BASELINE first (bottom of the stack) — white dashed, ⊙ badge, never evicted.
+  // BASELINE first (bottom of the stack) — white dashed, never evicted.
   if (fBaseline){
     const bs = shotFromFlight(applyWind(fBaseline.flight));
     const grp = document.createElementNS(ns,'g');
@@ -3693,7 +3710,6 @@ function buildGhostLayer(){
     dot.setAttribute('cx', land.x.toFixed(1)); dot.setAttribute('cy', land.y.toFixed(1));
     dot.setAttribute('r','2.6'); dot.setAttribute('fill','#E8F0FB');
     grp.appendChild(dot);
-    addBadge(grp, land, '⊙ ' + Math.round(bs.carryM) + ' m', '#E8F0FB');
     host.appendChild(grp);
   }
 
@@ -3716,13 +3732,6 @@ function buildGhostLayer(){
     dot.setAttribute('cx', land.x.toFixed(1)); dot.setAttribute('cy', land.y.toFixed(1));
     dot.setAttribute('r','2.6'); dot.setAttribute('fill','#9FB2C8');
     grp.appendChild(dot);
-    // identity badge: slot letter + the FIRST changed param vs the live shot + carry
-    // (VIZ MOCK: "live" = the CURRENT tuned delivery, not just the last-played one)
-    const lv = liveShot();
-    const changed = lv ? PARAM_KEYS.filter(k => ghosts[i].params[k] !== lv.params[k]) : [];
-    const pTxt = changed.length ? PARAM_META[changed[0]].label + ' ' + PARAM_META[changed[0]].fmt(ghosts[i].params[changed[0]]) : '';
-    const lbl = GHOST_LETTER[i] + (pTxt ? ' · ' + pTxt : '') + ' · ' + Math.round(gs.carryM) + ' m';
-    addBadge(grp, land, lbl, '#9FB2C8');
     host.appendChild(grp);
   }
   buildGhostLegend();
@@ -3738,9 +3747,11 @@ function buildGhostLayer(){
 //  fades in — both static under reduced motion.
 // ════════════════════════════════════════════════════════════════
 let connTarget = null, connTween = null;
+// ROUND 4: the midpoint lateral-Δ badge is REMOVED (canvas = apex label
+// only) — the connector stays as pure neutral reference geometry; the Δ
+// answer lives in the outcome strip.
 function buildConnector(){
-  const grp = $('fConnG'), line = $('fConnLine'), badgeHost = $('fConnBadge');
-  badgeHost.innerHTML = '';
+  const grp = $('fConnG'), line = $('fConnLine');
   grp.setAttribute('opacity','0');
   connTarget = null;
   // VIZ MOCK: reference priority pin > before-trace > newest ghost, and both
@@ -3753,48 +3764,21 @@ function buildConnector(){
   connTarget = { x1:refLand.x, y1:refLand.y, x2:landScreen.x, y2:landScreen.y };
   line.setAttribute('x1', refLand.x.toFixed(1));    line.setAttribute('y1', refLand.y.toFixed(1));
   line.setAttribute('x2', landScreen.x.toFixed(1)); line.setAttribute('y2', landScreen.y.toFixed(1));
-  // midpoint lateral-Δ badge — raw-once rounding, same verdict style as the
-  // strip (✓ closer / → further, sign+icon never colour alone)
-  const dLat = Math.round((Math.abs(applyWind(lv.flight).offline) - Math.abs(applyWind(g.flight).offline)) * YD2M);
-  let lbl, fill;
-  if (dLat <= -1){ lbl = '✓ ' + Math.abs(dLat) + ' m'; fill = '#4ADE80'; }
-  else if (dLat >= 1){ lbl = '→ ' + dLat + ' m'; fill = '#FBBF24'; }
-  else { lbl = '±0 m'; fill = '#E8F0FB'; }
-  const mid = { x:(refLand.x + landScreen.x)/2, y:(refLand.y + landScreen.y)/2 };
-  const w = lbl.length*5.6 + 12;
-  const bx = mid.x - w/2;
-  const by = dodgeBadgeY({ x:bx, y:mid.y - 17, w, h:14 });   // prefers just above the line, dodges the badge set
-  const ns = 'http://www.w3.org/2000/svg';
-  const rect = document.createElementNS(ns,'rect');
-  rect.setAttribute('x', bx.toFixed(1)); rect.setAttribute('y', by.toFixed(1));
-  rect.setAttribute('width', w.toFixed(0)); rect.setAttribute('height','14'); rect.setAttribute('rx','4');
-  rect.setAttribute('fill','rgba(8,16,20,.78)'); rect.setAttribute('stroke','rgba(230,240,250,.3)');
-  badgeHost.appendChild(rect);
-  const t = document.createElementNS(ns,'text');
-  t.setAttribute('x',(bx + w/2).toFixed(1)); t.setAttribute('y',(by + 10.5).toFixed(1));
-  t.setAttribute('text-anchor','middle'); t.setAttribute('font-size','9');
-  t.setAttribute('font-weight','700'); t.setAttribute('font-family','inherit');
-  t.setAttribute('fill', fill);
-  t.textContent = lbl;
-  badgeHost.appendChild(t);
 }
 function revealConnector(immediate){
-  const grp = $('fConnG'), line = $('fConnLine'), badgeHost = $('fConnBadge');
+  const grp = $('fConnG'), line = $('fConnLine');
   if (connTween){ connTween.kill(); connTween = null; }
   if (!connTarget){ grp.setAttribute('opacity','0'); return; }
   if (immediate || reduce){
     line.setAttribute('x2', connTarget.x2.toFixed(1)); line.setAttribute('y2', connTarget.y2.toFixed(1));
-    gsap.set(badgeHost, { opacity:1 });
     grp.setAttribute('opacity','1');
     return;
   }
   // draw-on: the dashed line grows from the reference point to the live landing
   line.setAttribute('x2', connTarget.x1.toFixed(1)); line.setAttribute('y2', connTarget.y1.toFixed(1));
-  gsap.set(badgeHost, { opacity:0 });
   grp.setAttribute('opacity','1');
   connTween = gsap.timeline();
   connTween.to(line, { attr:{ x2:connTarget.x2, y2:connTarget.y2 }, duration:.45, ease:'power2.out' }, 0);
-  connTween.to(badgeHost, { opacity:1, duration:.25, ease:'power1.out' }, .3);
 }
 function hideConnector(){
   if (connTween){ connTween.kill(); connTween = null; }
@@ -3862,31 +3846,25 @@ function maybeGhostCoach(){
     { storageKey: 'sa_coach_flight_ghost', onDone(){ ghostCoach = null; } });
 }
 
-// CHANGE 1 — reveal the bottom frame (chips) only after the ball lands
+// CHANGE 1 — ROUND 4: both zones (top INPUT strip + bottom OUTPUT dashboard)
+// hide during an animated flight and reveal together at the data beat.
 function hideData(){ hideDeltaLabel();
   hideOutcomeStrip(); hideConnector();  // OUTCOME MOCK: strip + connector follow the data beat
-  gsap.set(fLandAngMark,{opacity:0});   // land-angle plate resets with the rest of the data beat
   // K1 FIX: inert BEFORE the reduce early-return so both paths cover it — the
-  // chips must stop being focusable/operable the instant the flight starts,
-  // even under reduced motion where the visual is-hidden/aria-hidden below
-  // never runs (there's no animated flight to hide the chips FROM in that
-  // case, but a keyboard user must still be unable to Tab into them here).
-  fBottomEl.inert = true;
-  if(reduce) return; fBottomEl.classList.add('is-hidden'); fBottomEl.setAttribute('aria-hidden','true');
-  // hold all flight underlines empty so they animate from 0 on the next reveal
-  FCELLS.forEach(c=>{ if(!c.ring) return; const reg=cellEls['f_'+c.key]; if(!reg||!reg.barFill) return;
-    reg.barFill.style.transition='none';
-    reg.barFill.style.width='0%';
-    void reg.barFill.getBoundingClientRect(); reg.barFill.style.transition=''; });
+  // input chips must stop being focusable/operable the instant the flight
+  // starts, even under reduced motion where the visual is-hidden/aria-hidden
+  // below never runs (there's no animated flight to hide the chips FROM in
+  // that case, but a keyboard user must still be unable to Tab into them here).
+  fTopEl.inert = true;
+  if(reduce) return;
+  fTopEl.classList.add('is-hidden');  fTopEl.setAttribute('aria-hidden','true');
+  fDashEl.classList.add('is-hidden'); fDashEl.setAttribute('aria-hidden','true');
 }
 function revealData(immediate){
-  fBottomEl.inert = false;   // K1 FIX: unconditional — safe even when hideData() early-returned under reduce
-  fBottomEl.classList.remove('is-hidden'); fBottomEl.removeAttribute('aria-hidden');
-  // flight underlines fill in along with the values; static/reduced-motion snaps to final
-  fillFlightRings(!reduce);
-  // land-angle plate reveals WITH the data beat (same timing as the chip grid)
-  gsap.set(fLandAngMark,{opacity:1});
-  // STAGE 3 — the "what changed" micro-label follows +150ms after the reveal
+  fTopEl.inert = false;   // K1 FIX: unconditional — safe even when hideData() early-returned under reduce
+  fTopEl.classList.remove('is-hidden');  fTopEl.removeAttribute('aria-hidden');
+  fDashEl.classList.remove('is-hidden'); fDashEl.removeAttribute('aria-hidden');
+  // STAGE 3 — the "what changed" SR sentence follows +150ms after the reveal
   // (immediate + static under reduced-motion / static renders)
   showDeltaLabel(!!immediate);
   // OUTCOME MOCK: the strip counts up + the connector draws on at THIS beat
@@ -4015,31 +3993,47 @@ function fBuild(){
   // transform attribute would be clobbered by gsap's matrix on the scale tween.
   gsap.set(fApexMark, { x:apexScreen.x, y:apexScreen.y, xPercent:0, yPercent:0, transformOrigin:'center' });
   fApexTxt.textContent=`Apex ${Math.round(fModel.apexM)} m`;
+  // ROUND 4 — apex-label dodge: the label is the ONE surviving in-canvas
+  // label, and the outcome strip sits top-centre in exactly the band a tall,
+  // centred crest puts it. When a reference exists (the strip WILL show at
+  // the reveal beat) and the default above-the-crest plate would intersect a
+  // conservative strip box, flip the label BELOW the crest (stem mirrors).
+  (function placeApexLabel(){
+    const lblG = $('fApexLblG'), stem = $('fApexStem');
+    if (!lblG || !stem) return;
+    let below = false;
+    if (refShot()){
+      const card = $('flightCard');
+      const scale = (card.clientHeight || 1) / 540;      // uniform vb→px scale
+      const lblL = (apexScreen.x - 40) * scale, lblR = (apexScreen.x + 40) * scale;
+      const lblT = (apexScreen.y - 45) * scale, lblB = (apexScreen.y - 12) * scale;
+      // strip box: centred, ±120px wide, from --fstrip-clear (≈70px, safe-area
+      // 0 in-browser) down 58px — matches .outcomeStrip's resting geometry.
+      const clear = 70, cx = (card.clientWidth || 0) / 2;
+      const sL = cx - 120, sR = cx + 120, sT = clear, sB = clear + 58;
+      below = !(lblR < sL || lblL > sR || lblB < sT || lblT > sB);
+    }
+    lblG.setAttribute('transform', below ? 'translate(0,44)' : 'translate(0,-30)');
+    if (below){ stem.setAttribute('y1','9');  stem.setAttribute('y2','26'); }
+    else      { stem.setAttribute('y1','-9'); stem.setAttribute('y2','-26'); }
+  })();
   fLandMark.setAttribute('transform',`translate(${landScreen.x.toFixed(1)},${landScreen.y.toFixed(1)})`);
-  fLandTxt.textContent=`${Math.round(fModel.carryM)} m`;
-  // CHANGE 2 — offline side badge ("NN m R" / "NN m L"; right = positive)
+  // ROUND 4: the landing marker carries NO text any more (dot + splash only)
+  // — carry/offline/land-angle numbers live in the hero + bottom dashboard.
+  // left HERO stack offline ("NN m R/L")
   const offAbs = Math.round(Math.abs(fModel.offlineM));
-  if (offAbs >= 1){
-    fOfflineTxt.textContent = `${offAbs} m ${fModel.offlineM >= 0 ? 'R' : 'L'}`;
-    fOffline.setAttribute('opacity','1');
-  } else {
-    fOfflineTxt.textContent = 'On line';
-    fOffline.setAttribute('opacity','1');
-  }
-  // land-angle plate — "↘ NN°" from the solved landing angle (rounded integer)
-  fLandAngTxt.textContent = `↘ ${Math.round(fModel.f.landingAngle)}°`;
-  // left HERO stack offline ("NN m R/L") — mirrors the SVG badge
   $('fHeroOffNum').textContent = offAbs;
   $('fHeroOffSide').textContent = fModel.offlineM >= 0 ? 'R' : 'L';
   trajLen=fTracer.getTotalLength(); rollLen=fRoll.getTotalLength();
   buildGrid(); buildLateralRefs();
-  resetBadgeBoxes();     // OUTCOME MOCK move 4: seed the dodge set with the live marker plates
-  buildGhostLayer();     // ghost/baseline badges place through dodgeBadgeY
-  buildTuneRefLayer();   // VIZ MOCK move 3: the before-trace joins the dodge set
-  buildConnector();      // OUTCOME MOCK move 2: connector + midpoint badge (joins the dodge set)
+  resetBadgeBoxes();     // OUTCOME MOCK move 4: dormant (no in-canvas badges left)
+  buildGhostLayer();     // ghost/baseline traces + landing dots (no badges)
+  buildTuneRefLayer();   // VIZ MOCK move 3: the before-trace (dotted line, no badge)
+  buildConnector();      // OUTCOME MOCK move 2: connector line (no midpoint badge)
   updateData();
   renderOvTrios();       // VIZ MOCK move 2: re-anchor the transient trios to the (resized) tee
   updateWindTag();       // VIZ MOCK move 4: scene wind tag
+  placeDock();           // ROUND 4: keep the tune dock riding just above the live dashboard height
 }
 
 // carry counter — textContent written ONLY when the rounded integer changes
@@ -4062,28 +4056,44 @@ function announceCarry(v){
 }
 
 function updateData(){
-  const f=fModel.f;   // the DISPLAYED shot (wind already applied by computeModel)
   // hero stack Carry sub-line (resting trio = Total / Carry / Offline)
   const heroCarry = $('fHeroCarryNum');
   if (heroCarry) heroCarry.textContent = Math.round(fModel.carryM);
-  // OUTPUT chips: value text + accessible name in one pass. (The old grid's
-  // range underlines were dropped with the grid — barFill stays null-guarded.)
-  FCELLS.forEach(c=>{
-    const reg = cellEls['f_'+c.key]; if (!reg) return;
-    const r = c.value(f);
-    if (reg.valEl) reg.valEl.innerHTML = String(r.v) + (r.u ? '<small>'+r.u+'</small>' : '');
-    reg.btn.setAttribute('aria-label', c.name+' '+r.v+(r.u||'')+', opens explanation');
-    if (c.ring && reg.barFill){
-      reg.barTarget = barGeom(c.ring, f);
-      reg.barFill.style.left = reg.barTarget.left + '%';
-      if (fBottomEl && fBottomEl.classList.contains('is-hidden')){
-        reg.barFill.style.transition = 'none';
-        reg.barFill.style.width = '0%';
-      }
-    }
-  });
+  // ROUND 4: outputs render on the read-only bottom dashboard
+  updateDash();
   // INPUT chips: current param values (+ wind)
   updateInputChips();
+}
+
+// ══ ROUND 4 — OUTPUT DASHBOARD writes ══════════════════════════════
+// Read-only plates; updated on EVERY solve (live during tune drags) so the
+// golfer never adjusts blind. Values come from the DISPLAYED (wind-applied)
+// shot: fModel.carryM/totalM/apexM/offlineM are already in metres; the
+// angular results come straight off fModel.f.
+const sideVal = m => Math.abs(m) < 0.5 ? 'On line'
+  : Math.round(Math.abs(m)) + '<small>m</small> ' + (m >= 0 ? 'R' : 'L');
+function updateDash(){
+  if (!fModel || !fDashEl) return;
+  const f = fModel.f;
+  // HORIZONTAL (side/direction plane)
+  $('dv_offline').innerHTML = sideVal(fModel.offlineM);
+  $('dv_curve').innerHTML   = sideVal(f.curve * YD2M);
+  // VERTICAL (height/distance plane; Carry/Total carry the distance accent)
+  $('dv_launchAng').textContent = f.launchAngle.toFixed(1) + '°';
+  $('dv_apex').innerHTML     = Math.round(fModel.apexM) + '<small>m</small>';
+  $('dv_landAng').textContent = Math.round(f.landingAngle) + '°';
+  $('dv_spinLoft').textContent = f.spinLoft.toFixed(1) + '°';
+  $('dv_carry').innerHTML    = Math.round(fModel.carryM) + '<small>m</small>';
+  $('dv_total').innerHTML    = Math.round(fModel.totalM) + '<small>m</small>';
+}
+
+// keep the tune dock (and wind tag) riding directly ABOVE the dashboard:
+// --dash-clear = the dashboard's live height + gap (CSS fallback 72px).
+function placeDock(){
+  const card = $('flightCard');
+  if (!card || !fDashEl) return;
+  const h = fDashEl.getBoundingClientRect().height;
+  if (h > 0) card.style.setProperty('--dash-clear', Math.ceil(h + 8) + 'px');
 }
 
 // animate every flight-grid underline 0→target (called at the after-the-shot reveal).
@@ -4566,7 +4576,7 @@ fGhostClearEl.addEventListener('click', ()=>{
   ghosts.length = 0;
   fBaseline = null; buildGhostLegend();   // GHOST LAB: clear also drops the pin + its chips (buildGhostLegend → setPinUI)
   if (FX.ghosts) FX.ghosts.innerHTML = '';
-  hideDeltaLabel(); fDeltaEl.hidden = true; flightCueEl.hidden = true;
+  hideDeltaLabel(); fDeltaEl.hidden = true;
   hideOutcomeStrip(); hideConnector();   // OUTCOME MOCK: no reference left → no outcome UI
   // refit the shared camera when idle (never mid-flight); focus stays on the button
   if (flightScrim.classList.contains('open') && (!fTL || !fTL.isActive())) renderStatic();
@@ -4628,7 +4638,10 @@ function applyWind(f){
 }
 function updateWindTag(){
   const el = $('windTag'); if (!el) return;
-  if (!wind.speed){ el.hidden = true; return; }
+  // ROUND 4: the tag sits in the same band the tune dock opens in (just
+  // above the dashboard) — hide it while ANY dock is open; the dock itself
+  // carries the wind value then. Restored by closeTune()'s updateWindTag().
+  if (!wind.speed || tuneKey){ el.hidden = true; return; }
   el.hidden = false;
   const glyph = { head:'↓', tail:'↑', crossL:'←', crossR:'→' }[wind.mode];
   el.textContent = `${glyph} Wind ${wind.speed} m/s ${WIND_LABEL[wind.mode]} · EST`;
@@ -4673,21 +4686,8 @@ function buildTuneRefLayer(){
   dot.setAttribute('cx', land.x.toFixed(1)); dot.setAttribute('cy', land.y.toFixed(1));
   dot.setAttribute('r','2.4'); dot.setAttribute('fill','#E8F0FB');
   grp.appendChild(dot);
-  const lbl = '↺ ' + Math.round(ts.carryM) + ' m';
-  const w = lbl.length*5.6 + 10, bx = land.x + 6;
-  const by = dodgeBadgeY({ x:bx, y:land.y + 4, w, h:14 });
-  const rect = document.createElementNS(ns,'rect');
-  rect.setAttribute('x', bx.toFixed(1)); rect.setAttribute('y', by.toFixed(1));
-  rect.setAttribute('width', w.toFixed(0)); rect.setAttribute('height','14'); rect.setAttribute('rx','4');
-  rect.setAttribute('fill','rgba(8,16,20,.78)'); rect.setAttribute('stroke','rgba(232,240,251,.3)');
-  grp.appendChild(rect);
-  const t = document.createElementNS(ns,'text');
-  t.setAttribute('x',(bx+w/2).toFixed(1)); t.setAttribute('y',(by+10.5).toFixed(1));
-  t.setAttribute('text-anchor','middle'); t.setAttribute('font-size','9');
-  t.setAttribute('font-weight','700'); t.setAttribute('font-family','inherit');
-  t.setAttribute('fill','#E8F0FB');
-  t.textContent = lbl;
-  grp.appendChild(t);
+  // ROUND 4: no ↺ carry badge — the dotted trace + landing dot stay as pure
+  // comparison geometry; the numbers answer in the outcome strip + dashboard.
   host.appendChild(grp);
 }
 
@@ -4703,12 +4703,18 @@ function placeOvChip(id, deg, r, txt){
   g.setAttribute('transform', `translate(${(Math.cos(a)*r).toFixed(1)},${(Math.sin(a)*r).toFixed(1)})`);
   g.querySelector('text').textContent = txt;
 }
+// ROUND 4: the tune dock now sits ABOVE the bottom dashboard, i.e. higher up
+// the scene than the old bottom-row dock. Each trio lifts off the tee just
+// enough to clear that band: the side-on (ht) schematic — which carries its
+// OWN dashed ground reference, so it reads correctly anywhere — lifts 60
+// viewBox units; the top-down (dir) trio lifts a hair (14) so its pivot dot
+// isn't clipped by the dock's top edge on 375px-tall phones.
+const OV_LIFT = { dir:14, ht:60 };
 function renderOvTrios(){
   const ovDir = $('ovDir');
   if (!ovDir) return;
-  const tx = `translate(${TEE_X.toFixed(1)},${yBottom})`;
-  ovDir.setAttribute('transform', tx);
-  $('ovHt').setAttribute('transform', tx);
+  ovDir.setAttribute('transform', `translate(${TEE_X.toFixed(1)},${yBottom - OV_LIFT.dir})`);
+  $('ovHt').setAttribute('transform', `translate(${TEE_X.toFixed(1)},${yBottom - OV_LIFT.ht})`);
   const f = solveFlight(state);
   // — direction trio (top-down semantics: up-screen = downrange) —
   $('ov_face').setAttribute('transform', `rotate(${(state.faceAngle*GAIN_DIR).toFixed(2)})`);
@@ -4838,6 +4844,8 @@ function openTune(key){
   }
   showTrio(cfg.trio);
   renderOvTrios();
+  placeDock();        // ROUND 4: dock rides just above the output dashboard
+  updateWindTag();    // ROUND 4: the wind tag yields the band to the dock
   // keyboard opens move focus into the editor; pointer opens leave focus on
   // the chip (so the idle fade can run — focus-in-dock blocks it by design)
   const byPointer = (performance.now() - lastChipPointerTs) < 600;
@@ -4857,6 +4865,7 @@ function closeTune(immediate, returnFocus){
   chipExpanded(tuneKey, false);
   tuneKey = null;
   showTrio(null);
+  updateWindTag();    // ROUND 4: restore the wind tag once the dock leaves its band
   document.removeEventListener('pointerdown', onTuneOutside, true);
   const hide = ()=>{ if (!tuneKey){ tuneDock.hidden = true; tuneDock.classList.remove('fading'); } };
   if (immediate || reduce) hide();
@@ -4981,7 +4990,10 @@ wireSliderHaptics(twRange, 'wind');
   function moveTo(e){
     const cfg = INPUT_BY_KEY[ovDragKey];
     const p = scenePt(e);
-    const dx = p.x - TEE_X, dy = p.y - yBottom;
+    // ROUND 4: the trios are lifted off the tee (OV_LIFT) — the drag inverse
+    // must measure from the SAME lifted pivot or the recovered angle skews.
+    const pivotY = yBottom - (OV_LIFT[cfg.trio] || 0);
+    const dx = p.x - TEE_X, dy = p.y - pivotY;
     let rot = Math.atan2(dy, dx) * 180/Math.PI + (cfg.trio === 'dir' ? 90 : 0);
     while (rot > 180) rot -= 360; while (rot < -180) rot += 360;
     const val = cfg.trio === 'dir' ? rot / GAIN_DIR : -rot / GAIN_HEIGHT;
