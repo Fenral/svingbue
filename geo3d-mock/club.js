@@ -71,7 +71,7 @@
 import * as THREE from '../vendor/three/build/three.module.js';
 import { GLTFLoader } from '../vendor/three/examples/jsm/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from '../vendor/three/examples/jsm/libs/meshopt_decoder.module.js';
-import { arcPosition, shaftPivot, tangentAt, thetaAtImpact, deg2rad } from '../swing-parameters-and-impact.js';
+import { arcPosition, shaftPivot, tangentAt, thetaAtImpact, deg2rad, BALL_RADIUS_M } from '../swing-parameters-and-impact.js';
 
 const GLB_URL = new URL('../assets/club7.glb', import.meta.url).href;
 
@@ -159,6 +159,7 @@ export function createClub(state) {
   let loadFailed = false;
   let lastTheta = null;
   let lastLieDeg = 0;
+  let lastBlend = 1; // MOCK (challenge 1b-i) — last blend passed to updateBlended (0=grounded address)
 
   // ── FIX K.3 — ball always horizontally centred in the clubhead at impact ──
   // Deliberate simplification (owner-approved, no toe/heel nuance): apply a
@@ -193,6 +194,43 @@ export function createClub(state) {
     if (blade) p.add(blade.position);
     bladeFaceCentreX = p.x;
     modelSlot.position.x = -bladeFaceCentreX;
+  }
+
+  // ── MOCK (challenge 1b-ii, 2026-07-08) — DYNAMIC face-centre re-centering.
+  // FIX K.3's static local-X offset is measured ONCE at lie=0, but the
+  // dynamic lie compensation rotates the blade about its local Z by up to
+  // ~±30° at extreme low points (thetaAtImpact ±9.6° tilts the shaft's
+  // up-vector), swinging the blade's visual bbox centre up to ~26mm along
+  // the toe axis — the ball no longer met the middle of the face WIDTH
+  // (owner: "bladet skal treffe midt i sweetspot i bredden uansett
+  // plan/retning/lowpoint/ballposisjon"). This recomputes the modelSlot X
+  // offset on every update() so the blade's visual face centre sits EXACTLY
+  // on the ride point's toe-axis line for the CURRENT lie rotation:
+  //   err   = dot(bboxCentreWorld − groupWorld, toeAxisWorld)   (post-lie)
+  //   δ     = −err / dot(basis.X_world, toeAxisWorld)           (= −err/cos d)
+  //   modelSlot.position.x += δ            (one-shot exact — linear system)
+  // Pure cosmetic model shift: group/faceAnchor (the swing-physics anchors
+  // checkAlign3d asserts on) are untouched, and no derived number
+  // (deriveImpact/clubBallContact/strikeQuality) ever reads modelSlot.
+  // Runs BEFORE applySoleHeightCorrection (the shift along basis.X has a
+  // small vertical component that the sole correction must see).
+  const _dcC = new THREE.Vector3();
+  const _dcT = new THREE.Vector3();
+  const _dcG = new THREE.Vector3();
+  function applyDynamicFaceCentring() {
+    if (!bladeMesh || !blade) return;
+    if (!bladeMesh.geometry.boundingBox) bladeMesh.geometry.computeBoundingBox();
+    bladeMesh.updateWorldMatrix(true, false);
+    bladeMesh.geometry.boundingBox.getCenter(_dcC).applyMatrix4(bladeMesh.matrixWorld);
+    const be = blade.matrixWorld.elements;
+    _dcT.set(be[0], be[1], be[2]).normalize(); // post-lie toe axis (horizontal by computeLieDelta's construction)
+    group.getWorldPosition(_dcG);
+    const err = (_dcC.x - _dcG.x) * _dcT.x + (_dcC.y - _dcG.y) * _dcT.y + (_dcC.z - _dcG.z) * _dcT.z;
+    const ge = group.matrixWorld.elements;
+    const denom = (ge[0] * _dcT.x + ge[1] * _dcT.y + ge[2] * _dcT.z) /
+      (Math.hypot(ge[0], ge[1], ge[2]) || 1); // cos(lie delta)
+    if (!isFinite(err) || Math.abs(denom) < 0.2) return; // degenerate guard
+    modelSlot.position.x -= err / denom;
   }
 
   // ── FIX (2026-07-02) — SOLE-HEIGHT correction, freeze-zoom vertical
@@ -345,8 +383,11 @@ export function createClub(state) {
         applyFaceCentreOffset(); // FIX K.3 — measured once, right after the real mesh lands
         measureBladeSoleY(); // sole-height fix — measured once, right after the real mesh lands
         // re-apply the last known pose/lie now that the real blade node exists
-        // (placeholder has no blade node, so lie was a no-op until now)
-        if (lastTheta != null) update(lastTheta, state);
+        // (placeholder has no blade node, so lie was a no-op until now).
+        // MOCK (challenge 1b-i): re-apply through updateBlended with the last
+        // blend so an idle (grounded-address, blend 0) pose isn't snapped to
+        // the arc-riding pose by a late GLB load.
+        if (lastTheta != null) updateBlended(lastTheta, state, lastBlend);
         else applyLie(lastLieDeg);
         resolve(true);
       },
@@ -426,13 +467,123 @@ export function createClub(state) {
     const deltaRad = computeLieDelta(basis);
     if (blade) blade.rotation.z = deltaRad;
     lastLieDeg = deltaRad * 180 / Math.PI;
+    applyDynamicFaceCentring(); // MOCK (challenge 1b-ii) — re-centre the visual face for the CURRENT lie rotation
     applySoleHeightCorrection(); // sole-height fix — orientation-only lie compensation above never moves the hosel pivot's own height; this nudges `blade`'s position (never group/faceAnchor) so the sole actually meets the ground
     return { basis, lieDeg: lastLieDeg };
   }
 
-  /** Address-pose convenience: places the club at the state's rest theta. */
+  // ── MOCK (challenge 1b-i, 2026-07-08) — GROUNDED COSMETIC ADDRESS POSE ────
+  // Owner: "et svingplan endrer ikke lievinkelen" — at ADDRESS the club must
+  // sit soled FLAT on the ground, head next to the ball, regardless of
+  // plane/direction/lowpoint/ballPosition. The old address pose rode the arc
+  // at addressTheta (thetaAtImpact − 5°), so the head floated above ground
+  // and tilted whenever the low point moved. This pose is COSMETIC ONLY: no
+  // engine/physics numbers are derived from it — the arc/impact math is
+  // untouched (update() below stays the pure arc-riding placement, which is
+  // exactly what checkAlign3d keeps asserting against).
+  //
+  // Orientation: sole (local +Y / sole normal) = world up EXACTLY (sole
+  // parallel to ground, zero residual); face normal (local -Z) = the
+  // HORIZONTAL projection of the impact tangent (i.e. the club path
+  // direction) — face square to the delivery, honest with the physics.
+  // Position: the face (group origin = sweet spot) sits ADDRESS_FACE_GAP_M
+  // behind the ball's surface along that direction, and the group's height
+  // is chosen so the measured sole point lands exactly on the ground (z=0),
+  // using the same soleTargetGap measurement the sole-height fix already
+  // takes at GLB load (fallback constant until the GLB lands).
+  const ADDRESS_FACE_GAP_M = 0.015; // face-to-ball-SURFACE gap at address
+  const FALLBACK_SOLE_DROP_M = 0.014; // pre-GLB placeholder: box bottom ≈ 14mm below origin
+  function groundedAddressPose(state) {
+    const t = tangentAt(thetaAtImpact(state), state);
+    let fx = t.x, fy = t.y;
+    const m = Math.hypot(fx, fy);
+    if (!isFinite(m) || m < 1e-6) { fx = 1; fy = 0; } else { fx /= m; fy /= m; }
+    const Z = { x: -fx, y: -fy, z: 0 };   // local +Z world dir = -face normal
+    const Y = { x: 0, y: 0, z: 1 };       // sole normal straight up — sole ∥ ground
+    const X = cross(Y, Z);                // toe direction (exactly horizontal)
+    const behind = BALL_RADIUS_M + ADDRESS_FACE_GAP_M;
+    const drop = soleTargetGap != null ? -soleTargetGap : FALLBACK_SOLE_DROP_M;
+    return { pos: { x: -fx * behind, y: -fy * behind, z: drop }, X, Y, Z };
+  }
+
+  // MOCK (challenge 1b-i) — blended placement: b=0 → grounded address pose,
+  // b=1 → the pure arc-riding pose (byte-identical result to update()).
+  // Used by the mock timeline so playback lifts the club from the grounded
+  // address into the arc early in the swing (and re-grounds on settle).
+  // update() itself stays PURE arc math — checkAlign3d's contract unchanged.
+  const _gPos = new THREE.Vector3();
+  const _aPos = new THREE.Vector3();
+  const _gQuat = new THREE.Quaternion();
+  const _aQuat = new THREE.Quaternion();
+  const _gMat = new THREE.Matrix4();
+  const _bx = new THREE.Vector3(), _by = new THREE.Vector3(), _bz = new THREE.Vector3();
+  function updateBlended(theta, state, blend) {
+    const res = update(theta, state); // arc pose incl. lie + sole-height correction
+    const b = blend == null ? 1 : Math.max(0, Math.min(1, blend));
+    lastBlend = b;
+    if (b >= 1) return res;
+    _aPos.copy(group.position);
+    _aQuat.copy(group.quaternion);
+    const arcLie = blade ? blade.rotation.z : 0;
+    const g = groundedAddressPose(state);
+    _gPos.set(g.pos.x, g.pos.y, g.pos.z);
+    _gMat.makeBasis(
+      _bx.set(g.X.x, g.X.y, g.X.z),
+      _by.set(g.Y.x, g.Y.y, g.Y.z),
+      _bz.set(g.Z.x, g.Z.y, g.Z.z)
+    );
+    _gQuat.setFromRotationMatrix(_gMat);
+    group.position.lerpVectors(_gPos, _aPos, b);
+    group.quaternion.slerpQuaternions(_gQuat, _aQuat, b);
+    // grounded lie is exactly 0 (sole normal already world-up), so the lie
+    // angle blends linearly toward the arc pose's compensation.
+    if (blade) blade.rotation.z = arcLie * b;
+    group.updateWorldMatrix(true, false);
+    applyDynamicFaceCentring(); // keep the visual face centred through the blend too
+    // re-run the sole-height correction for the BLENDED orientation (it
+    // resets blade.position to the baked rest first, so no accumulation);
+    // at b=0 this lands the sole at faceAnchor.z + soleTargetGap = 0 exactly.
+    applySoleHeightCorrection();
+    return res;
+  }
+
+  /** Address-pose convenience — MOCK: now the GROUNDED cosmetic pose (sole
+   * flat on the ground next to the ball), not the arc-riding pose. The
+   * timeline blends out of this into the arc during playback. */
   function updateAddress(state) {
-    return update(addressTheta(state), state);
+    return updateBlended(addressTheta(state), state, 0);
+  }
+
+  // ── MOCK — pose diagnostics for the acceptance grid (headless verify).
+  // lieDeg: tilt of the blade's TOE–HEEL axis (local X) out of the ground
+  //         plane — this is the owner's "lie angle" (visible in face view).
+  // soleFullDeg: full sole-plane residual (sole normal vs world up) — at the
+  //         impact frame this includes the REAL fore-aft attack-angle tilt of
+  //         a descending strike (physics, not an error); reported for honesty.
+  // soleZ: world height of the measured sole point (bladeSoleLocal).
+  // faceCentreWorld: the blade mesh's visual face-centre (bbox centre) in
+  //         WORLD space (incl. any stance-frame parent shift) — the point the
+  //         impact-centring assert compares against the ball.
+  const _pdV = new THREE.Vector3();
+  function poseDebug() {
+    if (!blade || !bladeMesh) return null;
+    blade.updateWorldMatrix(true, false);
+    const e = blade.matrixWorld.elements;
+    const xl = Math.hypot(e[0], e[1], e[2]) || 1;
+    const yl = Math.hypot(e[4], e[5], e[6]) || 1;
+    const lieDeg = Math.asin(Math.min(1, Math.abs(e[2] / xl))) * 180 / Math.PI;
+    const soleFullDeg = Math.acos(Math.min(1, Math.abs(e[6] / yl))) * 180 / Math.PI;
+    let soleZ = null;
+    if (bladeSoleLocal) soleZ = _pdV.copy(bladeSoleLocal).applyMatrix4(blade.matrixWorld).z;
+    let faceCentreWorld = null;
+    if (!bladeMesh.geometry.boundingBox) bladeMesh.geometry.computeBoundingBox();
+    bladeMesh.updateWorldMatrix(true, false);
+    const c = bladeMesh.geometry.boundingBox.getCenter(new THREE.Vector3()).applyMatrix4(bladeMesh.matrixWorld);
+    faceCentreWorld = [c.x, c.y, c.z];
+    // toe–heel axis in world (blade local +X, normalized) — the "width of the
+    // face" direction the ball-centring criterion is measured along.
+    const toeAxis = [e[0] / xl, e[1] / xl, e[2] / xl];
+    return { lieDeg, soleFullDeg, soleZ, faceCentreWorld, toeAxis };
   }
 
   return {
@@ -447,6 +598,7 @@ export function createClub(state) {
     get bladeFaceCentreXOffset() { return -modelSlot.position.x; },
     loadPromise,
     update, updateAddress, applyLie,
+    updateBlended, groundedAddressPose, poseDebug, // MOCK (challenge 1b)
     computeLieDelta, clubBasisAt,
   };
 }

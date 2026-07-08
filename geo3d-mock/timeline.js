@@ -129,6 +129,14 @@ export function createTimeline3d({ state, sa3d, arc3d, club3d, getReduced, contr
   });
 
   const anim3 = { p: restP(state) };
+  // MOCK (challenge 1b-i, 2026-07-08) — GROUNDED ADDRESS BLEND: b=0 shows the
+  // grounded cosmetic address pose (sole flat on the ground next to the ball,
+  // see geo3d-mock/club.js groundedAddressPose), b=1 the pure arc-riding pose.
+  // play() tweens b 0→1 across the first ~0.45s of the windup (the club lifts
+  // off the turf as the backswing starts, and is FULLY arc-riding long before
+  // the downswing/impact — the impact frame always rides the arc); the settle
+  // tween brings it back to 0 so idle re-grounds. Reduced motion: snapped.
+  const addressBlend = { b: 0 };
   let phase = 'idle';
   let tween = null;
   let fxRafActive = false;
@@ -161,7 +169,11 @@ export function createTimeline3d({ state, sa3d, arc3d, club3d, getReduced, contr
   // arc + glass plane stay shown; only the clubhead resets to rest).
   function placeAt(p, { sampleTrail = false, inkP = p } = {}) {
     const theta = thetaAtP(p);
-    const { basis } = club3d.update(theta, state);
+    // MOCK (challenge 1b-i) — blended placement (grounded address ↔ arc pose);
+    // club3d.update() itself stays the pure arc math checkAlign3d asserts on.
+    const { basis } = club3d.updateBlended
+      ? club3d.updateBlended(theta, state, addressBlend.b)
+      : club3d.update(theta, state);
     // GROUND-STRIKE-BEFORE-BALL — render-only visible-dig clamp: club3d.update
     // (which we do not own/edit) places group.position from the ENGINE's true
     // arcPosition/theta math, unclamped — on a Duff that head z legitimately
@@ -309,6 +321,8 @@ export function createTimeline3d({ state, sa3d, arc3d, club3d, getReduced, contr
   /** Reduced-motion: snap straight to the finished/settled state, no tweens. */
   function snapReduced() {
     if (tween) { tween.kill(); tween = null; }
+    if (window.gsap) window.gsap.killTweensOf(addressBlend);
+    addressBlend.b = 0; // MOCK — grounded address, snapped (reduced motion)
     faceZoom.reset();
     fx.reset();
     impactFired = false;
@@ -346,6 +360,7 @@ export function createTimeline3d({ state, sa3d, arc3d, club3d, getReduced, contr
   /** Play the full 3D swing timeline. Kill-and-replace on re-Hit. */
   function play() {
     if (tween) { tween.kill(); tween = null; }
+    if (window.gsap) window.gsap.killTweensOf(addressBlend); // MOCK — a settle-phase re-ground tween must not fight the new swing
     faceZoom.reset(); // mid-zoom re-Hit: restore fov/timeScale/camera before the new swing snapshots cameraBaseRig
     const reduced = getReduced();
     if (reduced) { snapReduced(); return; }
@@ -393,6 +408,9 @@ export function createTimeline3d({ state, sa3d, arc3d, club3d, getReduced, contr
       onComplete: () => {
         setPhase('settle');
         dollyTo(0); // finish phase already ramps the dolly back to ~0; settle holds it there
+        // MOCK (challenge 1b-i) — re-ground: blend back to the grounded
+        // address pose across the settle, so idle ends soled on the turf.
+        window.gsap.to(addressBlend, { b: 0, duration: 0.8, ease: 'power2.inOut' });
         const settleTween = window.gsap.to(anim3, {
           p: pRest, duration: 0.8, ease: 'power2.inOut',
           onUpdate: () => { placeAt(anim3.p, { inkP: 1 }); },
@@ -413,7 +431,15 @@ export function createTimeline3d({ state, sa3d, arc3d, club3d, getReduced, contr
       .to(anim3, { p: 0, duration: 1.2, ease: 'power2.inOut', onUpdate: () => onU('windup') }, 0)
       .to(anim3, { p: 0.42, duration: 0.9, ease: 'power1.in', onUpdate: () => onU('down') })
       .to(anim3, { p: 0.58, duration: 2.55, ease: 'none', onUpdate: () => onU('impact') })
-      .to(anim3, { p: 1, duration: 1.0, ease: 'power1.out', onUpdate: () => onU('finish') });
+      .to(anim3, { p: 1, duration: 1.0, ease: 'power1.out', onUpdate: () => onU('finish') })
+      // MOCK (challenge 1b-i) — lift the club out of the grounded address pose
+      // into the arc-riding pose over the first 0.45s of the windup: fully
+      // arc-riding long before the downswing starts, so the impact frame is
+      // always pure arc math. (The owner's "blend early in the downswing" is
+      // mapped to "as the club leaves address" — a literal downswing-time
+      // blend would leave the club motionless on the turf through the whole
+      // visible backswing.)
+      .to(addressBlend, { b: 1, duration: 0.45, ease: 'power2.out' }, 0);
 
     setPhase('windup');
   }
@@ -463,7 +489,7 @@ export function createTimeline3d({ state, sa3d, arc3d, club3d, getReduced, contr
     seek,
     anim3,
     isPlaying: () => phase !== 'idle',
-    _internal: { placeAt, restP: () => restP(state), pImpactFor: () => pAtTheta(thetaAtImpact(state)) },
+    _internal: { placeAt, restP: () => restP(state), pImpactFor: () => pAtTheta(thetaAtImpact(state)), addressBlend },
     // GROUND-STRIKE-BEFORE-BALL — test/verify hooks (self-verify + Playwright):
     // groundStrike() is the trigger computed for the swing that just played
     // (null if this band has no early ground crossing — Pure/Thin/Whiff);

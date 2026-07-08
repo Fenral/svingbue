@@ -34,6 +34,36 @@
           the same +X nudge — so on screen the BALL moves and the arc stays
           put (matching the golf-lesson mental model), while the engine still
           computes in its canonical ball-at-origin frame.
+     ROUND 2 (2026-07-08, owner-testing feedback):
+       6. STRIKE DETAIL inset: the second scissored 3D pass is GONE ("uover-
+          siktlig og selve balltreff kommer bort") — #sdViewport is now a
+          purpose-built 2D SVG SCHEMATIC (side view): stylized arc-bottom
+          curve + ball + yellow low-point marker with cm dimension + turf
+          strip when fat (left panel), and a revived .ballcloseup-style face
+          panel (big ball circle + horizontal contact line + mm label in
+          strikeQuality colour) on the right. Band chip + foot sentence stay.
+          No renderPass is hooked (scene.js setInsetPass never called) — the
+          card is pure DOM/SVG; geo3d-mock/insetview.js is deleted.
+       7. CLUB VISUAL HONESTY: grounded cosmetic ADDRESS pose (sole parallel
+          to ground, head next to the ball, for EVERY plane/direction/low-
+          point/ballPosition — see geo3d-mock/club.js groundedAddressPose);
+          playback blends grounded→arc-riding as the club leaves address
+          (snap under reduced motion); the impact frame always rides the arc.
+          Impact centring itself needs NO new compensation: the production
+          engine's lpWorld() already carries the FIX L address translation
+          (arcPosition(thetaAtImpact) lands horizontally AT the ball,
+          exactly), and club.js's FIX K.3 already makes the blade's visual
+          face centre the point that rides the arc. Verified per-cell by the
+          __sa.mock.impactMetrics() acceptance-grid hook.
+       8. Attack/path arrows demoted: the 3D delivery arrow is NOT added to
+          the scene any more; instead a subtle ARC-EXIT PARTICLE STREAM
+          (#arcStream, DOM/CSS only) flows out of the swing arc at the
+          impact zone along the live resultant delivery direction. Replaces
+          the old chip-trail. Reduced motion → static directional hint;
+          document.hidden pauses the loop; renderer stays render-on-demand.
+       9. Carousel tabs show LIVE VALUES at all times (two-line tabs:
+          label + value, updated on every input, value ≥10px on the dark
+          plate, folded into each tab's accessible name).
      3D modules are the geo3d-mock/ copies (production geo3d/ untouched).
      ═══════════════════════════════════════════════════════════════════════ -->
 <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2052%2052'%20fill='none'%3E%3Cpath%20d='M11%2045%20C%2016%2026,%2024%2018,%2035%2015%20M21%2039%20L%2030%2024%20L%2043%2045'%20stroke='%2322E3D6'%20stroke-width='4.2'%20stroke-linecap='round'%20stroke-linejoin='round'/%3E%3Ccircle%20cx='37'%20cy='15'%20r='5.2'%20fill='%2322E3D6'/%3E%3C/svg%3E" />
@@ -143,24 +173,47 @@
     100%{transform:scale(1)}
   }
 
-  /* MOCK — ambient particle trail from the ball along the live resultant
-     attack+path (delivery) direction. DOM/CSS only (never drives the 3D
-     renderer — render-on-demand invariant); hidden under reduced motion. */
-  .chip-trail{position:fixed;left:0;top:0;z-index:2;pointer-events:none;width:0;height:0}
-  .chip-trail i{
+  /* MOCK round 2 (challenge 2) — ARC-EXIT PARTICLE STREAM. Replaces both the
+     old chip-trail AND the 3D delivery arrow (demoted: never added to the
+     scene in this mock). A handful of small ink-white dots flow OUT OF the
+     swing arc at the impact zone, along the live resultant attack+path
+     (delivery) direction. DOM/CSS only: spawn points + direction are
+     re-projected (world→screen) on every rebuild/slider input; the motion is
+     pure CSS keyframes, so the 3D renderer stays render-on-demand
+     (renderCount static at idle). Neutral white-ish alpha — cyan stays
+     reserved for the ball; the stream shows the RESULTANT only, the HUD
+     chips carry the numbers. Reduced motion: the global animation kill hides
+     the moving dots and a static directional gradient streak (.hint) shows
+     instead. document.hidden pauses the loop (JS toggles .paused). */
+  .arc-stream{position:fixed;left:0;top:0;z-index:2;pointer-events:none;width:0;height:0}
+  .arc-stream i{
     position:absolute;left:0;top:0;width:5px;height:5px;margin:-2.5px 0 0 -2.5px;border-radius:50%;
-    background:#e8f0fb;opacity:0;animation:trailDrift 2.8s linear infinite;
+    background:rgba(232,240,251,.92);box-shadow:0 0 6px rgba(232,240,251,.3);
+    opacity:0;animation:arcStreamFlow 2.6s linear infinite;
   }
-  .chip-trail i:nth-child(2){animation-delay:.7s}
-  .chip-trail i:nth-child(3){animation-delay:1.4s}
-  .chip-trail i:nth-child(4){animation-delay:2.1s}
-  @keyframes trailDrift{
-    0%{transform:translate(0,0) scale(1);opacity:0}
-    12%{opacity:.3}
-    80%{opacity:.09}
-    100%{transform:translate(var(--tdx,60px),var(--tdy,-14px)) scale(.45);opacity:0}
+  .arc-stream i:nth-child(even){width:3.5px;height:3.5px;margin:-1.75px 0 0 -1.75px}
+  .arc-stream i:nth-child(2){animation-delay:.37s}
+  .arc-stream i:nth-child(3){animation-delay:.74s}
+  .arc-stream i:nth-child(4){animation-delay:1.11s}
+  .arc-stream i:nth-child(5){animation-delay:1.48s}
+  .arc-stream i:nth-child(6){animation-delay:1.85s}
+  .arc-stream i:nth-child(7){animation-delay:2.22s}
+  @keyframes arcStreamFlow{
+    0%{transform:translate(var(--sx,0px),var(--sy,0px)) scale(1);opacity:0}
+    10%{opacity:.34}
+    70%{opacity:.12}
+    100%{transform:translate(calc(var(--sx,0px) + var(--dx,60px)),calc(var(--sy,0px) + var(--dy,-14px))) scale(.4);opacity:0}
   }
-  @media (prefers-reduced-motion:reduce){.chip-trail{display:none}}
+  .arc-stream.paused i{animation-play-state:paused}
+  .arc-stream .hint{display:none}
+  @media (prefers-reduced-motion:reduce){
+    .arc-stream i{display:none}
+    .arc-stream .hint{
+      display:block;position:absolute;left:0;top:-1px;width:42px;height:2px;border-radius:1px;
+      background:linear-gradient(90deg, rgba(232,240,251,0), rgba(232,240,251,.55));
+      transform:rotate(var(--ang,0deg));transform-origin:0 50%;
+    }
+  }
 
   /* freemium "N free shots left" nudge pill */
   .sa-nudge{
@@ -232,7 +285,14 @@
     background:rgba(74,222,128,.12);color:#4ADE80;border:1px solid rgba(74,222,128,.3);
   }
   .strike-detail .chip .pct{opacity:.75;font-weight:600}
-  .strike-detail .viewport{position:relative;width:100%;aspect-ratio:340/196}
+  /* MOCK round 2 (challenge 1a): the viewport no longer reveals a 3D pass —
+     it is a self-contained 2D SVG schematic, so it now carries its OWN dark
+     plate (previously it had to stay transparent for the scissored WebGL
+     render underneath). */
+  .strike-detail .viewport{
+    position:relative;width:100%;aspect-ratio:340/196;
+    background:linear-gradient(180deg, rgba(10,16,24,.96), rgba(9,13,19,.93));
+  }
   .strike-detail .viewport svg{position:absolute;inset:0;width:100%;height:100%;display:block;pointer-events:none}
   .sd-lb{font:700 12px/1 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;fill:var(--accent);font-variant-numeric:tabular-nums;paint-order:stroke;stroke:#0A0E12;stroke-width:2.5px;stroke-linejoin:round}
   .sd-lb-soil{fill:#c9a878}
@@ -260,13 +320,23 @@
     display:flex;gap:12px;align-items:center;
   }
   .ctabs{display:flex;gap:4px;flex:none}
+  /* MOCK round 2 (challenge 3) — tabs carry LIVE DATA at all times (all four,
+     not just the active one): two lines, param label on top + current value
+     underneath, updated on every input. Value line ≥10px; the value text is
+     ink (#e8f0fb) on the dark rail plate (≥4.5:1 — the muted #9aabc6 label
+     also passes). Both lines are text content, so each tab's accessible name
+     naturally folds the value in ("Plane 60°"). 44px targets preserved. */
   .ctab{
-    width:auto;min-width:44px;height:44px;padding:0 10px;border-radius:10px;
+    width:auto;min-width:44px;height:44px;padding:0 9px;border-radius:10px;
     background:transparent;border:1px solid transparent;color:var(--muted);
-    font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;white-space:nowrap;
+    display:inline-flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:2px;
+    font-size:11px;font-weight:700;letter-spacing:.05em;white-space:nowrap;
   }
+  .ctab .tl{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;line-height:1}
+  .ctab .tv{font-size:11px;font-weight:700;line-height:1;color:var(--ink);font-variant-numeric:tabular-nums;letter-spacing:0}
   .ctab:hover{background:rgba(255,255,255,.08);color:var(--ink);border-color:transparent}
   .ctab[aria-pressed="true"]{color:var(--accent);border-color:var(--accent-line);background:var(--accent-soft)}
+  .ctab[aria-pressed="true"] .tv{color:var(--accent)}
   .crows{flex:1;min-width:0}
   .row{display:none}
   .row.active{display:flex;align-items:center;gap:10px}
@@ -279,7 +349,9 @@
   .row .top .val{color:var(--rng,var(--accent));font-variant-numeric:tabular-nums;font-weight:700;flex:none}
   .row.active .slider{flex:1;min-width:0}
   @media (max-width:900px){
-    .ctab{padding:0 7px;font-size:10px}
+    .ctab{padding:0 6px;font-size:10px}
+    .ctab .tl{font-size:9px}
+    .ctab .tv{font-size:10px}   /* value stays ≥10px (challenge 3 constraint) */
     .row .top{width:116px;font-size:10px}
   }
 
@@ -410,8 +482,13 @@
     <span class="hud-chip path" id="chipPath"><span class="sw"></span><span>PATH</span> <span class="num" id="chipPathNum">—</span></span>
   </div>
 
-  <!-- MOCK — ambient particle trail from the ball along the live delivery direction -->
-  <div class="chip-trail" id="chipTrail" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+  <!-- MOCK round 2 — arc-exit particle stream: dots flow OUT OF the swing arc
+       at the impact zone along the live resultant delivery direction (replaces
+       the chip-trail + the demoted 3D delivery arrow). -->
+  <div class="arc-stream" id="arcStream" aria-hidden="true">
+    <i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+    <b class="hint"></b>
+  </div>
 
   <!-- freemium nudge pill -->
   <div class="sa-nudge" id="saNudge" hidden aria-hidden="true"></div>
@@ -438,14 +515,25 @@
     <button id="helpBtn" class="sa-help" aria-label="Replay the walkthrough" title="Help">?</button>
   </div>
 
-  <!-- STRIKE DETAIL inset — unchanged behaviour, raised above the rail -->
+  <!-- STRIKE DETAIL — MOCK round 2 (challenge 1a): purpose-built 2D SVG
+       SCHEMATIC (no second 3D pass). Left: side-view arc bottom + ball +
+       low-point marker/cm dimension + turf strip when fat. Right: revived
+       .ballcloseup face panel (ball circle + contact line + mm label).
+       Band chip + foot sentence unchanged. defs persist; JS redraws #sdDraw. -->
   <div class="strike-detail" id="strikeDetail" role="group" aria-labelledby="sdTtl">
     <div class="top">
       <span class="ttl" id="sdTtl">Strike detail</span>
       <span class="chip" id="sdChip"><span id="sdChipBand">Pure</span> <span class="pct" id="sdChipPct">100%</span></span>
     </div>
     <div class="viewport" id="sdViewport">
-      <svg id="sdAnnot" viewBox="0 0 340 196" aria-hidden="true"></svg>
+      <svg id="sdAnnot" viewBox="0 0 340 196" aria-hidden="true">
+        <defs>
+          <radialGradient id="sdBallGrad" cx="38%" cy="32%" r="75%">
+            <stop offset="0" stop-color="#ffffff"/><stop offset="0.7" stop-color="#e7ecf2"/><stop offset="1" stop-color="#b9c3cf"/>
+          </radialGradient>
+        </defs>
+        <g id="sdDraw"></g>
+      </svg>
     </div>
     <p class="foot" id="sdFoot"><b>Pure</b></p>
   </div>
@@ -462,11 +550,16 @@
 
   <!-- MOCK — slim always-visible carousel rail: ONE slider at a time -->
   <div class="tune" id="tune">
+    <!-- MOCK round 2 (challenge 3): every tab shows its LIVE value at all
+         times (label + value = the tab's text = its accessible name). -->
     <div class="ctabs" id="ctabs" role="group" aria-label="Swing parameter">
-      <button type="button" class="ctab" id="tab_plane" aria-pressed="true" aria-controls="row_plane">Plane</button>
-      <button type="button" class="ctab" id="tab_dir" aria-pressed="false" aria-controls="row_dir">Direction</button>
-      <button type="button" class="ctab" id="tab_lpx" aria-pressed="false" aria-controls="row_lpx">Low point</button>
-      <button type="button" class="ctab" id="tab_lpz" aria-pressed="false" aria-controls="row_lpz">Depth</button>
+      <!-- NOTE: the single space between the two spans is deliberate — it is
+           whitespace-only (not rendered as a flex item) but keeps the tab's
+           accessible name readable: "Plane 60°", not "Plane60°". -->
+      <button type="button" class="ctab" id="tab_plane" aria-pressed="true" aria-controls="row_plane"><span class="tl">Plane</span> <span class="tv" id="tv_plane">—</span></button>
+      <button type="button" class="ctab" id="tab_dir" aria-pressed="false" aria-controls="row_dir"><span class="tl">Direction</span> <span class="tv" id="tv_dir">—</span></button>
+      <button type="button" class="ctab" id="tab_lpx" aria-pressed="false" aria-controls="row_lpx"><span class="tl">Low point</span> <span class="tv" id="tv_lpx">—</span></button>
+      <button type="button" class="ctab" id="tab_lpz" aria-pressed="false" aria-controls="row_lpz"><span class="tl">Depth</span> <span class="tv" id="tv_lpz">—</span></button>
     </div>
     <div class="crows">
       <div class="row active" id="row_plane">
@@ -534,7 +627,8 @@ import { createGroundContact, groundCrossingTheta0 } from './geo3d-mock/groundco
 import { createClub } from './geo3d-mock/club.js';
 import { createTimeline3d } from './geo3d-mock/timeline.js';
 import { createDelivery } from './geo3d-mock/delivery.js';
-import { createInsetView } from './geo3d-mock/insetview.js';
+// MOCK round 2: geo3d-mock/insetview.js is GONE — the strike-detail card is a
+// pure 2D SVG schematic now (challenge 1a); no second scissored render pass.
 import * as saShots from './sa-shots.js';
 import * as saIap from './sa-iap.js';
 import { openPaywall } from './sa-paywall.js';
@@ -573,7 +667,6 @@ const reduceMotion3d = matchMedia('(prefers-reduced-motion: reduce)').matches;
 let sa3d = null;
 let arc3d = null, plane3d = null, lp3d = null, gc3d = null, club3d = null, timeline3d = null, delivery3d = null;
 let ballTick = null; // contact-height ring on the 3D ball (FIX J concept, mock recolour)
-let inset3d = null;  // STRIKE-DETAIL inset
 let shift3d = null;  // MOCK — stance-frame wrapper: all engine-driven content,
                      // shifted +X by state.ballPosition (ball moves, arc stays)
 
@@ -613,21 +706,19 @@ function init3d() {
 
   // MOCK — stance-frame wrapper (see file header): engine content shifts +X
   // by ballPosition; the ball mesh (scene.js child) gets the same nudge.
+  // ROUND 2 (challenge 2): delivery3d.group is DELIBERATELY NOT added — the
+  // delivery arrow is demoted; the instance is kept alive purely for its
+  // dir() math, which aims the DOM arc-exit particle stream.
   shift3d = new THREE.Group();
-  shift3d.add(arc3d.group, plane3d.group, lp3d.group, gc3d.group, club3d.group, delivery3d.group, ballTick);
+  shift3d.add(arc3d.group, plane3d.group, lp3d.group, gc3d.group, club3d.group, ballTick);
   sa3d.scene.add(shift3d);
   arc3d.group.__invalidate = sa3d.invalidate;
   plane3d.group.__invalidate = sa3d.invalidate;
-  delivery3d.group.__invalidate = sa3d.invalidate;
   club3d.loadPromise.then(() => sa3d.invalidate());
 
-  // STRIKE-DETAIL inset — second scissored viewport, same scene/renderer.
-  inset3d = createInsetView({
-    hideNodes: () => [plane3d.group, sa3d.targetLine],
-    getWorldOffsetX: () => state.ballPosition, // MOCK — stance-frame shift
-  });
-  sa3d.setInsetPass((renderer, scene, canvas) => inset3d.renderPass(renderer, scene, canvas));
-  updateInsetRect();
+  // STRIKE-DETAIL — ROUND 2 (challenge 1a): pure 2D SVG schematic; no
+  // renderPass is hooked (sa3d.setInsetPass never called → stays null).
+  refreshSchematic();
 
   timeline3d = createTimeline3d({
     state: engineState, sa3d, arc3d, club3d,
@@ -651,33 +742,34 @@ function init3d() {
   rebuild3d();
   sa3d.invalidate();
 
-  addEventListener('resize', () => { updateInsetRect(); sa3d.invalidate(); placeBallHandle(); updateTrail(); restyleActiveSlider(); });
+  addEventListener('resize', () => { refreshSchematic(); sa3d.invalidate(); placeBallHandle(); updateStream(); restyleActiveSlider(); });
 
-  // Re-measure the inset rect when the CARD's geometry shifts without a
+  // Re-measure the schematic when the CARD's geometry shifts without a
   // window resize (font load re-wrap, turf line appearing) — mirrors
   // production geometry.html (2026-07-08 fix).
   if (document.fonts && document.fonts.ready) {
-    document.fonts.ready.then(() => { updateInsetRect(); sa3d.invalidate(); });
+    document.fonts.ready.then(() => refreshSchematic());
   }
   if (typeof ResizeObserver === 'function') {
     const sdCard = $('strikeDetail');
-    if (sdCard) new ResizeObserver(() => { updateInsetRect(); sa3d.invalidate(); }).observe(sdCard);
+    if (sdCard) new ResizeObserver(() => refreshSchematic()).observe(sdCard);
   }
 
   canvas3d.addEventListener('webglcontextrestored', () => sa3d.invalidate());
 }
 
-function updateInsetRect() {
-  if (!inset3d) return;
-  const vp = $('sdViewport'), canvas3d = $('scene3d');
-  if (!vp || !canvas3d) return;
-  const vr = vp.getBoundingClientRect(), cr = canvas3d.getBoundingClientRect();
+// ── MOCK round 2 (challenge 1a) — schematic sizing: measure the viewport,
+// match the SVG viewBox 1:1 to CSS px (crisp 1px strokes), redraw. ─────────
+const sdLayout = { w: 0, h: 0, S: 0, bx: 0, gy: 0, divX: 0 };
+function refreshSchematic() {
+  const vp = $('sdViewport'), svg = $('sdAnnot');
+  if (!vp || !svg) return;
+  const vr = vp.getBoundingClientRect();
   if (vr.width < 2 || vr.height < 2) return;
-  const x = vr.left - cr.left;
-  const y = cr.bottom - vr.bottom; // gl viewport/scissor measure y from the BOTTOM
-  inset3d.setRect({ x, y, w: vr.width, h: vr.height });
-  const svg = $('sdAnnot');
-  if (svg) svg.setAttribute('viewBox', `0 0 ${vr.width.toFixed(1)} ${vr.height.toFixed(1)}`);
+  sdLayout.w = vr.width;
+  sdLayout.h = vr.height;
+  svg.setAttribute('viewBox', `0 0 ${vr.width.toFixed(1)} ${vr.height.toFixed(1)}`);
+  updateStrikeDetail(engineState);
 }
 
 function rebuild3d() {
@@ -693,13 +785,13 @@ function rebuild3d() {
   if (club3d) club3d.updateAddress(engineState);
   if (delivery3d) delivery3d.update(engineState);
   updateBallTick(engineState);
-  if (inset3d) { inset3d.updatePose(engineState); updateStrikeDetail(engineState); }
+  updateStrikeDetail(engineState); // MOCK round 2 — 2D schematic redraw (no 3D pose)
   if (arc3d && (!timeline3d || !timeline3d.isPlaying())) {
     arc3d.coreMat.uniforms.uProgress.value = 1;
     arc3d.glowMat.uniforms.uProgress.value = 1;
   }
   placeBallHandle();
-  updateTrail();
+  updateStream();
   sa3d.invalidate();
 }
 
@@ -734,7 +826,25 @@ function updateBallTick(stateRef) {
   ballTick.visible = true;
 }
 
-// ── STRIKE DETAIL inset (unchanged from geometry.html, fed engineState) ────
+// ── STRIKE DETAIL — MOCK round 2 (challenge 1a): purpose-built 2D SVG
+// SCHEMATIC replacing the second scissored 3D pass ("uoversiktlig og selve
+// balltreff kommer bort"). Crisp instrument-style SIDE VIEW (engine-frame
+// X-Z plane, ball at the origin — the stance frame is irrelevant here since
+// everything is drawn RELATIVE to the ball):
+//   LEFT PANEL — (4) minimal stylized arc-bottom curve (true arcPosition
+//   samples, face-on projection), ball on the ground line, (1) yellow
+//   low-point marker + dashed plumb + cm dimension (ahead/behind reads from
+//   the marker's side; the number matches effectiveLpx exactly — the same
+//   convention as the foot sentence; lpWorld.x differs from it only by a
+//   sub-mm direction-compensation term), (3) soil turf strip spanning the
+//   ground crossing when fat/duff.
+//   RIGHT PANEL — (2) revived pre-density-diet .ballcloseup: big ball circle
+//   resting on the same ground line + horizontal contact line at the true
+//   strike height + mm label in strikeQuality colour (textColor, ≥4.5:1).
+// Vertical display SATURATES for extreme depths (the arc/marker never escape
+// the card; all printed numbers stay true) and the horizontal scale only
+// zooms out beyond ±17cm effective low point so the dimension always fits.
+// Band chip + foot sentence unchanged from the production card.
 function hexToRgba(hex, alpha) {
   const h = hex.replace('#', '');
   const r = parseInt(h.substring(0, 2), 16), g = parseInt(h.substring(2, 4), 16), b = parseInt(h.substring(4, 6), 16);
@@ -747,14 +857,9 @@ function sdAnchorFor(x, rectW, preferred = 'middle') {
   return preferred;
 }
 
-const _sdBall = new THREE.Vector3();
-const _sdLp = new THREE.Vector3();
-const _sdContact = new THREE.Vector3();
-const _sdEntry = new THREE.Vector3();
-
 function updateStrikeDetail(stateRef) {
   const card = $('strikeDetail');
-  if (!card || !inset3d) return;
+  if (!card) return;
   const sq = strikeQuality(stateRef);
   const ct = clubBallContact(stateRef);
   const cmVal = Math.round(effectiveLpx(stateRef) * 100);
@@ -779,61 +884,112 @@ function updateStrikeDetail(stateRef) {
   $('sdFoot').innerHTML = `<b>${sq.band}</b> — low point <b>${cmText}</b>, strike <b>${mmText}</b> on the face.`
     + (turfText ? ` <span class="sd-turf">${turfText}</span>` : '');
 
-  const rect = inset3d.getRect();
-  const svg = $('sdAnnot');
-  if (!svg || rect.w < 4 || rect.h < 4) return;
-
-  _sdBall.set(0, 0, BALL_RADIUS_M);
-  const lp = lpWorld(stateRef);
-  _sdLp.set(lp.x, lp.y, lp.z);
-  const clampedOffset = Math.max(-BALL_RADIUS_M * 0.95, Math.min(BALL_RADIUS_M * 0.95, ct.offset));
-  _sdContact.set(0, -BALL_RADIUS_M, BALL_RADIUS_M + clampedOffset);
-
-  const pBall = inset3d.projectToInset(_sdBall);
-  const pLp = inset3d.projectToInset(_sdLp);
-  const pContact = inset3d.projectToInset(_sdContact);
+  const draw = $('sdDraw');
+  const w = sdLayout.w, h = sdLayout.h;
+  if (!draw || w < 4 || h < 4) return;
 
   const accent = '#22E3D6';
+  const yellow = '#ffd166';
+  const lpxEff = effectiveLpx(stateRef);
+  const lp = lpWorld(stateRef);
+
+  // layout: left schematic panel | divider | right face close-up panel
+  const divX = w * 0.60;
+  const gy = h * 0.68;                 // shared ground line (both panels)
+  const bx = divX * 0.56;              // ball x in the left panel
+  // horizontal px-per-metre: fixed for |lpxEff| ≤ 17cm, zooms out beyond so
+  // the dimension always fits (the marker never clamps at a panel edge).
+  const S = (divX * 0.46) / Math.max(0.17, Math.abs(lpxEff) * 1.15);
+  sdLayout.S = S; sdLayout.bx = bx; sdLayout.gy = gy; sdLayout.divX = divX;
+  const ballR = Math.max(4.5, BALL_RADIUS_M * S);
+
+  // vertical display saturation for the low-point depth (numbers stay true)
+  const zRoomDn = (h - gy) - 7, zRoomUp = (gy - 14) * 0.35;
+  const dispLpz = Math.max(-zRoomDn / S, Math.min(zRoomUp / S, lp.z));
+  const zAdj = dispLpz - lp.z;
+
   const parts = [];
 
-  if (!pBall.behind && !pLp.behind) {
-    const topY = Math.max(20, Math.min(pBall.y, pLp.y) - 36);
-    const leftX = Math.min(pBall.x, pLp.x), rightX = Math.max(pBall.x, pLp.x);
-    const midX = (pBall.x + pLp.x) / 2;
+  // (4) arc-bottom curve — true arcPosition side view (x=world X, y=world Z),
+  // drawn as glow + core with out-of-panel gaps
+  let core = '', pen = false;
+  for (let i = 0; i <= 44; i++) {
+    const th = -0.55 + 1.1 * (i / 44);
+    const p = arcPosition(th, stateRef);
+    const x = bx + p.x * S, y = gy - (p.z + zAdj) * S;
+    if (x < 7 || x > divX - 7 || y < 5 || y > h - 5) { pen = false; continue; }
+    core += (pen ? 'L' : 'M') + x.toFixed(1) + ' ' + y.toFixed(1);
+    pen = true;
+  }
+  if (core) {
+    parts.push(
+      `<path d="${core}" fill="none" stroke="${accent}" stroke-width="5" opacity=".10" stroke-linecap="round"/>`,
+      `<path d="${core}" fill="none" stroke="${accent}" stroke-width="1.6" opacity=".8" stroke-linecap="round"/>`
+    );
+  }
+
+  // (3) turf strip when fat/duff — soil band across the ground crossing
+  if (theta0 != null) {
+    const entry = arcPosition(-theta0, stateRef), exit = arcPosition(theta0, stateRef);
+    const ex = bx + entry.x * S, xx = bx + exit.x * S;
+    const xa = Math.max(7, Math.min(ex, xx)), xb = Math.min(divX - 7, Math.max(ex, xx));
+    if (xb > xa) parts.push(`<rect x="${xa.toFixed(1)}" y="${(gy - 2).toFixed(1)}" width="${(xb - xa).toFixed(1)}" height="4.5" rx="2" fill="#8a5a2b" opacity=".7"/>`);
+    const exC = Math.max(9, Math.min(divX - 9, ex));
+    parts.push(
+      `<circle cx="${exC.toFixed(1)}" cy="${gy.toFixed(1)}" r="2.6" fill="#9a7b52"/>`,
+      `<text x="${exC.toFixed(1)}" y="${(gy + 13).toFixed(1)}" text-anchor="${sdAnchorFor(exC, divX)}" class="sd-lb sd-lb-soil" font-size="10">turf</text>`
+    );
+  }
+
+  // shared ground line (drawn over the strip edge, under ball/markers)
+  parts.push(`<line x1="7" y1="${gy.toFixed(1)}" x2="${(w - 7).toFixed(1)}" y2="${gy.toFixed(1)}" stroke="rgba(255,255,255,.28)" stroke-width="1.2"/>`);
+
+  // ball (side view), resting on the ground line
+  parts.push(`<circle cx="${bx.toFixed(1)}" cy="${(gy - ballR).toFixed(1)}" r="${ballR.toFixed(1)}" fill="url(#sdBallGrad)"/>`);
+
+  // (1) low-point marker + dashed plumb + cm dimension (ball ↔ low point)
+  const lpX = bx + lpxEff * S;
+  const lpY = gy - dispLpz * S;
+  if (Math.abs(lpY - gy) > 2.5) {
+    parts.push(`<line x1="${lpX.toFixed(1)}" y1="${lpY.toFixed(1)}" x2="${lpX.toFixed(1)}" y2="${gy.toFixed(1)}" stroke="${yellow}" stroke-width="1" stroke-dasharray="2 3" opacity=".8"/>`);
+  }
+  parts.push(`<circle cx="${lpX.toFixed(1)}" cy="${lpY.toFixed(1)}" r="3" fill="${yellow}"/>`);
+  {
+    const topY = Math.max(24, Math.min(gy - ballR * 2, lpY) - 15);
+    const leftX = Math.min(bx, lpX), rightX = Math.max(bx, lpX);
+    const midX = (bx + lpX) / 2;
     const cmLabel = cmVal === 0 ? '0 cm' : `${Math.abs(cmVal)} cm`;
     parts.push(
-      `<line x1="${pBall.x.toFixed(1)}" y1="${pBall.y.toFixed(1)}" x2="${pBall.x.toFixed(1)}" y2="${topY.toFixed(1)}" stroke="${accent}" stroke-width="1" stroke-dasharray="2 3" opacity=".55"/>`,
-      `<line x1="${pLp.x.toFixed(1)}" y1="${pLp.y.toFixed(1)}" x2="${pLp.x.toFixed(1)}" y2="${topY.toFixed(1)}" stroke="${accent}" stroke-width="1" stroke-dasharray="2 3" opacity=".55"/>`,
+      `<line x1="${bx.toFixed(1)}" y1="${(gy - ballR * 2 - 2).toFixed(1)}" x2="${bx.toFixed(1)}" y2="${topY.toFixed(1)}" stroke="${accent}" stroke-width="1" stroke-dasharray="2 3" opacity=".55"/>`,
+      `<line x1="${lpX.toFixed(1)}" y1="${(lpY - 4).toFixed(1)}" x2="${lpX.toFixed(1)}" y2="${topY.toFixed(1)}" stroke="${accent}" stroke-width="1" stroke-dasharray="2 3" opacity=".55"/>`,
       `<line x1="${leftX.toFixed(1)}" y1="${topY.toFixed(1)}" x2="${rightX.toFixed(1)}" y2="${topY.toFixed(1)}" stroke="${accent}" stroke-width="1.4"/>`,
-      `<path d="M${(leftX - 7).toFixed(1)} ${topY.toFixed(1)} L${leftX.toFixed(1)} ${(topY - 3.5).toFixed(1)} L${leftX.toFixed(1)} ${(topY + 3.5).toFixed(1)} Z" fill="${accent}"/>`,
-      `<path d="M${(rightX + 7).toFixed(1)} ${topY.toFixed(1)} L${rightX.toFixed(1)} ${(topY - 3.5).toFixed(1)} L${rightX.toFixed(1)} ${(topY + 3.5).toFixed(1)} Z" fill="${accent}"/>`,
-      `<rect x="${(midX - 24).toFixed(1)}" y="${(topY - 21).toFixed(1)}" width="48" height="17" rx="4" fill="#0A0E12" stroke="rgba(34,227,214,.4)"/>`,
-      `<text x="${midX.toFixed(1)}" y="${(topY - 9).toFixed(1)}" text-anchor="middle" class="sd-lb">${cmLabel}</text>`
+      `<path d="M${(leftX - 6).toFixed(1)} ${topY.toFixed(1)} L${leftX.toFixed(1)} ${(topY - 3).toFixed(1)} L${leftX.toFixed(1)} ${(topY + 3).toFixed(1)} Z" fill="${accent}"/>`,
+      `<path d="M${(rightX + 6).toFixed(1)} ${topY.toFixed(1)} L${rightX.toFixed(1)} ${(topY - 3).toFixed(1)} L${rightX.toFixed(1)} ${(topY + 3).toFixed(1)} Z" fill="${accent}"/>`,
+      `<rect x="${(midX - 22).toFixed(1)}" y="${(topY - 20).toFixed(1)}" width="44" height="16" rx="4" fill="#0A0E12" stroke="rgba(34,227,214,.4)"/>`,
+      `<text x="${midX.toFixed(1)}" y="${(topY - 8).toFixed(1)}" text-anchor="middle" class="sd-lb">${cmLabel}</text>`
     );
   }
 
-  if (sq.band !== 'Whiff' && !pContact.behind) {
-    const mx = pContact.x + 20, my = pContact.y - 14;
-    parts.push(
-      `<line x1="${pContact.x.toFixed(1)}" y1="${pContact.y.toFixed(1)}" x2="${(mx - 3).toFixed(1)}" y2="${(my + 3).toFixed(1)}" stroke="${accent}" stroke-width="1" opacity=".75"/>`,
-      `<circle cx="${pContact.x.toFixed(1)}" cy="${pContact.y.toFixed(1)}" r="2" fill="${accent}"/>`,
-      `<text x="${mx.toFixed(1)}" y="${my.toFixed(1)}" text-anchor="${sdAnchorFor(mx, rect.w, 'start')}" class="sd-lb">${mmText === 'centered' ? 'center' : mmText}</text>`
-    );
-  }
+  // panel divider
+  parts.push(`<line x1="${divX.toFixed(1)}" y1="8" x2="${divX.toFixed(1)}" y2="${(h - 8).toFixed(1)}" stroke="rgba(255,255,255,.10)" stroke-width="1"/>`);
 
-  if (theta0 != null && turfText) {
-    const entry = arcPosition(-theta0, stateRef);
-    _sdEntry.set(entry.x, entry.y, 0);
-    const pEntry = inset3d.projectToInset(_sdEntry);
-    if (!pEntry.behind) {
-      parts.push(
-        `<circle cx="${pEntry.x.toFixed(1)}" cy="${pEntry.y.toFixed(1)}" r="3" fill="#9a7b52"/>`,
-        `<text x="${pEntry.x.toFixed(1)}" y="${(pEntry.y - 8).toFixed(1)}" text-anchor="${sdAnchorFor(pEntry.x, rect.w)}" class="sd-lb sd-lb-soil">${turfText}</text>`
-      );
-    }
+  // (2) face close-up — .ballcloseup revival: big ball + contact line + mm
+  const cR = Math.min((w - divX) * 0.27, h * 0.24);
+  const cx = divX + (w - divX) / 2;
+  const cy = gy - cR;
+  parts.push(`<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${cR.toFixed(1)}" fill="url(#sdBallGrad)"/>`);
+  const ratio = Math.max(-1.45, Math.min(1.45, ct.offsetRatio));
+  const cyLine = cy - ratio * cR;
+  if (sq.band === 'Whiff') {
+    parts.push(`<line x1="${(cx - cR - 7).toFixed(1)}" y1="${cyLine.toFixed(1)}" x2="${(cx + cR + 7).toFixed(1)}" y2="${cyLine.toFixed(1)}" stroke="${sq.color}" stroke-width="2" stroke-dasharray="4 4" stroke-linecap="round"/>`);
+  } else {
+    parts.push(`<line x1="${(cx - cR - 7).toFixed(1)}" y1="${cyLine.toFixed(1)}" x2="${(cx + cR + 7).toFixed(1)}" y2="${cyLine.toFixed(1)}" stroke="${sq.color}" stroke-width="2.5" stroke-linecap="round"/>`);
   }
+  const mmShort = sq.band === 'Whiff' ? 'no contact'
+    : (Math.abs(mmVal) < 1.5 ? 'center' : (mmVal > 0 ? `+${mmVal} mm high` : `−${Math.abs(mmVal)} mm low`));
+  parts.push(`<text x="${cx.toFixed(1)}" y="${(h - 7).toFixed(1)}" text-anchor="middle" class="sd-lb" style="fill:${sq.textColor}">${mmShort}</text>`);
 
-  svg.innerHTML = parts.join('');
+  draw.innerHTML = parts.join('');
 }
 
 const els = {
@@ -919,7 +1075,7 @@ renderReadout();
 // sign-coloured values would drop to ~2:1 contrast; fading them with the rest
 // keeps the low-alpha resting plate AND the AA contrast (values are static
 // mid-swing anyway).
-const CONTROL_SEL = '.controls, .tune, .modnav, .strike-detail, .ball-handle, .chip-trail, .hud-chips';
+const CONTROL_SEL = '.controls, .tune, .modnav, .strike-detail, .ball-handle, .arc-stream, .hud-chips';
 // a11y (Major 2): faded controls must leave the tab order — opacity:0 alone
 // keeps them focusable/operable invisibly. On hide-complete we set
 // visibility:hidden; if focus is inside a hidden control we stash it and park
@@ -977,7 +1133,7 @@ function animate3dView(toView) {
     Object.assign(sa3d.rig, pose);
     sa3d.applyRig();
     sa3d.invalidate();
-    placeBallHandle(); updateTrail();
+    placeBallHandle(); updateStream();
     if (gc3d) gc3d.update(engineState, sa3d.camera, $('scene3d'));
     return;
   }
@@ -985,7 +1141,7 @@ function animate3dView(toView) {
   sa3d.startTicking();
   viewTween3d = gsap.to(sa3d.rig, {
     ...pose, duration: 0.7, ease: 'power2.inOut',
-    onUpdate: () => { sa3d.applyRig(); placeBallHandle(); updateTrail(); },
+    onUpdate: () => { sa3d.applyRig(); placeBallHandle(); updateStream(); },
     onComplete: () => {
       viewTween3d = null; sa3d.stopTicking();
       if (gc3d) gc3d.update(engineState, sa3d.camera, $('scene3d'));
@@ -1067,14 +1223,26 @@ function wireSliderHaptics(el, hapticKey) {
   el.addEventListener('pointercancel', end);
 }
 
+// MOCK round 2 (challenge 3) — compact per-tab value formatters. Low point
+// uses the same ahead/behind convention as its slider bubble; Depth uses a
+// signed cm (matching its centre-origin slider); Direction always signed.
+const TAB_FMT = {
+  s_plane: v => v.toFixed(0) + '°',
+  s_dir: v => (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v).toFixed(1) + '°',
+  s_lpx: v => { const cm = Math.round(v * 100); return cm === 0 ? 'at ball' : `${Math.abs(cm)} cm ${cm > 0 ? 'ahead' : 'behind'}`; },
+  s_lpz: v => { const cm = Math.round(v * 100); return (cm > 0 ? '+' : cm < 0 ? '−' : '') + Math.abs(cm) + ' cm'; },
+};
+
 function bind(id, get, fmt) {
   const el = $(id), out = $('v_' + id.slice(2));
   const box = el.closest('.slider');
   const bubble = box ? box.querySelector('.bubble') : null;
+  const tabVal = $('tv_' + id.slice(2)); // challenge 3 — live value on the tab
   const sync = () => {
     const txt = fmt(+el.value);
     out.textContent = txt; el.setAttribute('aria-valuetext', txt);
     if (bubble) bubble.textContent = txt;
+    if (tabVal) tabVal.textContent = TAB_FMT[id](+el.value);
     styleSlider(el);
   };
   // NOTE (mock): syncEngine() runs SYNCHRONOUSLY here (not deferred to the
@@ -1255,18 +1423,52 @@ function pxPerMetreAtBall() {
 })();
 updateHandleAria();
 
-// ── MOCK ambient particle trail (DOM/CSS only — see .chip-trail styles) ────
-function updateTrail() {
-  const el = $('chipTrail');
+// ── MOCK round 2 (challenge 2) — ARC-EXIT PARTICLE STREAM (DOM/CSS only).
+// Spawn points sit ON the swing arc just before the impact zone (engine
+// arcPosition at thetaAtImpact − {0.16, 0.08, 0} rad, stance-shifted), and
+// every particle travels along the live RESULTANT delivery direction
+// (delivery3d.dir() = normalize(tangentAt(thetaAtImpact))) — attack+path
+// combined; no colour split, the chips carry the numbers. All positions are
+// re-projected here on every rebuild/slider input/camera move; the motion
+// itself is pure CSS keyframes (renderer stays render-on-demand). ──────────
+const STREAM_SPAWN_DTHETA = [0.16, 0.08, 0];
+const STREAM_TRAVEL_M = 0.5;
+function updateStream() {
+  const el = $('arcStream');
   if (!el || !sa3d) return;
-  const b = projectToScreen(state.ballPosition, 0, BALL_RADIUS_M);
+  const th0 = thetaAtImpact(engineState);
+  const impact = arcPosition(th0, engineState); // engine frame: horizontally AT the ball (FIX L)
+  const bp = projectToScreen(impact.x + state.ballPosition, impact.y, Math.max(impact.z, 0) + 0.004);
+  el.style.left = bp.x.toFixed(1) + 'px';
+  el.style.top = bp.y.toFixed(1) + 'px';
   const d = delivery3d ? delivery3d.dir() : { x: 1, y: 0, z: 0 };
-  const t = projectToScreen(state.ballPosition + d.x * 0.5, d.y * 0.5, BALL_RADIUS_M + d.z * 0.5);
-  el.style.left = b.x.toFixed(1) + 'px';
-  el.style.top = b.y.toFixed(1) + 'px';
-  el.style.setProperty('--tdx', (t.x - b.x).toFixed(1) + 'px');
-  el.style.setProperty('--tdy', (t.y - b.y).toFixed(1) + 'px');
+  const t = projectToScreen(
+    impact.x + state.ballPosition + d.x * STREAM_TRAVEL_M,
+    impact.y + d.y * STREAM_TRAVEL_M,
+    Math.max(impact.z, 0) + 0.004 + d.z * STREAM_TRAVEL_M
+  );
+  const dx = t.x - bp.x, dy = t.y - bp.y;
+  el.style.setProperty('--dx', dx.toFixed(1) + 'px');
+  el.style.setProperty('--dy', dy.toFixed(1) + 'px');
+  el.style.setProperty('--ang', (Math.atan2(dy, dx) * 180 / Math.PI).toFixed(1) + 'deg');
+  // per-particle spawn offsets: cycle the dots across the arc spawn points
+  const offs = STREAM_SPAWN_DTHETA.map((dth) => {
+    const p = arcPosition(th0 - dth, engineState);
+    const sp = projectToScreen(p.x + state.ballPosition, p.y, Math.max(p.z, 0) + 0.004);
+    return { x: sp.x - bp.x, y: sp.y - bp.y };
+  });
+  const dots = el.querySelectorAll('i');
+  dots.forEach((dot, i) => {
+    const o = offs[i % offs.length];
+    dot.style.setProperty('--sx', o.x.toFixed(1) + 'px');
+    dot.style.setProperty('--sy', o.y.toFixed(1) + 'px');
+  });
 }
+// pause the ambient loop while the tab is hidden (challenge 2 constraint)
+document.addEventListener('visibilitychange', () => {
+  const el = $('arcStream');
+  if (el) el.classList.toggle('paused', document.hidden);
+});
 
 // ── controls ──────────────────────────────────────────────────────────────
 $('viewBtn').addEventListener('click', () => {
@@ -1302,12 +1504,10 @@ $('strikeBtn').addEventListener('click', () => {
   const on = strikeDetailEl.style.display !== 'none';
   if (on) {
     strikeDetailEl.style.display = 'none';
-    if (inset3d) inset3d.setRect({ x: 0, y: 0, w: 0, h: 0 });
   } else {
     strikeDetailEl.style.display = '';
-    updateInsetRect();
+    refreshSchematic(); // re-measure + redraw (card was display:none → 0 size)
   }
-  if (sa3d) sa3d.invalidate();
   $('strikeBtn').setAttribute('aria-pressed', String(!on));
 });
 
@@ -1351,6 +1551,10 @@ window.__sa = Object.assign(window.__sa || {}, {
       };
     },
     delivery: {
+      // MOCK round 2 (challenge 2): the arrow is DEMOTED — its group is never
+      // added to the scene; the instance only feeds dir() to the DOM stream.
+      demoted: () => true,
+      inScene: () => !!(delivery3d && delivery3d.group.parent),
       dir: () => { const d = delivery3d ? delivery3d.dir() : { x: 1, y: 0, z: 0 }; return [d.x, d.y, d.z]; },
       visible: () => (delivery3d ? delivery3d.isVisible() : null),
       debug: () => (delivery3d ? delivery3d.debug() : null),
@@ -1370,18 +1574,26 @@ window.__sa = Object.assign(window.__sa || {}, {
       divotActiveCount: () => (timeline3d ? timeline3d.fx.divot.activeCount : null),
     },
     inset: {
-      rect: () => (inset3d ? inset3d.getRect() : null),
-      cameraPos: () => (inset3d ? inset3d.camera.position.toArray() : null),
-      cameraFov: () => (inset3d ? inset3d.camera.fov : null),
+      // MOCK round 2 (challenge 1a): the strike detail is a pure 2D SVG
+      // schematic — there is NO second 3D pass/camera. Hooks adapted:
+      // mode/layout are new; rect now returns the viewport's CLIENT rect
+      // (CSS px, top-left origin — the old scissor rect is meaningless);
+      // cameraPos/cameraFov return null (documented, no inset camera);
+      // projectWorld maps engine-frame (x,·,z) through the schematic's
+      // side-view transform (world Y is ignored — it's a side view).
+      mode: () => '2d-svg',
+      layout: () => ({ ...sdLayout }),
+      rect: () => { const el = $('sdViewport'); if (!el) return null; const r = el.getBoundingClientRect(); return { x: r.left, y: r.top, w: r.width, h: r.height }; },
+      cameraPos: () => null,
+      cameraFov: () => null,
       chipText: () => { const b = $('sdChipBand'), p = $('sdChipPct'); return b && p ? `${b.textContent} ${p.textContent}` : null; },
       footText: () => { const el = $('sdFoot'); return el ? el.textContent : null; },
       ariaLabel: () => { const el = $('strikeDetail'); return el ? el.getAttribute('aria-label') : null; },
       cardRect: () => { const el = $('strikeDetail'); return el ? el.getBoundingClientRect().toJSON() : null; },
       viewportRect: () => { const el = $('sdViewport'); return el ? el.getBoundingClientRect().toJSON() : null; },
       annotSvgHtml: () => { const el = $('sdAnnot'); return el ? el.innerHTML : null; },
-      projectWorld: (x, y, z) => (inset3d ? inset3d.projectToInset(new THREE.Vector3(x, y, z)) : null),
-      refreshRect: () => { updateInsetRect(); if (sa3d) sa3d.invalidate(); },
-      debugSetRect: (x, y, w, h) => { if (inset3d) { inset3d.setRect({ x, y, w, h }); sa3d.invalidate(); } },
+      projectWorld: (x, y, z) => (sdLayout.S ? { x: sdLayout.bx + x * sdLayout.S, y: sdLayout.gy - z * sdLayout.S, behind: false } : null),
+      refreshRect: () => refreshSchematic(),
     },
     ballTick: {
       visible: () => (ballTick ? ballTick.visible : null),
@@ -1453,6 +1665,86 @@ window.__sa = Object.assign(window.__sa || {}, {
     },
     shiftX: () => (shift3d ? shift3d.position.x : null),
     ballMeshX: () => (sa3d && sa3d.ball ? sa3d.ball.position.x : null),
+    // ── MOCK round 2 — acceptance-grid hooks (challenge 1b) ────────────────
+    // setParams: drive the full state (sliders + tabs + scene) synchronously.
+    setParams: ({ plane, dir, lpx, lpz, bp } = {}) => {
+      if (plane != null) { state.planeAngle = plane; $('s_plane').value = plane; }
+      if (dir != null) { state.swingDirection = dir; $('s_dir').value = dir; }
+      if (lpx != null) { state.lowPoint.x = lpx; $('s_lpx').value = lpx; }
+      if (lpz != null) { state.lowPoint.z = lpz; $('s_lpz').value = lpz; }
+      if (bp != null) state.ballPosition = Math.max(BALLPOS_MIN, Math.min(BALLPOS_MAX, bp));
+      syncEngine();
+      syncers.forEach(s => s());
+      updateHandleAria();
+      renderReadout(); writeSwingState(); rebuild3d();
+    },
+    // impactMetrics: place the club at the TRUE impact frame (pure arc pose —
+    // exactly what playback shows at impact, blend=1) and measure:
+    //   impactDxWidthPx — the blade visual face-centre's offset from the ball
+    //                     centre ALONG THE TOE–HEEL AXIS ("midt i sweetspot i
+    //                     bredden"), expressed in screen px — the centring
+    //                     assert. The face-normal DEPTH component (the bbox
+    //                     centre sits a few mm behind the face plane — real
+    //                     blade thickness, not a miss) is excluded.
+    //   impactDxRawPx   — raw screen-x difference bbox-centre vs ball centre
+    //                     (includes that depth component; report-only)
+    //   impactLieDeg    — toe–heel axis tilt out of the ground plane (the
+    //                     owner's LIE-angle criterion)
+    //   impactSoleFullDeg — full sole-plane residual incl. the REAL fore-aft
+    //                     attack tilt of a descending strike (physics; report-
+    //                     only, NOT the lie criterion)
+    //   addressSoleDeg / addressLieDeg / addressSoleZmm — grounded address:
+    //                     sole-plane angle, toe–heel angle, sole height (mm)
+    // Restores the idle (grounded address) pose before returning.
+    impactMetrics: () => {
+      if (!club3d || !club3d.poseDebug || !club3d.loaded) return null;
+      const th0 = thetaAtImpact(engineState);
+      club3d.update(th0, engineState);
+      const pd = club3d.poseDebug();
+      if (!pd) { club3d.updateAddress(engineState); return null; }
+      const fc = pd.faceCentreWorld; // world coords — includes the stance shift
+      const bw = [state.ballPosition, 0, BALL_RADIUS_M];
+      const v = [fc[0] - bw[0], fc[1] - bw[1], fc[2] - bw[2]];
+      const toe = pd.toeAxis;
+      const widthM = v[0] * toe[0] + v[1] * toe[1] + v[2] * toe[2];
+      const pBall = projectToScreen(bw[0], bw[1], bw[2]);
+      const pW = projectToScreen(bw[0] + toe[0] * widthM, bw[1] + toe[1] * widthM, bw[2] + toe[2] * widthM);
+      const pClub = projectToScreen(fc[0], fc[1], fc[2]);
+      const impact = {
+        dxWidthPx: Math.hypot(pW.x - pBall.x, pW.y - pBall.y) * Math.sign(widthM || 1),
+        dxRawPx: pClub.x - pBall.x,
+        widthMm: widthM * 1000,
+        lieDeg: pd.lieDeg, soleFullDeg: pd.soleFullDeg,
+      };
+      club3d.updateAddress(engineState); // restore idle grounded pose
+      const ad = club3d.poseDebug();
+      if (sa3d) sa3d.invalidate();
+      return {
+        impactDxWidthPx: +impact.dxWidthPx.toFixed(2),
+        impactWidthMm: +impact.widthMm.toFixed(2),
+        impactDxRawPx: +impact.dxRawPx.toFixed(2),
+        impactLieDeg: +impact.lieDeg.toFixed(3),
+        impactSoleFullDeg: +impact.soleFullDeg.toFixed(2),
+        addressSoleDeg: +ad.soleFullDeg.toFixed(3),
+        addressLieDeg: +ad.lieDeg.toFixed(3),
+        addressSoleZmm: ad.soleZ == null ? null : +(ad.soleZ * 1000).toFixed(2),
+      };
+    },
+    addressBlend: () => (timeline3d ? timeline3d._internal.addressBlend.b : null),
+    streamVars: () => {
+      const el = $('arcStream');
+      if (!el) return null;
+      const cs = el.style;
+      return {
+        left: cs.left, top: cs.top, dx: cs.getPropertyValue('--dx'), dy: cs.getPropertyValue('--dy'),
+        ang: cs.getPropertyValue('--ang'), paused: el.classList.contains('paused'),
+        dots: el.querySelectorAll('i').length,
+      };
+    },
+    tabValues: () => ({
+      plane: $('tv_plane').textContent, dir: $('tv_dir').textContent,
+      lpx: $('tv_lpx').textContent, lpz: $('tv_lpz').textContent,
+    }),
     // debug (freeze-pose diagnosis)
     nodeVis: () => ({
       arc: arc3d ? arc3d.group.visible : null,
