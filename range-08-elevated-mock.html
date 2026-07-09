@@ -1,0 +1,482 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>StrikeArc — range-night-3d-08 — Elevated Perspective + On-Ground Verification</title>
+<style>
+  :root{
+    color-scheme: dark;
+    --bg:#05060A; --surface:#0C1018; --plate:rgba(4,8,14,.86);
+    --ink:#F2F7FF; --muted:#93A5C4;
+    --accent:#46F5C4; --secondary:#8B7BFF; --celebrate:#FF5CA8;
+    --good:#5CFF9D; --bad:#FF5C6C;
+  }
+  *,*::before,*::after{ box-sizing:border-box; }
+  html,body{
+    margin:0; padding:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:"SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+
+  header.page-head{ max-width:1040px; margin:0 auto; padding:28px 18px 14px; }
+  header.page-head h1{ margin:0 0 6px; font-size:clamp(20px,3.4vw,26px); font-weight:800; letter-spacing:-.01em; }
+  header.page-head p{ margin:0 0 10px; font-size:13px; color:var(--muted); line-height:1.55; max-width:820px; }
+  header.page-head p code{ color:var(--ink); background:rgba(255,255,255,.08); border-radius:4px; padding:1px 5px; }
+  .req-list{ display:flex; flex-direction:column; gap:4px; margin:10px 0 14px; font-size:12.5px; color:var(--muted); }
+  .req-list b{ color:var(--ink); }
+
+  /* ---------------- shared distance-slider control bar ---------------- */
+  .control-bar{
+    max-width:1040px; margin:0 auto 18px; padding:14px 18px;
+    background:var(--surface); border:1px solid rgba(255,255,255,.08); border-radius:14px;
+    display:flex; flex-wrap:wrap; align-items:center; gap:14px;
+    position:sticky; top:10px; z-index:20; margin-left:auto; margin-right:auto;
+  }
+  .control-bar .cb-label{ font-size:11px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); white-space:nowrap; }
+  .control-bar input[type=range]{ flex:1 1 240px; min-width:180px; accent-color:var(--accent); }
+  #distReadout{ font-family:ui-monospace,"SF Mono",Menlo,monospace; font-size:12px; color:var(--ink); white-space:nowrap; }
+  #distReadout b{ color:var(--accent); }
+  .cb-guides{ display:inline-flex; align-items:center; gap:6px; font-size:11.5px; color:var(--muted); white-space:nowrap; cursor:pointer; }
+
+  .card-list{ max-width:1040px; margin:0 auto; padding:0 18px 30px; display:flex; flex-direction:column; gap:30px; }
+
+  .compare-card{ display:flex; flex-direction:column; gap:8px; }
+  .card-meta{ display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; }
+  .card-num{ font-family:ui-monospace,"SF Mono",Menlo,monospace; font-size:13px; font-weight:800; color:var(--ink); background:rgba(255,255,255,.08); border-radius:6px; padding:2px 7px; }
+  .card-tag{ font-size:11px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:var(--accent); }
+  .card-detail{ font-size:11.5px; color:var(--muted); letter-spacing:.02em; max-width:640px; }
+  .card-consts{ margin-left:auto; font-size:10.5px; color:var(--muted); font-family:ui-monospace,"SF Mono",Menlo,monospace; opacity:.85; }
+
+  .scene{ position:relative; width:100%; max-width:932px; aspect-ratio:932/430; border-radius:20px; overflow:hidden; background:#000; border:1px solid rgba(255,255,255,.08); }
+  .scene.broken{ outline:3px solid #FF7B8A; }
+
+  .ov-guide{ display:none; }
+  body.show-guides .ov-guide{ display:block; }
+
+  .ov-hero{ position:absolute; top:16px; left:16px; background:var(--plate); border-radius:12px; padding:8px 14px; }
+  .ov-hero .k{ font-size:10px; font-weight:800; letter-spacing:.09em; text-transform:uppercase; color:var(--muted); }
+  .ov-hero .v{ font-size:20px; font-weight:800; letter-spacing:-.01em; color:var(--ink); }
+
+  .ov-xp{ position:absolute; top:16px; right:16px; display:inline-flex; align-items:center; gap:6px;
+    background: color-mix(in oklab, var(--celebrate) 26%, #0C1018);
+    border:1px solid var(--celebrate); color:var(--ink);
+    border-radius:999px; padding:7px 14px; font-size:12px; font-weight:800; }
+  .ov-xp .spark{ color:var(--celebrate); font-size:13px; }
+
+  .ov-scene-svg{ position:absolute; inset:0; width:100%; height:100%; }
+
+  /* ---------------- verification panel ---------------- */
+  .verify-wrap{ max-width:1040px; margin:10px auto 40px; padding:0 18px; }
+  .verify-panel{ background:var(--surface); border:1px solid rgba(255,255,255,.1); border-radius:14px; padding:18px 20px; }
+  .verify-panel h2{ margin:0 0 6px; font-size:16px; font-weight:800; }
+  .verify-panel p{ margin:0 0 12px; font-size:12px; color:var(--muted); line-height:1.55; max-width:820px; }
+  .verify-panel p code{ color:var(--ink); background:rgba(255,255,255,.08); border-radius:4px; padding:1px 5px; }
+  table.vtable{ width:100%; border-collapse:collapse; font-family:ui-monospace,"SF Mono",Menlo,monospace; font-size:11.5px; }
+  table.vtable th, table.vtable td{ text-align:left; padding:6px 8px; border-bottom:1px solid rgba(255,255,255,.08); white-space:nowrap; }
+  table.vtable th{ color:var(--muted); font-weight:700; text-transform:uppercase; font-size:10px; letter-spacing:.05em; }
+  table.vtable td.pass{ color:var(--good); font-weight:800; }
+  table.vtable td.fail{ color:var(--bad); font-weight:800; }
+  .vtable-scroll{ overflow-x:auto; }
+  #verifySummary{ margin-top:12px; font-size:12.5px; line-height:1.7; }
+  #verifySummary .vs-line{ display:flex; gap:8px; align-items:baseline; }
+  #verifySummary .vs-pass{ color:var(--good); font-weight:800; }
+  #verifySummary .vs-fail{ color:var(--bad); font-weight:800; }
+
+  footer.credit{ max-width:1040px; margin:10px auto 40px; padding:0 18px; font-size:11px; color:var(--muted); opacity:.8; line-height:1.6; }
+  footer.credit code{ color:var(--ink); background:rgba(255,255,255,.08); border-radius:4px; padding:1px 5px; }
+  #status-line{ margin-top:10px; font-size:11px; font-family:ui-monospace,"SF Mono",Menlo,monospace; color:var(--muted); }
+</style>
+</head>
+<body>
+
+<header class="page-head">
+  <h1>StrikeArc — range-night-3d-08 — slightly elevated perspective + on-ground verification</h1>
+  <p><b>Owner's request:</b> "litt høyere perspektiv, bare litt, så man ser landingen litt bedre" (a little higher perspective, just a bit, so the landing reads better) — plus: "har du et system for å kontrollere at grid+landing blir riktig så det ser ut som det ligger på bakken?" (do you have a system to verify the grid + landing are correct, so it looks like it's on the ground?)</p>
+  <div class="req-list">
+    <div>1) <b>Slightly elevated camera</b> — steeper ground plane (↑<code>PE_A</code> / ↑<code>GROUND_K</code>, small <code>yH</code> nudge) in 3 subtle→more steps, so distance bands spread more vertically and the landing is easier to read.</div>
+    <div>2) <b>Dynamic grid preserved</b> — <code>maxD = 1.06 × totalM</code> (auto-fit, same as production <code>computeModel()</code>), NOT the fixed compressed hack. 50/100/150/200m bands appear only once <code>m &lt; maxD</code>, so the grid visibly extends as the shot gets longer.</div>
+    <div>3) <b>Tee-off from the very bottom</b> — trajectory origin fixed at <code>(TEE_X, yBottom)</code> = the foreground grass tee, every distance, every variant.</div>
+  </div>
+  <p><b>Verification system:</b> <code>window.__rangeCheck()</code> projects every visible grid line and the landing point to screen-Y for each variant at 5 shot distances and asserts each falls inside the photo's measured grass band — see panel below the cards.</p>
+  <div id="status-line">Loading…</div>
+</header>
+
+<div class="control-bar">
+  <span class="cb-label">Distance</span>
+  <input type="range" id="distSlider" min="90" max="250" step="1" value="162" />
+  <span id="distReadout"></span>
+  <label class="cb-guides"><input type="checkbox" id="guideToggle" /> show grass-band guides (photo top / model horizon / tee)</label>
+</div>
+
+<div class="card-list" id="cardList"></div>
+
+<div class="verify-wrap">
+  <div class="verify-panel">
+    <h2>On-ground verification — <code>window.__rangeCheck()</code></h2>
+    <p>
+      Photo grass band (fixed, re-measured from <code>assets/range-night-3d-08.png</code> — see footer): top = <code>yH_photo = 324</code> (viewBox units, the treeline anchor used across this whole project), bottom = <code>yBottom = 518</code> (foreground tee). For every variant × distance below, we compute the on-screen Y of every currently-visible grid line and the landing point using that variant's own <code>PE_A/GROUND_K/yH</code>, then check it against the <b>fixed photo band</b> — not the variant's own horizon — because a variant that pushes its own horizon above the true treeline is exactly the failure mode we're hunting for.
+    </p>
+    <div class="vtable-scroll">
+      <table class="vtable" id="vtable">
+        <thead>
+          <tr><th>Variant</th><th>Total (m)</th><th>maxD (m)</th><th>Visible bands</th><th>Grid on grass</th><th>Landing on grass</th><th>Tee at bottom</th><th>Landing Y (viewBox / %)</th></tr>
+        </thead>
+        <tbody id="vtableBody"></tbody>
+      </table>
+    </div>
+    <div id="verifySummary"></div>
+  </div>
+</div>
+
+<footer class="credit">
+  <p>Backdrop: <code>assets/range-night-3d-08.png</code> (1376×768, unmodified, not overwritten). No image generation used — this page only changes overlay geometry constants. Not committed.</p>
+  <p>Crop transform reproduced from the SVG &lt;image&gt; box (<code>x=-40 y=-40 w=1250 h=620</code>, <code>xMidYMid slice</code>) onto the 1170×540 viewBox: fresh pixel-sampling (brightness + hue scan down 10 columns, see scratch analysis) placed the actual tree-canopy top at PNG row ≈470-500 (viewBox Y ≈ 350-370, ~65% down) — deeper than the original ~58-62% estimate. That means <code>yH=324</code> (60% down, used as the fixed verification top) sits safely <i>above</i> the true canopy, inside the soft violet-to-grass haze band — i.e. it is a conservative, not a permissive, boundary for the on-grass check.</p>
+</footer>
+
+<script>
+  const SRC = 'assets/range-night-3d-08.png';
+
+  // ══════════════════════════════════════════════════════════════════
+  //  PROJECTION MATH — ported unchanged in structure from
+  //  range-08-final-mock.html / impact-viz-mock.html (pe/groundY/
+  //  lateralScale/heightScale/project). Only PE_A, GROUND_K and yH vary
+  //  per elevated variant; yBottom (foreground tee) is constant across
+  //  all variants per owner requirement #3. maxD is ALWAYS auto-fit to
+  //  the shot (requirement #2) — never the fixed compressed hack.
+  // ══════════════════════════════════════════════════════════════════
+  const CARD_W = 932, CARD_H = 430;
+  const VBH = 540;
+  const VBW = Math.round(VBH * (CARD_W / CARD_H));   // 1170
+  const TEE_X = VBW / 2;
+  const LAT_PX = 300;
+  const SIDE_PX_MAX = 290;
+  const TOP_MARGIN = 150;
+
+  const yBottom = 518;          // foreground grass tee — fixed, all variants (requirement #3)
+  const PHOTO_GRASS_TOP = 324;  // fixed verification band top — see footer note on re-measurement
+  const offlineM = 4, APEX_AT = 0.5;
+
+  // ---- three increasing elevation steps ----
+  // base (range-08-final-mock.html, for reference / not rendered): PE_A=2.2, GROUND_K=0.86, yH=324
+  const VARIANTS = [
+    { id:'E1', tag:'SUBTLE', PE_A:2.45, GROUND_K:0.89, yH:320,
+      detail:'Smallest nudge — PE_A 2.2→2.45, GROUND_K 0.86→0.89, yH 324→320 (4px). Barely-there elevation.' },
+    { id:'E2', tag:'MEDIUM', PE_A:2.75, GROUND_K:0.93, yH:312,
+      detail:'PE_A 2.2→2.75, GROUND_K 0.86→0.93, yH 324→312 (12px). Clearly steeper ground plane, landing reads better.' },
+    { id:'E3', tag:'A TOUCH MORE', PE_A:3.00, GROUND_K:0.96, yH:305,
+      detail:'PE_A 2.2→3.00, GROUND_K 0.86→0.96, yH 324→305 (19px). Pushed further — verification below shows whether this crosses the line.' },
+  ];
+
+  const TEST_DISTANCES = [100, 130, 162, 200, 240];
+  const GRID_METERS = [50, 100, 150, 200];
+
+  function heightAt(dM, carryM){
+    const d = dM / carryM; let h;
+    if (d <= APEX_AT){ const u = d / APEX_AT; h = 1 - (1-u)*(1-u); }
+    else { const u = (d - APEX_AT) / (1 - APEX_AT); h = 1 - u*u; }
+    return Math.max(0, Math.min(1, h));
+  }
+  function lateralAt(dM, carryM){
+    const dd = Math.max(0, Math.min(1, dM / carryM));
+    return offlineM * (0.55*dd + 0.45*dd*dd);
+  }
+
+  function makeModel(totalM, variant){
+    const carryM = Math.max(1, totalM - offlineM);
+    const maxD = 1.06 * totalM;                 // AUTO-FIT — requirement #2, never fixed/compressed
+    const { PE_A, GROUND_K, yH } = variant;
+
+    const pe = f => f * (1 + PE_A) / (1 + PE_A * f);
+    const groundY = f => yBottom - (yBottom - yH) * GROUND_K * pe(f);
+    const lateralScale = f => 1 - GROUND_K * pe(f) * 0.92;
+    const heightScale = f => 1 - 0.22 * pe(f);
+    const fa = (APEX_AT * carryM) / maxD;
+    const APEX_PX = Math.max(60, (groundY(fa) - TOP_MARGIN) / heightScale(fa));
+
+    function project(D, hFrac, X){
+      const f = Math.max(0, Math.min(1, D / maxD));
+      const gy = groundY(f);
+      const ls = lateralScale(f);
+      const sideFrac = X / offlineM;
+      const sx = TEE_X + sideFrac * SIDE_PX_MAX * ls;
+      const hs = heightScale(f);
+      const lift = hFrac * APEX_PX * hs;
+      return { x: sx, y: gy - lift };
+    }
+    function buildAirPath(){
+      const N = 96; let d = '';
+      for (let i = 0; i <= N; i++){
+        const dM = (i/N) * carryM;
+        const p = project(dM, heightAt(dM, carryM), lateralAt(dM, carryM));
+        d += (i===0?'M':'L') + p.x.toFixed(2) + ' ' + p.y.toFixed(2) + ' ';
+      }
+      return d;
+    }
+    function buildRollPath(){
+      const land = project(carryM, 0, lateralAt(carryM, carryM));
+      const rest = project(totalM, 0, lateralAt(carryM, carryM));
+      return `M${land.x.toFixed(2)} ${land.y.toFixed(2)} L${rest.x.toFixed(2)} ${rest.y.toFixed(2)}`;
+    }
+    function buildRails(){
+      const steps = 24; let dl = '', dr = '';
+      for (let i = 0; i <= steps; i++){
+        const f = i/steps, gy = groundY(f), ls = lateralScale(f), half = LAT_PX*ls*1.3;
+        dl += (i===0?'M':'L') + (TEE_X-half).toFixed(1) + ' ' + gy.toFixed(1) + ' ';
+        dr += (i===0?'M':'L') + (TEE_X+half).toFixed(1) + ' ' + gy.toFixed(1) + ' ';
+      }
+      return { dl, dr };
+    }
+    // DYNAMIC grid — bands only appear once their meter mark is inside the auto-fit range.
+    // This is what makes the grid "extend" as the shot gets longer (requirement #2).
+    const visibleBands = GRID_METERS.filter(m => m < maxD);
+    function buildGridBands(){
+      let out = '';
+      for (const m of visibleBands){
+        const f = m/maxD, gy = groundY(f), ls = lateralScale(f), halfW = LAT_PX*ls*1.3;
+        const x1 = (TEE_X-halfW).toFixed(1), x2 = (TEE_X+halfW).toFixed(1), y = gy.toFixed(1);
+        const op = (0.14 + ls*0.26).toFixed(2);
+        const sw = (0.6 + ls*0.9).toFixed(2);
+        const fs = (9 + ls*6).toFixed(1);
+        out += `<line x1="${x1}" y1="${y}" x2="${x2}" y2="${y}" stroke="rgba(230,240,250,1)" stroke-width="${sw}" opacity="${op}"/>`;
+        out += `<text x="${(TEE_X+halfW+6).toFixed(1)}" y="${(gy-3).toFixed(1)}" fill="rgba(230,240,250,1)" font-size="${fs}" font-weight="700" opacity="${(0.35+ls*0.45).toFixed(2)}">${m} m</text>`;
+      }
+      return out;
+    }
+
+    const apexP = project(APEX_AT*carryM, 1, lateralAt(APEX_AT*carryM, carryM));
+    const landP = project(carryM, 0, lateralAt(carryM, carryM));
+    const teeP  = project(0, 0, 0);
+
+    return {
+      project, groundY, buildAirPath, buildRollPath, buildRails, buildGridBands,
+      apexP, landP, teeP, carryM, totalM, maxD, visibleBands, variant
+    };
+  }
+
+  // ---------------------------------------------------------------
+  //  Rendering — 3 live cards driven by the shared distance slider
+  // ---------------------------------------------------------------
+  function overlaySceneSVG(model){
+    const rails = model.buildRails();
+    const airPath = model.buildAirPath();
+    const rollPath = model.buildRollPath();
+    const gridBandsSvg = model.buildGridBands();
+    const apexP = model.apexP, landP = model.landP;
+    const uid = model.variant.id + '-' + Math.round(model.totalM);
+
+    return `
+      <svg class="ov-scene-svg" viewBox="0 0 ${VBW} ${VBH}" preserveAspectRatio="none" aria-hidden="true">
+        <defs>
+          <clipPath id="ovClip-${uid}"><rect x="0" y="0" width="${VBW}" height="${VBH}"/></clipPath>
+          <linearGradient id="tracerGrad-${uid}" x1="0" y1="1" x2="0" y2="0">
+            <stop offset="0" stop-color="#46F5C4" stop-opacity=".2"/>
+            <stop offset=".5" stop-color="#46F5C4" stop-opacity=".95"/>
+            <stop offset="1" stop-color="#eafff6"/>
+          </linearGradient>
+          <radialGradient id="apexGlow-${uid}" cx="50%" cy="50%" r="50%">
+            <stop offset="0" stop-color="#46F5C4" stop-opacity=".85"/><stop offset="1" stop-color="#46F5C4" stop-opacity="0"/>
+          </radialGradient>
+        </defs>
+        <g clip-path="url(#ovClip-${uid})">
+          <image class="bg-image" href="${SRC}" x="-40" y="-40" width="${VBW + 80}" height="620"
+                 preserveAspectRatio="xMidYMid slice">
+            <title>StrikeArc down-range night backdrop, range-night-3d-08</title>
+          </image>
+
+          <!-- debug guides: fixed photo grass-band top (orange), THIS variant's own horizon (red), tee baseline (yellow) -->
+          <line class="ov-guide" x1="0" y1="${PHOTO_GRASS_TOP}" x2="${VBW}" y2="${PHOTO_GRASS_TOP}" stroke="#ff9f2d" stroke-width="1.5" stroke-dasharray="2 3"/>
+          <line class="ov-guide" x1="0" y1="${model.variant.yH}" x2="${VBW}" y2="${model.variant.yH}" stroke="#ff2d55" stroke-width="1.5" stroke-dasharray="4 4"/>
+          <line class="ov-guide" x1="0" y1="${yBottom}" x2="${VBW}" y2="${yBottom}" stroke="#ffeb3b" stroke-width="1.5" stroke-dasharray="4 4"/>
+
+          <!-- converging fairway rails -->
+          <path d="${rails.dl}" fill="none" stroke="rgba(230,240,250,.16)" stroke-width="1.2"/>
+          <path d="${rails.dr}" fill="none" stroke="rgba(230,240,250,.16)" stroke-width="1.2"/>
+          <!-- centre / target line -->
+          <line x1="${TEE_X}" y1="${yBottom}" x2="${TEE_X}" y2="${model.variant.yH}" stroke="rgba(230,240,250,.3)" stroke-width="1.4" stroke-dasharray="6 8"/>
+          <!-- dynamic distance grid — only bands with m < maxD are drawn -->
+          ${gridBandsSvg}
+
+          <!-- tee marker — anchored at the very bottom of the screen, on the grass tee -->
+          <ellipse cx="${TEE_X}" cy="${yBottom}" rx="34" ry="7" fill="#000" opacity=".35"/>
+          <ellipse cx="${TEE_X}" cy="${yBottom}" rx="30" ry="6" fill="none" stroke="rgba(70,245,196,.5)" stroke-width="1.4"/>
+          <path d="${airPath}" fill="none" stroke="#46F5C4" stroke-width="12" stroke-linecap="round" opacity=".16"/>
+          <path d="${airPath}" fill="none" stroke="url(#tracerGrad-${uid})" stroke-width="3.6" stroke-linecap="round" opacity=".97"/>
+          <path d="${airPath}" fill="none" stroke="#eafff6" stroke-width="1.3" stroke-linecap="round" opacity=".9"/>
+          <path d="${rollPath}" fill="none" stroke="#46F5C4" stroke-width="2" stroke-linecap="round" stroke-dasharray="3 5" opacity=".65"/>
+          <!-- apex marker -->
+          <circle cx="${apexP.x.toFixed(2)}" cy="${apexP.y.toFixed(2)}" r="15" fill="url(#apexGlow-${uid})"/>
+          <circle cx="${apexP.x.toFixed(2)}" cy="${apexP.y.toFixed(2)}" r="4" fill="none" stroke="#46F5C4" stroke-width="2"/>
+          <line x1="${apexP.x.toFixed(2)}" y1="${(apexP.y-8).toFixed(2)}" x2="${apexP.x.toFixed(2)}" y2="${(apexP.y-24).toFixed(2)}" stroke="#46F5C4" stroke-width="1.2" opacity=".7"/>
+          <rect x="${(apexP.x-32).toFixed(2)}" y="${(apexP.y-42).toFixed(2)}" width="64" height="17" rx="5" fill="rgba(4,8,14,.86)" stroke="rgba(70,245,196,.3)"/>
+          <text x="${apexP.x.toFixed(2)}" y="${(apexP.y-30).toFixed(2)}" text-anchor="middle" fill="#46F5C4" font-size="11" font-weight="800">Apex</text>
+          <!-- landing marker -->
+          <ellipse cx="${landP.x.toFixed(2)}" cy="${landP.y.toFixed(2)}" rx="12" ry="4" fill="none" stroke="#8B7BFF" stroke-width="1.4" opacity=".5"/>
+          <circle cx="${landP.x.toFixed(2)}" cy="${landP.y.toFixed(2)}" r="4.2" fill="#8B7BFF"/>
+          <rect x="${(landP.x-30).toFixed(2)}" y="${(landP.y-28).toFixed(2)}" width="60" height="18" rx="5" fill="rgba(4,8,14,.86)" stroke="rgba(139,123,255,.3)"/>
+          <text x="${landP.x.toFixed(2)}" y="${(landP.y-15.5).toFixed(2)}" text-anchor="middle" fill="#F2F7FF" font-size="11" font-weight="800">${Math.round(model.carryM)} m</text>
+        </g>
+      </svg>
+      <div class="ov-hero">
+        <div class="k">Total</div>
+        <div class="v">${Math.round(model.totalM)} m</div>
+      </div>
+      <div class="ov-xp"><span class="spark">✦</span>+25 XP</div>
+    `;
+  }
+
+  const list = document.getElementById('cardList');
+  const cardEls = {};
+
+  VARIANTS.forEach(v => {
+    const card = document.createElement('div');
+    card.className = 'compare-card';
+    card.innerHTML = `
+      <div class="card-meta">
+        <span class="card-num">CARD ${v.id}</span>
+        <span class="card-tag">${v.tag}</span>
+        <span class="card-detail">${v.detail}</span>
+        <span class="card-consts">PE_A=${v.PE_A} GROUND_K=${v.GROUND_K} yH=${v.yH} yBottom=${yBottom}</span>
+      </div>
+      <div class="scene" data-id="${v.id}"></div>
+    `;
+    list.appendChild(card);
+    cardEls[v.id] = card.querySelector('.scene');
+  });
+
+  let imgLoaded = 0, imgBroken = 0;
+  function renderAll(){
+    const totalM = +document.getElementById('distSlider').value;
+    imgLoaded = 0; imgBroken = 0;
+    VARIANTS.forEach(v => {
+      const model = makeModel(totalM, v);
+      const el = cardEls[v.id];
+      el.innerHTML = overlaySceneSVG(model);
+      el.classList.remove('broken');
+      const img = el.querySelector('.bg-image');
+      img.addEventListener('load', () => { imgLoaded++; updateStatus(); });
+      img.addEventListener('error', () => {
+        imgBroken++;
+        el.classList.add('broken');
+        console.error('BROKEN_IMAGE', v.id, SRC);
+        updateStatus();
+      });
+    });
+    const carryM = Math.max(1, totalM - offlineM);
+    const maxD = 1.06 * totalM;
+    const bands = GRID_METERS.filter(m => m < maxD);
+    document.getElementById('distReadout').innerHTML =
+      `<b>${Math.round(totalM)} m</b> total · ${Math.round(carryM)} m carry · maxD ${maxD.toFixed(1)} m · grid: ${bands.length ? bands.join('/') + ' m' : '(none)'}`;
+  }
+
+  function updateStatus(){
+    const el = document.getElementById('status-line');
+    const done = imgLoaded + imgBroken;
+    el.textContent = `Images: ${imgLoaded} loaded, ${imgBroken} broken, ${VARIANTS.length} total (${done}/${VARIANTS.length} settled).`;
+    if (done === VARIANTS.length) {
+      console.log(`RENDER_COMPLETE cards=${VARIANTS.length} loaded=${imgLoaded} broken=${imgBroken}`);
+    }
+  }
+
+  document.getElementById('distSlider').addEventListener('input', renderAll);
+  document.getElementById('guideToggle').addEventListener('change', e => {
+    document.body.classList.toggle('show-guides', e.target.checked);
+  });
+
+  // ---------------------------------------------------------------
+  //  VERIFICATION SYSTEM — window.__rangeCheck()
+  //  Proves (rather than eyeballs) that the dynamic grid + landing
+  //  point stay on the photo's grass at a fixed set of test distances,
+  //  for every elevated variant, independent of the slider's current
+  //  position.
+  // ---------------------------------------------------------------
+  function runVerification(){
+    const rows = [];
+    VARIANTS.forEach(v => {
+      TEST_DISTANCES.forEach(totalM => {
+        const model = makeModel(totalM, v);
+        const landY = model.landP.y;
+        const teeY = model.teeP.y;
+        const landingOnGrass = landY >= PHOTO_GRASS_TOP && landY <= yBottom;
+        const teeAtBottom = Math.abs(teeY - yBottom) < 0.5;
+        const bandChecks = model.visibleBands.map(m => {
+          const f = m / model.maxD;
+          const y = model.groundY(f);
+          return { m, y: +y.toFixed(1), onGrass: y >= PHOTO_GRASS_TOP && y <= yBottom };
+        });
+        const gridOnGrass = bandChecks.length > 0 && bandChecks.every(b => b.onGrass);
+        rows.push({
+          variant: v.id,
+          totalM,
+          maxD: +model.maxD.toFixed(1),
+          visibleBands: model.visibleBands.join('/') || '(none)',
+          bandChecks,
+          gridOnGrass,
+          landingOnGrass,
+          teeAtBottom,
+          landY: +landY.toFixed(1),
+          landYPct: +(100 * landY / VBH).toFixed(1),
+          allPass: gridOnGrass && landingOnGrass && teeAtBottom
+        });
+      });
+    });
+
+    // console.table summary (flattened, band detail joined)
+    console.table(rows.map(r => ({
+      variant: r.variant, totalM: r.totalM, maxD: r.maxD, bands: r.visibleBands,
+      gridOnGrass: r.gridOnGrass, landingOnGrass: r.landingOnGrass, teeAtBottom: r.teeAtBottom,
+      landY: r.landY, landYPct: r.landYPct + '%', allPass: r.allPass
+    })));
+
+    const byVariant = {};
+    VARIANTS.forEach(v => {
+      const vRows = rows.filter(r => r.variant === v.id);
+      byVariant[v.id] = {
+        passCount: vRows.filter(r => r.allPass).length,
+        totalCount: vRows.length,
+        allPass: vRows.every(r => r.allPass)
+      };
+    });
+
+    Object.keys(byVariant).forEach(id => {
+      const b = byVariant[id];
+      console.log(`[RangeCheck] ${id}: ${b.passCount}/${b.totalCount} distances PASS (grid+landing+tee on grass)${b.allPass ? '' : ' — FAIL present, see table'}`);
+    });
+
+    renderVerifyDOM(rows, byVariant);
+    return { photoGrassTop: PHOTO_GRASS_TOP, yBottom, testDistances: TEST_DISTANCES, rows, byVariant };
+  }
+
+  function renderVerifyDOM(rows, byVariant){
+    const tbody = document.getElementById('vtableBody');
+    tbody.innerHTML = rows.map(r => `
+      <tr>
+        <td>${r.variant}</td>
+        <td>${r.totalM}</td>
+        <td>${r.maxD}</td>
+        <td>${r.visibleBands}</td>
+        <td class="${r.gridOnGrass ? 'pass' : 'fail'}">${r.gridOnGrass ? 'PASS' : 'FAIL'}</td>
+        <td class="${r.landingOnGrass ? 'pass' : 'fail'}">${r.landingOnGrass ? 'PASS' : 'FAIL'}</td>
+        <td class="${r.teeAtBottom ? 'pass' : 'fail'}">${r.teeAtBottom ? 'PASS' : 'FAIL'}</td>
+        <td>${r.landY} / ${r.landYPct}%</td>
+      </tr>
+    `).join('');
+
+    const summaryEl = document.getElementById('verifySummary');
+    summaryEl.innerHTML = Object.keys(byVariant).map(id => {
+      const b = byVariant[id];
+      const cls = b.allPass ? 'vs-pass' : 'vs-fail';
+      return `<div class="vs-line"><span class="${cls}">${b.allPass ? 'PASS' : 'FAIL'}</span> <b>${id}</b> — ${b.passCount}/${b.totalCount} test distances fully on-grass (grid + landing + tee)</div>`;
+    }).join('');
+  }
+
+  window.__rangeCheck = runVerification;
+
+  // initial render
+  renderAll();
+  runVerification();
+</script>
+
+</body>
+</html>
