@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>StrikeArc — Down-range Night Backdrop Compare</title>
+<style>
+  :root{
+    color-scheme: dark;
+    --bg:#05060A; --surface:#0C1018; --plate:rgba(4,8,14,.86);
+    --ink:#F2F7FF; --muted:#93A5C4;
+    --accent:#46F5C4; --secondary:#8B7BFF; --celebrate:#FF5CA8;
+    --good:#5CFF9D;
+  }
+  *,*::before,*::after{ box-sizing:border-box; }
+  html,body{
+    margin:0; padding:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:"SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+
+  header.page-head{ max-width:1000px; margin:0 auto; padding:28px 18px 18px; }
+  header.page-head h1{ margin:0 0 6px; font-size:clamp(20px,3.4vw,26px); font-weight:800; letter-spacing:-.01em; }
+  header.page-head p{ margin:0 0 10px; font-size:13px; color:var(--muted); line-height:1.5; max-width:760px; }
+  .legend{ display:flex; flex-wrap:wrap; gap:8px 16px; margin-top:14px; font-size:11px; color:var(--muted); font-family:ui-monospace,"SF Mono",Menlo,monospace; }
+  .legend span{ color:var(--ink); font-weight:700; }
+  #status-line{ margin-top:12px; font-size:11px; font-family:ui-monospace,"SF Mono",Menlo,monospace; color:var(--muted); }
+
+  .card-list{ max-width:1000px; margin:0 auto; padding:0 18px 60px; display:flex; flex-direction:column; gap:26px; }
+
+  .compare-card{ display:flex; flex-direction:column; gap:8px; }
+  .compare-card.ref .scene{ outline:2px dashed rgba(147,165,196,.5); outline-offset:2px; }
+  .card-meta{ display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; }
+  .card-num{ font-family:ui-monospace,"SF Mono",Menlo,monospace; font-size:13px; font-weight:800; color:var(--ink); background:rgba(255,255,255,.08); border-radius:6px; padding:2px 7px; }
+  .card-tag{ font-size:11px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:var(--accent); }
+  .card-detail{ font-size:11px; color:var(--muted); letter-spacing:.02em; }
+  .card-title{ font-size:11px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:var(--celebrate); }
+  .card-file{ margin-left:auto; font-size:10.5px; color:var(--muted); font-family:ui-monospace,"SF Mono",Menlo,monospace; opacity:.7; }
+
+  .scene{ position:relative; width:100%; max-width:932px; aspect-ratio:932/430; border-radius:20px; overflow:hidden; background:#000; border:1px solid rgba(255,255,255,.08); }
+  .scene.broken{ outline:3px solid #FF7B8A; }
+  .bg-img{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:center 46%; display:block; }
+  .bg-img.frontal{ object-position:center 50%; }
+
+  /* ---------- identical UI overlay (drawn on every card) ---------- */
+  .ov-hero{ position:absolute; top:16px; left:16px; background:var(--plate); border-radius:12px; padding:8px 14px; }
+  .ov-hero .k{ font-size:10px; font-weight:800; letter-spacing:.09em; text-transform:uppercase; color:var(--muted); }
+  .ov-hero .v{ font-size:20px; font-weight:800; letter-spacing:-.01em; color:var(--ink); }
+
+  .ov-xp{ position:absolute; top:16px; right:16px; display:inline-flex; align-items:center; gap:6px;
+    background: color-mix(in oklab, var(--celebrate) 26%, #0C1018);
+    border:1px solid var(--celebrate); color:var(--ink);
+    border-radius:999px; padding:7px 14px; font-size:12px; font-weight:800; }
+  .ov-xp .spark{ color:var(--celebrate); font-size:13px; }
+
+  .ov-scene-svg{ position:absolute; inset:0; width:100%; height:100%; }
+
+  .ov-plate-text{ font-size:11px; font-weight:800; letter-spacing:.05em; font-family:inherit; }
+
+  footer.credit{ max-width:1000px; margin:10px auto 40px; padding:0 18px; font-size:11px; color:var(--muted); opacity:.7; line-height:1.6; }
+</style>
+</head>
+<body>
+
+<header class="page-head">
+  <h1>StrikeArc — Down-range Electric Night backdrop compare</h1>
+  <p>The owner liked range-night-14's floodlit-evening mood, but it was a FRONTAL shot (camera across the hitting bays). The real app's <code>assets/range-day.png</code> is a DOWN-THE-RANGE shot: camera at the tee, grass receding to a centre vanishing point, treeline at ~46% height. These 10 new candidates (range-night-3d-01…10) were generated to match that exact camera/composition. Every card below renders the SAME faithful down-range 3D overlay — perspective ground grid (50/100/150 m bands + converging rails), a mint trajectory that flies AWAY from the tee toward the vanishing point (not a flat side-on arc), an Apex plate, a downrange distance plate, the hero total, and the XP pill — so only the backdrop photo changes between cards.</p>
+  <div class="legend">
+    <div><span>REF-DAY</span> = current production day backdrop (assets/range-day.png)</div>
+    <div><span>REF-14</span> = the liked-but-frontal candidate (assets/range-night-14.png)</div>
+    <div><span>01–10</span> = new down-range night candidates (assets/range-night-3d-NN.png)</div>
+  </div>
+  <div id="status-line">Loading candidates…</div>
+</header>
+
+<div class="card-list" id="cardList"></div>
+
+<footer class="credit">
+  <p>Generated via Gemini API model gemini-3-pro-image-preview (Nano Banana Pro), REST generateContent, responseModalities:["IMAGE"], imageConfig.aspectRatio:"16:9". 11 calls made (1 transient 503 retried once) for 10 final assets — ~$1.54 est. Overlay geometry (pe/groundY/lateralScale/heightScale) ported from impact-viz-mock.html's real flight-scene projection so the drawn grid + trajectory match the production camera math, scaled to a 932×430 card.</p>
+</footer>
+
+<script>
+  const CANDIDATES = [
+    { id:'REF-DAY', kind:'photo', title:'CURRENT (day)', tag:'production', detail:'assets/range-day.png — the real backdrop today', src:'assets/range-day.png', ref:true },
+    { id:'REF-14',  kind:'photo', title:'LIKED BUT FRONTAL', tag:'reference', detail:'cool-white · 2 towers · camera ACROSS the bays (not down-range)', src:'assets/range-night-14.png', ref:true, frontal:true },
+    { id:'01', kind:'photo', tag:'2 towers',   detail:'subtle violet · light haze · dry',                    src:'assets/range-night-3d-01.png' },
+    { id:'02', kind:'photo', tag:'6 towers/side', detail:'subtle violet · light haze · dry · foreground bays', src:'assets/range-night-3d-02.png' },
+    { id:'03', kind:'photo', tag:'2 towers',   detail:'STRONG violet band · light haze · dry',                src:'assets/range-night-3d-03.png' },
+    { id:'04', kind:'photo', tag:'many towers', detail:'STRONG violet band · light haze · dry · tunnel effect', src:'assets/range-night-3d-04.png' },
+    { id:'05', kind:'photo', tag:'2 towers',   detail:'subtle violet · HEAVY haze/fog · dry',                 src:'assets/range-night-3d-05.png' },
+    { id:'06', kind:'photo', tag:'many towers', detail:'moderate haze · WET turf sheen (light streaks)',      src:'assets/range-night-3d-06.png' },
+    { id:'07', kind:'photo', tag:'2 towers',   detail:'subtle violet · haze · WET turf sheen',                src:'assets/range-night-3d-07.png' },
+    { id:'08', kind:'photo', tag:'2 big + far towers', detail:'STRONG violet · light haze · dry · tee-bay foreground', src:'assets/range-night-3d-08.png' },
+    { id:'09', kind:'photo', tag:'many towers', detail:'subtle violet · light haze · dry · ELEVATED camera · tee bays', src:'assets/range-night-3d-09.png' },
+    { id:'10', kind:'photo', tag:'2 towers',   detail:'balanced violet + haze · dry · clean/minimal',         src:'assets/range-night-3d-10.png' },
+  ];
+
+  // ══════════════════════════════════════════════════════════════════
+  //  FAITHFUL DOWN-RANGE PROJECTION — ported from impact-viz-mock.html
+  //  (pe / groundY / lateralScale / heightScale) scaled to a 932×430 card
+  //  so the drawn grid + trajectory match the REAL app's camera math.
+  // ══════════════════════════════════════════════════════════════════
+  const W = 932, H = 430;
+  const yH = H * 0.46;        // horizon — matches range-day.png treeline (~46% from top)
+  const yBottom = H * 0.95;   // tee baseline — near foreground, like the day photo's tee mat
+  const TEE_X = W / 2;
+  const LAT_PX = 230;
+  const SIDE_PX_MAX = 210;
+  const APEX_PX = 150;
+  const PE_A = 2.2, GROUND_K = 0.86;      // SAME constants as the production flight scene
+  const maxD = 200, carryM = 158, totalM = 162, offlineM = 4, APEX_AT = 0.5;
+
+  const pe = f => f * (1 + PE_A) / (1 + PE_A * f);
+  const groundY = f => yBottom - (yBottom - yH) * GROUND_K * pe(f);
+  const lateralScale = f => 1 - GROUND_K * pe(f) * 0.92;
+  const heightScale = f => 1 - 0.22 * pe(f);
+
+  function heightAt(dM){
+    const d = dM / carryM; let h;
+    if (d <= APEX_AT){ const u = d / APEX_AT; h = 1 - (1-u)*(1-u); }
+    else { const u = (d - APEX_AT) / (1 - APEX_AT); h = 1 - u*u; }
+    return Math.max(0, Math.min(1, h));
+  }
+  function lateralAt(dM){
+    const dd = Math.max(0, Math.min(1, dM / carryM));
+    return offlineM * (0.55*dd + 0.45*dd*dd);
+  }
+  function project(D, hFrac, X){
+    const f = Math.max(0, Math.min(1, D / maxD));
+    const gy = groundY(f);
+    const ls = lateralScale(f);
+    const sideFrac = X / offlineM;
+    const sx = TEE_X + sideFrac * SIDE_PX_MAX * ls;
+    const hs = heightScale(f);
+    const lift = hFrac * APEX_PX * hs;
+    return { x: sx, y: gy - lift };
+  }
+
+  function buildAirPath(){
+    const N = 96; let d = '';
+    for (let i = 0; i <= N; i++){
+      const dM = (i/N) * carryM;
+      const p = project(dM, heightAt(dM), lateralAt(dM));
+      d += (i===0?'M':'L') + p.x.toFixed(2) + ' ' + p.y.toFixed(2) + ' ';
+    }
+    return d;
+  }
+  function buildRollPath(){
+    const land = project(carryM, 0, lateralAt(carryM));
+    const rest = project(totalM, 0, lateralAt(carryM));
+    return `M${land.x.toFixed(2)} ${land.y.toFixed(2)} L${rest.x.toFixed(2)} ${rest.y.toFixed(2)}`;
+  }
+  function buildRails(){
+    const steps = 24; let dl = '', dr = '';
+    for (let i = 0; i <= steps; i++){
+      const f = i/steps, gy = groundY(f), ls = lateralScale(f), half = LAT_PX*ls*1.3;
+      dl += (i===0?'M':'L') + (TEE_X-half).toFixed(1) + ' ' + gy.toFixed(1) + ' ';
+      dr += (i===0?'M':'L') + (TEE_X+half).toFixed(1) + ' ' + gy.toFixed(1) + ' ';
+    }
+    return { dl, dr };
+  }
+  function buildGridBands(){
+    let out = '';
+    for (const m of [50, 100, 150]){
+      const f = m/maxD, gy = groundY(f), ls = lateralScale(f), halfW = LAT_PX*ls*1.3;
+      const x1 = (TEE_X-halfW).toFixed(1), x2 = (TEE_X+halfW).toFixed(1), y = gy.toFixed(1);
+      const op = (0.14 + ls*0.26).toFixed(2);
+      const sw = (0.6 + ls*0.9).toFixed(2);
+      const fs = (9 + ls*6).toFixed(1);
+      out += `<line x1="${x1}" y1="${y}" x2="${x2}" y2="${y}" stroke="rgba(230,240,250,1)" stroke-width="${sw}" opacity="${op}"/>`;
+      out += `<text x="${(TEE_X+halfW+6).toFixed(1)}" y="${(gy-3).toFixed(1)}" fill="rgba(230,240,250,1)" font-size="${fs}" font-weight="700" opacity="${(0.35+ls*0.45).toFixed(2)}">${m} m</text>`;
+    }
+    return out;
+  }
+
+  const rails = buildRails();
+  const airPath = buildAirPath();
+  const rollPath = buildRollPath();
+  const gridBandsSvg = buildGridBands();
+  const apexP = project(APEX_AT*carryM, 1, lateralAt(APEX_AT*carryM));
+  const landP = project(carryM, 0, lateralAt(carryM));
+
+  function overlaySceneSVG(){
+    return `
+      <svg class="ov-scene-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">
+        <defs>
+          <linearGradient id="tracerGrad" x1="0" y1="1" x2="0" y2="0">
+            <stop offset="0" stop-color="#46F5C4" stop-opacity=".2"/>
+            <stop offset=".5" stop-color="#46F5C4" stop-opacity=".95"/>
+            <stop offset="1" stop-color="#eafff6"/>
+          </linearGradient>
+          <radialGradient id="apexGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0" stop-color="#46F5C4" stop-opacity=".85"/><stop offset="1" stop-color="#46F5C4" stop-opacity="0"/>
+          </radialGradient>
+        </defs>
+        <!-- converging fairway rails -->
+        <path d="${rails.dl}" fill="none" stroke="rgba(230,240,250,.16)" stroke-width="1.2"/>
+        <path d="${rails.dr}" fill="none" stroke="rgba(230,240,250,.16)" stroke-width="1.2"/>
+        <!-- centre / target line, converging to the vanishing point -->
+        <line x1="${TEE_X}" y1="${yBottom}" x2="${TEE_X}" y2="${yH}" stroke="rgba(230,240,250,.3)" stroke-width="1.4" stroke-dasharray="6 8"/>
+        <!-- distance grid bands 50/100/150 -->
+        ${gridBandsSvg}
+        <!-- tee marker -->
+        <ellipse cx="${TEE_X}" cy="${yBottom}" rx="34" ry="7" fill="#000" opacity=".35"/>
+        <ellipse cx="${TEE_X}" cy="${yBottom}" rx="30" ry="6" fill="none" stroke="rgba(70,245,196,.5)" stroke-width="1.4"/>
+        <!-- soft under-glow trail -->
+        <path d="${airPath}" fill="none" stroke="#46F5C4" stroke-width="12" stroke-linecap="round" opacity=".16"/>
+        <!-- flight tracer: tee -> AWAY toward vanishing point, shrinking with distance -->
+        <path d="${airPath}" fill="none" stroke="url(#tracerGrad)" stroke-width="3.6" stroke-linecap="round" opacity=".97"/>
+        <path d="${airPath}" fill="none" stroke="#eafff6" stroke-width="1.3" stroke-linecap="round" opacity=".9"/>
+        <!-- ground roll after landing -->
+        <path d="${rollPath}" fill="none" stroke="#46F5C4" stroke-width="2" stroke-linecap="round" stroke-dasharray="3 5" opacity=".65"/>
+        <!-- apex marker -->
+        <circle cx="${apexP.x.toFixed(2)}" cy="${apexP.y.toFixed(2)}" r="15" fill="url(#apexGlow)"/>
+        <circle cx="${apexP.x.toFixed(2)}" cy="${apexP.y.toFixed(2)}" r="4" fill="none" stroke="#46F5C4" stroke-width="2"/>
+        <line x1="${apexP.x.toFixed(2)}" y1="${(apexP.y-8).toFixed(2)}" x2="${apexP.x.toFixed(2)}" y2="${(apexP.y-24).toFixed(2)}" stroke="#46F5C4" stroke-width="1.2" opacity=".7"/>
+        <rect x="${(apexP.x-32).toFixed(2)}" y="${(apexP.y-42).toFixed(2)}" width="64" height="17" rx="5" fill="rgba(4,8,14,.86)" stroke="rgba(70,245,196,.3)"/>
+        <text x="${apexP.x.toFixed(2)}" y="${(apexP.y-30).toFixed(2)}" text-anchor="middle" fill="#46F5C4" font-size="11" font-weight="800">Apex</text>
+        <!-- landing marker (secondary violet) -->
+        <ellipse cx="${landP.x.toFixed(2)}" cy="${landP.y.toFixed(2)}" rx="12" ry="4" fill="none" stroke="#8B7BFF" stroke-width="1.4" opacity=".5"/>
+        <circle cx="${landP.x.toFixed(2)}" cy="${landP.y.toFixed(2)}" r="4.2" fill="#8B7BFF"/>
+        <!-- downrange distance plate near the landing point -->
+        <rect x="${(landP.x-30).toFixed(2)}" y="${(landP.y-28).toFixed(2)}" width="60" height="18" rx="5" fill="rgba(4,8,14,.86)" stroke="rgba(139,123,255,.3)"/>
+        <text x="${landP.x.toFixed(2)}" y="${(landP.y-15.5).toFixed(2)}" text-anchor="middle" fill="#F2F7FF" font-size="11" font-weight="800">158 m</text>
+      </svg>
+      <div class="ov-hero">
+        <div class="k">Total</div>
+        <div class="v">162 m</div>
+      </div>
+      <div class="ov-xp"><span class="spark">✦</span>+25 XP</div>
+    `;
+  }
+
+  const list = document.getElementById('cardList');
+  let loaded = 0, broken = 0, total = 0;
+  const overlayMarkup = overlaySceneSVG();
+
+  CANDIDATES.forEach(c => {
+    const card = document.createElement('div');
+    card.className = 'compare-card' + (c.ref ? ' ref' : '');
+
+    const metaBits = [`<span class="card-num">${c.id}</span>`];
+    if (c.title) metaBits.push(`<span class="card-title">${c.title}</span>`);
+    if (c.tag) metaBits.push(`<span class="card-tag">${c.tag}</span>`);
+    if (c.detail) metaBits.push(`<span class="card-detail">${c.detail}</span>`);
+    if (c.src) metaBits.push(`<span class="card-file">${c.src}</span>`);
+
+    total++;
+    const imgClass = c.frontal ? 'bg-img frontal' : 'bg-img';
+    const bgHtml = `<img class="${imgClass}" src="${c.src}" alt="Night range backdrop candidate ${c.id}" />`;
+
+    card.innerHTML = `
+      <div class="card-meta">${metaBits.join('')}</div>
+      <div class="scene" data-id="${c.id}">
+        ${bgHtml}
+        ${overlayMarkup}
+      </div>
+    `;
+    list.appendChild(card);
+
+    const img = card.querySelector('.bg-img');
+    img.addEventListener('load', () => { loaded++; updateStatus(); });
+    img.addEventListener('error', () => {
+      broken++;
+      card.querySelector('.scene').classList.add('broken');
+      console.error('BROKEN_IMAGE', c.id, c.src);
+      updateStatus();
+    });
+  });
+
+  function updateStatus(){
+    const el = document.getElementById('status-line');
+    const done = loaded + broken;
+    el.textContent = `Images: ${loaded} loaded, ${broken} broken, ${total} total (${done}/${total} settled). Cards rendered: ${CANDIDATES.length}.`;
+    if (done === total) {
+      console.log(`RENDER_COMPLETE cards=${CANDIDATES.length} loaded=${loaded} broken=${broken}`);
+    }
+  }
+  updateStatus();
+</script>
+
+</body>
+</html>
