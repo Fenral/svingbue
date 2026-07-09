@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="robots" content="noindex" />
+<title>StrikeArc — Palette Decision (side-by-side)</title>
+<!-- ═════════════════════════════════════════════════════════════════════
+     palette-decision.html — INTERNAL DECISION PAGE, NOT SHIPPED.
+     Four palettes side by side in one horizontally-scrolling row (columns,
+     not tabs — owner asked to compare them simultaneously, not toggle).
+     Each column = real flight-screen screenshot (assets/palette-previews/
+     flight-{en,p1,p2,p3}.png, captured live from impact-viz-mock.html at
+     932x430 with the range-night-3d-13 photo + palette CSS-var/CSSOM patch)
+     + a self-contained Academy mini-mock rendered live in THIS page (no
+     dependency on academy.html — content is directional only, not real
+     copy) + 2-3 word verdict tags per the art-direction pass in
+     docs/palette-proposals.md.
+     ═════════════════════════════════════════════════════════════════════ -->
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{background:#020204}
+  body{
+    background:#020204;color:#EAF0FF;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-tap-highlight-color:transparent;
+    min-height:100vh;
+  }
+  a{color:inherit}
+
+  /* ── page chrome ─────────────────────────────────────────────────── */
+  .page-head{
+    padding:28px 20px 18px;
+    max-width:1000px;
+  }
+  .eyebrow{
+    font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;
+    color:#7C8CB0;margin-bottom:10px;
+  }
+  h1{
+    font-size:clamp(22px,4vw,34px);font-weight:800;letter-spacing:-.01em;line-height:1.12;
+    margin-bottom:10px;
+  }
+  .page-sub{
+    font-size:14px;line-height:1.55;color:#B7C2DC;max-width:62ch;margin-bottom:6px;
+  }
+  .scroll-hint{
+    font-size:12px;color:#7C8CB0;display:flex;align-items:center;gap:6px;margin-top:14px;
+  }
+  .scroll-hint kbd{
+    display:inline-block;font:inherit;font-size:11px;padding:2px 7px;border-radius:6px;
+    background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);
+  }
+
+  /* ── horizontal snap row ──────────────────────────────────────────── */
+  .scroll-wrap{position:relative;padding:6px 0 48px}
+  .edge-fade{
+    position:absolute;top:0;bottom:48px;width:56px;pointer-events:none;z-index:3;
+  }
+  .edge-fade.left{left:0;background:linear-gradient(to right,#020204, rgba(2,2,4,0))}
+  .edge-fade.right{right:0;background:linear-gradient(to left,#020204, rgba(2,2,4,0))}
+
+  .scroll-row{
+    display:flex;gap:26px;overflow-x:auto;overflow-y:hidden;
+    padding:4px 20px 20px;
+    scroll-snap-type:x mandatory;
+    scroll-padding-left:20px;
+    -webkit-overflow-scrolling:touch;
+  }
+  .scroll-row:focus-visible{outline:2px solid #6FC6FF;outline-offset:4px;border-radius:12px}
+  @media (prefers-reduced-motion:no-preference){ .scroll-row{scroll-behavior:smooth} }
+
+  /* thin, always-present scrollbar so the "more to the right" affordance
+     is visible even before interaction (desktop testing / mouse users) */
+  .scroll-row{scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.25) transparent}
+  .scroll-row::-webkit-scrollbar{height:8px}
+  .scroll-row::-webkit-scrollbar-thumb{background:rgba(255,255,255,.22);border-radius:8px}
+  .scroll-row::-webkit-scrollbar-track{background:transparent}
+
+  /* ── one palette column ───────────────────────────────────────────── */
+  .col{
+    flex:0 0 auto;
+    width:min(568px,84vw);
+    scroll-snap-align:start;
+    scroll-snap-stop:always;
+    background:var(--p-surface);
+    border:1px solid rgba(255,255,255,.10);
+    border-radius:20px;
+    padding:20px 20px 26px;
+    box-shadow:0 20px 60px rgba(0,0,0,.45);
+  }
+  .col-eyebrow{
+    font-size:10.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--p-secondary);margin-bottom:6px;
+  }
+  .col h2{
+    font-size:21px;font-weight:800;letter-spacing:-.01em;color:var(--p-ink);margin-bottom:6px;
+  }
+  .col-sub{
+    font-size:12.5px;line-height:1.5;color:var(--p-muted);margin-bottom:14px;min-height:36px;
+  }
+  .tags{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+  .tag{
+    font-size:11px;font-weight:700;letter-spacing:.02em;
+    padding:5px 11px;border-radius:999px;
+    background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.16);
+    color:var(--p-ink);white-space:nowrap;
+  }
+  .tag.accent{border-color:color-mix(in srgb, var(--p-accent) 55%, transparent);color:var(--p-accent)}
+  .tag.warn{border-color:color-mix(in srgb, var(--p-warn) 55%, transparent);color:var(--p-warn)}
+
+  .shot-figure{margin-bottom:18px}
+  .shot-figure img{
+    display:block;width:100%;height:auto;aspect-ratio:932/430;
+    border-radius:14px;border:1px solid rgba(255,255,255,.14);
+    background:#05060a;
+  }
+  .shot-cap{font-size:11px;color:var(--p-muted);margin-top:7px;line-height:1.4}
+
+  .section-label{
+    font-size:10.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--p-muted);margin:6px 0 10px;
+  }
+
+  /* ── Academy mini-mock ────────────────────────────────────────────── */
+  .academy-mock{
+    background:var(--p-bg);
+    border:1px solid rgba(255,255,255,.10);
+    border-radius:16px;
+    padding:14px 14px 16px;
+    position:relative;
+    overflow:hidden;
+  }
+  .am-header{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+  .am-hex{
+    flex:0 0 auto;width:40px;height:40px;
+    display:flex;align-items:center;justify-content:center;flex-direction:column;
+    clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);
+    background:rgba(255,255,255,.06);
+    border:1px solid var(--p-accent);
+  }
+  .am-hex b{font-size:14px;font-weight:800;color:var(--p-accent);line-height:1}
+  .am-hex span{font-size:10px;font-weight:700;letter-spacing:.04em;color:var(--p-muted)}
+  .am-xp{flex:1 1 auto;min-width:0}
+  .am-xp-top{display:flex;justify-content:space-between;font-size:10.5px;color:var(--p-muted);margin-bottom:4px}
+  .am-xp-top b{color:var(--p-ink);font-weight:800;font-size:11px}
+  .am-bar{height:6px;border-radius:999px;background:rgba(255,255,255,.10);overflow:hidden}
+  .am-bar i{
+    display:block;height:100%;width:62%;border-radius:999px;
+    background:linear-gradient(90deg, var(--p-accent), var(--p-secondary));
+  }
+  .am-badge{
+    flex:0 0 auto;display:flex;align-items:center;gap:5px;
+    font-size:10px;font-weight:700;color:var(--p-secondary);
+    padding:5px 9px;border-radius:999px;
+    background:rgba(255,255,255,.05);border:1px solid color-mix(in srgb, var(--p-secondary) 50%, transparent);
+    white-space:nowrap;
+  }
+  .am-badge svg{width:11px;height:11px;flex:0 0 auto}
+
+  /* skill-tree slice */
+  .am-tree{position:relative;height:78px;margin-bottom:14px}
+  .am-tree svg{position:absolute;inset:0;width:100%;height:100%}
+  .am-tree-nodes{position:relative;display:flex;justify-content:space-between;align-items:center;height:100%;padding:0 4px}
+  .am-node{
+    width:26px;height:26px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-size:11px;position:relative;z-index:1;
+    background:var(--p-bg);
+  }
+  .am-node.done{background:var(--p-good);color:#06110c;font-weight:900}
+  .am-node.active{
+    border:2px solid var(--p-accent);color:var(--p-accent);font-weight:900;
+    box-shadow:0 0 0 4px color-mix(in srgb, var(--p-accent) 20%, transparent);
+  }
+  .am-node.locked{border:1.5px solid rgba(255,255,255,.20);color:var(--p-muted)}
+  @media (prefers-reduced-motion:no-preference){
+    .am-node.active{animation:am-pulse 2.4s ease-in-out infinite}
+  }
+  @keyframes am-pulse{
+    0%,100%{box-shadow:0 0 0 4px color-mix(in srgb, var(--p-accent) 20%, transparent)}
+    50%{box-shadow:0 0 0 7px color-mix(in srgb, var(--p-accent) 10%, transparent)}
+  }
+
+  /* lesson-card snippet */
+  .am-lesson{
+    background:var(--p-surface);border:1px solid rgba(255,255,255,.12);border-radius:12px;
+    padding:12px 13px;margin-bottom:12px;
+  }
+  .am-lesson-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+  .am-lesson-tag{
+    font-size:10.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--p-accent);
+  }
+  .am-est{
+    font-size:10px;font-weight:800;letter-spacing:.04em;
+    padding:2px 7px;border-radius:999px;color:var(--p-warn);
+    background:color-mix(in srgb, var(--p-warn) 14%, transparent);
+    border:1px solid color-mix(in srgb, var(--p-warn) 45%, transparent);
+  }
+  .am-lesson-title{font-size:22px;font-weight:900;letter-spacing:-.01em;color:var(--p-ink);margin-bottom:9px}
+  .am-hier{display:flex;flex-direction:column;gap:4px}
+  .am-hier-row{display:flex;align-items:center;gap:7px}
+  .am-hier-label{font-size:10.5px;color:var(--p-muted);width:48px;flex:0 0 auto}
+  .am-hier-bar{height:6px;border-radius:4px;background:var(--p-path)}
+  .am-hier-row:nth-child(1) .am-hier-bar{width:82%;background:var(--p-path)}
+  .am-hier-row:nth-child(2) .am-hier-bar{width:54%;background:var(--p-loft)}
+  .am-hier-row:nth-child(3) .am-hier-bar{width:30%;background:var(--p-face)}
+
+  /* quiz option row */
+  .am-quiz{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+  .am-opt{
+    display:flex;align-items:center;gap:8px;
+    font-size:11px;padding:8px 10px;border-radius:9px;
+    border:1px solid rgba(255,255,255,.14);color:var(--p-ink);
+  }
+  .am-opt .dot{
+    width:16px;height:16px;border-radius:50%;flex:0 0 auto;
+    border:1.5px solid rgba(255,255,255,.35);
+  }
+  .am-opt.correct{
+    border-color:color-mix(in srgb, var(--p-good) 60%, transparent);
+    background:color-mix(in srgb, var(--p-good) 12%, transparent);
+  }
+  .am-opt.correct .dot{
+    background:var(--p-good);border-color:var(--p-good);
+    display:flex;align-items:center;justify-content:center;color:#06110c;font-size:10px;font-weight:900;
+  }
+
+  /* celebration pill */
+  .am-celebrate{
+    display:inline-flex;align-items:center;gap:6px;
+    font-size:12px;font-weight:800;color:#fff;
+    padding:7px 14px;border-radius:999px;
+    background:linear-gradient(90deg, var(--p-celebrate), var(--p-secondary));
+    box-shadow:0 4px 18px color-mix(in srgb, var(--p-celebrate) 45%, transparent);
+  }
+
+  .am-caption{font-size:11px;color:var(--p-muted);margin-top:12px;line-height:1.45}
+
+  /* ── palette token blocks ─────────────────────────────────────────── */
+  .pal-en{
+    --p-bg:#05060A; --p-surface:#0C1018;
+    --p-ink:#F2F7FF; --p-muted:#93A5C4;
+    --p-accent:#46F5C4; --p-secondary:#8B7BFF; --p-celebrate:#FF5CA8;
+    --p-good:#5CFF9D; --p-warn:#FFD056; --p-bad:#FF7B8A;
+    --p-face:#FF4D5E; --p-path:#5CB8FF; --p-attack:#FF6BE0; --p-loft:#A78BFF;
+  }
+  .pal-p1{
+    --p-bg:#05060A; --p-surface:#0C1018;
+    --p-ink:#F2F7FF; --p-muted:#93A5C4;
+    --p-accent:#46F5C4; --p-secondary:#8B7BFF; --p-celebrate:#FF5CA8;
+    --p-good:#5CFF9D; --p-warn:#FFD056; --p-bad:#FF8D9B;
+    --p-face:#FF5C6B; --p-path:#6FC6FF; --p-attack:#FFA14D; --p-loft:#C7A9FF;
+  }
+  .pal-p2{
+    --p-bg:#060810; --p-surface:#0D1320;
+    --p-ink:#F4F8FF; --p-muted:#9DAECB;
+    --p-accent:#CDFF4D; --p-secondary:#8B7BFF; --p-celebrate:#FF6BD5;
+    --p-good:#45E0A6; --p-warn:#FFC94D; --p-bad:#FF7B8A;
+    --p-face:#FF5C6B; --p-path:#6FC6FF; --p-attack:#FF8A3D; --p-loft:#B48CFF;
+  }
+  .pal-p3{
+    --p-bg:#07060C; --p-surface:#110D1C;
+    --p-ink:#F5F2FF; --p-muted:#A79FC7;
+    --p-accent:#FF8A4D; --p-secondary:#9D8BFF; --p-celebrate:#FF5CE1;
+    --p-good:#58E6A8; --p-warn:#FFD056; --p-bad:#FF7B8A;
+    --p-face:#FF5C6B; --p-path:#6FC6FF; --p-attack:#4DE8D2; --p-loft:#B9A0FF;
+  }
+
+  footer{padding:8px 20px 40px;font-size:11px;color:#5B6685;max-width:1000px}
+</style>
+</head>
+<body>
+
+<div class="page-head">
+  <p class="eyebrow">StrikeArc · art-direction pass · docs/palette-proposals.md</p>
+  <h1>Palette decision — four, side by side</h1>
+  <p class="page-sub">
+    Real flight-screen captures (impact-viz-mock.html, night range photo, resting state) plus a
+    directional Academy mini-mock for each palette. All four in one row so they can be judged
+    against each other at a glance, not toggled one at a time.
+  </p>
+  <p class="scroll-hint">
+    <kbd>←</kbd><kbd>→</kbd> to scroll once the row is focused, or swipe / drag on touch &amp; trackpad.
+  </p>
+</div>
+
+<div class="scroll-wrap">
+  <div class="edge-fade left" aria-hidden="true"></div>
+  <div class="edge-fade right" aria-hidden="true"></div>
+
+  <div class="scroll-row" id="scrollRow" tabindex="0" role="region" aria-label="Four palette columns, scroll horizontally to compare">
+
+    <!-- ══════════════════════════ EN — ORIGINAL (LOCKED) ══════════════════════════ -->
+    <article class="col pal-en" aria-labelledby="h-en">
+      <p class="col-eyebrow">Current · locked</p>
+      <h2 id="h-en">EN — Electric Night</h2>
+      <p class="col-sub">Mint ball on near-black, violet chrome, magenta reward. The lock stands — but attack and celebrate share one pink lane.</p>
+      <div class="tags">
+        <span class="tag accent">lock stands</span>
+        <span class="tag warn">attack/celebrate clash</span>
+        <span class="tag">path camouflages on photo</span>
+      </div>
+      <figure class="shot-figure">
+        <img src="assets/palette-previews/flight-en.png" alt="Flight result screen in the locked Electric Night palette: mint club-speed dot and ball trace, red face chip, ice-blue path chip, magenta attack chip, violet dyn-loft chip, over a night driving-range photo." loading="lazy" width="932" height="430">
+        <figcaption class="shot-cap">932×430 · impact-viz-mock.html, resting state, range-night-3d-13 photo</figcaption>
+      </figure>
+
+      <p class="section-label">Academy — directional feel</p>
+      <div class="academy-mock" aria-hidden="true">
+        <div class="am-header">
+          <div class="am-hex"><b>3</b><span>LVL</span></div>
+          <div class="am-xp">
+            <div class="am-xp-top"><b>Level 3</b><span>240 XP</span></div>
+            <div class="am-bar"><i></i></div>
+          </div>
+          <div class="am-badge"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="9"/></svg>Spin Master</div>
+        </div>
+        <div class="am-tree">
+          <svg viewBox="0 0 300 78" preserveAspectRatio="none" aria-hidden="true">
+            <path d="M20,55 C60,10 90,10 110,40 S170,70 190,35 S240,10 280,40" fill="none" stroke="rgba(255,255,255,.16)" stroke-width="2"/>
+          </svg>
+          <div class="am-tree-nodes">
+            <div class="am-node done">✓</div>
+            <div class="am-node active">●</div>
+            <div class="am-node locked">🔒</div>
+            <div class="am-node locked">🔒</div>
+            <div class="am-node locked">🔒</div>
+          </div>
+        </div>
+        <div class="am-lesson">
+          <div class="am-lesson-top"><span class="am-lesson-tag">Outcome · parameter</span><span class="am-est">EST</span></div>
+          <div class="am-lesson-title">CARRY</div>
+          <div class="am-hier">
+            <div class="am-hier-row"><span class="am-hier-label">Speed</span><span class="am-hier-bar"></span></div>
+            <div class="am-hier-row"><span class="am-hier-label">Loft</span><span class="am-hier-bar"></span></div>
+            <div class="am-hier-row"><span class="am-hier-label">Face</span><span class="am-hier-bar"></span></div>
+          </div>
+        </div>
+        <div class="am-quiz">
+          <div class="am-opt correct"><span class="dot">✓</span>Dynamic loft minus attack angle</div>
+          <div class="am-opt"><span class="dot"></span>Club speed times face angle</div>
+        </div>
+        <span class="am-celebrate">✦ +25 XP</span>
+      </div>
+      <p class="am-caption">Mint XP fill, violet badge/chrome, magenta reward-only pill — reads clean, but attack-orange isn't here to separate itself from celebrate yet (that's the P1 fix).</p>
+    </article>
+
+    <!-- ══════════════════════════ P1 — EN REFINED ══════════════════════════ -->
+    <article class="col pal-p1" aria-labelledby="h-p1">
+      <p class="col-eyebrow">Proposal 1 · smallest change</p>
+      <h2 id="h-p1">P1 — Electric Night · Refined</h2>
+      <p class="col-sub">Same identity, five tokens moved. Attack leaves the magenta lane for orange; path brightens to ice; celebrate finally owns pink alone.</p>
+      <div class="tags">
+        <span class="tag accent">ship this</span>
+        <span class="tag">attack → orange</span>
+        <span class="tag">celebrate owns pink</span>
+      </div>
+      <figure class="shot-figure">
+        <img src="assets/palette-previews/flight-p1.png" alt="Flight result screen in the P1 Electric Night Refined palette: same mint ball trace, but the attack chip is now orange instead of magenta, and the path chip and face chip are brighter, over a night driving-range photo." loading="lazy" width="932" height="430">
+        <figcaption class="shot-cap">932×430 · same capture, five params re-tokened</figcaption>
+      </figure>
+
+      <p class="section-label">Academy — directional feel</p>
+      <div class="academy-mock" aria-hidden="true">
+        <div class="am-header">
+          <div class="am-hex"><b>3</b><span>LVL</span></div>
+          <div class="am-xp">
+            <div class="am-xp-top"><b>Level 3</b><span>240 XP</span></div>
+            <div class="am-bar"><i></i></div>
+          </div>
+          <div class="am-badge"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="9"/></svg>Spin Master</div>
+        </div>
+        <div class="am-tree">
+          <svg viewBox="0 0 300 78" preserveAspectRatio="none" aria-hidden="true">
+            <path d="M20,55 C60,10 90,10 110,40 S170,70 190,35 S240,10 280,40" fill="none" stroke="rgba(255,255,255,.16)" stroke-width="2"/>
+          </svg>
+          <div class="am-tree-nodes">
+            <div class="am-node done">✓</div>
+            <div class="am-node active">●</div>
+            <div class="am-node locked">🔒</div>
+            <div class="am-node locked">🔒</div>
+            <div class="am-node locked">🔒</div>
+          </div>
+        </div>
+        <div class="am-lesson">
+          <div class="am-lesson-top"><span class="am-lesson-tag">Outcome · parameter</span><span class="am-est">EST</span></div>
+          <div class="am-lesson-title">CARRY</div>
+          <div class="am-hier">
+            <div class="am-hier-row"><span class="am-hier-label">Speed</span><span class="am-hier-bar"></span></div>
+            <div class="am-hier-row"><span class="am-hier-label">Loft</span><span class="am-hier-bar"></span></div>
+            <div class="am-hier-row"><span class="am-hier-label">Face</span><span class="am-hier-bar"></span></div>
+          </div>
+        </div>
+        <div class="am-quiz">
+          <div class="am-opt correct"><span class="dot">✓</span>Dynamic loft minus attack angle</div>
+          <div class="am-opt"><span class="dot"></span>Club speed times face angle</div>
+        </div>
+        <span class="am-celebrate">✦ +25 XP</span>
+      </div>
+      <p class="am-caption">Visually near-identical to EN at rest (bg/ink/accent/secondary/celebrate untouched) — the win shows up in the flight screen's attack chip, not here. Lavender loft now clearly separate from violet chrome.</p>
+    </article>
+
+    <!-- ══════════════════════════ P2 — VOLTAGE ══════════════════════════ -->
+    <article class="col pal-p2" aria-labelledby="h-p2">
+      <p class="col-eyebrow">Proposal 2 · maximal differentiation</p>
+      <h2 id="h-p2">P2 — Voltage</h2>
+      <p class="col-sub">Volt yellow-green replaces mint as the live-ball tracer — the hue night vision is most sensitive to. Motorsport energy over neon-lounge.</p>
+      <div class="tags">
+        <span class="tag accent">volt tracer</span>
+        <span class="tag">abandons mint equity</span>
+        <span class="tag warn">fights daylight-grass later</span>
+      </div>
+      <figure class="shot-figure">
+        <img src="assets/palette-previews/flight-p2.png" alt="Flight result screen in the P2 Voltage palette: bright yellow-green volt club-speed dot and ball trace, orange attack chip, violet dyn-loft chip, over a night driving-range photo." loading="lazy" width="932" height="430">
+        <figcaption class="shot-cap">932×430 · accent swapped to volt #CDFF4D</figcaption>
+      </figure>
+
+      <p class="section-label">Academy — directional feel</p>
+      <div class="academy-mock" aria-hidden="true">
+        <div class="am-header">
+          <div class="am-hex"><b>3</b><span>LVL</span></div>
+          <div class="am-xp">
+            <div class="am-xp-top"><b>Level 3</b><span>240 XP</span></div>
+            <div class="am-bar"><i></i></div>
+          </div>
+          <div class="am-badge"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="9"/></svg>Spin Master</div>
+        </div>
+        <div class="am-tree">
+          <svg viewBox="0 0 300 78" preserveAspectRatio="none" aria-hidden="true">
+            <path d="M20,55 C60,10 90,10 110,40 S170,70 190,35 S240,10 280,40" fill="none" stroke="rgba(255,255,255,.16)" stroke-width="2"/>
+          </svg>
+          <div class="am-tree-nodes">
+            <div class="am-node done">✓</div>
+            <div class="am-node active">●</div>
+            <div class="am-node locked">🔒</div>
+            <div class="am-node locked">🔒</div>
+            <div class="am-node locked">🔒</div>
+          </div>
+        </div>
+        <div class="am-lesson">
+          <div class="am-lesson-top"><span class="am-lesson-tag">Outcome · parameter</span><span class="am-est">EST</span></div>
+          <div class="am-lesson-title">CARRY</div>
+          <div class="am-hier">
+            <div class="am-hier-row"><span class="am-hier-label">Speed</span><span class="am-hier-bar"></span></div>
+            <div class="am-hier-row"><span class="am-hier-label">Loft</span><span class="am-hier-bar"></span></div>
+            <div class="am-hier-row"><span class="am-hier-label">Face</span><span class="am-hier-bar"></span></div>
+          </div>
+        </div>
+        <div class="am-quiz">
+          <div class="am-opt correct"><span class="dot">✓</span>Dynamic loft minus attack angle</div>
+          <div class="am-opt"><span class="dot"></span>Club speed times face angle</div>
+        </div>
+        <span class="am-celebrate">✦ +25 XP</span>
+      </div>
+      <p class="am-caption">XP bar and active-node ring go volt instead of mint — reads racing/adrenaline rather than tournament-neon. Warn-gold (not volt) stays the XP-numeral tint, so it doesn't fully take over gamification.</p>
+    </article>
+
+    <!-- ══════════════════════════ P3 — ULTRAVIOLET EMBER ══════════════════════════ -->
+    <article class="col pal-p3" aria-labelledby="h-p3">
+      <p class="col-eyebrow">Proposal 3 · the taste bet</p>
+      <h2 id="h-p3">P3 — Ultraviolet Ember</h2>
+      <p class="col-sub">Cold ultraviolet instrument; the ball is the only hot object in the universe. Most premium, most poster-able — and the riskiest.</p>
+      <div class="tags">
+        <span class="tag accent">ember comet</span>
+        <span class="tag">poster-grade</span>
+        <span class="tag warn">TrackMan-adjacent risk</span>
+      </div>
+      <figure class="shot-figure">
+        <img src="assets/palette-previews/flight-p3.png" alt="Flight result screen in the P3 Ultraviolet Ember palette: warm ember-orange club-speed dot and ball trace against a cold violet-black instrument, teal attack chip (mint demoted to a parameter), violet dyn-loft chip, over a night driving-range photo." loading="lazy" width="932" height="430">
+        <figcaption class="shot-cap">932×430 · accent swapped to ember #FF8A4D</figcaption>
+      </figure>
+
+      <p class="section-label">Academy — directional feel</p>
+      <div class="academy-mock" aria-hidden="true">
+        <div class="am-header">
+          <div class="am-hex"><b>3</b><span>LVL</span></div>
+          <div class="am-xp">
+            <div class="am-xp-top"><b>Level 3</b><span>240 XP</span></div>
+            <div class="am-bar"><i></i></div>
+          </div>
+          <div class="am-badge"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="9"/></svg>Spin Master</div>
+        </div>
+        <div class="am-tree">
+          <svg viewBox="0 0 300 78" preserveAspectRatio="none" aria-hidden="true">
+            <path d="M20,55 C60,10 90,10 110,40 S170,70 190,35 S240,10 280,40" fill="none" stroke="rgba(255,255,255,.16)" stroke-width="2"/>
+          </svg>
+          <div class="am-tree-nodes">
+            <div class="am-node done">✓</div>
+            <div class="am-node active">●</div>
+            <div class="am-node locked">🔒</div>
+            <div class="am-node locked">🔒</div>
+            <div class="am-node locked">🔒</div>
+          </div>
+        </div>
+        <div class="am-lesson">
+          <div class="am-lesson-top"><span class="am-lesson-tag">Outcome · parameter</span><span class="am-est">EST</span></div>
+          <div class="am-lesson-title">CARRY</div>
+          <div class="am-hier">
+            <div class="am-hier-row"><span class="am-hier-label">Speed</span><span class="am-hier-bar"></span></div>
+            <div class="am-hier-row"><span class="am-hier-label">Loft</span><span class="am-hier-bar"></span></div>
+            <div class="am-hier-row"><span class="am-hier-label">Face</span><span class="am-hier-bar"></span></div>
+          </div>
+        </div>
+        <div class="am-quiz">
+          <div class="am-opt correct"><span class="dot">✓</span>Dynamic loft minus attack angle</div>
+          <div class="am-opt"><span class="dot"></span>Club speed times face angle</div>
+        </div>
+        <span class="am-celebrate">✦ +25 XP</span>
+      </div>
+      <p class="am-caption">Ember XP fill against violet-black surfaces — the whole gamification layer runs colder and moodier, with the celebration pill (electric magenta) as the one other warm-adjacent beat besides the ember itself.</p>
+    </article>
+
+  </div>
+</div>
+
+<footer>
+  Internal decision page for visual comparison only — not linked from the shipped app, not copied into academy.html.
+  Source verdicts: docs/palette-proposals.md (2026-07-09).
+</footer>
+
+<script>
+  (function(){
+    var row = document.getElementById('scrollRow');
+    if (!row) return;
+    var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    row.addEventListener('keydown', function(e){
+      var cols = row.querySelectorAll('.col');
+      var step = cols.length ? (cols[0].getBoundingClientRect().width + 26) : 400;
+      if (e.key === 'ArrowRight'){
+        row.scrollBy({ left: step, behavior: reduce ? 'auto' : 'smooth' });
+        e.preventDefault();
+      } else if (e.key === 'ArrowLeft'){
+        row.scrollBy({ left: -step, behavior: reduce ? 'auto' : 'smooth' });
+        e.preventDefault();
+      }
+    });
+  })();
+</script>
+
+</body>
+</html>
