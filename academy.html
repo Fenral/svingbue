@@ -18,7 +18,7 @@
     --rule:rgba(232,240,251,.10); --rule-2:rgba(232,240,251,.06);
     --rule-hot:rgba(34,227,214,.42); --glow-cyan:rgba(34,227,214,.20);
     /* ink */
-    --ink:#e8f0fb; --ink-dim:#9aabc6; --ink-faint:#5d6e87;
+    --ink:#e8f0fb; --ink-dim:#9aabc6; --ink-faint:#7e90ac;
     --cyan-soft:rgba(34,227,214,.10); --amber-soft:rgba(255,181,52,.12); --mag-soft:rgba(255,77,141,.12);
     --gain-soft:rgba(74,222,128,.12);
     /* dark text plate */
@@ -47,6 +47,12 @@
   button{font-family:inherit}
   a{color:inherit}
   :focus-visible{outline:2px solid var(--cyan); outline-offset:3px}
+
+  /* ── skip link ── */
+  .skip-link{position:absolute;top:-60px;left:8px;z-index:100;background:var(--bg-2);color:var(--ink);
+    border:1px solid var(--rule-hot);border-radius:6px;padding:10px 16px;font-family:var(--f-display);font-weight:600;
+    font-size:12px;letter-spacing:.06em;text-transform:uppercase;text-decoration:none;transition:top .15s var(--ease)}
+  .skip-link:focus{top:8px}
 
   /* grid-dot instrument backdrop */
   .bench{position:fixed;inset:0;z-index:0;pointer-events:none;
@@ -323,8 +329,8 @@
   .datatable{margin-top:10px;border:1px solid var(--rule);border-radius:8px;overflow:hidden;display:none}
   .datatable.show{display:block}
   .datatable table{width:100%;border-collapse:collapse}
-  .datatable td{padding:7px 12px;border-top:1px solid var(--rule-2);font-family:var(--f-mono);font-size:11.5px;color:var(--ink-dim)}
-  .datatable td:first-child{color:var(--ink-faint)}
+  .datatable th,.datatable td{padding:7px 12px;border-top:1px solid var(--rule-2);font-family:var(--f-mono);font-size:11.5px;font-weight:400;text-align:left;color:var(--ink-dim)}
+  .datatable th:first-child,.datatable td:first-child{color:var(--ink-faint)}
   .datatable td:last-child{text-align:right;color:var(--ink)}
 
   /* ── quiz ── */
@@ -341,7 +347,7 @@
   .quiz .opt.correct .mark{border-color:var(--cyan);color:var(--cyan)}
   .quiz .opt.wrong{border-color:var(--magenta);background:var(--mag-soft)}
   .quiz .opt.wrong .mark{border-color:var(--magenta);color:var(--magenta)}
-  .quiz .opt:disabled{cursor:default}
+  .quiz .opt[aria-disabled="true"]{cursor:default;pointer-events:none}
   .quiz .expl{margin-top:11px;background:var(--plate);border:1px solid var(--rule);border-radius:8px;padding:11px 13px;font-size:13.5px;color:var(--ink-dim);line-height:1.55;display:none}
   .quiz .expl.show{display:block}
   .quiz .expl .el{font-family:var(--f-display);font-weight:600;font-size:10px;letter-spacing:.14em;text-transform:uppercase;margin-bottom:5px}
@@ -393,8 +399,9 @@
 </style>
 </head>
 <body>
+  <a class="skip-link" href="#app">Skip to content</a>
   <div class="bench" aria-hidden="true"></div>
-  <div class="rotate" role="alertdialog" aria-label="Rotate device">
+  <div class="rotate" role="alert" aria-live="assertive" aria-label="Rotate device">
     <div class="ico" aria-hidden="true">&#128241;</div>
     <p>Rotate your phone to landscape.</p>
     <div class="k">StrikeArc Academy</div>
@@ -402,7 +409,7 @@
 
   <div id="live" class="sr-only" aria-live="polite" aria-atomic="true"></div>
   <div class="tooltip" id="tooltip" role="status"></div>
-  <main id="app"></main>
+  <main id="app" tabindex="-1"></main>
 
   <script type="application/json" id="graph-data">
 {"nodes":[{"id":"club-speed","label":"Club Speed","tier":"fundamental","blurb":"How fast the head moves at impact — the power source for the whole shot."},{"id":"face-angle","label":"Face Angle","tier":"fundamental","blurb":"Where the face points at impact — the dominant driver of start direction."},{"id":"club-path","label":"Club Path","tier":"fundamental","blurb":"Horizontal direction the head travels through impact — in-to-out or out-to-in."},{"id":"attack-angle","label":"Attack Angle","tier":"fundamental","blurb":"Up or down motion of the head at impact — ascending or descending strike."},{"id":"dynamic-loft","label":"Dynamic Loft","tier":"fundamental","blurb":"Effective loft actually delivered at impact — sets launch and spin."},{"id":"spin-loft","label":"Spin Loft","tier":"derived","blurb":"Dynamic loft minus attack angle — the glancing angle that creates backspin."},{"id":"smash","label":"Smash Factor","tier":"derived","blurb":"Ball speed over club speed — energy transfer; falls as spin loft rises."},{"id":"ball-speed","label":"Ball Speed","tier":"derived","blurb":"Club speed times smash factor — the true engine of distance."},{"id":"launch-angle","label":"Launch Angle","tier":"derived","blurb":"Initial climb angle — loft-dominant, nudged by attack angle."},{"id":"start-direction","label":"Start Direction","tier":"derived","blurb":"Where the ball starts — ~75% face, ~25% path, weighted by loft."},{"id":"spin-axis","label":"Spin Axis","tier":"derived","blurb":"Tilt of the spin from the face-to-path gap — decides which way it bends."},{"id":"backspin","label":"Backspin","tier":"derived","blurb":"Rev rate from spin loft and ball speed — the lift that holds flight."},{"id":"carry","label":"Carry","tier":"outcome","blurb":"Distance flown through the air — driven by ball speed."},{"id":"apex","label":"Apex","tier":"outcome","blurb":"Peak height of the flight — from ball speed and launch angle."},{"id":"landing-angle","label":"Landing Angle","tier":"outcome","blurb":"How steeply the ball descends — from spin loft, launch and apex."},{"id":"total","label":"Total Distance","tier":"outcome","blurb":"Carry plus roll-out — roll shrinks as the landing angle steepens."},{"id":"curve","label":"Curve","tier":"outcome","blurb":"Sideways bend in flight from spin axis — grows with distance squared."},{"id":"offline","label":"Offline","tier":"outcome","blurb":"Total sideways miss from target — start direction plus curve."},{"id":"altitude","label":"Altitude","tier":"environment","blurb":"Thinner air up high — more carry, flatter spin, less curve."},{"id":"wind","label":"Wind","tier":"environment","blurb":"Head, tail and crosswind — reshapes carry and pushes the ball offline."},{"id":"temperature","label":"Temperature","tier":"environment","blurb":"Warm air and a warm ball — more ball speed and more carry."}],"edges":[{"from":"face-angle","to":"start-direction"},{"from":"club-path","to":"start-direction"},{"from":"dynamic-loft","to":"start-direction"},{"from":"dynamic-loft","to":"spin-loft"},{"from":"attack-angle","to":"spin-loft"},{"from":"dynamic-loft","to":"launch-angle"},{"from":"attack-angle","to":"launch-angle"},{"from":"face-angle","to":"spin-axis"},{"from":"club-path","to":"spin-axis"},{"from":"spin-loft","to":"smash"},{"from":"club-speed","to":"ball-speed"},{"from":"smash","to":"ball-speed"},{"from":"spin-loft","to":"backspin"},{"from":"ball-speed","to":"backspin"},{"from":"ball-speed","to":"carry"},{"from":"ball-speed","to":"apex"},{"from":"launch-angle","to":"apex"},{"from":"spin-loft","to":"landing-angle"},{"from":"launch-angle","to":"landing-angle"},{"from":"apex","to":"landing-angle"},{"from":"carry","to":"curve"},{"from":"spin-axis","to":"curve"},{"from":"carry","to":"offline"},{"from":"start-direction","to":"offline"},{"from":"curve","to":"offline"},{"from":"carry","to":"total"},{"from":"landing-angle","to":"total"},{"from":"altitude","to":"carry"},{"from":"altitude","to":"apex"},{"from":"altitude","to":"curve"},{"from":"wind","to":"carry"},{"from":"wind","to":"offline"},{"from":"temperature","to":"ball-speed"},{"from":"temperature","to":"carry"}],"progression":["club-speed","dynamic-loft","attack-angle","face-angle","club-path","spin-loft","smash","ball-speed","launch-angle","start-direction","spin-axis","backspin","carry","apex","landing-angle","total","curve","offline","altitude","wind","temperature"]}
@@ -523,6 +530,17 @@
   const liveEl = $('#live');
   function announce(msg){ liveEl.textContent = ''; setTimeout(() => { liveEl.textContent = msg; }, 30); }
 
+  /* ══ ROTATE LOCK: keep #app out of the tree while the portrait overlay is shown ══ */
+  function syncRotateLock(){
+    const isPortrait = window.matchMedia('(orientation:portrait)').matches;
+    if (isPortrait){ app.setAttribute('inert',''); app.setAttribute('aria-hidden','true'); }
+    else { app.removeAttribute('inert'); app.removeAttribute('aria-hidden'); }
+  }
+  const portraitMQ = window.matchMedia('(orientation:portrait)');
+  if (portraitMQ.addEventListener) portraitMQ.addEventListener('change', syncRotateLock);
+  else if (portraitMQ.addListener) portraitMQ.addListener(syncRotateLock);
+  syncRotateLock();
+
   const H = (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Haptics) || null;
   function haptic(k){
     try{
@@ -560,13 +578,20 @@
   /* ══ BADGES + LEVEL ══ */
   let pendingBadges = [];   // badges awarded during current lesson finish (for completion panel)
   function awardBadges(collectInto){
+    const newlyEarned = [];
     for (const b of BADGES){
       if (!store.badges.includes(b.id) && badgePredicate[b.id](store)){
         store.badges.push(b.id);
         if (collectInto) collectInto.push(b.id);
-        haptic('success');
-        announce('Badge earned: ' + b.label + '. ' + b.desc);
+        newlyEarned.push(b);
       }
+    }
+    if (newlyEarned.length){
+      haptic('success');
+      const msg = newlyEarned.length === 1
+        ? 'Badge earned: ' + newlyEarned[0].label + '. ' + newlyEarned[0].desc
+        : 'Badges earned: ' + newlyEarned.map(b => b.label + ' — ' + b.desc).join(' ');
+      announce(msg);
     }
   }
 
@@ -586,7 +611,7 @@
         <div class="lvmeta">
           <div class="t" id="hdr-title">${esc(li.title)}</div>
           <div class="x mono"><span id="hdr-xp">${store.xp}</span> XP &middot; ${li.pct>=1&&li.lvl>=6?'max':'next '+li.nextXp}</div>
-          <div class="xpbar" role="progressbar" aria-valuemin="${li.curXp}" aria-valuemax="${li.nextXp}" aria-valuenow="${store.xp}" aria-label="Experience to next level"><div class="fill" id="hdr-xpfill" style="width:${(li.pct*100).toFixed(1)}%"></div></div>
+          <div class="xpbar" id="hdr-xpbar" role="progressbar" aria-valuemin="${li.curXp}" aria-valuemax="${li.nextXp}" aria-valuenow="${store.xp}" aria-label="Experience to next level"><div class="fill" id="hdr-xpfill" style="width:${(li.pct*100).toFixed(1)}%"></div></div>
         </div>
       </div>
       <div class="badgerail">${badges}</div>
@@ -600,12 +625,23 @@
 
   /* ══ ROUTER ══ */
   function go(hash){ if (location.hash === hash) route(); else location.hash = hash; }
+  function focusMainHeading(){
+    const h1 = app.querySelector('h1');
+    if (!h1) return;
+    if (!h1.hasAttribute('tabindex')) h1.setAttribute('tabindex', '-1');
+    h1.focus({ preventScroll:true });
+  }
+  let hasRoutedOnce = false;
   function route(){
     const h = location.hash || '#/path';
     const m = h.match(/^#\/lesson\/(backspin|carry)$/);
     if (m) renderLesson(m[1]);
     else renderPath();
     window.scrollTo(0,0);
+    // Move focus to the new view's heading on every SPA route change, but not on the very
+    // first paint — that would rob keyboard users of the skip link as their first Tab stop.
+    if (hasRoutedOnce) focusMainHeading();
+    hasRoutedOnce = true;
   }
   window.addEventListener('hashchange', route);
 
@@ -644,7 +680,6 @@
     TIER_COLS.forEach((col, ci) => { heads += `<div class="col-head" style="left:${L.colX[ci]}px;width:${NODE_W}px">${col.label}</div>`; });
     // nodes
     let nodes = '';
-    let firstFocusId = null;
     TIER_COLS.forEach((col, ci) => {
       col.ids.forEach(id => {
         const n = NODE[id], st = nodeState(id), p = L.pos[id];
@@ -660,16 +695,15 @@
         const aria = st === 'locked'
           ? `${n.label}, locked, coming soon`
           : `${n.label}, ${st}${st==='available'?', press Enter to start':''}. ${n.blurb}`;
-        if (!firstFocusId && st !== 'locked') firstFocusId = id;
-        nodes += `<button class="${cls.join(' ')}" data-node="${id}" role="treeitem" aria-level="${ci+1}" aria-disabled="${st==='locked'}"
-          tabindex="-1" style="left:${p.x}px;top:${p.y}px;width:${NODE_W}px;height:${NODE_H}px" aria-label="${esc(aria)}">
+        nodes += `<button class="${cls.join(' ')}" data-node="${id}" aria-disabled="${st==='locked'}"
+          style="left:${p.x}px;top:${p.y}px;width:${NODE_W}px;height:${NODE_H}px" aria-label="${esc(aria)}">
           <span class="r1"><span class="ntier">${tierTag}</span>${glyph}</span>
           <span class="nlabel">${esc(n.label)}</span>${xpStamp}
         </button>`;
       });
     });
-    if (!firstFocusId) firstFocusId = 'backspin';
 
+    document.title = 'StrikeArc Academy';
     app.innerHTML = `<div class="view">
       ${headerHTML()}
       <div class="path-intro">
@@ -678,7 +712,7 @@
         <div class="slice">Vertical slice: <b>${doneCount}</b> of 21 modules live &middot; Backspin &amp; Carry are pre-unlocked so you can judge the format now.</div>
       </div>
       <div class="map-scroll">
-        <div class="map-canvas" role="tree" aria-label="Parameter mastery path" style="width:${L.width}px;height:${L.height}px">
+        <div class="map-canvas" role="group" aria-label="Parameter mastery path" style="width:${L.width}px;height:${L.height}px">
           <svg class="map-edges" viewBox="0 0 ${L.width} ${L.height}" width="${L.width}" height="${L.height}" aria-hidden="true">${edges}</svg>
           ${heads}
           ${nodes}
@@ -687,38 +721,18 @@
     </div>`;
 
     wireBadges(app);
-    wireMap(firstFocusId);
+    wireMap();
   }
 
-  function wireMap(firstFocusId){
+  function wireMap(){
     const canvas = $('.map-canvas');
     const btns = Array.from(canvas.querySelectorAll('[data-node]'));
     const byId = Object.fromEntries(btns.map(b => [b.dataset.node, b]));
-    // roving tabindex grid
-    const grid = TIER_COLS.map(c => c.ids.slice());
-    let focus = { col:0, row:0 };
-    // set initial focus
-    outer: for (let ci=0; ci<grid.length; ci++) for (let ri=0; ri<grid[ci].length; ri++) if (grid[ci][ri] === firstFocusId){ focus = {col:ci, row:ri}; break outer; }
-    byId[firstFocusId] && (byId[firstFocusId].tabIndex = 0);
-
-    function focusCell(ci, ri){
-      const id = grid[ci] && grid[ci][ri]; if (!id) return;
-      btns.forEach(b => b.tabIndex = -1);
-      const b = byId[id]; b.tabIndex = 0; b.focus(); focus = { col:ci, row:ri };
-    }
     function openNode(id){
       const st = nodeState(id);
       if (st === 'locked'){ haptic('light'); announce(NODE[id].label + ', locked. Coming soon — this module is not built yet.'); return; }
       haptic('light'); store.lastOpened = id; save(); go('#/lesson/' + id);
     }
-    canvas.addEventListener('keydown', e => {
-      let ci = focus.col, ri = focus.row;
-      if (e.key === 'ArrowRight'){ ci = Math.min(grid.length-1, ci+1); ri = Math.min(ri, grid[ci].length-1); focusCell(ci, ri); e.preventDefault(); }
-      else if (e.key === 'ArrowLeft'){ ci = Math.max(0, ci-1); ri = Math.min(ri, grid[ci].length-1); focusCell(ci, ri); e.preventDefault(); }
-      else if (e.key === 'ArrowDown'){ ri = Math.min(grid[ci].length-1, ri+1); focusCell(ci, ri); e.preventDefault(); }
-      else if (e.key === 'ArrowUp'){ ri = Math.max(0, ri-1); focusCell(ci, ri); e.preventDefault(); }
-      else if (e.key === 'Enter' || e.key === ' '){ const id = grid[ci][ri]; openNode(id); e.preventDefault(); }
-    });
     btns.forEach(b => {
       const id = b.dataset.node;
       b.addEventListener('click', () => openNode(id));
@@ -810,8 +824,9 @@
     const wolfItems = d.wolframChecks.map(w => `<li>${esc(w)}</li>`).join('');
 
     const jump = SECTIONS.map(s => `<a href="#${s.id}" data-jump="${s.id}">${s.label}</a>`).join('');
-    const dots = SECTIONS.map((s,i) => `<span class="d" data-dot="${i}"></span>`).join('');
+    const dots = SECTIONS.map((s,i) => `<span class="d" data-dot="${i}" aria-hidden="true"></span>`).join('');
 
+    document.title = d.parameter + ' — StrikeArc Academy';
     app.innerHTML = `<div class="view lesson">
       <div class="topbar">
         <button class="backbtn" id="backBtn" aria-label="Back to path">← Path</button>
@@ -907,7 +922,13 @@
     });
     // jump nav
     app.querySelectorAll('[data-jump]').forEach(a => a.addEventListener('click', e => {
-      e.preventDefault(); const t = document.getElementById(a.dataset.jump); if (t) t.scrollIntoView({ behavior: reduced()?'auto':'smooth', block:'start' });
+      e.preventDefault();
+      const t = document.getElementById(a.dataset.jump);
+      if (t){
+        if (!t.hasAttribute('tabindex')) t.setAttribute('tabindex', '-1');
+        t.focus({ preventScroll:true });
+        t.scrollIntoView({ behavior: reduced()?'auto':'smooth', block:'start' });
+      }
     }));
 
     mountDiagram(meta.diagram, id);
@@ -961,6 +982,7 @@
     const t = $('#hdr-title'); if (t) t.textContent = li.title;
     const xp = $('#hdr-xp'); if (xp) setNum(xp, store.xp, { commas:true });
     const f = $('#hdr-xpfill'); if (f) f.style.width = (li.pct*100).toFixed(1)+'%';
+    const bar = $('#hdr-xpbar'); if (bar){ bar.setAttribute('aria-valuemin', li.curXp); bar.setAttribute('aria-valuemax', li.nextXp); bar.setAttribute('aria-valuenow', store.xp); }
     const tbx = $('#tb-xp'); if (tbx) tbx.textContent = store.xp + ' XP';
     const tbt = $('#tb-lvtitle'); if (tbt) tbt.textContent = 'Lv ' + li.lvl + ' ' + li.title;
     // badge rail
@@ -989,7 +1011,7 @@
   function mountBackspin(mount, lessonId){
     const state = { dl:30, aa:-3, cs:90, friction:false, band:'7iron' };
     mount.innerHTML = `
-      <div class="vig-head"><div class="vig-title">The Spin-Loft Machine</div><div class="vig-tag mono">ENGINE-LIVE</div></div>
+      <div class="vig-head"><h2 class="vig-title">The Spin-Loft Machine</h2><div class="vig-tag mono">ENGINE-LIVE</div></div>
       <div class="bs-diagram">
         <div class="bs-controls">
           ${slider('dl','Dynamic loft',10,55,1,30,false)}
@@ -1003,14 +1025,14 @@
           <button class="toggle" id="bs-friction" aria-pressed="false"><span class="knob" aria-hidden="true"></span><span>Grass between face &amp; ball</span></button>
           <div class="footnote">Presets set delivery only; the slice engine models a 7-iron head. Friction is a display-layer flyer gate applied after the engine solve.</div>
           <button class="datatoggle" id="bs-datatoggle" aria-expanded="false">Show data table</button>
-          <div class="datatable" id="bs-datatable"><table><tbody id="bs-datarows"></tbody></table></div>
+          <div class="datatable" id="bs-datatable"><table><caption class="sr-only">Spin-loft machine values</caption><tbody id="bs-datarows"></tbody></table></div>
         </div>
         <div class="bs-machine">
           <div role="img" id="bs-imglabel" aria-label="">
-            <svg class="bs-svg" viewBox="0 0 300 262" id="bs-schem">
+            <svg class="bs-svg" viewBox="0 0 300 262" id="bs-schem" aria-hidden="true">
               <style>@keyframes saSpin{to{transform:rotate(-360deg)}}</style>
               <line x1="26" y1="200" x2="288" y2="200" stroke="rgba(232,240,251,.10)" stroke-width="1" stroke-dasharray="4 5"/>
-              <text x="30" y="216" font-family="Azeret Mono" font-size="9" fill="#5d6e87">TARGET LINE</text>
+              <text x="30" y="216" font-family="Azeret Mono" font-size="9" fill="#7e90ac">TARGET LINE</text>
               <polygon id="bs-wedge" points="" fill="rgba(34,227,214,.10)" stroke="#22E3D6" stroke-width="1"/>
               <line id="bs-path" x1="140" y1="200" x2="250" y2="200" stroke="#9aabc6" stroke-width="2.4" marker-end="url(#bs-ah)"/>
               <line id="bs-face" x1="140" y1="200" x2="235" y2="120" stroke="#22E3D6" stroke-width="2.4" marker-end="url(#bs-ahc)"/>
@@ -1032,7 +1054,7 @@
           </div>
           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
             <span class="flyertag mono" id="bs-flyer">⚑ FLYER — grip lost</span>
-            <span class="mono" style="font-size:10px;color:#5d6e87">Path (grey) vs face-normal (cyan); shaded wedge = spin loft.</span>
+            <span class="mono" style="font-size:10px;color:#7e90ac">Path (grey) vs face-normal (cyan); shaded wedge = spin loft.</span>
           </div>
         </div>
         <div class="bs-right">
@@ -1042,7 +1064,7 @@
             <div class="fnote" id="bs-f-note"></div>
           </div>
           <div>
-            <div class="fk" style="font-family:var(--f-display);font-weight:600;font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:#5d6e87;margin-bottom:6px">Displayed backspin</div>
+            <div class="fk" style="font-family:var(--f-display);font-weight:600;font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:#7e90ac;margin-bottom:6px">Displayed backspin</div>
             <div class="rpmbig"><span class="mono" id="bs-rpm">7,099</span><span class="u">RPM</span></div>
           </div>
           <div class="meterwrap">
@@ -1106,8 +1128,8 @@
       // ball spin animation speed
       const spd = clamp(9000 / Math.max(rpmShown, 400), 0.4, 6);
       const spin = el('#bs-spin'); spin.style.setProperty('--spd', spd.toFixed(2)+'s'); spin.style.animation = 'saSpin ' + spd.toFixed(2) + 's linear infinite';
-      spin.querySelectorAll('path').forEach(p => p.setAttribute('stroke', state.friction ? '#5d6e87' : '#22E3D6'));
-      spin.querySelectorAll('path[fill]').forEach(p => { if (p.getAttribute('fill') !== 'none') p.setAttribute('fill', state.friction ? '#5d6e87' : '#22E3D6'); });
+      spin.querySelectorAll('path').forEach(p => p.setAttribute('stroke', state.friction ? '#7e90ac' : '#22E3D6'));
+      spin.querySelectorAll('path[fill]').forEach(p => { if (p.getAttribute('fill') !== 'none') p.setAttribute('fill', state.friction ? '#7e90ac' : '#22E3D6'); });
       el('#bs-flyer').classList.toggle('on', state.friction);
 
       // formula
@@ -1156,13 +1178,13 @@
         ['Backspin (engine)', Math.round(rpmEngine).toLocaleString('en-US')+' rpm'],
         ['Backspin (shown)', rpmShown.toLocaleString('en-US')+' rpm'+(state.friction?' · flyer':'')],
         ['Launch', f.launchAngle.toFixed(1)+'°'], ['Carry', f.carry.toFixed(0)+' yd'], ['Apex', f.apex.toFixed(0)+' yd'],
-      ].map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join('');
+      ].map(r => `<tr><th scope="row">${r[0]}</th><td>${r[1]}</td></tr>`).join('');
     }
 
     function onInput(){ markDiagramTouched(lessonId); haptic('select'); render(); }
     slDl.addEventListener('input', () => { state.dl = +slDl.value; state.band = '7iron'; setPresetPressed(null); onInput(); });
-    slAa.addEventListener('input', () => { state.aa = +slAa.value; onInput(); });
-    slCs.addEventListener('input', () => { state.cs = +slCs.value; onInput(); });
+    slAa.addEventListener('input', () => { state.aa = +slAa.value; setPresetPressed(null); onInput(); });
+    slCs.addEventListener('input', () => { state.cs = +slCs.value; setPresetPressed(null); onInput(); });
 
     function setPresetPressed(which){ mount.querySelectorAll('[data-preset]').forEach(b => b.setAttribute('aria-pressed', b.dataset.preset === which ? 'true':'false')); }
     const presets = { driver:{dl:13,aa:4}, '7iron':{dl:30,aa:-3}, wedge:{dl:46,aa:-5} };
@@ -1188,7 +1210,7 @@
   function mountCarry(mount, lessonId){
     const state = { cs:90, dl:30, aa:-3, alt:0, wind:0, temp:15, hum:50 };
     mount.innerHTML = `
-      <div class="vig-head"><div class="vig-title">The Carry Ledger</div><div class="vig-tag mono">ENGINE + EST AIR</div></div>
+      <div class="vig-head"><h2 class="vig-title">The Carry Ledger</h2><div class="vig-tag mono">ENGINE + EST AIR</div></div>
       <div class="carry-canvas-wrap">
         <svg class="carry-svg" viewBox="0 0 1000 300" id="c-svg" role="img" aria-label="">
           <g id="c-ticks"></g>
@@ -1223,7 +1245,7 @@
           </div>
           <div class="footnote">Engine carry depends on ball speed only; altitude / wind / temperature / humidity are a documented EST post-solve air layer (grounded by the Wolfram checks below). The drawn flight = engine carry × EST air. Every EST number wears a pill.</div>
           <button class="datatoggle" id="c-datatoggle" aria-expanded="false">Show data table</button>
-          <div class="datatable" id="c-datatable"><table><tbody id="c-datarows"></tbody></table></div>
+          <div class="datatable" id="c-datatable"><table><caption class="sr-only">Carry ledger values</caption><tbody id="c-datarows"></tbody></table></div>
         </div>
         <div class="carry-ledger">
           <div class="ledger-k">The ledger — where the yards come from</div>
@@ -1243,7 +1265,7 @@
 
     // yard ticks (static)
     let ticks = '';
-    for (let yd=0; yd<=260; yd+=25){ const X = 40 + (yd/260)*(980-40); ticks += `<line x1="${X.toFixed(0)}" y1="256" x2="${X.toFixed(0)}" y2="264" stroke="rgba(232,240,251,.16)" stroke-width="1"/><text x="${X.toFixed(0)}" y="278" font-family="Azeret Mono" font-size="9" fill="#5d6e87" text-anchor="middle">${yd}</text>`; }
+    for (let yd=0; yd<=260; yd+=25){ const X = 40 + (yd/260)*(980-40); ticks += `<line x1="${X.toFixed(0)}" y1="256" x2="${X.toFixed(0)}" y2="264" stroke="rgba(232,240,251,.16)" stroke-width="1"/><text x="${X.toFixed(0)}" y="278" font-family="Azeret Mono" font-size="9" fill="#7e90ac" text-anchor="middle">${yd}</text>`; }
     el('#c-ticks').innerHTML = ticks;
 
     const SX = yd => 40 + (yd/260)*(980-40);
@@ -1338,7 +1360,7 @@
         ['Spin loft', f.spinLoft.toFixed(0)+'°'], ['Launch', f.launchAngle.toFixed(1)+'°'], ['Backspin', Math.round(f.backspin).toLocaleString('en-US')+' rpm'],
         ['Carry (engine)', f.carry.toFixed(0)+' yd'], ['Density ratio (EST)', densityRatio.toFixed(3)],
         ['Carry ×air (EST)', carryFinal.toFixed(0)+' yd'], ['Air delta (EST)', (delta>=0?'+':'−')+Math.abs(delta).toFixed(0)+' yd'],
-      ].map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join('');
+      ].map(r => `<tr><th scope="row">${r[0]}</th><td>${r[1]}</td></tr>`).join('');
     }
 
     function onInput(){ markDiagramTouched(lessonId); haptic('select'); render(); }
@@ -1402,25 +1424,28 @@
       expl.classList.add('show');
       if (correct){
         st.resolved = true;
-        opts.forEach(o => { o.disabled = true; if (+o.dataset.o === oi){ o.classList.add('correct'); o.querySelector('.mark').textContent = '✓'; } });
+        let correctEl = null;
+        opts.forEach(o => { o.setAttribute('aria-disabled','true'); if (+o.dataset.o === oi){ o.classList.add('correct'); o.querySelector('.mark').textContent = '✓'; correctEl = o; } });
         expl.classList.add('ok'); expl.classList.remove('no'); expl.querySelector('.el').textContent = st.firstTry ? 'Correct — first try' : 'Correct';
         mount.querySelector(`[data-retry="${qi}"]`).classList.remove('show');
         mount.querySelector(`[data-qscore="${qi}"]`).textContent = '+' + (st.firstTry?20:10) + ' XP';
         haptic('success');
+        if (correctEl) correctEl.focus({ preventScroll:true });
       } else {
-        opts.forEach(o => { o.disabled = true; if (+o.dataset.o === oi){ o.classList.add('wrong'); o.querySelector('.mark').textContent = '✗'; } if (+o.dataset.o === q.answerIndex){ o.classList.add('correct'); o.querySelector('.mark').textContent = '✓'; } });
+        opts.forEach(o => { o.setAttribute('aria-disabled','true'); if (+o.dataset.o === oi){ o.classList.add('wrong'); o.querySelector('.mark').textContent = '✗'; } if (+o.dataset.o === q.answerIndex){ o.classList.add('correct'); o.querySelector('.mark').textContent = '✓'; } });
         expl.classList.add('no'); expl.classList.remove('ok'); expl.querySelector('.el').textContent = 'Not quite — see why';
-        mount.querySelector(`[data-retry="${qi}"]`).classList.add('show');
+        const retryBtn = mount.querySelector(`[data-retry="${qi}"]`);
+        retryBtn.classList.add('show');
         mount.querySelector(`[data-qscore="${qi}"]`).textContent = '0 XP · retry for +10';
         haptic('error');
+        retryBtn.focus({ preventScroll:true });
       }
-      announce((correct?'Correct. ':'Incorrect. ') + q.explanation);
       updateFinish();
     }
     function retry(qi){
       const st = qs[qi]; if (st.resolved) return;
       const opts = optsOf(qi);
-      opts.forEach(o => { o.disabled = false; o.classList.remove('wrong','correct'); o.setAttribute('aria-checked','false'); o.querySelector('.mark').textContent = ''; });
+      opts.forEach(o => { o.removeAttribute('aria-disabled'); o.classList.remove('wrong','correct'); o.setAttribute('aria-checked','false'); o.querySelector('.mark').textContent = ''; });
       $('#expl-'+qi).classList.remove('show');
       mount.querySelector(`[data-retry="${qi}"]`).classList.remove('show');
       mount.querySelector(`[data-qscore="${qi}"]`).textContent = '';
@@ -1428,13 +1453,13 @@
     }
 
     mount.querySelectorAll('.opt').forEach(o => {
-      o.addEventListener('click', () => choose(+o.dataset.q, +o.dataset.o));
+      o.addEventListener('click', () => { if (o.getAttribute('aria-disabled') === 'true') return; choose(+o.dataset.q, +o.dataset.o); });
     });
     mount.querySelectorAll('[data-retry]').forEach(b => b.addEventListener('click', () => retry(+b.dataset.retry)));
     // radiogroup keyboard
     mount.querySelectorAll('.opts').forEach(group => {
       group.addEventListener('keydown', e => {
-        const opts = Array.from(group.querySelectorAll('.opt')).filter(o => !o.disabled);
+        const opts = Array.from(group.querySelectorAll('.opt')).filter(o => o.getAttribute('aria-disabled') !== 'true');
         if (!opts.length) return;
         let i = opts.indexOf(document.activeElement);
         if (['ArrowDown','ArrowRight'].includes(e.key)){ i = (i+1+opts.length)%opts.length; opts.forEach(o=>o.tabIndex=-1); opts[i].tabIndex=0; opts[i].focus(); e.preventDefault(); }
