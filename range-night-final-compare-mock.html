@@ -44,8 +44,6 @@
 
   .scene{ position:relative; width:100%; max-width:932px; aspect-ratio:932/430; border-radius:20px; overflow:hidden; background:#000; border:1px solid rgba(255,255,255,.08); }
   .scene.broken{ outline:3px solid #FF7B8A; }
-  .bg-img{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:center 46%; display:block; }
-  .bg-img.frontal{ object-position:center 50%; }
 
   /* ---------- identical UI overlay (drawn on every card) ---------- */
   .ov-hero{ position:absolute; top:16px; left:16px; background:var(--plate); border-radius:12px; padding:8px 14px; }
@@ -86,7 +84,7 @@
 <div class="card-list" id="cardListRefined"></div>
 
 <footer class="credit">
-  <p>Round-2 refinement generated via Gemini API model gemini-3-pro-image-preview (Nano Banana Pro), REST generateContent, responseModalities:["IMAGE"], imageConfig.aspectRatio:"16:9". 5 calls made, 5 succeeded (no retries needed) for 5 new assets (range-night-3d-11…15) — ~$0.70 est. Overlay geometry (pe/groundY/lateralScale/heightScale) ported from impact-viz-mock.html's real flight-scene projection so the drawn grid + trajectory match the production camera math, scaled to a 932×430 card — identical to round 1's range-3d-compare-mock.html.</p>
+  <p>Round-2 refinement generated via Gemini API model gemini-3-pro-image-preview (Nano Banana Pro), REST generateContent, responseModalities:["IMAGE"], imageConfig.aspectRatio:"16:9". 5 calls made, 5 succeeded (no retries needed) for 5 new assets (range-night-3d-11…15) — ~$0.70 est. Overlay geometry (pe/groundY/lateralScale/heightScale) AND the photo crop itself are now ported from impact-viz-mock.html's real flight-scene EXACTLY (same viewBox math + same SVG-image "xMidYMid slice" crop box) — round-3 fix for the grid/landing marker floating near the tree-line instead of sitting on the grass — identical to range-3d-compare-mock.html.</p>
 </footer>
 
 <script>
@@ -109,25 +107,42 @@
   const CANDIDATES = [...REF, ...LIKED, ...REFINED];
 
   // ══════════════════════════════════════════════════════════════════
-  //  FAITHFUL DOWN-RANGE PROJECTION — ported from impact-viz-mock.html
-  //  (pe / groundY / lateralScale / heightScale) scaled to a 932×430 card
-  //  so the drawn grid + trajectory match the REAL app's camera math.
+  //  FAITHFUL DOWN-RANGE PROJECTION — MIRRORS impact-viz-mock.html's real
+  //  flight-scene EXACTLY: same viewBox math (VBH=540, VBW=540·cardAspect),
+  //  same photo crop (preserveAspectRatio "xMidYMid slice", image box
+  //  x=-40 y=-40 width=VBW+80 height=620), same yH / yBottom / PE_A /
+  //  GROUND_K / TEE_X / LAT_PX / SIDE_PX_MAX / APEX_AT constants
+  //  (impact-viz-mock.html:3193-3212).
+  //  ROUND 3 FIX: rounds 1-2 rendered the backdrop as a plain CSS <img>
+  //  with object-fit:cover + object-position:center 46%, an INDEPENDENT
+  //  crop box from production's SVG-image slice. That mismatch put the
+  //  photo's real tree-line a few % lower on screen than the code assumed,
+  //  so the grid + landing marker were drawn INSIDE the photo's hazy
+  //  tree-line band instead of on the clear grass below it (owner: "the
+  //  ball must land on the grass; the grid can't be in the air"). Putting
+  //  the photo INSIDE the same SVG, cropped with the identical box the
+  //  production scene uses, reproduces its verified-correct result.
   //  (identical to round-1 range-3d-compare-mock.html — do not re-tune)
   // ══════════════════════════════════════════════════════════════════
-  const W = 932, H = 430;
-  const yH = H * 0.46;        // horizon — matches range-day.png treeline (~46% from top)
-  const yBottom = H * 0.95;   // tee baseline — near foreground, like the day photo's tee mat
-  const TEE_X = W / 2;
-  const LAT_PX = 230;
-  const SIDE_PX_MAX = 210;
-  const APEX_PX = 150;
+  const CARD_W = 932, CARD_H = 430;                  // card CSS box (unchanged)
+  const VBH = 540;                                    // fixed viewBox height — matches production
+  const VBW = Math.round(VBH * (CARD_W / CARD_H));    // ≈1170 — viewBox width at this card aspect
+  const yH = 265;             // horizon screen-Y — production's photo tree-line (impact-viz-mock.html:3193)
+  const yBottom = 356;        // tee baseline screen-Y (impact-viz-mock.html:3198)
+  const TEE_X = VBW / 2;
+  const LAT_PX = 300;
+  const SIDE_PX_MAX = 290;
+  const TOP_MARGIN = 150;
   const PE_A = 2.2, GROUND_K = 0.86;      // SAME constants as the production flight scene
-  const maxD = 200, carryM = 158, totalM = 162, offlineM = 4, APEX_AT = 0.5;
+  const carryM = 158, totalM = 162, offlineM = 4, APEX_AT = 0.5;
+  const maxD = 1.06 * totalM;              // auto-fit headroom — same ratio as computeModel()
 
   const pe = f => f * (1 + PE_A) / (1 + PE_A * f);
   const groundY = f => yBottom - (yBottom - yH) * GROUND_K * pe(f);
   const lateralScale = f => 1 - GROUND_K * pe(f) * 0.92;
   const heightScale = f => 1 - 0.22 * pe(f);
+  const fa = (APEX_AT * carryM) / maxD;
+  const APEX_PX = Math.max(60, (groundY(fa) - TOP_MARGIN) / heightScale(fa));   // mirrors computeModel()
 
   function heightAt(dM){
     const d = dM / carryM; let h;
@@ -194,10 +209,16 @@
   const apexP = project(APEX_AT*carryM, 1, lateralAt(APEX_AT*carryM));
   const landP = project(carryM, 0, lateralAt(carryM));
 
-  function overlaySceneSVG(){
+  // Background photo now lives INSIDE the same SVG as the drawn geometry
+  // (an <image>, preserveAspectRatio "xMidYMid slice"), cropped with the
+  // EXACT box the production flight-scene uses — this is what makes the
+  // grid + landing marker land on the SAME patch of grass the photo
+  // actually shows there, instead of guessing via CSS object-position.
+  function overlaySceneSVG(src, alt){
     return `
-      <svg class="ov-scene-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">
+      <svg class="ov-scene-svg" viewBox="0 0 ${VBW} ${VBH}" preserveAspectRatio="none" aria-hidden="true">
         <defs>
+          <clipPath id="ovClip"><rect x="0" y="0" width="${VBW}" height="${VBH}"/></clipPath>
           <linearGradient id="tracerGrad" x1="0" y1="1" x2="0" y2="0">
             <stop offset="0" stop-color="#46F5C4" stop-opacity=".2"/>
             <stop offset=".5" stop-color="#46F5C4" stop-opacity=".95"/>
@@ -207,35 +228,41 @@
             <stop offset="0" stop-color="#46F5C4" stop-opacity=".85"/><stop offset="1" stop-color="#46F5C4" stop-opacity="0"/>
           </radialGradient>
         </defs>
-        <!-- converging fairway rails -->
-        <path d="${rails.dl}" fill="none" stroke="rgba(230,240,250,.16)" stroke-width="1.2"/>
-        <path d="${rails.dr}" fill="none" stroke="rgba(230,240,250,.16)" stroke-width="1.2"/>
-        <!-- centre / target line, converging to the vanishing point -->
-        <line x1="${TEE_X}" y1="${yBottom}" x2="${TEE_X}" y2="${yH}" stroke="rgba(230,240,250,.3)" stroke-width="1.4" stroke-dasharray="6 8"/>
-        <!-- distance grid bands 50/100/150 -->
-        ${gridBandsSvg}
-        <!-- tee marker -->
-        <ellipse cx="${TEE_X}" cy="${yBottom}" rx="34" ry="7" fill="#000" opacity=".35"/>
-        <ellipse cx="${TEE_X}" cy="${yBottom}" rx="30" ry="6" fill="none" stroke="rgba(70,245,196,.5)" stroke-width="1.4"/>
-        <!-- soft under-glow trail -->
-        <path d="${airPath}" fill="none" stroke="#46F5C4" stroke-width="12" stroke-linecap="round" opacity=".16"/>
-        <!-- flight tracer: tee -> AWAY toward vanishing point, shrinking with distance -->
-        <path d="${airPath}" fill="none" stroke="url(#tracerGrad)" stroke-width="3.6" stroke-linecap="round" opacity=".97"/>
-        <path d="${airPath}" fill="none" stroke="#eafff6" stroke-width="1.3" stroke-linecap="round" opacity=".9"/>
-        <!-- ground roll after landing -->
-        <path d="${rollPath}" fill="none" stroke="#46F5C4" stroke-width="2" stroke-linecap="round" stroke-dasharray="3 5" opacity=".65"/>
-        <!-- apex marker -->
-        <circle cx="${apexP.x.toFixed(2)}" cy="${apexP.y.toFixed(2)}" r="15" fill="url(#apexGlow)"/>
-        <circle cx="${apexP.x.toFixed(2)}" cy="${apexP.y.toFixed(2)}" r="4" fill="none" stroke="#46F5C4" stroke-width="2"/>
-        <line x1="${apexP.x.toFixed(2)}" y1="${(apexP.y-8).toFixed(2)}" x2="${apexP.x.toFixed(2)}" y2="${(apexP.y-24).toFixed(2)}" stroke="#46F5C4" stroke-width="1.2" opacity=".7"/>
-        <rect x="${(apexP.x-32).toFixed(2)}" y="${(apexP.y-42).toFixed(2)}" width="64" height="17" rx="5" fill="rgba(4,8,14,.86)" stroke="rgba(70,245,196,.3)"/>
-        <text x="${apexP.x.toFixed(2)}" y="${(apexP.y-30).toFixed(2)}" text-anchor="middle" fill="#46F5C4" font-size="11" font-weight="800">Apex</text>
-        <!-- landing marker (secondary violet) -->
-        <ellipse cx="${landP.x.toFixed(2)}" cy="${landP.y.toFixed(2)}" rx="12" ry="4" fill="none" stroke="#8B7BFF" stroke-width="1.4" opacity=".5"/>
-        <circle cx="${landP.x.toFixed(2)}" cy="${landP.y.toFixed(2)}" r="4.2" fill="#8B7BFF"/>
-        <!-- downrange distance plate near the landing point -->
-        <rect x="${(landP.x-30).toFixed(2)}" y="${(landP.y-28).toFixed(2)}" width="60" height="18" rx="5" fill="rgba(4,8,14,.86)" stroke="rgba(139,123,255,.3)"/>
-        <text x="${landP.x.toFixed(2)}" y="${(landP.y-15.5).toFixed(2)}" text-anchor="middle" fill="#F2F7FF" font-size="11" font-weight="800">158 m</text>
+        <g clip-path="url(#ovClip)">
+          <image href="${src}" x="-40" y="-40" width="${VBW + 80}" height="620"
+                 preserveAspectRatio="xMidYMid slice">
+            <title>${alt || ''}</title>
+          </image>
+          <!-- converging fairway rails -->
+          <path d="${rails.dl}" fill="none" stroke="rgba(230,240,250,.16)" stroke-width="1.2"/>
+          <path d="${rails.dr}" fill="none" stroke="rgba(230,240,250,.16)" stroke-width="1.2"/>
+          <!-- centre / target line, converging to the vanishing point -->
+          <line x1="${TEE_X}" y1="${yBottom}" x2="${TEE_X}" y2="${yH}" stroke="rgba(230,240,250,.3)" stroke-width="1.4" stroke-dasharray="6 8"/>
+          <!-- distance grid bands 50/100/150 -->
+          ${gridBandsSvg}
+          <!-- tee marker -->
+          <ellipse cx="${TEE_X}" cy="${yBottom}" rx="34" ry="7" fill="#000" opacity=".35"/>
+          <ellipse cx="${TEE_X}" cy="${yBottom}" rx="30" ry="6" fill="none" stroke="rgba(70,245,196,.5)" stroke-width="1.4"/>
+          <!-- soft under-glow trail -->
+          <path d="${airPath}" fill="none" stroke="#46F5C4" stroke-width="12" stroke-linecap="round" opacity=".16"/>
+          <!-- flight tracer: tee -> AWAY toward vanishing point, shrinking with distance -->
+          <path d="${airPath}" fill="none" stroke="url(#tracerGrad)" stroke-width="3.6" stroke-linecap="round" opacity=".97"/>
+          <path d="${airPath}" fill="none" stroke="#eafff6" stroke-width="1.3" stroke-linecap="round" opacity=".9"/>
+          <!-- ground roll after landing -->
+          <path d="${rollPath}" fill="none" stroke="#46F5C4" stroke-width="2" stroke-linecap="round" stroke-dasharray="3 5" opacity=".65"/>
+          <!-- apex marker -->
+          <circle cx="${apexP.x.toFixed(2)}" cy="${apexP.y.toFixed(2)}" r="15" fill="url(#apexGlow)"/>
+          <circle cx="${apexP.x.toFixed(2)}" cy="${apexP.y.toFixed(2)}" r="4" fill="none" stroke="#46F5C4" stroke-width="2"/>
+          <line x1="${apexP.x.toFixed(2)}" y1="${(apexP.y-8).toFixed(2)}" x2="${apexP.x.toFixed(2)}" y2="${(apexP.y-24).toFixed(2)}" stroke="#46F5C4" stroke-width="1.2" opacity=".7"/>
+          <rect x="${(apexP.x-32).toFixed(2)}" y="${(apexP.y-42).toFixed(2)}" width="64" height="17" rx="5" fill="rgba(4,8,14,.86)" stroke="rgba(70,245,196,.3)"/>
+          <text x="${apexP.x.toFixed(2)}" y="${(apexP.y-30).toFixed(2)}" text-anchor="middle" fill="#46F5C4" font-size="11" font-weight="800">Apex</text>
+          <!-- landing marker (secondary violet) -->
+          <ellipse cx="${landP.x.toFixed(2)}" cy="${landP.y.toFixed(2)}" rx="12" ry="4" fill="none" stroke="#8B7BFF" stroke-width="1.4" opacity=".5"/>
+          <circle cx="${landP.x.toFixed(2)}" cy="${landP.y.toFixed(2)}" r="4.2" fill="#8B7BFF"/>
+          <!-- downrange distance plate near the landing point -->
+          <rect x="${(landP.x-30).toFixed(2)}" y="${(landP.y-28).toFixed(2)}" width="60" height="18" rx="5" fill="rgba(4,8,14,.86)" stroke="rgba(139,123,255,.3)"/>
+          <text x="${landP.x.toFixed(2)}" y="${(landP.y-15.5).toFixed(2)}" text-anchor="middle" fill="#F2F7FF" font-size="11" font-weight="800">158 m</text>
+        </g>
       </svg>
       <div class="ov-hero">
         <div class="k">Total</div>
@@ -245,7 +272,6 @@
     `;
   }
 
-  const overlayMarkup = overlaySceneSVG();
   let loaded = 0, broken = 0, total = 0;
 
   function renderGroup(listEl, items, groupClass){
@@ -260,19 +286,16 @@
       if (c.src) metaBits.push(`<span class="card-file">${c.src}</span>`);
 
       total++;
-      const imgClass = c.frontal ? 'bg-img frontal' : 'bg-img';
-      const bgHtml = `<img class="${imgClass}" src="${c.src}" alt="Night range backdrop candidate ${c.id}" />`;
 
       card.innerHTML = `
         <div class="card-meta">${metaBits.join('')}</div>
         <div class="scene" data-id="${c.id}">
-          ${bgHtml}
-          ${overlayMarkup}
+          ${overlaySceneSVG(c.src, `Night range backdrop candidate ${c.id}`)}
         </div>
       `;
       listEl.appendChild(card);
 
-      const img = card.querySelector('.bg-img');
+      const img = card.querySelector('image');
       img.addEventListener('load', () => { loaded++; updateStatus(); });
       img.addEventListener('error', () => {
         broken++;
