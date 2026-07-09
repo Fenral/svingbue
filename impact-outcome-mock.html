@@ -50,6 +50,29 @@
                edge fades + edge chevrons + a half-cut PEEK chip (fixed
                104px chips) + a one-time scroll-hint nudge (skipped under
                reduced motion).
+       move 6  INPUT-IDIOM UNIFY (owner decision 2026-07): the flight overlay
+               drops its OWN input idiom (the club-speed −/slider/+ block and
+               the 8-cell fData grid) and speaks the SAME language as the
+               instrument: a 5-chip INPUT ROW (Club speed, Face, Path, Attack,
+               Dyn loft) that opens the tune dock, and ONE horizontally
+               scrollable OUTPUT ROW (the 8 flight values; Total lives in the
+               hero) with the identical peek/fade/chevron/nudge affordances.
+               DOCK DECISION (chosen + documented): ONE SHARED dock instance —
+               the #tuneDock NODE relocates into #flightCard while the overlay
+               is open and moves back home on close. A second instance would
+               duplicate the full interaction contract (fade lifecycle, K4
+               rescue, Esc/Done focus return, valuetext, Pro-gating) and the
+               two copies could drift; the single node carries the contract
+               with zero duplication, and the id-based wiring (aria-controls,
+               listeners) survives the move untouched. Dock edits inside the
+               overlay run the applyFlightSpeed pattern GENERALISED to all
+               five params (live static redraw, no animation) + the viz mock's
+               before-trace contract: the FIRST change of a tune session
+               snapshots the pre-adjust delivery as a dotted neutral reference
+               (reference priority pin > before-trace > newest ghost); Replay
+               COMMITS the session (fPlay clears it, noteFlight captures).
+               SR: announcements are held during the drag (srHold) and the ONE
+               composed sentence lands in #fDeltaSR ~700ms after settle.
      Engine files (impact-flight.js etc.) are byte-identical imports.
      ═════════════════════════════════════════════════════════════════════ -->
 <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2052%2052'%20fill='none'%3E%3Cpath%20d='M11%2045%20C%2016%2026,%2024%2018,%2035%2015%20M21%2039%20L%2030%2024%20L%2043%2045'%20stroke='%2322E3D6'%20stroke-width='4.2'%20stroke-linecap='round'%20stroke-linejoin='round'/%3E%3Ccircle%20cx='37'%20cy='15'%20r='5.2'%20fill='%2322E3D6'/%3E%3C/svg%3E" />
@@ -247,7 +270,8 @@
   #heroResultsLaunch .mcard .mk{font-size:10px;letter-spacing:.03em}
 
   /* ══ PREMIUM CUSTOM RANGE SLIDERS ══════════════════════════════════
-     Applied to s_face / s_path / s_attack / s_loft / s_speed (+ fSpeedRange).
+     (move 6 UNIFY: no live consumers — the registry below is empty. Kept
+     for reuse; historically applied to the inline + flight-speed sliders.)
      • ~5px rounded base track rgba(255,255,255,.14)
      • centre-origin (signed) or left-origin (loft/speed) FILL in the param colour,
        painted as a layered linear-gradient set live by JS on `input`.
@@ -349,7 +373,6 @@
   .mini.k-loft  .rwrap{--rc:var(--c-loft)}
   .mini.k-attack .rwrap{--rc:var(--c-attack)}
   .speedwrap .rwrap{--rc:var(--accent)}
-  .fSpeed .rwrap{--rc:var(--accent)}
   @media (prefers-reduced-motion:reduce){
     .rwrap input[type=range].premium-range::-webkit-slider-thumb{transition:none}
     .rwrap input[type=range].premium-range::-moz-range-thumb{transition:none}
@@ -640,93 +663,36 @@
     font-size:clamp(15px,3.4vh,24px);color:var(--accent);line-height:1;text-shadow:0 0 18px rgba(34,227,214,.4)}
   .flightCarry .offline .side{font-size:.6em;font-weight:700;letter-spacing:.06em;margin-left:3px;color:#fff}
 
-  /* ── LAYOUT B (BOTTOM ONLY): one aligned rectangle along the bottom ──
-     [ club-speed block (2 chip-rows tall) ] + [ 4×2 parameter chips ].
-     Flight is the full-width hero on top; the left hero column (Total →
-     Offline) stays clear above the bottom frame.
-     Fullscreen overlay: insets combine the existing 3.4% breathing room
-     with env(safe-area-inset-*) so the chip grid gets full room on a normal
-     browser (safe-area = 0 everywhere → identical to before) and clears a
-     device's home-indicator / rounded-corner area on a future native shell. */
+  /* ── move 6 UNIFY — BOTTOM I/O STACK (replaces LAYOUT B's club-speed block
+     + 4×2 grid): the SAME two-row idiom as the instrument's .ioBar — one
+     scrollable OUTPUT row on top, the 5-chip INPUT row at the very bottom
+     (thumb reach; the relocated tune dock replaces it in place while
+     editing). Both rows reuse .rowWrap/.chipScroll/.chipRow verbatim.
+     INSETS: fixed 50px sides (not 3.4%) — with the 26px scroll padding the
+     visible chip area is vw−152, and at BOTH target widths (812/932, exactly
+     one 120px pitch apart) that lands the SAME ~54%-cut PEEK chip at the
+     right edge, the primary "there's more" signal. */
   .fBottom{position:absolute;z-index:5;
-    left:max(3.4%,env(safe-area-inset-left));right:max(3.4%,env(safe-area-inset-right));
-    bottom:max(3.4%,env(safe-area-inset-bottom));
-    display:flex;align-items:stretch;gap:8px;
+    left:max(50px,env(safe-area-inset-left));right:max(50px,env(safe-area-inset-right));
+    bottom:max(10px,env(safe-area-inset-bottom));
+    display:flex;flex-direction:column;gap:1px;
     /* CHANGE 1: revealed only AFTER the ball lands (fade + slide-up) */
     transition:opacity .5s ease, transform .5s ease}
   /* hidden during the flight so the launch + low bow stay unobstructed */
   .fBottom.is-hidden{opacity:0;transform:translateY(12px);pointer-events:none}
-  .fData{flex:1 1 auto;min-width:0;
-    display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:1fr 1fr;gap:8px}
-  .fData .cell{width:100%}
-  /* each cell is a real button (raised pressable pill) that opens the glass explainer popover.
-     A2 CLEAN — label ABOVE (small uppercase muted), big value below (tabular-nums)
-     + tiny muted unit, soft-depth surface, "›" chevron, plus a thin 2px range
-     UNDERLINE along the bottom edge filled with cyan to show the value's position. */
-  .fData .cell{appearance:none;font-family:inherit;cursor:pointer;
-    display:flex;flex-direction:column;align-items:stretch;justify-content:center;gap:4px;min-width:0;
-    min-height:44px;padding:8px 10px 15px;text-align:left;color:var(--ink);overflow:hidden;
-    background:linear-gradient(180deg, rgba(22,34,50,.88), rgba(12,19,29,.88));
-    border:1px solid rgba(255,255,255,.10);border-radius:12px;position:relative;
-    box-shadow:0 6px 16px rgba(0,0,0,.32), inset 0 1px 0 rgba(255,255,255,.06);
-    backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
-    transition:transform .12s ease, box-shadow .12s ease, border-color .15s ease, background .15s ease}
-  .fData .cell:hover{transform:translateY(-1px);border-color:rgba(255,255,255,.18);
-    box-shadow:0 10px 22px rgba(0,0,0,.38), inset 0 1px 0 rgba(255,255,255,.08)}
-  .fData .cell:active,
-  .fData .cell[aria-expanded="true"]{transform:scale(.97);
-    box-shadow:0 4px 10px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.05);border-color:rgba(255,255,255,.2)}
-  .fData .cell:focus-visible{outline:3px solid #fff;outline-offset:2px}
-  /* chevron affordance — bottom-right corner */
-  .fData .cell::after{content:"›";position:absolute;right:8px;bottom:6px;
-    color:var(--muted);font-weight:800;font-size:clamp(10px,1.3vw,13px);opacity:.5;line-height:1}
-  .fData .cell:hover::after{opacity:.8}
-  /* label — own row, full width, ABOVE the value. */
-  .fData .cell .k{font-size:clamp(8px,1.1vw,11.5px);letter-spacing:.04em;text-transform:uppercase;color:var(--muted);
-    white-space:nowrap;display:flex;align-items:center;gap:4px;line-height:1;order:-1}
-  /* value — own row, full width, dominant. */
-  .fData .cell .valrow{display:flex;align-items:center;min-width:0}
-  .fData .cell .v{font-weight:800;font-variant-numeric:tabular-nums;font-size:clamp(12.5px,1.7vw,22px);color:var(--ink);white-space:nowrap;line-height:1;min-width:0;padding-right:11px;letter-spacing:-.012em}
-  .fData .cell .v small{font-size:.52em;color:var(--muted);font-weight:600;margin-left:2px}
-  /* hero chips (Carry/Ball Speed/Smash): cyan accent value */
-  .fData .cell.hero .v{color:var(--accent);text-shadow:0 0 14px rgba(34,227,214,.35)}
-  /* A2 range underline — thin 2px bar along the bottom edge, cyan fill shows
-     the value's position in its range (signed metrics fill from CENTRE). */
-  .fData .cell .rng{position:absolute;left:11px;right:11px;bottom:7px;height:2px;border-radius:2px;
-    background:rgba(255,255,255,.10);display:block}
-  .fData .cell .rng .fill{position:absolute;top:0;bottom:0;border-radius:2px;background:var(--accent);width:0;
-    transition:width .6s cubic-bezier(.2,.7,.2,1)}
-  .fData .cell[data-signed] .rng .fill{background:rgba(34,227,214,.7)}
-  /* Shape — text-only, no underline. Its value can be a two-word string
-     ("Pull Hook"), so allow it to scale a touch smaller than the numeric chips
-     and lose the chevron padding so it always fits on one line. */
-  .fData .cell.noRange{padding-bottom:8px}
-  .fData .cell.noRange .v{font-size:clamp(12px,1.55vw,20px);padding-right:9px}
-  @media (prefers-reduced-motion:reduce){ .flightScrim,.flightCard,.fBottom{transition:none} .fData .cell .rng .fill{transition:none} }
+  /* move 6 UNIFY: the fData 4×2 grid + the .fSpeed club-speed block are
+     RETIRED — the overlay's I/O now reuses the instrument's .rowWrap/
+     .chipScroll/.chipRow/.outRow/.chip.input styles verbatim (one language). */
+  @media (prefers-reduced-motion:reduce){ .flightScrim,.flightCard,.fBottom{transition:none} }
 
-  /* ── CLUB SPEED block — far LEFT of the bottom frame, exactly 2 chip-rows tall ──
-     Holds: CLUB SPEED label, big NN mph value, and −/slider/+ steppers.
-     Changing it re-solves + replays the flight. */
-  .fSpeed{flex:0 0 auto;width:clamp(150px,16vw,200px);
-    display:flex;flex-direction:column;justify-content:center;gap:12px;
-    background:linear-gradient(180deg, rgba(20,32,48,.85), rgba(11,17,26,.85));
-    border:1px solid rgba(255,255,255,.10);border-radius:var(--radius-card);
-    padding:12px 14px;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
-    box-shadow:0 8px 22px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,255,255,.06)}
-  .fSpeed label{font-size:clamp(8px,1.05vw,11px);font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
-  .fSpeed .val{font-weight:700;font-size:clamp(22px,3.2vw,30px);color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap;line-height:1;margin-top:3px}
-  .fSpeed .val small{font-size:.42em;color:var(--muted);font-weight:600;margin-left:3px}
-  .fSpeed .ctrl{display:flex;align-items:center;gap:7px;min-height:44px}
-  .fSpeed .step{appearance:none;flex:0 0 auto;width:44px;height:44px;border-radius:10px;cursor:pointer;
-    background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.16);color:var(--ink);
-    font-weight:700;font-size:18px;line-height:1;display:flex;align-items:center;justify-content:center;font-family:inherit}
-  .fSpeed .step:hover{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.26)}
-  .fSpeed .step:active{transform:scale(.94)}
-  .fSpeed .step:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-  .fSpeed input[type=range]{flex:1 1 auto;width:100%;height:44px;min-width:0;accent-color:var(--accent);background:transparent;cursor:pointer}
-  .fSpeed input[type=range]:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:8px}
-  /* once wrapped in .rwrap, the wrapper becomes the flex item in the −/slider/+ ctrl */
-  .fSpeed .ctrl .rwrap{flex:1 1 auto;min-width:0}
+  /* move 6 UNIFY — the ONE SHARED tune dock relocates INTO #flightCard while
+     the overlay is open (see openFlight/closeFlight). Inside the card it
+     aligns with the .fBottom insets so it opens exactly OVER the input row
+     (never over the output row / outcome strip / hero / ghost controls).
+     Same solid #0A1118 plate — the covered chips must never ghost through. */
+  .flightCard .tuneDock{
+    left:max(50px,env(safe-area-inset-left));right:max(50px,env(safe-area-inset-right));
+    bottom:max(10px,env(safe-area-inset-bottom))}
 
   /* CHANGE 2: lateral side references (STAGE 5 — demoted to white-alpha neutral:
      reference geometry, not live-ball data; labels keep a touch more alpha for AA)
@@ -1118,8 +1084,8 @@
        controls' <input>s survive here (display:none — never focusable, out of
        the accessibility tree) so every existing binding keeps working
        unchanged: bind()/applyLive→recompute, the lens arrows' drag
-       round-trip ($('s_'+key) + dispatch 'input'), applyFlightSpeed's
-       s_speed sync, and init seeding. The TUNE DOCK is the accessible
+       round-trip ($('s_'+key) + dispatch 'input'), the overlay's live
+       static-redraw pipeline, and init seeding. The TUNE DOCK is the accessible
        control now: it writes here and dispatches 'input', driving the SAME
        live recompute path the inline sliders drove. -->
   <div id="sliderBackbone" hidden>
@@ -1314,33 +1280,39 @@
         </g>
       </svg>
 
-      <!-- BOTTOM FRAME — one aligned rectangle: [ club-speed block (2 chip-rows tall) ]
-           + [ 4×2 parameter chips ]. Total + Offline live in the left hero only.
-           Each chip is a button → glass explainer. The whole frame reveals AFTER landing. -->
+      <!-- move 6 UNIFY — BOTTOM I/O STACK: the overlay speaks the instrument's
+           input language. OUTPUT row (top): the 8 flight values on ONE
+           scrollable row of .mcard popover buttons (Total lives in the hero) —
+           same 112px pitch, peek chip, edge fades + chevrons, roving tabindex,
+           NOT a live region. INPUT row (bottom): the SAME five chips (built by
+           buildInputRow into #fChipRow) opening the SHARED tune dock, which
+           relocates into this card while the overlay is open. The whole stack
+           reveals AFTER landing (and is inert during the flight animation). -->
       <div class="fBottom is-hidden">
-        <!-- CLUB-SPEED block — far left, exactly 2 chip-rows tall.
-             Changing it re-solves + replays the flight at the new speed. -->
-        <div class="fSpeed">
-          <div>
-            <label for="fSpeedRange">Club speed</label>
-            <div class="val" aria-hidden="true"><span id="fSpeedV">90</span><small>mph</small></div>
+        <div class="rowWrap" id="fOutWrap">
+          <div class="chipScroll" id="fOutScroll">
+            <div class="chipRow outRow" id="fOutRow" role="toolbar" aria-orientation="horizontal"
+                 aria-label="Shot results, eight live values. Each opens an explanation. Use left and right arrow keys to move">
+              <button class="mcard" type="button" id="fcell_carry" aria-haspopup="dialog" aria-expanded="false" aria-controls="pop"><div class="mk">Carry</div><div class="mv"><span id="dCarry">0</span><small>m</small></div></button>
+              <button class="mcard" type="button" id="fcell_launchDir" aria-haspopup="dialog" aria-expanded="false" aria-controls="pop"><div class="mk">Launch dir</div><div class="mv"><span id="dLaunchDir">0.0</span><small>°</small></div></button>
+              <button class="mcard" type="button" id="fcell_spinAxis" aria-haspopup="dialog" aria-expanded="false" aria-controls="pop"><div class="mk">Spin axis</div><div class="mv"><span id="dSpinAxis">0</span><small>°</small></div></button>
+              <button class="mcard" type="button" id="fcell_curve" aria-haspopup="dialog" aria-expanded="false" aria-controls="pop"><div class="mk">Curve</div><div class="mv"><span id="dCurve">0.0</span><small>m</small></div></button>
+              <button class="mcard" type="button" id="fcell_launchAngle" aria-haspopup="dialog" aria-expanded="false" aria-controls="pop"><div class="mk">Launch ang</div><div class="mv"><span id="dLaunchAng">0.0</span><small>°</small></div></button>
+              <button class="mcard" type="button" id="fcell_spinLoft" aria-haspopup="dialog" aria-expanded="false" aria-controls="pop"><div class="mk">Spin loft</div><div class="mv"><span id="dSpinLoft">0.0</span><small>°</small></div></button>
+              <button class="mcard" type="button" id="fcell_backspin" aria-haspopup="dialog" aria-expanded="false" aria-controls="pop"><div class="mk">Backspin</div><div class="mv"><span id="dSpin">0</span><small>rpm</small></div></button>
+              <button class="mcard" type="button" id="fcell_ballSpeed" aria-haspopup="dialog" aria-expanded="false" aria-controls="pop"><div class="mk">Ball speed</div><div class="mv"><span id="dBallSpd">0</span><small>mph</small></div></button>
+            </div>
           </div>
-          <div class="ctrl">
-            <button class="step" id="fSpeedDown" type="button" aria-label="Decrease club speed">−</button>
-            <input type="range" id="fSpeedRange" min="40" max="130" value="90" step="1"
-                   aria-label="Club speed in miles per hour" />
-            <button class="step" id="fSpeedUp" type="button" aria-label="Increase club speed">+</button>
-          </div>
+          <span class="edgeChev left" aria-hidden="true">‹</span>
+          <span class="edgeChev right" aria-hidden="true">›</span>
         </div>
-        <div class="fData" role="group" aria-label="Shot data">
-          <button class="cell hero" type="button" id="fcell_carry" aria-haspopup="dialog" aria-expanded="false" aria-controls="pop"><div class="k">Carry</div><div class="valrow"><div class="v"><span id="dCarry">0</span><small>m</small></div></div><span class="rng" aria-hidden="true"><i class="fill"></i></span></button>
-          <button class="cell" type="button" id="fcell_launchDir" aria-haspopup="dialog" aria-expanded="false" aria-controls="pop"><div class="k">Launch Dir</div><div class="valrow"><div class="v"><span id="dLaunchDir">0.0</span><small>°</small></div></div><span class="rng" aria-hidden="true"><i class="fill"></i></span></button>
-          <button class="cell" type="button" id="fcell_spinAxis" aria-haspopup="dialog" aria-expanded="false" aria-controls="pop"><div class="k">Spin Axis</div><div class="valrow"><div class="v"><span id="dSpinAxis">0</span><small>°</small></div></div><span class="rng" aria-hidden="true"><i class="fill"></i></span></button>
-          <button class="cell" type="button" id="fcell_curve" aria-haspopup="dialog" aria-expanded="false" aria-controls="pop"><div class="k">Curve</div><div class="valrow"><div class="v"><span id="dCurve">0.0</span><small>m</small></div></div><span class="rng" aria-hidden="true"><i class="fill"></i></span></button>
-          <button class="cell" type="button" id="fcell_launchAngle" aria-haspopup="dialog" aria-expanded="false" aria-controls="pop"><div class="k">Launch Ang</div><div class="valrow"><div class="v"><span id="dLaunchAng">0.0</span><small>°</small></div></div><span class="rng" aria-hidden="true"><i class="fill"></i></span></button>
-          <button class="cell" type="button" id="fcell_spinLoft" aria-haspopup="dialog" aria-expanded="false" aria-controls="pop"><div class="k">Spin Loft</div><div class="valrow"><div class="v"><span id="dSpinLoft">0.0</span><small>°</small></div></div><span class="rng" aria-hidden="true"><i class="fill"></i></span></button>
-          <button class="cell" type="button" id="fcell_backspin" aria-haspopup="dialog" aria-expanded="false" aria-controls="pop"><div class="k">Backspin</div><div class="valrow"><div class="v"><span id="dSpin">0</span><small>rpm</small></div></div><span class="rng" aria-hidden="true"><i class="fill"></i></span></button>
-          <button class="cell hero" type="button" id="fcell_ballSpeed" aria-haspopup="dialog" aria-expanded="false" aria-controls="pop"><div class="k">Ball Speed</div><div class="valrow"><div class="v"><span id="dBallSpd">0</span><small>mph</small></div></div><span class="rng" aria-hidden="true"><i class="fill"></i></span></button>
+        <div class="rowWrap" id="fInWrap">
+          <div class="chipScroll" id="fChipScroll">
+            <div class="chipRow" id="fChipRow" role="toolbar" aria-orientation="horizontal"
+                 aria-label="Shot inputs. Each chip opens an editor. Use left and right arrow keys to move"></div>
+          </div>
+          <span class="edgeChev left" aria-hidden="true">‹</span>
+          <span class="edgeChev right" aria-hidden="true">›</span>
         </div>
       </div>
     </div>
@@ -1848,8 +1820,9 @@ function buildHeroCard(c){
 
 // ════════════════════════════════════════════════════════════════
 //  FLIGHT DATA-GRID EXPLAINERS  (same glass popover as the rail)
-//  Each of the 12 .fData cells is a real <button>. We register them into
-//  the SAME cellEls map under PREFIXED keys ('f_carry' …) so the existing
+//  Each overlay result cell (move 6: 8 .mcard buttons on ONE scrollable row)
+//  is registered into the SAME cellEls map under PREFIXED keys ('f_carry' …)
+//  so the existing
 //  openPopover / fillPopover / positionPopover / closePopover / togglePopover
 //  all work unchanged. Meta uses the IDENTICAL shape as CELLS above:
 //  { key,name,plane,value(f),desc,formula(f), honesty | sourcenote }.
@@ -1930,14 +1903,22 @@ const FCELLS = [
     sourcenote:'Illustrative thresholds map start + curve to draw/fade/hook/slice.' },
 ];
 (function buildFlightCells(){
+  // move 6 UNIFY: the 8 overlay result cells are .mcard buttons on ONE
+  // scrollable row now (no .rng underline — same silhouette as the
+  // instrument's output row). barFill stays in the registry as null; every
+  // underline codepath (updateData/fillFlightRings/hideData) already guards
+  // on it, so those calls degrade to no-ops without special-casing.
   FCELLS.forEach(c => {
     const key = 'f_'+c.key;
     const btn = $('fcell_'+c.key);
     if (!btn) return;
     if (c.ring && c.ring.signed) btn.dataset.signed = '';
     btn.addEventListener('click', () => togglePopover(key));
-    cellEls[key] = { btn, valEl: btn.querySelector('.v'), barFill: btn.querySelector('.rng .fill'), def: c };
+    cellEls[key] = { btn, valEl: btn.querySelector('.mv'), barFill: btn.querySelector('.rng .fill'), def: c };
   });
+  // roving tabindex — ONE tab stop for the overlay output row
+  const host = $('fOutRow');
+  Array.from(host.children).forEach((b, i) => { b.tabIndex = i === 0 ? 0 : -1; });
 })();
 
 // ════════════════════════════════════════════════════════════════
@@ -2822,8 +2803,8 @@ const TRACK_BASE = 'rgba(255,255,255,.14)';
 const PREMIUM = {
   // move 5 VIZ-PORT: the instrument sliders (s_face/s_path/s_attack/s_loft/
   // s_speed) are hidden state-backbone inputs now — no premium chrome needed.
-  // Only the flight overlay's club-speed bar keeps the premium treatment.
-  fSpeedRange:{ signed:false, fmt:fmtSpeed },
+  // move 6 UNIFY: the overlay's club-speed bar (the last premium slider) is
+  // retired too — the registry is empty; the machinery stays for reuse.
 };
 function setupPremiumSliders(){
   Object.entries(PREMIUM).forEach(([id, cfg])=>{
@@ -3006,8 +2987,12 @@ const INPUT_CHIPS = [
 const INPUT_BY_KEY = {};
 INPUT_CHIPS.forEach(c => INPUT_BY_KEY[c.key] = c);
 
-(function buildChipRow(){
-  const row = $('chipRow');
+// move 6 UNIFY: ONE builder, TWO surfaces. The instrument row (#chipRow,
+// ids icell_*/iv_*) and the flight overlay's row (#fChipRow, ids
+// ficell_*/fiv_*) are built from the SAME registry with the same pattern —
+// only the id prefix differs. Each chip passes ITSELF to openTune so the
+// shared dock knows which surface summoned it (focus returns there).
+function buildInputRow(row, idPrefix){
   const tuneGlyph = '<span class="tglyph" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 14 14" fill="none">'
     + '<path d="M2 4h5.6M11.4 4H12M2 10h.6M5.4 10H12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>'
     + '<circle cx="9.5" cy="4" r="1.9" fill="currentColor"/><circle cx="3.5" cy="10" r="1.9" fill="currentColor"/></svg></span>';
@@ -3015,32 +3000,36 @@ INPUT_CHIPS.forEach(c => INPUT_BY_KEY[c.key] = c);
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'chip input';
-    btn.id = 'icell_' + cfg.key;
+    btn.id = idPrefix + 'icell_' + cfg.key;
     btn.style.setProperty('--pc', cfg.color);
     btn.setAttribute('aria-expanded', 'false');
     btn.setAttribute('aria-controls', 'tuneDock');
     btn.innerHTML = '<span class="cdot" aria-hidden="true"></span>'
       + '<span class="cbody"><span class="ck">' + cfg.label + '</span>'
-      + '<span class="cv" id="iv_' + cfg.key + '">—</span></span>' + tuneGlyph;
-    btn.addEventListener('click', () => openTune(cfg.key));
+      + '<span class="cv" id="' + idPrefix + 'iv_' + cfg.key + '">—</span></span>' + tuneGlyph;
+    btn.addEventListener('click', () => openTune(cfg.key, btn));
     row.appendChild(btn);
   });
   // roving tabindex — ONE tab stop for the whole row
   Array.from(row.querySelectorAll('.chip')).forEach((b, i) => { b.tabIndex = i === 0 ? 0 : -1; });
-})();
+}
+buildInputRow($('chipRow'), '');     // instrument (ids unchanged: icell_*)
+buildInputRow($('fChipRow'), 'f');   // flight overlay (ficell_*)
 
 function updateInputChips(){
   INPUT_CHIPS.forEach(cfg => {
-    const el = $('iv_'+cfg.key); if (!el) return;
     const v = state[cfg.state];
-    el.innerHTML = cfg.fmtHtml(v);
-    // A2 FIX (carried over): while a drag is live AND this chip holds focus,
-    // skip the aria rewrite — otherwise whatever the AT is mid-announcing
-    // gets clobbered at pointermove rate.
-    const chip = $('icell_'+cfg.key);
-    const aria = cfg.label + ' ' + cfg.fmt(v) + '. Opens editor';
-    const midDrag = (lensDragKey || tunePointerDown) && chip === document.activeElement;
-    if (!midDrag && chip.getAttribute('aria-label') !== aria) chip.setAttribute('aria-label', aria);
+    ['', 'f'].forEach(px => {
+      const el = $(px+'iv_'+cfg.key); if (!el) return;
+      el.innerHTML = cfg.fmtHtml(v);
+      // A2 FIX (carried over): while a drag is live AND this chip holds focus,
+      // skip the aria rewrite — otherwise whatever the AT is mid-announcing
+      // gets clobbered at pointermove rate.
+      const chip = $(px+'icell_'+cfg.key);
+      const aria = cfg.label + ' ' + cfg.fmt(v) + '. Opens editor';
+      const midDrag = (lensDragKey || tunePointerDown) && chip === document.activeElement;
+      if (!midDrag && chip.getAttribute('aria-label') !== aria) chip.setAttribute('aria-label', aria);
+    });
   });
 }
 
@@ -3075,6 +3064,8 @@ function wireRowNav(row){
 }
 wireRowNav($('chipRow'));
 wireRowNav($('outRow'));
+wireRowNav($('fChipRow'));   // move 6 UNIFY: overlay rows carry the same contract
+wireRowNav($('fOutRow'));
 
 // ── dynamic edge fades + chevrons: .can-left/.can-right from the LIVE scroll
 //    position, so the affordance only shows when there genuinely is more. ──
@@ -3092,6 +3083,11 @@ function wireEdgeFades(wrapId, scrollId){
 }
 wireEdgeFades('outWrap', 'outScroll');
 wireEdgeFades('inWrap', 'chipScroll');
+// move 6 UNIFY: the overlay rows get the same live fade/chevron logic; their
+// upd fns are re-run on every overlay open (openFlight) so the affordances
+// are correct the moment the rows become visible.
+const fOutFadeUpd = wireEdgeFades('fOutWrap', 'fOutScroll');
+const fInFadeUpd  = wireEdgeFades('fInWrap', 'fChipScroll');
 
 // ── one-time scroll hint: the output row nudges sideways once (~34px out and
 //    back) shortly after load so the overflow is impossible to miss. Skipped
@@ -3107,6 +3103,22 @@ wireEdgeFades('inWrap', 'chipScroll');
     sc.addEventListener('wheel', cancel, { passive:true });
   });
 })();
+// move 6 UNIFY: the overlay output row's one-time nudge — same move, but
+// fired at the FIRST data reveal (the row is hidden until the ball lands, so
+// a load-time nudge would run unseen). Skipped under reduced motion.
+let fOutHintDone = false;
+function flightOutScrollHint(){
+  if (reduce || fOutHintDone) return;
+  fOutHintDone = true;
+  const sc = $('fOutScroll');
+  requestAnimationFrame(()=>{
+    if (sc.scrollWidth - sc.clientWidth < 20) return;
+    const tw = gsap.to(sc, { scrollLeft:34, duration:.5, delay:.6, ease:'power2.inOut', yoyo:true, repeat:1 });
+    const cancel = ()=>{ tw.kill(); sc.removeEventListener('pointerdown', cancel); sc.removeEventListener('wheel', cancel); };
+    sc.addEventListener('pointerdown', cancel, { passive:true });
+    sc.addEventListener('wheel', cancel, { passive:true });
+  });
+}
 
 // ════════════════════════════════════════════════════════════════
 //  move 5 VIZ-PORT — TUNE DOCK: one shared transient editor.
@@ -3119,13 +3131,23 @@ wireEdgeFades('inWrap', 'chipScroll');
 // ════════════════════════════════════════════════════════════════
 const tuneDock = $('tuneDock'), tdName = $('tdName'), tdVal = $('tdVal'),
       tdRange = $('tdRange'), tdDown = $('tdDown'), tdUp = $('tdUp'), tdDone = $('tdDone');
-let tuneKey = null, tuneFadeTimer = null;
+let tuneKey = null, tuneFadeTimer = null, tuneSettleTimer = null;
+let tuneChip = null;                      // move 6 UNIFY: the chip that summoned the dock (instrument OR overlay copy) — focus returns THERE
 let tunePointerDown = false, lensDragKey = null;
+let srHold = false;                       // move 6 UNIFY: hold SR announcements during a live-tune drag (flushed once on settle)
 let lastChipPointerTs = -1e9;             // pointer-vs-keyboard open detection
+// move 6 UNIFY: the shared dock's HOME slot (base document, after #ioBar) —
+// openFlight moves the node into #flightCard, closeFlight restores it here.
+const tuneDockHome = { parent: tuneDock.parentNode, next: tuneDock.nextSibling };
 
 function chipExpanded(key, on){
-  const b = $('icell_'+key);
-  if (b) b.setAttribute('aria-expanded', String(on));
+  // both surface copies stay in sync — only one is ever visible/operable
+  // (the instrument row is inert under the overlay; the overlay row lives
+  // inside the hidden scrim otherwise), so this never double-signals.
+  ['icell_'+key, 'ficell_'+key].forEach(id => {
+    const b = $(id);
+    if (b) b.setAttribute('aria-expanded', String(on));
+  });
 }
 function syncDockUI(){
   if (!tuneKey) return;
@@ -3145,23 +3167,30 @@ function retargetDock(key){
   tuneDock.setAttribute('aria-label', 'Adjust ' + cfg.aria);   // A1 FIX carried over
   syncDockUI();
 }
-function openTune(key){
+function openTune(key, chipEl){
   // K1 guard (carried over): never let a tune surface open over a live
   // flight animation (the whole ioBar is also inert while the overlay is up).
   if (fTL && fTL.isActive()) return;
   // MONETIZATION (locked decision): "Tune = Pro" — in production any live-
   // tune surface on this screen requires the RevenueCat "pro" entitlement.
+  // The overlay's dock is the SAME instance, so the gate covers it too.
   // isWeb() ungates this web mock.
   if (!saShots.isWeb() && !saShots.isPro()){ openPaywall('impact'); return; }
   if (tuneKey === key){ closeTune(false, true); return; }     // second tap toggles
   closePopover(false);
   if (tuneKey) chipExpanded(tuneKey, false);
   tuneKey = key;
+  // move 6 UNIFY: remember WHICH surface summoned the dock (default to
+  // whichever copy is currently operable) — focus returns there on close.
+  tuneChip = chipEl
+    || $((flightScrim.classList.contains('open') ? 'ficell_' : 'icell_') + key);
   chipExpanded(key, true);
   tuneDock.hidden = false;
   tuneDock.classList.remove('fading');
   retargetDock(key);
   // light the matching lens arrow immediately — the lens IS the live feedback
+  // (under the overlay the lenses are behind the scrim; harmless, and they're
+  // correct the moment the overlay closes)
   const cfg = INPUT_BY_KEY[key];
   if (cfg.arrow) setActive(cfg.arrow);
   // keyboard opens move focus into the editor; pointer opens leave focus on
@@ -3178,9 +3207,9 @@ function closeTune(immediate, returnFocus){
   // closes the dock while focus may still be inside it.
   const focusWasInside = tuneDock.contains(document.activeElement);
   clearTimeout(tuneFadeTimer); tuneFadeTimer = null;
-  const chip = $('icell_'+tuneKey);
+  const chip = tuneChip || $('icell_'+tuneKey);
   chipExpanded(tuneKey, false);
-  tuneKey = null;
+  tuneKey = null; tuneChip = null;
   releaseActive();          // chip-fade hold → the lens returns to resting state
   document.removeEventListener('pointerdown', onTuneOutside, true);
   const hide = ()=>{ if (!tuneKey){ tuneDock.hidden = true; tuneDock.classList.remove('fading'); } };
@@ -3191,7 +3220,15 @@ function closeTune(immediate, returnFocus){
   // on a genuinely focusable target keep the focus it naturally received.
   if ((returnFocus || focusWasInside) && chip){
     requestAnimationFrame(()=>{
-      if (document.activeElement === document.body || tuneDock.contains(document.activeElement)) chip.focus({ preventScroll:true });
+      if (document.activeElement === document.body || tuneDock.contains(document.activeElement)){
+        chip.focus({ preventScroll:true });
+        // move 6 UNIFY: if the summoning chip can't take focus (its row went
+        // inert because a flight animation started), land on Replay instead —
+        // focus is NEVER stranded on <body> inside the open overlay.
+        if (document.activeElement === document.body && flightScrim.classList.contains('open')){
+          $('flightReplay').focus({ preventScroll:true });
+        }
+      }
     });
   }
 }
@@ -3199,7 +3236,7 @@ function onTuneOutside(e){
   if (!tuneKey) return;
   if (tuneDock.contains(e.target)) return;
   if (e.target.closest && e.target.closest('.arrowG')) return;   // lens-arrow drag = still editing
-  const chip = $('icell_'+tuneKey);
+  const chip = tuneChip;
   if (chip && chip.contains(e.target)) return;                   // chip tap handles its own toggle
   closeTune(false, false);
 }
@@ -3227,18 +3264,45 @@ tuneDock.addEventListener('focusout', ()=>{
   });
 });
 
+// move 6 UNIFY — SR settle: announcements are held during a live-tune drag
+// (srHold) and flushed ONCE ~700ms after the last input — the ONE composed
+// sentence lands in #fDeltaSR (else the settled total in #fCarryLive when no
+// reference exists yet). Ported verbatim from the viz mock.
+function scheduleTuneSettle(){
+  clearTimeout(tuneSettleTimer);
+  tuneSettleTimer = setTimeout(()=>{
+    srHold = false;
+    if (!flightScrim.classList.contains('open')) return;   // overlay closed mid-settle → nothing to announce
+    const c = outcomeContent();
+    if (c) showDeltaLabel(true);            // ONE composed sentence → the ONE live region
+    else announceCarry(fModel.totalM);      // no reference yet: announce the settled total
+  }, 700);
+}
 // the live-tune pipeline: write the hidden backbone slider + dispatch 'input'
 // so bind()'s OWN handler runs — state, chip-fade (setActive), applyLive →
 // recompute → arrows/predictor/coach/output chips. No coupling is lost.
+// move 6 UNIFY: while the flight overlay is open the SAME pipeline ALSO
+// drives the range scene — the applyFlightSpeed pattern generalised to all
+// five params: live STATIC redraw (no animation), before-trace snapshot on
+// the session's first change, settle-gated announcements.
 function tuneParam(key, v){
   const cfg = INPUT_BY_KEY[key];
   if (!cfg) return;
   const stepped = Math.round(v / cfg.step) * cfg.step;
   v = clamp(+stepped.toFixed(2), cfg.min, cfg.max);
   if (state[cfg.state] === v){ if (tuneKey) armFade(); return; }
+  const inFlight = flightScrim.classList.contains('open');
+  // viz-mock move 3 contract: the FIRST change of a tune session snapshots
+  // the pre-adjust delivery as the temporary before-trace reference.
+  if (inFlight && !tuneRef && lastFlown) tuneRef = { params: paramsSnapshot(), flight: solveFlight(state) };
   const hidden = $(cfg.slider);
   hidden.value = v;
   hidden.dispatchEvent(new Event('input'));
+  if (inFlight && (!fTL || !fTL.isActive())){
+    srHold = true;
+    renderStatic();          // LIVE STATIC redraw — trajectory + numbers + strip + connector
+    scheduleTuneSettle();
+  }
   syncDockUI();
   if (tuneKey) armFade();
 }
@@ -3259,6 +3323,7 @@ function notifyLensDragStart(key){
   if (tuneKey !== key && INPUT_BY_KEY[key]){
     chipExpanded(tuneKey, false);
     tuneKey = key;
+    tuneChip = $('icell_'+key);   // lens drags only exist on the instrument surface
     chipExpanded(key, true);
     retargetDock(key);
   }
@@ -3564,18 +3629,39 @@ function paramClause(k, oldP, newP){
   if (k === 'dynamicLoft') return dirClause('Dynamic loft', oldP[k], newP[k], '°');
   return `Club speed ${d>0?'up':'down'} ${Math.round(Math.abs(d))} mph (${Math.round(oldP[k])} to ${Math.round(newP[k])} mph)`;
 }
+// ── move 6 UNIFY (viz-mock move 3 contract) — BEFORE-TRACE session refs ──
+// The FIRST input of a tune session inside the flight overlay snapshots the
+// pre-adjust delivery as a TEMPORARY reference (tuneRef — dotted neutral
+// trace, no badge). It never enters the ghost FIFO uninvited; fPlay clears
+// it (Replay COMMITS the session and the normal invited noteFlight capture
+// takes over). While it exists, liveShot() is the CURRENT tuned state — the
+// outcome strip / connector / cause chips answer "how is the shot
+// different?" LIVE during the drag. Reference priority: pin > before-trace
+// > newest ghost. With no session open this reduces EXACTLY to the old
+// pin-else-newest-ghost vs lastFlown comparison.
+let tuneRef = null;
+function liveShot(){
+  return tuneRef ? { params: paramsSnapshot(), flight: solveFlight(state) } : lastFlown;
+}
+function refShot(){
+  if (fBaseline) return { g: fBaseline, name: 'pinned baseline' };
+  if (tuneRef)   return { g: tuneRef,   name: 'before adjust' };
+  if (ghosts[0]) return { g: ghosts[0], name: 'previous shot' };
+  return null;
+}
 function outcomeContent(){
-  const g = fBaseline || ghosts[0];
-  if (!g || !lastFlown) return null;
-  const cf = lastFlown.flight, gf = g.flight;
-  const refName = fBaseline ? 'pinned baseline' : 'previous shot';
+  const ref = refShot(), lv = liveShot();
+  if (!ref || !lv) return null;
+  const g = ref.g;
+  const cf = lv.flight, gf = g.flight;
+  const refName = ref.name;
   // deltas on RAW values, rounded ONCE (the rounding fix)
   const dTot = Math.round((cf.total - gf.total) * YD2M);
   const dLat = Math.round((Math.abs(cf.offline) - Math.abs(gf.offline)) * YD2M);
   // changed params, ranked by significance (|Δ| normalised by slider range)
-  const changed = PARAM_KEYS.filter(k => lastFlown.params[k] !== g.params[k])
-    .sort((a,b) => Math.abs(lastFlown.params[b]-g.params[b])/PARAM_RANGE[b]
-                 - Math.abs(lastFlown.params[a]-g.params[a])/PARAM_RANGE[a]);
+  const changed = PARAM_KEYS.filter(k => lv.params[k] !== g.params[k])
+    .sort((a,b) => Math.abs(lv.params[b]-g.params[b])/PARAM_RANGE[b]
+                 - Math.abs(lv.params[a]-g.params[a])/PARAM_RANGE[a]);
   const top = changed.slice(0, 2);          // cap: 2 most significant params
   const NEU_DOT = 'rgba(232,240,251,.75)';  // derived/outcome chips: NEUTRAL dot (never cyan — comparison data, not live-ball)
   const chip = (dot, txt, outcome) =>
@@ -3583,8 +3669,8 @@ function outcomeContent(){
   const chips = [], parts = [];
   top.forEach(k => {
     const m = PARAM_META[k];
-    chips.push(chip(m.color, `${m.label} ${m.fmt(g.params[k])}→${m.fmt(lastFlown.params[k])}`));
-    parts.push(paramClause(k, g.params, lastFlown.params));
+    chips.push(chip(m.color, `${m.label} ${m.fmt(g.params[k])}→${m.fmt(lv.params[k])}`));
+    parts.push(paramClause(k, g.params, lv.params));
   });
   // derived intermediate when only ONE input changed (the mock spec's
   // Face → Spin axis → Curve chain, generalised per lens)
@@ -3641,7 +3727,10 @@ function showDeltaLabel(immediate){
   fDeltaEl.hidden = false;
   const apply = ()=>{
     $('fDeltaCause').innerHTML = c.chipsHTML;   // move 3: visual chip-chain (aria-hidden subtree)
-    $('fDeltaSR').textContent  = c.sentence;    // THE announcement — one region, one sentence per landing
+    // move 6 UNIFY: while a live-tune drag is in progress (srHold) the ONE
+    // live region stays quiet — the settle timer (scheduleTuneSettle) calls
+    // back in here with srHold cleared and writes the sentence ONCE.
+    if (!srHold) $('fDeltaSR').textContent = c.sentence;   // THE announcement — one region, one sentence per settle
     fDeltaEl.classList.remove('is-hidden');
   };
   if (immediate || reduce) apply();
@@ -3852,6 +3941,39 @@ function buildGhostLayer(){
   buildGhostLegend();
 }
 
+// ── move 6 UNIFY (viz-mock move 3) — BEFORE-TRACE layer: the pre-adjust
+//    delivery as a DOTTED neutral trace + landing dot (no badge — pure
+//    comparison geometry; the numbers answer in the outcome strip). Lives in
+//    its own #fTuneRefG group ABOVE the ghosts (it is the most recent
+//    reference) and OUTSIDE them (the Ghosts pill must not hide the live
+//    editing feedback). Dotted 2.5/5.5 ≠ pin's long dash ≠ ghost dashes, and
+//    NEVER cyan — reference geometry stays neutral. ──
+function buildTuneRefLayer(){
+  if (!FX.built || !FX.tuneRef) return;
+  const host = FX.tuneRef;
+  host.innerHTML = '';
+  if (!tuneRef) return;
+  // dedupe: if the pin IS the pre-adjust delivery its white dashed trace
+  // already carries the "before" — don't double-draw.
+  if (fBaseline && sameParams(fBaseline.params, tuneRef.params)) return;
+  const ts = shotFromFlight(tuneRef.flight);
+  const ns = 'http://www.w3.org/2000/svg';
+  const grp = document.createElementNS(ns,'g');
+  grp.setAttribute('opacity','.62');
+  const p = document.createElementNS(ns,'path');
+  p.setAttribute('d', buildAirPath(ts));
+  p.setAttribute('fill','none'); p.setAttribute('stroke','#E8F0FB');
+  p.setAttribute('stroke-width','2'); p.setAttribute('stroke-linecap','round');
+  p.setAttribute('stroke-dasharray','2.5 5.5');
+  grp.appendChild(p);
+  const land = project(ts.carryM, 0, lateralAt(ts.carryM, ts));
+  const dot = document.createElementNS(ns,'circle');
+  dot.setAttribute('cx', land.x.toFixed(1)); dot.setAttribute('cy', land.y.toFixed(1));
+  dot.setAttribute('r','2.4'); dot.setAttribute('fill','#E8F0FB');
+  grp.appendChild(dot);
+  host.appendChild(grp);
+}
+
 // ════════════════════════════════════════════════════════════════
 //  OUTCOME MOCK move 2 — LANDING CONNECTOR
 //  Reference geometry (NEVER cyan): a neutral white-alpha dashed line from
@@ -3867,8 +3989,12 @@ function buildConnector(){
   badgeHost.innerHTML = '';
   grp.setAttribute('opacity','0');
   connTarget = null;
-  const g = fBaseline || ghosts[0];
-  if (!g || !lastFlown || !landScreen) return;
+  // move 6 UNIFY: reference priority pin > before-trace > newest ghost, and
+  // the LIVE end is the current tuned delivery (landScreen already is — it
+  // comes from fBuild's live camera), so mid-drag the connector answers live.
+  const ref = refShot(), lv = liveShot();
+  const g = ref && ref.g;
+  if (!g || !lv || !landScreen) return;
   const rs = shotFromFlight(g.flight);
   const refLand = project(rs.carryM, 0, lateralAt(rs.carryM, rs));
   connTarget = { x1:refLand.x, y1:refLand.y, x2:landScreen.x, y2:landScreen.y };
@@ -3876,7 +4002,7 @@ function buildConnector(){
   line.setAttribute('x2', landScreen.x.toFixed(1)); line.setAttribute('y2', landScreen.y.toFixed(1));
   // midpoint lateral-Δ badge — raw-once rounding, same verdict style as the
   // strip (✓ closer / → further, sign+icon never colour alone)
-  const dLat = Math.round((Math.abs(lastFlown.flight.offline) - Math.abs(g.flight.offline)) * YD2M);
+  const dLat = Math.round((Math.abs(lv.flight.offline) - Math.abs(g.flight.offline)) * YD2M);
   let lbl, fill;
   if (dLat <= -1){ lbl = '✓ ' + Math.abs(dLat) + ' m'; fill = '#4ADE80'; }
   else if (dLat >= 1){ lbl = '→ ' + dLat + ' m'; fill = '#FBBF24'; }
@@ -3987,6 +4113,11 @@ function hideData(){ hideDeltaLabel();
   hideOutcomeStrip(); hideConnector();  // OUTCOME MOCK: strip + connector follow the data beat
   gsap.set(fLandAngMark,{opacity:0});   // land-angle plate resets with the rest of the data beat
   if(reduce) return; fBottomEl.classList.add('is-hidden'); fBottomEl.setAttribute('aria-hidden','true');
+  // move 6 UNIFY: the I/O rows are REAL buttons now — inert while visually
+  // hidden during the flight (aria-hidden alone would leave stray tab stops).
+  // Rescue focus first so making the rows inert never strands it on <body>.
+  if (fBottomEl.contains(document.activeElement)) $('flightReplay').focus({ preventScroll:true });
+  fBottomEl.inert = true;
   // hold all flight underlines empty so they animate from 0 on the next reveal
   FCELLS.forEach(c=>{ if(!c.ring) return; const reg=cellEls['f_'+c.key]; if(!reg||!reg.barFill) return;
     reg.barFill.style.transition='none';
@@ -3994,8 +4125,11 @@ function hideData(){ hideDeltaLabel();
     void reg.barFill.getBoundingClientRect(); reg.barFill.style.transition=''; });
 }
 function revealData(immediate){ fBottomEl.classList.remove('is-hidden'); fBottomEl.removeAttribute('aria-hidden');
+  fBottomEl.inert = false;   // move 6 UNIFY: rows tab-reachable again the moment they show
   // flight underlines fill in along with the values; static/reduced-motion snaps to final
   fillFlightRings(!reduce);
+  // move 6 UNIFY: one-time overlay output-row scroll nudge (first reveal only)
+  flightOutScrollHint();
   // land-angle plate reveals WITH the data beat (same timing as the chip grid)
   gsap.set(fLandAngMark,{opacity:1});
   // STAGE 3 — the "what changed" micro-label follows +150ms after the reveal
@@ -4082,6 +4216,7 @@ function fBuild(){
   // doesn't make every other path jump).
   const extraShots = ghosts.map(g => shotFromFlight(g.flight));
   if (fBaseline) extraShots.push(shotFromFlight(fBaseline.flight));
+  if (tuneRef)   extraShots.push(shotFromFlight(tuneRef.flight));   // move 6 UNIFY: the before-trace holds the frame too
   computeModel(extraShots);
   // re-centre the tee marker to TEE_X (dynamic on resize) and the raised baseline
   fTeeShadow.setAttribute('cx', TEE_X); fTeeShadow.setAttribute('cy', yBottom);
@@ -4141,9 +4276,10 @@ function fBuild(){
   $('fHeroOffSide').textContent = fModel.offlineM >= 0 ? 'R' : 'L';
   trajLen=fTracer.getTotalLength(); rollLen=fRoll.getTotalLength();
   buildGrid(); buildLateralRefs();
-  resetBadgeBoxes();   // OUTCOME MOCK move 4: seed the dodge set with the live marker plates
-  buildGhostLayer();   // ghost/baseline badges place through dodgeBadgeY
-  buildConnector();    // OUTCOME MOCK move 2: connector + midpoint badge (joins the dodge set)
+  resetBadgeBoxes();     // OUTCOME MOCK move 4: seed the dodge set with the live marker plates
+  buildGhostLayer();     // ghost/baseline badges place through dodgeBadgeY
+  buildTuneRefLayer();   // move 6 UNIFY: before-trace (dotted line + dot, no badge)
+  buildConnector();      // OUTCOME MOCK move 2: connector + midpoint badge (joins the dodge set)
   updateData();
 }
 
@@ -4218,7 +4354,12 @@ function renderStatic(){
   gsap.set(fLandMark,{opacity:1});
   // persistent, subtle splash ring at the landing point (no pulse)
   gsap.set(fSplash,{attr:{rx:13,ry:4.5}, opacity:.42});
-  setCarry(fModel.carryM); announceCarry(fModel.carryM);
+  // move 6 UNIFY (viz-mock fix folded in): the hero number is labelled TOTAL,
+  // so the static render shows totalM (the old carryM here was a mismatch
+  // that matters now the static render is the live-tune loop). Announcements
+  // are held during live-tune drags (srHold) and flushed once on settle.
+  setCarry(fModel.totalM);
+  if (!srHold) announceCarry(fModel.totalM);
   revealData(true);   // ?play / reduced-motion: data panel + micro-label immediately, no motion
 }
 
@@ -4253,6 +4394,12 @@ function fPlay(){
   if (wouldBeNew && saShots.shouldGate()){ openPaywall('impact'); return; }
   if (fTL) fTL.kill();
   resetChoreo();
+  // move 6 UNIFY (viz-mock contract): playing COMMITS the tune session — the
+  // before-trace clears and the invited noteFlight capture takes over (the
+  // pre-tune played shot enters the FIFO because its params now differ).
+  // The dock never sits over an animating flight.
+  closeTune(true, false);
+  tuneRef = null;
   // STAGE 3 — capture/replay accounting BEFORE the camera fit, so a freshly
   // captured ghost is part of this run's shared camera. Replays never capture.
   const isNewRun = noteFlight();
@@ -4483,6 +4630,10 @@ function ensureFX(){
     + '</radialGradient>');
   // ghost-flight group BELOW the tracer layers
   fTrail.insertAdjacentHTML('beforebegin', '<g id="fGhosts"></g>');
+  // move 6 UNIFY: before-trace group — above the ghosts (most recent
+  // reference), still below the live tracer; OUTSIDE #fGhosts so the
+  // Ghosts visibility pill never hides live editing feedback.
+  fTrail.insertAdjacentHTML('beforebegin', '<g id="fTuneRefG"></g>');
   // ── COMET — 3 dash-segment strokes riding the tracer path + hot head ──
   fTracerCore.insertAdjacentHTML('afterend',
     '<path id="fCometGlow" fill="none" stroke="#22E3D6" stroke-width="10" stroke-linecap="round" opacity="0"/>'
@@ -4538,6 +4689,7 @@ function ensureFX(){
   FX.dustPuff = $('fDustPuff');
   FX.sparksG = $('fSparks'); FX.sparks = Array.from(FX.sparksG.querySelectorAll('.fxSpark'));
   FX.ghosts = $('fGhosts');
+  FX.tuneRef = $('fTuneRefG');   // move 6 UNIFY: before-trace host
   FX.cometGlow = $('fCometGlow'); FX.cometMid = $('fCometMid'); FX.cometHot = $('fCometHot');
   FX.cometHead = $('fCometHead');
   FX.motesG = $('fMotes'); FX.motes = Array.from(FX.motesG.children);
@@ -4580,16 +4732,21 @@ function openFlight(){
   // under the overlay — close it first; if focus lived in the dock, return
   // it to the summoning chip when the overlay closes instead.
   if (tuneKey){
-    const summon = $('icell_'+tuneKey);
+    const summon = tuneChip || $('icell_'+tuneKey);
     if (tuneDock.contains(lastFocus) && summon) lastFocus = summon;
     closeTune(true, false);
   }
   ensureFX();
   startAmbient();               // no-op under prefers-reduced-motion
-  // sync the in-overlay club-speed bar to the current instrument state
-  $('fSpeedRange').value = state.clubSpeed;
-  $('fSpeedV').textContent = Math.round(state.clubSpeed);
-  $('fSpeedRange')._premiumRefresh && $('fSpeedRange')._premiumRefresh();
+  // move 6 UNIFY — the ONE SHARED dock relocates into the overlay card while
+  // it is open: same node, same id/listeners/contract; z-order + Esc routing
+  // work because it is now a CHILD of #flightCard (see the dock-decision note
+  // in the header). Restored to its home slot by closeFlight.
+  $('flightCard').appendChild(tuneDock);
+  // the overlay chip rows just became the live surfaces — sync their values
+  // and their edge-fade/chevron state before the first paint.
+  updateInputChips();
+  fOutFadeUpd(); fInFadeUpd();
   // Make the base instrument (top strip + both lenses) inert while the
   // overlay is open — without this, Tab could escape flightCard into the two
   // full lenses behind the scrim with no visible focus ring (dual-lens made
@@ -4618,6 +4775,15 @@ function openFlight(){
   fPlay();
 }
 function closeFlight(){
+  // move 6 UNIFY: the tune session never outlives the overlay — close the
+  // dock (no focus theatrics; lastFocus handles the return below), clear the
+  // before-trace + any pending settle announcement, and move the shared dock
+  // node back to its home slot in the base document.
+  if (tuneKey) closeTune(true, false);
+  tuneRef = null;
+  srHold = false;
+  clearTimeout(tuneSettleTimer);
+  tuneDockHome.parent.insertBefore(tuneDock, tuneDockHome.next);
   flightScrim.classList.remove('open');
   const topstripEl = document.querySelector('.topstrip');
   const stageEl = document.getElementById('stage');
@@ -4709,7 +4875,9 @@ fGhostPillEl.addEventListener('click', ()=>{
 fGhostClearEl.addEventListener('click', ()=>{
   ghosts.length = 0;
   fBaseline = null; buildGhostLegend();   // GHOST LAB: clear also drops the pin + its chips (buildGhostLegend → setPinUI)
+  tuneRef = null;                         // move 6 UNIFY: "clear" drops EVERY comparison, incl. the before-trace
   if (FX.ghosts) FX.ghosts.innerHTML = '';
+  if (FX.tuneRef) FX.tuneRef.innerHTML = '';
   hideDeltaLabel(); fDeltaEl.hidden = true;
   hideOutcomeStrip(); hideConnector();   // OUTCOME MOCK: no reference left → no outcome UI
   // refit the shared camera when idle (never mid-flight); focus stays on the button
@@ -4734,37 +4902,12 @@ $('fGhostLegend').addEventListener('click', (e)=>{
   saHaptics.selectionChanged();
 });
 
-// ── CLUB-SPEED bar inside the flight overlay (left column) ──
-// Changing it updates clubSpeed (other D-plane params stay from instrument
-// state), keeps the top-strip slider in sync, and REDRAWS THE TRAJECTORY
-// STATICALLY (live) — it does NOT re-run the launch→land animation. That lets
-// you step/drag freely to the speed you want; the explicit Replay button (or
-// reduced-motion) is the only thing that animates. (Bug fix: the ± steppers
-// used to replay the ~4s shot on every click — "you could only change one mph
-// before it re-visualised and interrupted you".)
-const fSpeedRange = $('fSpeedRange'), fSpeedV = $('fSpeedV');
-function applyFlightSpeed(v){
-  v = clamp(Math.round(v), +fSpeedRange.min, +fSpeedRange.max);
-  state.clubSpeed = v;
-  fSpeedRange.value = v;
-  fSpeedV.textContent = v;
-  fSpeedRange._premiumRefresh && fSpeedRange._premiumRefresh();   // re-sync the premium fill/bubble
-  // keep the live dual-lens instrument's club-speed slider + label in sync
-  const main = $('s_speed');
-  if (main && +main.value !== v){ main.value = v; main.dispatchEvent(new Event('input')); }
-  // live static redraw of the new trajectory (no animation) while overlay is open
-  if (flightScrim.classList.contains('open')) renderStatic();
-}
-fSpeedRange.addEventListener('input', ()=>{ applyFlightSpeed(+fSpeedRange.value); });
-fSpeedRange.addEventListener('change', ()=>{ applyFlightSpeed(+fSpeedRange.value); });
-$('fSpeedDown').addEventListener('click', ()=>{ applyFlightSpeed(+fSpeedRange.value - 1); });
-$('fSpeedUp').addEventListener('click', ()=>{ applyFlightSpeed(+fSpeedRange.value + 1); });
-// STAGE 4 — haptics: flight club-speed control follows the same slider
-// protocol (pointerdown→selectionStart, whole-mph crossings→tick, pointerup→
-// selectionEnd); the ± steppers each fire one selectionChanged per press.
-wireSliderHaptics(fSpeedRange, 'fSpeed');
-$('fSpeedDown').addEventListener('click', ()=> saHaptics.selectionChanged());
-$('fSpeedUp').addEventListener('click', ()=> saHaptics.selectionChanged());
+// ── move 6 UNIFY: the overlay's dedicated club-speed bar (applyFlightSpeed +
+//    fSpeedRange/fSpeedV/± steppers) is RETIRED. Club speed is the first chip
+//    of the overlay's input row; its dock edits run tuneParam's generalised
+//    applyFlightSpeed pattern (live static redraw, no animation, Replay is
+//    what animates). The instrument stays in sync automatically because the
+//    dock writes through the SAME hidden s_speed backbone slider. ──
 
 // ════════════════════════════════════════════════════════════════
 //  INIT
@@ -4973,7 +5116,9 @@ window.__impact = { state, solve:()=>solveFlight(state), visAngle, targetAngle,
   get ghosts(){return ghosts;}, get baseline(){return fBaseline;}, get replayCount(){return replayCount;}, get lastFlown(){return lastFlown;},
   haptics: saHaptics,
   // move 5 VIZ-PORT — dock/chip-row test hook (mirrors the viz mock's `viz` hook)
-  tune: { open: openTune, close: closeTune, param: tuneParam, get key(){ return tuneKey; } },
+  // move 6 UNIFY — session/before-trace verification hooks added
+  tune: { open: openTune, close: closeTune, param: tuneParam, get key(){ return tuneKey; },
+    get ref(){ return tuneRef; }, liveShot, refShot, renderStatic },
   focus: __impactFocusHook };   // STAGE 4 — test hook (+ FOCUS-MODES hook)
 </script>
 </body>
