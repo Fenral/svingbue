@@ -4804,6 +4804,28 @@ function closeFlight(){
   setFocus(preFlightFocus || 'direction', { skipFlightOpen:true, immediate:true });
 }
 function onFlightKey(e){ if (e.key==='Escape'){ e.preventDefault(); closeFlight(); } }
+// A11Y FIX (regression): while the shared tuneDock lives inside #flightCard
+// (see openFlight), a POINTER-opened dock deliberately leaves focus on the
+// summoning chip — OUTSIDE the dock — so tuneDock's own bubble-phase Escape
+// handler (bound to tuneDock itself, ~line 3256) never sees the keydown; it
+// bubbles straight past the dock to this document-level onFlightKey and
+// closes the WHOLE overlay on the first Escape instead of just the dock.
+// A CAPTURE-phase listener on #flightCard runs before onFlightKey's bubble
+// handler (capture always finishes before bubble starts) and before
+// tuneDock's own bubble handler too, so it becomes the single funnel for
+// both pointer- and keyboard-opened docks. First Escape while a dock is
+// open: close ONLY the dock and swallow the key so the overlay survives.
+// Second Escape (no dock open): falls through unchanged to onFlightKey,
+// which closes the overlay as before. Scoped to #flightCard, so it never
+// fires when the dock is back in its instrument-view home slot (outside
+// flightCard) — that context keeps using tuneDock's own bubble handler.
+$('flightCard').addEventListener('keydown', e=>{
+  if (e.key === 'Escape' && tuneKey){
+    closeTune(false, true);
+    e.stopPropagation();
+    e.preventDefault();
+  }
+}, true);
 $('playFlight').addEventListener('click', openFlight);
 $('flightClose').addEventListener('click', closeFlight);
 
