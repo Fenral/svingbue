@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>StrikeArc — range-night-3d-08 — Horizon-at-Treeline Fix</title>
+<style>
+  :root{
+    color-scheme: dark;
+    --bg:#05060A; --surface:#0C1018; --plate:rgba(4,8,14,.86);
+    --ink:#F2F7FF; --muted:#93A5C4;
+    --accent:#46F5C4; --secondary:#8B7BFF; --celebrate:#FF5CA8;
+    --good:#5CFF9D;
+  }
+  *,*::before,*::after{ box-sizing:border-box; }
+  html,body{
+    margin:0; padding:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:"SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+
+  header.page-head{ max-width:1000px; margin:0 auto; padding:28px 18px 18px; }
+  header.page-head h1{ margin:0 0 6px; font-size:clamp(20px,3.4vw,26px); font-weight:800; letter-spacing:-.01em; }
+  header.page-head p{ margin:0 0 10px; font-size:13px; color:var(--muted); line-height:1.55; max-width:780px; }
+  header.page-head p code{ color:var(--ink); background:rgba(255,255,255,.08); border-radius:4px; padding:1px 5px; }
+  .legend{ display:flex; flex-wrap:wrap; gap:8px 16px; margin-top:14px; font-size:11px; color:var(--muted); font-family:ui-monospace,"SF Mono",Menlo,monospace; }
+  .legend span{ color:var(--ink); font-weight:700; }
+  #status-line{ margin-top:12px; font-size:11px; font-family:ui-monospace,"SF Mono",Menlo,monospace; color:var(--muted); }
+
+  .card-list{ max-width:1000px; margin:0 auto; padding:0 18px 60px; display:flex; flex-direction:column; gap:30px; }
+
+  .compare-card{ display:flex; flex-direction:column; gap:8px; }
+  .card-meta{ display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; }
+  .card-num{ font-family:ui-monospace,"SF Mono",Menlo,monospace; font-size:13px; font-weight:800; color:var(--ink); background:rgba(255,255,255,.08); border-radius:6px; padding:2px 7px; }
+  .card-tag{ font-size:11px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:var(--accent); }
+  .card-detail{ font-size:11.5px; color:var(--muted); letter-spacing:.02em; max-width:640px; }
+  .card-file{ margin-left:auto; font-size:10.5px; color:var(--muted); font-family:ui-monospace,"SF Mono",Menlo,monospace; opacity:.7; }
+
+  .scene{ position:relative; width:100%; max-width:932px; aspect-ratio:932/430; border-radius:20px; overflow:hidden; background:#000; border:1px solid rgba(255,255,255,.08); }
+  .scene.broken{ outline:3px solid #FF7B8A; }
+
+  /* debug guide lines — toggled via body.show-guides */
+  .ov-guide{ display:none; }
+  body.show-guides .ov-guide{ display:block; }
+
+  /* ---------- identical Electric Night overlay chrome on every card ---------- */
+  .ov-hero{ position:absolute; top:16px; left:16px; background:var(--plate); border-radius:12px; padding:8px 14px; }
+  .ov-hero .k{ font-size:10px; font-weight:800; letter-spacing:.09em; text-transform:uppercase; color:var(--muted); }
+  .ov-hero .v{ font-size:20px; font-weight:800; letter-spacing:-.01em; color:var(--ink); }
+
+  .ov-xp{ position:absolute; top:16px; right:16px; display:inline-flex; align-items:center; gap:6px;
+    background: color-mix(in oklab, var(--celebrate) 26%, #0C1018);
+    border:1px solid var(--celebrate); color:var(--ink);
+    border-radius:999px; padding:7px 14px; font-size:12px; font-weight:800; }
+  .ov-xp .spark{ color:var(--celebrate); font-size:13px; }
+
+  .ov-scene-svg{ position:absolute; inset:0; width:100%; height:100%; }
+
+  footer.credit{ max-width:1000px; margin:10px auto 40px; padding:0 18px; font-size:11px; color:var(--muted); opacity:.7; line-height:1.6; }
+  footer.credit label{ display:inline-flex; align-items:center; gap:6px; cursor:pointer; color:var(--ink); }
+</style>
+</head>
+<body>
+
+<header class="page-head">
+  <h1>StrikeArc — range-night-3d-08 — horizon re-anchored to the treeline</h1>
+  <p><b>Owner feedback:</b> "Be careful the tee-off starts from the GRASS TEE, at the very START (bottom) of the screen. Important that the ball LANDS ON THE GRASS. Can we get the references (50/100/150 grid) to LIE ON THE GRASS? If not, we can DROP the references."</p>
+  <p><b>Diagnosis:</b> objective pixel-sampling of <code>assets/range-night-3d-08.png</code> (1376×768) found the treeline (green grass meets dark trees) at ~58–62% of the photo height, and clear lit grass running ~73–90%, tee mats ~90–96%. With production's existing crop box (<code>x=-40 y=-40 w=VBW+80 h=620</code>, xMidYMid slice), that treeline lands at <b>~60% down the card</b> — but the old overlay had <code>yH=265</code> (49% down) and <code>yBottom=356</code> (66% down), i.e. the whole ground-plane was anchored ABOVE the treeline, up in the violet glow. That's why the grid + ball floated.</p>
+  <p><b>Fix:</b> re-anchor <code>yH=324</code> (60% down card, AT the treeline) and <code>yBottom=518</code> (96% down card, on the foreground grass tee). Everything else — <code>pe()/groundY()/lateralScale()/heightScale()</code>, <code>PE_A</code>, <code>GROUND_K</code> — is ported unchanged from <code>range-3d-compare-mock.html</code> / <code>impact-viz-mock.html</code>.</p>
+  <div class="legend">
+    <div><span>A</span> = with 50/100/150m reference grid, standard scale</div>
+    <div><span>B</span> = no grid (dropped per owner's fallback offer) — tee + tracer + landing dot only</div>
+    <div><span>C</span> = compressed downrange scale — same 158m carry lands deeper in the clear grass</div>
+  </div>
+  <div id="status-line">Loading…</div>
+</header>
+
+<div class="card-list" id="cardList"></div>
+
+<footer class="credit">
+  <p>Backdrop: <code>assets/range-night-3d-08.png</code> (unmodified, not overwritten). No image generation used — this page only changes overlay geometry constants. Not committed.</p>
+</footer>
+
+<script>
+  const SRC = 'assets/range-night-3d-08.png';
+
+  // ══════════════════════════════════════════════════════════════════
+  //  PROJECTION MATH — ported unchanged (pe/groundY/lateralScale/
+  //  heightScale/project) from range-3d-compare-mock.html, which itself
+  //  mirrors impact-viz-mock.html's production flight-scene. Only yH and
+  //  yBottom are re-anchored for THIS photo's actual treeline / tee
+  //  position (measured via pixel-sampling, see header). Card C additionally
+  //  varies maxD to compress the downrange scale.
+  // ══════════════════════════════════════════════════════════════════
+  const CARD_W = 932, CARD_H = 430;                  // card CSS box (unchanged)
+  const VBH = 540;                                    // fixed viewBox height — matches production
+  const VBW = Math.round(VBH * (CARD_W / CARD_H));    // 1170 — viewBox width at this card aspect
+  const TEE_X = VBW / 2;
+  const LAT_PX = 300;
+  const SIDE_PX_MAX = 290;
+  const TOP_MARGIN = 150;
+  const PE_A = 2.2, GROUND_K = 0.86;      // SAME constants as the production flight scene
+
+  // ---- RE-ANCHORED for range-night-3d-08.png (measured, not guessed) ----
+  const yH = 324;             // horizon / vanishing point = 60% down the card = photo treeline
+  const yBottom = 518;        // tee baseline = 96% down the card = foreground grass tee
+  // -------------------------------------------------------------------
+
+  const carryM = 158, totalM = 162, offlineM = 4, APEX_AT = 0.5;
+  const maxD_STANDARD = 1.06 * totalM;     // ≈171.7 — same auto-fit ratio as computeModel() (cards A & B)
+  const maxD_COMPRESSED = 523;             // Card C — foreshortened ground scale, see header note
+
+  function heightAt(dM){
+    const d = dM / carryM; let h;
+    if (d <= APEX_AT){ const u = d / APEX_AT; h = 1 - (1-u)*(1-u); }
+    else { const u = (d - APEX_AT) / (1 - APEX_AT); h = 1 - u*u; }
+    return Math.max(0, Math.min(1, h));
+  }
+  function lateralAt(dM){
+    const dd = Math.max(0, Math.min(1, dM / carryM));
+    return offlineM * (0.55*dd + 0.45*dd*dd);
+  }
+
+  function makeModel(maxD){
+    const pe = f => f * (1 + PE_A) / (1 + PE_A * f);
+    const groundY = f => yBottom - (yBottom - yH) * GROUND_K * pe(f);
+    const lateralScale = f => 1 - GROUND_K * pe(f) * 0.92;
+    const heightScale = f => 1 - 0.22 * pe(f);
+    const fa = (APEX_AT * carryM) / maxD;
+    const APEX_PX = Math.max(60, (groundY(fa) - TOP_MARGIN) / heightScale(fa));
+
+    function project(D, hFrac, X){
+      const f = Math.max(0, Math.min(1, D / maxD));
+      const gy = groundY(f);
+      const ls = lateralScale(f);
+      const sideFrac = X / offlineM;
+      const sx = TEE_X + sideFrac * SIDE_PX_MAX * ls;
+      const hs = heightScale(f);
+      const lift = hFrac * APEX_PX * hs;
+      return { x: sx, y: gy - lift };
+    }
+    function buildAirPath(){
+      const N = 96; let d = '';
+      for (let i = 0; i <= N; i++){
+        const dM = (i/N) * carryM;
+        const p = project(dM, heightAt(dM), lateralAt(dM));
+        d += (i===0?'M':'L') + p.x.toFixed(2) + ' ' + p.y.toFixed(2) + ' ';
+      }
+      return d;
+    }
+    function buildRollPath(){
+      const land = project(carryM, 0, lateralAt(carryM));
+      const rest = project(totalM, 0, lateralAt(carryM));
+      return `M${land.x.toFixed(2)} ${land.y.toFixed(2)} L${rest.x.toFixed(2)} ${rest.y.toFixed(2)}`;
+    }
+    function buildRails(){
+      const steps = 24; let dl = '', dr = '';
+      for (let i = 0; i <= steps; i++){
+        const f = i/steps, gy = groundY(f), ls = lateralScale(f), half = LAT_PX*ls*1.3;
+        dl += (i===0?'M':'L') + (TEE_X-half).toFixed(1) + ' ' + gy.toFixed(1) + ' ';
+        dr += (i===0?'M':'L') + (TEE_X+half).toFixed(1) + ' ' + gy.toFixed(1) + ' ';
+      }
+      return { dl, dr };
+    }
+    function buildGridBands(){
+      let out = '';
+      for (const m of [50, 100, 150]){
+        const f = m/maxD, gy = groundY(f), ls = lateralScale(f), halfW = LAT_PX*ls*1.3;
+        const x1 = (TEE_X-halfW).toFixed(1), x2 = (TEE_X+halfW).toFixed(1), y = gy.toFixed(1);
+        const op = (0.14 + ls*0.26).toFixed(2);
+        const sw = (0.6 + ls*0.9).toFixed(2);
+        const fs = (9 + ls*6).toFixed(1);
+        out += `<line x1="${x1}" y1="${y}" x2="${x2}" y2="${y}" stroke="rgba(230,240,250,1)" stroke-width="${sw}" opacity="${op}"/>`;
+        out += `<text x="${(TEE_X+halfW+6).toFixed(1)}" y="${(gy-3).toFixed(1)}" fill="rgba(230,240,250,1)" font-size="${fs}" font-weight="700" opacity="${(0.35+ls*0.45).toFixed(2)}">${m} m</text>`;
+      }
+      return out;
+    }
+
+    const apexP = project(APEX_AT*carryM, 1, lateralAt(APEX_AT*carryM));
+    const landP = project(carryM, 0, lateralAt(carryM));
+    const gyAtMaxD = groundY(1);
+
+    return { project, buildAirPath, buildRollPath, buildRails, buildGridBands, apexP, landP, APEX_PX, gyAtMaxD };
+  }
+
+  const modelStd = makeModel(maxD_STANDARD);
+  const modelCompressed = makeModel(maxD_COMPRESSED);
+
+  // debug: log measured card-fraction of every key y so the report can cite exact numbers
+  console.log('GEOMETRY', JSON.stringify({
+    yH, yBottom, yH_pct: +(100*yH/VBH).toFixed(1), yBottom_pct: +(100*yBottom/VBH).toFixed(1),
+    std_landing_pct: +(100*modelStd.landP.y/VBH).toFixed(1),
+    std_apex_pct: +(100*modelStd.apexP.y/VBH).toFixed(1),
+    compressed_landing_pct: +(100*modelCompressed.landP.y/VBH).toFixed(1),
+    compressed_apex_pct: +(100*modelCompressed.apexP.y/VBH).toFixed(1),
+    maxD_STANDARD, maxD_COMPRESSED
+  }));
+
+  function overlaySceneSVG(model, withGrid){
+    const rails = withGrid ? model.buildRails() : null;
+    const airPath = model.buildAirPath();
+    const rollPath = model.buildRollPath();
+    const gridBandsSvg = withGrid ? model.buildGridBands() : '';
+    const apexP = model.apexP;
+    const landP = model.landP;
+
+    return `
+      <svg class="ov-scene-svg" viewBox="0 0 ${VBW} ${VBH}" preserveAspectRatio="none" aria-hidden="true">
+        <defs>
+          <clipPath id="ovClip-${withGrid}-${model===modelCompressed}"><rect x="0" y="0" width="${VBW}" height="${VBH}"/></clipPath>
+          <linearGradient id="tracerGrad-${withGrid}-${model===modelCompressed}" x1="0" y1="1" x2="0" y2="0">
+            <stop offset="0" stop-color="#46F5C4" stop-opacity=".2"/>
+            <stop offset=".5" stop-color="#46F5C4" stop-opacity=".95"/>
+            <stop offset="1" stop-color="#eafff6"/>
+          </linearGradient>
+          <radialGradient id="apexGlow-${withGrid}-${model===modelCompressed}" cx="50%" cy="50%" r="50%">
+            <stop offset="0" stop-color="#46F5C4" stop-opacity=".85"/><stop offset="1" stop-color="#46F5C4" stop-opacity="0"/>
+          </radialGradient>
+        </defs>
+        <g clip-path="url(#ovClip-${withGrid}-${model===modelCompressed})">
+          <image href="${SRC}" x="-40" y="-40" width="${VBW + 80}" height="620"
+                 preserveAspectRatio="xMidYMid slice">
+            <title>StrikeArc down-range night backdrop, range-night-3d-08</title>
+          </image>
+
+          <!-- debug guides: treeline (yH) + tee baseline (yBottom) -->
+          <line class="ov-guide" x1="0" y1="${yH}" x2="${VBW}" y2="${yH}" stroke="#ff2d55" stroke-width="1.5" stroke-dasharray="4 4"/>
+          <line class="ov-guide" x1="0" y1="${yBottom}" x2="${VBW}" y2="${yBottom}" stroke="#ffeb3b" stroke-width="1.5" stroke-dasharray="4 4"/>
+
+          ${withGrid ? `
+          <!-- converging fairway rails -->
+          <path d="${rails.dl}" fill="none" stroke="rgba(230,240,250,.16)" stroke-width="1.2"/>
+          <path d="${rails.dr}" fill="none" stroke="rgba(230,240,250,.16)" stroke-width="1.2"/>
+          <!-- centre / target line, converging to the vanishing point at the treeline -->
+          <line x1="${TEE_X}" y1="${yBottom}" x2="${TEE_X}" y2="${yH}" stroke="rgba(230,240,250,.3)" stroke-width="1.4" stroke-dasharray="6 8"/>
+          <!-- distance grid bands 50/100/150 -->
+          ${gridBandsSvg}
+          ` : ''}
+
+          <!-- tee marker — anchored at the very bottom of the screen, on the grass -->
+          <ellipse cx="${TEE_X}" cy="${yBottom}" rx="34" ry="7" fill="#000" opacity=".35"/>
+          <ellipse cx="${TEE_X}" cy="${yBottom}" rx="30" ry="6" fill="none" stroke="rgba(70,245,196,.5)" stroke-width="1.4"/>
+          <!-- soft under-glow trail -->
+          <path d="${airPath}" fill="none" stroke="#46F5C4" stroke-width="12" stroke-linecap="round" opacity=".16"/>
+          <!-- flight tracer: tee -> AWAY toward vanishing point, shrinking with distance -->
+          <path d="${airPath}" fill="none" stroke="url(#tracerGrad-${withGrid}-${model===modelCompressed})" stroke-width="3.6" stroke-linecap="round" opacity=".97"/>
+          <path d="${airPath}" fill="none" stroke="#eafff6" stroke-width="1.3" stroke-linecap="round" opacity=".9"/>
+          <!-- ground roll after landing -->
+          <path d="${rollPath}" fill="none" stroke="#46F5C4" stroke-width="2" stroke-linecap="round" stroke-dasharray="3 5" opacity=".65"/>
+          <!-- apex marker -->
+          <circle cx="${apexP.x.toFixed(2)}" cy="${apexP.y.toFixed(2)}" r="15" fill="url(#apexGlow-${withGrid}-${model===modelCompressed})"/>
+          <circle cx="${apexP.x.toFixed(2)}" cy="${apexP.y.toFixed(2)}" r="4" fill="none" stroke="#46F5C4" stroke-width="2"/>
+          <line x1="${apexP.x.toFixed(2)}" y1="${(apexP.y-8).toFixed(2)}" x2="${apexP.x.toFixed(2)}" y2="${(apexP.y-24).toFixed(2)}" stroke="#46F5C4" stroke-width="1.2" opacity=".7"/>
+          <rect x="${(apexP.x-32).toFixed(2)}" y="${(apexP.y-42).toFixed(2)}" width="64" height="17" rx="5" fill="rgba(4,8,14,.86)" stroke="rgba(70,245,196,.3)"/>
+          <text x="${apexP.x.toFixed(2)}" y="${(apexP.y-30).toFixed(2)}" text-anchor="middle" fill="#46F5C4" font-size="11" font-weight="800">Apex</text>
+          <!-- landing marker (secondary violet) — must sit on the grass -->
+          <ellipse cx="${landP.x.toFixed(2)}" cy="${landP.y.toFixed(2)}" rx="12" ry="4" fill="none" stroke="#8B7BFF" stroke-width="1.4" opacity=".5"/>
+          <circle cx="${landP.x.toFixed(2)}" cy="${landP.y.toFixed(2)}" r="4.2" fill="#8B7BFF"/>
+          <!-- downrange distance plate near the landing point -->
+          <rect x="${(landP.x-30).toFixed(2)}" y="${(landP.y-28).toFixed(2)}" width="60" height="18" rx="5" fill="rgba(4,8,14,.86)" stroke="rgba(139,123,255,.3)"/>
+          <text x="${landP.x.toFixed(2)}" y="${(landP.y-15.5).toFixed(2)}" text-anchor="middle" fill="#F2F7FF" font-size="11" font-weight="800">158 m</text>
+        </g>
+      </svg>
+      <div class="ov-hero">
+        <div class="k">Total</div>
+        <div class="v">162 m</div>
+      </div>
+      <div class="ov-xp"><span class="spark">✦</span>+25 XP</div>
+    `;
+  }
+
+  const CARDS = [
+    { id:'A', tag:'WITH REFERENCES', detail:'Tee at bottom (96%) · 50/100/150m grid lying flat on the grass, receding to the treeline horizon (60%) · ball lands near the back of the grass, just in front of the treeline.', model: modelStd, withGrid: true },
+    { id:'B', tag:'NO REFERENCES (dropped)', detail:'Same tee-at-bottom + trajectory + landing dot, but the distance grid is removed entirely — owner\'s explicit fallback if the grid can\'t be made to lie convincingly on the grass.', model: modelStd, withGrid: false },
+    { id:'C', tag:'COMPRESSED VARIANT', detail:'Same 158m carry, but the downrange scale is compressed (maxD 172→523) so the ball lands mid-grass (~80% down) with clear green margin in front of the treeline, instead of near the back edge.', model: modelCompressed, withGrid: true },
+  ];
+
+  const list = document.getElementById('cardList');
+  let loaded = 0, broken = 0, total = CARDS.length;
+
+  CARDS.forEach(c => {
+    const card = document.createElement('div');
+    card.className = 'compare-card';
+    card.innerHTML = `
+      <div class="card-meta">
+        <span class="card-num">CARD ${c.id}</span>
+        <span class="card-tag">${c.tag}</span>
+        <span class="card-detail">${c.detail}</span>
+        <span class="card-file">${SRC}</span>
+      </div>
+      <div class="scene" data-id="${c.id}">
+        ${overlaySceneSVG(c.model, c.withGrid)}
+      </div>
+    `;
+    list.appendChild(card);
+
+    const img = card.querySelector('image');
+    img.addEventListener('load', () => { loaded++; updateStatus(); });
+    img.addEventListener('error', () => {
+      broken++;
+      card.querySelector('.scene').classList.add('broken');
+      console.error('BROKEN_IMAGE', c.id, SRC);
+      updateStatus();
+    });
+  });
+
+  function updateStatus(){
+    const el = document.getElementById('status-line');
+    const done = loaded + broken;
+    el.textContent = `Images: ${loaded} loaded, ${broken} broken, ${total} total (${done}/${total} settled). Cards rendered: ${CARDS.length}.`;
+    if (done === total) {
+      console.log(`RENDER_COMPLETE cards=${CARDS.length} loaded=${loaded} broken=${broken}`);
+    }
+  }
+  updateStatus();
+
+  // press "g" to toggle the treeline/tee debug guide lines
+  window.addEventListener('keydown', e => { if (e.key === 'g') document.body.classList.toggle('show-guides'); });
+</script>
+
+</body>
+</html>

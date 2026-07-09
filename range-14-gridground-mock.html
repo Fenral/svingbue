@@ -1,0 +1,426 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>StrikeArc — range-night-14 "Grid as ground" compositing mock</title>
+<style>
+  :root{
+    color-scheme: dark;
+    --bg:#05060A; --surface:#0C1018; --plate:rgba(4,8,14,.86);
+    --ink:#F2F7FF; --muted:#93A5C4;
+    --accent:#46F5C4; --secondary:#8B7BFF; --celebrate:#FF5CA8;
+    --good:#5CFF9D;
+  }
+  *,*::before,*::after{ box-sizing:border-box; }
+  html,body{
+    margin:0; padding:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:"SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+
+  header.page-head{ max-width:1000px; margin:0 auto; padding:28px 18px 18px; }
+  header.page-head h1{ margin:0 0 6px; font-size:clamp(20px,3.4vw,26px); font-weight:800; letter-spacing:-.01em; }
+  header.page-head p{ margin:0 0 10px; font-size:13px; color:var(--muted); line-height:1.55; max-width:780px; }
+  header.page-head p b{ color:var(--ink); }
+  .legend{ display:flex; flex-wrap:wrap; gap:8px 16px; margin-top:14px; font-size:11px; color:var(--muted); font-family:ui-monospace,"SF Mono",Menlo,monospace; }
+  .legend span{ color:var(--ink); font-weight:700; }
+  #status-line{ margin-top:12px; font-size:11px; font-family:ui-monospace,"SF Mono",Menlo,monospace; color:var(--muted); }
+
+  .card-list{ max-width:1000px; margin:0 auto; padding:0 18px 60px; display:flex; flex-direction:column; gap:30px; }
+
+  .compare-card{ display:flex; flex-direction:column; gap:8px; }
+  .compare-card.ref .scene{ outline:2px dashed rgba(147,165,196,.5); outline-offset:2px; }
+  .card-meta{ display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; }
+  .card-num{ font-family:ui-monospace,"SF Mono",Menlo,monospace; font-size:13px; font-weight:800; color:var(--ink); background:rgba(255,255,255,.08); border-radius:6px; padding:2px 7px; }
+  .card-tag{ font-size:11px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:var(--accent); }
+  .card-detail{ font-size:11.5px; color:var(--muted); letter-spacing:.01em; line-height:1.5; max-width:820px; }
+  .card-title{ font-size:11px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:var(--celebrate); }
+  .card-file{ margin-left:auto; font-size:10.5px; color:var(--muted); font-family:ui-monospace,"SF Mono",Menlo,monospace; opacity:.7; }
+  .card-nums{ font-size:10.5px; color:var(--muted); font-family:ui-monospace,"SF Mono",Menlo,monospace; opacity:.85; }
+
+  .scene{ position:relative; width:100%; max-width:932px; aspect-ratio:932/430; border-radius:20px; overflow:hidden; background:#000; border:1px solid rgba(255,255,255,.08); }
+  .scene.broken{ outline:3px solid #FF7B8A; }
+
+  /* ---------- identical UI overlay chrome (drawn on every card) ---------- */
+  .ov-hero{ position:absolute; top:16px; left:16px; background:var(--plate); border-radius:12px; padding:8px 14px; }
+  .ov-hero .k{ font-size:10px; font-weight:800; letter-spacing:.09em; text-transform:uppercase; color:var(--muted); }
+  .ov-hero .v{ font-size:20px; font-weight:800; letter-spacing:-.01em; color:var(--ink); }
+
+  .ov-xp{ position:absolute; top:16px; right:16px; display:inline-flex; align-items:center; gap:6px;
+    background: color-mix(in oklab, var(--celebrate) 26%, #0C1018);
+    border:1px solid var(--celebrate); color:var(--ink);
+    border-radius:999px; padding:7px 14px; font-size:12px; font-weight:800; }
+  .ov-xp .spark{ color:var(--celebrate); font-size:13px; }
+
+  .ov-scene-svg{ position:absolute; inset:0; width:100%; height:100%; }
+
+  footer.credit{ max-width:1000px; margin:10px auto 40px; padding:0 18px; font-size:11px; color:var(--muted); opacity:.75; line-height:1.6; }
+  footer.credit code{ color:var(--ink); opacity:.9; }
+
+  header.section-head{ max-width:1000px; margin:36px auto 0; padding:24px 18px 4px; border-top:1px solid rgba(255,255,255,.1); }
+  header.section-head h2{ margin:0 0 6px; font-size:clamp(18px,3vw,22px); font-weight:800; letter-spacing:-.01em; }
+  header.section-head h3{ margin:18px 0 4px; font-size:13px; font-weight:800; letter-spacing:.04em; text-transform:uppercase; color:var(--secondary); }
+  header.section-head p{ margin:0 0 8px; font-size:13px; color:var(--muted); line-height:1.55; max-width:780px; }
+  header.section-head p b{ color:var(--ink); }
+</style>
+</head>
+<body>
+
+<header class="page-head">
+  <h1>range-night-14 — "hide what's after the mats, let the GRID be the ground"</h1>
+  <p>Owner's idea for the frontal floodlit-range photo: keep the real tee-bay mats (very bottom of the frame) and the real sky+towers (top of the frame), but <b>mask the flat, texture-less mid-ground grass</b> between them and let the app's own drawn 3D perspective grid + trajectory fill that band instead. Real stalls in front, drawn floor behind. This page is a pure CSS/SVG composite over the existing photo — <b>no image generation, nothing overwritten</b>.</p>
+  <p>Pixel-sampled the photo first (assets/range-night-14.png, 1376×768): sky/towers dominate the top ~72%, a dark near-black transitional band (treeline + the flat grass that "doesn't read 3D") sits roughly 72%–87% of frame height, and the bright wooden tee-bay mats fill the bottom ~13%. Every card below uses the <b>same photo crop</b> and the <b>same trajectory/grid projection math</b> (pe/groundY/lateralScale/heightScale, ported verbatim from range-3d-compare-mock.html §impact-viz-mock) — only the mask presence, horizon (<code>yH</code>) and mask strength change.</p>
+  <div class="legend">
+    <div><span>REF</span> = no mask, grid drawn straight over the real (visible) flat grass</div>
+    <div><span>V1</span> = horizon at the base of the towers, soft mask</div>
+    <div><span>V2</span> = horizon lowered ~8%, thinner soft mask (more real grass left showing)</div>
+    <div><span>V3</span> = same horizon as V1, near-opaque hard mask (grid fully dominates)</div>
+  </div>
+  <div id="status-line">Loading…</div>
+</header>
+
+<div class="card-list" id="cardList"></div>
+
+<header class="section-head">
+  <h2>Part 2 — how low should the "reference system" (ground plane) sit?</h2>
+  <p>Owner follow-up: try pushing the whole reference system — horizon, the 50/100/150 grid bands, and the ball's landing point — further DOWN in frame. That leaves more dark sky above for the mint tracer to arc through, and lands the ball lower/nearer on the visible ground instead of right up against the treeline (V1 above lands the ball only ~12px above its own horizon — visually "at" the treeline). Two heights per context: <b>HIGH</b> = current/default placement, <b>LOW</b> = horizon+ground pushed down. The ball still lands ON the grid in every case; only where that grid sits in the frame changes.</p>
+
+  <h3>2A — range-14 grid-as-ground composite (mask constrained by the real mat line)</h3>
+  <p>Here <code>yBottom</code> can't move far — the real tee-bay mats start at svg-y≈470 (87% down the card), so pushing the ground plane down eats directly into the visible mat strip. Pushed by the largest amount that still leaves a usable strip of real mat visible (~6% of card height, vs the 12–18% asked for) — flagged honestly as a physical ceiling, not a stylistic choice.</p>
+  <div class="card-list" id="cardListA" style="padding:0; gap:30px; margin:18px 0 0;"></div>
+
+  <h3>2B — plain corrected overlay (assets/range-day.png, unconstrained)</h3>
+  <p>No real foreground object to protect here — the whole lower frame is fairway grass — so this uses the full 15% push the owner asked for. Same production crop box and projection constants as range-3d-compare-mock.html (yH=265/yBottom=356 is the current shipped placement).</p>
+  <div class="card-list" id="cardListB" style="padding:0; gap:30px; margin:18px 0 0;"></div>
+</header>
+
+<footer class="credit">
+  <p><b>Part 1</b>: <code>assets/range-night-14.png</code> loaded unchanged into an inline SVG (viewBox 0 0 1170 540, matches the 932:430 card aspect exactly). Photo crop: <code>x=0 y=-78.37 width=1170 height=653.02</code> (custom vertical anchor — trims ~12% of empty black sky off the top and ~5% of near-camera grass off the very bottom, so the towers' light housings and the full mat row both stay in frame). Mask: a full-bleed gradient rect from <code>yH</code> (horizon) to <code>yBottom=470</code> (top edge of the real mats), feathered at both edges, with an olive-tinted seam at the bottom so the drawn floor visually "grows out of" the mat wood instead of butting a hard black line against it.</p>
+  <p><b>Part 2</b>: same mask machinery re-parametrized to compare how low the ground plane sits in frame — 2A keeps range-night-14's mask (capped ~6% push, limited by the real mat line at yBottom≈470); 2B uses the plain production overlay on <code>assets/range-day.png</code> with its existing production crop box (<code>x=-40 y=-40 width=1250 height=620</code>, unchanged from range-3d-compare-mock.html), pushed the full ~15% since there's no foreground object to protect.</p>
+  <p>Grid/trajectory in every card: identical <code>pe()/groundY()/lateralScale()/heightScale()</code> formulas and PE_A=2.2, GROUND_K=0.86, carry=158m, total=162m, APEX_AT=0.5 as the production down-range overlay — only <code>yH</code>/<code>yBottom</code>, the mask, and the backdrop photo vary per card. Nothing was committed; <code>assets/range-day.png</code> and all <code>assets/range-night-*.png</code> files are untouched (read-only).</p>
+</footer>
+
+<script>
+  // ══════════════════════════════════════════════════════════════════
+  //  PHOTO CROP — custom vertical anchor for THIS frontal photo
+  //  Native photo: 1376×768. Card/viewBox: 1170×540 (aspect 2.1667,
+  //  wider than the native 1.7917), so a pure "cover" crop would slice
+  //  ~66px off top+bottom equally. Instead we bias the anchor down:
+  //  skip ~12% of the top (pure black sky, no detail) and only ~5% off
+  //  the very bottom, so the tower light-housings AND the full mat row
+  //  both survive in frame. Solved so the cropped native height
+  //  (635.06px) exactly matches the box aspect ratio → zero horizontal
+  //  crop needed (image width lands exactly on VBW).
+  // ══════════════════════════════════════════════════════════════════
+  const PHOTO_SRC = 'assets/range-night-14.png';
+  const PHOTO_NATIVE_W = 1376, PHOTO_NATIVE_H = 768;
+  const CARD_W = 932, CARD_H = 430;
+  const VBH = 540;
+  const VBW = Math.round(VBH * (CARD_W / CARD_H));   // 1170
+  const TEE_X = VBW / 2;
+
+  const IMG_SCALE = VBW / PHOTO_NATIVE_W;             // 0.85029 — fills width exactly
+  const IMG_W = VBW;                                   // 1170
+  const IMG_H = PHOTO_NATIVE_H * IMG_SCALE;            // 653.02
+  const IMG_TOP_CROP_FRAC = 0.12;                      // native fraction skipped off the top
+  const IMG_Y = -(IMG_TOP_CROP_FRAC * PHOTO_NATIVE_H) * IMG_SCALE;   // -78.37
+
+  // photo-derived bands (svg-y, for reference / sanity only)
+  //   base of towers / treeline start  ≈ 392  (72.6% of card)
+  //   deepest dark / horizon glow      ≈ 431  (79.8%)
+  //   bright mats begin                ≈ 470  (87.1%)  ← used as yBottom
+  //   mats fully bright                ≈ 509  (94.3%)
+
+  const LAT_PX = 300;
+  const SIDE_PX_MAX = 290;
+  const TOP_MARGIN = 150;
+  const PE_A = 2.2, GROUND_K = 0.86;
+  const carryM = 158, totalM = 162, offlineM = 4, APEX_AT = 0.5;
+  const maxD = 1.06 * totalM;
+
+  function buildGeometry(yH, yBottom){
+    const pe = f => f * (1 + PE_A) / (1 + PE_A * f);
+    const groundY = f => yBottom - (yBottom - yH) * GROUND_K * pe(f);
+    const lateralScale = f => 1 - GROUND_K * pe(f) * 0.92;
+    const heightScale = f => 1 - 0.22 * pe(f);
+    const fa = (APEX_AT * carryM) / maxD;
+    const APEX_PX = Math.max(60, (groundY(fa) - TOP_MARGIN) / heightScale(fa));
+
+    function heightAt(dM){
+      const d = dM / carryM; let h;
+      if (d <= APEX_AT){ const u = d / APEX_AT; h = 1 - (1-u)*(1-u); }
+      else { const u = (d - APEX_AT) / (1 - APEX_AT); h = 1 - u*u; }
+      return Math.max(0, Math.min(1, h));
+    }
+    function lateralAt(dM){
+      const dd = Math.max(0, Math.min(1, dM / carryM));
+      return offlineM * (0.55*dd + 0.45*dd*dd);
+    }
+    function project(D, hFrac, X){
+      const f = Math.max(0, Math.min(1, D / maxD));
+      const gy = groundY(f);
+      const ls = lateralScale(f);
+      const sideFrac = X / offlineM;
+      const sx = TEE_X + sideFrac * SIDE_PX_MAX * ls;
+      const hs = heightScale(f);
+      const lift = hFrac * APEX_PX * hs;
+      return { x: sx, y: gy - lift };
+    }
+    function buildAirPath(){
+      const N = 96; let d = '';
+      for (let i = 0; i <= N; i++){
+        const dM = (i/N) * carryM;
+        const p = project(dM, heightAt(dM), lateralAt(dM));
+        d += (i===0?'M':'L') + p.x.toFixed(2) + ' ' + p.y.toFixed(2) + ' ';
+      }
+      return d;
+    }
+    function buildRollPath(){
+      const land = project(carryM, 0, lateralAt(carryM));
+      const rest = project(totalM, 0, lateralAt(carryM));
+      return `M${land.x.toFixed(2)} ${land.y.toFixed(2)} L${rest.x.toFixed(2)} ${rest.y.toFixed(2)}`;
+    }
+    function buildRails(){
+      const steps = 24; let dl = '', dr = '';
+      for (let i = 0; i <= steps; i++){
+        const f = i/steps, gy = groundY(f), ls = lateralScale(f), half = LAT_PX*ls*1.3;
+        dl += (i===0?'M':'L') + (TEE_X-half).toFixed(1) + ' ' + gy.toFixed(1) + ' ';
+        dr += (i===0?'M':'L') + (TEE_X+half).toFixed(1) + ' ' + gy.toFixed(1) + ' ';
+      }
+      return { dl, dr };
+    }
+    function buildGridBands(){
+      let out = '';
+      for (const m of [50, 100, 150]){
+        const f = m/maxD, gy = groundY(f), ls = lateralScale(f), halfW = LAT_PX*ls*1.3;
+        const x1 = (TEE_X-halfW).toFixed(1), x2 = (TEE_X+halfW).toFixed(1), y = gy.toFixed(1);
+        const op = (0.14 + ls*0.26).toFixed(2);
+        const sw = (0.6 + ls*0.9).toFixed(2);
+        const fs = (9 + ls*6).toFixed(1);
+        out += `<line x1="${x1}" y1="${y}" x2="${x2}" y2="${y}" stroke="rgba(230,240,250,1)" stroke-width="${sw}" opacity="${op}"/>`;
+        out += `<text x="${(TEE_X+halfW+6).toFixed(1)}" y="${(gy-3).toFixed(1)}" fill="rgba(230,240,250,1)" font-size="${fs}" font-weight="700" opacity="${(0.35+ls*0.45).toFixed(2)}">${m} m</text>`;
+      }
+      return out;
+    }
+
+    const rails = buildRails();
+    const airPath = buildAirPath();
+    const rollPath = buildRollPath();
+    const gridBandsSvg = buildGridBands();
+    const apexP = project(APEX_AT*carryM, 1, lateralAt(APEX_AT*carryM));
+    const landP = project(carryM, 0, lateralAt(carryM));
+    return { yH, yBottom, rails, airPath, rollPath, gridBandsSvg, apexP, landP };
+  }
+
+  // ══════════════════════════════════════════════════════════════════
+  //  MASK — dark ground plate covering the flat mid-ground grass band,
+  //  from yH (horizon) down to yBottom (top of the real mats). Soft
+  //  variant feathers heavily at both edges; strong variant is near-
+  //  opaque with a thin feather. Both end with an olive-tinted seam
+  //  near yBottom so the drawn floor blends into the mat wood instead
+  //  of a hard black bar.
+  // ══════════════════════════════════════════════════════════════════
+  function maskSVG(uid, yH, yBottom, strength){
+    if (!strength) return '';
+    const soft = strength === 'soft';
+    const topFeather = soft ? 26 : 10;
+    const bottomFeather = soft ? 18 : 10;
+    const y0 = yH - topFeather, y1 = yBottom + bottomFeather;
+    const gradId = `mg_${uid}`;
+    const stops = soft ? `
+        <stop offset="0"    stop-color="#05070c" stop-opacity="0"/>
+        <stop offset="0.16" stop-color="#05070c" stop-opacity="0.5"/>
+        <stop offset="0.5"  stop-color="#04060a" stop-opacity="0.86"/>
+        <stop offset="0.8"  stop-color="#10160c" stop-opacity="0.82"/>
+        <stop offset="0.92" stop-color="#232c14" stop-opacity="0.6"/>
+        <stop offset="1"    stop-color="#3a4520" stop-opacity="0.22"/>
+      ` : `
+        <stop offset="0"    stop-color="#05070c" stop-opacity="0.32"/>
+        <stop offset="0.12" stop-color="#04060a" stop-opacity="0.93"/>
+        <stop offset="0.5"  stop-color="#03050a" stop-opacity="0.98"/>
+        <stop offset="0.82" stop-color="#0d1309" stop-opacity="0.97"/>
+        <stop offset="0.94" stop-color="#232c14" stop-opacity="0.72"/>
+        <stop offset="1"    stop-color="#3a4520" stop-opacity="0.32"/>
+      `;
+    return `
+      <defs>
+        <linearGradient id="${gradId}" x1="0" y1="0" x2="0" y2="1">
+          ${stops}
+        </linearGradient>
+      </defs>
+      <rect x="-40" y="${y0.toFixed(1)}" width="${VBW+80}" height="${(y1-y0).toFixed(1)}" fill="url(#${gradId})"/>
+    `;
+  }
+
+  function overlaySceneSVG(card){
+    const uid = card.id;
+    const geo = buildGeometry(card.yH, card.yBottom);
+    const { rails, airPath, rollPath, gridBandsSvg, apexP, landP, yBottom } = geo;
+    const photoSrc = card.photoSrc || PHOTO_SRC;
+    const imgX = card.imgX != null ? card.imgX : 0;
+    const imgY = card.imgY != null ? card.imgY : IMG_Y;
+    const imgW = card.imgW != null ? card.imgW : IMG_W;
+    const imgH = card.imgH != null ? card.imgH : IMG_H;
+    return `
+      <svg class="ov-scene-svg" viewBox="0 0 ${VBW} ${VBH}" preserveAspectRatio="none" aria-hidden="true">
+        <defs>
+          <clipPath id="ovClip_${uid}"><rect x="0" y="0" width="${VBW}" height="${VBH}"/></clipPath>
+          <linearGradient id="tracerGrad_${uid}" x1="0" y1="1" x2="0" y2="0">
+            <stop offset="0" stop-color="#46F5C4" stop-opacity=".2"/>
+            <stop offset=".5" stop-color="#46F5C4" stop-opacity=".95"/>
+            <stop offset="1" stop-color="#eafff6"/>
+          </linearGradient>
+          <radialGradient id="apexGlow_${uid}" cx="50%" cy="50%" r="50%">
+            <stop offset="0" stop-color="#46F5C4" stop-opacity=".85"/><stop offset="1" stop-color="#46F5C4" stop-opacity="0"/>
+          </radialGradient>
+        </defs>
+        <g clip-path="url(#ovClip_${uid})">
+          <image href="${photoSrc}" x="${imgX}" y="${imgY.toFixed(2)}" width="${imgW}" height="${imgH.toFixed(2)}"
+                 preserveAspectRatio="none">
+            <title>StrikeArc range backdrop — reference-height comparison</title>
+          </image>
+
+          ${maskSVG(uid, card.yH, card.yBottom, card.mask)}
+
+          <!-- converging fairway rails -->
+          <path d="${rails.dl}" fill="none" stroke="rgba(230,240,250,.16)" stroke-width="1.2"/>
+          <path d="${rails.dr}" fill="none" stroke="rgba(230,240,250,.16)" stroke-width="1.2"/>
+          <!-- centre / target line, converging to the vanishing point -->
+          <line x1="${TEE_X}" y1="${yBottom}" x2="${TEE_X}" y2="${card.yH}" stroke="rgba(230,240,250,.3)" stroke-width="1.4" stroke-dasharray="6 8"/>
+          <!-- distance grid bands 50/100/150 -->
+          ${gridBandsSvg}
+          <!-- tee marker, just behind the real mats -->
+          <ellipse cx="${TEE_X}" cy="${yBottom}" rx="34" ry="7" fill="#000" opacity=".35"/>
+          <ellipse cx="${TEE_X}" cy="${yBottom}" rx="30" ry="6" fill="none" stroke="rgba(70,245,196,.5)" stroke-width="1.4"/>
+          <!-- soft under-glow trail -->
+          <path d="${airPath}" fill="none" stroke="#46F5C4" stroke-width="12" stroke-linecap="round" opacity=".16"/>
+          <!-- flight tracer: tee -> away toward the vanishing point -->
+          <path d="${airPath}" fill="none" stroke="url(#tracerGrad_${uid})" stroke-width="3.6" stroke-linecap="round" opacity=".97"/>
+          <path d="${airPath}" fill="none" stroke="#eafff6" stroke-width="1.3" stroke-linecap="round" opacity=".9"/>
+          <!-- ground roll after landing, ON the drawn grid -->
+          <path d="${rollPath}" fill="none" stroke="#46F5C4" stroke-width="2" stroke-linecap="round" stroke-dasharray="3 5" opacity=".65"/>
+          <!-- apex marker -->
+          <circle cx="${apexP.x.toFixed(2)}" cy="${apexP.y.toFixed(2)}" r="15" fill="url(#apexGlow_${uid})"/>
+          <circle cx="${apexP.x.toFixed(2)}" cy="${apexP.y.toFixed(2)}" r="4" fill="none" stroke="#46F5C4" stroke-width="2"/>
+          <line x1="${apexP.x.toFixed(2)}" y1="${(apexP.y-8).toFixed(2)}" x2="${apexP.x.toFixed(2)}" y2="${(apexP.y-24).toFixed(2)}" stroke="#46F5C4" stroke-width="1.2" opacity=".7"/>
+          <rect x="${(apexP.x-32).toFixed(2)}" y="${(apexP.y-42).toFixed(2)}" width="64" height="17" rx="5" fill="rgba(4,8,14,.86)" stroke="rgba(70,245,196,.3)"/>
+          <text x="${apexP.x.toFixed(2)}" y="${(apexP.y-30).toFixed(2)}" text-anchor="middle" fill="#46F5C4" font-size="11" font-weight="800">Apex</text>
+          <!-- landing marker: ball lands ON the drawn grid -->
+          <ellipse cx="${landP.x.toFixed(2)}" cy="${landP.y.toFixed(2)}" rx="12" ry="4" fill="none" stroke="#8B7BFF" stroke-width="1.4" opacity=".5"/>
+          <circle cx="${landP.x.toFixed(2)}" cy="${landP.y.toFixed(2)}" r="4.2" fill="#8B7BFF"/>
+          <!-- downrange distance plate near the landing point -->
+          <rect x="${(landP.x-30).toFixed(2)}" y="${(landP.y-28).toFixed(2)}" width="60" height="18" rx="5" fill="rgba(4,8,14,.86)" stroke="rgba(139,123,255,.3)"/>
+          <text x="${landP.x.toFixed(2)}" y="${(landP.y-15.5).toFixed(2)}" text-anchor="middle" fill="#F2F7FF" font-size="11" font-weight="800">158 m</text>
+        </g>
+      </svg>
+      <div class="ov-hero">
+        <div class="k">Total</div>
+        <div class="v">162 m</div>
+      </div>
+      <div class="ov-xp"><span class="spark">✦</span>+25 XP</div>
+    `;
+  }
+
+  // ══════════════════════════════════════════════════════════════════
+  //  CARDS — REF (no mask) + 3 variants, all on the SAME unmodified
+  //  photo asset.
+  // ══════════════════════════════════════════════════════════════════
+  const CARDS = [
+    { id:'REF', ref:true, title:'BASELINE — NO MASK', tag:'grid over real flat grass', mask:null, yH:392, yBottom:470,
+      detail:'Same horizon (yH=392, base of towers) and tee-line (yBottom=470, top of the real mats) as V1 — but the flat mid-ground grass is left fully VISIBLE. The grid is drawn straight on top of the real violet-to-black gradient instead of a clean plane.' },
+    { id:'V1', title:'V1 — HORIZON AT TOWER BASE', tag:'soft mask · balanced', mask:'soft', yH:392, yBottom:470,
+      detail:'Mask covers the photo\'s actual flat-grass band (~73%→87% of frame height), soft feathered gradient. Horizon sits exactly where the light towers plant into the ground — the natural "back wall" of the scene.' },
+    { id:'V2', title:'V2 — HORIZON LOWERED ~8%', tag:'soft mask · minimal', mask:'soft', yH:435, yBottom:470,
+      detail:'Horizon dropped toward the mats (yH=435, +8% of card height lower than V1). Thinner mask band (~80.6%→87%) — more of the photo\'s own dark ground-glow is left showing before the grid takes over.' },
+    { id:'V3', title:'V3 — SAME HORIZON, STRONGER MASK', tag:'hard mask · grid dominates', mask:'strong', yH:392, yBottom:470,
+      detail:'Identical horizon to V1 (yH=392) but the ground plate is pushed to near-opaque black with a thin feather — almost no photo texture survives in the mid-band, the drawn grid fully owns the floor.' },
+  ];
+
+  // ══════════════════════════════════════════════════════════════════
+  //  PART 2A — range-14 grid-as-ground composite: reference-system
+  //  height compared. yBottom is constrained by the real mat line
+  //  (~470, 87% down the card) so the "LOW" push is capped at ~6% of
+  //  card height (32 svg units) — pushing further would eat visibly
+  //  into the real mat strip, defeating the point of showing real mats.
+  // ══════════════════════════════════════════════════════════════════
+  const CARDS_A = [
+    { id:'A-HIGH', ref:true, title:'REFERENCE HIGH (= V1)', tag:'soft mask · horizon at tower base', mask:'soft', yH:392, yBottom:470,
+      detail:'Same placement as V1 above: yH=392 (72.6%), yBottom=470 (87.0%). Ball lands only ~12 svg-units above its own horizon — reads as landing almost AT the treeline.' },
+    { id:'A-LOW', title:'REFERENCE LOW (pushed down ~6%, the max the mat line allows)', tag:'soft mask · pushed down', mask:'soft', yH:424, yBottom:502,
+      detail:'Whole ground plane shifted down 32 svg-units (~6% of card height): yH=424 (78.5%), yBottom=502 (93.0%). More dark sky above the tracer, landing point sits visibly lower/closer to camera — but the real mat strip shrinks to ~7% of the card, and the grid band gets noticeably tighter.' },
+  ];
+
+  // ══════════════════════════════════════════════════════════════════
+  //  PART 2B — plain corrected overlay on assets/range-day.png
+  //  (production backdrop, production crop box). No real foreground
+  //  object below yBottom, so the full ~15% push the owner asked for
+  //  is used with no constraint.
+  // ══════════════════════════════════════════════════════════════════
+  const RANGEDAY_SRC = 'assets/range-day.png';
+  const RANGEDAY_IMG_X = -40, RANGEDAY_IMG_Y = -40, RANGEDAY_IMG_W = VBW + 80, RANGEDAY_IMG_H = 620;
+  const CARDS_B = [
+    { id:'B-HIGH', ref:true, title:'REFERENCE HIGH (current production)', tag:'no mask needed · yH=265 (49%)', mask:null, yH:265, yBottom:356,
+      photoSrc: RANGEDAY_SRC, imgX: RANGEDAY_IMG_X, imgY: RANGEDAY_IMG_Y, imgW: RANGEDAY_IMG_W, imgH: RANGEDAY_IMG_H,
+      detail:'Current shipped placement (impact-viz-mock.html / range-3d-compare-mock.html): yH=265 sits on the photo\'s real treeline, yBottom=356 clears the app\'s bottom chip band. Grid occupies the mid-frame.' },
+    { id:'B-LOW', title:'REFERENCE LOW (pushed down ~15%)', tag:'no mask needed · yH=346 (64%)', mask:null, yH:346, yBottom:437,
+      photoSrc: RANGEDAY_SRC, imgX: RANGEDAY_IMG_X, imgY: RANGEDAY_IMG_Y, imgW: RANGEDAY_IMG_W, imgH: RANGEDAY_IMG_H,
+      detail:'Whole ground plane shifted down 81 svg-units (15% of card height): yH=346, yBottom=437 — both still land on plain fairway grass in the photo (no foreground object to protect). Much more open sky above for the tracer; landing sits clearly lower/nearer. (Note: yBottom=437 would clip the app\'s real bottom chip band in production — shown here purely to judge the vertical placement in isolation.)' },
+  ];
+
+  let loaded = 0, broken = 0, total = 0;
+
+  function renderCards(containerId, cards, defaultSrc){
+    const list = document.getElementById(containerId);
+    cards.forEach(c => {
+      const card = document.createElement('div');
+      card.className = 'compare-card' + (c.ref ? ' ref' : '');
+
+      const metaBits = [`<span class="card-num">${c.id}</span>`];
+      if (c.title) metaBits.push(`<span class="card-title">${c.title}</span>`);
+      if (c.tag) metaBits.push(`<span class="card-tag">${c.tag}</span>`);
+      metaBits.push(`<span class="card-nums">yH=${c.yH} · yBottom=${c.yBottom} · mask=${c.mask || 'none'}</span>`);
+      metaBits.push(`<span class="card-file">${c.photoSrc || defaultSrc}</span>`);
+
+      total++;
+
+      card.innerHTML = `
+        <div class="card-meta">${metaBits.join('')}</div>
+        <div class="card-detail">${c.detail}</div>
+        <div class="scene" data-id="${c.id}">
+          ${overlaySceneSVG(c)}
+        </div>
+      `;
+      list.appendChild(card);
+
+      const img = card.querySelector('image');
+      img.addEventListener('load', () => { loaded++; updateStatus(); });
+      img.addEventListener('error', () => {
+        broken++;
+        card.querySelector('.scene').classList.add('broken');
+        console.error('BROKEN_IMAGE', c.id, c.photoSrc || defaultSrc);
+        updateStatus();
+      });
+    });
+  }
+
+  const TOTAL_CARDS = CARDS.length + CARDS_A.length + CARDS_B.length;
+
+  function updateStatus(){
+    const el = document.getElementById('status-line');
+    const done = loaded + broken;
+    el.textContent = `Images: ${loaded} loaded, ${broken} broken, ${total} total (${done}/${total} settled). Cards rendered: ${TOTAL_CARDS}.`;
+    if (done === total) {
+      console.log(`RENDER_COMPLETE cards=${TOTAL_CARDS} loaded=${loaded} broken=${broken}`);
+    }
+  }
+
+  renderCards('cardList', CARDS, PHOTO_SRC);
+  renderCards('cardListA', CARDS_A, PHOTO_SRC);
+  renderCards('cardListB', CARDS_B, RANGEDAY_SRC);
+  updateStatus();
+</script>
+
+</body>
+</html>
