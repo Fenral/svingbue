@@ -1,0 +1,1508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>StrikeArc Academy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Azeret+Mono:wght@400;500;600;700&family=Archivo:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    /* surfaces */
+    --bg:#0A0E12; --bg-2:#0b1220; --bg-3:#0e1722; --bg-4:#10202c;
+    /* signal */
+    --cyan:#22E3D6; --cyan-deep:#06181b; --amber:#FFB534; --magenta:#FF4D8D;
+    --gain:#4ADE80;
+    /* rules / glow */
+    --rule:rgba(232,240,251,.10); --rule-2:rgba(232,240,251,.06);
+    --rule-hot:rgba(34,227,214,.42); --glow-cyan:rgba(34,227,214,.20);
+    /* ink */
+    --ink:#e8f0fb; --ink-dim:#9aabc6; --ink-faint:#5d6e87;
+    --cyan-soft:rgba(34,227,214,.10); --amber-soft:rgba(255,181,52,.12); --mag-soft:rgba(255,77,141,.12);
+    --gain-soft:rgba(74,222,128,.12);
+    /* dark text plate */
+    --plate:rgba(8,16,20,.78); --plate-hi:rgba(8,16,20,.86);
+    /* fonts */
+    --f-display:"Chakra Petch",system-ui,sans-serif;
+    --f-mono:"Azeret Mono",ui-monospace,monospace;
+    --f-body:"Archivo",system-ui,sans-serif;
+    /* motion */
+    --ease:cubic-bezier(.2,.9,.2,1); --ease-snap:cubic-bezier(.6,0,.1,1);
+  }
+
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:
+      radial-gradient(1200px 600px at 82% -12%, rgba(34,227,214,.07), transparent 60%),
+      radial-gradient(900px 500px at -6% 112%, rgba(255,77,141,.045), transparent 55%),
+      var(--bg);
+    color:var(--ink); font-family:var(--f-body); font-size:15px; line-height:1.55;
+    -webkit-font-smoothing:antialiased; letter-spacing:.005em; min-height:100vh;
+    overflow-x:hidden;
+  }
+  .mono{font-family:var(--f-mono); font-variant-numeric:tabular-nums; font-feature-settings:"tnum" 1}
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+  button{font-family:inherit}
+  a{color:inherit}
+  :focus-visible{outline:2px solid var(--cyan); outline-offset:3px}
+
+  /* grid-dot instrument backdrop */
+  .bench{position:fixed;inset:0;z-index:0;pointer-events:none;
+    background-image:
+      linear-gradient(var(--rule-2) 1px,transparent 1px),
+      linear-gradient(90deg,var(--rule-2) 1px,transparent 1px);
+    background-size:28px 28px; opacity:.6}
+
+  /* ── landscape lock ── */
+  .rotate{position:fixed;inset:0;z-index:60;display:none;flex-direction:column;align-items:center;justify-content:center;
+    background:var(--bg);text-align:center;gap:14px;padding:24px}
+  .rotate .ico{font-size:46px;animation:tilt 1.8s ease-in-out infinite}
+  .rotate p{font-size:15px;max-width:260px;color:var(--ink);margin:0}
+  .rotate .k{font-family:var(--f-display);font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--ink-faint)}
+  @keyframes tilt{0%,100%{transform:rotate(-12deg)}50%{transform:rotate(78deg)}}
+  @media (orientation:portrait){.rotate{display:flex}}
+
+  /* ── app shell ── */
+  #app{position:relative;z-index:1}
+  .view{animation:viewIn .22s var(--ease)}
+  @keyframes viewIn{from{opacity:0;transform:translateX(2%)}to{opacity:1;transform:none}}
+
+  /* ═══ HEADER ═══ */
+  .hdr{display:flex;align-items:center;gap:18px;padding:14px 22px;border-bottom:1px solid var(--rule);
+    background:linear-gradient(180deg,rgba(11,18,32,.72),rgba(10,14,18,.35));position:sticky;top:0;z-index:20;backdrop-filter:blur(6px)}
+  .wordmark{font-family:var(--f-display);font-weight:700;font-size:17px;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}
+  .wordmark b{color:var(--cyan);font-weight:700}
+  .medallion{display:flex;align-items:center;gap:12px;min-width:0}
+  .hex{width:52px;height:58px;flex:none;display:grid;place-items:center;position:relative;
+    background:linear-gradient(180deg,var(--bg-3),var(--bg-2));border:1px solid var(--rule-hot);
+    clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%)}
+  .hex .lv{font-family:var(--f-mono);font-weight:700;font-size:19px;color:var(--cyan);line-height:1}
+  .hex .lk{font-family:var(--f-display);font-size:7.5px;letter-spacing:.18em;color:var(--ink-faint);text-transform:uppercase}
+  .lvmeta{min-width:120px}
+  .lvmeta .t{font-family:var(--f-display);font-weight:600;font-size:13px;letter-spacing:.03em;text-transform:uppercase;color:var(--ink)}
+  .lvmeta .x{font-family:var(--f-mono);font-size:11px;color:var(--ink-dim);margin-top:2px}
+  .xpbar{height:5px;border-radius:3px;background:var(--rule);margin-top:6px;overflow:hidden;width:140px;max-width:34vw}
+  .xpbar .fill{height:100%;background:linear-gradient(90deg,var(--cyan),rgba(34,227,214,.55));border-radius:3px;transition:width .5s var(--ease)}
+  .badgerail{display:flex;gap:8px;margin-left:auto;flex-wrap:wrap;justify-content:flex-end}
+  .badge{width:38px;height:38px;border-radius:9px;display:grid;place-items:center;font-size:16px;position:relative;cursor:pointer;
+    border:1px solid var(--rule);background:var(--bg-3);color:var(--ink-faint);transition:transform .2s var(--ease),border-color .2s var(--ease)}
+  .badge.earned{border-color:var(--rule-hot);background:linear-gradient(180deg,var(--cyan-soft),var(--bg-3));color:var(--cyan);box-shadow:0 0 14px var(--glow-cyan)}
+  .badge.earned.pop{animation:badgePop .5s var(--ease)}
+  @keyframes badgePop{0%{transform:scale(.4);opacity:0}60%{transform:scale(1.18)}100%{transform:scale(1);opacity:1}}
+  .badge:hover,.badge:focus-visible{transform:translateY(-2px)}
+  .badge .pop-info{position:absolute;top:calc(100% + 8px);right:0;width:190px;background:var(--plate-hi);border:1px solid var(--rule);
+    border-radius:8px;padding:9px 11px;z-index:40;opacity:0;pointer-events:none;transition:opacity .15s var(--ease-snap)}
+  .badge:hover .pop-info,.badge:focus-visible .pop-info{opacity:1}
+  .badge .pop-info .bn{font-family:var(--f-display);font-weight:600;font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink);display:block}
+  .badge .pop-info .bd{font-size:11.5px;color:var(--ink-dim);line-height:1.4;margin-top:3px}
+
+  /* ═══ PATH / MAP ═══ */
+  .path-intro{padding:16px 22px 6px}
+  .kicker{font-family:var(--f-display);font-weight:600;font-size:10.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--ink-faint)}
+  .path-intro h1{font-family:var(--f-display);font-weight:700;font-size:clamp(22px,3.2vw,32px);letter-spacing:-.01em;text-transform:uppercase;margin:6px 0 4px}
+  .path-intro .slice{font-family:var(--f-mono);font-size:12px;color:var(--ink-dim)}
+  .path-intro .slice b{color:var(--cyan)}
+
+  .map-scroll{overflow-x:auto;overflow-y:hidden;padding:8px 22px 26px;-webkit-overflow-scrolling:touch}
+  .map-canvas{position:relative}
+  .map-edges{position:absolute;inset:0;pointer-events:none}
+  .col-head{position:absolute;top:0;font-family:var(--f-display);font-weight:600;font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-faint)}
+  .col-head::after{content:"";display:block;height:1px;margin-top:6px;background:var(--rule)}
+
+  .node{position:absolute;display:flex;flex-direction:column;justify-content:center;gap:3px;text-align:left;
+    padding:8px 12px;border-radius:7px;border:1px solid var(--rule);background:var(--bg-2);color:var(--ink-faint);
+    cursor:default;transition:transform .18s var(--ease),border-color .18s var(--ease),box-shadow .18s var(--ease);min-height:44px}
+  .node .r1{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .node .ntier{font-family:var(--f-display);font-weight:600;font-size:8.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint)}
+  .node .nglyph{font-size:12px;line-height:1}
+  .node .nlabel{font-family:var(--f-display);font-weight:600;font-size:14.5px;color:var(--ink-faint);letter-spacing:.01em}
+  .node .nxp{font-family:var(--f-mono);font-size:10px;color:var(--cyan)}
+  .node--available{background:linear-gradient(180deg,var(--bg-3),var(--bg-2));border-color:var(--rule-hot);color:var(--ink);cursor:pointer}
+  .node--available .nlabel{color:var(--ink)}
+  .node--available .nglyph{color:var(--cyan)}
+  .node--available:hover,.node--available:focus-visible{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.35)}
+  .node--available .ring{width:11px;height:11px;border-radius:50%;border:2px solid var(--cyan);animation:ringpulse 2s var(--ease) infinite}
+  @keyframes ringpulse{0%,100%{box-shadow:0 0 0 0 var(--glow-cyan)}50%{box-shadow:0 0 0 5px rgba(34,227,214,0)}}
+  .node--completed{background:linear-gradient(180deg,var(--cyan-soft),var(--bg-2));border-color:var(--rule-hot);color:var(--ink);cursor:pointer}
+  .node--completed .nlabel{color:var(--ink)}
+  .node--completed .nglyph{color:var(--cyan)}
+  .node--completed:hover,.node--completed:focus-visible{transform:translateY(-2px)}
+  .node--locked{opacity:.9}
+  .node--current::before{content:"";position:absolute;top:-1px;right:-1px;width:0;height:0;
+    border-top:14px solid var(--amber);border-left:14px solid transparent;border-top-right-radius:7px}
+  .node.justdone{animation:justdone 1.1s var(--ease)}
+  @keyframes justdone{0%{box-shadow:0 0 0 0 var(--glow-cyan)}30%{box-shadow:0 0 0 6px var(--glow-cyan)}100%{box-shadow:0 0 0 0 rgba(34,227,214,0)}}
+
+  .tooltip{position:fixed;z-index:45;max-width:230px;background:var(--plate-hi);border:1px solid var(--rule);border-radius:8px;
+    padding:9px 11px;font-size:12px;color:var(--ink-dim);line-height:1.45;pointer-events:none;opacity:0;transition:opacity .12s var(--ease-snap)}
+  .tooltip.show{opacity:1}
+  .tooltip b{color:var(--ink);font-family:var(--f-display);font-weight:600;font-size:11px;letter-spacing:.05em;text-transform:uppercase;display:block;margin-bottom:3px}
+
+  /* ═══ LESSON ═══ */
+  .lesson{padding-bottom:60px}
+  .topbar{display:flex;align-items:center;gap:14px;padding:12px 22px;border-bottom:1px solid var(--rule);
+    position:sticky;top:0;z-index:20;background:linear-gradient(180deg,rgba(11,18,32,.82),rgba(10,14,18,.5));backdrop-filter:blur(6px)}
+  .backbtn{display:inline-flex;align-items:center;gap:7px;min-height:40px;padding:8px 14px;border-radius:8px;border:1px solid var(--rule-hot);
+    background:transparent;color:var(--cyan);font-family:var(--f-display);font-weight:600;font-size:12px;letter-spacing:.08em;text-transform:uppercase;cursor:pointer}
+  .backbtn:hover{background:var(--cyan-soft)}
+  .topbar .tb-mono{font-family:var(--f-mono);font-size:11px;color:var(--ink-faint);margin-left:auto}
+  .topbar .tb-lv{display:flex;align-items:center;gap:8px;margin-left:auto}
+  .topbar .tb-lv .x{font-family:var(--f-mono);font-size:12px;color:var(--cyan)}
+  .topbar .tb-lv .t{font-family:var(--f-display);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-dim)}
+
+  /* sticky jump strip (landscape form of the section rail) */
+  .jump{position:sticky;top:65px;z-index:15;display:flex;align-items:center;gap:8px;padding:8px 22px;
+    background:linear-gradient(180deg,rgba(10,14,18,.9),rgba(10,14,18,.55));border-bottom:1px solid var(--rule);overflow-x:auto}
+  .jump a{font-family:var(--f-display);font-weight:600;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint);
+    white-space:nowrap;padding:6px 9px;border-radius:6px;text-decoration:none;border:1px solid transparent}
+  .jump a:hover{color:var(--ink-dim)}
+  .jump a.on{color:var(--cyan);border-color:var(--rule-hot);background:var(--cyan-soft)}
+  .jump .jspace{margin-left:auto}
+  .jump .jprog{font-family:var(--f-mono);font-size:11px;color:var(--ink-dim);white-space:nowrap}
+  .jump .jxp{font-family:var(--f-mono);font-size:11px;color:var(--cyan);white-space:nowrap}
+
+  .lesson-body{max-width:1180px;margin:0 auto;padding:0 22px}
+  .sect{padding:34px 0;border-bottom:1px solid var(--rule-2);opacity:0;transform:translateY(8px)}
+  .sect.in{opacity:1;transform:none;transition:opacity .4s var(--ease),transform .4s var(--ease)}
+  .sect-k{font-family:var(--f-display);font-weight:600;font-size:10.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:12px}
+  .sect h2{font-family:var(--f-display);font-weight:600;font-size:clamp(20px,2.6vw,30px);letter-spacing:.01em;margin:0 0 14px}
+  .prose{max-width:68ch;color:var(--ink-dim);font-size:15px;line-height:1.62;background:var(--plate);border:1px solid var(--rule);border-radius:10px;padding:16px 18px}
+  .pquote{max-width:68ch;margin:16px 0 0;font-family:var(--f-mono);font-weight:600;font-size:clamp(15px,2vw,20px);color:var(--cyan);
+    background:var(--plate);border:1px solid var(--rule-hot);border-left:3px solid var(--cyan);border-radius:8px;padding:14px 16px;letter-spacing:-.01em}
+
+  /* hero */
+  .hero{display:grid;grid-template-columns:1.4fr .8fr;gap:20px;align-items:stretch;padding:30px 0 26px}
+  .hero-main{background:var(--plate);border:1px solid var(--rule);border-radius:12px;padding:22px 22px 20px;position:relative;overflow:hidden}
+  .hero-main::before{content:"";position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--cyan),transparent)}
+  .hero-main .htier{display:inline-block;font-family:var(--f-display);font-weight:600;font-size:10px;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--cyan);border:1px solid var(--rule-hot);border-radius:4px;padding:4px 9px;margin-bottom:12px}
+  .hero-main h1{font-family:var(--f-display);font-weight:700;font-size:clamp(34px,5vw,54px);letter-spacing:-.01em;text-transform:uppercase;margin:0 0 12px;line-height:.98}
+  .hero-main .oneliner{color:var(--ink-dim);font-size:15px;line-height:1.55;max-width:52ch}
+  .hero-side{background:var(--bg-2);border:1px solid var(--rule);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:10px}
+  .hero-side .hs-k{font-family:var(--f-display);font-weight:600;font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-faint)}
+  .dots{display:flex;gap:6px;flex-wrap:wrap;margin-top:auto}
+  .dots .d{width:8px;height:8px;border-radius:50%;background:var(--rule)}
+  .dots .d.on{background:var(--cyan)}
+
+  /* components grid */
+  .cgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .ccard{background:var(--bg-2);border:1px solid var(--rule);border-radius:10px;padding:14px 15px}
+  .ccard .cn{font-family:var(--f-display);font-weight:600;font-size:13px;letter-spacing:.03em;color:var(--ink);text-transform:uppercase}
+  .ccard .cr{font-size:13.5px;color:var(--ink-dim);line-height:1.5;margin:8px 0 10px}
+  .ccard .crange{display:inline-block;font-family:var(--f-mono);font-size:11px;color:var(--ink-faint);background:var(--bg);border:1px solid var(--rule);border-radius:4px;padding:4px 8px}
+
+  /* hierarchy ranked bars */
+  .hrow{border-top:1px solid var(--rule-2);padding:12px 0}
+  .hrow:first-child{border-top:0}
+  .hrow .htop{display:flex;align-items:center;gap:12px}
+  .hrow .hrank{font-family:var(--f-mono);font-weight:700;font-size:15px;color:var(--ink-faint);width:22px;flex:none;text-align:right}
+  .hrow .hlabel{font-family:var(--f-display);font-weight:600;font-size:13.5px;color:var(--ink);flex:1;min-width:120px}
+  .hrow .hest{font-family:var(--f-mono);font-size:9px;letter-spacing:.08em;color:var(--amber);border:1px solid var(--amber-soft);background:var(--amber-soft);border-radius:3px;padding:2px 5px}
+  .hrow .hexpand{background:transparent;border:1px solid var(--rule);color:var(--ink-dim);border-radius:6px;width:30px;height:30px;cursor:pointer;font-size:14px;flex:none}
+  .hbar{height:12px;border-radius:6px;background:var(--rule);margin-top:9px;position:relative;overflow:hidden}
+  .hbar .hf{height:100%;border-radius:6px}
+  .hrow .hweight{display:inline-block;font-family:var(--f-mono);font-size:11px;color:var(--ink-dim);margin-top:8px}
+  .hrow .hwhy{max-height:0;overflow:hidden;transition:max-height .3s var(--ease);color:var(--ink-dim);font-size:13.5px;line-height:1.55}
+  .hrow.open .hwhy{max-height:220px;margin-top:10px}
+  .hlegend{font-family:var(--f-mono);font-size:10.5px;color:var(--ink-faint);margin-bottom:14px}
+
+  /* misconceptions */
+  .mgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+  .mcard{background:var(--bg-2);border:1px solid var(--rule);border-radius:10px;padding:14px 15px}
+  .mcard .myth{color:var(--ink-faint);font-size:13.5px;line-height:1.5;position:relative;padding-left:20px}
+  .mcard .myth::before{content:"\2717";position:absolute;left:0;top:0;color:var(--magenta);font-weight:700}
+  .mcard .truth{color:var(--ink);font-size:13.5px;line-height:1.55;margin-top:10px;padding-top:10px;border-top:1px solid var(--rule-2);position:relative;padding-left:20px}
+  .mcard .truth::before{content:"\2713";position:absolute;left:0;top:10px;color:var(--cyan);font-weight:700}
+
+  /* wolfram disclosure */
+  .wolf{background:var(--bg-2);border:1px solid var(--rule);border-radius:10px;padding:4px 16px}
+  .wolf summary{cursor:pointer;font-family:var(--f-display);font-weight:600;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-dim);padding:12px 0;list-style:none;display:flex;align-items:center;gap:8px}
+  .wolf summary::-webkit-details-marker{display:none}
+  .wolf summary::before{content:"\25B8";color:var(--cyan);transition:transform .2s var(--ease)}
+  .wolf[open] summary::before{transform:rotate(90deg)}
+  .wolf ul{list-style:none;margin:0;padding:0 0 12px}
+  .wolf li{font-family:var(--f-mono);font-size:11.5px;color:var(--ink-dim);line-height:1.55;padding:6px 0;border-top:1px solid var(--rule-2)}
+
+  /* ── vignette (diagram panel) ── */
+  .vignette{border:1px solid var(--rule-hot);border-radius:12px;background:linear-gradient(180deg,rgba(14,23,34,.85),rgba(10,14,18,.62));position:relative;overflow:hidden;padding:18px}
+  .vignette::before{content:"";position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--cyan),transparent)}
+  .vig-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+  .vig-title{font-family:var(--f-display);font-weight:700;font-size:18px;letter-spacing:.01em;text-transform:uppercase}
+  .vig-tag{font-family:var(--f-mono);font-size:10px;color:var(--cyan);border:1px solid var(--rule-hot);border-radius:3px;padding:4px 8px}
+
+  /* sliders (from design system) */
+  .sl{margin-bottom:14px}
+  .sl label{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;gap:8px}
+  .sl .slk{font-family:var(--f-display);font-weight:600;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-dim)}
+  .sl .slk .est{font-family:var(--f-mono);font-size:8.5px;letter-spacing:.06em;color:var(--amber);border:1px solid var(--amber-soft);background:var(--amber-soft);border-radius:3px;padding:1px 4px;margin-left:5px}
+  .sl .slv{font-family:var(--f-mono);font-weight:600;font-size:16px;color:var(--cyan);font-variant-numeric:tabular-nums}
+  input[type=range].sa-range{-webkit-appearance:none;appearance:none;width:100%;height:44px;min-height:44px;background:transparent;outline:none;cursor:pointer;margin:0}
+  input[type=range].sa-range::-webkit-slider-runnable-track{height:3px;background:var(--rule);border-radius:2px}
+  input[type=range].sa-range::-moz-range-track{height:3px;background:var(--rule);border-radius:2px}
+  input[type=range].sa-range::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:18px;height:18px;margin-top:-7.5px;border-radius:50%;background:var(--cyan);border:3px solid var(--bg);box-shadow:0 0 0 1px var(--cyan),0 0 14px var(--glow-cyan);cursor:pointer;transition:transform .1s var(--ease)}
+  input[type=range].sa-range::-webkit-slider-thumb:active{transform:scale(1.18)}
+  input[type=range].sa-range::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:var(--cyan);border:3px solid var(--bg);box-shadow:0 0 0 1px var(--cyan);cursor:pointer}
+  input[type=range].sa-range:focus-visible{outline:2px solid var(--cyan);outline-offset:6px}
+  .ticks{display:flex;justify-content:space-between;margin-top:2px}
+  .ticks span{font-family:var(--f-mono);font-size:10px;color:var(--ink-faint)}
+
+  .segmented{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 8px}
+  .segmented button{min-height:40px;padding:8px 11px;border-radius:7px;border:1px solid var(--rule);background:var(--bg-2);color:var(--ink-dim);
+    font-family:var(--f-display);font-weight:600;font-size:11px;letter-spacing:.05em;cursor:pointer;transition:all .15s var(--ease)}
+  .segmented button[aria-pressed="true"]{background:var(--cyan-soft);color:var(--cyan);box-shadow:inset 0 0 0 1px var(--rule-hot)}
+  .toggle{display:inline-flex;align-items:center;gap:9px;min-height:40px;padding:6px 12px;border-radius:8px;border:1px solid var(--rule);
+    background:var(--bg-2);color:var(--ink-dim);cursor:pointer;font-family:var(--f-display);font-weight:600;font-size:11px;letter-spacing:.05em}
+  .toggle[aria-pressed="true"]{color:var(--amber);border-color:var(--amber-soft);background:var(--amber-soft)}
+  .toggle .knob{width:34px;height:18px;border-radius:10px;background:var(--rule);position:relative;transition:background .15s var(--ease);flex:none}
+  .toggle .knob::after{content:"";position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:var(--ink-faint);transition:transform .15s var(--ease)}
+  .toggle[aria-pressed="true"] .knob{background:var(--amber-soft)}
+  .toggle[aria-pressed="true"] .knob::after{transform:translateX(16px);background:var(--amber)}
+  .footnote{font-family:var(--f-mono);font-size:10px;color:var(--ink-faint);line-height:1.45;margin-top:6px}
+
+  /* backspin diagram */
+  .bs-diagram{display:flex;flex-wrap:wrap;gap:16px}
+  .bs-controls{flex:1 1 200px;min-width:190px}
+  .bs-machine{flex:2 1 260px;min-width:240px;display:flex;flex-direction:column;gap:10px}
+  .bs-right{flex:1 1 240px;min-width:230px;display:flex;flex-direction:column;gap:12px}
+  .bs-svg{width:100%;height:auto;background:var(--bg);border:1px solid var(--rule);border-radius:10px}
+  .formula{background:var(--plate);border:1px solid var(--rule-hot);border-radius:10px;padding:12px 14px}
+  .formula .fk{font-family:var(--f-display);font-weight:600;font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:6px}
+  .formula .fx{font-family:var(--f-mono);font-weight:600;font-size:15px;color:var(--cyan);line-height:1.5;word-break:break-word}
+  .formula .fx .op{color:var(--ink-faint)}
+  .formula .fnote{font-family:var(--f-mono);font-size:10px;color:var(--amber);margin-top:6px}
+  .rpmbig{font-family:var(--f-mono);font-weight:700;font-size:44px;letter-spacing:-.02em;color:var(--cyan);line-height:1;text-shadow:0 0 26px var(--glow-cyan)}
+  .rpmbig .u{font-family:var(--f-display);font-size:13px;letter-spacing:.1em;color:var(--ink-dim);text-shadow:none;margin-left:6px}
+  .meterwrap{display:flex;gap:12px;align-items:stretch}
+  .meter{width:26px;flex:none;height:150px;border:1px solid var(--rule);border-radius:8px;background:var(--bg);position:relative;overflow:hidden}
+  .meter .band{position:absolute;left:0;right:0;background:var(--cyan-soft);border-top:1px dashed var(--rule-hot);border-bottom:1px dashed var(--rule-hot)}
+  .meter .fill{position:absolute;left:0;right:0;bottom:0;background:linear-gradient(180deg,var(--cyan),rgba(34,227,214,.5));transition:height .2s var(--ease)}
+  .meter.flyer .fill{background:linear-gradient(180deg,var(--ink-faint),rgba(93,110,135,.5))}
+  .meterlabels{flex:1;display:flex;flex-direction:column;justify-content:space-between;font-family:var(--f-mono);font-size:10px;color:var(--ink-faint);padding:2px 0}
+  .meterlabels .bandlbl{color:var(--cyan)}
+  .minitraj{width:100%;height:96px;background:var(--bg);border:1px solid var(--rule);border-radius:10px}
+  .chips{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{background:var(--bg-2);border:1px solid var(--rule);border-radius:7px;padding:7px 10px;min-width:70px}
+  .chip .ck{font-family:var(--f-display);font-weight:600;font-size:8.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint)}
+  .chip .cv{font-family:var(--f-mono);font-weight:600;font-size:15px;color:var(--ink);font-variant-numeric:tabular-nums}
+  .chip .cv .cu{font-size:9px;color:var(--ink-faint);margin-left:3px}
+  .flyertag{display:none;font-family:var(--f-mono);font-size:10px;letter-spacing:.08em;color:var(--amber);border:1px solid var(--amber-soft);background:var(--amber-soft);border-radius:4px;padding:3px 7px}
+  .flyertag.on{display:inline-block}
+
+  /* carry diagram */
+  .carry-canvas-wrap{position:relative;width:100%}
+  .carry-svg{width:100%;height:auto;display:block;border:1px solid var(--rule);border-radius:10px;background:linear-gradient(180deg,#0c2029,#0a141a)}
+  .carry-read{position:absolute;top:12px;left:12px;background:var(--plate-hi);border:1px solid var(--rule);border-radius:9px;padding:10px 13px}
+  .carry-read .crk{font-family:var(--f-display);font-weight:600;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint)}
+  .carry-read .crv{font-family:var(--f-mono);font-weight:700;font-size:32px;color:var(--cyan);line-height:1;font-variant-numeric:tabular-nums;text-shadow:0 0 24px var(--glow-cyan)}
+  .carry-read .crv .u{font-family:var(--f-display);font-size:12px;color:var(--ink-dim);text-shadow:none;margin-left:4px}
+  .deltachip{display:inline-block;margin-top:6px;font-family:var(--f-mono);font-size:11px;border-radius:5px;padding:3px 7px}
+  .deltachip.gain{color:var(--gain);border:1px solid var(--gain-soft);background:var(--gain-soft)}
+  .deltachip.loss{color:var(--amber);border:1px solid var(--amber-soft);background:var(--amber-soft)}
+  .carry-lower{display:flex;flex-wrap:wrap;gap:16px;margin-top:14px}
+  .carry-controls{flex:1 1 300px;min-width:280px}
+  .carry-ledger{flex:1 1 280px;min-width:260px}
+  .ledger-k{font-family:var(--f-display);font-weight:600;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:10px}
+  .lrow{margin-bottom:9px}
+  .lrow .ltop{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:4px}
+  .lrow .ln{font-family:var(--f-display);font-weight:600;font-size:11px;letter-spacing:.04em;color:var(--ink-dim)}
+  .lrow .ln .est{font-family:var(--f-mono);font-size:8px;color:var(--amber);border:1px solid var(--amber-soft);border-radius:3px;padding:1px 4px;margin-left:5px}
+  .lrow .lv{font-family:var(--f-mono);font-size:12px;color:var(--ink);font-variant-numeric:tabular-nums}
+  .lbar{height:14px;border-radius:5px;background:var(--rule);overflow:hidden;position:relative}
+  .lbar .lf{height:100%;border-radius:5px;transition:width .25s var(--ease)}
+  .lbar .lf.base{background:linear-gradient(90deg,#4a6b78,#2f4a54)}
+  .lbar .lf.pos{background:linear-gradient(90deg,var(--gain),rgba(74,222,128,.5))}
+  .lbar .lf.neg{background:linear-gradient(90deg,var(--amber),rgba(255,181,52,.5))}
+  .resetbtn{margin-top:10px;min-height:40px;padding:9px 14px;border-radius:8px;border:1px solid var(--rule-hot);background:transparent;color:var(--cyan);
+    font-family:var(--f-display);font-weight:600;font-size:11px;letter-spacing:.06em;text-transform:uppercase;cursor:pointer}
+  .resetbtn:hover{background:var(--cyan-soft)}
+
+  .datatoggle{margin-top:12px;background:transparent;border:1px solid var(--rule);color:var(--ink-dim);border-radius:7px;min-height:38px;padding:8px 12px;
+    font-family:var(--f-display);font-weight:600;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;cursor:pointer}
+  .datatable{margin-top:10px;border:1px solid var(--rule);border-radius:8px;overflow:hidden;display:none}
+  .datatable.show{display:block}
+  .datatable table{width:100%;border-collapse:collapse}
+  .datatable td{padding:7px 12px;border-top:1px solid var(--rule-2);font-family:var(--f-mono);font-size:11.5px;color:var(--ink-dim)}
+  .datatable td:first-child{color:var(--ink-faint)}
+  .datatable td:last-child{text-align:right;color:var(--ink)}
+
+  /* ── quiz ── */
+  .quiz .q{border:1px solid var(--rule);border-radius:12px;background:var(--bg-2);padding:16px 18px;margin-bottom:14px}
+  .quiz .qn{font-family:var(--f-mono);font-size:10.5px;color:var(--cyan);letter-spacing:.08em;margin-bottom:6px}
+  .quiz .qq{font-family:var(--f-display);font-weight:600;font-size:16px;color:var(--ink);margin-bottom:12px;line-height:1.35}
+  .quiz .opts{display:flex;flex-direction:column;gap:8px}
+  .quiz .opt{display:flex;align-items:center;gap:11px;text-align:left;min-height:44px;padding:11px 13px;border-radius:9px;border:1px solid var(--rule);
+    background:var(--bg-3);color:var(--ink);font-size:14px;cursor:pointer;transition:border-color .15s var(--ease),background .15s var(--ease)}
+  .quiz .opt:hover{border-color:var(--rule-hot)}
+  .quiz .opt .mark{width:20px;height:20px;border-radius:50%;border:1.5px solid var(--ink-faint);flex:none;display:grid;place-items:center;font-size:12px}
+  .quiz .opt[aria-checked="true"]{border-color:var(--rule-hot);background:var(--bg-4)}
+  .quiz .opt.correct{border-color:var(--cyan);background:var(--cyan-soft)}
+  .quiz .opt.correct .mark{border-color:var(--cyan);color:var(--cyan)}
+  .quiz .opt.wrong{border-color:var(--magenta);background:var(--mag-soft)}
+  .quiz .opt.wrong .mark{border-color:var(--magenta);color:var(--magenta)}
+  .quiz .opt:disabled{cursor:default}
+  .quiz .expl{margin-top:11px;background:var(--plate);border:1px solid var(--rule);border-radius:8px;padding:11px 13px;font-size:13.5px;color:var(--ink-dim);line-height:1.55;display:none}
+  .quiz .expl.show{display:block}
+  .quiz .expl .el{font-family:var(--f-display);font-weight:600;font-size:10px;letter-spacing:.14em;text-transform:uppercase;margin-bottom:5px}
+  .quiz .expl.ok .el{color:var(--cyan)}
+  .quiz .expl.no .el{color:var(--amber)}
+  .quiz .qfoot{display:flex;align-items:center;gap:10px;margin-top:12px}
+  .retrybtn{background:transparent;border:1px solid var(--rule);color:var(--ink-dim);border-radius:7px;min-height:38px;padding:8px 13px;
+    font-family:var(--f-display);font-weight:600;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;display:none}
+  .retrybtn.show{display:inline-block}
+  .qscore{font-family:var(--f-mono);font-size:12px;color:var(--ink-dim);margin-left:auto}
+  .finishbtn{margin-top:6px;min-height:46px;padding:12px 22px;border-radius:10px;border:1px solid var(--cyan);background:var(--cyan);color:var(--cyan-deep);
+    font-family:var(--f-display);font-weight:700;font-size:13px;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;opacity:.4;pointer-events:none}
+  .finishbtn.ready{opacity:1;pointer-events:auto}
+  .finishbtn.ready:hover{box-shadow:0 0 22px var(--glow-cyan)}
+
+  /* completion */
+  .completion{border:1px solid var(--rule-hot);border-radius:14px;background:linear-gradient(180deg,rgba(14,23,34,.9),rgba(10,14,18,.7));padding:26px;margin-top:8px;position:relative;overflow:hidden}
+  .completion::before{content:"";position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--cyan),transparent)}
+  .completion .ck{font-family:var(--f-display);font-weight:600;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--cyan)}
+  .completion h2{font-family:var(--f-display);font-weight:700;font-size:clamp(26px,4vw,44px);text-transform:uppercase;margin:8px 0 4px;letter-spacing:-.01em}
+  .completion .cscore{font-family:var(--f-mono);font-size:15px;color:var(--ink-dim);margin-bottom:18px}
+  .completion .cscore b{color:var(--cyan)}
+  .xptally{font-family:var(--f-mono);font-weight:700;font-size:56px;color:var(--cyan);line-height:1;text-shadow:0 0 30px var(--glow-cyan)}
+  .xptally .u{font-family:var(--f-display);font-size:16px;color:var(--ink-dim);letter-spacing:.1em;margin-left:8px;text-shadow:none}
+  .levelup{display:none;margin:16px 0;padding:12px 16px;border:1px solid var(--amber-soft);background:var(--amber-soft);border-radius:10px;
+    font-family:var(--f-display);font-weight:600;font-size:14px;letter-spacing:.04em;color:var(--amber)}
+  .levelup.show{display:block;animation:badgePop .5s var(--ease)}
+  .cbadges{display:flex;gap:12px;flex-wrap:wrap;margin:16px 0}
+  .cbadge{display:flex;align-items:center;gap:10px;border:1px solid var(--rule-hot);background:var(--cyan-soft);border-radius:10px;padding:10px 14px}
+  .cbadge .g{font-size:20px;color:var(--cyan)}
+  .cbadge .n{font-family:var(--f-display);font-weight:600;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink)}
+  .cbadge .d{font-size:11px;color:var(--ink-dim)}
+  .cctas{display:flex;gap:12px;flex-wrap:wrap;margin-top:18px}
+  .cta{min-height:48px;padding:13px 22px;border-radius:10px;font-family:var(--f-display);font-weight:700;font-size:13px;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;border:1px solid var(--cyan)}
+  .cta.primary{background:var(--cyan);color:var(--cyan-deep)}
+  .cta.primary:hover{box-shadow:0 0 22px var(--glow-cyan)}
+  .cta.ghost{background:transparent;color:var(--cyan);border-color:var(--rule-hot)}
+  .cta.ghost:hover{background:var(--cyan-soft)}
+
+  @media (max-width:820px){
+    .hero{grid-template-columns:1fr}
+    .cgrid{grid-template-columns:repeat(2,1fr)}
+    .mgrid{grid-template-columns:1fr}
+  }
+  @media (max-width:560px){ .cgrid{grid-template-columns:1fr} }
+
+  /* global reduced-motion kill switch */
+  @media (prefers-reduced-motion:reduce){ *{transition:none!important;animation:none!important} }
+</style>
+</head>
+<body>
+  <div class="bench" aria-hidden="true"></div>
+  <div class="rotate" role="alertdialog" aria-label="Rotate device">
+    <div class="ico" aria-hidden="true">&#128241;</div>
+    <p>Rotate your phone to landscape.</p>
+    <div class="k">StrikeArc Academy</div>
+  </div>
+
+  <div id="live" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+  <div class="tooltip" id="tooltip" role="status"></div>
+  <main id="app"></main>
+
+  <script type="application/json" id="graph-data">
+{"nodes":[{"id":"club-speed","label":"Club Speed","tier":"fundamental","blurb":"How fast the head moves at impact — the power source for the whole shot."},{"id":"face-angle","label":"Face Angle","tier":"fundamental","blurb":"Where the face points at impact — the dominant driver of start direction."},{"id":"club-path","label":"Club Path","tier":"fundamental","blurb":"Horizontal direction the head travels through impact — in-to-out or out-to-in."},{"id":"attack-angle","label":"Attack Angle","tier":"fundamental","blurb":"Up or down motion of the head at impact — ascending or descending strike."},{"id":"dynamic-loft","label":"Dynamic Loft","tier":"fundamental","blurb":"Effective loft actually delivered at impact — sets launch and spin."},{"id":"spin-loft","label":"Spin Loft","tier":"derived","blurb":"Dynamic loft minus attack angle — the glancing angle that creates backspin."},{"id":"smash","label":"Smash Factor","tier":"derived","blurb":"Ball speed over club speed — energy transfer; falls as spin loft rises."},{"id":"ball-speed","label":"Ball Speed","tier":"derived","blurb":"Club speed times smash factor — the true engine of distance."},{"id":"launch-angle","label":"Launch Angle","tier":"derived","blurb":"Initial climb angle — loft-dominant, nudged by attack angle."},{"id":"start-direction","label":"Start Direction","tier":"derived","blurb":"Where the ball starts — ~75% face, ~25% path, weighted by loft."},{"id":"spin-axis","label":"Spin Axis","tier":"derived","blurb":"Tilt of the spin from the face-to-path gap — decides which way it bends."},{"id":"backspin","label":"Backspin","tier":"derived","blurb":"Rev rate from spin loft and ball speed — the lift that holds flight."},{"id":"carry","label":"Carry","tier":"outcome","blurb":"Distance flown through the air — driven by ball speed."},{"id":"apex","label":"Apex","tier":"outcome","blurb":"Peak height of the flight — from ball speed and launch angle."},{"id":"landing-angle","label":"Landing Angle","tier":"outcome","blurb":"How steeply the ball descends — from spin loft, launch and apex."},{"id":"total","label":"Total Distance","tier":"outcome","blurb":"Carry plus roll-out — roll shrinks as the landing angle steepens."},{"id":"curve","label":"Curve","tier":"outcome","blurb":"Sideways bend in flight from spin axis — grows with distance squared."},{"id":"offline","label":"Offline","tier":"outcome","blurb":"Total sideways miss from target — start direction plus curve."},{"id":"altitude","label":"Altitude","tier":"environment","blurb":"Thinner air up high — more carry, flatter spin, less curve."},{"id":"wind","label":"Wind","tier":"environment","blurb":"Head, tail and crosswind — reshapes carry and pushes the ball offline."},{"id":"temperature","label":"Temperature","tier":"environment","blurb":"Warm air and a warm ball — more ball speed and more carry."}],"edges":[{"from":"face-angle","to":"start-direction"},{"from":"club-path","to":"start-direction"},{"from":"dynamic-loft","to":"start-direction"},{"from":"dynamic-loft","to":"spin-loft"},{"from":"attack-angle","to":"spin-loft"},{"from":"dynamic-loft","to":"launch-angle"},{"from":"attack-angle","to":"launch-angle"},{"from":"face-angle","to":"spin-axis"},{"from":"club-path","to":"spin-axis"},{"from":"spin-loft","to":"smash"},{"from":"club-speed","to":"ball-speed"},{"from":"smash","to":"ball-speed"},{"from":"spin-loft","to":"backspin"},{"from":"ball-speed","to":"backspin"},{"from":"ball-speed","to":"carry"},{"from":"ball-speed","to":"apex"},{"from":"launch-angle","to":"apex"},{"from":"spin-loft","to":"landing-angle"},{"from":"launch-angle","to":"landing-angle"},{"from":"apex","to":"landing-angle"},{"from":"carry","to":"curve"},{"from":"spin-axis","to":"curve"},{"from":"carry","to":"offline"},{"from":"start-direction","to":"offline"},{"from":"curve","to":"offline"},{"from":"carry","to":"total"},{"from":"landing-angle","to":"total"},{"from":"altitude","to":"carry"},{"from":"altitude","to":"apex"},{"from":"altitude","to":"curve"},{"from":"wind","to":"carry"},{"from":"wind","to":"offline"},{"from":"temperature","to":"ball-speed"},{"from":"temperature","to":"carry"}],"progression":["club-speed","dynamic-loft","attack-angle","face-angle","club-path","spin-loft","smash","ball-speed","launch-angle","start-direction","spin-axis","backspin","carry","apex","landing-angle","total","curve","offline","altitude","wind","temperature"]}
+  </script>
+  <script type="application/json" id="lesson-backspin">
+{"parameter":"Backspin","oneLiner":"Backspin is the ball's backward rotation — the top spinning back toward you — that generates aerodynamic lift and holds the shot in the air.","whatItIs":"Every well-struck golf shot leaves the face spinning backwards: the top of the ball rotates back toward you at thousands of RPM. That spin drags air faster over the top of the ball than underneath, creating an upward force (the Magnus effect) that fights gravity and keeps the ball climbing long after it \"should\" have fallen. Amounts are big — a 7-iron spins around 7,000 rpm, a driver only about 2,700, a wedge 9,000+. Crucially, backspin is not something you \"add\" with a scoop or a flick of the wrists — it is a by-product of how glancing the strike is (spin loft) and how fast the ball leaves the face. The app's engine encodes exactly this: backspin ≈ spin loft × ball speed × 1.8, where spin loft = dynamic loft − attack angle.","components":[{"name":"Spin loft","role":"The master lever. The angle between where the club is travelling and where the face points at impact (dynamic loft minus attack angle). The bigger this gap, the more glancing the blow and the more backspin. It alone decides whether you make 2,700 (driver) or 9,000 (wedge) rpm.","typicalRange":"iron ~30-35 deg, driver ~12-16 deg, wedge ~40-50 deg"},{"name":"Dynamic loft","role":"The effective loft actually delivered at impact (not the number stamped on the club). It is the larger half of spin loft and also sets launch height.","typicalRange":"7-iron ~28-32 deg, driver ~12-15 deg"},{"name":"Attack angle","role":"The up/down direction the club is moving through impact. It SUBTRACTS from dynamic loft to set spin loft, so hitting down (negative) raises spin, hitting up (positive) lowers it.","typicalRange":"iron -4 to -2 deg (down), driver 0 to +5 deg (up)"},{"name":"Ball speed (via club speed)","role":"The near-linear multiplier on spin. For a fixed spin loft, a faster ball skids up the face harder and grips more, so spin scales roughly in proportion to ball speed.","typicalRange":"7-iron ball ~115-125 mph, driver ~160-175 mph"},{"name":"Friction / strike quality","role":"The on/off gate. Grooves, ball cover (urethane vs surlyn), a clean dry face, the lie, and moisture decide whether the glancing blow can actually GRIP. Grass or water between ball and face makes it slide instead of spin (a 'flyer').","typicalRange":"clean dry urethane = full spin; flyer/wet can cut 20-50% (2,000+ rpm off a wedge)"},{"name":"Air & conditions","role":"Does not change spin at the face, but re-shapes what that spin DOES in flight. Denser air (cold, sea level) gives the spin more lift but shorter carry; thin air (altitude, heat) carries farther but the spin lifts less.","typicalRange":"Denver air ~14% thinner than sea level; 0 C air ~10% denser than 30 C"}],"howTheyConnect":"Contact between clubface and ball lasts about half a millisecond. In that instant the ball is compressed against the face, and because the face is not pointing exactly where the club is travelling, the ball skids up the face. Friction resists that skid and rolls the ball backwards — the larger the mismatch (spin loft), the more glancing the blow and the more skid there is to convert into spin. So spin rate rises with spin loft, and for a given spin loft it rises with ball speed (a faster skid grips harder). The app's engine states this literally: backspin ≈ spinLoft × ballSpeed × 1.8, and spinLoft = dynamicLoft − attackAngle. That is why hitting DOWN (more negative attack) and holding loft both raise spin, and why teeing a driver UP (positive attack, low loft) is the classic low-spin recipe. There is a subtle self-limiter: a bigger spin loft is also a more glancing, less efficient strike, so the engine lowers the smash factor (smashEff = 1.46 − 0.004·spinLoft), trimming ball speed slightly as spin loft climbs — but spin still rises strongly overall. Friction is the gate over all of this: if grass, water, or a slick cover intrudes, the skid can't grip and spin collapses regardless of a perfect spin loft. Once airborne, that backspin generates Magnus lift — at driver-level ball speed the lift can exceed TWICE the ball's own weight — and then slowly decays a few percent per second, while thin or warm air lets the ball carry farther but gives the spin less air to grab.","hierarchy":[{"driver":"Spin loft (dynamic loft minus attack angle)","weight":"dominant — ~216 rpm per degree at a 120-mph 7-iron ball; sets the whole range from ~2,700 (driver) to ~9,000 (wedge) rpm","why":"It is the single geometric quantity that governs how glancing the blow is. In the engine backspin scales directly with it (spinLoft × ballSpeed × 1.8). Moving from 25 deg to 40 deg spin loft shifts spin from ~5,400 to ~8,600 rpm at the same speed. Everything else is a modifier on top of this."},{"driver":"Ball speed (from club speed)","weight":"near-linear multiplier — ~59 rpm per +1 mph at 33 deg spin loft; roughly 2x speed ≈ 2x spin","why":"For a fixed spin loft, a faster ball skids up the face harder and grips more, so spin is close to linear in ball speed. It is why a low-loft driver still makes ~2,700 rpm at 165 mph, and why the same swing on a range mat vs a tight lie changes little if speed and loft are held."},{"driver":"Friction / strike quality (grooves, ball, lie, moisture)","weight":"large but conditional — a flyer lie or wet face can strip 20-50% (2,000+ rpm off a wedge)","why":"Friction is the gate that lets the glancing blow become spin. When it is present the top two levers rule; when grass or water intrudes it can dominate everything by killing grip. Ranked below the always-on levers because most of the time (clean, dry) it is near-maxed and invisible."},{"driver":"Dynamic loft","weight":"~216 rpm per degree via spin loft; also the primary launch-height lever","why":"It is the bigger, more adjustable half of spin loft — you change it with club selection and shaft lean across a huge range. Each degree adds spin through the same channel as spin loft, and it doubles as the main control of how high the ball launches, so practically it is the knob a golfer turns most."},{"driver":"Attack angle","weight":"~216 rpm per degree via spin loft (spinLoft = DL − AA); narrower usable range","why":"Mathematically it carries the exact same per-degree weight as dynamic loft (they are the two terms of spin loft), but a golfer's usable attack-angle range is smaller (roughly -6 to +5 deg), so it moves the total less than loft does. It is the cleanest way to LOWER driver spin: hit up."},{"driver":"Air & conditions (altitude, temperature, wind)","weight":"second-order — does not change face spin; ~14% thinner air (Denver) or ~10% lighter warm air only reshapes the flight","why":"None of this alters the rpm coming off the face; it changes how much lift that spin produces and how far the ball carries. Real, but a layer removed from the backspin NUMBER — grounded by air density falling ~14% at Denver and ~10% from 0 C to 30 C."}],"misconceptions":["\"You create backspin by hitting down and 'pinching' or scooping the ball.\" Backspin comes from spin loft (the face-vs-path mismatch) and face friction, NOT from the divot or a scoop. Hitting down helps only because it keeps spin loft up and ensures clean ball-first contact; the ground itself adds no spin.","\"More loft always means more backspin.\" It is spin LOFT (dynamic loft minus attack angle), not loft alone. A high wedge from a flyer lie can spin LESS than a clean 8-iron because grass kills the friction, and adding loft while also swinging more upward can leave spin loft unchanged.","\"Backspin makes the ball fly higher and farther, so more is always better.\" Only up to an optimum. Past it the ball balloons — climbs, stalls, drops short. Drivers especially lose carry and roll from excess spin: ~2,700 rpm beats ~3,500 rpm at the same speed.","\"Backspin is what curves the ball right or left.\" Pure backspin (a level spin axis) only lifts. Sideways curve comes from the spin axis TILTING, driven by the face-to-path difference — in the engine that is spinAxis, a completely separate quantity from backspin.","\"New wedge grooves add loads of spin on every shot.\" On a clean, dry fairway lie the face grips almost fully with or without fresh grooves; the difference is small. Grooves earn their keep in rough and wet, channelling grass and water away so friction survives. Their job is protecting spin, not manufacturing it.","\"A softer ball spins more with every club.\" Cover friction dominates only on high-spin-loft short shots (wedges), where soft urethane grips more. Off the driver (low spin loft) premium balls are engineered to spin LESS. Ball choice is shot-dependent, not a blanket 'soft = more spin'."],"wolframChecks":["air density at 15 C sea level -> 1.225 kg/m^3 (ISA reference), anchoring the sea-level baseline for lift/drag claims.","air density at 1600 m (Denver) -> ~1.05 kg/m^3; 1.225 / 1.048 = 1.169, so sea-level air is ~17% denser / Denver air ~14% thinner — grounds the altitude carry effect.","density of dry air 0 C -> ~1.29 kg/m^3 vs 30 C -> 1.165 kg/m^3; (1.293-1.165)/1.293 = 9.9% -> cold air ~10% denser than warm, grounding the temperature effect on flight.","7000 rpm -> 733 rad/s; 733 x 0.0213 m (ball radius) = 15.6 m/s -> the ball's surface tangential speed at 7-iron spin.","spin ratio S = 15.6 / 67 m/s = 0.233 -> the dimensionless spin parameter (surface speed / ball speed), matching iron-flight literature (~0.2).","Magnus lift 0.5 x rho x v^2 x A x C_L = 0.5 x 1.225 x 67^2 x pi x 0.0213^2 x 0.25 = 0.98 N; ball weight = 0.04593 kg x 9.81 = 0.451 N; 0.98 / 0.4506 = 2.17 -> Magnus lift can exceed the ball's own weight ~2.2x at speed (why a spinning shot climbs).","engine backspin check: 33 deg spin loft x 120 mph ball x 1.8 = 7,128 rpm (default 7-iron), and sensitivity 120 x 1.8 = 216 rpm per degree of spin loft; 33 x 1.8 = ~59 rpm per mph of ball speed.","engine carry curve 0.232 x ballSpeed^1.389 / (1 + (ballSpeed/210)^6): 120 mph -> 173.2 yd, 140 mph -> 204.1 yd (near-linear, +18% carry for +17% ball speed), cross-checking carry vs ball speed.","spin decay exp(-0.04 x 6) = 0.787 -> at ~4% per second a ball still carries ~79% of its launch spin after a 6-second flight (backspin decays slowly, so launch spin dominates)."],"quiz":[{"q":"Spin loft is defined as:","options":["Dynamic loft plus attack angle","Dynamic loft minus attack angle","Club speed times face angle","The loft number stamped on the club"],"answerIndex":1,"explanation":"Spin loft = dynamic loft minus attack angle — the angle between where the face points and where the club is travelling. It is the single biggest driver of backspin. A 30 deg dynamic loft with a -3 deg (downward) attack gives 33 deg of spin loft, which in the app's engine and TrackMan data produces roughly 7,000 rpm for a 7-iron."},{"q":"A player's driver is ballooning and losing distance from too much spin. Which change lowers spin the most?","options":["Swing faster with the same delivery","Hit UP on the ball (more positive attack) with the same low loft","Add loft and hit down","Switch to an older, more worn ball"],"answerIndex":1,"explanation":"Spin loft = dynamic loft minus attack angle, so hitting UP (more positive attack) shrinks spin loft and cuts spin — the classic low-spin driver recipe. Swinging faster raises ball speed and ADDS spin. Adding loft and hitting down both raise spin loft, making the balloon worse."},{"q":"Two 7-irons are struck with an identical 33 deg spin loft, but one ball leaves at 110 mph and the other at 125 mph. What happens to backspin?","options":["It is the same — spin loft is identical","The faster ball spins meaningfully more","The faster ball spins less","Spin depends only on the grooves"],"answerIndex":1,"explanation":"For a fixed spin loft, spin is roughly linear in ball speed. In the app's model (rpm = spin loft x ball speed x 1.8) the 33 deg / 110 mph strike makes ~6,530 rpm and the 33 deg / 125 mph strike ~7,425 rpm — about 59 rpm for every extra mph of ball speed."},{"q":"From a wet, grassy 'flyer' lie a wedge often comes out LOWER-spinning than from a clean fairway. Why?","options":["The extra grass increases friction","Water and grass get between ball and face, cutting friction so the ball can't grip","Spin loft becomes negative","The ball speed drops to zero"],"answerIndex":1,"explanation":"Backspin needs friction to turn the glancing blow into spin. Grass and moisture form a slick film between ball and face, so the ball slides instead of gripping — spin can fall 20-50%. That is the 'flyer'; grooves exist mainly to channel that debris away and protect spin, not to create it."},{"q":"Once the ball is in the air, what does backspin mainly do?","options":["Curves the ball sideways","Creates upward Magnus lift that keeps the ball airborne","Speeds the ball up","Nothing until it lands"],"answerIndex":1,"explanation":"Backspin drags air faster over the top of the ball, producing an upward Magnus force. At driver ball speeds that lift can exceed twice the ball's own weight (~0.98 N of lift vs ~0.45 N of weight in our grounded check), which is why a spinning shot climbs and hangs. Sideways curve is a separate effect, caused by the spin axis TILTING — not by backspin itself."}]}
+  </script>
+  <script type="application/json" id="lesson-carry">
+{"parameter":"Carry","oneLiner":"Carry is how far the ball flies through the air before its first bounce — driven mostly by ball speed, shaped by the launch-angle-and-backspin window, and nudged by the air it flies through.","whatItIs":"Carry is the airborne distance of the shot, measured from impact to where the ball first lands — separate from roll, which is the bit it bounces and rolls afterward. Almost all of your carry comes from ball speed (how fast the ball leaves the face), and ball speed is just your club speed multiplied by \"smash factor\" (how cleanly you strike it). Two more things decide how efficiently that speed turns into distance: the launch angle (how steeply it takes off) and the backspin (which creates lift and holds the ball up). Finally, the air itself matters a little — thinner air at altitude, a tailwind, or a hot day all let the ball fly a touch farther, while a headwind or dense cold air pull it up short.","components":[{"name":"Ball speed","role":"The engine of carry. Everything else only shapes how efficiently this speed becomes distance. Equals club speed x smash factor.","typicalRange":"7-iron ~105-125 mph; driver ~150-185 mph"},{"name":"Club speed","role":"The raw input you control with the swing — the single biggest lever on ball speed.","typicalRange":"7-iron ~75-95 mph"},{"name":"Smash factor","role":"Strike efficiency: ball speed / club speed. A center hit transfers more energy. In StrikeArc it also drops as spin loft rises (glancing blow).","typicalRange":"iron ~1.30-1.38; driver ~1.48-1.50"},{"name":"Launch angle","role":"Vertical take-off angle. Too low dumps the ball short; too high sacrifices forward speed. Engine: 0.62 x dynamic loft + 0.25 x attack angle.","typicalRange":"7-iron ~16-19 deg; driver ~10-15 deg"},{"name":"Backspin","role":"Creates aerodynamic lift (Magnus effect) that keeps the ball airborne. Needed for carry — only EXCESS spin hurts. Engine: |spin loft| x ball speed x 1.8.","typicalRange":"7-iron ~6500-7500 rpm; driver ~2200-2900 rpm"},{"name":"Spin loft","role":"The hidden lever: dynamic loft minus attack angle. It sets both backspin (up) and smash (down), so it is the tradeoff knob behind launch+spin.","typicalRange":"7-iron ~30-35 deg; driver ~11-15 deg"},{"name":"Air density / altitude","role":"The medium the ball flies through. Thinner air (higher altitude) means less drag, so more carry. Drops ~3% per 1000 ft.","typicalRange":"Sea level 1.225 kg/m3; Denver 5280 ft ~1.05 kg/m3"},{"name":"Wind (head / tail)","role":"Changes the ball's airspeed. Headwind adds drag and balloons the flight; tailwind reduces both. Asymmetric — headwind hurts more than tailwind helps.","typicalRange":"headwind ~ -1%/mph; tailwind ~ +0.5%/mph"},{"name":"Temperature","role":"Warmer air is thinner (density is proportional to 1/absolute-temperature), so the ball flies slightly farther on a hot day. Small effect.","typicalRange":"~3.3% density change per 10 C; ~+2 yd per +10 C"},{"name":"Humidity","role":"Humid air is slightly LIGHTER than dry air (water vapor is lighter than nitrogen/oxygen), so muggy air adds a tiny bit of carry. Nearly negligible — and opposite to the common myth.","typicalRange":"<1% density change; ~1-2 yd at most"}],"howTheyConnect":"Think of carry as a chain. First, your club speed times smash factor sets the ball speed — this alone accounts for the overwhelming majority of distance (StrikeArc's engine grows carry as ball-speed^1.389, so it climbs steeply then flattens as air drag saturates it near ~210 yd for a 7-iron). Second, that speed only converts into maximum distance if the launch angle and backspin sit in an OPTIMAL WINDOW: the ball must take off high enough to stay airborne but not so steep that it loses forward speed, and it needs enough backspin to generate lift (the ball literally flies farther than a spinless one because backspin creates an upward Magnus force — at ~60 m/s that lift is roughly 0.77 N, about 1.7x the ball's own 0.45 N weight) yet not so much that it balloons upward and stalls. In StrikeArc both launch and spin are governed by one lever — spin loft (dynamic loft minus attack angle): adding loft raises backspin sharply (spin loft 25->40 deg took backspin 5400->8496 rpm) but simultaneously lowers smash (1.36->1.30), costing ball speed. That is the whole tradeoff: you tune loft/attack to find the window, not to maximize spin. Third, everything then flies through AIR, which acts as a final scaling layer: thinner air (altitude, heat, humidity) lets the same shot carry a bit farther by cutting drag, while a headwind does the reverse. Air density is the common thread underneath altitude, temperature and humidity — density falls ~3% per 1000 ft, ~3.3% per +10 C, and <1% from full humidity — but the carry gain is always LESS than the raw density drop, because the same thin air that cuts drag also weakens the backspin lift that was holding the ball up.","hierarchy":[{"driver":"Ball speed (club speed x smash factor)","weight":"DOMINANT — about +20 yards per +10 mph club speed for a 7-iron (~+2 yd/mph), tapering at the very top as drag saturates. Carry scales as ball-speed^1.389.","why":"Grounded in the engine: 80/90/100/110 mph club speed produced 148.8 / 172.4 / 193.9 / 211.6 yd carry. Nothing else moves carry this much. Smash lives inside this: raising smash 1.25->1.33 on a 90 mph swing adds ~7 mph ball speed, ~+12 yd."},{"driver":"Launch angle + backspin (the optimal window)","weight":"~10-25 yards between an in-window launch/spin combo and a poor one on the same ball speed. Excess spin of ~+2000 rpm can cost ~8-15 yd by ballooning; too little dumps the trajectory short.","why":"Backspin generates the lift that keeps the ball airborne (Magnus lift ~0.77 N at 60 m/s vs the ball's 0.45 N weight), but past the window the ball climbs and stalls. Launch that is too flat gives drag no time to lift it; too steep wastes forward speed."},{"driver":"Spin loft (the lever behind launch+spin, and smash)","weight":"The tradeoff knob: each +1 deg of spin loft drops smash ~0.004 (less ball speed) while adding backspin steeply. Spin loft 25->40 deg: smash 1.36->1.30, backspin 5400->8496 rpm.","why":"Dynamic loft minus attack angle. It is WHY launch, spin and ball speed all move together — you cannot add spin/launch without paying in ball speed, so carry is optimized, not maximized, on this lever."},{"driver":"Altitude / air density","weight":"~+2% carry per 1000 ft of elevation (the raw density drop is ~3%/1000 ft, but lift-loss offsets ~a third). Denver 5280 ft ~ +10%, roughly +15 yd on a 175-yd shot.","why":"Grounded: air density falls from 1.225 kg/m3 (sea level) to 1.19 at 1000 ft (0.97x) and 1.056 at 5000 ft (0.86x). Less dense air = less drag = more carry, but the same thin air weakens backspin lift, so carry gains less than density falls."},{"driver":"Wind (head / tail)","weight":"Headwind ~ -1% carry per mph; tailwind ~ +0.5% per mph — ASYMMETRIC. A 10 mph headwind ~ -10 to -18 yd; 20 mph ~ -25 to -35 yd on a mid-iron.","why":"Wind changes the ball's airspeed and drag scales with airspeed^2, so a headwind adds more drag (+21% at a representative 45 m/s) than a tailwind removes (-19%), and it also lengthens air-exposure time. In strong gusts wind is the single biggest environmental factor, exceeding altitude."},{"driver":"Temperature","weight":"Air density is proportional to 1/absolute-temperature: ~3.3% thinner per +10 C (~+2 yd per +10 C, ~+1 yd per 10 F). Small.","why":"Grounded: dry air is 1.247 kg/m3 at 10 C vs 1.165 at 30 C (288/283 = 1.018, 288/303 = 0.951). Hot air is thinner so the ball flies a touch farther; a cold ball is also slightly less lively, compounding the loss modestly."},{"driver":"Humidity","weight":"<1% of carry — essentially negligible, and OPPOSITE to intuition: humid air is lighter, so muggy conditions add ~1-2 yd at most.","why":"Grounded: water vapor is 18.0 g/mol vs dry air 28.96 g/mol, so replacing air molecules with water molecules LOWERS density (moist air ~1.199 kg/m3 vs 1.20+ dry at 20 C). The 'thick humid air kills distance' belief is a myth."}],"misconceptions":["More loft = more carry. False past the window: added dynamic loft raises backspin AND lowers smash/ball speed (engine: spin loft 25->40 deg drops smash 1.36->1.30), so beyond the optimal launch/spin the ball balloons and carries SHORTER.","'Thick, humid air kills distance.' Backwards — humid air is LIGHTER than dry air (water vapor 18.0 g/mol vs dry air 28.96 g/mol), so muggy conditions add a tiny bit of carry, not take it away.","'Swing down harder to hit it farther.' Attack angle mostly changes spin loft, launch and spin — the real distance lever is ball SPEED (club speed x a clean, centered strike).","'Backspin is bad, it shortens shots.' You NEED backspin: it creates the Magnus lift (~0.77 N at 60 m/s, ~1.7x the ball's weight) that keeps the ball airborne. Only spin ABOVE the window costs carry.","'At altitude the ball goes as much farther as the air is thinner.' No — carry gains only ~2% per 1000 ft even though density drops ~3%, because the same thin air also weakens the lift holding the ball up.","'A headwind and a tailwind cancel out.' They don't — a headwind hurts about twice as much as an equal tailwind helps, because drag grows with airspeed squared.","'Cold air makes the ball fly short because it's cold.' The effect is real but small (~2 yd per 10 C) and it's mostly the DENSER cold air, not the ball's temperature."],"wolframChecks":["air density at sea level standard atmosphere 15 C -> 1.226 kg/m3 (ISA reference 1.225)","air density at 1000 ft ISA -> 1.19 kg/m3 (0.97x sea level = ~3% thinner per 1000 ft)","air density at 5000 ft ISA -> 1.056 kg/m3 (0.86x); at 5280 ft (Denver) -> 1.047 kg/m3 (0.855x, ~14% thinner)","density of dry air at 30 C 1 atm -> 1.165 kg/m3 (0.95x); at 10 C -> 1.247 kg/m3 (1.02x): ~3.3% per 10 C","288.15/303.15 = 0.9505 and 288.15/283.15 = 1.0177 -> confirms density is proportional to 1/absolute-temperature (matches the 30 C / 10 C densities exactly)","molar mass water vapor 18.015 g/mol vs dry air 28.96 g/mol -> humid air is LIGHTER, so moist air is less dense (density of moist air 20 C/50% -> 1.199 kg/m3, MW 28.84)","drag force 0.5*1.225*70^2*0.25*(pi/4*0.0427^2) = 1.074 N on a golf ball at 70 m/s (vs ball weight ~0.45 N) -> drag dominates flight","Magnus lift 0.5*1.2*0.25*(pi/4*0.0427^2)*60^2 = 0.773 N at 60 m/s -> ~1.7x the ball's 0.45 N weight, why backspin extends carry","engine carry 0.232*ballSpeed^1.389/(1+(ballSpeed/210)^6) at club speeds 80/90/100/110 mph (ball 106/120/133/146) -> 148.8 / 172.4 / 193.9 / 211.6 yd = ~+20 yd per +10 mph, tapering","engine ballSpeed 150 vs 170 -> carry 215.7 vs 226.9 yd (only +5.2%): confirms drag saturation flattens carry at the top end","engine smash 1.46-0.004*spinLoft at 25/33/40 deg -> 1.36 / 1.328 / 1.30, and backspin spinLoft*ballSpeed*1.8 -> 5400 / 7098 / 8496 rpm: adding loft trades ball speed for spin (the optimal-window mechanism)","wind drag asymmetry (49.47^2-45^2)/45^2 = +0.209 headwind vs (40.53^2-45^2)/45^2 = -0.189 tailwind at 45 m/s +/-10 mph -> headwind adds ~21% drag, tailwind removes ~19%: asymmetric penalty"],"quiz":[{"q":"What is the single biggest driver of how far a shot carries?","options":["Backspin rate","Ball speed (club speed x smash factor)","Air temperature","Dynamic loft"],"answerIndex":1,"explanation":"Ball speed dominates everything else. In StrikeArc's engine, going from 80 to 110 mph of club speed lifts a 7-iron's carry from ~149 to ~212 yards — about +20 yards per 10 mph. Launch, spin and weather only fine-tune how efficiently that speed becomes distance."},{"q":"You play the same 7-iron shot in Denver (~5,280 ft) instead of at sea level. Roughly what happens to your carry?","options":["About 10% shorter","About the same","About 10% longer","About 25% longer"],"answerIndex":2,"explanation":"Thinner air means less drag. Air density falls ~14% from sea level to Denver, but carry only gains about +2% per 1,000 ft (~+10% total) because the same thin air also weakens the backspin lift holding the ball up. On a 175-yard shot that's roughly +15 yards."},{"q":"Compare a 10 mph headwind to a 10 mph tailwind. Which is true?","options":["They cancel out — wind is symmetric","The headwind costs more than the tailwind gives back","The tailwind helps more than the headwind hurts","Wind changes direction but not carry"],"answerIndex":1,"explanation":"Drag grows with airspeed squared, so a headwind adds more drag (~21% at a typical mid-flight speed) than a tailwind removes (~19%), and it also keeps the ball in the air longer. Rule of thumb: a headwind costs ~1% carry per mph, a tailwind gives back only ~0.5% per mph."},{"q":"On a hot, humid, muggy day, the ball tends to carry...","options":["Noticeably shorter — humid air is heavy and thick","Slightly farther — humid air is actually lighter than dry air","Exactly the same — water vapor has no effect","Shorter, because the ball absorbs moisture"],"answerIndex":1,"explanation":"Water vapor (18.0 g/mol) is lighter than the nitrogen and oxygen it displaces (dry air 28.96 g/mol), so humid air is LESS dense than dry air. Combined with the heat thinning the air, the ball flies a touch farther — the opposite of the common 'thick air' myth, though the effect is only a yard or two."},{"q":"You add a lot of dynamic loft to hit it higher, same club speed. Backspin and launch jump up, but carry doesn't grow the way you hoped. Why?","options":["More loft always means more carry","Extra spin loft boosts spin and launch but lowers smash/ball speed, and past the optimal window the extra spin balloons the flight","Loft has no effect on a golf ball's carry","The ball gets heavier at higher loft"],"answerIndex":1,"explanation":"Dynamic loft raises spin loft, which trades ball speed for spin — in the engine, spin loft 25 to 40 deg drops smash 1.36 to 1.30 while backspin climbs 5,400 to 8,496 rpm. Beyond the optimal launch-and-spin window the ball balloons and stalls, so carry peaks and then falls. You tune loft to find the window, not to maximize spin."}]}
+  </script>
+
+  <script type="module">
+  import { solveFlight, trajectorySamples } from './impact-flight.js';
+  import { deg2rad, rad2deg, clamp } from './swing-parameters-and-impact.js';
+
+  /* ══ DATA ══ */
+  const GRAPH = JSON.parse(document.getElementById('graph-data').textContent);
+  const LESSONS = {
+    backspin: JSON.parse(document.getElementById('lesson-backspin').textContent),
+    carry:    JSON.parse(document.getElementById('lesson-carry').textContent),
+  };
+  const NODE = Object.fromEntries(GRAPH.nodes.map(n => [n.id, n]));
+  const AUTHORED = { backspin: true, carry: true };
+  const SLICE_MODE = true;
+
+  const LESSON_META = {
+    backspin: { node:'backspin', tier:'Derived', identity:'backspin ≈ spinLoft × ballSpeed × 1.8', diagram:'backspin', next:'carry', nextLabel:'Carry', maxXp:190 },
+    carry:    { node:'carry', tier:'Outcome', identity:'carry ≈ 0.232 · ballSpeed^1.389 (ball speed alone)', diagram:'carry', next:null, nextLabel:null, maxXp:190 },
+  };
+
+  const TIER_COLS = [
+    { tier:'fundamental', label:'Fundamentals', ids:['club-speed','dynamic-loft','attack-angle','face-angle','club-path'] },
+    { tier:'derived',     label:'Derived',      ids:['spin-loft','smash','ball-speed','launch-angle','start-direction','spin-axis','backspin'] },
+    { tier:'outcome',     label:'Outcomes',     ids:['carry','apex','landing-angle','total','curve','offline'] },
+    { tier:'environment', label:'Environment',  ids:['altitude','wind','temperature'] },
+  ];
+
+  const LEVELS = [
+    { lvl:1, xp:0,    title:'Apprentice' },
+    { lvl:2, xp:150,  title:'Student' },
+    { lvl:3, xp:350,  title:'Analyst' },
+    { lvl:4, xp:650,  title:'Technician' },
+    { lvl:5, xp:1000, title:'Engineer' },
+    { lvl:6, xp:1500, title:'Master' },
+  ];
+  function levelInfo(xp){
+    let idx = 0;
+    for (let i=0;i<LEVELS.length;i++) if (xp >= LEVELS[i].xp) idx = i;
+    let lvl = LEVELS[idx].lvl, title = LEVELS[idx].title, curXp = LEVELS[idx].xp, nextXp;
+    if (idx < LEVELS.length-1) nextXp = LEVELS[idx+1].xp;
+    else { const extra = Math.floor((xp-1500)/600); lvl = 6+extra; curXp = 1500+extra*600; nextXp = curXp+600; title = 'Master'; }
+    const span = nextXp - curXp, into = xp - curXp;
+    return { lvl, title, curXp, nextXp, pct: clamp(into/span,0,1) };
+  }
+
+  const BADGES = [
+    { id:'first-light',      label:'First Light',      glyph:'✦', desc:'Complete your first lesson.' },
+    { id:'spin-doctor',      label:'Spin Doctor',      glyph:'⟳', desc:'Complete the Backspin module.' },
+    { id:'range-finder',     label:'Range Finder',     glyph:'◎', desc:'Complete the Carry module.' },
+    { id:'flawless',         label:'Flawless',         glyph:'★', desc:'Score 5/5 first-try on any quiz.' },
+    { id:'instrument-rated', label:'Instrument Rated', glyph:'⌖', desc:'Complete both slice modules.' },
+    { id:'curious',          label:'Curious',          glyph:'✷', desc:'Move a slider on both interactive diagrams.' },
+  ];
+  const BADGE = Object.fromEntries(BADGES.map(b => [b.id, b]));
+  const badgePredicate = {
+    'first-light':      s => Object.values(s.lessons).some(l => l.completed),
+    'spin-doctor':      s => s.lessons.backspin.completed,
+    'range-finder':     s => s.lessons.carry.completed,
+    'flawless':         s => Object.values(s.lessons).some(l => l.perfect),
+    'instrument-rated': s => s.lessons.backspin.completed && s.lessons.carry.completed,
+    'curious':          s => s.lessons.backspin.diagramTouched && s.lessons.carry.diagramTouched,
+  };
+
+  /* ══ STORE ══ */
+  const STORE_KEY = 'strikearc.academy.v1';
+  function seed(){
+    const mk = () => ({ read:false, quizBest:0, quizAttempts:0, perfect:false, completed:false, completedAt:null, diagramTouched:false });
+    return { version:1, xp:0, lessons:{ backspin:mk(), carry:mk() }, unlocked:['backspin','carry'], badges:[], lastOpened:null };
+  }
+  let store = load();
+  function load(){
+    try {
+      const raw = localStorage.getItem(STORE_KEY);
+      if (!raw) return seed();
+      const p = JSON.parse(raw);
+      if (!p || p.version !== 1 || !p.lessons || !p.lessons.backspin || !p.lessons.carry) return seed();
+      const base = seed();
+      return { ...base, ...p, lessons:{ backspin:{...base.lessons.backspin, ...p.lessons.backspin}, carry:{...base.lessons.carry, ...p.lessons.carry} },
+        unlocked: Array.isArray(p.unlocked)?p.unlocked:base.unlocked, badges: Array.isArray(p.badges)?p.badges:[] };
+    } catch(e){ return seed(); }
+  }
+  let saveTimer = null;
+  function save(){
+    if (saveTimer) clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => { try { localStorage.setItem(STORE_KEY, JSON.stringify(store)); } catch(e){} }, 120);
+  }
+
+  function recomputeUnlocks(){
+    if (SLICE_MODE){ for (const id of ['backspin','carry']) if (!store.unlocked.includes(id)) store.unlocked.push(id); return; }
+    for (const n of GRAPH.nodes){
+      const preds = GRAPH.edges.filter(e => e.to === n.id).map(e => e.from);
+      const ok = preds.length === 0 || preds.every(p => store.lessons[p] && store.lessons[p].completed);
+      if (ok && !store.unlocked.includes(n.id)) store.unlocked.push(n.id);
+    }
+  }
+  function nodeState(id){
+    const l = store.lessons[id];
+    if (l && l.completed) return 'completed';
+    if (AUTHORED[id] && store.unlocked.includes(id)) return 'available';
+    return 'locked';
+  }
+
+  /* ══ HELPERS ══ */
+  const $ = (s, r=document) => r.querySelector(s);
+  const reduced = () => window.matchMedia('(prefers-reduced-motion:reduce)').matches;
+  const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const app = $('#app');
+  const liveEl = $('#live');
+  function announce(msg){ liveEl.textContent = ''; setTimeout(() => { liveEl.textContent = msg; }, 30); }
+
+  const H = (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Haptics) || null;
+  function haptic(k){
+    try{
+      if(!H) return;
+      if(k==='select') H.selectionChanged && H.selectionChanged();
+      else if(k==='light') H.impact && H.impact({style:'LIGHT'});
+      else if(k==='success') H.notification && H.notification({type:'SUCCESS'});
+      else if(k==='error') H.notification && H.notification({type:'WARNING'});
+    }catch(e){}
+  }
+
+  function fmt(v, dp, commas){
+    let n = dp>0 ? Number(v).toFixed(dp) : String(Math.round(v));
+    if (commas) n = Number(n).toLocaleString('en-US', { minimumFractionDigits:dp||0, maximumFractionDigits:dp||0 });
+    return n;
+  }
+  function setNum(el, to, opts){
+    opts = opts || {};
+    const dp = opts.dp||0, suffix = opts.suffix||'', prefix = opts.prefix||'', commas = !!opts.commas, signed = !!opts.signed;
+    const from = parseFloat(el.dataset.v || '0');
+    el.dataset.v = to;
+    const render = v => { let core = fmt(Math.abs(v), dp, commas); let sign = signed ? (v>0?'+':(v<0?'−':'')) : (v<0?'−':''); return prefix + sign + core + suffix; };
+    if (reduced() || Math.abs(to-from) < 0.5 || isNaN(from)){ el.textContent = render(to); return; }
+    if (el._raf) cancelAnimationFrame(el._raf);
+    const t0 = performance.now(), dur = 180;
+    const step = t => { const k = clamp((t-t0)/dur,0,1); const e = 1-Math.pow(1-k,3); const v = from+(to-from)*e; el.textContent = render(v); if (k<1) el._raf = requestAnimationFrame(step); };
+    el._raf = requestAnimationFrame(step);
+  }
+
+  /* ══ TOOLTIP ══ */
+  const tipEl = $('#tooltip');
+  function showTip(html, x, y){ tipEl.innerHTML = html; tipEl.style.left = Math.min(x, window.innerWidth-250)+'px'; tipEl.style.top = (y+14)+'px'; tipEl.classList.add('show'); }
+  function hideTip(){ tipEl.classList.remove('show'); }
+
+  /* ══ BADGES + LEVEL ══ */
+  let pendingBadges = [];   // badges awarded during current lesson finish (for completion panel)
+  function awardBadges(collectInto){
+    for (const b of BADGES){
+      if (!store.badges.includes(b.id) && badgePredicate[b.id](store)){
+        store.badges.push(b.id);
+        if (collectInto) collectInto.push(b.id);
+        haptic('success');
+        announce('Badge earned: ' + b.label + '. ' + b.desc);
+      }
+    }
+  }
+
+  /* ══ HEADER ══ */
+  function headerHTML(){
+    const li = levelInfo(store.xp);
+    const badges = BADGES.map(b => {
+      const earned = store.badges.includes(b.id);
+      return `<button class="badge${earned?' earned':''}" data-badge="${b.id}" aria-label="${esc(b.label)}: ${earned?'earned':'locked'}. ${esc(b.desc)}">
+        <span aria-hidden="true">${b.glyph}</span>
+        <span class="pop-info"><span class="bn">${esc(b.label)}</span><span class="bd">${esc(b.desc)}</span></span></button>`;
+    }).join('');
+    return `<header class="hdr">
+      <div class="wordmark">STRIKE<b>ARC</b> ACADEMY</div>
+      <div class="medallion">
+        <div class="hex"><span class="lv mono" id="hdr-lv">${li.lvl}</span><span class="lk">LVL</span></div>
+        <div class="lvmeta">
+          <div class="t" id="hdr-title">${esc(li.title)}</div>
+          <div class="x mono"><span id="hdr-xp">${store.xp}</span> XP &middot; ${li.pct>=1&&li.lvl>=6?'max':'next '+li.nextXp}</div>
+          <div class="xpbar" role="progressbar" aria-valuemin="${li.curXp}" aria-valuemax="${li.nextXp}" aria-valuenow="${store.xp}" aria-label="Experience to next level"><div class="fill" id="hdr-xpfill" style="width:${(li.pct*100).toFixed(1)}%"></div></div>
+        </div>
+      </div>
+      <div class="badgerail">${badges}</div>
+    </header>`;
+  }
+  function wireBadges(root){
+    root.querySelectorAll('[data-badge]').forEach(b => {
+      b.addEventListener('click', () => { const bd = BADGE[b.dataset.badge]; announce(bd.label + (store.badges.includes(bd.id)?' — earned. ':' — locked. ') + bd.desc); });
+    });
+  }
+
+  /* ══ ROUTER ══ */
+  function go(hash){ if (location.hash === hash) route(); else location.hash = hash; }
+  function route(){
+    const h = location.hash || '#/path';
+    const m = h.match(/^#\/lesson\/(backspin|carry)$/);
+    if (m) renderLesson(m[1]);
+    else renderPath();
+    window.scrollTo(0,0);
+  }
+  window.addEventListener('hashchange', route);
+
+  /* ══ PATH / MAP VIEW ══ */
+  const NODE_W = 176, NODE_H = 60;
+  function computeLayout(){
+    const colX = [40, 370, 700, 1030];
+    const top = 92, bottom = 748;
+    const pos = {};
+    TIER_COLS.forEach((col, ci) => {
+      const k = col.ids.length;
+      col.ids.forEach((id, ri) => {
+        const y = k === 1 ? (top+bottom)/2 - NODE_H/2 : top + ri * ((bottom - top - NODE_H)/(k-1));
+        pos[id] = { x: colX[ci], y, col: ci, row: ri };
+      });
+    });
+    return { pos, colX, width: colX[3] + NODE_W + 40, height: 780 };
+  }
+
+  function renderPath(){
+    const L = computeLayout();
+    const doneCount = Object.values(store.lessons).filter(l => l.completed).length;
+    // edges svg
+    let edges = '';
+    for (const e of GRAPH.edges){
+      const A = L.pos[e.from], B = L.pos[e.to]; if (!A || !B) continue;
+      const acx = A.x + NODE_W/2, bcx = B.x + NODE_W/2;
+      let x1, x2; const y1 = A.y + NODE_H/2, y2 = B.y + NODE_H/2;
+      if (acx <= bcx){ x1 = A.x + NODE_W; x2 = B.x; } else { x1 = A.x; x2 = B.x + NODE_W; }
+      const dx = (x2 - x1) * 0.5;
+      const hot = ['available','completed'].includes(nodeState(e.from)) || ['available','completed'].includes(nodeState(e.to));
+      edges += `<path d="M${x1},${y1} C${x1+dx},${y1} ${x2-dx},${y2} ${x2},${y2}" fill="none" stroke="${hot?'rgba(34,227,214,.42)':'rgba(232,240,251,.10)'}" stroke-width="1"/>`;
+    }
+    // column heads
+    let heads = '';
+    TIER_COLS.forEach((col, ci) => { heads += `<div class="col-head" style="left:${L.colX[ci]}px;width:${NODE_W}px">${col.label}</div>`; });
+    // nodes
+    let nodes = '';
+    let firstFocusId = null;
+    TIER_COLS.forEach((col, ci) => {
+      col.ids.forEach(id => {
+        const n = NODE[id], st = nodeState(id), p = L.pos[id];
+        const l = store.lessons[id];
+        const cls = ['node','node--'+st];
+        if (store.lastOpened === id) cls.push('node--current');
+        let glyph = '';
+        if (st === 'completed') glyph = '<span class="nglyph" aria-hidden="true">✓</span>';
+        else if (st === 'available') glyph = '<span class="ring" aria-hidden="true"></span>';
+        else glyph = '<span class="nglyph" aria-hidden="true">🔒</span>';
+        const xpStamp = st === 'completed' ? `<span class="nxp mono">+${l.quizBest + (l.read?40:0)} XP</span>` : '';
+        const tierTag = col.label.replace(/s$/,'');
+        const aria = st === 'locked'
+          ? `${n.label}, locked, coming soon`
+          : `${n.label}, ${st}${st==='available'?', press Enter to start':''}. ${n.blurb}`;
+        if (!firstFocusId && st !== 'locked') firstFocusId = id;
+        nodes += `<button class="${cls.join(' ')}" data-node="${id}" role="treeitem" aria-level="${ci+1}" aria-disabled="${st==='locked'}"
+          tabindex="-1" style="left:${p.x}px;top:${p.y}px;width:${NODE_W}px;height:${NODE_H}px" aria-label="${esc(aria)}">
+          <span class="r1"><span class="ntier">${tierTag}</span>${glyph}</span>
+          <span class="nlabel">${esc(n.label)}</span>${xpStamp}
+        </button>`;
+      });
+    });
+    if (!firstFocusId) firstFocusId = 'backspin';
+
+    app.innerHTML = `<div class="view">
+      ${headerHTML()}
+      <div class="path-intro">
+        <div class="kicker">Mastery Path</div>
+        <h1>Learn the Instrument</h1>
+        <div class="slice">Vertical slice: <b>${doneCount}</b> of 21 modules live &middot; Backspin &amp; Carry are pre-unlocked so you can judge the format now.</div>
+      </div>
+      <div class="map-scroll">
+        <div class="map-canvas" role="tree" aria-label="Parameter mastery path" style="width:${L.width}px;height:${L.height}px">
+          <svg class="map-edges" viewBox="0 0 ${L.width} ${L.height}" width="${L.width}" height="${L.height}" aria-hidden="true">${edges}</svg>
+          ${heads}
+          ${nodes}
+        </div>
+      </div>
+    </div>`;
+
+    wireBadges(app);
+    wireMap(firstFocusId);
+  }
+
+  function wireMap(firstFocusId){
+    const canvas = $('.map-canvas');
+    const btns = Array.from(canvas.querySelectorAll('[data-node]'));
+    const byId = Object.fromEntries(btns.map(b => [b.dataset.node, b]));
+    // roving tabindex grid
+    const grid = TIER_COLS.map(c => c.ids.slice());
+    let focus = { col:0, row:0 };
+    // set initial focus
+    outer: for (let ci=0; ci<grid.length; ci++) for (let ri=0; ri<grid[ci].length; ri++) if (grid[ci][ri] === firstFocusId){ focus = {col:ci, row:ri}; break outer; }
+    byId[firstFocusId] && (byId[firstFocusId].tabIndex = 0);
+
+    function focusCell(ci, ri){
+      const id = grid[ci] && grid[ci][ri]; if (!id) return;
+      btns.forEach(b => b.tabIndex = -1);
+      const b = byId[id]; b.tabIndex = 0; b.focus(); focus = { col:ci, row:ri };
+    }
+    function openNode(id){
+      const st = nodeState(id);
+      if (st === 'locked'){ haptic('light'); announce(NODE[id].label + ', locked. Coming soon — this module is not built yet.'); return; }
+      haptic('light'); store.lastOpened = id; save(); go('#/lesson/' + id);
+    }
+    canvas.addEventListener('keydown', e => {
+      let ci = focus.col, ri = focus.row;
+      if (e.key === 'ArrowRight'){ ci = Math.min(grid.length-1, ci+1); ri = Math.min(ri, grid[ci].length-1); focusCell(ci, ri); e.preventDefault(); }
+      else if (e.key === 'ArrowLeft'){ ci = Math.max(0, ci-1); ri = Math.min(ri, grid[ci].length-1); focusCell(ci, ri); e.preventDefault(); }
+      else if (e.key === 'ArrowDown'){ ri = Math.min(grid[ci].length-1, ri+1); focusCell(ci, ri); e.preventDefault(); }
+      else if (e.key === 'ArrowUp'){ ri = Math.max(0, ri-1); focusCell(ci, ri); e.preventDefault(); }
+      else if (e.key === 'Enter' || e.key === ' '){ const id = grid[ci][ri]; openNode(id); e.preventDefault(); }
+    });
+    btns.forEach(b => {
+      const id = b.dataset.node;
+      b.addEventListener('click', () => openNode(id));
+      const tipHtml = () => nodeState(id)==='locked'
+        ? `<b>${esc(NODE[id].label)}</b>Coming soon — module not yet built.`
+        : `<b>${esc(NODE[id].label)}</b>${esc(NODE[id].blurb)}`;
+      b.addEventListener('mouseenter', ev => showTip(tipHtml(), ev.clientX, ev.clientY));
+      b.addEventListener('mousemove', ev => showTip(tipHtml(), ev.clientX, ev.clientY));
+      b.addEventListener('mouseleave', hideTip);
+      b.addEventListener('focus', () => { const r = b.getBoundingClientRect(); showTip(tipHtml(), r.left, r.bottom); });
+      b.addEventListener('blur', hideTip);
+    });
+    // pulse the just-completed / last-opened node
+    if (store.lastOpened && byId[store.lastOpened] && nodeState(store.lastOpened) === 'completed'){
+      const b = byId[store.lastOpened];
+      if (!reduced()){ b.classList.add('justdone'); setTimeout(() => b.classList.remove('justdone'), 1200); }
+    }
+  }
+
+  /* ══ LESSON VIEW ══ */
+  function parseMyth(s){
+    s = String(s).trim();
+    const q = s[0];
+    const pair = { '"':'"', '“':'”', "'":"'", '‘':'’' };
+    if (pair[q]){ const idx = s.indexOf(pair[q], 1); if (idx > 0) return { myth:s.slice(1, idx), truth:s.slice(idx+1).trim() }; }
+    const m = s.match(/^(.+?[.!?])\s+(.+)$/s);
+    if (m) return { myth:m[1], truth:m[2] };
+    return { myth:s, truth:'' };
+  }
+  function isEnvDriver(d){ return /air|altitude|wind|temperature|humidity|conditions/i.test(d); }
+
+  function miniMapSVG(currentId){
+    const L = computeLayout();
+    const sx = 200 / L.width, sy = 110 / L.height;
+    let dots = '';
+    for (const id of Object.keys(L.pos)){
+      const p = L.pos[id], st = nodeState(id);
+      const cx = (p.x + NODE_W/2) * sx, cy = (p.y + NODE_H/2) * sy;
+      const cur = id === currentId;
+      const fill = cur ? '#22E3D6' : (st==='completed' ? 'rgba(34,227,214,.55)' : st==='available' ? 'rgba(154,171,198,.7)' : 'rgba(93,110,135,.5)');
+      dots += `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${cur?4.5:2.4}" fill="${fill}"/>`;
+      if (cur) dots += `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="7" fill="none" stroke="#22E3D6" stroke-width="1"/>`;
+    }
+    return `<svg viewBox="0 0 200 110" width="100%" height="110" aria-hidden="true">${dots}</svg>`;
+  }
+
+  const SECTIONS = [
+    { id:'sec-hook', label:'Hook' },
+    { id:'sec-what', label:'What it is' },
+    { id:'sec-comp', label:'Components' },
+    { id:'sec-connect', label:'How it connects' },
+    { id:'sec-hier', label:'Hierarchy' },
+    { id:'sec-diagram', label:'Interactive' },
+    { id:'sec-myth', label:'Myths' },
+    { id:'sec-quiz', label:'Quiz' },
+  ];
+
+  function renderLesson(id){
+    const d = LESSONS[id], meta = LESSON_META[id];
+    const li = levelInfo(store.xp);
+
+    const compCards = d.components.map(c => `<div class="ccard">
+      <div class="cn">${esc(c.name)}</div>
+      <div class="cr">${esc(c.role)}</div>
+      <div class="crange mono">${esc(c.typicalRange)}</div></div>`).join('');
+
+    const nH = d.hierarchy.length;
+    const hierRows = d.hierarchy.map((h, i) => {
+      const fillPct = 100 - i * (58/(nH-1));
+      const col = i === 0 ? 'var(--cyan)' : `color-mix(in srgb, var(--cyan) ${Math.max(0, 70 - i*16)}%, var(--ink-dim))`;
+      const env = isEnvDriver(h.driver);
+      return `<div class="hrow" data-hrow>
+        <div class="htop">
+          <span class="hrank mono">${i+1}</span>
+          <span class="hlabel">${esc(h.driver)}</span>
+          ${env?'<span class="hest">EST</span>':''}
+          <button class="hexpand" aria-expanded="false" aria-label="Why: ${esc(h.driver)}">+</button>
+        </div>
+        <div class="hbar"><div class="hf" style="width:${fillPct.toFixed(0)}%;background:${col}"></div></div>
+        <span class="hweight mono">${esc(h.weight)}</span>
+        <div class="hwhy">${esc(h.why)}</div>
+      </div>`;
+    }).join('');
+
+    const mythCards = d.misconceptions.map(mc => { const p = parseMyth(mc); return `<div class="mcard">
+      <div class="myth">${esc(p.myth)}</div>
+      <div class="truth">${esc(p.truth)}</div></div>`; }).join('');
+
+    const wolfItems = d.wolframChecks.map(w => `<li>${esc(w)}</li>`).join('');
+
+    const jump = SECTIONS.map(s => `<a href="#${s.id}" data-jump="${s.id}">${s.label}</a>`).join('');
+    const dots = SECTIONS.map((s,i) => `<span class="d" data-dot="${i}"></span>`).join('');
+
+    app.innerHTML = `<div class="view lesson">
+      <div class="topbar">
+        <button class="backbtn" id="backBtn" aria-label="Back to path">← Path</button>
+        <div class="tb-lv"><span class="x mono" id="tb-xp">${store.xp} XP</span><span class="t" id="tb-lvtitle">Lv ${li.lvl} ${esc(li.title)}</span></div>
+      </div>
+      <nav class="jump" aria-label="Lesson sections">
+        ${jump}
+        <span class="jspace"></span>
+        <span class="jprog mono" id="jprog">0 / ${SECTIONS.length}</span>
+        <span class="jxp mono" id="jxp">+0 XP</span>
+      </nav>
+      <div class="lesson-body">
+
+        <section class="sect in" id="sec-hook">
+          <div class="hero">
+            <div class="hero-main">
+              <span class="htier">${esc(meta.tier)} · Parameter</span>
+              <h1>${esc(d.parameter)}</h1>
+              <div class="oneliner">${esc(d.oneLiner)}</div>
+            </div>
+            <div class="hero-side">
+              <div class="hs-k">You are here</div>
+              ${miniMapSVG(meta.node)}
+              <div class="hs-k">Lesson progress</div>
+              <div class="dots" id="secdots">${dots}</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="sect" id="sec-what">
+          <div class="sect-k">01 — What it is</div>
+          <h2>The physics, plainly</h2>
+          <div class="prose">${esc(d.whatItIs)}</div>
+          <div class="pquote mono">${esc(meta.identity)}</div>
+        </section>
+
+        <section class="sect" id="sec-comp">
+          <div class="sect-k">02 — Components</div>
+          <h2>What feeds it</h2>
+          <div class="cgrid">${compCards}</div>
+        </section>
+
+        <section class="sect" id="sec-connect">
+          <div class="sect-k">03 — How they connect</div>
+          <h2>The chain of cause</h2>
+          <div class="prose">${esc(d.howTheyConnect)}</div>
+        </section>
+
+        <section class="sect" id="sec-hier">
+          <div class="sect-k">04 — Hierarchy</div>
+          <h2>Ranked by influence</h2>
+          <div class="hlegend">Bars show RELATIVE INFLUENCE (qualitative rank, not a measured value). Environment drivers wear an EST pill.</div>
+          ${hierRows}
+        </section>
+
+        <section class="sect" id="sec-diagram">
+          <div class="sect-k">05 — Interactive</div>
+          <div class="vignette" id="diagramMount"></div>
+        </section>
+
+        <section class="sect" id="sec-myth">
+          <div class="sect-k">06 — Misconceptions</div>
+          <h2>Myth vs truth</h2>
+          <div class="mgrid">${mythCards}</div>
+        </section>
+
+        <section class="sect" id="sec-wolf" style="padding-top:0;border:0">
+          <details class="wolf"><summary>Under the hood — grounded by Wolfram</summary><ul>${wolfItems}</ul></details>
+        </section>
+
+        <section class="sect" id="sec-quiz">
+          <div class="sect-k">07 — Check yourself</div>
+          <h2>Quiz</h2>
+          <div class="quiz" id="quizMount"></div>
+        </section>
+
+        <section class="sect" id="sec-done" style="padding-top:8px">
+          <div id="completionMount"></div>
+        </section>
+
+      </div>
+    </div>`;
+
+    // back
+    $('#backBtn').addEventListener('click', () => { haptic('light'); go('#/path'); });
+    // hierarchy accordions
+    app.querySelectorAll('[data-hrow] .hexpand').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const row = btn.closest('[data-hrow]'); const open = row.classList.toggle('open');
+        btn.setAttribute('aria-expanded', open ? 'true' : 'false'); btn.textContent = open ? '–' : '+';
+        haptic('select');
+      });
+    });
+    // jump nav
+    app.querySelectorAll('[data-jump]').forEach(a => a.addEventListener('click', e => {
+      e.preventDefault(); const t = document.getElementById(a.dataset.jump); if (t) t.scrollIntoView({ behavior: reduced()?'auto':'smooth', block:'start' });
+    }));
+
+    mountDiagram(meta.diagram, id);
+    mountQuiz(id, d);
+    setupReveal(id);
+  }
+
+  function setupReveal(lessonId){
+    const sects = Array.from(app.querySelectorAll('.sect'));
+    const jprog = $('#jprog');
+    const dots = Array.from(app.querySelectorAll('#secdots .d'));
+    const jumps = Array.from(app.querySelectorAll('[data-jump]'));
+    const idIndex = Object.fromEntries(SECTIONS.map((s,i)=>[s.id,i]));
+    let seen = new Set(['sec-hook']);
+    dots[0] && dots[0].classList.add('on');
+    if (reduced()){ sects.forEach(s => s.classList.add('in')); }
+    const io = new IntersectionObserver(entries => {
+      entries.forEach(en => {
+        if (en.isIntersecting){
+          en.target.classList.add('in');
+          const idx = idIndex[en.target.id];
+          if (idx != null){ seen.add(en.target.id); dots[idx] && dots[idx].classList.add('on'); }
+        }
+      });
+      // active jump
+      const vis = sects.filter(s => { const r = s.getBoundingClientRect(); return r.top < window.innerHeight*0.5 && r.bottom > 80; });
+      if (vis.length){ const cur = vis[0].id; jumps.forEach(j => j.classList.toggle('on', j.dataset.jump === cur)); }
+      const count = SECTIONS.filter(s => seen.has(s.id)).length;
+      jprog.textContent = count + ' / ' + SECTIONS.length;
+    }, { rootMargin:'0px 0px -20% 0px', threshold:0.15 });
+    sects.forEach(s => io.observe(s));
+    // safety: reveal anything still hidden after 700ms
+    setTimeout(() => sects.forEach(s => s.classList.add('in')), 700);
+  }
+
+  function bumpLessonXpDisplay(lessonId){
+    const el = $('#jxp'); if (!el) return;
+    const l = store.lessons[lessonId];
+    const earned = (l.read?40:0) + l.quizBest;
+    el.textContent = '+' + earned + ' XP';
+  }
+
+  /* ══ DIAGRAMS ══ */
+  function markDiagramTouched(lessonId){
+    const l = store.lessons[lessonId];
+    if (!l.diagramTouched){ l.diagramTouched = true; save(); awardBadges(null); refreshHeaderLive(); }
+  }
+  function refreshHeaderLive(){
+    const li = levelInfo(store.xp);
+    const lv = $('#hdr-lv'); if (lv) lv.textContent = li.lvl;
+    const t = $('#hdr-title'); if (t) t.textContent = li.title;
+    const xp = $('#hdr-xp'); if (xp) setNum(xp, store.xp, { commas:true });
+    const f = $('#hdr-xpfill'); if (f) f.style.width = (li.pct*100).toFixed(1)+'%';
+    const tbx = $('#tb-xp'); if (tbx) tbx.textContent = store.xp + ' XP';
+    const tbt = $('#tb-lvtitle'); if (tbt) tbt.textContent = 'Lv ' + li.lvl + ' ' + li.title;
+    // badge rail
+    document.querySelectorAll('[data-badge]').forEach(b => {
+      const earned = store.badges.includes(b.dataset.badge);
+      if (earned && !b.classList.contains('earned')){ b.classList.add('earned','pop'); }
+    });
+  }
+
+  function mountDiagram(kind, lessonId){
+    const mount = $('#diagramMount');
+    if (kind === 'backspin') mountBackspin(mount, lessonId);
+    else mountCarry(mount, lessonId);
+  }
+
+  function slider(name, lbl, min, max, step, val, est){
+    return `<div class="sl">
+      <label for="sl-${name}"><span class="slk">${lbl}${est?'<span class="est">EST</span>':''}</span><span class="slv mono" id="v-${name}"></span></label>
+      <input type="range" class="sa-range" id="sl-${name}" min="${min}" max="${max}" step="${step}" value="${val}" aria-label="${lbl.replace(/<[^>]+>/g,'')}">
+      <div class="ticks"><span>${min}</span><span>${max}</span></div>
+    </div>`;
+  }
+
+  /* ── BACKSPIN: The Spin-Loft Machine ── */
+  const BS_BANDS = { driver:{lo:2200,hi:2800,name:'Driver'}, '7iron':{lo:6500,hi:7500,name:'7-iron'}, wedge:{lo:8000,hi:9000,name:'Wedge'} };
+  function mountBackspin(mount, lessonId){
+    const state = { dl:30, aa:-3, cs:90, friction:false, band:'7iron' };
+    mount.innerHTML = `
+      <div class="vig-head"><div class="vig-title">The Spin-Loft Machine</div><div class="vig-tag mono">ENGINE-LIVE</div></div>
+      <div class="bs-diagram">
+        <div class="bs-controls">
+          ${slider('dl','Dynamic loft',10,55,1,30,false)}
+          ${slider('aa','Attack angle',-8,8,1,-3,false)}
+          ${slider('cs','Club speed',70,130,1,90,false)}
+          <div class="segmented" role="group" aria-label="Delivery presets">
+            <button data-preset="driver" aria-pressed="false">Driver tee</button>
+            <button data-preset="7iron" aria-pressed="true">7-iron</button>
+            <button data-preset="wedge" aria-pressed="false">Wedge</button>
+          </div>
+          <button class="toggle" id="bs-friction" aria-pressed="false"><span class="knob" aria-hidden="true"></span><span>Grass between face &amp; ball</span></button>
+          <div class="footnote">Presets set delivery only; the slice engine models a 7-iron head. Friction is a display-layer flyer gate applied after the engine solve.</div>
+          <button class="datatoggle" id="bs-datatoggle" aria-expanded="false">Show data table</button>
+          <div class="datatable" id="bs-datatable"><table><tbody id="bs-datarows"></tbody></table></div>
+        </div>
+        <div class="bs-machine">
+          <div role="img" id="bs-imglabel" aria-label="">
+            <svg class="bs-svg" viewBox="0 0 300 262" id="bs-schem">
+              <style>@keyframes saSpin{to{transform:rotate(-360deg)}}</style>
+              <line x1="26" y1="200" x2="288" y2="200" stroke="rgba(232,240,251,.10)" stroke-width="1" stroke-dasharray="4 5"/>
+              <text x="30" y="216" font-family="Azeret Mono" font-size="9" fill="#5d6e87">TARGET LINE</text>
+              <polygon id="bs-wedge" points="" fill="rgba(34,227,214,.10)" stroke="#22E3D6" stroke-width="1"/>
+              <line id="bs-path" x1="140" y1="200" x2="250" y2="200" stroke="#9aabc6" stroke-width="2.4" marker-end="url(#bs-ah)"/>
+              <line id="bs-face" x1="140" y1="200" x2="235" y2="120" stroke="#22E3D6" stroke-width="2.4" marker-end="url(#bs-ahc)"/>
+              <defs>
+                <marker id="bs-ah" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#9aabc6"/></marker>
+                <marker id="bs-ahc" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#22E3D6"/></marker>
+              </defs>
+              <g id="bs-ball">
+                <circle cx="140" cy="200" r="15" fill="#0e1722" stroke="rgba(232,240,251,.5)" stroke-width="1"/>
+                <g class="ballspin" id="bs-spin" style="transform-origin:140px 200px">
+                  <path d="M140,187 A13,13 0 1 1 128,193" fill="none" stroke="#22E3D6" stroke-width="2" stroke-linecap="round"/>
+                  <path d="M128,193 l-3,-5 l6,-1 Z" fill="#22E3D6"/>
+                </g>
+              </g>
+              <g id="bs-pathlbl"></g>
+              <g id="bs-facelbl"></g>
+              <g id="bs-wedgelbl"></g>
+            </svg>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <span class="flyertag mono" id="bs-flyer">⚑ FLYER — grip lost</span>
+            <span class="mono" style="font-size:10px;color:#5d6e87">Path (grey) vs face-normal (cyan); shaded wedge = spin loft.</span>
+          </div>
+        </div>
+        <div class="bs-right">
+          <div class="formula">
+            <div class="fk">Backspin formula (engine)</div>
+            <div class="fx"><span id="bs-f-sl">33</span> <span class="op">×</span> <span id="bs-f-bs">120</span> <span class="op">×</span> 1.8 <span class="op">=</span> <span id="bs-f-res" style="text-shadow:0 0 18px var(--glow-cyan)">7,099</span> rpm</div>
+            <div class="fnote" id="bs-f-note"></div>
+          </div>
+          <div>
+            <div class="fk" style="font-family:var(--f-display);font-weight:600;font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:#5d6e87;margin-bottom:6px">Displayed backspin</div>
+            <div class="rpmbig"><span class="mono" id="bs-rpm">7,099</span><span class="u">RPM</span></div>
+          </div>
+          <div class="meterwrap">
+            <div class="meter" id="bs-meter">
+              <div class="band" id="bs-band"></div>
+              <div class="fill" id="bs-fill" style="height:0"></div>
+            </div>
+            <div class="meterlabels">
+              <span>9,000</span>
+              <span class="bandlbl" id="bs-bandlbl">7-iron window</span>
+              <span>1,500</span>
+            </div>
+          </div>
+          <svg class="minitraj" id="bs-traj" viewBox="0 0 300 96" role="img" aria-label="Trajectory preview">
+            <line x1="16" y1="86" x2="292" y2="86" stroke="rgba(232,240,251,.10)" stroke-width="1"/>
+            <path id="bs-arc" d="" fill="none" stroke="#22E3D6" stroke-width="2"/>
+            <circle id="bs-apexdot" r="3" fill="#22E3D6"/>
+          </svg>
+          <div class="chips">
+            <div class="chip"><div class="ck">Ball speed</div><div class="cv"><span class="mono" id="bs-c-bs">0</span><span class="cu">mph</span></div></div>
+            <div class="chip"><div class="ck">Launch</div><div class="cv"><span class="mono" id="bs-c-la">0</span><span class="cu">°</span></div></div>
+            <div class="chip"><div class="ck">Carry</div><div class="cv"><span class="mono" id="bs-c-ca">0</span><span class="cu">yd</span></div></div>
+            <div class="chip"><div class="ck">Apex</div><div class="cv"><span class="mono" id="bs-c-ap">0</span><span class="cu">yd</span></div></div>
+          </div>
+        </div>
+      </div>`;
+
+    const el = s => mount.querySelector(s);
+    const slDl = el('#sl-dl'), slAa = el('#sl-aa'), slCs = el('#sl-cs');
+
+    function setLabel(name, val, unit){ el('#v-'+name).textContent = val + unit; }
+    function ptOnRay(cx, cy, angDeg, r){ const a = deg2rad(angDeg); return { x: cx + r*Math.cos(a), y: cy - r*Math.sin(a) }; }
+
+    function render(){
+      const f = solveFlight({ clubPath:0, faceAngle:0, attackAngle:state.aa, dynamicLoft:state.dl, clubSpeed:state.cs, club:'7iron' });
+      const rpmEngine = f.backspin;
+      const rpmShown = state.friction ? Math.round(rpmEngine*0.6) : Math.round(rpmEngine);
+      // slider labels
+      slDl.setAttribute('aria-valuetext', state.dl + ' degrees');
+      slAa.setAttribute('aria-valuetext', state.aa + ' degrees');
+      slCs.setAttribute('aria-valuetext', state.cs + ' miles per hour');
+      setLabel('dl', state.dl, '°'); setLabel('aa', (state.aa>0?'+':'')+state.aa, '°'); setLabel('cs', state.cs, ' mph');
+
+      // schematic geometry
+      const IX = 140, IY = 200;
+      const pathTip = ptOnRay(IX, IY, state.aa, 108);
+      const faceTip = ptOnRay(IX, IY, state.dl, 95);
+      el('#bs-path').setAttribute('x2', pathTip.x.toFixed(1)); el('#bs-path').setAttribute('y2', pathTip.y.toFixed(1));
+      el('#bs-face').setAttribute('x2', faceTip.x.toFixed(1)); el('#bs-face').setAttribute('y2', faceTip.y.toFixed(1));
+      // wedge polygon between path angle and face angle
+      const rW = 66; let pts = IX+','+IY;
+      const steps = 12;
+      for (let i=0;i<=steps;i++){ const ang = state.aa + (state.dl-state.aa)*(i/steps); const p = ptOnRay(IX, IY, ang, rW); pts += ' ' + p.x.toFixed(1)+','+p.y.toFixed(1); }
+      el('#bs-wedge').setAttribute('points', pts);
+      // labels
+      const pl = ptOnRay(IX, IY, state.aa, 118), fl = ptOnRay(IX, IY, state.dl, 104), wl = ptOnRay(IX, IY, (state.aa+state.dl)/2, 40);
+      el('#bs-pathlbl').innerHTML = `<rect x="${(pl.x-16).toFixed(0)}" y="${(pl.y-8).toFixed(0)}" width="34" height="14" rx="2" fill="rgba(8,16,20,.78)"/><text x="${pl.x.toFixed(0)}" y="${(pl.y+2).toFixed(0)}" text-anchor="middle" font-family="Azeret Mono" font-size="8.5" fill="#9aabc6">PATH</text>`;
+      el('#bs-facelbl').innerHTML = `<rect x="${(fl.x-16).toFixed(0)}" y="${(fl.y-8).toFixed(0)}" width="34" height="14" rx="2" fill="rgba(8,16,20,.78)"/><text x="${fl.x.toFixed(0)}" y="${(fl.y+2).toFixed(0)}" text-anchor="middle" font-family="Azeret Mono" font-size="8.5" fill="#22E3D6">FACE</text>`;
+      el('#bs-wedgelbl').innerHTML = `<rect x="${(wl.x-22).toFixed(0)}" y="${(wl.y-9).toFixed(0)}" width="46" height="16" rx="2" fill="rgba(8,16,20,.86)"/><text x="${(wl.x+1).toFixed(0)}" y="${(wl.y+3).toFixed(0)}" text-anchor="middle" font-family="Azeret Mono" font-weight="600" font-size="10" fill="#22E3D6">${f.spinLoft.toFixed(0)}° SL</text>`;
+
+      // ball spin animation speed
+      const spd = clamp(9000 / Math.max(rpmShown, 400), 0.4, 6);
+      const spin = el('#bs-spin'); spin.style.setProperty('--spd', spd.toFixed(2)+'s'); spin.style.animation = 'saSpin ' + spd.toFixed(2) + 's linear infinite';
+      spin.querySelectorAll('path').forEach(p => p.setAttribute('stroke', state.friction ? '#5d6e87' : '#22E3D6'));
+      spin.querySelectorAll('path[fill]').forEach(p => { if (p.getAttribute('fill') !== 'none') p.setAttribute('fill', state.friction ? '#5d6e87' : '#22E3D6'); });
+      el('#bs-flyer').classList.toggle('on', state.friction);
+
+      // formula
+      el('#bs-f-sl').textContent = f.spinLoft.toFixed(0);
+      el('#bs-f-bs').textContent = f.ballSpeed.toFixed(1);
+      const clamped = Math.round(f.spinRpmRaw) !== Math.round(f.backspin);
+      el('#bs-f-res').textContent = Math.round(rpmEngine).toLocaleString('en-US');
+      el('#bs-f-note').textContent = (clamped ? 'raw ' + Math.round(f.spinRpmRaw).toLocaleString('en-US') + ' rpm capped at engine limit. ' : '') + (state.friction ? '× 0.6 friction gate → ' + rpmShown.toLocaleString('en-US') + ' rpm shown.' : '');
+      el('#bs-f-note').style.display = (clamped || state.friction) ? 'block' : 'none';
+
+      // big rpm + meter
+      setNum(el('#bs-rpm'), rpmShown, { commas:true });
+      const fillPct = clamp((rpmShown-1500)/(9000-1500),0,1)*100;
+      el('#bs-fill').style.height = fillPct.toFixed(1)+'%';
+      el('#bs-meter').classList.toggle('flyer', state.friction);
+      const band = BS_BANDS[state.band];
+      const bLo = clamp((band.lo-1500)/(9000-1500),0,1), bHi = clamp((band.hi-1500)/(9000-1500),0,1);
+      el('#bs-band').style.bottom = (bLo*100).toFixed(1)+'%';
+      el('#bs-band').style.height = ((bHi-bLo)*100).toFixed(1)+'%';
+      el('#bs-bandlbl').textContent = band.name + ' window';
+
+      // mini trajectory
+      const samples = trajectorySamples(f, 40);
+      const xMax = 230, yMax = 52, gx0 = 18, gx1 = 290, gy0 = 86, gy1 = 8;
+      let dPath = '', apexPt = null, maxh = 0;
+      samples.forEach((s, i) => {
+        const X = gx0 + (s.d*f.carry/xMax)*(gx1-gx0);
+        const Y = gy0 - (s.h*f.apex/yMax)*(gy0-gy1);
+        dPath += (i===0?'M':'L') + X.toFixed(1) + ',' + Y.toFixed(1);
+        if (s.h > maxh){ maxh = s.h; apexPt = { X, Y }; }
+      });
+      el('#bs-arc').setAttribute('d', dPath);
+      if (apexPt){ el('#bs-apexdot').setAttribute('cx', apexPt.X.toFixed(1)); el('#bs-apexdot').setAttribute('cy', apexPt.Y.toFixed(1)); }
+
+      // chips
+      setNum(el('#bs-c-bs'), f.ballSpeed, { dp:1 });
+      setNum(el('#bs-c-la'), f.launchAngle, { dp:1 });
+      setNum(el('#bs-c-ca'), f.carry, { dp:0 });
+      setNum(el('#bs-c-ap'), f.apex, { dp:0 });
+
+      // aria + data table
+      el('#bs-imglabel').setAttribute('aria-label', `Spin-loft machine: spin loft ${f.spinLoft.toFixed(0)} degrees, ball speed ${f.ballSpeed.toFixed(0)} mph, backspin ${rpmShown} rpm${state.friction?' (flyer gate active)':''}, carry ${f.carry.toFixed(0)} yards.`);
+      el('#bs-datarows').innerHTML = [
+        ['Dynamic loft', state.dl+'°'], ['Attack angle', state.aa+'°'], ['Club speed', state.cs+' mph'],
+        ['Spin loft', f.spinLoft.toFixed(0)+'°'], ['Ball speed', f.ballSpeed.toFixed(1)+' mph'],
+        ['Backspin (engine)', Math.round(rpmEngine).toLocaleString('en-US')+' rpm'],
+        ['Backspin (shown)', rpmShown.toLocaleString('en-US')+' rpm'+(state.friction?' · flyer':'')],
+        ['Launch', f.launchAngle.toFixed(1)+'°'], ['Carry', f.carry.toFixed(0)+' yd'], ['Apex', f.apex.toFixed(0)+' yd'],
+      ].map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join('');
+    }
+
+    function onInput(){ markDiagramTouched(lessonId); haptic('select'); render(); }
+    slDl.addEventListener('input', () => { state.dl = +slDl.value; state.band = '7iron'; setPresetPressed(null); onInput(); });
+    slAa.addEventListener('input', () => { state.aa = +slAa.value; onInput(); });
+    slCs.addEventListener('input', () => { state.cs = +slCs.value; onInput(); });
+
+    function setPresetPressed(which){ mount.querySelectorAll('[data-preset]').forEach(b => b.setAttribute('aria-pressed', b.dataset.preset === which ? 'true':'false')); }
+    const presets = { driver:{dl:13,aa:4}, '7iron':{dl:30,aa:-3}, wedge:{dl:46,aa:-5} };
+    mount.querySelectorAll('[data-preset]').forEach(b => b.addEventListener('click', () => {
+      const p = presets[b.dataset.preset]; state.dl = p.dl; state.aa = p.aa; state.band = b.dataset.preset;
+      slDl.value = p.dl; slAa.value = p.aa; setPresetPressed(b.dataset.preset);
+      haptic('light'); markDiagramTouched(lessonId); render();
+    }));
+    el('#bs-friction').addEventListener('click', () => {
+      state.friction = !state.friction; el('#bs-friction').setAttribute('aria-pressed', state.friction?'true':'false');
+      haptic('light'); render();
+    });
+    el('#bs-datatoggle').addEventListener('click', () => {
+      const t = el('#bs-datatable'); const open = t.classList.toggle('show');
+      el('#bs-datatoggle').setAttribute('aria-expanded', open?'true':'false');
+      el('#bs-datatoggle').textContent = open ? 'Hide data table' : 'Show data table';
+    });
+
+    render();
+  }
+
+  /* ── CARRY: The Carry Ledger ── */
+  function mountCarry(mount, lessonId){
+    const state = { cs:90, dl:30, aa:-3, alt:0, wind:0, temp:15, hum:50 };
+    mount.innerHTML = `
+      <div class="vig-head"><div class="vig-title">The Carry Ledger</div><div class="vig-tag mono">ENGINE + EST AIR</div></div>
+      <div class="carry-canvas-wrap">
+        <svg class="carry-svg" viewBox="0 0 1000 300" id="c-svg" role="img" aria-label="">
+          <g id="c-ticks"></g>
+          <line x1="40" y1="260" x2="980" y2="260" stroke="rgba(232,240,251,.16)" stroke-width="1.5"/>
+          <path id="c-ghost" d="" fill="none" stroke="rgba(154,171,198,.35)" stroke-width="2" stroke-dasharray="5 5"/>
+          <path id="c-live" d="" fill="none" stroke="#22E3D6" stroke-width="2.6"/>
+          <ellipse id="c-shadow" cx="0" cy="260" rx="10" ry="3" fill="rgba(34,227,214,.25)"/>
+          <circle id="c-ball" r="6" fill="#22E3D6" style="filter:drop-shadow(0 0 8px rgba(34,227,214,.8))"/>
+          <text id="c-ghostlbl" x="0" y="0" font-family="Azeret Mono" font-size="11" fill="#9aabc6" text-anchor="middle">sea-level baseline</text>
+        </svg>
+        <div class="carry-read">
+          <div class="crk">Carry</div>
+          <div class="crv"><span class="mono" id="c-carry">0</span><span class="u">yd</span></div>
+          <span class="deltachip gain mono" id="c-delta">+0 yd air</span>
+        </div>
+      </div>
+      <div class="carry-lower">
+        <div class="carry-controls">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 16px">
+            <div>
+              ${slider('c-cs','Club speed',60,130,1,90,false)}
+              ${slider('c-dl','Dynamic loft',8,60,1,30,false)}
+              ${slider('c-aa','Attack angle',-8,6,1,-3,false)}
+              ${slider('c-alt','Altitude (ft)',0,8000,100,0,true)}
+            </div>
+            <div>
+              ${slider('c-wind','Wind (+head)',-20,20,1,0,true)}
+              ${slider('c-temp','Temperature (°C)',-5,40,1,15,true)}
+              ${slider('c-hum','Humidity (%)',0,100,5,50,true)}
+              <button class="resetbtn" id="c-reset">Sea level, no wind, 15 °C</button>
+            </div>
+          </div>
+          <div class="footnote">Engine carry depends on ball speed only; altitude / wind / temperature / humidity are a documented EST post-solve air layer (grounded by the Wolfram checks below). The drawn flight = engine carry × EST air. Every EST number wears a pill.</div>
+          <button class="datatoggle" id="c-datatoggle" aria-expanded="false">Show data table</button>
+          <div class="datatable" id="c-datatable"><table><tbody id="c-datarows"></tbody></table></div>
+        </div>
+        <div class="carry-ledger">
+          <div class="ledger-k">The ledger — where the yards come from</div>
+          <div id="c-ledger"></div>
+          <div class="chips" style="margin-top:10px">
+            <div class="chip"><div class="ck">Ball speed</div><div class="cv"><span class="mono" id="c-c-bs">0</span><span class="cu">mph</span></div></div>
+            <div class="chip"><div class="ck">Launch</div><div class="cv"><span class="mono" id="c-c-la">0</span><span class="cu">°</span></div></div>
+            <div class="chip"><div class="ck">Backspin</div><div class="cv"><span class="mono" id="c-c-sp">0</span><span class="cu">rpm</span></div></div>
+            <div class="chip"><div class="ck">Spin loft</div><div class="cv"><span class="mono" id="c-c-sl">0</span><span class="cu">°</span></div></div>
+            <div class="chip"><div class="ck">Smash</div><div class="cv"><span class="mono" id="c-c-sm">0</span></div></div>
+          </div>
+        </div>
+      </div>`;
+
+    const el = s => mount.querySelector(s);
+    const sls = { cs:el('#sl-c-cs'), dl:el('#sl-c-dl'), aa:el('#sl-c-aa'), alt:el('#sl-c-alt'), wind:el('#sl-c-wind'), temp:el('#sl-c-temp'), hum:el('#sl-c-hum') };
+
+    // yard ticks (static)
+    let ticks = '';
+    for (let yd=0; yd<=260; yd+=25){ const X = 40 + (yd/260)*(980-40); ticks += `<line x1="${X.toFixed(0)}" y1="256" x2="${X.toFixed(0)}" y2="264" stroke="rgba(232,240,251,.16)" stroke-width="1"/><text x="${X.toFixed(0)}" y="278" font-family="Azeret Mono" font-size="9" fill="#5d6e87" text-anchor="middle">${yd}</text>`; }
+    el('#c-ticks').innerHTML = ticks;
+
+    const SX = yd => 40 + (yd/260)*(980-40);
+    const SY = h  => 260 - (h/52)*(260-24);
+
+    function arcPath(carry, apex, f){
+      const s = trajectorySamples(f, 64); let d = '';
+      s.forEach((pt, i) => { d += (i===0?'M':'L') + SX(pt.d*carry).toFixed(1) + ',' + SY(pt.h*apex).toFixed(1); });
+      return d;
+    }
+
+    function ledgerRow(name, val, kind, est){
+      const base = 100; // width mapping done by caller via width; here just markup
+      return { name, val, kind, est };
+    }
+
+    function render(){
+      const f = solveFlight({ clubSpeed:state.cs, dynamicLoft:state.dl, attackAngle:state.aa, clubPath:0, faceAngle:0 });
+      // EST air layer
+      const fAlt  = 1 - 0.030*(state.alt/1000);
+      const fTemp = 288.15/(273.15 + state.temp);
+      const fHum  = 1 - 0.001*(state.hum/100);
+      const densityRatio = fAlt*fTemp*fHum;
+      const carryEnvMult = 1 + 0.70*(1 - densityRatio);
+      const windMult = state.wind >= 0 ? (1 - 0.010*state.wind) : (1 + 0.005*(-state.wind));
+      const carryFinal = f.carry * carryEnvMult * windMult;
+      const apexFinal  = f.apex * carryEnvMult;
+
+      // slider labels + valuetext
+      sls.cs.setAttribute('aria-valuetext', state.cs + ' miles per hour');
+      sls.dl.setAttribute('aria-valuetext', state.dl + ' degrees');
+      sls.aa.setAttribute('aria-valuetext', state.aa + ' degrees');
+      sls.alt.setAttribute('aria-valuetext', state.alt.toLocaleString('en-US') + ' feet, estimated');
+      sls.wind.setAttribute('aria-valuetext', Math.abs(state.wind) + ' mph ' + (state.wind>0?'headwind':state.wind<0?'tailwind':'calm') + ', estimated');
+      sls.temp.setAttribute('aria-valuetext', state.temp + ' degrees celsius, estimated');
+      sls.hum.setAttribute('aria-valuetext', state.hum + ' percent, estimated');
+      el('#v-c-cs').textContent = state.cs+' mph'; el('#v-c-dl').textContent = state.dl+'°';
+      el('#v-c-aa').textContent = (state.aa>0?'+':'')+state.aa+'°'; el('#v-c-alt').textContent = state.alt.toLocaleString('en-US')+' ft';
+      el('#v-c-wind').textContent = (state.wind>0?'+':'')+state.wind+' mph'; el('#v-c-temp').textContent = state.temp+'°C'; el('#v-c-hum').textContent = state.hum+'%';
+
+      // arcs
+      el('#c-ghost').setAttribute('d', arcPath(f.carry, f.apex, f));
+      el('#c-live').setAttribute('d', arcPath(carryFinal, apexFinal, f));
+      // ball at apex of live arc (d=0.52)
+      const ballX = SX(0.52*carryFinal), ballY = SY(0.9985*apexFinal);
+      el('#c-ball').setAttribute('cx', ballX.toFixed(1)); el('#c-ball').setAttribute('cy', ballY.toFixed(1));
+      el('#c-shadow').setAttribute('cx', ballX.toFixed(1));
+      el('#c-ghostlbl').setAttribute('x', SX(f.carry).toFixed(1)); el('#c-ghostlbl').setAttribute('y', '252');
+
+      // carry readout + delta
+      setNum(el('#c-carry'), carryFinal, { dp:0 });
+      const delta = carryFinal - f.carry;
+      const dchip = el('#c-delta');
+      dchip.textContent = (delta>=0?'+':'−') + Math.abs(delta).toFixed(0) + ' yd air';
+      dchip.className = 'deltachip mono ' + (delta>=0 ? 'gain' : 'loss');
+
+      // ledger
+      const base = f.carry;
+      const windowBonus = base*0.06*Math.max(0, 1 - Math.abs(f.launchAngle-15)/12);
+      const dAlt = base*0.70*(1-fAlt);
+      const dTemp = base*0.70*(1-fTemp);
+      const dHum = base*0.70*(1-fHum);
+      const dWind = base*(windMult-1);
+      const rows = [
+        { name:'Ball speed', val:base, kind:'base', est:false },
+        { name:'Launch + spin window', val:windowBonus, kind:'pos', est:true, illus:true },
+        { name:'Altitude', val:dAlt, kind:dAlt>=0?'pos':'neg', est:true },
+        { name:'Wind', val:dWind, kind:dWind>=0?'pos':'neg', est:true },
+        { name:'Temperature', val:dTemp, kind:dTemp>=0?'pos':'neg', est:true },
+        { name:'Humidity', val:dHum, kind:dHum>=0?'pos':'neg', est:true },
+      ];
+      el('#c-ledger').innerHTML = rows.map(r => {
+        const w = clamp(Math.abs(r.val)/base*100, r.val!==0?4:0, 100);
+        const sign = r.kind==='base' ? '' : (r.val>=0?'+':'−');
+        return `<div class="lrow">
+          <div class="ltop"><span class="ln">${r.name}${r.est?'<span class="est">EST</span>':''}</span><span class="lv mono">${sign}${Math.abs(r.val).toFixed(r.kind==='base'?0:1)} yd</span></div>
+          <div class="lbar"><div class="lf ${r.kind}" style="width:${w.toFixed(1)}%"></div></div>
+        </div>`;
+      }).join('') + `<div class="footnote">Ball-speed base is engine-true; the window bonus is illustrative (EST) and not added to the drawn flight. Air deltas are marginal EST contributions.</div>`;
+
+      // chips (engine-true)
+      setNum(el('#c-c-bs'), f.ballSpeed, { dp:1 });
+      setNum(el('#c-c-la'), f.launchAngle, { dp:1 });
+      setNum(el('#c-c-sp'), f.backspin, { dp:0, commas:true });
+      setNum(el('#c-c-sl'), f.spinLoft, { dp:0 });
+      setNum(el('#c-c-sm'), f.smash, { dp:2 });
+
+      // aria + data
+      el('#c-svg').setAttribute('aria-label', `Carry ledger: club speed ${state.cs} mph, ball speed ${f.ballSpeed.toFixed(0)} mph, engine carry ${f.carry.toFixed(0)} yards, with estimated air layer ${carryFinal.toFixed(0)} yards (${delta>=0?'+':'−'}${Math.abs(delta).toFixed(0)} from air).`);
+      el('#c-datarows').innerHTML = [
+        ['Club speed', state.cs+' mph'], ['Ball speed', f.ballSpeed.toFixed(1)+' mph'], ['Smash', f.smash.toFixed(2)],
+        ['Spin loft', f.spinLoft.toFixed(0)+'°'], ['Launch', f.launchAngle.toFixed(1)+'°'], ['Backspin', Math.round(f.backspin).toLocaleString('en-US')+' rpm'],
+        ['Carry (engine)', f.carry.toFixed(0)+' yd'], ['Density ratio (EST)', densityRatio.toFixed(3)],
+        ['Carry ×air (EST)', carryFinal.toFixed(0)+' yd'], ['Air delta (EST)', (delta>=0?'+':'−')+Math.abs(delta).toFixed(0)+' yd'],
+      ].map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join('');
+    }
+
+    function onInput(){ markDiagramTouched(lessonId); haptic('select'); render(); }
+    sls.cs.addEventListener('input', () => { state.cs = +sls.cs.value; onInput(); });
+    sls.dl.addEventListener('input', () => { state.dl = +sls.dl.value; onInput(); });
+    sls.aa.addEventListener('input', () => { state.aa = +sls.aa.value; onInput(); });
+    sls.alt.addEventListener('input', () => { state.alt = +sls.alt.value; onInput(); });
+    sls.wind.addEventListener('input', () => { state.wind = +sls.wind.value; onInput(); });
+    sls.temp.addEventListener('input', () => { state.temp = +sls.temp.value; onInput(); });
+    sls.hum.addEventListener('input', () => { state.hum = +sls.hum.value; onInput(); });
+    el('#c-reset').addEventListener('click', () => {
+      state.alt=0; state.wind=0; state.temp=15; state.hum=50;
+      sls.alt.value=0; sls.wind.value=0; sls.temp.value=15; sls.hum.value=50;
+      haptic('light'); render();
+    });
+    el('#c-datatoggle').addEventListener('click', () => {
+      const t = el('#c-datatable'); const open = t.classList.toggle('show');
+      el('#c-datatoggle').setAttribute('aria-expanded', open?'true':'false');
+      el('#c-datatoggle').textContent = open ? 'Hide data table' : 'Show data table';
+    });
+
+    render();
+  }
+
+  /* ══ QUIZ ══ */
+  function mountQuiz(lessonId, d){
+    const mount = $('#quizMount');
+    const quiz = d.quiz;
+    const qs = quiz.map(() => ({ answered:false, firstTry:null, resolved:false }));
+
+    mount.innerHTML = quiz.map((q, qi) => {
+      const opts = q.options.map((o, oi) => `<button class="opt" role="radio" aria-checked="false" tabindex="${oi===0?0:-1}" data-q="${qi}" data-o="${oi}"><span class="mark" aria-hidden="true"></span><span>${esc(o)}</span></button>`).join('');
+      return `<div class="q" data-qi="${qi}">
+        <div class="qn mono">Question ${qi+1} of ${quiz.length}</div>
+        <div class="qq" id="q-${qi}">${esc(q.q)}</div>
+        <div class="opts" role="radiogroup" aria-labelledby="q-${qi}">${opts}</div>
+        <div class="qfoot"><button class="retrybtn" data-retry="${qi}">Retry</button><span class="qscore mono" data-qscore="${qi}"></span></div>
+        <div class="expl" id="expl-${qi}" role="status"><div class="el"></div><div class="et"></div></div>
+      </div>`;
+    }).join('') + `<button class="finishbtn" id="finishBtn" aria-disabled="true">Finish lesson</button>`;
+
+    const optsOf = qi => Array.from(mount.querySelectorAll(`.opt[data-q="${qi}"]`));
+
+    function awardRead(){
+      const l = store.lessons[lessonId];
+      if (!l.read){ l.read = true; store.xp += 40; save(); refreshHeaderLive(); bumpLessonXpDisplay(lessonId); announce('Lesson read — plus 40 XP.'); }
+    }
+    function updateFinish(){
+      const all = qs.every(s => s.answered);
+      const fb = $('#finishBtn'); fb.classList.toggle('ready', all); fb.setAttribute('aria-disabled', all?'false':'true');
+    }
+    function choose(qi, oi){
+      const st = qs[qi]; if (st.resolved) return;
+      awardRead();
+      const q = quiz[qi]; const correct = oi === q.answerIndex;
+      if (!st.answered){ st.firstTry = correct; st.answered = true; }
+      const opts = optsOf(qi);
+      opts.forEach(o => o.setAttribute('aria-checked', o.dataset.o === String(oi) ? 'true':'false'));
+      const expl = $('#expl-'+qi);
+      expl.querySelector('.et').textContent = q.explanation;
+      expl.classList.add('show');
+      if (correct){
+        st.resolved = true;
+        opts.forEach(o => { o.disabled = true; if (+o.dataset.o === oi){ o.classList.add('correct'); o.querySelector('.mark').textContent = '✓'; } });
+        expl.classList.add('ok'); expl.classList.remove('no'); expl.querySelector('.el').textContent = st.firstTry ? 'Correct — first try' : 'Correct';
+        mount.querySelector(`[data-retry="${qi}"]`).classList.remove('show');
+        mount.querySelector(`[data-qscore="${qi}"]`).textContent = '+' + (st.firstTry?20:10) + ' XP';
+        haptic('success');
+      } else {
+        opts.forEach(o => { o.disabled = true; if (+o.dataset.o === oi){ o.classList.add('wrong'); o.querySelector('.mark').textContent = '✗'; } if (+o.dataset.o === q.answerIndex){ o.classList.add('correct'); o.querySelector('.mark').textContent = '✓'; } });
+        expl.classList.add('no'); expl.classList.remove('ok'); expl.querySelector('.el').textContent = 'Not quite — see why';
+        mount.querySelector(`[data-retry="${qi}"]`).classList.add('show');
+        mount.querySelector(`[data-qscore="${qi}"]`).textContent = '0 XP · retry for +10';
+        haptic('error');
+      }
+      announce((correct?'Correct. ':'Incorrect. ') + q.explanation);
+      updateFinish();
+    }
+    function retry(qi){
+      const st = qs[qi]; if (st.resolved) return;
+      const opts = optsOf(qi);
+      opts.forEach(o => { o.disabled = false; o.classList.remove('wrong','correct'); o.setAttribute('aria-checked','false'); o.querySelector('.mark').textContent = ''; });
+      $('#expl-'+qi).classList.remove('show');
+      mount.querySelector(`[data-retry="${qi}"]`).classList.remove('show');
+      mount.querySelector(`[data-qscore="${qi}"]`).textContent = '';
+      opts[0].focus();
+    }
+
+    mount.querySelectorAll('.opt').forEach(o => {
+      o.addEventListener('click', () => choose(+o.dataset.q, +o.dataset.o));
+    });
+    mount.querySelectorAll('[data-retry]').forEach(b => b.addEventListener('click', () => retry(+b.dataset.retry)));
+    // radiogroup keyboard
+    mount.querySelectorAll('.opts').forEach(group => {
+      group.addEventListener('keydown', e => {
+        const opts = Array.from(group.querySelectorAll('.opt')).filter(o => !o.disabled);
+        if (!opts.length) return;
+        let i = opts.indexOf(document.activeElement);
+        if (['ArrowDown','ArrowRight'].includes(e.key)){ i = (i+1+opts.length)%opts.length; opts.forEach(o=>o.tabIndex=-1); opts[i].tabIndex=0; opts[i].focus(); e.preventDefault(); }
+        else if (['ArrowUp','ArrowLeft'].includes(e.key)){ i = (i-1+opts.length)%opts.length; opts.forEach(o=>o.tabIndex=-1); opts[i].tabIndex=0; opts[i].focus(); e.preventDefault(); }
+        else if (e.key===' '||e.key==='Enter'){ if (document.activeElement.classList.contains('opt')){ document.activeElement.click(); e.preventDefault(); } }
+      });
+    });
+
+    $('#finishBtn').addEventListener('click', () => {
+      if (!$('#finishBtn').classList.contains('ready')) return;
+      haptic('light'); finishLesson(lessonId, d, qs);
+    });
+  }
+
+  /* ══ COMPLETION ══ */
+  function finishLesson(lessonId, d, qs){
+    const l = store.lessons[lessonId];
+    const quiz = d.quiz, meta = LESSON_META[lessonId];
+    const perQ = qs.map(s => s.resolved ? (s.firstTry?20:10) : 0);
+    const quizXP = perQ.reduce((a,b)=>a+b,0);
+    const correct = qs.filter(s => s.resolved).length;
+    const perfect = qs.every(s => s.resolved && s.firstTry);
+    const lessonQuizXP = quizXP + (perfect?50:0);
+
+    const beforeLevel = levelInfo(store.xp).lvl;
+    l.quizAttempts += 1;
+    const delta = Math.max(0, lessonQuizXP - l.quizBest);
+    store.xp += delta;
+    l.quizBest = Math.max(l.quizBest, lessonQuizXP);
+    if (perfect) l.perfect = true;
+    l.completed = true; l.completedAt = Date.now();
+    store.lastOpened = lessonId;
+    recomputeUnlocks();
+    const earned = [];
+    awardBadges(earned);
+    save();
+    const afterLevel = levelInfo(store.xp).lvl;
+    const leveledUp = afterLevel > beforeLevel;
+    refreshHeaderLive();
+    bumpLessonXpDisplay(lessonId);
+
+    const li = levelInfo(store.xp);
+    const nextCta = meta.next ? `<button class="cta primary" id="c-next">Next: ${esc(meta.nextLabel)} →</button>` : '';
+    const luBanner = leveledUp ? `<div class="levelup show">Level up! You reached Level ${afterLevel} — ${esc(li.title)}.</div>` : '';
+    const badgeCards = earned.map(id => { const b = BADGE[id]; return `<div class="cbadge"><span class="g" aria-hidden="true">${b.glyph}</span><div><div class="n">${esc(b.label)}</div><div class="d">${esc(b.desc)}</div></div></div>`; }).join('');
+
+    const cm = $('#completionMount');
+    cm.innerHTML = `<div class="completion">
+      <div class="ck">Module complete</div>
+      <h2>${esc(d.parameter)} mastered</h2>
+      <div class="cscore mono">${correct} / ${quiz.length} correct${perfect?' · <b>perfect run</b>':''} &middot; earned <b>+${delta} XP</b> this attempt</div>
+      <div class="xptally"><span class="mono" id="c-xptally">${store.xp - delta}</span><span class="u">XP TOTAL</span></div>
+      ${luBanner}
+      ${badgeCards ? `<div class="cbadges">${badgeCards}</div>` : ''}
+      <div class="cctas">${nextCta}<button class="cta ghost" id="c-back">Back to path</button></div>
+    </div>`;
+
+    setNum($('#c-xptally'), store.xp, { commas:true });
+    announce(`Module complete. ${correct} of ${quiz.length} correct. Plus ${delta} XP. ${leveledUp?('Level '+afterLevel+', '+li.title+'. '):''}${earned.length?('Badge'+(earned.length>1?'s':'')+' earned: '+earned.map(id=>BADGE[id].label).join(', ')+'.'):''}`);
+
+    const nb = $('#c-next'); if (nb) nb.addEventListener('click', () => { haptic('light'); store.lastOpened = meta.next; save(); go('#/lesson/'+meta.next); });
+    $('#c-back').addEventListener('click', () => { haptic('light'); go('#/path'); });
+    if (!reduced()) cm.scrollIntoView({ behavior:'smooth', block:'start' });
+  }
+
+  /* ══ INIT ══ */
+  recomputeUnlocks();
+  route();
+  </script>
+</body>
+</html>
