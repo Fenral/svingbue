@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>StrikeArc — Night Backdrop Compare</title>
+<style>
+  :root{
+    color-scheme: dark;
+    --bg:#05060A; --surface:#0C1018; --plate:rgba(4,8,14,.86);
+    --ink:#F2F7FF; --muted:#93A5C4;
+    --accent:#46F5C4; --secondary:#8B7BFF; --celebrate:#FF5CA8;
+    --good:#5CFF9D;
+  }
+  *,*::before,*::after{ box-sizing:border-box; }
+  html,body{
+    margin:0; padding:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:"SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+
+  header.page-head{
+    max-width:1000px; margin:0 auto; padding:28px 18px 18px;
+  }
+  header.page-head h1{
+    margin:0 0 6px; font-size:clamp(20px,3.4vw,26px); font-weight:800; letter-spacing:-.01em;
+  }
+  header.page-head p{
+    margin:0 0 10px; font-size:13px; color:var(--muted); line-height:1.5; max-width:760px;
+  }
+  .legend{
+    display:flex; flex-wrap:wrap; gap:8px 16px; margin-top:14px;
+    font-size:11px; color:var(--muted); font-family:ui-monospace,"SF Mono",Menlo,monospace;
+  }
+  .legend span{ color:var(--ink); font-weight:700; }
+  #status-line{
+    margin-top:12px; font-size:11px; font-family:ui-monospace,"SF Mono",Menlo,monospace; color:var(--muted);
+  }
+
+  .card-list{
+    max-width:1000px; margin:0 auto; padding:0 18px 60px;
+    display:flex; flex-direction:column; gap:26px;
+  }
+
+  .compare-card{ display:flex; flex-direction:column; gap:8px; }
+  .card-meta{
+    display:flex; align-items:baseline; gap:10px; flex-wrap:wrap;
+  }
+  .card-num{
+    font-family:ui-monospace,"SF Mono",Menlo,monospace;
+    font-size:13px; font-weight:800; color:var(--ink);
+    background:rgba(255,255,255,.08); border-radius:6px; padding:2px 7px;
+  }
+  .card-tag{
+    font-size:11px; font-weight:800; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--accent);
+  }
+  .card-detail{
+    font-size:11px; color:var(--muted); letter-spacing:.02em;
+  }
+  .card-title{
+    font-size:11px; font-weight:800; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--celebrate);
+  }
+  .card-file{
+    margin-left:auto; font-size:10.5px; color:var(--muted);
+    font-family:ui-monospace,"SF Mono",Menlo,monospace; opacity:.7;
+  }
+
+  .scene{
+    position:relative; width:100%; max-width:932px;
+    aspect-ratio:932/430;
+    border-radius:20px; overflow:hidden;
+    background:#000;
+    border:1px solid rgba(255,255,255,.08);
+  }
+  .scene.broken{ outline:3px solid #FF7B8A; }
+  .bg-img{
+    position:absolute; inset:0; width:100%; height:100%;
+    object-fit:cover; object-position:center 42%;
+    display:block;
+  }
+  .fallback-bg{
+    position:absolute; inset:0;
+    background: linear-gradient(180deg, #0a1420 0%, #0a1420 46%, #0b1420 62%, #05060A 100%);
+  }
+  .fallback-glow{
+    position:absolute; inset:auto 0 0 0; height:46%;
+    background: linear-gradient(180deg, transparent 0%, rgba(139,123,255,.16) 55%, rgba(139,123,255,.05) 100%);
+    pointer-events:none;
+  }
+  .fallback-grain{
+    position:absolute; inset:0; opacity:.5;
+    background:
+      radial-gradient(1px 1px at 12% 18%, rgba(255,255,255,.5), transparent 60%),
+      radial-gradient(1px 1px at 34% 9%, rgba(255,255,255,.35), transparent 60%),
+      radial-gradient(1px 1px at 58% 22%, rgba(255,255,255,.4), transparent 60%),
+      radial-gradient(1px 1px at 77% 14%, rgba(255,255,255,.3), transparent 60%),
+      radial-gradient(1px 1px at 90% 26%, rgba(255,255,255,.35), transparent 60%);
+    pointer-events:none;
+  }
+
+  /* ---------- identical UI overlay (drawn on every card) ---------- */
+  .ov-hero{
+    position:absolute; top:16px; left:16px;
+    background:var(--plate); border-radius:12px; padding:8px 14px;
+  }
+  .ov-hero .k{
+    font-size:10px; font-weight:800; letter-spacing:.09em; text-transform:uppercase; color:var(--muted);
+  }
+  .ov-hero .v{
+    font-size:20px; font-weight:800; letter-spacing:-.01em; color:var(--ink);
+  }
+
+  .ov-xp{
+    position:absolute; top:16px; right:16px;
+    display:inline-flex; align-items:center; gap:6px;
+    background: color-mix(in oklab, var(--celebrate) 26%, #0C1018);
+    border:1px solid var(--celebrate); color:var(--ink);
+    border-radius:999px; padding:7px 14px; font-size:12px; font-weight:800;
+  }
+  .ov-xp .spark{ color:var(--celebrate); font-size:13px; }
+
+  .ov-tracer{ position:absolute; inset:0; width:100%; height:100%; }
+
+  .ov-apex{
+    position:absolute; top:14%; left:50%; transform:translateX(-50%);
+    font-size:10.5px; font-weight:800; letter-spacing:.06em; text-transform:uppercase;
+    color:var(--ink); background:var(--plate); padding:4px 11px; border-radius:999px;
+    white-space:nowrap;
+  }
+
+  .ov-outcome{
+    position:absolute; left:16px; bottom:16px;
+    display:flex; align-items:center; gap:10px;
+    background:var(--plate); border-radius:14px; padding:10px 14px;
+    max-width:80%;
+  }
+  .ov-outcome .check{
+    width:26px; height:26px; border-radius:50%; flex:0 0 auto;
+    background:var(--good); color:#08170c;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .ov-outcome .headline{ font-size:14px; font-weight:800; color:var(--ink); letter-spacing:-.01em; }
+  .ov-outcome .sub{
+    font-size:10.5px; font-weight:700; color:var(--muted); letter-spacing:.03em; text-transform:uppercase;
+  }
+
+  footer.credit{
+    max-width:1000px; margin:10px auto 40px; padding:0 18px;
+    font-size:11px; color:var(--muted); opacity:.7; line-height:1.6;
+  }
+</style>
+</head>
+<body>
+
+<header class="page-head">
+  <h1>StrikeArc — Electric Night range backdrop compare</h1>
+  <p>Internal visual mock only, not wired to production. Every card renders the same photo/gradient scene at ~932×430 with an <strong>identical</strong> Electric Night UI overlay (hero total, mint tracer arc, apex plate, outcome strip, magenta XP pill) so only the backdrop changes between cards. Card 00 is a pure CSS fallback for comparison against the photographic candidates.</p>
+  <div class="legend">
+    <div><span>floodlights</span> = soft distant towers, dim, off-centre</div>
+    <div><span>violet</span> = strong horizon glow band, no towers</div>
+    <div><span>clean</span> = pure minimal sky, no towers</div>
+    <div><span>stars</span> = faint stars in upper sky</div>
+    <div><span>elevated</span> = camera raised above tee line</div>
+    <div><span>floodlit</span> = prominent evening session, towers actively lighting turf</div>
+  </div>
+  <div id="status-line">Loading candidates…</div>
+</header>
+
+<div class="card-list" id="cardList"></div>
+
+<footer class="credit">
+  <p>Generated via Gemini API (model reported in status line above / task report). Assets: assets/range-night-01.png … -18.png. Fallback card uses no external image.</p>
+</footer>
+
+<script>
+  const CANDIDATES = [
+    { id:'00', kind:'fallback', title:'CODE-DRAWN FALLBACK', detail:'pure CSS gradient, no photo' },
+    { id:'01', kind:'photo', tag:'floodlights', src:'assets/range-night-01.png' },
+    { id:'02', kind:'photo', tag:'floodlights', src:'assets/range-night-02.png' },
+    { id:'03', kind:'photo', tag:'floodlights', src:'assets/range-night-03.png' },
+    { id:'04', kind:'photo', tag:'violet',      src:'assets/range-night-04.png' },
+    { id:'05', kind:'photo', tag:'violet',      src:'assets/range-night-05.png' },
+    { id:'06', kind:'photo', tag:'violet',      src:'assets/range-night-06.png' },
+    { id:'07', kind:'photo', tag:'clean',       src:'assets/range-night-07.png' },
+    { id:'08', kind:'photo', tag:'clean',       src:'assets/range-night-08.png' },
+    { id:'09', kind:'photo', tag:'clean',       src:'assets/range-night-09.png' },
+    { id:'10', kind:'photo', tag:'stars',       src:'assets/range-night-10.png' },
+    { id:'11', kind:'photo', tag:'stars',       src:'assets/range-night-11.png' },
+    { id:'12', kind:'photo', tag:'elevated',    src:'assets/range-night-12.png' },
+    { id:'13', kind:'photo', tag:'floodlit', detail:'warm-white · 2 towers · dry',        src:'assets/range-night-13.png' },
+    { id:'14', kind:'photo', tag:'floodlit', detail:'cool-white · 2 towers · dry',        src:'assets/range-night-14.png' },
+    { id:'15', kind:'photo', tag:'floodlit', detail:'warm-white · 4 towers · dry',        src:'assets/range-night-15.png' },
+    { id:'16', kind:'photo', tag:'floodlit', detail:'cool-white · 4 towers · dry',        src:'assets/range-night-16.png' },
+    { id:'17', kind:'photo', tag:'floodlit', detail:'warm-white · 2 towers · wet sheen',  src:'assets/range-night-17.png' },
+    { id:'18', kind:'photo', tag:'floodlit', detail:'cool-white · 4 towers · wet sheen',  src:'assets/range-night-18.png' },
+  ];
+
+  function overlayHTML(){
+    return `
+      <div class="ov-hero">
+        <div class="k">Total</div>
+        <div class="v">162 m</div>
+      </div>
+      <div class="ov-xp"><span class="spark">✦</span>+25 XP</div>
+      <svg class="ov-tracer" viewBox="0 0 932 430" preserveAspectRatio="none" aria-hidden="true">
+        <path d="M110,390 C300,140 600,105 800,250" stroke="var(--accent)" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+        <circle cx="110" cy="390" r="7" fill="var(--secondary)"/>
+        <circle cx="800" cy="250" r="7" fill="var(--secondary)"/>
+      </svg>
+      <div class="ov-apex">Apex 30 m</div>
+      <div class="ov-outcome">
+        <div class="check" aria-hidden="true">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M4 12.5L9.5 18L20 6" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div>
+          <div class="headline">TOTAL +12 m</div>
+          <div class="sub">9 m closer to line</div>
+        </div>
+      </div>
+    `;
+  }
+
+  const list = document.getElementById('cardList');
+  let loaded = 0, broken = 0, total = 0;
+
+  CANDIDATES.forEach(c => {
+    const card = document.createElement('div');
+    card.className = 'compare-card';
+
+    const metaBits = [`<span class="card-num">${c.id}</span>`];
+    if (c.title) metaBits.push(`<span class="card-title">${c.title}</span>`);
+    if (c.tag) metaBits.push(`<span class="card-tag">${c.tag}</span>`);
+    if (c.detail) metaBits.push(`<span class="card-detail">${c.detail}</span>`);
+    if (c.src) metaBits.push(`<span class="card-file">${c.src}</span>`);
+
+    let bgHtml;
+    if (c.kind === 'fallback') {
+      bgHtml = `<div class="fallback-bg"></div><div class="fallback-grain"></div><div class="fallback-glow"></div>`;
+    } else {
+      total++;
+      bgHtml = `<img class="bg-img" src="${c.src}" alt="Night range backdrop candidate ${c.id}" />`;
+    }
+
+    card.innerHTML = `
+      <div class="card-meta">${metaBits.join('')}</div>
+      <div class="scene" data-id="${c.id}">
+        ${bgHtml}
+        ${overlayHTML()}
+      </div>
+    `;
+    list.appendChild(card);
+
+    if (c.kind !== 'fallback') {
+      const img = card.querySelector('.bg-img');
+      img.addEventListener('load', () => {
+        loaded++;
+        updateStatus();
+      });
+      img.addEventListener('error', () => {
+        broken++;
+        card.querySelector('.scene').classList.add('broken');
+        console.error('BROKEN_IMAGE', c.id, c.src);
+        updateStatus();
+      });
+    }
+  });
+
+  function updateStatus(){
+    const el = document.getElementById('status-line');
+    const done = loaded + broken;
+    el.textContent = `Images: ${loaded} loaded, ${broken} broken, ${total} total (${done}/${total} settled). Cards rendered: ${CANDIDATES.length}.`;
+    if (done === total) {
+      console.log(`RENDER_COMPLETE cards=${CANDIDATES.length} loaded=${loaded} broken=${broken}`);
+    }
+  }
+  updateStatus();
+</script>
+
+</body>
+</html>
