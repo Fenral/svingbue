@@ -61,22 +61,29 @@
       linear-gradient(90deg,var(--rule-2) 1px,transparent 1px);
     background-size:28px 28px; opacity:.6}
 
-  /* ── landscape lock ── */
-  .rotate{position:fixed;inset:0;z-index:60;display:none;flex-direction:column;align-items:center;justify-content:center;
-    background:var(--bg);text-align:center;gap:14px;padding:24px}
-  .rotate .ico{font-size:46px;animation:tilt 1.8s ease-in-out infinite}
-  .rotate p{font-size:15px;max-width:260px;color:var(--ink);margin:0}
-  .rotate .k{font-family:var(--f-display);font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--ink-faint)}
-  @keyframes tilt{0%,100%{transform:rotate(-12deg)}50%{transform:rotate(78deg)}}
-  @media (orientation:portrait){.rotate{display:flex}}
+  /* ── gentle orientation nudge (portrait is the optimized reading layout; NEVER blocks) ── */
+  .nudge{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:60;display:none;align-items:center;gap:11px;
+    max-width:min(92vw,560px);padding:10px 12px 10px 14px;border-radius:12px;border:1px solid var(--rule-hot);
+    background:var(--plate-hi);backdrop-filter:blur(8px);box-shadow:0 8px 30px rgba(0,0,0,.45)}
+  .nudge .ico{font-size:18px;line-height:1;animation:tilt 2.6s ease-in-out infinite}
+  .nudge p{font-size:12.5px;color:var(--ink);margin:0;line-height:1.4}
+  .nudge .x{flex:none;width:30px;height:30px;min-height:30px;border-radius:8px;border:1px solid var(--rule);background:var(--bg-3);
+    color:var(--ink-dim);font-size:14px;cursor:pointer;display:grid;place-items:center}
+  .nudge .x:hover,.nudge .x:focus-visible{color:var(--ink);border-color:var(--rule-hot)}
+  @keyframes tilt{0%,100%{transform:rotate(0deg)}50%{transform:rotate(-15deg)}}
+  /* the whole app stays landscape-locked elsewhere; Academy alone is orientation-flexible.
+     Portrait = optimized reading. In landscape we only surface a dismissible hint. */
+  @media (orientation:landscape){.nudge:not(.dismissed){display:flex}}
 
-  /* ── app shell ── */
-  #app{position:relative;z-index:1}
+  /* ── app shell ──
+     Portrait-first single column. Cap at a comfortable reading width so LANDSCAPE
+     centres the same column (usable, not stretched) while PORTRAIT fills the phone. */
+  #app{position:relative;z-index:1;max-width:640px;margin:0 auto}
   .view{animation:viewIn .22s var(--ease)}
   @keyframes viewIn{from{opacity:0;transform:translateX(2%)}to{opacity:1;transform:none}}
 
   /* ═══ HEADER ═══ */
-  .hdr{display:flex;align-items:center;gap:18px;padding:14px 22px;border-bottom:1px solid var(--rule);
+  .hdr{display:flex;align-items:center;flex-wrap:wrap;gap:14px 18px;padding:14px 20px;border-bottom:1px solid var(--rule);
     background:linear-gradient(180deg,rgba(11,18,32,.72),rgba(10,14,18,.35));position:sticky;top:0;z-index:20;backdrop-filter:blur(6px)}
   .wordmark{font-family:var(--f-display);font-weight:700;font-size:17px;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}
   .wordmark b{color:var(--cyan);font-weight:700}
@@ -111,13 +118,14 @@
   .path-intro .slice{font-family:var(--f-mono);font-size:12px;color:var(--ink-dim)}
   .path-intro .slice b{color:var(--cyan)}
 
-  .map-scroll{overflow-x:auto;overflow-y:hidden;padding:8px 22px 26px;-webkit-overflow-scrolling:touch}
-  .map-canvas{position:relative}
-  .map-edges{position:absolute;inset:0;pointer-events:none}
-  .col-head{position:absolute;top:0;font-family:var(--f-display);font-weight:600;font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-faint)}
+  /* vertical climb: no horizontal scroll — tiers stack top→bottom, nodes flow down two lanes */
+  .map-scroll{padding:6px 20px 40px}
+  .map-canvas{position:relative;width:100%}
+  .map-edges{position:absolute;inset:0;pointer-events:none;width:100%;height:100%}
+  .col-head{position:absolute;left:0;right:0;font-family:var(--f-display);font-weight:600;font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-faint)}
   .col-head::after{content:"";display:block;height:1px;margin-top:6px;background:var(--rule)}
 
-  .node{position:absolute;display:flex;flex-direction:column;justify-content:center;gap:3px;text-align:left;
+  .node{position:absolute;width:42%;display:flex;flex-direction:column;justify-content:center;gap:3px;text-align:left;
     padding:8px 12px;border-radius:7px;border:1px solid var(--rule);background:var(--bg-2);color:var(--ink-faint);
     cursor:default;transition:transform .18s var(--ease),border-color .18s var(--ease),box-shadow .18s var(--ease);min-height:44px}
   .node .r1{display:flex;align-items:center;justify-content:space-between;gap:8px}
@@ -169,7 +177,7 @@
   .jump .jprog{font-family:var(--f-mono);font-size:11px;color:var(--ink-dim);white-space:nowrap}
   .jump .jxp{font-family:var(--f-mono);font-size:11px;color:var(--cyan);white-space:nowrap}
 
-  .lesson-body{max-width:1180px;margin:0 auto;padding:0 22px}
+  .lesson-body{max-width:680px;margin:0 auto;padding:0 20px}
   .sect{padding:34px 0;border-bottom:1px solid var(--rule-2);opacity:0;transform:translateY(8px)}
   .sect.in{opacity:1;transform:none;transition:opacity .4s var(--ease),transform .4s var(--ease)}
   .sect-k{font-family:var(--f-display);font-weight:600;font-size:10.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:12px}
@@ -178,8 +186,8 @@
   .pquote{max-width:68ch;margin:16px 0 0;font-family:var(--f-mono);font-weight:600;font-size:clamp(15px,2vw,20px);color:var(--cyan);
     background:var(--plate);border:1px solid var(--rule-hot);border-left:3px solid var(--cyan);border-radius:8px;padding:14px 16px;letter-spacing:-.01em}
 
-  /* hero */
-  .hero{display:grid;grid-template-columns:1.4fr .8fr;gap:20px;align-items:stretch;padding:30px 0 26px}
+  /* hero — single reading column: headline card on top, "you are here" band below */
+  .hero{display:grid;grid-template-columns:1fr;gap:16px;align-items:stretch;padding:26px 0 24px}
   .hero-main{background:var(--plate);border:1px solid var(--rule);border-radius:12px;padding:22px 22px 20px;position:relative;overflow:hidden}
   .hero-main::before{content:"";position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--cyan),transparent)}
   .hero-main .htier{display:inline-block;font-family:var(--f-display);font-weight:600;font-size:10px;letter-spacing:.18em;text-transform:uppercase;
@@ -192,8 +200,8 @@
   .dots .d{width:8px;height:8px;border-radius:50%;background:var(--rule)}
   .dots .d.on{background:var(--cyan)}
 
-  /* components grid */
-  .cgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  /* components grid — container-responsive so it wraps by column width, not viewport */
+  .cgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
   .ccard{background:var(--bg-2);border:1px solid var(--rule);border-radius:10px;padding:14px 15px}
   .ccard .cn{font-family:var(--f-display);font-weight:600;font-size:13px;letter-spacing:.03em;color:var(--ink);text-transform:uppercase}
   .ccard .cr{font-size:13.5px;color:var(--ink-dim);line-height:1.5;margin:8px 0 10px}
@@ -214,8 +222,8 @@
   .hrow.open .hwhy{max-height:220px;margin-top:10px}
   .hlegend{font-family:var(--f-mono);font-size:10.5px;color:var(--ink-faint);margin-bottom:14px}
 
-  /* misconceptions */
-  .mgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+  /* misconceptions — container-responsive */
+  .mgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
   .mcard{background:var(--bg-2);border:1px solid var(--rule);border-radius:10px;padding:14px 15px}
   .mcard .myth{color:var(--ink-faint);font-size:13.5px;line-height:1.5;position:relative;padding-left:20px}
   .mcard .myth::before{content:"\2717";position:absolute;left:0;top:0;color:var(--magenta);font-weight:700}
@@ -267,11 +275,11 @@
   .toggle[aria-pressed="true"] .knob::after{transform:translateX(16px);background:var(--amber)}
   .footnote{font-family:var(--f-mono);font-size:10px;color:var(--ink-faint);line-height:1.45;margin-top:6px}
 
-  /* backspin diagram */
-  .bs-diagram{display:flex;flex-wrap:wrap;gap:16px}
-  .bs-controls{flex:1 1 200px;min-width:190px}
-  .bs-machine{flex:2 1 260px;min-width:240px;display:flex;flex-direction:column;gap:10px}
-  .bs-right{flex:1 1 240px;min-width:230px;display:flex;flex-direction:column;gap:12px}
+  /* backspin diagram — portrait stack: schematic (canvas) → live readouts → controls */
+  .bs-diagram{display:flex;flex-direction:column;gap:16px}
+  .bs-controls{width:100%;order:3}
+  .bs-machine{width:100%;order:1;display:flex;flex-direction:column;gap:10px}
+  .bs-right{width:100%;order:2;display:flex;flex-direction:column;gap:12px}
   .bs-svg{width:100%;height:auto;background:var(--bg);border:1px solid var(--rule);border-radius:10px}
   .formula{background:var(--plate);border:1px solid var(--rule-hot);border-radius:10px;padding:12px 14px}
   .formula .fk{font-family:var(--f-display);font-weight:600;font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:6px}
@@ -306,9 +314,10 @@
   .deltachip{display:inline-block;margin-top:6px;font-family:var(--f-mono);font-size:11px;border-radius:5px;padding:3px 7px}
   .deltachip.gain{color:var(--gain);border:1px solid var(--gain-soft);background:var(--gain-soft)}
   .deltachip.loss{color:var(--amber);border:1px solid var(--amber-soft);background:var(--amber-soft)}
-  .carry-lower{display:flex;flex-wrap:wrap;gap:16px;margin-top:14px}
-  .carry-controls{flex:1 1 300px;min-width:280px}
-  .carry-ledger{flex:1 1 280px;min-width:260px}
+  /* carry diagram — portrait stack: trajectory canvas (above) → controls → ledger */
+  .carry-lower{display:flex;flex-direction:column;gap:16px;margin-top:14px}
+  .carry-controls{width:100%}
+  .carry-ledger{width:100%}
   .ledger-k{font-family:var(--f-display);font-weight:600;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:10px}
   .lrow{margin-bottom:9px}
   .lrow .ltop{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:4px}
@@ -387,12 +396,17 @@
   .cta.ghost{background:transparent;color:var(--cyan);border-color:var(--rule-hot)}
   .cta.ghost:hover{background:var(--cyan-soft)}
 
-  @media (max-width:820px){
-    .hero{grid-template-columns:1fr}
-    .cgrid{grid-template-columns:repeat(2,1fr)}
-    .mgrid{grid-template-columns:1fr}
+  /* compact header for narrow portrait — badges wrap to their own line */
+  @media (max-width:560px){
+    .hdr{padding:12px 16px;gap:12px 14px}
+    .wordmark{font-size:15px}
+    .hex{width:44px;height:50px}
+    .hex .lv{font-size:16px}
+    .lvmeta{min-width:0}
+    .xpbar{margin-top:5px}
+    .badge{width:34px;height:34px;border-radius:8px;font-size:14px}
+    .badgerail{gap:6px}
   }
-  @media (max-width:560px){ .cgrid{grid-template-columns:1fr} }
 
   /* global reduced-motion kill switch */
   @media (prefers-reduced-motion:reduce){ *{transition:none!important;animation:none!important} }
@@ -401,15 +415,17 @@
 <body>
   <a class="skip-link" href="#app">Skip to content</a>
   <div class="bench" aria-hidden="true"></div>
-  <div class="rotate" role="alert" aria-live="assertive" aria-label="Rotate device">
-    <div class="ico" aria-hidden="true">&#128241;</div>
-    <p>Rotate your phone to landscape.</p>
-    <div class="k">StrikeArc Academy</div>
-  </div>
 
   <div id="live" class="sr-only" aria-live="polite" aria-atomic="true"></div>
   <div class="tooltip" id="tooltip" role="status"></div>
   <main id="app" tabindex="-1"></main>
+
+  <!-- gentle, non-blocking landscape hint (portrait is the optimized reading layout) -->
+  <div class="nudge" id="nudge" role="note">
+    <span class="ico" aria-hidden="true">&#128241;</span>
+    <p>Rotate to portrait for the best reading experience.</p>
+    <button class="x" id="nudge-x" type="button" aria-label="Dismiss rotate hint">&#10005;</button>
+  </div>
 
   <script type="application/json" id="graph-data">
 {"nodes":[{"id":"club-speed","label":"Club Speed","tier":"fundamental","blurb":"How fast the head moves at impact — the power source for the whole shot."},{"id":"face-angle","label":"Face Angle","tier":"fundamental","blurb":"Where the face points at impact — the dominant driver of start direction."},{"id":"club-path","label":"Club Path","tier":"fundamental","blurb":"Horizontal direction the head travels through impact — in-to-out or out-to-in."},{"id":"attack-angle","label":"Attack Angle","tier":"fundamental","blurb":"Up or down motion of the head at impact — ascending or descending strike."},{"id":"dynamic-loft","label":"Dynamic Loft","tier":"fundamental","blurb":"Effective loft actually delivered at impact — sets launch and spin."},{"id":"spin-loft","label":"Spin Loft","tier":"derived","blurb":"Dynamic loft minus attack angle — the glancing angle that creates backspin."},{"id":"smash","label":"Smash Factor","tier":"derived","blurb":"Ball speed over club speed — energy transfer; falls as spin loft rises."},{"id":"ball-speed","label":"Ball Speed","tier":"derived","blurb":"Club speed times smash factor — the true engine of distance."},{"id":"launch-angle","label":"Launch Angle","tier":"derived","blurb":"Initial climb angle — loft-dominant, nudged by attack angle."},{"id":"start-direction","label":"Start Direction","tier":"derived","blurb":"Where the ball starts — ~75% face, ~25% path, weighted by loft."},{"id":"spin-axis","label":"Spin Axis","tier":"derived","blurb":"Tilt of the spin from the face-to-path gap — decides which way it bends."},{"id":"backspin","label":"Backspin","tier":"derived","blurb":"Rev rate from spin loft and ball speed — the lift that holds flight."},{"id":"carry","label":"Carry","tier":"outcome","blurb":"Distance flown through the air — driven by ball speed."},{"id":"apex","label":"Apex","tier":"outcome","blurb":"Peak height of the flight — from ball speed and launch angle."},{"id":"landing-angle","label":"Landing Angle","tier":"outcome","blurb":"How steeply the ball descends — from spin loft, launch and apex."},{"id":"total","label":"Total Distance","tier":"outcome","blurb":"Carry plus roll-out — roll shrinks as the landing angle steepens."},{"id":"curve","label":"Curve","tier":"outcome","blurb":"Sideways bend in flight from spin axis — grows with distance squared."},{"id":"offline","label":"Offline","tier":"outcome","blurb":"Total sideways miss from target — start direction plus curve."},{"id":"altitude","label":"Altitude","tier":"environment","blurb":"Thinner air up high — more carry, flatter spin, less curve."},{"id":"wind","label":"Wind","tier":"environment","blurb":"Head, tail and crosswind — reshapes carry and pushes the ball offline."},{"id":"temperature","label":"Temperature","tier":"environment","blurb":"Warm air and a warm ball — more ball speed and more carry."}],"edges":[{"from":"face-angle","to":"start-direction"},{"from":"club-path","to":"start-direction"},{"from":"dynamic-loft","to":"start-direction"},{"from":"dynamic-loft","to":"spin-loft"},{"from":"attack-angle","to":"spin-loft"},{"from":"dynamic-loft","to":"launch-angle"},{"from":"attack-angle","to":"launch-angle"},{"from":"face-angle","to":"spin-axis"},{"from":"club-path","to":"spin-axis"},{"from":"spin-loft","to":"smash"},{"from":"club-speed","to":"ball-speed"},{"from":"smash","to":"ball-speed"},{"from":"spin-loft","to":"backspin"},{"from":"ball-speed","to":"backspin"},{"from":"ball-speed","to":"carry"},{"from":"ball-speed","to":"apex"},{"from":"launch-angle","to":"apex"},{"from":"spin-loft","to":"landing-angle"},{"from":"launch-angle","to":"landing-angle"},{"from":"apex","to":"landing-angle"},{"from":"carry","to":"curve"},{"from":"spin-axis","to":"curve"},{"from":"carry","to":"offline"},{"from":"start-direction","to":"offline"},{"from":"curve","to":"offline"},{"from":"carry","to":"total"},{"from":"landing-angle","to":"total"},{"from":"altitude","to":"carry"},{"from":"altitude","to":"apex"},{"from":"altitude","to":"curve"},{"from":"wind","to":"carry"},{"from":"wind","to":"offline"},{"from":"temperature","to":"ball-speed"},{"from":"temperature","to":"carry"}],"progression":["club-speed","dynamic-loft","attack-angle","face-angle","club-path","spin-loft","smash","ball-speed","launch-angle","start-direction","spin-axis","backspin","carry","apex","landing-angle","total","curve","offline","altitude","wind","temperature"]}
@@ -530,16 +546,20 @@
   const liveEl = $('#live');
   function announce(msg){ liveEl.textContent = ''; setTimeout(() => { liveEl.textContent = msg; }, 30); }
 
-  /* ══ ROTATE LOCK: keep #app out of the tree while the portrait overlay is shown ══ */
-  function syncRotateLock(){
-    const isPortrait = window.matchMedia('(orientation:portrait)').matches;
-    if (isPortrait){ app.setAttribute('inert',''); app.setAttribute('aria-hidden','true'); }
-    else { app.removeAttribute('inert'); app.removeAttribute('aria-hidden'); }
-  }
-  const portraitMQ = window.matchMedia('(orientation:portrait)');
-  if (portraitMQ.addEventListener) portraitMQ.addEventListener('change', syncRotateLock);
-  else if (portraitMQ.addListener) portraitMQ.addListener(syncRotateLock);
-  syncRotateLock();
+  /* ══ ORIENTATION NUDGE (non-blocking): Academy is orientation-FLEXIBLE. Portrait is the
+     optimized reading layout; landscape stays usable (centred column). We never inert the app —
+     we only surface a dismissible hint in landscape. CSS handles show/hide by orientation. ══ */
+  const NUDGE_KEY = 'strikearc.academy.nudge';
+  (function initNudge(){
+    const nudgeEl = document.getElementById('nudge');
+    if (!nudgeEl) return;
+    try { if (localStorage.getItem(NUDGE_KEY) === '1') nudgeEl.classList.add('dismissed'); } catch(e){}
+    const x = document.getElementById('nudge-x');
+    if (x) x.addEventListener('click', () => {
+      nudgeEl.classList.add('dismissed');
+      try { localStorage.setItem(NUDGE_KEY, '1'); } catch(e){}
+    });
+  })();
 
   const H = (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Haptics) || null;
   function haptic(k){
@@ -645,39 +665,53 @@
   }
   window.addEventListener('hashchange', route);
 
-  /* ══ PATH / MAP VIEW ══ */
-  const NODE_W = 176, NODE_H = 60;
+  /* ══ PATH / MAP VIEW — VERTICAL CLIMB ══
+     Tiers stack top→bottom (Fundamentals at the top, Environment at the bottom): the vertical
+     scroll direction reads as foundations → derived → outcomes, matching the dependency flow.
+     Within a tier, nodes flow down two lanes; a lone trailing node centres as a capstone.
+     x is stored as the node CENTRE in PERCENT (0–100) so the map is fully width-responsive;
+     y is a pixel offset. Edges + mini-map both consume these coordinates. */
+  const NODE_H = 58;
+  const LANE = [27, 73];        // lane centres, percent
   function computeLayout(){
-    const colX = [40, 370, 700, 1030];
-    const top = 92, bottom = 748;
-    const pos = {};
-    TIER_COLS.forEach((col, ci) => {
-      const k = col.ids.length;
+    const headH = 38, rowH = 78, tierGap = 30, topPad = 10;
+    const pos = {}, tierBands = [];
+    let y = topPad;
+    TIER_COLS.forEach(col => {
+      const y0 = y;
+      const rowStart = y + headH;
+      const rows = Math.ceil(col.ids.length / 2);
+      const n = col.ids.length;
       col.ids.forEach((id, ri) => {
-        const y = k === 1 ? (top+bottom)/2 - NODE_H/2 : top + ri * ((bottom - top - NODE_H)/(k-1));
-        pos[id] = { x: colX[ci], y, col: ci, row: ri };
+        const loneLast = (ri === n - 1) && (n % 2 === 1);
+        const lane = ri % 2, row = Math.floor(ri / 2);
+        pos[id] = { x: loneLast ? 50 : LANE[lane], y: rowStart + row * rowH, lane, row };
       });
+      y = rowStart + rows * rowH;
+      tierBands.push({ label: col.label, y0, y1: y });
+      y += tierGap;
     });
-    return { pos, colX, width: colX[3] + NODE_W + 40, height: 780 };
+    return { pos, tierBands, width: 100, height: y };
   }
 
   function renderPath(){
     const L = computeLayout();
     const doneCount = Object.values(store.lessons).filter(l => l.completed).length;
-    // edges svg
+    // edges svg — vertical S-curves flowing down between lanes (percent-x / pixel-y space)
     let edges = '';
     for (const e of GRAPH.edges){
       const A = L.pos[e.from], B = L.pos[e.to]; if (!A || !B) continue;
-      const acx = A.x + NODE_W/2, bcx = B.x + NODE_W/2;
-      let x1, x2; const y1 = A.y + NODE_H/2, y2 = B.y + NODE_H/2;
-      if (acx <= bcx){ x1 = A.x + NODE_W; x2 = B.x; } else { x1 = A.x; x2 = B.x + NODE_W; }
-      const dx = (x2 - x1) * 0.5;
+      const x1 = A.x, x2 = B.x;
+      let y1, y2;
+      if (A.y <= B.y){ y1 = A.y + NODE_H; y2 = B.y; }   // downward: source bottom → target top
+      else { y1 = A.y; y2 = B.y + NODE_H; }             // upward (e.g. Environment → Outcomes)
+      const dy = (y2 - y1) * 0.5;
       const hot = ['available','completed'].includes(nodeState(e.from)) || ['available','completed'].includes(nodeState(e.to));
-      edges += `<path d="M${x1},${y1} C${x1+dx},${y1} ${x2-dx},${y2} ${x2},${y2}" fill="none" stroke="${hot?'rgba(34,227,214,.42)':'rgba(232,240,251,.10)'}" stroke-width="1"/>`;
+      edges += `<path d="M${x1},${y1.toFixed(1)} C${x1},${(y1+dy).toFixed(1)} ${x2},${(y2-dy).toFixed(1)} ${x2},${y2.toFixed(1)}" fill="none" stroke="${hot?'rgba(34,227,214,.42)':'rgba(232,240,251,.10)'}" stroke-width="1" vector-effect="non-scaling-stroke"/>`;
     }
-    // column heads
+    // tier heads — full-width bands stacked down the climb
     let heads = '';
-    TIER_COLS.forEach((col, ci) => { heads += `<div class="col-head" style="left:${L.colX[ci]}px;width:${NODE_W}px">${col.label}</div>`; });
+    L.tierBands.forEach(t => { heads += `<div class="col-head" style="top:${t.y0}px">${esc(t.label)}</div>`; });
     // nodes
     let nodes = '';
     TIER_COLS.forEach((col, ci) => {
@@ -696,7 +730,7 @@
           ? `${n.label}, locked, coming soon`
           : `${n.label}, ${st}${st==='available'?', press Enter to start':''}. ${n.blurb}`;
         nodes += `<button class="${cls.join(' ')}" data-node="${id}" aria-disabled="${st==='locked'}"
-          style="left:${p.x}px;top:${p.y}px;width:${NODE_W}px;height:${NODE_H}px" aria-label="${esc(aria)}">
+          style="left:${(p.x-21).toFixed(2)}%;top:${p.y}px;height:${NODE_H}px" aria-label="${esc(aria)}">
           <span class="r1"><span class="ntier">${tierTag}</span>${glyph}</span>
           <span class="nlabel">${esc(n.label)}</span>${xpStamp}
         </button>`;
@@ -712,8 +746,8 @@
         <div class="slice">Vertical slice: <b>${doneCount}</b> of 21 modules live &middot; Backspin &amp; Carry are pre-unlocked so you can judge the format now.</div>
       </div>
       <div class="map-scroll">
-        <div class="map-canvas" role="group" aria-label="Parameter mastery path" style="width:${L.width}px;height:${L.height}px">
-          <svg class="map-edges" viewBox="0 0 ${L.width} ${L.height}" width="${L.width}" height="${L.height}" aria-hidden="true">${edges}</svg>
+        <div class="map-canvas" role="group" aria-label="Parameter mastery path" style="height:${L.height}px">
+          <svg class="map-edges" viewBox="0 0 100 ${L.height}" preserveAspectRatio="none" width="100%" height="${L.height}" aria-hidden="true">${edges}</svg>
           ${heads}
           ${nodes}
         </div>
@@ -766,17 +800,18 @@
 
   function miniMapSVG(currentId){
     const L = computeLayout();
-    const sx = 200 / L.width, sy = 110 / L.height;
+    const VW = 110, VH = 150;                       // portrait mini-map, mirrors the vertical climb
+    const sx = VW / L.width, sy = VH / L.height;
     let dots = '';
     for (const id of Object.keys(L.pos)){
       const p = L.pos[id], st = nodeState(id);
-      const cx = (p.x + NODE_W/2) * sx, cy = (p.y + NODE_H/2) * sy;
+      const cx = p.x * sx, cy = (p.y + NODE_H/2) * sy;
       const cur = id === currentId;
       const fill = cur ? '#22E3D6' : (st==='completed' ? 'rgba(34,227,214,.55)' : st==='available' ? 'rgba(154,171,198,.7)' : 'rgba(93,110,135,.5)');
       dots += `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${cur?4.5:2.4}" fill="${fill}"/>`;
       if (cur) dots += `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="7" fill="none" stroke="#22E3D6" stroke-width="1"/>`;
     }
-    return `<svg viewBox="0 0 200 110" width="100%" height="110" aria-hidden="true">${dots}</svg>`;
+    return `<svg viewBox="0 0 ${VW} ${VH}" width="100%" height="${VH}" preserveAspectRatio="xMidYMid meet" style="display:block;max-width:150px;margin:0 auto" aria-hidden="true">${dots}</svg>`;
   }
 
   const SECTIONS = [
@@ -1229,7 +1264,7 @@
       </div>
       <div class="carry-lower">
         <div class="carry-controls">
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 16px">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:0 16px">
             <div>
               ${slider('c-cs','Club speed',60,130,1,90,false)}
               ${slider('c-dl','Dynamic loft',8,60,1,30,false)}
