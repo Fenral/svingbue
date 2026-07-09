@@ -32,6 +32,24 @@
        move 4  BADGE DODGING — addBadge() ports placeChip()'s collision
                dodge: landing badges + the connector badge vertically offset
                so nothing overlaps when landing points are close.
+       move 5  VIZ-PORT (owner decision 2026-07): the inline lens sliders
+               (Face/Path, Attack/Dyn loft) + the top-strip club-speed slider
+               are RETIRED. Inputs live on a bottom INPUT CHIP ROW (5 chips:
+               Club speed, Face, Path, Attack, Dyn loft — no Wind here) that
+               opens impact-viz-mock's TUNE DOCK (−/slider/+ + Done,
+               aria-valuetext, ~1.8s auto-fade, reduced-motion = explicit
+               dismiss only, K4 focus rescue). The dock writes to hidden
+               state-backbone sliders and dispatches 'input', so the SAME
+               bind()→applyLive()→recompute() path the inline sliders drove
+               keeps the dual-lens arrows/predictor/coach lines fully LIVE.
+               ALL NINE output chips (Launch dir, Spin axis, Curve, Launch,
+               Apex, Land angle, Ball speed, Backspin, Carry) consolidate
+               onto ONE horizontally scrollable OUTPUT ROW directly under
+               the lenses — roving-tabindex (one tab stop), read-only popover
+               buttons, NOT a live region. Scroll is made OBVIOUS: dynamic
+               edge fades + edge chevrons + a half-cut PEEK chip (fixed
+               104px chips) + a one-time scroll-hint nudge (skipped under
+               reduced motion).
      Engine files (impact-flight.js etc.) are byte-identical imports.
      ═════════════════════════════════════════════════════════════════════ -->
 <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2052%2052'%20fill='none'%3E%3Cpath%20d='M11%2045%20C%2016%2026,%2024%2018,%2035%2015%20M21%2039%20L%2030%2024%20L%2043%2045'%20stroke='%2322E3D6'%20stroke-width='4.2'%20stroke-linecap='round'%20stroke-linejoin='round'/%3E%3Ccircle%20cx='37'%20cy='15'%20r='5.2'%20fill='%2322E3D6'/%3E%3C/svg%3E" />
@@ -718,6 +736,112 @@
   #fOfflineBox{fill:rgba(8,16,20,.72);stroke:rgba(34,227,214,.28)}
   #fOfflineTxt{fill:#22E3D6;font-family:inherit;font-weight:700}
 
+  /* ══ move 5 VIZ-PORT — BOTTOM I/O BARS (input chip row + ONE output row) ══
+     .ioBar is a normal flex-column sibling of .main: OUTPUT row on top
+     (directly under the lenses — results read right under the picture),
+     INPUT row at the very bottom (thumb reach; the tune dock replaces it
+     in place while editing). Both rows share .chipScroll (hidden scrollbar,
+     26px side padding so focus rings + edge fades clear the first/last
+     chip — K5 carried over from the viz mock). */
+  .ioBar{flex:0 0 auto;display:flex;flex-direction:column;gap:1px;min-width:0;
+    padding:0 0 max(3px,env(safe-area-inset-bottom))}
+  .rowWrap{position:relative;min-width:0}
+  .chipScroll{overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;
+    scrollbar-width:none;overscroll-behavior-x:contain;
+    padding:4px max(26px,env(safe-area-inset-right)) 5px max(26px,env(safe-area-inset-left));
+    scroll-padding:0 26px}
+  .chipScroll::-webkit-scrollbar{display:none}
+  .chipRow{display:flex;gap:8px;width:max-content;align-items:stretch}
+  /* dynamic edge fades — scroll affordance (decorative, pointer-events none).
+     JS toggles .can-left/.can-right from the live scroll position, so the
+     RIGHT fade shows whenever more chips exist off-screen and the LEFT fade
+     appears once scrolled — "swipe sideways for more" at a glance. */
+  .rowWrap::before,.rowWrap::after{content:"";position:absolute;top:0;bottom:0;width:30px;
+    z-index:2;pointer-events:none;opacity:0;transition:opacity .25s ease}
+  .rowWrap::before{left:0;background:linear-gradient(90deg, rgba(7,11,16,.94), rgba(7,11,16,0))}
+  .rowWrap::after{right:0;background:linear-gradient(270deg, rgba(7,11,16,.94), rgba(7,11,16,0))}
+  .rowWrap.can-left::before{opacity:1}
+  .rowWrap.can-right::after{opacity:1}
+  /* edge chevrons ride ON the fades (same .can-* gate) — a literal "more this
+     way" pointer for anyone who doesn't read the fade or the cut chip. */
+  .edgeChev{position:absolute;top:50%;transform:translateY(-50%);z-index:3;pointer-events:none;
+    font-size:16px;font-weight:800;color:#e8f0fb;line-height:1;opacity:0;transition:opacity .25s ease;
+    text-shadow:0 1px 3px rgba(0,0,0,.8)}
+  .edgeChev.left{left:7px} .edgeChev.right{right:7px}
+  .rowWrap.can-left .edgeChev.left{opacity:.9}
+  .rowWrap.can-right .edgeChev.right{opacity:.9}
+  @media (prefers-reduced-motion:reduce){ .rowWrap::before,.rowWrap::after,.edgeChev{transition:none} }
+  /* INPUT chips (ported verbatim from the viz mock's .chip.input): coloured
+     dot + coloured baseline + tune glyph — visibly a control, 44px target. */
+  .chip{appearance:none;font-family:inherit;cursor:pointer;position:relative;flex:0 0 auto;
+    display:flex;align-items:center;gap:7px;min-height:44px;padding:5px 12px;color:var(--ink);
+    background:linear-gradient(180deg, rgba(22,34,50,.88), rgba(12,19,29,.88));
+    border:1px solid rgba(255,255,255,.12);border-radius:12px;
+    box-shadow:0 6px 16px rgba(0,0,0,.32), inset 0 1px 0 rgba(255,255,255,.06);
+    transition:transform .12s ease, border-color .15s ease, background .15s ease}
+  .chip:hover{border-color:rgba(255,255,255,.22)}
+  .chip:active{transform:scale(.97)}
+  .chip:focus-visible{outline:3px solid #fff;outline-offset:2px}
+  .chip .ck{font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);
+    font-weight:700;white-space:nowrap;line-height:1}
+  .chip .cv{font-size:15px;font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap;
+    line-height:1;letter-spacing:-.01em}
+  .chip .cv small{font-size:10px;color:var(--muted);font-weight:600;margin-left:2px}
+  .chip .cbody{display:flex;flex-direction:column;gap:3px;align-items:flex-start}
+  .chip.input{border-color:rgba(255,255,255,.18)}
+  .chip.input::after{content:"";position:absolute;left:11px;right:11px;bottom:4px;height:2.5px;
+    border-radius:2px;background:var(--pc,var(--accent));opacity:.85}
+  .chip.input .cdot{width:8px;height:8px;border-radius:50%;background:var(--pc,var(--accent));
+    flex:0 0 auto;box-shadow:0 0 8px color-mix(in srgb, var(--pc,var(--accent)) 60%, transparent)}
+  .chip.input .tglyph{color:var(--muted);flex:0 0 auto;display:flex;align-items:center}
+  .chip.input[aria-expanded="true"]{border-color:var(--pc,var(--accent));
+    background:linear-gradient(180deg, rgba(28,42,60,.92), rgba(14,22,33,.92))}
+  @media (prefers-reduced-motion:reduce){ .chip{transition:none} }
+  /* OUTPUT row cards: the same .mcard (popover button) re-homed onto the
+     scroll row. FIXED 112px width + 8px gap = 120px pitch — and 932−812 is
+     exactly one pitch, so BOTH target viewports land the SAME half-cut PEEK
+     chip (~59% visible) at the right edge: the primary "there's more"
+     signal, backed by the edge fade + chevron. */
+  .outRow .mcard{flex:0 0 112px;width:112px;height:50px;padding:4px 9px}
+  /* the label must never flex-shrink under the big value (it top-clips) */
+  .outRow .mcard .mk{flex:0 0 auto}
+  /* ══ move 5 VIZ-PORT — TUNE DOCK (transient editor bar over the input row) ══ */
+  .tuneDock{position:absolute;z-index:22;
+    left:max(8px,env(safe-area-inset-left));right:max(8px,env(safe-area-inset-right));
+    bottom:max(3px,env(safe-area-inset-bottom));
+    display:flex;align-items:center;gap:12px;min-height:53px;
+    padding:4px 13px;border-radius:14px;
+    /* SOLID plate (not the viz mock's .94 alpha): this dock sits directly ON
+       TOP of the input chip row — any translucency lets the covered chips
+       ghost through the editor (verified at dpr2). */
+    background:#0A1118;border:1px solid rgba(255,255,255,.18);
+    box-shadow:0 -10px 30px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.07);
+    opacity:1;transition:opacity .3s ease}
+  .tuneDock[hidden]{display:none}   /* display:flex must not defeat [hidden] */
+  .tuneDock.fading{opacity:0;pointer-events:none}
+  .tuneDock .tdTop{flex:0 0 auto;display:flex;flex-direction:column;gap:2px;min-width:88px}
+  .tuneDock .tdName{font-size:10.5px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;
+    color:var(--pc,var(--accent));white-space:nowrap}
+  .tuneDock .tdVal{font-size:16px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--ink);white-space:nowrap}
+  .tuneDock .tdCtrl{display:flex;align-items:center;gap:8px;min-height:44px;flex:1 1 auto;min-width:0}
+  .tuneDock .tdStep{appearance:none;font-family:inherit;cursor:pointer;flex:0 0 auto;
+    width:44px;height:44px;border-radius:11px;font-size:18px;font-weight:700;line-height:1;
+    background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.16);color:var(--ink);
+    display:flex;align-items:center;justify-content:center}
+  .tuneDock .tdStep:hover{background:rgba(255,255,255,.1)}
+  .tuneDock .tdStep:active{transform:scale(.94)}
+  .tuneDock .tdStep:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .tuneDock input[type=range]{flex:1 1 auto;min-width:0;height:44px;cursor:pointer;
+    accent-color:var(--pc,var(--accent));background:transparent}
+  .tuneDock input[type=range]:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:8px}
+  .tuneDock .tdDone{appearance:none;font-family:inherit;cursor:pointer;flex:0 0 auto;position:relative;
+    height:30px;padding:0 13px;border-radius:999px;font-size:11px;font-weight:700;letter-spacing:.03em;
+    background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.2);color:var(--ink)}
+  .tuneDock .tdDone::after{content:"";position:absolute;left:0;right:0;top:50%;height:44px;transform:translateY(-50%)}
+  .tuneDock .tdDone:hover{background:rgba(255,255,255,.13)}
+  .tuneDock .tdDone:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  @media (prefers-reduced-motion:reduce){ .tuneDock{transition:none} }
+
   /* ── rotate hint (portrait) ── */
   .rotate{position:fixed;inset:0;z-index:60;display:none;flex-direction:column;align-items:center;justify-content:center;
     gap:14px;background:var(--bg);text-align:center;padding:24px}
@@ -772,15 +896,10 @@
       <!-- DUAL-LENS: the [Direction|Launch|Flight] focus toggle is retired — both
            lenses are shown at once and Flight opens via the Play-flight button. -->
 
-      <div class="ts-center">
-        <div class="speedwrap">
-          <label for="s_speed">Club speed</label>
-          <input type="range" id="s_speed" min="40" max="130" step="1" value="90"
-                 aria-describedby="speed_help">
-          <span class="speedval" id="v_speed" aria-hidden="true">90 mph</span>
-          <span id="speed_help" class="sr-only">Global club-head speed in miles per hour. Drives ball speed and carry.</span>
-        </div>
-      </div>
+      <!-- move 5 VIZ-PORT: the top-strip club-speed slider is RETIRED — club
+           speed is the first INPUT CHIP in the bottom chip row (tap → tune
+           dock). Its hidden state-backbone <input> lives in #sliderBackbone. -->
+      <div class="ts-center"></div>
       <div class="ts-right">
         <button class="playpill" id="playFlight" aria-haspopup="dialog" aria-controls="flightScrim">
           <span class="pico" aria-hidden="true">▶</span> Play flight
@@ -880,18 +999,9 @@
           <g class="vchipWrap" id="vchip_launchDir" data-launch="launchDir" aria-hidden="true"><rect class="vchip" x="0" y="0" width="58" height="22" rx="6"/><text class="vchipText" x="0" y="0" text-anchor="middle" fill="var(--c-launch)"></text></g>
           <g class="vchipWrap" id="vchip_face" aria-hidden="true"><rect class="vchip" x="0" y="0" width="58" height="22" rx="6"/><text class="vchipText" x="0" y="0" text-anchor="middle" fill="var(--c-face)"></text></g>
         </svg>
-        <div class="minidock">
-          <div class="mini k-face">
-            <div class="mtop"><span class="mname"><span class="mdot" style="background:var(--c-face)" aria-hidden="true"></span><label for="s_face">Face</label></span><span class="mval" id="v_face" aria-hidden="true">−2.0°</span></div>
-            <input type="range" id="s_face" min="-20" max="20" step="0.1" value="-2">
-          </div>
-          <div class="mini k-path">
-            <div class="mtop"><span class="mname"><span class="mdot" style="background:var(--c-path)" aria-hidden="true"></span><label for="s_path">Path</label></span><span class="mval" id="v_path" aria-hidden="true">+2.0°</span></div>
-            <input type="range" id="s_path" min="-20" max="20" step="0.1" value="2">
-          </div>
-        </div>
-        <!-- HERO CARDS — Direction (max 4): re-homed rail cells, same popover wiring -->
-        <div class="heroResults" id="heroResultsDir" role="group" aria-label="Direction results — tap any value for an explanation"></div>
+        <!-- move 5 VIZ-PORT: the Face/Path minidock is RETIRED (inputs live on
+             the bottom chip row → tune dock; hidden backbone sliders keep the
+             ids). The Direction result cards moved to the ONE output row. -->
         <div class="coachWrap">
           <div class="coachLine"><span class="coachDot" aria-hidden="true"></span><span class="cause" id="causeDir">Main cause: —</span><span class="cue" id="cueDir"></span></div>
         </div>
@@ -948,21 +1058,79 @@
           <g class="vchipWrap" id="vchip_launchAng" data-launch="launchAng" aria-hidden="true"><rect class="vchip" x="0" y="0" width="58" height="22" rx="6"/><text class="vchipText" x="0" y="0" text-anchor="middle" fill="var(--c-launch)"></text></g>
           <g class="vchipWrap" id="vchip_loft" aria-hidden="true"><rect class="vchip" x="0" y="0" width="58" height="22" rx="6"/><text class="vchipText" x="0" y="0" text-anchor="middle" fill="var(--c-loft)"></text></g>
         </svg>
-        <div class="minidock">
-          <div class="mini k-attack">
-            <div class="mtop"><span class="mname"><span class="mdot" style="background:var(--c-attack)" aria-hidden="true"></span><label for="s_attack">Attack</label></span><span class="mval" id="v_attack" aria-hidden="true">−3.0°</span></div>
-            <input type="range" id="s_attack" min="-15" max="15" step="0.1" value="-3">
-          </div>
-          <div class="mini k-loft">
-            <div class="mtop"><span class="mname"><span class="mdot" style="background:var(--c-loft)" aria-hidden="true"></span><label for="s_loft">Dyn loft</label></span><span class="mval" id="v_loft" aria-hidden="true">30.0°</span></div>
-            <input type="range" id="s_loft" min="0" max="60" step="0.1" value="30">
-          </div>
-        </div>
-        <!-- HERO CARDS — Launch (max 4): re-homed rail cells, same popover wiring -->
-        <div class="heroResults" id="heroResultsLaunch" role="group" aria-label="Launch results — tap any value for an explanation"></div>
+        <!-- move 5 VIZ-PORT: the Attack/Dyn-loft minidock is RETIRED (inputs
+             live on the bottom chip row → tune dock; hidden backbone sliders
+             keep the ids). The Launch result cards moved to the ONE output row. -->
       </section>
     </div>
   </main>
+
+  <!-- ══ move 5 VIZ-PORT — BOTTOM I/O BARS ═══════════════════════════
+       OUTPUT ROW (top): ALL NINE result chips on ONE horizontally scrollable
+       row (owner: "keep every chip on the same row"). Same .mcard →
+       togglePopover(popover) buttons as the old per-lens grids; roving
+       tabindex = ONE tab stop; values update silently on every solve — NOT a
+       live region (the outcome strip + #fDeltaSR stay the announcers).
+       INPUT ROW (bottom): five input chips (Club speed, Face, Path, Attack,
+       Dyn loft). Tap → TUNE DOCK, which slides up OVER this row so the
+       lenses + the output row stay visible while adjusting (never adjust
+       blind). Both rows: dynamic edge fades + chevrons signal the overflow;
+       fixed chip widths guarantee a half-cut PEEK chip at the right edge. -->
+  <div class="ioBar" id="ioBar">
+    <div class="rowWrap" id="outWrap">
+      <div class="chipScroll" id="outScroll">
+        <div class="chipRow outRow" id="outRow" role="toolbar" aria-orientation="horizontal"
+             aria-label="Shot results, nine live values. Each opens an explanation. Use left and right arrow keys to move"></div>
+      </div>
+      <span class="edgeChev left" aria-hidden="true">‹</span>
+      <span class="edgeChev right" aria-hidden="true">›</span>
+    </div>
+    <div class="rowWrap" id="inWrap">
+      <div class="chipScroll" id="chipScroll">
+        <div class="chipRow" id="chipRow" role="toolbar" aria-orientation="horizontal"
+             aria-label="Shot inputs. Each chip opens an editor. Use left and right arrow keys to move"></div>
+      </div>
+      <span class="edgeChev left" aria-hidden="true">‹</span>
+      <span class="edgeChev right" aria-hidden="true">›</span>
+    </div>
+  </div>
+
+  <!-- move 5 VIZ-PORT — TUNE DOCK (interaction contract ported verbatim from
+       impact-viz-mock: one shared transient editor, −/slider/+ + Done,
+       aria-valuetext, auto-fade ~1.8s after the last input — never while
+       pressed or focused; reduced motion = explicit dismiss only; Esc / Done /
+       outside-tap close with the K4 focus rescue). No wind mode on this mock.
+       Anchored over the INPUT row so the lenses + output row stay visible. -->
+  <div class="tuneDock" id="tuneDock" role="group" aria-label="Adjust parameter" hidden>
+    <div class="tdTop">
+      <span class="tdName" id="tdName">—</span>
+      <span class="tdVal" id="tdVal" aria-hidden="true">—</span>
+    </div>
+    <div class="tdCtrl" id="tdParamCtrl">
+      <button class="tdStep" id="tdDown" type="button" aria-label="Decrease">−</button>
+      <input type="range" id="tdRange" min="0" max="1" step="0.1" value="0" />
+      <button class="tdStep" id="tdUp" type="button" aria-label="Increase">+</button>
+    </div>
+    <button class="tdDone" id="tdDone" type="button">Done</button>
+  </div>
+
+  <!-- move 5 VIZ-PORT: hidden STATE-BACKBONE sliders. The retired inline
+       controls' <input>s survive here (display:none — never focusable, out of
+       the accessibility tree) so every existing binding keeps working
+       unchanged: bind()/applyLive→recompute, the lens arrows' drag
+       round-trip ($('s_'+key) + dispatch 'input'), applyFlightSpeed's
+       s_speed sync, and init seeding. The TUNE DOCK is the accessible
+       control now: it writes here and dispatches 'input', driving the SAME
+       live recompute path the inline sliders drove. -->
+  <div id="sliderBackbone" hidden>
+    <input type="range" id="s_speed" min="40" max="130" step="1" value="90" tabindex="-1"
+           aria-label="Club speed in miles per hour" aria-describedby="speed_help">
+    <span id="speed_help" class="sr-only">Global club-head speed in miles per hour. Drives ball speed and carry.</span>
+    <input type="range" id="s_face" min="-20" max="20" step="0.1" value="-2" tabindex="-1" aria-label="Face angle in degrees">
+    <input type="range" id="s_path" min="-20" max="20" step="0.1" value="2" tabindex="-1" aria-label="Club path in degrees">
+    <input type="range" id="s_attack" min="-15" max="15" step="0.1" value="-3" tabindex="-1" aria-label="Attack angle in degrees">
+    <input type="range" id="s_loft" min="0" max="60" step="0.1" value="30" tabindex="-1" aria-label="Dynamic loft in degrees">
+  </div>
 
   <!-- ══ GLASS POPOVER (single reused node) — STAGE 7 three-section body ══ -->
   <div class="pop" id="pop" role="dialog" aria-modal="false" aria-labelledby="popHeadName" hidden>
@@ -1664,16 +1832,18 @@ function buildHeroCard(c){
   return btn;
 }
 (function buildHeroRows(){
-  const dirHost = $('heroResultsDir'), launchHost = $('heroResultsLaunch');
-  DIR_CELLS.forEach(c => dirHost.appendChild(buildHeroCard(c)));
-  LAUNCH_CELLS.forEach(c => launchHost.appendChild(buildHeroCard(c)));
-  // LENS-DOMINANCE REBALANCE: the secondary cells (Ball speed / Backspin /
-  // Carry) join the SAME slim strip as the Launch hero cards (7 compact
-  // columns) instead of a second .secChips row — that row used to cost the
-  // Launch lens ~50px of height on phone. Same buildHeroCard → same
-  // togglePopover wiring, so every popover keeps working. #secChipsLaunch
-  // stays in the DOM (empty, display:none) so no other wiring breaks.
-  SEC_CELLS.forEach(c => launchHost.appendChild(buildHeroCard(c)));
+  // move 5 VIZ-PORT: ALL NINE result cards land on the ONE horizontal output
+  // row (owner: "keep every chip on the same row") in the approved order —
+  // Launch dir, Spin axis, Curve | Launch, Apex, Land angle | Ball speed,
+  // Backspin, Carry. Same buildHeroCard → same togglePopover wiring, so
+  // every explainer popover keeps working. Roving tabindex (ONE tab stop
+  // for the whole row) is initialised here; wireRowNav() adds the
+  // arrow-walk + Home/End + focusin re-sync below.
+  const host = $('outRow');
+  DIR_CELLS.forEach(c => host.appendChild(buildHeroCard(c)));
+  LAUNCH_CELLS.forEach(c => host.appendChild(buildHeroCard(c)));
+  SEC_CELLS.forEach(c => host.appendChild(buildHeroCard(c)));
+  Array.from(host.children).forEach((b, i) => { b.tabIndex = i === 0 ? 0 : -1; });
 })();
 
 // ════════════════════════════════════════════════════════════════
@@ -2565,6 +2735,11 @@ function recompute(){
   renderPredictor(flight);
   renderLaunchBend(flight);
   updateCoachLines(flight);
+  // move 5 VIZ-PORT: the input chips + the open tune dock mirror the live
+  // state on EVERY recompute — so a lens-arrow drag (which routes through the
+  // hidden backbone slider) also updates the chip value and the dock readout.
+  updateInputChips();
+  syncDockUI();
 }
 
 // ── sliders (rAF-throttled live update via bind()) ──────────────
@@ -2645,12 +2820,9 @@ function decorateAria(){
 const TRACK_BASE = 'rgba(255,255,255,.14)';
 // id → { signed, fmt }. signed → fill from the CENTRE (0); else fill from the LEFT.
 const PREMIUM = {
-  s_face:   { signed:true,  fmt:fmtDeg },
-  s_path:   { signed:true,  fmt:fmtDeg },
-  s_attack: { signed:true,  fmt:fmtDeg },
-  s_loft:   { signed:false, fmt:fmtLoftStr },
-  // s_speed lives in the THIN top strip → its bubble would clip above; drop it below.
-  s_speed:  { signed:false, fmt:fmtSpeed, below:true },
+  // move 5 VIZ-PORT: the instrument sliders (s_face/s_path/s_attack/s_loft/
+  // s_speed) are hidden state-backbone inputs now — no premium chrome needed.
+  // Only the flight overlay's club-speed bar keeps the premium treatment.
   fSpeedRange:{ signed:false, fmt:fmtSpeed },
 };
 function setupPremiumSliders(){
@@ -2752,6 +2924,10 @@ function setupArrowDrag(svgId){
     dragKey = g.dataset.key;
     svg.setPointerCapture?.(e.pointerId);
     setActive(dragKey);
+    // move 5 VIZ-PORT: an arrow drag counts as "still editing" for the tune
+    // dock's fade session, and silently RETARGETS an open dock to the dragged
+    // param (the viz mock's setupOvDrag contract).
+    notifyLensDragStart(dragKey);
     e.preventDefault();
     moveTo(e);
   });
@@ -2763,6 +2939,7 @@ function setupArrowDrag(svgId){
     if (!dragKey) return;
     dragKey=null;
     releaseActive();
+    notifyLensDragEnd();   // move 5 VIZ-PORT: re-arm the dock's idle fade
   }
   svg.addEventListener('pointerup', endDrag);
   svg.addEventListener('pointercancel', endDrag);
@@ -2798,6 +2975,297 @@ setupArrowDrag('svgHt');
 // arrows are always interactive → show the grab affordance
 function setArrowAffordance(){
   Object.keys(ARROWS).forEach(k=> $(ARROWS[k].group).classList.add('grab'));
+}
+
+// ════════════════════════════════════════════════════════════════
+//  move 5 VIZ-PORT — INPUT CHIP ROW (registry + builder)
+//   Five editable D-plane params (no Wind on this mock). Tap → tune dock.
+//   slider: the hidden state-backbone <input> kept in silent sync — the
+//   dock writes THERE and dispatches 'input', so the SAME bind()→applyLive
+//   →recompute() path the retired inline sliders drove keeps the dual-lens
+//   arrows, predictor, coach lines and output chips fully LIVE.
+// ════════════════════════════════════════════════════════════════
+const fmtSign1 = v => f1(v)+'°';
+const INPUT_CHIPS = [
+  { key:'speed',  label:'Club speed', aria:'Club speed in miles per hour', state:'clubSpeed',
+    min:40, max:130, step:1, btnStep:1, color:'var(--accent)', slider:'s_speed', arrow:null,
+    fmt:v=>Math.round(v)+' mph', fmtHtml:v=>Math.round(v)+'<small>mph</small>' },
+  { key:'face',   label:'Face', aria:'Face angle in degrees', state:'faceAngle',
+    min:-20, max:20, step:0.1, btnStep:1, color:'var(--c-face)', slider:'s_face', arrow:'face',
+    fmt:fmtSign1, fmtHtml:fmtSign1 },
+  { key:'path',   label:'Path', aria:'Club path in degrees', state:'clubPath',
+    min:-20, max:20, step:0.1, btnStep:1, color:'var(--c-path)', slider:'s_path', arrow:'path',
+    fmt:fmtSign1, fmtHtml:fmtSign1 },
+  { key:'attack', label:'Attack', aria:'Attack angle in degrees', state:'attackAngle',
+    min:-15, max:15, step:0.1, btnStep:1, color:'var(--c-attack)', slider:'s_attack', arrow:'attack',
+    fmt:fmtSign1, fmtHtml:fmtSign1 },
+  { key:'loft',   label:'Dyn loft', aria:'Dynamic loft in degrees', state:'dynamicLoft',
+    min:0, max:60, step:0.1, btnStep:1, color:'var(--c-loft)', slider:'s_loft', arrow:'loft',
+    fmt:v=>v.toFixed(1)+'°', fmtHtml:v=>v.toFixed(1)+'°' },
+];
+const INPUT_BY_KEY = {};
+INPUT_CHIPS.forEach(c => INPUT_BY_KEY[c.key] = c);
+
+(function buildChipRow(){
+  const row = $('chipRow');
+  const tuneGlyph = '<span class="tglyph" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 14 14" fill="none">'
+    + '<path d="M2 4h5.6M11.4 4H12M2 10h.6M5.4 10H12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>'
+    + '<circle cx="9.5" cy="4" r="1.9" fill="currentColor"/><circle cx="3.5" cy="10" r="1.9" fill="currentColor"/></svg></span>';
+  INPUT_CHIPS.forEach(cfg => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'chip input';
+    btn.id = 'icell_' + cfg.key;
+    btn.style.setProperty('--pc', cfg.color);
+    btn.setAttribute('aria-expanded', 'false');
+    btn.setAttribute('aria-controls', 'tuneDock');
+    btn.innerHTML = '<span class="cdot" aria-hidden="true"></span>'
+      + '<span class="cbody"><span class="ck">' + cfg.label + '</span>'
+      + '<span class="cv" id="iv_' + cfg.key + '">—</span></span>' + tuneGlyph;
+    btn.addEventListener('click', () => openTune(cfg.key));
+    row.appendChild(btn);
+  });
+  // roving tabindex — ONE tab stop for the whole row
+  Array.from(row.querySelectorAll('.chip')).forEach((b, i) => { b.tabIndex = i === 0 ? 0 : -1; });
+})();
+
+function updateInputChips(){
+  INPUT_CHIPS.forEach(cfg => {
+    const el = $('iv_'+cfg.key); if (!el) return;
+    const v = state[cfg.state];
+    el.innerHTML = cfg.fmtHtml(v);
+    // A2 FIX (carried over): while a drag is live AND this chip holds focus,
+    // skip the aria rewrite — otherwise whatever the AT is mid-announcing
+    // gets clobbered at pointermove rate.
+    const chip = $('icell_'+cfg.key);
+    const aria = cfg.label + ' ' + cfg.fmt(v) + '. Opens editor';
+    const midDrag = (lensDragKey || tunePointerDown) && chip === document.activeElement;
+    if (!midDrag && chip.getAttribute('aria-label') !== aria) chip.setAttribute('aria-label', aria);
+  });
+}
+
+// ── roving-tabindex row nav (K2/K5 carried over) — shared by the INPUT row
+//    and the OUTPUT row: ONE tab stop, ArrowLeft/Right walk, Home/End, and a
+//    focusin re-sync so tabbing/programmatic focus never desyncs the index.
+//    focusin's scrollIntoView is what makes each row KEYBOARD-SCROLLABLE:
+//    arrow-walking to an off-screen chip scrolls it into view. ──
+function wireRowNav(row){
+  row.addEventListener('pointerdown', ()=>{ lastChipPointerTs = performance.now(); }, true);
+  row.addEventListener('keydown', e=>{
+    const list = Array.from(row.querySelectorAll('button'));
+    const i = list.indexOf(document.activeElement);
+    if (i < 0) return;
+    let j = null;
+    if (e.key === 'ArrowRight') j = Math.min(list.length - 1, i + 1);
+    else if (e.key === 'ArrowLeft') j = Math.max(0, i - 1);
+    else if (e.key === 'Home') j = 0;
+    else if (e.key === 'End') j = list.length - 1;
+    if (j === null || j === i) { if (j !== null) e.preventDefault(); return; }
+    e.preventDefault();
+    list.forEach(c => c.tabIndex = -1);
+    list[j].tabIndex = 0;
+    list[j].focus();
+  });
+  row.addEventListener('focusin', e=>{
+    const b = e.target.closest('button');
+    if (!b || !row.contains(b)) return;
+    row.querySelectorAll('button').forEach(c => c.tabIndex = (c === b ? 0 : -1));
+    b.scrollIntoView({ block:'nearest', inline:'nearest' });
+  });
+}
+wireRowNav($('chipRow'));
+wireRowNav($('outRow'));
+
+// ── dynamic edge fades + chevrons: .can-left/.can-right from the LIVE scroll
+//    position, so the affordance only shows when there genuinely is more. ──
+function wireEdgeFades(wrapId, scrollId){
+  const wrap = $(wrapId), sc = $(scrollId);
+  const upd = ()=>{
+    const max = sc.scrollWidth - sc.clientWidth;
+    wrap.classList.toggle('can-left', sc.scrollLeft > 4);
+    wrap.classList.toggle('can-right', max - sc.scrollLeft > 4);
+  };
+  sc.addEventListener('scroll', upd, { passive:true });
+  window.addEventListener('resize', upd);
+  requestAnimationFrame(upd);
+  return upd;
+}
+wireEdgeFades('outWrap', 'outScroll');
+wireEdgeFades('inWrap', 'chipScroll');
+
+// ── one-time scroll hint: the output row nudges sideways once (~34px out and
+//    back) shortly after load so the overflow is impossible to miss. Skipped
+//    under reduced motion; cancelled the moment the user touches the row. ──
+(function outScrollHint(){
+  if (reduce) return;
+  const sc = $('outScroll');
+  requestAnimationFrame(()=>{
+    if (sc.scrollWidth - sc.clientWidth < 20) return;
+    const tw = gsap.to(sc, { scrollLeft:34, duration:.5, delay:1.1, ease:'power2.inOut', yoyo:true, repeat:1 });
+    const cancel = ()=>{ tw.kill(); sc.removeEventListener('pointerdown', cancel); sc.removeEventListener('wheel', cancel); };
+    sc.addEventListener('pointerdown', cancel, { passive:true });
+    sc.addEventListener('wheel', cancel, { passive:true });
+  });
+})();
+
+// ════════════════════════════════════════════════════════════════
+//  move 5 VIZ-PORT — TUNE DOCK: one shared transient editor.
+//  Lifecycle (verbatim viz contract): chip tap → dock appears + the param's
+//  lens arrow lights up (chip-fade); every input drives the SAME live
+//  recompute path the inline sliders drove; the dock fades ~1.8s after the
+//  last input, NEVER while pressed or focused; reduced motion: no auto-fade
+//  — explicit dismiss only (Done / Esc / outside / focus-out). K4: focus is
+//  never stranded — closing returns it to the summoning chip.
+// ════════════════════════════════════════════════════════════════
+const tuneDock = $('tuneDock'), tdName = $('tdName'), tdVal = $('tdVal'),
+      tdRange = $('tdRange'), tdDown = $('tdDown'), tdUp = $('tdUp'), tdDone = $('tdDone');
+let tuneKey = null, tuneFadeTimer = null;
+let tunePointerDown = false, lensDragKey = null;
+let lastChipPointerTs = -1e9;             // pointer-vs-keyboard open detection
+
+function chipExpanded(key, on){
+  const b = $('icell_'+key);
+  if (b) b.setAttribute('aria-expanded', String(on));
+}
+function syncDockUI(){
+  if (!tuneKey) return;
+  const cfg = INPUT_BY_KEY[tuneKey];
+  const v = state[cfg.state];
+  if (+tdRange.value !== v) tdRange.value = v;
+  tdVal.textContent = cfg.fmt(v);
+  tdRange.setAttribute('aria-valuetext', cfg.label + ' ' + cfg.fmt(v));
+}
+function retargetDock(key){
+  const cfg = INPUT_BY_KEY[key];
+  tuneDock.style.setProperty('--pc', cfg.color);
+  tdName.textContent = cfg.label;
+  tdRange.min = cfg.min; tdRange.max = cfg.max; tdRange.step = cfg.step;
+  tdRange.value = state[cfg.state];
+  tdRange.setAttribute('aria-label', cfg.aria);
+  tuneDock.setAttribute('aria-label', 'Adjust ' + cfg.aria);   // A1 FIX carried over
+  syncDockUI();
+}
+function openTune(key){
+  // K1 guard (carried over): never let a tune surface open over a live
+  // flight animation (the whole ioBar is also inert while the overlay is up).
+  if (fTL && fTL.isActive()) return;
+  // MONETIZATION (locked decision): "Tune = Pro" — in production any live-
+  // tune surface on this screen requires the RevenueCat "pro" entitlement.
+  // isWeb() ungates this web mock.
+  if (!saShots.isWeb() && !saShots.isPro()){ openPaywall('impact'); return; }
+  if (tuneKey === key){ closeTune(false, true); return; }     // second tap toggles
+  closePopover(false);
+  if (tuneKey) chipExpanded(tuneKey, false);
+  tuneKey = key;
+  chipExpanded(key, true);
+  tuneDock.hidden = false;
+  tuneDock.classList.remove('fading');
+  retargetDock(key);
+  // light the matching lens arrow immediately — the lens IS the live feedback
+  const cfg = INPUT_BY_KEY[key];
+  if (cfg.arrow) setActive(cfg.arrow);
+  // keyboard opens move focus into the editor; pointer opens leave focus on
+  // the chip (so the idle fade can run — focus-in-dock blocks it by design)
+  const byPointer = (performance.now() - lastChipPointerTs) < 600;
+  if (!byPointer) tdRange.focus({ preventScroll:true });
+  armFade();
+  document.addEventListener('pointerdown', onTuneOutside, true);
+  saHaptics.impact('light');
+}
+function closeTune(immediate, returnFocus){
+  if (!tuneKey) return;
+  // K4 FIX (carried over): captured BEFORE tuneKey is nulled — an outside tap
+  // closes the dock while focus may still be inside it.
+  const focusWasInside = tuneDock.contains(document.activeElement);
+  clearTimeout(tuneFadeTimer); tuneFadeTimer = null;
+  const chip = $('icell_'+tuneKey);
+  chipExpanded(tuneKey, false);
+  tuneKey = null;
+  releaseActive();          // chip-fade hold → the lens returns to resting state
+  document.removeEventListener('pointerdown', onTuneOutside, true);
+  const hide = ()=>{ if (!tuneKey){ tuneDock.hidden = true; tuneDock.classList.remove('fading'); } };
+  if (immediate || reduce) hide();
+  else { tuneDock.classList.add('fading'); setTimeout(hide, 320); }
+  // K4 FIX: return focus to the summoning chip whenever asked OR focus was
+  // about to be stranded in the (closing) dock; the rAF re-check lets a tap
+  // on a genuinely focusable target keep the focus it naturally received.
+  if ((returnFocus || focusWasInside) && chip){
+    requestAnimationFrame(()=>{
+      if (document.activeElement === document.body || tuneDock.contains(document.activeElement)) chip.focus({ preventScroll:true });
+    });
+  }
+}
+function onTuneOutside(e){
+  if (!tuneKey) return;
+  if (tuneDock.contains(e.target)) return;
+  if (e.target.closest && e.target.closest('.arrowG')) return;   // lens-arrow drag = still editing
+  const chip = $('icell_'+tuneKey);
+  if (chip && chip.contains(e.target)) return;                   // chip tap handles its own toggle
+  closeTune(false, false);
+}
+// fade lifecycle — ~1.8s after the last input; never while pressed/focused.
+function armFade(){
+  clearTimeout(tuneFadeTimer);
+  if (reduce) return;   // reduced motion: explicit dismiss only
+  tuneFadeTimer = setTimeout(()=>{
+    if (tunePointerDown || lensDragKey || tuneDock.contains(document.activeElement)){ armFade(); return; }
+    closeTune(false, false);
+  }, 1800);
+}
+tuneDock.addEventListener('pointerdown', ()=>{ tunePointerDown = true; clearTimeout(tuneFadeTimer); });
+document.addEventListener('pointerup', ()=>{
+  if (tunePointerDown){ tunePointerDown = false; if (tuneKey) armFade(); }
+});
+tuneDock.addEventListener('keydown', e=>{
+  if (e.key === 'Escape'){ e.preventDefault(); e.stopPropagation(); closeTune(false, true); }
+});
+tuneDock.addEventListener('focusout', ()=>{
+  // focus left the dock entirely → dismiss (the reduced-motion contract);
+  // guarded so pointer/arrow interactions don't false-trigger.
+  requestAnimationFrame(()=>{
+    if (tuneKey && !tunePointerDown && !lensDragKey && !tuneDock.contains(document.activeElement)) closeTune(false, false);
+  });
+});
+
+// the live-tune pipeline: write the hidden backbone slider + dispatch 'input'
+// so bind()'s OWN handler runs — state, chip-fade (setActive), applyLive →
+// recompute → arrows/predictor/coach/output chips. No coupling is lost.
+function tuneParam(key, v){
+  const cfg = INPUT_BY_KEY[key];
+  if (!cfg) return;
+  const stepped = Math.round(v / cfg.step) * cfg.step;
+  v = clamp(+stepped.toFixed(2), cfg.min, cfg.max);
+  if (state[cfg.state] === v){ if (tuneKey) armFade(); return; }
+  const hidden = $(cfg.slider);
+  hidden.value = v;
+  hidden.dispatchEvent(new Event('input'));
+  syncDockUI();
+  if (tuneKey) armFade();
+}
+tdRange.addEventListener('input', ()=>{ if (tuneKey) tuneParam(tuneKey, +tdRange.value); });
+tdDown.addEventListener('click', ()=>{ if (!tuneKey) return;
+  const cfg = INPUT_BY_KEY[tuneKey]; tuneParam(tuneKey, state[cfg.state] - cfg.btnStep); saHaptics.selectionChanged(); });
+tdUp.addEventListener('click', ()=>{ if (!tuneKey) return;
+  const cfg = INPUT_BY_KEY[tuneKey]; tuneParam(tuneKey, state[cfg.state] + cfg.btnStep); saHaptics.selectionChanged(); });
+tdDone.addEventListener('click', ()=> closeTune(false, true));
+wireSliderHaptics(tdRange, 'tune');
+
+// lens-arrow drag ↔ dock session bridge (called from setupArrowDrag):
+// dragging an arrow keeps an open dock alive and silently retargets it.
+function notifyLensDragStart(key){
+  lensDragKey = key;
+  if (!tuneKey) return;
+  clearTimeout(tuneFadeTimer);
+  if (tuneKey !== key && INPUT_BY_KEY[key]){
+    chipExpanded(tuneKey, false);
+    tuneKey = key;
+    chipExpanded(key, true);
+    retargetDock(key);
+  }
+}
+function notifyLensDragEnd(){
+  lensDragKey = null;
+  if (tuneKey) armFade();
 }
 
 // ════════════════════════════════════════════════════════════════
@@ -4108,6 +4576,14 @@ document.addEventListener('visibilitychange', () => {
 function openFlight(){
   saHaptics.impact('medium');   // STAGE 4 — #playFlight press
   lastFocus = document.activeElement;
+  // move 5 VIZ-PORT: never leave the tune dock open (or focus stranded in it)
+  // under the overlay — close it first; if focus lived in the dock, return
+  // it to the summoning chip when the overlay closes instead.
+  if (tuneKey){
+    const summon = $('icell_'+tuneKey);
+    if (tuneDock.contains(lastFocus) && summon) lastFocus = summon;
+    closeTune(true, false);
+  }
   ensureFX();
   startAmbient();               // no-op under prefers-reduced-motion
   // sync the in-overlay club-speed bar to the current instrument state
@@ -4123,8 +4599,13 @@ function openFlight(){
   // inert-ing `.app` would inert the overlay it's supposed to protect.
   const topstripEl = document.querySelector('.topstrip');
   const stageEl = document.getElementById('stage');
+  const ioBarEl = document.getElementById('ioBar');
   if (topstripEl) topstripEl.inert = true;
   if (stageEl) stageEl.inert = true;
+  // move 5 VIZ-PORT (K1 contract): both chip rows are inert the whole time
+  // the flight overlay owns the screen — a keyboard user can never Tab into
+  // an input/output chip behind the scrim (or during the flight animation).
+  if (ioBarEl) ioBarEl.inert = true;
   flightScrim.classList.add('open');
   document.addEventListener('keydown', onFlightKey);
   $('flightClose').focus({preventScroll:true});
@@ -4140,8 +4621,10 @@ function closeFlight(){
   flightScrim.classList.remove('open');
   const topstripEl = document.querySelector('.topstrip');
   const stageEl = document.getElementById('stage');
+  const ioBarEl = document.getElementById('ioBar');
   if (topstripEl) topstripEl.inert = false;
   if (stageEl) stageEl.inert = false;
+  if (ioBarEl) ioBarEl.inert = false;   // move 5 VIZ-PORT: chip rows operable again
   if (fTL) fTL.kill();
   resetChoreo();        // stage 2: no dim pills / stuck camera dip on reopen
   hideDeltaLabel();
@@ -4342,15 +4825,15 @@ $('fSpeedUp').addEventListener('click', ()=> saHaptics.selectionChanged());
     { selector: '#stage',
       title: 'Both lenses at once',
       body: 'Direction (left) shows face & path from above; Launch (right) shows attack & loft from the side.' },
-    { selector: '#lensDir .minidock',
+    { selector: '#icell_face',
       title: 'Shape the shot',
-      body: 'Adjust Face & Path here to aim the clubface and swing direction — they set how the ball starts and curves.' },
-    { selector: '#lensHt .minidock',
+      body: 'Tap Face or Path to open the tuner — drag its slider and watch the Direction lens aim the clubface and swing direction live.' },
+    { selector: '#icell_loft',
       title: 'Launch & spin',
-      body: 'Set Attack & Dyn loft here to change how high the ball launches and how much it spins.' },
-    { selector: '#s_speed',
+      body: 'Tap Attack or Dyn loft — the Launch lens shows how high the ball launches and how much it spins while you drag.' },
+    { selector: '#icell_speed',
       title: 'Set your club speed',
-      body: 'Drag the club-speed slider — it drives ball speed and carry distance.' },
+      body: 'Tap Club speed and drag the slider — it drives ball speed and carry distance.' },
     { selector: '#playFlight',
       title: 'See the ball fly',
       body: 'Press Play flight to watch the shot launch, climb to apex and land downrange.' }
@@ -4388,10 +4871,11 @@ $('fSpeedUp').addEventListener('click', ()=> saHaptics.selectionChanged());
       onDone(){
         activeCoach = null; coachArmed = false; coachIdx = 0;
         // the tour's own close/focus-return can land on a spotlighted node
-        // that then re-hides (e.g. a mini-panel), dropping focus to <body>.
-        // Land somewhere always-present and useful instead.
-        const speed = $('s_speed');
-        if (speed) speed.focus({ preventScroll:true });
+        // that then re-hides, dropping focus to <body>. Land somewhere
+        // always-present and useful instead: the first input chip (the
+        // row's focusin handler re-syncs the roving tabindex).
+        const first = $('icell_speed');
+        if (first) first.focus({ preventScroll:true });
       }
     });
   }
@@ -4488,6 +4972,8 @@ window.__impact = { state, solve:()=>solveFlight(state), visAngle, targetAngle,
   get activeKey(){return activeKey;}, get fTL(){return fTL;}, get ambient(){return ambient;},
   get ghosts(){return ghosts;}, get baseline(){return fBaseline;}, get replayCount(){return replayCount;}, get lastFlown(){return lastFlown;},
   haptics: saHaptics,
+  // move 5 VIZ-PORT — dock/chip-row test hook (mirrors the viz mock's `viz` hook)
+  tune: { open: openTune, close: closeTune, param: tuneParam, get key(){ return tuneKey; } },
   focus: __impactFocusHook };   // STAGE 4 — test hook (+ FOCUS-MODES hook)
 </script>
 </body>
