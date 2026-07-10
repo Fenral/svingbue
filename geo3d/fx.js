@@ -67,7 +67,7 @@ function createTrail() {
   geom.__ready = true;
 
   const mat = new THREE.MeshBasicMaterial({
-    vertexColors: true, transparent: true, toneMapped: false,
+    vertexColors: true, transparent: true, toneMapped: false, fog: false,
     blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide,
   });
   const mesh = new THREE.Mesh(geom, mat);
@@ -76,7 +76,7 @@ function createTrail() {
   mesh.renderOrder = 4;
 
   const ring = []; // { pos: Vector3, dir: Vector3 (shaft dir), t: age-index }
-  const cyan = new THREE.Color('#22E3D6');
+  const cyan = new THREE.Color('#FF8A4D'); // §1 — cyan trail → ember-tail (--accent), additive
   const _up = new THREE.Vector3(0, 0, 1);
   const _side = new THREE.Vector3();
 
@@ -257,7 +257,7 @@ function createDivot() {
 function createFlash() {
   const geo = new THREE.PlaneGeometry(0.08, 0.08);
   const mat = new THREE.MeshBasicMaterial({
-    color: 0xffffff, transparent: true, opacity: 0, toneMapped: false,
+    color: 0xffffff, transparent: true, opacity: 0, toneMapped: false, fog: false,
     blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide,
   });
   const mesh = new THREE.Mesh(geo, mat);
@@ -296,7 +296,7 @@ function createFlash() {
 function createSwoosh() {
   const geo = new THREE.PlaneGeometry(0.16, 0.05);
   const mat = new THREE.MeshBasicMaterial({
-    color: 0xbfe9ff, transparent: true, opacity: 0, toneMapped: false,
+    color: 0xC7CBF0, transparent: true, opacity: 0, toneMapped: false, fog: false,
     blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide,
   });
   const mesh = new THREE.Mesh(geo, mat);
@@ -407,7 +407,7 @@ export function createFx(state) {
       // no ground contact at all — faint air-swoosh above the ball, club clears it
       const swooshPos = ballV.clone(); swooshPos.z += BALL_RADIUS_M * 2.2;
       swoosh.show(swooshPos, camera ? camera.quaternion : null, { duration: reduced ? 0 : 0.32 });
-      flash.pulse(ballV, { duration: reduced ? 0 : 0.14, scale: 0.5, color: 0xbfe9ff });
+      flash.pulse(ballV, { duration: reduced ? 0 : 0.14, scale: 0.5, color: 0xC7CBF0 });
       if (reduced) { swoosh.setStatic(); flash.setStatic(ballV); }
       return { shakeMs: 0 };
     }

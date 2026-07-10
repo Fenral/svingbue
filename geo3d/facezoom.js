@@ -190,6 +190,38 @@ export function createFaceZoom({ sa3d, club3d, chipEl, liveEl, hintEl, dismissEl
   marker.renderOrder = 8;
   club3d.faceAnchor.add(marker);
 
+  // §2.4 — ONE ember bloom pulse on the contact marker at the freeze (300ms):
+  // an additive ember disc that blooms + fades, child of the same faceAnchor so
+  // it rides the exact contact point. The only heat at the moment of contact.
+  const bloomGeo = new THREEns.CircleGeometry(0.02, 24);
+  const bloomMat = new THREEns.MeshBasicMaterial({
+    color: 0xFF8A4D, transparent: true, opacity: 0, toneMapped: false,
+    depthWrite: false, depthTest: false, blending: THREEns.AdditiveBlending, side: THREEns.DoubleSide,
+  });
+  const bloom = new THREEns.Mesh(bloomGeo, bloomMat);
+  bloom.visible = false;
+  bloom.renderOrder = 7;
+  club3d.faceAnchor.add(bloom);
+  let bloomTween = null;
+  const BLOOM_MS = 300;
+  function pulseBloom() {
+    if (!window.gsap) return;
+    bloom.position.copy(marker.position);
+    bloom.visible = true;
+    bloom.scale.setScalar(0.4);
+    bloomMat.opacity = 0.85;
+    if (bloomTween) bloomTween.kill();
+    bloomTween = window.gsap.timeline({ onUpdate: () => sa3d.invalidate() });
+    bloomTween
+      .to(bloom.scale, { x: 2.6, y: 2.6, z: 2.6, duration: BLOOM_MS / 1000, ease: 'power2.out' }, 0)
+      .to(bloomMat, { opacity: 0, duration: BLOOM_MS / 1000, ease: 'power1.in' }, 0)
+      .add(() => { bloom.visible = false; });
+  }
+  function clearBloom() {
+    if (bloomTween) { bloomTween.kill(); bloomTween = null; }
+    bloom.visible = false; bloomMat.opacity = 0;
+  }
+
   let active = false;          // a zoom detour (approach OR frozen hold) is currently in flight
   let stage = 'idle';          // FIX N — 'idle' | 'approach' (pre-impact slow-mo, still moving) | 'frozen' (paused at impact)
   let isWhiffRun = false;      // whether the CURRENT detour is the Whiff (ball-framing) branch
@@ -215,18 +247,22 @@ export function createFaceZoom({ sa3d, club3d, chipEl, liveEl, hintEl, dismissEl
 
   const lastContact = { active: false, band: null, offsetM: 0, offsetRatio: 0, pct: null };
 
-  function setChip(text, color) {
+  // §2.4/§2.5 — the verdict lower-third: band word in Fraunces, percent in mono.
+  function setChip(band, pct, color) {
     if (!chipEl) return;
-    chipEl.textContent = text;
+    chipEl.innerHTML = `<span class="fzc-txt"><span class="fzc-band">${band}</span><span class="fzc-sep">·</span><span class="fzc-pct">${pct}%</span></span>`;
     chipEl.style.color = color || '';
   }
-  function showChip() {
+  function showChip(typed) {
     if (!chipEl) return;
     chipEl.classList.add('is-visible');
+    chipEl.classList.toggle('is-typing', !!typed);
+    if (typed) { const t = chipEl.querySelector('.fzc-txt'); if (t) { t.style.animation = 'none'; void t.offsetWidth; t.style.animation = ''; } } // restart the typed-on wipe
   }
   function hideChip() {
     if (!chipEl) return;
     chipEl.classList.remove('is-visible');
+    chipEl.classList.remove('is-typing');
   }
   function announceOnce(text) {
     if (announced || !liveEl) return;
@@ -569,7 +605,9 @@ export function createFaceZoom({ sa3d, club3d, chipEl, liveEl, hintEl, dismissEl
     restoreSceneNodes(); // FIX K.1 — bring back arc/plane/lowpoint/groundcontact/delivery/target-line/trail
     resumeSwingTween(true); // revive: this IS the tween that must keep driving finish/settle
     clearMarker();
-    hideChip();
+    clearBloom();
+    // §2.4 — the verdict plaque HOLDS past release (until the next input); it is
+    // hidden by reset() on the next swing, or geometry.html on slider/orbit.
     hideHint();
     active = false;
     stage = 'idle';
@@ -691,11 +729,12 @@ export function createFaceZoom({ sa3d, club3d, chipEl, liveEl, hintEl, dismissEl
     trackCameraToState(state); // final snap: freeze frame must match the TRUE-impact club pose exactly
 
     const sq = strikeQuality(state);
-    setChip(BAND_LABEL[sq.band] + ' · ' + sq.pct + '%', sq.textColor);
-    showChip();
+    setChip(BAND_LABEL[sq.band], sq.pct, sq.textColor);
+    showChip(true); // typed-on lower-third
     announceOnce('Strike: ' + BAND_ANNOUNCE[sq.band] + ', ' + sq.pct + ' percent');
     if (!isWhiffRun) {
       pulseMarker();
+      pulseBloom(); // §2.4 — one ember bloom on the contact marker (300ms)
       // FIX P4 — ghost the ball + lift the blade only on real contact (Whiff
       // has no ball/face contact to reveal, and no clubface occlusion problem
       // to solve — the club passes clean over the ball, see the Whiff camera
@@ -736,8 +775,8 @@ export function createFaceZoom({ sa3d, club3d, chipEl, liveEl, hintEl, dismissEl
     lastContact.pct = sq.pct;
     lastContact.offsetM = sq.band === 'Whiff' ? null : clubBallContact(state).offset;
     lastContact.offsetRatio = sq.band === 'Whiff' ? null : clubBallContact(state).offsetRatio;
-    setChip(BAND_LABEL[sq.band] + ' · ' + sq.pct + '%', sq.textColor);
-    showChip();
+    setChip(BAND_LABEL[sq.band], sq.pct, sq.textColor);
+    showChip(false); // reduced-motion: render complete + static, no wipe
     announced = false;
     announceOnce('Strike: ' + BAND_ANNOUNCE[sq.band] + ', ' + sq.pct + ' percent');
     clearMarker();
@@ -775,6 +814,7 @@ export function createFaceZoom({ sa3d, club3d, chipEl, liveEl, hintEl, dismissEl
     pImpactTarget = null;
     announced = false;
     clearMarker();
+    clearBloom();
     hideChip();
     hideHint();
     lastContact.active = false;
@@ -801,6 +841,7 @@ export function createFaceZoom({ sa3d, club3d, chipEl, liveEl, hintEl, dismissEl
     trackApproach,
     freeze,
     showStaticChip,
+    hideVerdict: hideChip, // §2.4 — geometry.html hides the held verdict on the next input
     reset,
     endNow,
     isActive: () => active,

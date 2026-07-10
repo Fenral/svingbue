@@ -3,7 +3,10 @@
  * ArcCurve samples arcPosition() directly (same source of truth as the SVG).
  * TubeGeometry (140 segments × 8 radial, r=6mm) + additive glow tube.
  * Ink-draw uProgress uniform (default 1 = fully drawn) via onBeforeCompile.
- * Color gradient #7ff4eb -> #15b9ad along vUv.x (sweep parameter).
+ * Colour (THE OBSERVATORY BROADCAST §1 — kills the teal era): ember gradient
+ * --accent #FF8A4D → a cooler, dimmer ember tail along vUv.x; the low-point
+ * valley runs white-hot (#FFF3E8), so at the strike the arc reads as a wire
+ * heated to incandescence at the point of contact.
  * Buffers are preallocated once; slider input rewrites positions in place.
  */
 import * as THREE from '../vendor/three/build/three.module.js';
@@ -11,9 +14,9 @@ import { arcPosition, SWEEP_RAD } from '../swing-parameters-and-impact.js';
 
 const TUBE_SEG = 140, TUBE_RADIAL = 8;
 const CORE_R = 0.006, GLOW_R = 0.016;
-const C_A = new THREE.Color('#7ff4eb');
-const C_B = new THREE.Color('#15b9ad');
-const C_WARM = new THREE.Color('#fff1d6'); // valley-glow hotspot near the true low point
+const C_A = new THREE.Color('#FF8A4D');   // ember head = --accent
+const C_B = new THREE.Color('#9E4A28');   // cooler/dimmer ember tail (rgba(255,138,77,.35) grade)
+const C_WARM = new THREE.Color('#FFF3E8'); // white-hot valley-glow hotspot near the true low point
 
 class ArcCurve extends THREE.Curve {
   constructor(state) { super(); this.state = state; }
@@ -26,7 +29,7 @@ class ArcCurve extends THREE.Curve {
 
 function makeInkMaterial(opts) {
   const mat = new THREE.MeshBasicMaterial({
-    vertexColors: true, toneMapped: false,
+    vertexColors: true, toneMapped: false, fog: false, // ember stays pure — never tinted by the violet depth fog
     transparent: opts.transparent || false,
     opacity: opts.opacity != null ? opts.opacity : 1,
     blending: opts.additive ? THREE.AdditiveBlending : THREE.NormalBlending,
@@ -96,7 +99,7 @@ export function createArc(state) {
   // frozen "ghost" arc: a dimmed, thin fat-line clone frozen at pointerdown time,
   // shown while dragging, faded 400ms after pointerup.
   const ghostGeo = new THREE.TubeGeometry(curve, TUBE_SEG, CORE_R * 0.85, 6, false);
-  const ghostMat = new THREE.MeshBasicMaterial({ color: 0x9fb3c9, transparent: true, opacity: 0, toneMapped: false, depthWrite: false });
+  const ghostMat = new THREE.MeshBasicMaterial({ color: 0xA7A0C4, transparent: true, opacity: 0, toneMapped: false, fog: false, depthWrite: false });
   const ghost = new THREE.Mesh(ghostGeo, ghostMat);
   ghost.visible = false;
   ghost.renderOrder = 0;

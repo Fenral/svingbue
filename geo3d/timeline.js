@@ -50,6 +50,7 @@ import { thetaAtImpact, strikeQuality, lpWorld, arcPosition, SWEEP_RAD, BALL_RAD
 import { hashSeed, createFx } from './fx.js';
 import { createFaceZoom, APPROACH_P_DELTA } from './facezoom.js';
 import { groundCrossingTheta0 } from './groundcontact.js';
+import { createGhosts } from './ghosts.js';
 import saHaptics from '../sa-haptics.js';
 
 const REST_BEHIND = deg2radLocal(5);
@@ -116,6 +117,25 @@ function computeGroundStrikeTrigger(state) {
 export function createTimeline3d({ state, sa3d, arc3d, club3d, getReduced, controlsVisible, faceZoomChipEl, faceZoomLiveEl, faceZoomHintEl, faceZoomDismissEl, faceZoomHideNodes, faceZoomHideLabels, groundStrikeLabelEl } = {}) {
   const fx = createFx(state);
   sa3d.scene.add(fx.group);
+
+  // §2.4 — star-trail persistence: pooled ember clubhead silhouettes laid
+  // along the downswing→impact path, decayed on release. Deliberately NOT in
+  // the face-zoom hide list so the long-exposure holds through the freeze and
+  // is the hero as the camera arcs out on release.
+  const ghosts = createGhosts({ getBladeMesh: () => club3d.bladeMesh, invalidate: sa3d.invalidate });
+  sa3d.scene.add(ghosts.group);
+  const GHOST_START_P = 0.12, GHOST_SLOT = 0.035;
+  let lastGhostSlot = -1, ghostDecayStarted = false;
+  function maybeSampleGhost(ph, p) {
+    if (ph !== 'down' && ph !== 'impact') return;
+    if (getReduced()) return;
+    if (p < GHOST_START_P) return;
+    const slot = Math.floor(p / GHOST_SLOT);
+    if (slot === lastGhostSlot) return;
+    lastGhostSlot = slot;
+    const bm = club3d.bladeMesh;
+    if (bm) { club3d.group.updateMatrixWorld(true); bm.updateWorldMatrix(true, false); ghosts.sample(bm.matrixWorld); }
+  }
 
   // STEP 5 — FACE-ZOOM impact replay (contact marker + camera hard-cut + chip).
   // FIX N (2026-07-02): early slow-mo cut-in before impact + FULL FREEZE at
@@ -306,11 +326,46 @@ export function createTimeline3d({ state, sa3d, arc3d, club3d, getReduced, contr
 
   function setPhase(p) { phase = p; }
 
+  // ── §2.4 THE WOW — broadcast camera choreography, riding the EXISTING
+  // timeline via its progress callbacks (never wall-time). A down-phase azimuth
+  // WHIP toward the impact-side composition (an additive sa3d.camOffset so it
+  // composes with the base rig + FACE/DTL edits and survives facezoom's own
+  // rig save/restore) plus a global timeScale ramp 1→0.3. Both no-op the moment
+  // facezoom owns the camera (approach/freeze) and resume on release, arcing the
+  // camera to a finish composition and easing timeScale back to 1.
+  const WHIP_DEG = -26;         // azimuth swept across the downswing
+  const WHIP_FINISH_DEG = -42;  // where the camera "completes its arc" on release
+  function applyReplayCamera(ph, p) {
+    if (faceZoom.isActive()) return; // facezoom owns az + timeScale during the closeup
+    let az = 0;
+    if (ph === 'down') az = WHIP_DEG * Math.min(1, Math.max(0, p / 0.42));
+    else if (ph === 'impact') az = WHIP_DEG;
+    else if (ph === 'finish') az = WHIP_DEG + (WHIP_FINISH_DEG - WHIP_DEG) * Math.min(1, Math.max(0, (p - 0.58) / 0.42));
+    sa3d.setCamOffset({ az });
+    // Global timeScale: the downswing DECELERATES 1→0.3 (drama), then the impact
+    // window eases back toward 1 so the EXISTING slow-mo (the 2.55s impact tween
+    // + facezoom's 0.05 cut-in) plays at its designed pace rather than being
+    // multiplied into a 10s crawl. windup/finish run at 1.
+    if (tween && tween.timeScale) {
+      let ts = 1;
+      if (ph === 'down') ts = 1 - 0.7 * Math.min(1, Math.max(0, p / 0.42));
+      else if (ph === 'impact') ts = 0.3 + 0.7 * Math.min(1, Math.max(0, (p - 0.42) / 0.08)); // 0.3 → 1 by p≈0.50
+      tween.timeScale(ts);
+    }
+  }
+  function resetReplayCamera() {
+    sa3d.setCamOffset({ az: 0 });
+    ghosts.reset();
+    lastGhostSlot = -1;
+    ghostDecayStarted = false;
+  }
+
   /** Reduced-motion: snap straight to the finished/settled state, no tweens. */
   function snapReduced() {
     if (tween) { tween.kill(); tween = null; }
     faceZoom.reset();
     fx.reset();
+    resetReplayCamera(); // reduced-motion: no whip, no ghosts (spec §2.4)
     impactFired = false;
     groundStrike = computeGroundStrikeTrigger(state);
     groundStrikeFired = false;
@@ -351,6 +406,7 @@ export function createTimeline3d({ state, sa3d, arc3d, club3d, getReduced, contr
     if (reduced) { snapReduced(); return; }
 
     fx.reset();
+    resetReplayCamera(); // §2.4 — clear ghosts + whip offset before a fresh swing
     impactFired = false;
     groundStrike = computeGroundStrikeTrigger(state);
     groundStrikeFired = false;
@@ -371,6 +427,11 @@ export function createTimeline3d({ state, sa3d, arc3d, club3d, getReduced, contr
       const sampleTrail = ph === 'down' || ph === 'impact' || ph === 'finish';
       placeAt(anim3.p, { sampleTrail });
       maybeFireGroundStrike(ph, anim3.p);
+      // §2.4 — lay ember ghost silhouettes along the downswing→impact path,
+      // and ride the whip + timeScale ramp (both no-op once facezoom cuts in).
+      maybeSampleGhost(ph, anim3.p);
+      applyReplayCamera(ph, anim3.p);
+      if (ph === 'finish' && !ghostDecayStarted) { ghostDecayStarted = true; ghosts.startDecay(window.gsap, false); }
       // dolly: ramp in across windup→down→impact midpoint, back out across finish
       // (skipped once the face-zoom owns the camera — dollyTo() itself already
       // no-ops via faceZoom.isActive(), kept here for clarity of intent).
@@ -395,10 +456,20 @@ export function createTimeline3d({ state, sa3d, arc3d, club3d, getReduced, contr
         dollyTo(0); // finish phase already ramps the dolly back to ~0; settle holds it there
         const settleTween = window.gsap.to(anim3, {
           p: pRest, duration: 0.8, ease: 'power2.inOut',
-          onUpdate: () => { placeAt(anim3.p, { inkP: 1 }); },
+          onUpdate: () => {
+            placeAt(anim3.p, { inkP: 1 });
+            // §2.4 — bring the whipped camera home to the resting pose as the
+            // club returns to address (only while facezoom isn't mid-detour).
+            if (!faceZoom.isActive()) {
+              const f = Math.min(1, Math.max(0, (1 - anim3.p) / Math.max(1e-6, 1 - pRest)));
+              sa3d.setCamOffset({ az: WHIP_FINISH_DEG * (1 - f) });
+              sa3d.applyRig();
+            }
+          },
           onComplete: () => {
             setPhase('idle');
             tween = null;
+            resetReplayCamera();  // whip offset → 0, ghosts cleared (failsafe if decay didn't finish)
             if (cameraBaseRig) { sa3d.rig.dist = cameraBaseRig.dist; sa3d.applyRig(); }
             controlsVisible(true);
             fx.trail.reset();   // hide the trail once idle (spec: "hidden when idle")
@@ -457,6 +528,7 @@ export function createTimeline3d({ state, sa3d, arc3d, club3d, getReduced, contr
   return {
     fx,
     faceZoom,
+    ghosts,
     play,
     getPhase,
     getTimeline,

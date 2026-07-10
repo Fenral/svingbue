@@ -5,18 +5,44 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <meta name="robots" content="noindex" />
 <title>Swing-arc simulator</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2052%2052'%20fill='none'%3E%3Cpath%20d='M11%2045%20C%2016%2026,%2024%2018,%2035%2015%20M21%2039%20L%2030%2024%20L%2043%2045'%20stroke='%2322E3D6'%20stroke-width='4.2'%20stroke-linecap='round'%20stroke-linejoin='round'/%3E%3Ccircle%20cx='37'%20cy='15'%20r='5.2'%20fill='%2322E3D6'/%3E%3C/svg%3E" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2052%2052'%20fill='none'%3E%3Cpath%20d='M11%2045%20C%2016%2026,%2024%2018,%2035%2015%20M21%2039%20L%2030%2024%20L%2043%2045'%20stroke='%23FF8A4D'%20stroke-width='4.2'%20stroke-linecap='round'%20stroke-linejoin='round'/%3E%3Ccircle%20cx='37'%20cy='15'%20r='5.2'%20fill='%23FF8A4D'/%3E%3C/svg%3E" />
 <link rel="stylesheet" href="./sa.css" />
 <link rel="stylesheet" href="./sa-paywall.css" />
 <style>
+  /* ── THE OBSERVATORY BROADCAST — per-page vendored fonts (showcase-spec §1/§4).
+     Fraunces (display, variable, single woff2 <300KB) is the engraved-instrument
+     plaque voice; scoped HERE, deliberately NOT added to sa-p3.css. IBM Plex Mono
+     carries every data value (tabular-nums + U+2212), per the unchanged mono law. */
+  @font-face{
+    font-family:'Fraunces';font-style:normal;font-weight:100 900;font-display:swap;
+    src:url('./vendor/fonts/Fraunces-Variable.woff2') format('woff2');
+  }
+  @font-face{font-family:'IBM Plex Mono';font-style:normal;font-weight:400;font-display:swap;src:url('./vendor/fonts/IBMPlexMono-Regular.woff2') format('woff2');}
+  @font-face{font-family:'IBM Plex Mono';font-style:normal;font-weight:500;font-display:swap;src:url('./vendor/fonts/IBMPlexMono-Medium.woff2') format('woff2');}
+  @font-face{font-family:'IBM Plex Mono';font-style:normal;font-weight:600;font-display:swap;src:url('./vendor/fonts/IBMPlexMono-SemiBold.woff2') format('woff2');}
   :root{
-    --accent:#22E3D6; --accent-soft:rgba(34,227,214,.16); --accent-line:rgba(34,227,214,.55);
-    --ink:#e8f0fb; --muted:#9aabc6;                     /* unified ink + AAA-ish muted */
-    --bg:#0A0E12; --bg-top:#0b1220;
-    --panel:rgba(12,20,33,.72); --line:rgba(255,255,255,.30);  /* line raised to ≥3:1 */
+    /* P3 Ultraviolet Ember (sa-p3.css tokens, mirrored locally — this page does
+       not link sa-p3.css; §1 deviations are documented at each use). */
+    --accent:#FF8A4D; --accent-soft:rgba(255,138,77,.16); --accent-line:rgba(255,138,77,.55);
+    --secondary:#9D8BFF; --secondary-soft:rgba(157,139,255,.14); --secondary-line:rgba(157,139,255,.45);
+    --ink:#F5F2FF; --muted:#A79FC7;
+    --bg:#07060C; --bg-top:#140E24;                    /* violet-shifted scene grade */
+    --panel:rgba(17,13,28,.72); --line:rgba(255,255,255,.30);  /* line ≥3:1 */
+    /* etched-instrument brass (deviation-by-promotion) + SYS-11 param hues */
+    --launch:#E3C468; --plane:#93A4F2; --depth:#C98AE6;
+    --q-path:#6FC6FF; --q-attack:#4DE8D2; --celebrate:#FF5CE1;
+    --line-strong:rgba(255,255,255,.30);
     --radius-pill:999px; --radius-card:16px; --radius-control:12px;
     --blur-surface:10px; --blur-overlay:18px;
+    /* type roles (showcase deviation): serif display = Fraunces; data = mono */
+    --font-serif:'Fraunces',Georgia,'Times New Roman',serif;
+    --font-mono:'IBM Plex Mono',ui-monospace,"SF Mono",Menlo,monospace;
   }
+  /* ── Fraunces plaque voice — engraved observatory nameplate. Two optical
+     instances: soft-display for plaques/titles; WONKY axis on for the wordmark. */
+  .fr-plaque{font-family:var(--font-serif);font-variation-settings:'opsz' 40,'wght' 560,'SOFT' 40,'WONK' 0;}
+  .fr-wonk{font-variation-settings:'opsz' 96,'wght' 600,'SOFT' 30,'WONK' 1;}
+  .mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums;}
   *{box-sizing:border-box;margin:0;padding:0}
   html,body{height:100%;overflow:hidden}
   body{
@@ -31,18 +57,53 @@
   /* live measured-bracket label for the 3D lowpoint (L1), positioned via JS */
   .lp3d-label{
     position:fixed;z-index:2;pointer-events:none;white-space:nowrap;
-    font-size:12px;font-weight:700;letter-spacing:.02em;color:var(--ink);
-    background:rgba(10,14,18,.7);border:1px solid rgba(255,209,102,.4);border-radius:8px;
-    padding:3px 9px;font-variant-numeric:tabular-nums;
+    font-size:12px;font-weight:500;letter-spacing:.01em;color:var(--ink);
+    background:rgba(10,7,18,.72);border:1px solid rgba(77,232,210,.42);border-radius:8px;
+    padding:3px 9px;font-family:var(--font-mono);font-variant-numeric:tabular-nums;
   }
   .lp3d-label[hidden]{display:none}
   .gc3d-label{
     position:fixed;z-index:2;pointer-events:none;white-space:nowrap;
-    font-size:12px;font-weight:700;letter-spacing:.02em;color:var(--ink);
-    background:rgba(10,14,18,.7);border:1px solid rgba(138,90,43,.55);border-radius:8px;
-    padding:3px 9px;font-variant-numeric:tabular-nums;
+    font-size:12px;font-weight:500;letter-spacing:.01em;color:var(--ink);
+    background:rgba(10,7,18,.72);border:1px solid rgba(138,90,43,.55);border-radius:8px;
+    padding:3px 9px;font-family:var(--font-mono);font-variant-numeric:tabular-nums;
   }
   .gc3d-label[hidden]{display:none}
+  /* §2.1 — plane-angle plaque at the hinge: engraved Fraunces "PLANE" eyebrow +
+     mono angle, brass-bordered (etched-instrument voice). Anchored via project. */
+  .plane-label{
+    position:fixed;z-index:2;pointer-events:none;white-space:nowrap;
+    display:inline-flex;align-items:baseline;gap:7px;
+    font-family:var(--font-mono);font-variant-numeric:tabular-nums;
+    /* Pass-1 (Fable): value in INK — brass never carries data (frame + eyebrow
+       stay brass; the numeral is a reading, not an engraving). */
+    font-size:13px;font-weight:600;letter-spacing:.01em;color:var(--ink);
+    background:rgba(10,7,18,.7);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);
+    border:1px solid rgba(227,196,104,.5);border-radius:8px;padding:3px 10px;
+    transform:translate(-50%,-50%);
+  }
+  .plane-label::before{
+    content:"PLANE";font-family:var(--font-serif);
+    font-variation-settings:'opsz' 24,'wght' 560,'SOFT' 40,'WONK' 0;
+    font-size:10.5px;font-weight:560;letter-spacing:.1em;color:#C9B27E;
+  }
+  .plane-label[hidden]{display:none}
+  /* §2.5 — transient pose-name slate (Fraunces): names the view the moment it
+     settles (FACE / DTL), then fades — a broadcast angle caption, not chrome.
+     A cheap ≤4° tilt-to-camera parallax rides --pn-tilt under orbit drag. */
+  .pose-name{
+    position:fixed;left:50%;top:20%;z-index:4;
+    transform:translateX(-50%) translateY(-6px) rotate(var(--pn-tilt,0deg));
+    font-family:var(--font-serif);font-variation-settings:'opsz' 96,'wght' 560,'SOFT' 40,'WONK' 0;
+    font-size:14px;letter-spacing:.2em;color:#D9D2F0;text-transform:uppercase;
+    white-space:nowrap;pointer-events:none;opacity:0;
+    background:rgba(9,6,16,.62);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
+    border:1px solid rgba(157,139,255,.28);border-radius:8px;padding:5px 14px 6px;
+    box-shadow:0 10px 30px -16px rgba(0,0,0,.85);
+    transition:opacity .5s ease,transform .5s ease;
+  }
+  .pose-name.is-visible{opacity:.92;transform:translateX(-50%) translateY(0) rotate(var(--pn-tilt,0deg))}
+  @media (prefers-reduced-motion:reduce){.pose-name{transition:none}}
   /* GROUND-STRIKE cue (2026-07-02, owner: "see the club hit the ground BEFORE
      the ball on a duff"): brief "turf first" emphasis pulse on the existing
      FIX J turf label at the moment the early ground-strike FX fires — a
@@ -63,18 +124,34 @@
 
   /* FACE-ZOOM band-label chip: dark plate, fades in during the zoom
      detour (reuses the app's panel/blur/radius tokens; see .tune). */
+  /* §2.4/§2.5 — the Impact-Replay verdict plaque (a broadcast lower-third):
+     band word in Fraunces, percent in mono, typed-on at the freeze, holding
+     past release until the next input. */
   .facezoom-chip{
     position:fixed;left:50%;bottom:max(18px,env(safe-area-inset-bottom));z-index:6;
     transform:translateX(-50%) translateY(6px);
-    background:rgba(7,12,18,.86);-webkit-backdrop-filter:blur(var(--blur-surface));backdrop-filter:blur(var(--blur-surface));
-    border:1px solid var(--line);border-radius:var(--radius-pill);
-    padding:8px 18px;font-size:14px;font-weight:700;letter-spacing:.02em;
-    font-variant-numeric:tabular-nums;white-space:nowrap;pointer-events:none;
+    display:inline-flex;align-items:baseline;
+    background:rgba(9,6,16,.9);-webkit-backdrop-filter:blur(var(--blur-surface));backdrop-filter:blur(var(--blur-surface));
+    border:1px solid var(--line);border-radius:12px;
+    padding:9px 20px 10px;white-space:nowrap;pointer-events:none;
     opacity:0;transition:opacity .22s ease,transform .22s ease;
-    box-shadow:0 14px 40px -18px rgba(0,0,0,.85);
+    box-shadow:0 16px 44px -18px rgba(0,0,0,.9);
   }
+  .facezoom-chip .fzc-txt{display:inline-block;line-height:1}
+  .facezoom-chip .fzc-band{
+    font-family:var(--font-serif);font-variation-settings:'opsz' 64,'wght' 600,'SOFT' 30,'WONK' 0;
+    font-size:20px;letter-spacing:.005em;
+  }
+  .facezoom-chip .fzc-sep{opacity:.45;margin:0 9px;font-size:16px}
+  .facezoom-chip .fzc-pct{font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-size:15px;font-weight:600}
   .facezoom-chip.is-visible{opacity:1;transform:translateX(-50%) translateY(0)}
-  @media (prefers-reduced-motion:reduce){.facezoom-chip{transition:none}}
+  /* typed-on lower-third: a sharp left→right reveal (no blur), ~240ms */
+  .facezoom-chip.is-typing .fzc-txt{animation:fzcType .24s steps(16,end) both}
+  @keyframes fzcType{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
+  @media (prefers-reduced-motion:reduce){
+    .facezoom-chip{transition:none}
+    .facezoom-chip.is-typing .fzc-txt{animation:none;clip-path:none}
+  }
 
   /* FACE-ZOOM "tap to continue" hint: small, muted, sits just below the
      band-label chip during the indefinite hold. Fades in ~600ms after the
@@ -85,7 +162,9 @@
     transform:translateX(-50%) translateY(4px);
     background:rgba(7,12,18,.7);-webkit-backdrop-filter:blur(var(--blur-surface));backdrop-filter:blur(var(--blur-surface));
     border:1px solid rgba(255,255,255,.18);border-radius:var(--radius-pill);
-    padding:5px 14px;font-size:11px;font-weight:600;letter-spacing:.03em;color:var(--muted);
+    /* Pass-1 (Fable): the dismiss affordance was near-invisible over the dark
+       freeze — ink, not muted. */
+    padding:5px 14px;font-size:11px;font-weight:600;letter-spacing:.03em;color:var(--ink);
     white-space:nowrap;pointer-events:none;
     opacity:0;transition:opacity .3s ease,transform .3s ease;
   }
@@ -100,14 +179,16 @@
   }
   .hud-chip{
     display:inline-flex;align-items:center;gap:8px;height:24px;padding:0 10px;
-    border-radius:7px;background:rgba(7,16,20,.78);border:1px solid;
-    font-size:12px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap;
+    border-radius:7px;background:rgba(10,7,18,.8);border:1px solid;
+    font-size:12px;font-weight:600;white-space:nowrap;
+    font-family:var(--font-mono);font-variant-numeric:tabular-nums;   /* data = mono law */
   }
   .hud-chip .sw{width:6.4px;height:6.4px;border-radius:50%;flex:none}
-  .hud-chip.atk{border-color:rgba(255,179,71,.5);color:#ffe0bb}
-  .hud-chip.atk .sw{background:#ffb347}
-  .hud-chip.path{border-color:rgba(34,227,214,.5);color:#bff6f1}
-  .hud-chip.path .sw{background:#22E3D6}
+  /* SYS-11 param hues: ATTACK = --q-attack mint (attack angle) · PATH = --q-path blue (club-path dir) */
+  .hud-chip.atk{border-color:rgba(77,232,210,.5);color:#bff4ec}
+  .hud-chip.atk .sw{background:var(--q-attack)}
+  .hud-chip.path{border-color:rgba(111,198,255,.5);color:#cfe9ff}
+  .hud-chip.path .sw{background:var(--q-path)}
 
   /* freemium "N free shots left" nudge pill — discreet, top-centre, clear of
      the hud-chips row above it. Shown only in the tail (1-2) of the free
@@ -140,9 +221,10 @@
   }
   .modnav a.home{width:44px;padding:0;font-size:17px}
   .modnav a:hover{background:rgba(255,255,255,.08);color:var(--ink)}
-  .modnav a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .modnav a:focus-visible{outline:2px solid var(--secondary);outline-offset:2px}
+  /* active tab is chrome → violet secondary (ember stays reserved for the live arc/ball) */
   .modnav a[aria-current="page"]{
-    color:var(--accent);border-color:var(--accent-line);background:var(--accent-soft);
+    color:var(--secondary);border-color:var(--secondary-line);background:var(--secondary-soft);
   }
 
   .controls{position:fixed;top:max(10px,env(safe-area-inset-top));right:max(12px,env(safe-area-inset-right));z-index:4;display:flex;gap:8px}
@@ -155,10 +237,12 @@
   button svg{width:20px;height:20px;display:block}
   button:hover{background:rgba(255,255,255,.13);border-color:rgba(255,255,255,.3)}
   button:active{transform:translateY(1px)}
-  button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-  button[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+  button:focus-visible{outline:2px solid var(--secondary);outline-offset:2px}
+  /* toggle chrome = violet secondary; the play button stays ember (it fires the live swing) */
+  button[aria-pressed="true"]{background:var(--secondary-soft);border-color:var(--secondary);color:var(--secondary)}
   #hit{color:var(--accent);border-color:var(--accent-line)}
   #hit:hover{background:var(--accent-soft);border-color:var(--accent)}
+  #hit:focus-visible{outline-color:var(--accent)}
 
   /* ── STRIKE DETAIL inset (2026-07-03 redesign) — the real 3D club/ball/
      low-point rendered big via a second scissored viewport (geo3d/scene.js +
@@ -184,7 +268,7 @@
        emptier left so it never covers the money shot. */
     position:fixed;left:max(14px,env(safe-area-inset-left));bottom:max(14px,env(safe-area-inset-bottom));z-index:3;
     width:clamp(220px,32vw,320px);
-    border:1px solid rgba(34,227,214,.28);border-radius:var(--radius-card);
+    border:1px solid var(--secondary-line);border-radius:var(--radius-card);
     box-shadow:0 18px 50px -20px rgba(0,0,0,.85);
     overflow:hidden;
   }
@@ -193,7 +277,7 @@
     padding:9px 11px 7px;
     background:linear-gradient(180deg, rgba(13,20,26,.98), rgba(13,20,26,.94));
   }
-  .strike-detail .ttl{font-size:11px;font-weight:700;letter-spacing:.15em;color:var(--muted);text-transform:uppercase}
+  .strike-detail .ttl{font-family:var(--font-serif);font-variation-settings:'opsz' 30,'wght' 560,'SOFT' 40,'WONK' 0;font-size:12px;font-weight:560;letter-spacing:.06em;color:var(--muted)}
   .strike-detail .chip{
     display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;
     padding:3px 9px;border-radius:999px;white-space:nowrap;
@@ -202,7 +286,7 @@
   .strike-detail .chip .pct{opacity:.75;font-weight:600}
   .strike-detail .viewport{position:relative;width:100%;aspect-ratio:340/196}
   .strike-detail .viewport svg{position:absolute;inset:0;width:100%;height:100%;display:block;pointer-events:none}
-  .sd-lb{font:700 12px/1 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;fill:var(--accent);font-variant-numeric:tabular-nums;paint-order:stroke;stroke:#0A0E12;stroke-width:2.5px;stroke-linejoin:round}
+  .sd-lb{font-family:var(--font-mono);font-weight:500;font-size:11.5px;fill:var(--q-attack);font-variant-numeric:tabular-nums;paint-order:stroke;stroke:#07060C;stroke-width:2.5px;stroke-linejoin:round}
   .sd-lb-soil{fill:#c9a878}
   .strike-detail .foot{
     padding:7px 11px 9px;font-size:11px;color:var(--muted);line-height:1.35;
@@ -335,11 +419,17 @@
 
   <div class="lp3d-label" id="lp3dLabel" hidden aria-hidden="true"></div>
   <div class="gc3d-label" id="gc3dLabel" hidden aria-hidden="true"></div>
+  <div class="plane-label" id="planeLabel" hidden aria-hidden="true"></div>
+  <div class="pose-name" id="poseName" aria-hidden="true"></div>
 
   <!-- FACE-ZOOM band-label chip (fades in during the zoom detour) -->
   <div class="facezoom-chip" id="faceZoomChip" aria-hidden="true"></div>
   <!-- FACE-ZOOM "tap to continue" hint (indefinite hold — fades in ~600ms after cut-in) -->
-  <div class="facezoom-hint" id="faceZoomHint" role="status" aria-live="polite">Tap to continue ▸</div>
+  <!-- Visible affordance only (NOT a live region): static text toggled by
+       .is-visible during the freeze-hold. The verdict is announced through the
+       single #sceneData region; keyboard release (Esc/Enter/Space) + 8s
+       fallback cover the non-visual dismiss path. -->
+  <div class="facezoom-hint" id="faceZoomHint">Tap to continue ▸</div>
 
   <!-- persistent ATTACK/PATH readout chips (DOM, top-centre) -->
   <div class="hud-chips" aria-hidden="true">
@@ -350,8 +440,11 @@
   <!-- freemium nudge pill: "N free shots left" — hidden unless saShots.shouldNudge() -->
   <div class="sa-nudge" id="saNudge" hidden aria-hidden="true"></div>
 
+  <!-- THE single polite live region for this view (a11y guardrail: exactly one).
+       Carries the debounced scene readout AND the face-zoom one-shot verdict
+       (routed here via faceZoomLiveEl) — one channel, never competing since the
+       readout is drag-driven and the verdict is replay-driven (disjoint). -->
   <p id="sceneData" class="sr-only" aria-live="polite" aria-atomic="true">Swing arc loading.</p>
-  <p id="faceZoomLive" class="sr-only" aria-live="polite" aria-atomic="true"></p>
 
   <nav class="modnav" aria-label="Modules">
     <a class="home" href="./index.html" aria-label="Home"><svg width="22" height="22" viewBox="0 0 52 52" fill="none" aria-hidden="true"><path d="M11 45 C 16 26, 24 18, 35 15 M21 39 L 30 24 L 43 45" stroke="currentColor" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="37" cy="15" r="5.2" fill="currentColor"/></svg></a>
@@ -393,7 +486,7 @@
     <h2>Parameters</h2>
     <div class="row" id="row_plane">
       <div class="top"><label for="s_plane">Plane</label><span class="val" id="v_plane"></span></div>
-      <div class="slider" data-origin="left" style="--rng:#22E3D6">
+      <div class="slider" data-origin="left" style="--rng:#93A4F2">
         <div class="ticks" aria-hidden="true"></div>
         <input type="range" id="s_plane" min="45" max="70" step="1" aria-label="Plane angle">
         <span class="bubble" id="b_plane" aria-hidden="true"></span>
@@ -401,7 +494,7 @@
     </div>
     <div class="row" id="row_dir">
       <div class="top"><label for="s_dir">Direction</label><span class="val" id="v_dir"></span></div>
-      <div class="slider" data-origin="center" style="--rng:#22E3D6">
+      <div class="slider" data-origin="center" style="--rng:#6FC6FF">
         <div class="ticks" aria-hidden="true"></div>
         <input type="range" id="s_dir" min="-8" max="8" step="0.5" aria-label="Swing direction">
         <span class="bubble" id="b_dir" aria-hidden="true"></span>
@@ -409,7 +502,7 @@
     </div>
     <div class="row" id="row_lpx">
       <div class="top"><label for="s_lpx">Low point</label><span class="val" id="v_lpx"></span></div>
-      <div class="slider" data-origin="center" data-ticks="cm" style="--rng:#ffd166">
+      <div class="slider" data-origin="center" data-ticks="cm" style="--rng:#4DE8D2">
         <div class="ticks" aria-hidden="true"></div>
         <input type="range" id="s_lpx" min="-0.30" max="0.30" step="0.005" aria-label="Low point, ahead or behind the ball">
         <span class="bubble" id="b_lpx" aria-hidden="true"></span>
@@ -417,7 +510,7 @@
     </div>
     <div class="row" id="row_lpz">
       <div class="top"><label for="s_lpz">Depth</label><span class="val" id="v_lpz"></span></div>
-      <div class="slider" data-origin="center" data-ticks="cm" style="--rng:#ffb347">
+      <div class="slider" data-origin="center" data-ticks="cm" style="--rng:#C98AE6">
         <div class="ticks" aria-hidden="true"></div>
         <input type="range" id="s_lpz" min="-0.20" max="0.20" step="0.002" aria-label="Strike depth, fat or thin">
         <span class="bubble" id="b_lpz" aria-hidden="true"></span>
@@ -425,7 +518,7 @@
     </div>
   </div>
 
-  <div class="rotate" role="status">
+  <div class="rotate">
     <div class="ico" aria-hidden="true">📱</div>
     <p>Rotate your phone to landscape</p>
   </div>
@@ -495,7 +588,7 @@ function init3d() {
   const canvas3d = $('scene3d');
   sa3d = createScene(canvas3d);
   arc3d = createArc(state);
-  plane3d = createPlane(state);
+  plane3d = createPlane(state, $('planeLabel'));
   lp3d = createLowpoint(state, $('lp3dLabel'));
   gc3d = createGroundContact(state, $('gc3dLabel'));
   club3d = createClub(state);
@@ -511,7 +604,11 @@ function init3d() {
   // Only the glass plane + target line are hidden for this pass (see
   // geo3d/insetview.js file header for why the rest stays).
   inset3d = createInsetView({ hideNodes: () => [plane3d.group, sa3d.targetLine] });
-  sa3d.setInsetPass((renderer, scene, canvas) => inset3d.renderPass(renderer, scene, canvas));
+  // Pass-1 (Fable): the inset follows the control chrome. When controlsVisible(false)
+  // fades the card for the replay/freeze, the scissored GL region kept painting a
+  // frameless second closeup (half-state). Suppressing the pass lets the main scene
+  // show through — the inset returns whole with the chrome at release.
+  sa3d.setInsetPass((renderer, scene, canvas) => { if (!insetSuppressed) inset3d.renderPass(renderer, scene, canvas); });
   updateInsetRect();
 
   // 3D swing timeline (trail/divot/flash + club/arc placement).
@@ -521,9 +618,10 @@ function init3d() {
     state, sa3d, arc3d, club3d,
     getReduced: () => matchMedia('(prefers-reduced-motion: reduce)').matches,
     controlsVisible: (show) => controlsVisible(show),
-    // FACE-ZOOM band-label chip + one-shot aria-live announcement
+    // FACE-ZOOM band-label chip + one-shot announcement (routed into the single
+    // #sceneData live region — a11y guardrail: exactly one polite live region).
     faceZoomChipEl: $('faceZoomChip'),
-    faceZoomLiveEl: $('faceZoomLive'),
+    faceZoomLiveEl: $('sceneData'),
     // FACE-ZOOM indefinite-hold "tap to continue" hint + dismiss surface
     faceZoomHintEl: $('faceZoomHint'),
     faceZoomDismissEl: canvas3d,
@@ -536,7 +634,7 @@ function init3d() {
       arc3d.group, plane3d.group, lp3d.group, gc3d.group, delivery3d.group,
       sa3d.targetLine, timeline3d ? timeline3d.fx.trail.mesh : null,
     ].filter(Boolean),
-    faceZoomHideLabels: [$('lp3dLabel'), $('gc3dLabel')],
+    faceZoomHideLabels: [$('lp3dLabel'), $('gc3dLabel'), $('planeLabel')],
     // GROUND-STRIKE-BEFORE-BALL — "turf first" cue reuses the existing FIX J
     // turf label (gc3dLabel) for a brief emphasis pulse at the moment the
     // early ground-strike FX fires (see timeline.js pulseGroundStrikeLabel()).
@@ -590,7 +688,7 @@ function rebuild3d() {
   arc3d.rewrite();
   const lowestTheta = lp3d.update(state, sa3d.camera, $('scene3d'));
   arc3d.setLowestSegmentGlow(lowestTheta);
-  plane3d.update(state);
+  plane3d.update(state, sa3d.camera, $('scene3d'));
   if (gc3d) gc3d.update(state, sa3d.camera, $('scene3d'));   // FIX J — turf zone + bracket
   if (club3d) club3d.updateAddress(state);   // address pose follows the sliders live
   if (delivery3d) delivery3d.update(state);  // delivery arrow direction follows the sliders live
@@ -706,7 +804,7 @@ function updateStrikeDetail(stateRef) {
   const pLp = inset3d.projectToInset(_sdLp);
   const pContact = inset3d.projectToInset(_sdContact);
 
-  const accent = '#22E3D6';
+  const accent = '#4DE8D2'; // --q-attack mint: these annotations measure the low-point/attack locus
   const parts = [];
 
   // (a) hero dimension line: ball -> low point, labelled with the cm value
@@ -724,7 +822,7 @@ function updateStrikeDetail(stateRef) {
       `<line x1="${leftX.toFixed(1)}" y1="${topY.toFixed(1)}" x2="${rightX.toFixed(1)}" y2="${topY.toFixed(1)}" stroke="${accent}" stroke-width="1.4"/>`,
       `<path d="M${(leftX - 7).toFixed(1)} ${topY.toFixed(1)} L${leftX.toFixed(1)} ${(topY - 3.5).toFixed(1)} L${leftX.toFixed(1)} ${(topY + 3.5).toFixed(1)} Z" fill="${accent}"/>`,
       `<path d="M${(rightX + 7).toFixed(1)} ${topY.toFixed(1)} L${rightX.toFixed(1)} ${(topY - 3.5).toFixed(1)} L${rightX.toFixed(1)} ${(topY + 3.5).toFixed(1)} Z" fill="${accent}"/>`,
-      `<rect x="${(midX - 24).toFixed(1)}" y="${(topY - 21).toFixed(1)}" width="48" height="17" rx="4" fill="#0A0E12" stroke="rgba(34,227,214,.4)"/>`,
+      `<rect x="${(midX - 24).toFixed(1)}" y="${(topY - 21).toFixed(1)}" width="48" height="17" rx="4" fill="#0B0913" stroke="rgba(77,232,210,.4)"/>`,
       `<text x="${midX.toFixed(1)}" y="${(topY - 9).toFixed(1)}" text-anchor="middle" class="sd-lb">${cmLabel}</text>`
     );
   }
@@ -768,15 +866,27 @@ const els = {
 };
 
 // ── strike readout ──────────────────────────────────────────────────────
+// The visible strike verdict lives in the 3D strike-detail inset (#sdChip
+// band/pct + #sdFoot sentence + the ballTick ring / mm callout) and the
+// persistent HUD chips. renderReadout() keeps ONLY those VISIBLE marks in sync
+// — it runs every animation frame while a slider drags, so it must stay cheap
+// and silent. The verbose sr-only #sceneData sentence is emitted separately by
+// announceSceneData(), debounced to drag-end (a11y M1: atomic × every frame
+// was flooding the screen reader with dozens of full sentences per drag).
 function renderReadout() {
-  const sq = strikeQuality(state);
-  // The visible strike verdict now lives ONLY in the 3D strike-detail inset
-  // (#sdChip band/pct + #sdFoot sentence + the ballTick ring / mm callout);
-  // the old duplicate .readout prose panel was removed (density-diet). This
-  // function keeps the sr-only #sceneData live region + the persistent HUD
-  // chips in sync with the sliders.
+  const di = deriveImpact(state);
+  // persistent HUD chips (live with the sliders)
+  const fmtSigned = v => (v >= 0 ? '+' : '−') + Math.abs(v).toFixed(1) + '°';
+  els.chipAtkTx.textContent = 'ATTACK ' + fmtSigned(di.attackAngle);
+  els.chipPathTx.textContent = 'PATH ' + fmtSigned(di.clubPath);
+}
 
-  // live numeric alternative to the chart (a11y) — keeps the screen-reader text in sync with the data
+// sr-only #sceneData — THE single polite live region for this view (a11y
+// guardrail: exactly one). Fired on settle (drag-end / keyboard-step commit),
+// never per animation frame, so a screen reader hears ONE tidy scene sentence
+// per change instead of a flood. The face-zoom verdict is routed here too.
+function announceSceneData() {
+  const sq = strikeQuality(state);
   const di = deriveImpact(state);
   const lpx = state.lowPoint.x;
   const lpDesc = Math.abs(lpx) < 0.001 ? 'at the ball'
@@ -785,21 +895,20 @@ function renderReadout() {
     `Strike ${sq.band}, ${sq.pct}%. Plane angle ${state.planeAngle} degrees. ` +
     `Attack angle ${di.attackAngle.toFixed(1)} degrees ${di.attackAngle >= 0 ? 'up' : 'down'}. ` +
     `Club path ${di.clubPath.toFixed(1)} degrees. Low point ${lpDesc}.`;
-
-  // persistent HUD chips (live with the sliders)
-  const fmtSigned = v => (v >= 0 ? '+' : '−') + Math.abs(v).toFixed(1) + '°';
-  els.chipAtkTx.textContent = 'ATTACK ' + fmtSigned(di.attackAngle);
-  els.chipPathTx.textContent = 'PATH ' + fmtSigned(di.clubPath);
 }
 
 // ── init ──────────────────────────────────────────────────────────────────
 renderReadout();
+announceSceneData();
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 // ── fade the control surfaces during play for a clean ball-strike view ────
 // The HUD chips stay visible during play (matches the old in-canvas chips).
 const CONTROL_SEL = '.controls, .tune, .modnav, .strike-detail';
+let insetSuppressed = false; // Pass-1 (Fable): GL inset follows the chrome fade
 function controlsVisible(show) {
+  insetSuppressed = !show;
+  if (sa3d) sa3d.invalidate();
   const nodes = document.querySelectorAll(CONTROL_SEL);
   if (reduce) { nodes.forEach(n => { n.style.opacity = show ? '' : '0'; n.style.pointerEvents = show ? '' : 'none'; }); return; }
   nodes.forEach(n => {
@@ -812,6 +921,20 @@ function controlsVisible(show) {
   // settle/idle. 150ms fade; reduced-motion snaps instantly (handled inside
   // delivery.js's setVisible).
   if (delivery3d) delivery3d.setVisible(show, gsap, reduceMotion3d);
+}
+
+// ── §2.5 transient pose-name slate: names the view the moment it settles,
+// then fades. A subtle per-view tilt gives it the aligned-to-camera character
+// (the tilt-to-camera parallax; ≤4°, a cheap 2D transform, not 3D text).
+let poseNameTimer = null;
+function showPoseName(view) {
+  const el = $('poseName');
+  if (!el) return;
+  el.textContent = view === 'dtl' ? 'Down the line' : 'Face-on';
+  el.style.setProperty('--pn-tilt', (view === 'dtl' ? 1.6 : -1.6) + 'deg');
+  el.classList.add('is-visible');
+  clearTimeout(poseNameTimer);
+  poseNameTimer = setTimeout(() => el.classList.remove('is-visible'), 1700);
 }
 
 // ── 3D: camera orbit between FACE/DTL poses ────────────────────────────────
@@ -829,7 +952,7 @@ function animate3dView(toView) {
   sa3d.startTicking();
   viewTween3d = gsap.to(sa3d.rig, {
     ...pose, duration: 0.7, ease: 'power2.inOut',
-    onUpdate: () => { sa3d.applyRig(); lp3d && lp3d.placeLabel(sa3d.camera, $('scene3d')); },
+    onUpdate: () => { sa3d.applyRig(); lp3d && lp3d.placeLabel(sa3d.camera, $('scene3d')); plane3d && plane3d.placeAngleLabel(sa3d.camera, $('scene3d')); },
     onComplete: () => { viewTween3d = null; sa3d.stopTicking(); },
   });
 }
@@ -856,9 +979,199 @@ function animateRailOffset(open) {
   sa3d.startTicking();
   railOffsetTween3d = gsap.to(sa3d.targetOffset, {
     z: target, duration: 0.35, ease: 'power2.out',
-    onUpdate: () => { sa3d.applyRig(); lp3d && lp3d.placeLabel(sa3d.camera, $('scene3d')); if (gc3d) gc3d.update(state, sa3d.camera, $('scene3d')); },
+    onUpdate: () => { sa3d.applyRig(); lp3d && lp3d.placeLabel(sa3d.camera, $('scene3d')); plane3d && plane3d.placeAngleLabel(sa3d.camera, $('scene3d')); if (gc3d) gc3d.update(state, sa3d.camera, $('scene3d')); },
     onComplete: () => { railOffsetTween3d = null; sa3d.stopTicking(); },
   });
+}
+
+// ── §2.3 Free orbit + idle telescope drift ────────────────────────────────
+// One-finger drag orbits the rig (clamped azimuth/elevation, inertia, magnetic
+// pose snap); two-finger pinch dollies within ±18% of the pose distance; [ / ]
+// step azimuth 15°. When idle >6s (motion allowed + page visible) the rig
+// breathes a ±1.5° / 14s telescope drift via sa3d.camOffset (any input kills
+// it). FACE/DTL buttons still tween the same rig (animate3dView, untouched).
+function initCameraGestures() {
+  const canvas = $('scene3d');
+  const AZ_MIN = -160, AZ_MAX = -50, EL_MIN = 6, EL_MAX = 28;
+  const SNAP_DEG = 12, DOLLY_FRAC = 0.18;
+  const DRAG_AZ_GAIN = 0.34, DRAG_EL_GAIN = 0.24;
+  const clampN = (v, a, b) => Math.max(a, Math.min(b, v));
+
+  const pointers = new Map();
+  let dragging = false, lastX = 0, lastY = 0;
+  let velAz = 0, velEl = 0;
+  let pinchStartGap = 0, pinchStartDist = 0;
+  let snapTween = null;
+  let lastDecision = null; // {kind:'snap'|'momentum', pose?, target} — verification hook
+
+  function placeLabels() {
+    if (lp3d) lp3d.placeLabel(sa3d.camera, canvas);
+    if (plane3d) plane3d.placeAngleLabel(sa3d.camera, canvas);
+  }
+  function applyAndPlace() { sa3d.applyRig(); placeLabels(); }
+  function gestureBlocked() {
+    return !!(timeline3d && (timeline3d.isPlaying() || timeline3d.faceZoom.isActive()));
+  }
+  function nearestPose() {
+    let best = null, bestD = SNAP_DEG + 1;
+    for (const v of ['face', 'dtl']) { const d = Math.abs(sa3d.rig.az - sa3d.POSES[v].az); if (d < bestD) { bestD = d; best = v; } }
+    return bestD <= SNAP_DEG ? best : null;
+  }
+  function setViewState(v) {
+    state.view = v;
+    $('viewBtn').setAttribute('aria-pressed', String(v === 'dtl'));
+    $('viewBtn').title = v === 'dtl' ? 'Down-the-line' : 'Front';
+    showPoseName(v); // §2.5 — name the view as the magnetic snap lands it
+  }
+  // Glide the base rig into a named pose (gravitational ease). Assumes the
+  // caller already startTicking()'d; the tween's onComplete stopTicking()s.
+  function glideToPose(v) {
+    const pose = sa3d.POSES[v];
+    lastDecision = { kind: 'snap', pose: v, target: +pose.az.toFixed(3) };
+    setViewState(v);
+    if (reduceMotion3d) { sa3d.rig.az = pose.az; sa3d.rig.el = pose.el; applyAndPlace(); sa3d.invalidate(); sa3d.stopTicking(); return; }
+    if (snapTween) snapTween.kill();
+    // onComplete AND onInterrupt both settle the ticker so the one startTicking()
+    // that preceded this glide is always balanced (never leaks a live ticker →
+    // renderCount would otherwise keep climbing at idle).
+    let settled = false;
+    const settle = () => { if (settled) return; settled = true; snapTween = null; sa3d.stopTicking(); sa3d.invalidate(); };
+    snapTween = gsap.to(sa3d.rig, { az: pose.az, el: pose.el, duration: 0.6, ease: 'power3.out',
+      onUpdate: applyAndPlace, onComplete: settle, onInterrupt: settle });
+  }
+  // Release momentum: project a resting az/el from the exit velocity, then let
+  // a magnetic pose (within SNAP_DEG of the projection) absorb it — a single
+  // gsap glide (decelerating = inertia feel) rather than a hand-rolled rAF loop
+  // (more robust to background rAF throttling, and it settles the ticker
+  // deterministically via onComplete/onInterrupt). Assumes the caller already
+  // startTicking()'d (onDown did).
+  const MOMENTUM = 9;
+  function releaseWithMomentum() {
+    const projAz = clampN(sa3d.rig.az + velAz * MOMENTUM, AZ_MIN, AZ_MAX);
+    const projEl = clampN(sa3d.rig.el + velEl * MOMENTUM, EL_MIN, EL_MAX);
+    let snapV = null, bestD = SNAP_DEG + 1;
+    for (const v of ['face', 'dtl']) { const d = Math.abs(projAz - sa3d.POSES[v].az); if (d < bestD) { bestD = d; snapV = d <= SNAP_DEG ? v : null; } }
+    if (snapV) { glideToPose(snapV); return; }
+    lastDecision = { kind: 'momentum', target: +projAz.toFixed(3) };
+    if (snapTween) snapTween.kill();
+    let settled = false;
+    const settle = () => { if (settled) return; settled = true; snapTween = null; sa3d.stopTicking(); sa3d.invalidate(); };
+    snapTween = gsap.to(sa3d.rig, { az: projAz, el: projEl, duration: 0.55, ease: 'power2.out',
+      onUpdate: applyAndPlace, onComplete: settle, onInterrupt: settle });
+  }
+
+  function onDown(e) {
+    // §2.4 — ANY pointer on the scene is a "next input": clear the held verdict
+    // even when the gesture itself is blocked (e.g. during the finish tween).
+    // Pass-2 (Fable): moved above the guard — the guard previously swallowed it.
+    if (timeline3d && timeline3d.faceZoom) timeline3d.faceZoom.hideVerdict();
+    if (gestureBlocked()) return;
+    pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (pointers.size === 1) {
+      dragging = true; lastX = e.clientX; lastY = e.clientY; velAz = 0; velEl = 0;
+      if (snapTween) { snapTween.kill(); snapTween = null; }
+      sa3d.startTicking();
+      try { canvas.setPointerCapture(e.pointerId); } catch (err) {}
+    } else if (pointers.size === 2) {
+      const pts = [...pointers.values()];
+      pinchStartGap = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y) || 1;
+      pinchStartDist = sa3d.rig.dist;
+    }
+  }
+  function onMove(e) {
+    if (!pointers.has(e.pointerId)) return;
+    pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (pointers.size >= 2) {
+      const pts = [...pointers.values()];
+      const gap = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y) || 1;
+      const ref = sa3d.POSES[state.view].dist;
+      sa3d.rig.dist = clampN(pinchStartDist * (pinchStartGap / gap), ref * (1 - DOLLY_FRAC), ref * (1 + DOLLY_FRAC));
+      applyAndPlace(); sa3d.invalidate();
+      return;
+    }
+    if (!dragging) return;
+    const dAz = (e.clientX - lastX) * DRAG_AZ_GAIN;
+    const dEl = -(e.clientY - lastY) * DRAG_EL_GAIN;
+    lastX = e.clientX; lastY = e.clientY;
+    sa3d.rig.az = clampN(sa3d.rig.az + dAz, AZ_MIN, AZ_MAX);
+    sa3d.rig.el = clampN(sa3d.rig.el + dEl, EL_MIN, EL_MAX);
+    velAz = clampN(dAz, -4, 4); velEl = clampN(dEl, -3, 3);
+    applyAndPlace(); sa3d.invalidate();
+  }
+  function onUp(e) {
+    if (!pointers.has(e.pointerId)) return;
+    pointers.delete(e.pointerId);
+    try { canvas.releasePointerCapture(e.pointerId); } catch (err) {}
+    if (pointers.size >= 1) { const rem = [...pointers.values()][0]; lastX = rem.x; lastY = rem.y; dragging = pointers.size === 1; return; }
+    if (!dragging) return;
+    dragging = false;
+    if (reduceMotion3d) { const p = nearestPose(); if (p) { sa3d.rig.az = sa3d.POSES[p].az; sa3d.rig.el = sa3d.POSES[p].el; setViewState(p); applyAndPlace(); sa3d.invalidate(); } sa3d.stopTicking(); return; }
+    if (Math.abs(velAz) > 0.05 || Math.abs(velEl) > 0.05) releaseWithMomentum();
+    else { const p = nearestPose(); if (p) glideToPose(p); else sa3d.stopTicking(); }
+  }
+  canvas.addEventListener('pointerdown', onDown);
+  canvas.addEventListener('pointermove', onMove);
+  canvas.addEventListener('pointerup', onUp);
+  canvas.addEventListener('pointercancel', onUp);
+
+  let keyTween = null, keyTargetAz = null;
+  window.addEventListener('keydown', (e) => {
+    if (e.key !== '[' && e.key !== ']') return;
+    if (gestureBlocked()) return;
+    // accumulate off the pending target (not the live mid-tween az) so rapid
+    // presses actually step 15° EACH, not collapse into one step.
+    const base = (keyTween && keyTargetAz != null) ? keyTargetAz : sa3d.rig.az;
+    keyTargetAz = clampN(base + (e.key === ']' ? 15 : -15), AZ_MIN, AZ_MAX);
+    if (reduceMotion3d) { sa3d.rig.az = keyTargetAz; keyTargetAz = null; applyAndPlace(); sa3d.invalidate(); return; }
+    sa3d.startTicking();
+    if (keyTween) keyTween.kill();
+    let settled = false;
+    const settle = () => { if (settled) return; settled = true; sa3d.stopTicking(); };
+    keyTween = gsap.to(sa3d.rig, { az: keyTargetAz, duration: 0.3, ease: 'power2.out',
+      onUpdate: applyAndPlace,
+      onComplete: () => { keyTween = null; keyTargetAz = null; settle(); sa3d.invalidate(); },
+      onInterrupt: settle });
+  });
+
+  // ── idle telescope drift (±1.5°, 14s period, ~30fps) ──
+  let idleTimer = 0, driftRaf = 0, driftStart = 0, driftLastFrame = 0;
+  function stopDrift() {
+    if (driftRaf) { cancelAnimationFrame(driftRaf); driftRaf = 0; }
+    if (sa3d.camOffset.az !== 0) { sa3d.setCamOffset({ az: 0 }); sa3d.applyRig(); placeLabels(); sa3d.invalidate(); }
+  }
+  function driftLoop(t) {
+    if (document.hidden) { driftRaf = 0; return; }
+    if (t - driftLastFrame >= 33) {
+      driftLastFrame = t;
+      sa3d.setCamOffset({ az: 1.5 * Math.sin(2 * Math.PI * (t - driftStart) / 14000) });
+      sa3d.applyRig(); placeLabels(); sa3d.invalidate();
+    }
+    driftRaf = requestAnimationFrame(driftLoop);
+  }
+  function startDrift() {
+    if (reduceMotion3d || document.hidden) return;
+    if (gestureBlocked()) { idleTimer = setTimeout(startDrift, 2000); return; }
+    if (driftRaf) return;
+    driftStart = performance.now(); driftLastFrame = 0;
+    driftRaf = requestAnimationFrame(driftLoop);
+  }
+  function noteActivity() { stopDrift(); clearTimeout(idleTimer); idleTimer = setTimeout(startDrift, 6000); }
+  document.addEventListener('pointerdown', noteActivity, true);
+  document.addEventListener('keydown', noteActivity, true);
+  document.addEventListener('wheel', noteActivity, { capture: true, passive: true });
+  document.addEventListener('visibilitychange', () => { if (document.hidden) stopDrift(); else noteActivity(); });
+  ['s_plane', 's_dir', 's_lpx', 's_lpz'].forEach(id => { const el = $(id); if (el) el.addEventListener('input', noteActivity); });
+  noteActivity();
+
+  // test/verify hooks
+  window.__saOrbit = {
+    clamps: { AZ_MIN, AZ_MAX, EL_MIN, EL_MAX, SNAP_DEG, DOLLY_FRAC },
+    driftActive: () => !!driftRaf,
+    camOffsetAz: () => sa3d.camOffset.az,
+    stepKey: (k) => window.dispatchEvent(new KeyboardEvent('keydown', { key: k })),
+    lastDecision: () => lastDecision,
+    forceSettle: () => { if (window.gsap) window.gsap.globalTimeline.getChildren(true, true, false).forEach(t => { try { t.progress(1); } catch (e) {} }); },
+  };
 }
 
 // ── shared swing-state → localStorage (consumed by impact.html) ───────────
@@ -874,7 +1187,16 @@ function writeSwingState() {
 
 // ── sliders (rAF-throttled) ───────────────────────────────────────────────
 let pending = false;
+let sceneDataTimer = 0;
 function applyLive() {
+  // §2.4 — a slider change is a "next input": clear the held verdict plaque.
+  if (timeline3d && timeline3d.faceZoom && !timeline3d.isPlaying()) timeline3d.faceZoom.hideVerdict();
+  // a11y M1 — the verbose sr-only #sceneData sentence is debounced to drag-end
+  // (fires ~350ms after the LAST input), so screen readers get one clean
+  // announcement per change, not one per animation frame. VISIBLE marks (HUD
+  // chips + 3D inset) still update every frame via renderReadout() below.
+  clearTimeout(sceneDataTimer);
+  sceneDataTimer = setTimeout(announceSceneData, 350);
   if (pending) return; pending = true;
   requestAnimationFrame(() => { pending = false; renderReadout(); writeSwingState(); rebuild3d(); });
 }
@@ -1061,6 +1383,7 @@ $('viewBtn').addEventListener('click', () => {
   $('viewBtn').title = to === 'dtl' ? 'Down-the-line' : 'Front';
   state.view = to;
   animate3dView(to);
+  showPoseName(to);
 });
 // freemium "N free shots left" pill — visible only in the tail of the free
 // window (saShots.shouldNudge()); toggled on load and after every counted play.
@@ -1105,6 +1428,9 @@ $('strikeBtn').addEventListener('click', () => {
 });
 
 init3d();
+initCameraGestures();   // §2.3 free orbit + idle telescope drift
+// §2.4 — ghost-trail verification hook
+window.__saGhosts = { count: () => (timeline3d && timeline3d.ghosts ? timeline3d.ghosts.count() : 0) };
 saIap.init();     // no-op on web; wires RevenueCat entitlement on native
 refreshNudge();   // reflect any shots already used this session on load
 // debug hooks for live orientation tuning from Playwright (no redeploy per tweak)

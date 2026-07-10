@@ -21,6 +21,10 @@ export function createScene(canvas) {
 
   const scene = new THREE.Scene();
   scene.background = null; // transparent — SVG/backdrop shows through where nothing is drawn
+  // §1 — subtle violet depth fog (#0B0817) deepens the star-chart floor toward
+  // its rim without touching the near-origin arc/ball/club. Additive/emissive
+  // elements (arc, target line, fx) opt out via fog:false so ember stays pure.
+  scene.fog = new THREE.FogExp2(0x0B0817, 0.058);
 
   let pmremTex = buildEnvironment(renderer, scene);
 
@@ -67,8 +71,18 @@ export function createScene(canvas) {
     if (o.y !== undefined) targetOffset.y = o.y;
     if (o.z !== undefined) targetOffset.z = o.z;
   }
+  // §2.3 / §2.4 — a transient additive azimuth/elevation offset composed on top
+  // of the base rig, used by the idle telescope drift and the replay whip. It
+  // is ORTHOGONAL to the base pose (free-orbit + FACE/DTL edit rig.az/el
+  // directly; magnetic snap glides the base rig) and to facezoom's own hard-cut
+  // (which saves/restores rig, never camOffset), so the two never fight.
+  const camOffset = { az: 0, el: 0 };
+  function setCamOffset(o) {
+    if (o.az !== undefined) camOffset.az = o.az;
+    if (o.el !== undefined) camOffset.el = o.el;
+  }
   function applyRig() {
-    const a = deg2rad(rig.az), e = deg2rad(rig.el);
+    const a = deg2rad(rig.az + camOffset.az), e = deg2rad(rig.el + camOffset.el);
     camera.position.set(
       rig.tx + rig.dist * Math.cos(e) * Math.cos(a),
       rig.ty + rig.dist * Math.cos(e) * Math.sin(a),
@@ -78,8 +92,10 @@ export function createScene(canvas) {
   }
   applyRig();
 
-  // ── lighting ─────────────────────────────────────────────────────────────
-  const key = new THREE.DirectionalLight(0xdfeaf6, 2.2);
+  // ── lighting (§1 — UV-violet observatory key, ember rim near the ball) ─────
+  // Key light shifts from cold #dfeaf6 to a UV-violet #C9CCFF so the whole rig
+  // reads under starlight/telescope light rather than a sports HUD.
+  const key = new THREE.DirectionalLight(0xC9CCFF, 2.15);
   key.position.set(1.6, -2.6, 3.6);
   key.castShadow = true;
   key.shadow.mapSize.set(1024, 1024);
@@ -89,13 +105,24 @@ export function createScene(canvas) {
   key.shadow.bias = -0.0004;
   scene.add(key);
 
-  const fill = new THREE.DirectionalLight(0xaac4e6, 0.5);
+  // fill deepens violet
+  const fill = new THREE.DirectionalLight(0x8E7ED8, 0.48);
   fill.position.set(-2.2, 2.0, 2.0);
   scene.add(fill);
 
-  const hemi = new THREE.HemisphereLight(0x2b3947, 0x05070a, 0.55);
+  // hemisphere: violet sky, near-black violet ground tint (#0A0714)
+  const hemi = new THREE.HemisphereLight(0x2C2448, 0x0A0714, 0.55);
   hemi.position.set(0, 0, 1);
   scene.add(hemi);
+
+  // ONE warm ember rim/point light locked near the ball — the club's leading
+  // edge catches fire-light at the impact zone (the only heat in the cold room).
+  // Pass-1 (Fable): 1.5 clipped the leading edge to white at the 3/4 freeze
+  // angle (worse at DPR2); 1.1 keeps the fire, keeps the metal's texture.
+  const emberRim = new THREE.PointLight(0xFF8A4D, 1.1, 0.9, 2.0);
+  emberRim.position.set(0.05, -0.13, 0.2);
+  emberRim.castShadow = false;
+  scene.add(emberRim);
 
   // ── instrument-stage floor (ported from geo-canvas-mock.html) ────────────
   const floor = new THREE.Mesh(
@@ -105,15 +132,16 @@ export function createScene(canvas) {
   floor.receiveShadow = true;
   scene.add(floor);
 
-  // target line: thin emissive cyan quad along +X through the ball
+  // target line = one clean meridian. §1 — cyan → neutral white-alpha
+  // (--line-strong grade, additive) so it reads as an engraved sightline, not a laser.
   const tlCore = new THREE.Mesh(
     new THREE.PlaneGeometry(6.5, 0.012),
-    new THREE.MeshBasicMaterial({ color: 0x7ff4eb, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false })
+    new THREE.MeshBasicMaterial({ color: 0xF5F2FF, transparent: true, opacity: 0.72, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false, fog: false })
   );
   tlCore.position.set(2.0, 0, 0.002);
   const tlGlow = new THREE.Mesh(
     new THREE.PlaneGeometry(6.5, 0.07),
-    new THREE.MeshBasicMaterial({ color: 0x22E3D6, transparent: true, opacity: 0.14, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false })
+    new THREE.MeshBasicMaterial({ color: 0xC7CBF0, transparent: true, opacity: 0.10, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false, fog: false })
   );
   tlGlow.position.set(2.0, 0, 0.0018);
   // grouped so FACE-ZOOM (FIX K) can hide/show the target line with one toggle
@@ -205,6 +233,7 @@ export function createScene(canvas) {
   return {
     THREE, scene, camera, rig, POSES, applyRig, renderer,
     targetOffset, setTargetOffset,
+    camOffset, setCamOffset,
     invalidate, startTicking, stopTicking,
     targetLine, floor, ball,
     setInsetPass,
@@ -231,42 +260,103 @@ function buildEnvironment(renderer, scene) {
   return tex;
 }
 
-// ── instrument-stage floor texture (ported verbatim from geo-canvas-mock.html) ─
+// ── §2.2 STAR-CHART GROUND ─────────────────────────────────────────────────
+// The instrument floor restyled as a star chart: a violet-black ground, a fine
+// white-alpha polar graticule (concentric circles + radial spokes) with brass
+// major ticks, one clean +X meridian, procedural constellation-style point
+// clusters (seeded — NO photo asset), and the kept vignette.
+function mulberryLocal(seed) {
+  let a = seed >>> 0;
+  return function () {
+    a |= 0; a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
 function makeFloorTexture() {
   const S = 1024, half = S / 2, pxm = half / 6; // 6 m radius
   const cv = document.createElement('canvas');
   cv.width = cv.height = S;
   const g = cv.getContext('2d');
 
+  // violet-black ground gradient (harmonised with the fog / scene grade)
   const grad = g.createRadialGradient(half, half, 0, half, half, half);
-  grad.addColorStop(0, '#161b21');
-  grad.addColorStop(0.55, '#10151a');
-  grad.addColorStop(0.85, '#0B0F14');
-  grad.addColorStop(1, '#0A0E12');
+  grad.addColorStop(0, '#15101F');
+  grad.addColorStop(0.55, '#100B1A');
+  grad.addColorStop(0.85, '#0A0714');
+  grad.addColorStop(1, '#07060C');
   g.fillStyle = grad;
   g.fillRect(0, 0, S, S);
 
-  const vin = g.createRadialGradient(half, half, half * 0.55, half, half, half);
-  vin.addColorStop(0, 'rgba(0,0,0,0)');
-  vin.addColorStop(1, 'rgba(0,0,0,0.5)');
-  g.fillStyle = vin;
-  g.fillRect(0, 0, S, S);
-
-  g.strokeStyle = 'rgba(230,240,250,0.08)';
-  g.lineWidth = 1.5;
-  for (const r of [2.0, 3.5, 5.0]) {
+  // constellation-style point clusters (drawn UNDER the graticule so the grid
+  // reads on top). Seeded → identical every load. Kept to the outer band so the
+  // impact zone (ball/club/low-point) at the centre stays clean.
+  const rng = mulberryLocal(0x5A17C0DE);
+  const starDot = (x, y, r, a) => { g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2); g.fillStyle = `rgba(233,238,255,${a})`; g.fill(); };
+  for (let c = 0; c < 6; c++) {
+    const cAng = rng() * Math.PI * 2;
+    const cRad = (2.6 + rng() * 2.6) * pxm;             // 2.6–5.2 m out
+    const cx = half + Math.cos(cAng) * cRad, cy = half + Math.sin(cAng) * cRad;
+    const n = 3 + Math.floor(rng() * 3);                // 3–5 stars per cluster
+    const pts = [];
+    for (let i = 0; i < n; i++) {
+      const sx = cx + (rng() - 0.5) * 0.9 * pxm;
+      const sy = cy + (rng() - 0.5) * 0.9 * pxm;
+      pts.push([sx, sy]);
+    }
+    // faint connecting lines (constellation) — never brass, cool white
+    g.strokeStyle = 'rgba(199,203,240,0.13)';
+    g.lineWidth = 1.1;
     g.beginPath();
-    g.arc(half, half, r * pxm, 0, Math.PI * 2);
+    for (let i = 0; i < pts.length; i++) { const [x, y] = pts[i]; i ? g.lineTo(x, y) : g.moveTo(x, y); }
+    g.stroke();
+    for (let i = 0; i < pts.length; i++) {
+      const bright = rng();
+      const r = bright > 0.75 ? 3.4 : 1.7 + rng() * 1.2;
+      starDot(pts[i][0], pts[i][1], r, 0.35 + bright * 0.5);
+    }
+  }
+  // a light dusting of lone faint stars across the field
+  for (let i = 0; i < 90; i++) {
+    const a = rng() * Math.PI * 2, rr = (0.8 + rng() * 5.0) * pxm;
+    starDot(half + Math.cos(a) * rr, half + Math.sin(a) * rr, 0.7 + rng() * 0.9, 0.08 + rng() * 0.16);
+  }
+
+  // fine white-alpha polar graticule — concentric circles …
+  g.strokeStyle = 'rgba(228,236,255,0.05)';
+  g.lineWidth = 1.2;
+  for (let r = 1; r <= 5.5; r += 1) {
+    g.beginPath(); g.arc(half, half, r * pxm, 0, Math.PI * 2); g.stroke();
+  }
+  // … and radial spokes every 30°
+  g.strokeStyle = 'rgba(228,236,255,0.035)';
+  for (let a = 0; a < 360; a += 30) {
+    const rad = a * Math.PI / 180;
+    g.beginPath();
+    g.moveTo(half + Math.cos(rad) * 0.5 * pxm, half + Math.sin(rad) * 0.5 * pxm);
+    g.lineTo(half + Math.cos(rad) * 5.5 * pxm, half + Math.sin(rad) * 5.5 * pxm);
     g.stroke();
   }
 
-  g.fillStyle = 'rgba(230,240,250,0.25)';
-  for (let x = 0.25; x <= 5.25; x += 0.25) {
+  // brass major ticks where each whole-metre circle meets the +X meridian
+  // (the etched-instrument role — graduation, never data).
+  g.fillStyle = 'rgba(227,196,104,0.55)';
+  for (let x = 0.5; x <= 5.5; x += 0.5) {
     const isMajor = Math.abs(x - Math.round(x)) < 1e-6;
-    const len = (isMajor ? 0.15 : 0.065) * pxm;
+    const len = (isMajor ? 0.16 : 0.07) * pxm;
     const w = Math.max(1.5, 0.010 * pxm);
+    g.globalAlpha = isMajor ? 0.6 : 0.32;
     g.fillRect(half + x * pxm - w / 2, half - len / 2, w, len);
   }
+  g.globalAlpha = 1;
+
+  // kept vignette
+  const vin = g.createRadialGradient(half, half, half * 0.5, half, half, half);
+  vin.addColorStop(0, 'rgba(0,0,0,0)');
+  vin.addColorStop(1, 'rgba(0,0,0,0.55)');
+  g.fillStyle = vin;
+  g.fillRect(0, 0, S, S);
 
   const tex = new THREE.CanvasTexture(cv);
   tex.colorSpace = THREE.SRGBColorSpace;

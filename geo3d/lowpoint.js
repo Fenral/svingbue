@@ -3,14 +3,14 @@
  * Marker dot on the arc's true lowest point + dashed plumb line to ground +
  * measured ground bracket (ball -> lowpoint ground-projection) with a live
  * DOM label ("+8 cm ahead" / "−5 cm behind") anchored via Vector3.project.
- * Keeps the existing #ffd166 lowpoint accent hue for marker/bracket.
+ * Marker/bracket use the --q-attack mint hue (0x4DE8D2, §1) — the attack locus.
  * The warm valley-glow hotspot itself lives in arc.js (setLowestSegmentGlow),
  * driven here via the theta of the arc's true lowest point.
  */
 import * as THREE from '../vendor/three/build/three.module.js';
 import { lpWorld, arcPosition, effectiveLpx, SWEEP_RAD } from '../swing-parameters-and-impact.js';
 
-const ACCENT = 0xffd166; // existing lowpoint accent hue, unchanged
+const ACCENT = 0x4DE8D2; // §1 — low-point marker/bracket → --q-attack mint (the attack locus, SYS-11)
 
 export function createLowpoint(state, labelEl) {
   const group = new THREE.Group();

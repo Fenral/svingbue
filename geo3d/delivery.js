@@ -9,7 +9,7 @@
  *     neutral ink white (#e8f0fb), unlit MeshBasicMaterial, ~0.5 opacity.
  *   - shadowGroup: flatter "shadow" arrow on the floor (z≈0.002m) = the same
  *     direction projected to the ground plane (horizontal components only,
- *     same origin, same horizontal length), faint path-cyan (#22E3D6, ~0.25).
+ *     same origin, same horizontal length), faint q-path blue (--q-path #6FC6FF, ~0.4).
  * Reading: shadow vs. target line (+X) = PATH. Vertical gap between the arrow
  * and its shadow = ATTACK. No degree labels — those live in the DOM chips.
  *
@@ -31,8 +31,8 @@ const SHAFT_R = 0.0096;      // ×1.6 (was 0.006)
 const HEAD_R = 0.0256;       // ×1.6 (was 0.016)
 const GROUND_Z = 0.002;
 
-const INK = 0xe8f0fb;
-const PATH_CYAN = 0x22e3d6;
+const INK = 0xF5F2FF;        // §1 — arrow body stays ink-neutral (P3 ink)
+const PATH_CYAN = 0x6FC6FF;  // §1 — ground projection cyan → --q-path blue (club-path direction, SYS-11)
 
 const BASE_OPACITY_ARROW = 0.85;  // was 0.5 — the "obvious at rest" ask
 const BASE_OPACITY_SHADOW = 0.4;  // was 0.25
