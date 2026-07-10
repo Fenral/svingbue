@@ -1,0 +1,1141 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
+<meta name="robots" content="noindex" />
+<title>Strike Window — geometry C2 mock</title>
+<!-- ═══════════════════════════════════════════════════════════════════════
+     STRIKE WINDOW — geometry C2 mock (docs/geometry-rethink.md · Fable ★ pick)
+     ─────────────────────────────────────────────────────────────────────────
+     A pure-consumer 2D SVG mock. The engine (swing-parameters-and-impact.js)
+     stays BYTE-IDENTICAL — imported, never touched. strikedisplay.js (the
+     honest band side-layer) is REUSED verbatim. groundCrossingTheta0 is
+     INLINED as an engine-only closed form (a verbatim copy of the free
+     function in geo3d-mock/groundcontact.js) so this mock never pulls in
+     Three.js — it stays 2D SVG, fast, per the C2 "keep it 2D SVG only" clause.
+
+     STEP A — the STRIKE WINDOW is the hero: an ORTHOGRAPHIC side-on view
+       (drawn attack tangent = the attack value; the low-point cm dimension is
+       to scale) with the arc-bottom curve, ball at its stance position, ground
+       line, low-point marker + cm-to-ball dimension, the turf-contact zone as
+       a first-class element, and a SEQUENCE BAR that makes reading order
+       literal ([turf]/[ball] left-to-right with the N-cm gap). All four
+       outputs always readable at rest as NUMBERS (Attack, Club path via the
+       top-down PATH DIAL, Strike height mm via the FACE PANEL ball-closeup,
+       and the contact sequence) plus a band chip (Pure/Thin/Fat/Duff/Topped/
+       Whiff, via strikedisplay.js). Each output shows in TWO places: drawing
+       + number.
+     STEP B — the LIVE LOOP (flight grammar, mirrored from impact-viz-mock.html):
+       5 input chips → tune-dock slider (tap chip → dock above the row, live
+       static redraw on every input, auto-fade ~1.8s, aria-valuetext). PLUS
+       direct manipulation: drag the LOW-POINT marker (X = fore/aft, Y = depth)
+       and the BALL (X = ball position) on the window — same state as the
+       sliders. BEFORE-TRACE: the first input of a session freezes the
+       pre-adjust arc-bottom + markers as a dashed neutral ghost and the output
+       tiles show "was → is" deltas. 5 PRESETS set known states (the
+       falsification test: all four answers readable in <3s from any preset).
+     STEP C — 3D demoted: a small "View in 3D" pill stub links to the old
+       geometry-mock.html on demand (no Three.js embedded here).
+
+     A11Y: the window/face/dial/sequence SVGs are DECORATIVE (aria-hidden);
+       every value is carried in real text tiles + ONE composed polite live
+       region announced on settle (srHold pattern, never per-frame). Chips are a
+       roving-tabindex toolbar (aria-expanded, Esc/Done return focus). The two
+       on-canvas handles are keyboard-operable (role=slider + arrow keys) AND
+       fully redundant with the five dock sliders (the guaranteed keyboard
+       path). Presets are buttons. Reduced-motion: no auto-fade, no transitions,
+       ghost persists until the next preset.
+     Dusk tokens live in CSS vars so the later P3 cohesion pass is a token swap.
+     ═══════════════════════════════════════════════════════════════════════ -->
+<style>
+  :root{
+    /* ── dusk tokens (structure everything through vars; P3 repaint = swap) ── */
+    --accent:#22E3D6; --accent-soft:rgba(34,227,214,.16); --accent-line:rgba(34,227,214,.55);
+    --ink:#e8f0fb; --muted:#9aabc6;
+    --bg:#0A0E12; --bg-top:#0b1220;
+    --panel:rgba(12,20,33,.72); --panel-2:rgba(12,20,33,.9);
+    --line:rgba(255,255,255,.30); --line-soft:rgba(255,255,255,.12);
+    --good:#4ADE80; --warn:#FBBF24; --bad:#F87171;
+    --yellow:#ffd166; --soil:#8a5a2b; --soil-ink:#d9b489;
+    --ghost:#9FB2C8;
+    /* input-param hues */
+    --c-plane:#22E3D6; --c-dir:#7EA6FF; --c-lpx:#ffd166; --c-depth:#C68CF0; --c-ball:#F0A868;
+    /* strike/attack accents */
+    --c-attack:#F0A868;
+    --radius-pill:999px; --radius-card:13px; --radius-ctl:10px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;overflow:hidden}
+  body{
+    background:radial-gradient(130% 120% at 50% -10%, var(--bg-top), var(--bg));
+    color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-tap-highlight-color:transparent;
+    font-variant-numeric:tabular-nums;
+  }
+  .sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+  button{font-family:inherit}
+
+  .stage{
+    position:fixed;inset:0;display:flex;flex-direction:column;
+    padding:calc(6px + env(safe-area-inset-top)) calc(8px + env(safe-area-inset-right))
+            calc(6px + env(safe-area-inset-bottom)) calc(8px + env(safe-area-inset-left));
+    gap:6px;
+  }
+
+  /* ── TOP BAR: title · presets · band chip ─────────────────────────────── */
+  .topbar{flex:0 0 auto;display:flex;align-items:center;gap:10px;height:34px}
+  .brand{display:flex;align-items:center;gap:7px;flex:0 0 auto}
+  .brand svg{width:20px;height:20px;display:block}
+  .brand .t{font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--ink);white-space:nowrap}
+  .brand .t small{color:var(--muted);font-weight:700;letter-spacing:.1em}
+
+  .presets{display:flex;gap:6px;flex:1 1 auto;justify-content:center;overflow-x:auto;scrollbar-width:none}
+  .presets::-webkit-scrollbar{display:none}
+  .preset{
+    appearance:none;cursor:pointer;flex:0 0 auto;height:28px;padding:0 13px;
+    border-radius:var(--radius-pill);border:1px solid var(--line);
+    background:rgba(10,16,26,.6);color:var(--muted);
+    font-size:11.5px;font-weight:700;letter-spacing:.03em;position:relative;
+    transition:background .16s ease,color .16s ease,border-color .16s ease;
+  }
+  .preset::after{content:"";position:absolute;inset:-6px}   /* ≥44px hit target */
+  .preset:hover{color:var(--ink);border-color:var(--line)}
+  .preset[aria-pressed="true"]{color:#06131a;background:var(--accent);border-color:var(--accent);font-weight:800}
+  .preset:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+  .bandchip{
+    flex:0 0 auto;height:28px;padding:0 14px;border-radius:var(--radius-pill);
+    display:flex;align-items:center;gap:7px;font-size:12px;font-weight:800;letter-spacing:.08em;
+    border:1px solid var(--line-soft);white-space:nowrap;
+  }
+  .bandchip .dot{width:8px;height:8px;border-radius:50%}
+
+  /* ── HERO ─────────────────────────────────────────────────────────────── */
+  .hero{flex:1 1 auto;display:flex;gap:8px;min-height:0}
+  .card{background:var(--panel);border:1px solid var(--line-soft);border-radius:var(--radius-card);position:relative;overflow:hidden}
+
+  .windowcol{flex:1 1 62%;display:flex;flex-direction:column;gap:6px;min-width:0}
+  .wincard{flex:1 1 auto;min-height:0}
+  #winSvg{position:absolute;inset:0;width:100%;height:100%;display:block}
+  .wintag{position:absolute;left:11px;top:9px;font-size:9.5px;font-weight:700;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--muted);pointer-events:none}
+  .winhint{position:absolute;right:11px;bottom:8px;font-size:9.5px;font-weight:600;color:var(--muted);
+    opacity:.85;pointer-events:none}
+  /* on-canvas draggable handles are transparent hit/focus zones over the SVG marks */
+  .handle{position:absolute;transform:translate(-50%,-50%);border-radius:50%;cursor:grab;touch-action:none;
+    background:transparent;border:0;padding:0;z-index:3}
+  .handle::after{content:"";position:absolute;inset:0;border-radius:50%}
+  .handle:active{cursor:grabbing}
+  .handle:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+  #hLow{width:40px;height:40px}
+  #hBall{width:40px;height:40px}
+
+  .seqcard{flex:0 0 auto;height:52px}
+  #seqSvg{position:absolute;inset:0;width:100%;height:100%;display:block}
+
+  /* ── SIDE COLUMN: outputs · face · dial ───────────────────────────────── */
+  .sidecol{flex:0 0 37%;display:flex;flex-direction:column;gap:6px;min-width:0}
+  .outputs{flex:0 0 auto;display:grid;grid-template-columns:1fr 1fr;gap:6px}
+  .otile{
+    background:var(--panel);border:1px solid var(--line-soft);border-radius:var(--radius-ctl);
+    padding:6px 9px;display:flex;flex-direction:column;gap:1px;min-width:0;position:relative;overflow:hidden;
+  }
+  .otile .ok{font-size:9px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+  .otile .ov{font-size:16px;font-weight:800;letter-spacing:.01em;line-height:1.05;white-space:nowrap;display:flex;align-items:baseline;gap:4px}
+  .otile .ov .arw{font-size:13px}
+  .otile .ov .u{font-size:10px;font-weight:700;color:var(--muted)}
+  .otile .osub{font-size:9.5px;font-weight:700;color:var(--ghost);white-space:nowrap;min-height:12px}
+  .otile .osub.hot{color:var(--accent)}
+
+  .sidelower{flex:1 1 auto;display:flex;gap:6px;min-height:0}
+  .facecard{flex:1 1 52%;min-width:0}
+  .dialcard{flex:1 1 48%;min-width:0}
+  #faceSvg,#dialSvg{position:absolute;inset:0;width:100%;height:100%;display:block}
+  .panel-tag{position:absolute;left:9px;top:7px;font-size:9px;font-weight:800;letter-spacing:.12em;
+    text-transform:uppercase;color:var(--muted);pointer-events:none;z-index:1}
+
+  /* ── BOTTOM BAR: input chips + 3D pill ────────────────────────────────── */
+  .bottombar{flex:0 0 auto;height:52px;display:flex;align-items:stretch;gap:8px}
+  .chiprow{display:flex;gap:7px;flex:1 1 auto;align-items:stretch;overflow-x:auto;scrollbar-width:none;padding-bottom:1px}
+  .chiprow::-webkit-scrollbar{display:none}
+  .chip{
+    appearance:none;cursor:pointer;flex:1 1 0;min-width:118px;position:relative;
+    display:flex;align-items:center;gap:8px;padding:0 11px;
+    border-radius:var(--radius-ctl);border:1px solid var(--line-soft);
+    background:rgba(10,16,26,.55);color:var(--ink);text-align:left;
+    transition:border-color .15s ease,background .15s ease;
+  }
+  .chip:hover{border-color:var(--line)}
+  .chip[aria-expanded="true"]{border-color:var(--pc,var(--accent));background:rgba(34,227,214,.08)}
+  .chip:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .chip .cdot{width:9px;height:9px;border-radius:50%;background:var(--pc,var(--accent));flex:0 0 auto}
+  .chip .cbody{display:flex;flex-direction:column;gap:1px;min-width:0;flex:1 1 auto}
+  .chip .ck{font-size:9.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .chip .cv{font-size:14px;font-weight:800;color:var(--ink);white-space:nowrap}
+  .chip .tglyph{flex:0 0 auto;color:var(--muted);opacity:.85;display:flex}
+
+  .pill3d{
+    flex:0 0 auto;align-self:center;height:38px;padding:0 15px;border-radius:var(--radius-pill);
+    display:flex;align-items:center;gap:7px;text-decoration:none;
+    border:1px solid var(--line);background:rgba(10,16,26,.6);color:var(--muted);
+    font-size:11.5px;font-weight:800;letter-spacing:.05em;position:relative;
+  }
+  .pill3d:hover{color:var(--ink);border-color:var(--line)}
+  .pill3d:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .pill3d .cube{width:14px;height:14px}
+
+  /* ── TUNE DOCK (floats above the bottom bar) ─────────────────────────── */
+  .tuneDock{
+    position:absolute;z-index:8;left:8px;right:auto;
+    display:flex;align-items:center;gap:10px;
+    padding:9px 11px;border-radius:var(--radius-card);
+    background:var(--panel-2);border:1px solid var(--pc,var(--accent-line));
+    box-shadow:0 18px 44px -18px rgba(0,0,0,.85);
+    -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
+    transition:opacity .2s ease;
+    min-width:340px;max-width:min(560px,calc(100% - 16px));
+  }
+  .tuneDock[hidden]{display:none}
+  .tuneDock.fading{opacity:0;pointer-events:none}
+  .tuneDock .tdTop{display:flex;flex-direction:column;gap:1px;min-width:98px;flex:0 0 auto}
+  .tuneDock .tdName{font-size:10px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--pc,var(--accent))}
+  .tuneDock .tdVal{font-size:17px;font-weight:800;color:var(--ink);white-space:nowrap}
+  .tuneDock .tdCtrl{display:flex;align-items:center;gap:8px;flex:1 1 auto;min-width:0}
+  .tuneDock .tdStep{
+    appearance:none;cursor:pointer;flex:0 0 auto;width:34px;height:34px;border-radius:9px;
+    border:1px solid var(--line);background:rgba(255,255,255,.05);color:var(--ink);
+    font-size:19px;font-weight:700;line-height:1;display:flex;align-items:center;justify-content:center;
+  }
+  .tuneDock .tdStep:hover{background:rgba(255,255,255,.1)}
+  .tuneDock .tdStep:active{transform:scale(.94)}
+  .tuneDock .tdStep:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .tuneDock input[type=range]{flex:1 1 auto;min-width:0;height:40px;cursor:pointer;accent-color:var(--pc,var(--accent))}
+  .tuneDock input[type=range]:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:8px}
+  .tuneDock .tdDone{
+    appearance:none;cursor:pointer;flex:0 0 auto;height:34px;padding:0 14px;border-radius:9px;
+    border:1px solid var(--line);background:rgba(255,255,255,.06);color:var(--ink);
+    font-size:12px;font-weight:800;letter-spacing:.03em;
+  }
+  .tuneDock .tdDone:hover{background:rgba(255,255,255,.12)}
+  .tuneDock .tdDone:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+  @media (prefers-reduced-motion:reduce){
+    *{transition:none!important;animation:none!important}
+  }
+</style>
+</head>
+<body>
+  <div class="stage" id="stage">
+
+    <!-- ── TOP BAR ────────────────────────────────────────────────────── -->
+    <div class="topbar">
+      <div class="brand" aria-hidden="true">
+        <svg viewBox="0 0 52 52" fill="none"><path d="M11 45 C 16 26, 24 18, 35 15 M21 39 L 30 24 L 43 45" stroke="#22E3D6" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="37" cy="15" r="5.2" fill="#22E3D6"/></svg>
+        <span class="t">Strike Window <small>· side-on</small></span>
+      </div>
+      <div class="presets" role="group" aria-label="Strike presets">
+        <button type="button" class="preset" data-preset="Pure">Pure</button>
+        <button type="button" class="preset" data-preset="Thin">Thin</button>
+        <button type="button" class="preset" data-preset="Fat">Fat</button>
+        <button type="button" class="preset" data-preset="Duff">Duff</button>
+        <button type="button" class="preset" data-preset="Topped">Topped</button>
+      </div>
+      <div class="bandchip" id="bandChip"><span class="dot" id="bandDot"></span><span id="bandLabel">Pure</span></div>
+    </div>
+
+    <!-- ── HERO ───────────────────────────────────────────────────────── -->
+    <div class="hero">
+
+      <!-- WINDOW COLUMN -->
+      <div class="windowcol">
+        <div class="card wincard" id="winCard">
+          <svg id="winSvg" aria-hidden="true" role="presentation" preserveAspectRatio="xMidYMid meet"></svg>
+          <span class="wintag">Impact zone · orthographic</span>
+          <span class="winhint">drag low point ⌂ or ball ⛳</span>
+          <!-- draggable handles: keyboard-operable (role=slider) AND redundant with the dock sliders -->
+          <button type="button" class="handle" id="hLow" role="slider"
+            aria-label="Low point marker. Drag or use arrow keys: left and right move it fore and aft, up and down change its depth. Also editable from the Low point and Depth sliders."
+            aria-valuemin="-10" aria-valuemax="20" aria-valuenow="0" aria-valuetext="low point"></button>
+          <button type="button" class="handle" id="hBall" role="slider"
+            aria-label="Ball position. Drag or use arrow keys to move the ball fore and aft. Also editable from the Ball position slider."
+            aria-orientation="horizontal" aria-valuemin="-10" aria-valuemax="10" aria-valuenow="0" aria-valuetext="centre"></button>
+        </div>
+        <div class="card seqcard" id="seqCard">
+          <svg id="seqSvg" aria-hidden="true" role="presentation" preserveAspectRatio="xMidYMid meet"></svg>
+        </div>
+      </div>
+
+      <!-- SIDE COLUMN -->
+      <div class="sidecol">
+        <div class="outputs">
+          <div class="otile" id="oAttack">
+            <span class="ok">Attack angle</span>
+            <span class="ov"><span id="oAttackV">—</span><span class="arw" id="oAttackArw"></span></span>
+            <span class="osub" id="oAttackSub"></span>
+          </div>
+          <div class="otile" id="oPath">
+            <span class="ok">Club path</span>
+            <span class="ov"><span id="oPathV">—</span></span>
+            <span class="osub" id="oPathSub"></span>
+          </div>
+          <div class="otile" id="oFace">
+            <span class="ok">Strike height</span>
+            <span class="ov"><span id="oFaceV">—</span></span>
+            <span class="osub" id="oFaceSub"></span>
+          </div>
+          <div class="otile" id="oSeq">
+            <span class="ok">Contact order</span>
+            <span class="ov" style="font-size:13px"><span id="oSeqV">—</span></span>
+            <span class="osub" id="oSeqSub"></span>
+          </div>
+        </div>
+        <div class="sidelower">
+          <div class="card facecard" id="faceCard">
+            <span class="panel-tag">Face · strike height</span>
+            <svg id="faceSvg" aria-hidden="true" role="presentation" preserveAspectRatio="xMidYMid meet"></svg>
+          </div>
+          <div class="card dialcard" id="dialCard">
+            <span class="panel-tag">Path · top-down</span>
+            <svg id="dialSvg" aria-hidden="true" role="presentation" preserveAspectRatio="xMidYMid meet"></svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── BOTTOM BAR ─────────────────────────────────────────────────── -->
+    <div class="bottombar">
+      <div class="chiprow" id="chipRow" role="toolbar" aria-orientation="horizontal" aria-label="Swing inputs"></div>
+      <a class="pill3d" href="./geometry-mock.html" id="pill3d">
+        <svg class="cube" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 2 20 6.5V15.5L12 20 4 15.5V6.5L12 2Z M12 2V11 M12 11 20 6.5 M12 11 4 6.5 M12 11V20" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+        View in 3D
+      </a>
+    </div>
+
+    <!-- TUNE DOCK -->
+    <div class="tuneDock" id="tuneDock" hidden role="group">
+      <div class="tdTop"><span class="tdName" id="tdName">—</span><span class="tdVal" id="tdVal">—</span></div>
+      <div class="tdCtrl">
+        <button type="button" class="tdStep" id="tdDown" aria-label="Decrease">−</button>
+        <input type="range" id="tdRange" />
+        <button type="button" class="tdStep" id="tdUp" aria-label="Increase">+</button>
+      </div>
+      <button type="button" class="tdDone" id="tdDone">Done</button>
+    </div>
+
+    <!-- ONE polite live region — announced on settle (srHold), never per-frame -->
+    <div class="sr" id="srLive" aria-live="polite" aria-atomic="true"></div>
+  </div>
+
+<script type="module">
+import {
+  RADIUS, BALL_RADIUS_M,
+  deriveImpact, clubBallContact, effectiveLpx, lpWorld, arcPosition, thetaAtImpact,
+  deg2rad, clamp,
+} from './swing-parameters-and-impact.js';
+import { strikeDisplay } from './geo3d-mock/strikedisplay.js';
+
+// ── groundCrossingTheta0 — VERBATIM engine-only closed form copied from
+//    geo3d-mock/groundcontact.js (avoids importing that module, which pulls in
+//    Three.js). Returns theta0 (ground re-crossing half-angle) or null when
+//    there is no real crossing (lp.z >= 0 → Pure/Thin/Topped, or cosθ0 ∉ [-1,1]).
+function groundCrossingTheta0(state){
+  const lp = lpWorld(state);
+  if (lp.z >= 0) return null;
+  const phi = deg2rad(state.planeAngle);
+  const r = state.radius;
+  const sinPhi = Math.sin(phi);
+  if (Math.abs(sinPhi) < 1e-9) return null;
+  const cosTheta0 = 1 + lp.z / (r * sinPhi);
+  if (cosTheta0 < -1 || cosTheta0 > 1) return null;
+  return Math.acos(cosTheta0);
+}
+
+const $ = id => document.getElementById(id);
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// ── state (raw inputs) + derived engine state (ball position folded into
+//    lowPoint.x exactly as geometry-mock does — the engine file is untouched) ──
+const state = {
+  planeAngle: 60, swingDirection: 0,
+  lowPoint: { x: 0.08, z: 0.016 },
+  ballPosition: 0,
+};
+const engineState = { view:'face', radius:RADIUS, planeAngle:60, swingDirection:0, lowPoint:{ x:0.08, y:0, z:0.016 } };
+function syncEngine(){
+  engineState.planeAngle = state.planeAngle;
+  engineState.swingDirection = state.swingDirection;
+  engineState.lowPoint.x = state.lowPoint.x - state.ballPosition;
+  engineState.lowPoint.z = state.lowPoint.z;
+}
+
+const PRESETS = {
+  Pure:   { planeAngle:60, swingDirection:0,  lowPoint:{x:0.08,  z:0.016},  ballPosition:0 },
+  Thin:   { planeAngle:56, swingDirection:1,  lowPoint:{x:0.03,  z:0.028},  ballPosition:0 },
+  Fat:    { planeAngle:60, swingDirection:0,  lowPoint:{x:0.03,  z:-0.010}, ballPosition:0 },
+  Duff:   { planeAngle:61, swingDirection:-1, lowPoint:{x:-0.02, z:-0.030}, ballPosition:0 },
+  Topped: { planeAngle:58, swingDirection:0,  lowPoint:{x:0.05,  z:0.035},  ballPosition:0 },
+};
+let activePreset = 'Pure';
+
+// ── input-chip config (labels, ranges, formats, aria-valuetext) ──────────
+const perDegAt = phi => RADIUS * Math.cos(deg2rad(phi)) * (Math.PI/180);
+const cmTxt  = m => { const c = Math.round(m*100); return c===0 ? '0 cm' : (c>0?'+':'−')+Math.abs(c)+' cm'; };
+const mmTxt  = m => { const v = Math.round(m*1000); return v===0 ? '0 mm' : (v>0?'+':'−')+Math.abs(v)+' mm'; };
+const sgn1   = v => (v>=0?'+':'−')+Math.abs(v).toFixed(1)+'°';
+const cmWord = m => { const c=Math.round(m*100); return c===0?'at centre':(Math.abs(c)+' cm '+(c>0?'forward':'back')); };
+const mmWord = m => { const v=Math.round(m*1000); return v===0?'level with the ground':(Math.abs(v)+' millimetres '+(v>0?'above ground':'below ground, digging')); };
+const dirWord= v => Math.abs(v)<0.05?'square':(Math.abs(v).toFixed(1)+' degrees '+(v>0?'in to out':'out to in'));
+const ballWord=m => { const c=Math.round(m*100); return c===0?'centre of stance':(Math.abs(c)+' cm '+(c>0?'forward, toward the target':'back')); };
+
+const INPUTS = [
+  { key:'plane', label:'Swing plane', color:'var(--c-plane)', min:45, max:70, step:1, big:2,
+    get:()=>state.planeAngle, set:v=>state.planeAngle=v, fmt:v=>Math.round(v)+'°',
+    aria:'Swing plane angle in degrees', vt:v=>Math.round(v)+' degrees' },
+  { key:'dir', label:'Swing dir', color:'var(--c-dir)', min:-8, max:8, step:0.5, big:1,
+    get:()=>state.swingDirection, set:v=>state.swingDirection=v, fmt:v=>sgn1(v),
+    aria:'Swing direction in degrees, positive is in to out', vt:v=>dirWord(v) },
+  { key:'lpx', label:'Low point', color:'var(--c-lpx)', min:-0.10, max:0.20, step:0.005, big:0.02,
+    get:()=>state.lowPoint.x, set:v=>state.lowPoint.x=v, fmt:v=>cmTxt(v),
+    aria:'Low point fore or aft, in centimetres', vt:v=>cmWord(v) },
+  { key:'depth', label:'Depth', color:'var(--c-depth)', min:-0.05, max:0.05, step:0.002, big:0.01,
+    get:()=>state.lowPoint.z, set:v=>state.lowPoint.z=v, fmt:v=>mmTxt(v),
+    aria:'Low point depth in millimetres, negative digs below the ground', vt:v=>mmWord(v) },
+  { key:'ball', label:'Ball pos', color:'var(--c-ball)', min:-0.10, max:0.10, step:0.005, big:0.02,
+    get:()=>state.ballPosition, set:v=>state.ballPosition=v, fmt:v=>cmTxt(v),
+    aria:'Ball position in centimetres, positive is forward toward the target', vt:v=>ballWord(v) },
+];
+const INPUT_BY = {}; INPUTS.forEach(c=>INPUT_BY[c.key]=c);
+
+// ── band colours (mirror strikedisplay.js STYLE / textColor) ─────────────
+const BAND_TEXT = { Pure:'#4ADE80', Thin:'#FBBF24', Fat:'#FBBF24', Topped:'#F87171', Duff:'#F87171', Whiff:'#F87171' };
+const BAND_DOT  = { Pure:'#22C55E', Thin:'#EAB308', Fat:'#A16207', Topped:'#DC2626', Duff:'#DC2626', Whiff:'#DC2626' };
+
+// ── before-trace session ─────────────────────────────────────────────────
+let before = null;          // { eng, ball, di, ct, disp, entryX, effLpx }
+let sessionActive = false;
+let fadeTimer = null;
+function cloneEng(){ return { view:'face', radius:RADIUS, planeAngle:engineState.planeAngle,
+  swingDirection:engineState.swingDirection, lowPoint:{ x:engineState.lowPoint.x, y:0, z:engineState.lowPoint.z } }; }
+function beginSession(){
+  if (sessionActive) return;
+  sessionActive = true;
+  const eng = cloneEng();
+  const t0 = groundCrossingTheta0(eng);
+  before = {
+    eng, ball: state.ballPosition,
+    di: deriveImpact(eng), ct: clubBallContact(eng), disp: strikeDisplay(eng),
+    entryX: t0!=null ? arcPosition(-t0, eng).x : null,
+    effLpx: effectiveLpx(eng),
+  };
+}
+function endSession(){
+  if (!sessionActive && !before) return;
+  sessionActive = false; before = null;
+  clearTimeout(fadeTimer); fadeTimer = null;
+  renderAll(); flushLive();
+}
+function armSessionFade(){
+  if (reduce) return;                 // reduced motion: ghost persists until next preset
+  clearTimeout(fadeTimer);
+  fadeTimer = setTimeout(endSession, 1800);
+}
+
+// ── settle / srHold: hold live-region writes during a drag, flush once ───
+let srHold = false;
+let settleTimer = null;
+function scheduleSettle(){
+  clearTimeout(settleTimer);
+  settleTimer = setTimeout(()=>{ srHold = false; flushLive(); }, 650);
+}
+
+// ════════════════════════════════════════════════════════════════════════
+//  LAYOUT MEASURE
+// ════════════════════════════════════════════════════════════════════════
+const HSPAN = 0.90, OX_FRAC = 0.46, GY_FRAC = 0.58;   // orthographic window mapping
+const win = { w:0,h:0,S:0,ox:0,gy:0 };
+function measure(){
+  const wr = $('winCard').getBoundingClientRect();
+  if (wr.width < 4 || wr.height < 4) return false;
+  win.w = wr.width; win.h = wr.height;
+  win.S = win.w / HSPAN;
+  win.ox = win.w * OX_FRAC;
+  win.gy = win.h * GY_FRAC;
+  $('winSvg').setAttribute('viewBox', `0 0 ${win.w.toFixed(1)} ${win.h.toFixed(1)}`);
+  const sr = $('seqCard').getBoundingClientRect();
+  $('seqSvg').setAttribute('viewBox', `0 0 ${sr.width.toFixed(1)} ${sr.height.toFixed(1)}`);
+  const fr = $('faceCard').getBoundingClientRect();
+  $('faceSvg').setAttribute('viewBox', `0 0 ${fr.width.toFixed(1)} ${fr.height.toFixed(1)}`);
+  const dr = $('dialCard').getBoundingClientRect();
+  $('dialSvg').setAttribute('viewBox', `0 0 ${dr.width.toFixed(1)} ${dr.height.toFixed(1)}`);
+  win.faceW = fr.width; win.faceH = fr.height;
+  win.dialW = dr.width; win.dialH = dr.height;
+  win.seqW = sr.width;  win.seqH = sr.height;
+  return true;
+}
+const mapX = sx => win.ox + sx * win.S;              // stance-frame X (m) → px
+const mapY = z  => win.gy - z * win.S;               // world Z (m, up) → px
+
+// ════════════════════════════════════════════════════════════════════════
+//  DRAW — STRIKE WINDOW (orthographic side-on)
+// ════════════════════════════════════════════════════════════════════════
+function arcPathD(eng, ballPos){
+  let d = '', pen = false;
+  for (let i=0;i<=60;i++){
+    const th = -0.62 + 1.24*(i/60);
+    const p = arcPosition(th, eng);
+    const x = mapX(p.x + ballPos), y = mapY(p.z);
+    if (x < 6 || x > win.w-6 || y < 6 || y > win.h-6){ pen = false; continue; }
+    d += (pen?'L':'M') + x.toFixed(1) + ' ' + y.toFixed(1);
+    pen = true;
+  }
+  return d;
+}
+function drawWindow(m){
+  const { di, ct, disp, t0, entryX, effLpxV, lpW } = m;
+  const S = win.S, gy = win.gy, W = win.w, H = win.h;
+  const ballPos = state.ballPosition;
+  const ballR = Math.max(6, BALL_RADIUS_M * S);
+  const ACC = '#22E3D6', YEL = 'var(--yellow)';
+  const parts = [];
+
+  // defs (ball gradient)
+  parts.push(`<defs>
+    <radialGradient id="ballG" cx="38%" cy="32%" r="72%">
+      <stop offset="0" stop-color="#ffffff"/><stop offset="0.55" stop-color="#e6ecf4"/><stop offset="1" stop-color="#9fb0c4"/>
+    </radialGradient>
+    <linearGradient id="turfG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#8a5a2b" stop-opacity="0.85"/><stop offset="1" stop-color="#5c3a1a" stop-opacity="0.5"/>
+    </linearGradient>
+  </defs>`);
+
+  // faint impact plumb (guide at the ball/impact x)
+  const bScreenX = mapX(ballPos);
+  parts.push(`<line x1="${bScreenX.toFixed(1)}" y1="10" x2="${bScreenX.toFixed(1)}" y2="${(H-8).toFixed(1)}" stroke="rgba(255,255,255,.06)" stroke-width="1"/>`);
+
+  // BEFORE-TRACE ghost (dashed) — drawn UNDER the live marks
+  if (before){
+    const gd = arcPathD(before.eng, before.ball);
+    if (gd) parts.push(`<path d="${gd}" fill="none" stroke="var(--ghost)" stroke-width="1.5" stroke-dasharray="4 4" opacity=".55" stroke-linecap="round"/>`);
+    // ghost low point
+    const glpx = lpWorld(before.eng).x, glpz = before.eng.lowPoint.z;
+    const gx = mapX(glpx + before.ball), gyv = mapY(glpz);
+    parts.push(`<circle cx="${gx.toFixed(1)}" cy="${gyv.toFixed(1)}" r="3" fill="none" stroke="var(--ghost)" stroke-width="1.4" opacity=".7"/>`);
+    // ghost turf entry
+    if (before.entryX != null){
+      const gex = mapX(before.entryX + before.ball);
+      parts.push(`<circle cx="${gex.toFixed(1)}" cy="${gy.toFixed(1)}" r="2.4" fill="none" stroke="var(--ghost)" stroke-width="1.3" opacity=".65"/>`);
+    }
+  }
+
+  // TURF strip + entry (fat/duff) — first-class element
+  if (t0 != null){
+    const entry = arcPosition(-t0, m.eng), exit = arcPosition(t0, m.eng);
+    let ex = mapX(entry.x + ballPos), xx = mapX(exit.x + ballPos);
+    const xa = Math.max(4, Math.min(ex, xx)), xb = Math.min(W-4, Math.max(ex, xx));
+    if (xb > xa) parts.push(`<rect x="${xa.toFixed(1)}" y="${(gy-3).toFixed(1)}" width="${(xb-xa).toFixed(1)}" height="7" rx="2.5" fill="url(#turfG)"/>`);
+    const exC = Math.max(8, Math.min(W-8, ex));
+    parts.push(`<circle cx="${exC.toFixed(1)}" cy="${gy.toFixed(1)}" r="4" fill="var(--soil)" stroke="#c9a878" stroke-width="1"/>`);
+    const turfCm = Math.round(entry.x*100);
+    const lbl = turfCm<=0 ? `turf ${Math.abs(turfCm)} cm BEFORE ball` : `turf ${turfCm} cm after ball`;
+    const anchor = exC < W*0.2 ? 'start' : (exC > W*0.8 ? 'end' : 'middle');
+    parts.push(`<text x="${exC.toFixed(1)}" y="${(gy+17).toFixed(1)}" text-anchor="${anchor}" fill="var(--soil-ink)" font-size="10" font-weight="700" font-family="inherit">${lbl}</text>`);
+  }
+
+  // GROUND line
+  parts.push(`<line x1="4" y1="${gy.toFixed(1)}" x2="${(W-4).toFixed(1)}" y2="${gy.toFixed(1)}" stroke="rgba(255,255,255,.34)" stroke-width="1.4"/>`);
+
+  // ARC-BOTTOM curve (engine samples, orthographic) — glow + core
+  const d = arcPathD(m.eng, ballPos);
+  if (d){
+    parts.push(`<path d="${d}" fill="none" stroke="${ACC}" stroke-width="6" opacity=".10" stroke-linecap="round"/>`);
+    parts.push(`<path d="${d}" fill="none" stroke="${ACC}" stroke-width="2" opacity=".85" stroke-linecap="round"/>`);
+  }
+
+  // ATTACK TANGENT at impact — slope drawn EXACTLY = attackAngle (orthographic honesty)
+  {
+    const impactZ = ct.clubZ;
+    const ix = mapX(ballPos), iy = mapY(impactZ);
+    // orthographic + equal X/Z scale ⇒ the ON-SCREEN slope IS the world slope
+    // (tan of the attack angle); screen Y is down, so descending (attack<0)
+    // tilts the line down toward +x. dyScreen(dx_px) = -tan(attack)*dx_px.
+    const slope = Math.tan(deg2rad(di.attackAngle));
+    const len = Math.min(W*0.30, 150);
+    const x1 = ix - len, y1 = iy + slope*len;
+    const x2 = ix + len, y2 = iy - slope*len;
+    parts.push(`<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="var(--c-attack)" stroke-width="2" stroke-linecap="round" opacity=".95"/>`);
+    // label rides the forward end of the tangent
+    const lx = ix + len*0.60, ly = iy - slope*(len*0.60);
+    parts.push(`<text x="${(lx+6).toFixed(1)}" y="${(ly + (di.attackAngle<=0?-6:15)).toFixed(1)}" fill="var(--c-attack)" font-size="10.5" font-weight="800" font-family="inherit">Attack ${sgn1(di.attackAngle)}</text>`);
+  }
+
+  // BALL (draggable) — stance position
+  parts.push(`<circle cx="${bScreenX.toFixed(1)}" cy="${(gy-ballR).toFixed(1)}" r="${ballR.toFixed(1)}" fill="url(#ballG)"/>`);
+  parts.push(`<circle cx="${bScreenX.toFixed(1)}" cy="${(gy-ballR).toFixed(1)}" r="${ballR.toFixed(1)}" fill="none" stroke="rgba(255,255,255,.25)" stroke-width="1"/>`);
+
+  // LOW-POINT marker + plumb + cm dimension (ball ↔ low point = effectiveLpx)
+  const lpx = mapX(lpW.x + ballPos), lpy = mapY(m.eng.lowPoint.z);
+  if (Math.abs(lpy - gy) > 2){
+    parts.push(`<line x1="${lpx.toFixed(1)}" y1="${lpy.toFixed(1)}" x2="${lpx.toFixed(1)}" y2="${gy.toFixed(1)}" stroke="${YEL}" stroke-width="1" stroke-dasharray="2 3" opacity=".8"/>`);
+  }
+  parts.push(`<circle cx="${lpx.toFixed(1)}" cy="${lpy.toFixed(1)}" r="4.5" fill="${YEL}"/>`);
+  parts.push(`<circle cx="${lpx.toFixed(1)}" cy="${lpy.toFixed(1)}" r="4.5" fill="none" stroke="rgba(0,0,0,.4)" stroke-width="1"/>`);
+  // dimension: ball(top) ↔ low point, cm label
+  {
+    const cmVal = Math.round(effLpxV*100);
+    const topY = Math.max(20, Math.min(gy - ballR*2 - 6, lpy) - 14);
+    const leftX = Math.min(bScreenX, lpx), rightX = Math.max(bScreenX, lpx);
+    const midX = (bScreenX + lpx)/2;
+    const cmLabel = cmVal===0 ? 'at ball' : (Math.abs(cmVal)+' cm '+(cmVal>0?'ahead':'behind'));
+    parts.push(
+      `<line x1="${bScreenX.toFixed(1)}" y1="${(gy-ballR*2-2).toFixed(1)}" x2="${bScreenX.toFixed(1)}" y2="${topY.toFixed(1)}" stroke="${ACC}" stroke-width="1" stroke-dasharray="2 3" opacity=".5"/>`,
+      `<line x1="${lpx.toFixed(1)}" y1="${(lpy-5).toFixed(1)}" x2="${lpx.toFixed(1)}" y2="${topY.toFixed(1)}" stroke="${ACC}" stroke-width="1" stroke-dasharray="2 3" opacity=".5"/>`,
+      `<line x1="${leftX.toFixed(1)}" y1="${topY.toFixed(1)}" x2="${rightX.toFixed(1)}" y2="${topY.toFixed(1)}" stroke="${ACC}" stroke-width="1.4"/>`,
+      `<rect x="${(midX-38).toFixed(1)}" y="${(topY-19).toFixed(1)}" width="76" height="16" rx="4" fill="#0A0E12" stroke="rgba(34,227,214,.4)"/>`,
+      `<text x="${midX.toFixed(1)}" y="${(topY-7).toFixed(1)}" text-anchor="middle" fill="var(--ink)" font-size="10.5" font-weight="700" font-family="inherit">low pt ${cmLabel}</text>`
+    );
+    // store handle positions
+    win.lpHandle = { x: lpx, y: lpy };
+    win.ballHandle = { x: bScreenX, y: gy-ballR };
+  }
+
+  $('winSvg').innerHTML = parts.join('');
+  // position the transparent keyboard/drag handles over the marks
+  positionHandle('hLow', win.lpHandle);
+  positionHandle('hBall', win.ballHandle);
+}
+function positionHandle(id, pt){
+  if (!pt) return;
+  const el = $(id);
+  el.style.left = pt.x + 'px';
+  el.style.top  = pt.y + 'px';
+}
+
+// ════════════════════════════════════════════════════════════════════════
+//  DRAW — SEQUENCE BAR (reading order literal)
+// ════════════════════════════════════════════════════════════════════════
+function drawSequence(m){
+  const { t0, entryX, effLpxV, lpW } = m;
+  const W = win.seqW, H = win.seqH, gy = win.gy;
+  const trackY = H*0.44;
+  const ballPos = state.ballPosition;
+  const parts = [];
+  parts.push(`<line x1="8" y1="${trackY.toFixed(1)}" x2="${(W-8).toFixed(1)}" y2="${trackY.toFixed(1)}" stroke="rgba(255,255,255,.16)" stroke-width="2"/>`);
+
+  // events in stance X
+  const events = [];
+  if (t0 != null) events.push({ kind:'turf', sx: entryX + ballPos, color:'var(--soil)', ring:'#c9a878', label:'TURF' });
+  events.push({ kind:'ball', sx: ballPos, color:'#e6ecf4', ring:'rgba(255,255,255,.6)', label:'BALL' });
+  events.push({ kind:'low',  sx: lpW.x + ballPos, color:'var(--yellow)', ring:'rgba(0,0,0,.4)', label:'LOW PT' });
+  events.sort((a,b)=>a.sx-b.sx);   // left→right = time order (club travels +X)
+
+  let prevPx = -999, prevRow = 1;
+  events.forEach((e,i)=>{
+    let x = mapX(e.sx);
+    x = Math.max(14, Math.min(W-14, x));
+    e.px = x;
+    // stagger the text label onto a 2nd row when pips crowd (<36px apart)
+    const row = (x - prevPx) < 36 ? (prevRow===0?1:0) : 0;
+    prevRow = row; prevPx = x;
+    parts.push(`<circle cx="${x.toFixed(1)}" cy="${trackY.toFixed(1)}" r="6.5" fill="${e.color}" stroke="${e.ring}" stroke-width="1.3"/>`);
+    parts.push(`<text x="${x.toFixed(1)}" y="${(trackY+1).toFixed(1)}" text-anchor="middle" fill="#06131a" font-size="8.5" font-weight="900" font-family="inherit">${i+1}</text>`);
+    const anchor = x < W*0.12 ? 'start' : (x > W*0.88 ? 'end' : 'middle');
+    parts.push(`<text x="${x.toFixed(1)}" y="${(trackY+20+row*11).toFixed(1)}" text-anchor="${anchor}" fill="var(--muted)" font-size="9" font-weight="700" letter-spacing=".04em" font-family="inherit">${e.label}</text>`);
+  });
+
+  // headline verdict — the duff/ball-first binary
+  let verdict, vcolor;
+  if (t0 != null){
+    const turfCm = Math.round(entryX*100);
+    verdict = turfCm<=0 ? `Turf ${Math.abs(turfCm)} cm BEFORE ball` : `Turf ${turfCm} cm after ball`;
+    vcolor = 'var(--bad)';
+  } else {
+    verdict = 'Ball first · no turf';
+    vcolor = 'var(--good)';
+  }
+  parts.push(`<text x="${(W-8).toFixed(1)}" y="14" text-anchor="end" fill="${vcolor}" font-size="10.5" font-weight="800" font-family="inherit">${verdict}</text>`);
+  parts.push(`<text x="8" y="14" text-anchor="start" fill="var(--muted)" font-size="9" font-weight="700" letter-spacing=".1em" font-family="inherit">SEQUENCE →</text>`);
+
+  $('seqSvg').innerHTML = parts.join('');
+}
+
+// ════════════════════════════════════════════════════════════════════════
+//  DRAW — FACE PANEL (ball closeup + contact line + mm)  [proven inset]
+// ════════════════════════════════════════════════════════════════════════
+function drawFace(m){
+  const { ct, disp } = m;
+  const W = win.faceW, H = win.faceH;
+  const cR = Math.min(W*0.30, H*0.30);
+  const cx = W*0.5, cy = H*0.52;
+  const parts = [];
+  parts.push(`<defs><radialGradient id="faceBallG" cx="38%" cy="32%" r="72%">
+    <stop offset="0" stop-color="#ffffff"/><stop offset="0.55" stop-color="#e6ecf4"/><stop offset="1" stop-color="#9fb0c4"/></radialGradient></defs>`);
+  // ground line under the ball
+  parts.push(`<line x1="${(cx-cR-14).toFixed(1)}" y1="${(cy+cR).toFixed(1)}" x2="${(cx+cR+14).toFixed(1)}" y2="${(cy+cR).toFixed(1)}" stroke="rgba(255,255,255,.28)" stroke-width="1.2"/>`);
+  parts.push(`<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${cR.toFixed(1)}" fill="url(#faceBallG)"/>`);
+  // equator reference
+  parts.push(`<line x1="${(cx-cR).toFixed(1)}" y1="${cy.toFixed(1)}" x2="${(cx+cR).toFixed(1)}" y2="${cy.toFixed(1)}" stroke="rgba(10,14,18,.28)" stroke-width="1" stroke-dasharray="3 3"/>`);
+  const mmVal = Math.round(ct.offset*1000);
+  const ratio = Math.max(-1.45, Math.min(1.45, ct.offsetRatio));
+  const cyLine = cy - ratio*cR;
+  const col = disp.color, tcol = disp.textColor;
+  if (!disp.contact){
+    parts.push(`<line x1="${(cx-cR-12).toFixed(1)}" y1="${cyLine.toFixed(1)}" x2="${(cx+cR+12).toFixed(1)}" y2="${cyLine.toFixed(1)}" stroke="${col}" stroke-width="2.4" stroke-dasharray="5 4" stroke-linecap="round"/>`);
+  } else {
+    parts.push(`<line x1="${(cx-cR-12).toFixed(1)}" y1="${cyLine.toFixed(1)}" x2="${(cx+cR+12).toFixed(1)}" y2="${cyLine.toFixed(1)}" stroke="${col}" stroke-width="3" stroke-linecap="round"/>`);
+  }
+  const mmShort = !disp.contact ? 'no contact'
+    : (Math.abs(mmVal)<1.5 ? 'centre' : (mmVal>0 ? `+${mmVal} mm high` : `−${Math.abs(mmVal)} mm low`));
+  parts.push(`<text x="${cx.toFixed(1)}" y="${(H-8).toFixed(1)}" text-anchor="middle" fill="${tcol}" font-size="12" font-weight="800" font-family="inherit">${mmShort}</text>`);
+  $('faceSvg').innerHTML = parts.join('');
+}
+
+// ════════════════════════════════════════════════════════════════════════
+//  DRAW — PATH DIAL (top-down compass; angles exaggerated for legibility,
+//  the printed ° is authoritative — the one output not in the cross-section)
+// ════════════════════════════════════════════════════════════════════════
+function drawDial(m){
+  const { di } = m;
+  const W = win.dialW, H = win.dialH;
+  const cx = W*0.5, cy = H*0.58, r = Math.min(W,H)*0.32;
+  const GAIN = 4.2, CAP = 62;
+  const parts = [];
+  // dial ring
+  parts.push(`<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${r.toFixed(1)}" fill="none" stroke="rgba(255,255,255,.14)" stroke-width="1.2"/>`);
+  // target line up (the dashed vertical reads as the target line — no extra label)
+  parts.push(`<line x1="${cx.toFixed(1)}" y1="${cy.toFixed(1)}" x2="${cx.toFixed(1)}" y2="${(cy-r-6).toFixed(1)}" stroke="rgba(255,255,255,.30)" stroke-width="1.2" stroke-dasharray="3 3"/>`);
+  parts.push(`<path d="M${cx.toFixed(1)} ${(cy-r-6).toFixed(1)} l-3 5 l6 0 z" fill="rgba(255,255,255,.4)"/>`);
+  const ray = (val,color,wdt)=>{
+    const a = deg2rad(clamp(val*GAIN, -CAP, CAP));   // +val = in-to-out = clockwise (right)
+    const ex = cx + Math.sin(a)*r, ey = cy - Math.cos(a)*r;
+    const ang = Math.atan2(ey-cy, ex-cx);
+    const hx = ex - Math.cos(ang)*8, hy = ey - Math.sin(ang)*8;
+    const px = Math.cos(ang+Math.PI/2)*4, py = Math.sin(ang+Math.PI/2)*4;
+    return `<line x1="${cx.toFixed(1)}" y1="${cy.toFixed(1)}" x2="${hx.toFixed(1)}" y2="${hy.toFixed(1)}" stroke="${color}" stroke-width="${wdt}" stroke-linecap="round"/>`
+      + `<polygon points="${ex.toFixed(1)},${ey.toFixed(1)} ${(hx-px).toFixed(1)},${(hy-py).toFixed(1)} ${(hx+px).toFixed(1)},${(hy+py).toFixed(1)}" fill="${color}"/>`;
+  };
+  parts.push(ray(state.swingDirection, 'var(--c-dir)', 2.4));   // swing direction
+  parts.push(ray(di.clubPath, 'var(--accent)', 3.2));           // resulting path
+  parts.push(`<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="3" fill="#fff" opacity=".9"/>`);
+  // printed value
+  parts.push(`<text x="${cx.toFixed(1)}" y="${(H-8).toFixed(1)}" text-anchor="middle" fill="var(--accent)" font-size="12.5" font-weight="800" font-family="inherit">Path ${sgn1(di.clubPath)}</text>`);
+  $('dialSvg').innerHTML = parts.join('');
+}
+
+// ════════════════════════════════════════════════════════════════════════
+//  OUTPUT TILES + BAND CHIP
+// ════════════════════════════════════════════════════════════════════════
+function fmtDelta(now, was, unit, dp){
+  const d = now - was;
+  if (Math.abs(d) < (dp===0?0.5:0.05)) return `was ${was.toFixed(dp)}${unit} · no change`;
+  return `${was.toFixed(dp)} → ${now.toFixed(dp)}${unit}`;
+}
+function updateOutputs(m){
+  const { di, ct, disp, t0, entryX } = m;
+
+  // Attack
+  const atk = di.attackAngle;
+  $('oAttackV').textContent = sgn1(atk);
+  const arw = Math.abs(atk)<0.05 ? '→' : (atk<0 ? '↓' : '↑');
+  const arwEl = $('oAttackArw'); arwEl.textContent = arw;
+  arwEl.style.color = atk<0 ? 'var(--c-attack)' : (atk>0 ? 'var(--good)' : 'var(--muted)');
+  const aSub = $('oAttackSub');
+  if (before){ aSub.textContent = fmtDelta(atk, before.di.attackAngle, '°', 1); aSub.classList.add('hot'); }
+  else { aSub.textContent = atk<0?'descending':(atk>0?'ascending':'level'); aSub.classList.remove('hot'); }
+
+  // Path
+  const pth = di.clubPath;
+  $('oPathV').textContent = sgn1(pth);
+  const pSub = $('oPathSub');
+  if (before){ pSub.textContent = fmtDelta(pth, before.di.clubPath, '°', 1); pSub.classList.add('hot'); }
+  else { pSub.textContent = Math.abs(pth)<0.05?'square':(pth>0?'in-to-out':'out-to-in'); pSub.classList.remove('hot'); }
+
+  // Strike height (face mm)
+  const mmVal = Math.round(ct.offset*1000);
+  const fEl = $('oFaceV');
+  fEl.innerHTML = !disp.contact ? 'no contact'
+    : (Math.abs(mmVal)<1.5 ? 'centre' : `${mmVal>0?'+':'−'}${Math.abs(mmVal)}<span class="u"> mm ${mmVal>0?'high':'low'}</span>`);
+  fEl.style.color = disp.textColor;
+  const fSub = $('oFaceSub');
+  if (before){ fSub.textContent = `${Math.round(before.ct.offset*1000)} → ${mmVal} mm`; fSub.classList.add('hot'); }
+  else { fSub.textContent = 'on the clubface'; fSub.classList.remove('hot'); }
+
+  // Contact order (sequence / turf)
+  const sEl = $('oSeqV'), sSub = $('oSeqSub');
+  if (t0 != null){
+    const turfCm = Math.round(entryX*100);
+    sEl.textContent = turfCm<=0 ? `Turf ${Math.abs(turfCm)} cm first` : `Turf ${turfCm} cm after`;
+    sEl.style.color = turfCm<=0 ? 'var(--bad)' : 'var(--warn)';
+    sSub.textContent = turfCm<=0 ? 'ground before ball' : 'ball before ground';
+    sSub.classList.remove('hot');
+  } else {
+    sEl.textContent = 'Ball first';
+    sEl.style.color = 'var(--good)';
+    sSub.textContent = 'no turf contact'; sSub.classList.remove('hot');
+  }
+
+  // Band chip
+  $('bandLabel').textContent = disp.label;
+  $('bandChip').style.color = disp.textColor;
+  $('bandChip').style.background = 'rgba(255,255,255,.04)';
+  $('bandChip').style.borderColor = disp.color;
+  $('bandDot').style.background = BAND_DOT[disp.band] || disp.color;
+}
+
+// ════════════════════════════════════════════════════════════════════════
+//  COMPOSE — the ONE polite live sentence (flushed on settle only)
+// ════════════════════════════════════════════════════════════════════════
+function liveSentence(){
+  const disp = strikeDisplay(engineState);
+  const di = deriveImpact(engineState);
+  const ct = clubBallContact(engineState);
+  const effCm = Math.round(effectiveLpx(engineState)*100);
+  const lpDesc = effCm===0 ? 'at the ball' : (Math.abs(effCm)+' cm '+(effCm>0?'ahead of the ball':'behind the ball'));
+  const bpCm = Math.round(state.ballPosition*100);
+  const bpDesc = bpCm===0 ? 'centre' : (Math.abs(bpCm)+' cm '+(bpCm>0?'forward':'back'));
+  const mmVal = Math.round(ct.offset*1000);
+  const mmDesc = !disp.contact ? 'no contact, the club passes above the ball'
+    : (Math.abs(mmVal)<1.5 ? 'centred on the face' : `${Math.abs(mmVal)} mm ${mmVal>0?'high':'low'} on the face`);
+  const t0 = groundCrossingTheta0(engineState);
+  let turfDesc = ' Ball first, no turf contact.';
+  if (t0 != null){
+    const cm = Math.round(arcPosition(-t0, engineState).x*100);
+    turfDesc = ` Turf contact ${Math.abs(cm)} cm ${cm<=0?'before':'after'} the ball.`;
+  }
+  const atkDir = Math.abs(di.attackAngle)<0.05?'level':(di.attackAngle>0?'up':'down');
+  const pathDir = Math.abs(di.clubPath)<0.05?'square':(di.clubPath>0?'in to out':'out to in');
+  let pre = '';
+  if (before){
+    pre = `Adjusting from a ${before.disp.label.toLowerCase()} strike. `;
+  }
+  return pre +
+    `${disp.label} strike. Plane ${Math.round(state.planeAngle)} degrees. ` +
+    `Attack angle ${Math.abs(di.attackAngle).toFixed(1)} degrees ${atkDir}. ` +
+    `Club path ${Math.abs(di.clubPath).toFixed(1)} degrees ${pathDir}. ` +
+    `Low point ${lpDesc}. Ball position ${bpDesc}. Strike ${mmDesc}.` + turfDesc;
+}
+function flushLive(){
+  if (srHold) return;
+  $('srLive').textContent = liveSentence();
+}
+
+// ════════════════════════════════════════════════════════════════════════
+//  RENDER ALL
+// ════════════════════════════════════════════════════════════════════════
+function computeModel(){
+  syncEngine();
+  const t0 = groundCrossingTheta0(engineState);
+  return {
+    eng: engineState,
+    di: deriveImpact(engineState),
+    ct: clubBallContact(engineState),
+    disp: strikeDisplay(engineState),
+    t0,
+    entryX: t0!=null ? arcPosition(-t0, engineState).x : null,
+    effLpxV: effectiveLpx(engineState),
+    lpW: lpWorld(engineState),
+  };
+}
+function renderAll(){
+  if (!measure()) return;
+  const m = computeModel();
+  drawWindow(m);
+  drawSequence(m);
+  drawFace(m);
+  drawDial(m);
+  updateOutputs(m);
+  syncHandleAria(m);
+}
+// lighter redraw path used during live drags / slider input
+function renderStatic(){ renderAll(); }
+
+function syncHandleAria(m){
+  const lpcm = Math.round(m.effLpxV*100);
+  const depthmm = Math.round(state.lowPoint.z*1000);
+  const hLow = $('hLow');
+  hLow.setAttribute('aria-valuenow', String(lpcm));
+  hLow.setAttribute('aria-valuetext',
+    `${lpcm===0?'at the ball':Math.abs(lpcm)+' cm '+(lpcm>0?'ahead':'behind')}, depth ${depthmm===0?'level':Math.abs(depthmm)+' mm '+(depthmm>0?'above':'below')}`);
+  const bpcm = Math.round(state.ballPosition*100);
+  const hBall = $('hBall');
+  hBall.setAttribute('aria-valuenow', String(bpcm));
+  hBall.setAttribute('aria-valuetext', ballWord(state.ballPosition));
+}
+
+// ════════════════════════════════════════════════════════════════════════
+//  TUNE DOCK (tap chip → dock; live static redraw; auto-fade; aria)
+// ════════════════════════════════════════════════════════════════════════
+const tuneDock = $('tuneDock'), tdName = $('tdName'), tdVal = $('tdVal'), tdRange = $('tdRange');
+let tuneKey = null, dockFadeTimer = null, dockPointerDown = false, lastChipPointerTs = 0;
+
+function chipExpanded(key, on){ const c = $('icell_'+key); if (c) c.setAttribute('aria-expanded', on?'true':'false'); }
+function syncDockUI(){
+  if (!tuneKey) return;
+  const cfg = INPUT_BY[tuneKey];
+  tdVal.textContent = cfg.fmt(cfg.get());
+  tdRange.value = cfg.get();
+  tdRange.setAttribute('aria-valuetext', cfg.vt(cfg.get()));
+  // reflect on the chip too
+  const cv = $('iv_'+tuneKey); if (cv) cv.textContent = cfg.fmt(cfg.get());
+}
+function placeDock(){
+  const bb = $('chipRow').getBoundingClientRect();
+  const stageR = $('stage').getBoundingClientRect();
+  tuneDock.style.bottom = (stageR.bottom - bb.top + 8) + 'px';
+}
+function openTune(key){
+  if (tuneKey === key){ closeTune(true); return; }
+  if (tuneKey) chipExpanded(tuneKey, false);
+  tuneKey = key;
+  chipExpanded(key, true);
+  const cfg = INPUT_BY[key];
+  tuneDock.hidden = false;
+  tuneDock.classList.remove('fading');
+  tuneDock.style.setProperty('--pc', cfg.color);
+  tdName.textContent = cfg.label;
+  tdRange.min = cfg.min; tdRange.max = cfg.max; tdRange.step = cfg.step;
+  tdRange.value = cfg.get();
+  tdRange.setAttribute('aria-label', cfg.aria);
+  tdRange.setAttribute('aria-valuetext', cfg.vt(cfg.get()));
+  tuneDock.setAttribute('aria-label', 'Adjust ' + cfg.aria);
+  syncDockUI();
+  placeDock();
+  const byPointer = (performance.now() - lastChipPointerTs) < 600;
+  if (!byPointer) tdRange.focus({ preventScroll:true });
+  armDockFade();
+  document.addEventListener('pointerdown', onTuneOutside, true);
+}
+function closeTune(returnFocus){
+  if (!tuneKey) return;
+  const focusInside = tuneDock.contains(document.activeElement);
+  const chip = $('icell_'+tuneKey);
+  chipExpanded(tuneKey, false);
+  const key = tuneKey; tuneKey = null;
+  clearTimeout(dockFadeTimer); dockFadeTimer = null;
+  document.removeEventListener('pointerdown', onTuneOutside, true);
+  const hide = ()=>{ if (!tuneKey){ tuneDock.hidden = true; tuneDock.classList.remove('fading'); } };
+  if (reduce) hide();
+  else { tuneDock.classList.add('fading'); setTimeout(hide, 220); }
+  if ((returnFocus || focusInside) && chip){
+    requestAnimationFrame(()=>{ if (document.activeElement===document.body || tuneDock.contains(document.activeElement)) chip.focus({ preventScroll:true }); });
+  }
+}
+function onTuneOutside(e){
+  if (!tuneKey) return;
+  if (tuneDock.contains(e.target)) return;
+  const chip = $('icell_'+tuneKey);
+  if (chip && chip.contains(e.target)) return;
+  if (e.target.closest && e.target.closest('.handle')) return;   // dragging a marker = still editing
+  closeTune(false);
+}
+function armDockFade(){
+  if (reduce) return;
+  clearTimeout(dockFadeTimer);
+  dockFadeTimer = setTimeout(()=>{
+    if (dockPointerDown || tuneDock.contains(document.activeElement)){ armDockFade(); return; }
+    closeTune(false);
+  }, 1800);
+}
+tuneDock.addEventListener('pointerdown', ()=>{ dockPointerDown = true; clearTimeout(dockFadeTimer); });
+document.addEventListener('pointerup', ()=>{ if (dockPointerDown){ dockPointerDown=false; if (tuneKey) armDockFade(); } });
+tuneDock.addEventListener('keydown', e=>{ if (e.key==='Escape'){ e.preventDefault(); e.stopPropagation(); closeTune(true); } });
+tuneDock.addEventListener('focusout', ()=>{ requestAnimationFrame(()=>{
+  if (tuneKey && !dockPointerDown && !tuneDock.contains(document.activeElement)) closeTune(false);
+}); });
+
+function applyInput(key, v){
+  const cfg = INPUT_BY[key];
+  const stepped = Math.round(v/cfg.step)*cfg.step;
+  v = clamp(+stepped.toFixed(4), cfg.min, cfg.max);
+  if (cfg.get() === v) return;
+  beginSession();
+  cfg.set(v);
+  activePresetClear();
+  srHold = true;
+  renderStatic();
+  syncDockUI();
+  scheduleSettle();
+  if (tuneKey) armDockFade();
+  armSessionFade();
+}
+tdRange.addEventListener('input', ()=>{ if (tuneKey) applyInput(tuneKey, +tdRange.value); });
+$('tdDown').addEventListener('click', ()=>{ if (!tuneKey) return; const c=INPUT_BY[tuneKey]; applyInput(tuneKey, c.get()-c.step); });
+$('tdUp').addEventListener('click',   ()=>{ if (!tuneKey) return; const c=INPUT_BY[tuneKey]; applyInput(tuneKey, c.get()+c.step); });
+$('tdDone').addEventListener('click', ()=> closeTune(true));
+
+// ── build chip row (roving tabindex toolbar) ─────────────────────────────
+(function buildChipRow(){
+  const row = $('chipRow');
+  const tuneGlyph = '<span class="tglyph" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 14 14" fill="none">'
+    + '<path d="M2 4h5.6M11.4 4H12M2 10h.6M5.4 10H12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>'
+    + '<circle cx="9.5" cy="4" r="1.9" fill="currentColor"/><circle cx="3.5" cy="10" r="1.9" fill="currentColor"/></svg></span>';
+  INPUTS.forEach(cfg=>{
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'chip'; b.id = 'icell_'+cfg.key;
+    b.style.setProperty('--pc', cfg.color);
+    b.setAttribute('aria-expanded','false');
+    b.setAttribute('aria-controls','tuneDock');
+    b.innerHTML = '<span class="cdot" aria-hidden="true"></span>'
+      + '<span class="cbody"><span class="ck">'+cfg.label+'</span><span class="cv" id="iv_'+cfg.key+'">—</span></span>'+tuneGlyph;
+    b.addEventListener('pointerdown', ()=>{ lastChipPointerTs = performance.now(); });
+    b.addEventListener('click', ()=> openTune(cfg.key));
+    row.appendChild(b);
+  });
+  Array.from(row.querySelectorAll('.chip')).forEach((b,i)=>{ b.tabIndex = i===0?0:-1; });
+  row.addEventListener('keydown', e=>{
+    const list = Array.from(row.querySelectorAll('.chip'));
+    const i = list.indexOf(document.activeElement); if (i<0) return;
+    let j = null;
+    if (e.key==='ArrowRight') j = Math.min(list.length-1, i+1);
+    else if (e.key==='ArrowLeft') j = Math.max(0, i-1);
+    else if (e.key==='Home') j = 0;
+    else if (e.key==='End') j = list.length-1;
+    if (j===null || j===i){ if (j!==null) e.preventDefault(); return; }
+    e.preventDefault();
+    list.forEach(c=>c.tabIndex=-1); list[j].tabIndex=0; list[j].focus();
+  });
+  row.addEventListener('focusin', e=>{
+    const b = e.target.closest('.chip'); if (!b) return;
+    row.querySelectorAll('.chip').forEach(c=>c.tabIndex=(c===b?0:-1));
+    b.scrollIntoView({ block:'nearest', inline:'nearest' });
+  });
+})();
+function syncChipValues(){ INPUTS.forEach(c=>{ const el=$('iv_'+c.key); if (el) el.textContent = c.fmt(c.get()); }); }
+
+// ════════════════════════════════════════════════════════════════════════
+//  PRESETS
+// ════════════════════════════════════════════════════════════════════════
+function markPreset(name){
+  activePreset = name;
+  document.querySelectorAll('.preset').forEach(b=>b.setAttribute('aria-pressed', b.dataset.preset===name ? 'true':'false'));
+}
+function activePresetClear(){ if (activePreset){ activePreset=null; document.querySelectorAll('.preset').forEach(b=>b.setAttribute('aria-pressed','false')); } }
+function applyPreset(name){
+  const p = PRESETS[name]; if (!p) return;
+  // a preset is a fresh start → end any session (clears before-trace)
+  sessionActive = false; before = null; clearTimeout(fadeTimer); fadeTimer = null;
+  state.planeAngle = p.planeAngle;
+  state.swingDirection = p.swingDirection;
+  state.lowPoint.x = p.lowPoint.x;
+  state.lowPoint.z = p.lowPoint.z;
+  state.ballPosition = p.ballPosition;
+  markPreset(name);
+  srHold = false;
+  renderAll();
+  syncChipValues();
+  if (tuneKey) syncDockUI();
+  flushLive();
+}
+document.querySelectorAll('.preset').forEach(b=> b.addEventListener('click', ()=> applyPreset(b.dataset.preset)) );
+
+// ════════════════════════════════════════════════════════════════════════
+//  DIRECT MANIPULATION — drag low-point / ball on the window
+//  (redundant with the dock sliders; the handles are also keyboard-operable)
+// ════════════════════════════════════════════════════════════════════════
+function svgPointToPx(el, e){
+  const r = $('winCard').getBoundingClientRect();
+  return { x: e.clientX - r.left, y: e.clientY - r.top };
+}
+function dragLowTo(px, py){
+  // horizontal → lowPoint.x (ball-position cancels; +dir compensation term)
+  const perDeg = perDegAt(state.planeAngle);
+  const lx = (px - win.ox)/win.S + state.swingDirection*perDeg;
+  const lz = (win.gy - py)/win.S;
+  beginSession();
+  state.lowPoint.x = clamp(+lx.toFixed(4), INPUT_BY.lpx.min, INPUT_BY.lpx.max);
+  state.lowPoint.z = clamp(+lz.toFixed(4), INPUT_BY.depth.min, INPUT_BY.depth.max);
+  activePresetClear();
+  srHold = true; renderStatic(); syncChipValues(); if (tuneKey) syncDockUI();
+  scheduleSettle(); armSessionFade();
+}
+function dragBallTo(px){
+  const bp = (px - win.ox)/win.S;
+  beginSession();
+  state.ballPosition = clamp(+bp.toFixed(4), INPUT_BY.ball.min, INPUT_BY.ball.max);
+  activePresetClear();
+  srHold = true; renderStatic(); syncChipValues(); if (tuneKey) syncDockUI();
+  scheduleSettle(); armSessionFade();
+}
+function wireDrag(handleId, onMove, axis){
+  const el = $(handleId);
+  let active = false;
+  el.addEventListener('pointerdown', e=>{
+    active = true;
+    try { el.setPointerCapture && el.setPointerCapture(e.pointerId); } catch(_){ /* synthetic / already-released pointer — move events still drive the drag */ }
+    e.preventDefault();
+    const p = svgPointToPx(el, e); axis==='xy'?onMove(p.x,p.y):onMove(p.x);
+  });
+  el.addEventListener('pointermove', e=>{ if (!active) return; const p = svgPointToPx(el, e); axis==='xy'?onMove(p.x,p.y):onMove(p.x); });
+  const end = e=>{ if (active){ active=false; try { el.releasePointerCapture && el.releasePointerCapture(e.pointerId); } catch(_){} } };
+  el.addEventListener('pointerup', end);
+  el.addEventListener('pointercancel', end);
+}
+wireDrag('hLow', (x,y)=>dragLowTo(x,y), 'xy');
+wireDrag('hBall', (x)=>dragBallTo(x), 'x');
+
+// keyboard on the on-canvas handles (arrow keys) — enhancement + redundant path
+$('hLow').addEventListener('keydown', e=>{
+  const sx = INPUT_BY.lpx.step, sz = INPUT_BY.depth.step;
+  let used = true;
+  if (e.key==='ArrowRight') applyAxis('lowx', state.lowPoint.x + sx);
+  else if (e.key==='ArrowLeft') applyAxis('lowx', state.lowPoint.x - sx);
+  else if (e.key==='ArrowUp') applyAxis('lowz', state.lowPoint.z + sz);
+  else if (e.key==='ArrowDown') applyAxis('lowz', state.lowPoint.z - sz);
+  else used = false;
+  if (used){ e.preventDefault(); }
+});
+$('hBall').addEventListener('keydown', e=>{
+  const s = INPUT_BY.ball.step; let used = true;
+  if (e.key==='ArrowRight') applyAxis('ball', state.ballPosition + s);
+  else if (e.key==='ArrowLeft') applyAxis('ball', state.ballPosition - s);
+  else used = false;
+  if (used){ e.preventDefault(); }
+});
+function applyAxis(which, v){
+  beginSession();
+  if (which==='lowx') state.lowPoint.x = clamp(+v.toFixed(4), INPUT_BY.lpx.min, INPUT_BY.lpx.max);
+  else if (which==='lowz') state.lowPoint.z = clamp(+v.toFixed(4), INPUT_BY.depth.min, INPUT_BY.depth.max);
+  else if (which==='ball') state.ballPosition = clamp(+v.toFixed(4), INPUT_BY.ball.min, INPUT_BY.ball.max);
+  activePresetClear();
+  srHold = true; renderStatic(); syncChipValues(); if (tuneKey) syncDockUI();
+  scheduleSettle(); armSessionFade();
+}
+
+// ════════════════════════════════════════════════════════════════════════
+//  INIT
+// ════════════════════════════════════════════════════════════════════════
+function boot(){
+  markPreset('Pure');
+  renderAll();
+  syncChipValues();
+  flushLive();
+}
+addEventListener('resize', ()=>{ renderAll(); if (tuneKey) placeDock(); });
+if (typeof ResizeObserver==='function'){
+  const ro = new ResizeObserver(()=>{ renderAll(); if (tuneKey) placeDock(); });
+  ro.observe($('winCard')); ro.observe($('faceCard')); ro.observe($('dialCard'));
+}
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(()=>renderAll());
+requestAnimationFrame(boot);
+
+// ── verification hook (engine-vs-displayed assertions) ───────────────────
+window.__mock = {
+  engine: { deriveImpact, clubBallContact, effectiveLpx, arcPosition, groundCrossingTheta0, BALL_RADIUS_M, lpWorld, strikeDisplay },
+  engineState: ()=>({ view:'face', radius:RADIUS, planeAngle:engineState.planeAngle,
+    swingDirection:engineState.swingDirection, lowPoint:{ x:engineState.lowPoint.x, y:0, z:engineState.lowPoint.z } }),
+  state: ()=>JSON.parse(JSON.stringify(state)),
+  applyPreset,
+  hasBefore: ()=>!!before,
+  dom: ()=>({
+    band: $('bandLabel').textContent,
+    attack: $('oAttackV').textContent,
+    path: $('oPathV').textContent,
+    face: $('oFaceV').textContent,
+    seq: $('oSeqV').textContent,
+    live: $('srLive').textContent,
+  }),
+};
+</script>
+</body>
+</html>
