@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<meta name="theme-color" content="#0A0E12" />
+<meta name="theme-color" content="#07060C" />
 <meta name="robots" content="noindex" />
 <title>VIZ MOCK — See the Shot (visualization-primary + chip row + transient lens overlays)</title>
 <!-- ═════════════════════════════════════════════════════════════════════
@@ -48,22 +48,32 @@
      ungates this web mock.
      Engine files (impact-flight.js etc.) are byte-identical imports.
      ═════════════════════════════════════════════════════════════════════ -->
-<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2052%2052'%20fill='none'%3E%3Cpath%20d='M11%2045%20C%2016%2026,%2024%2018,%2035%2015%20M21%2039%20L%2030%2024%20L%2043%2045'%20stroke='%2322E3D6'%20stroke-width='4.2'%20stroke-linecap='round'%20stroke-linejoin='round'/%3E%3Ccircle%20cx='37'%20cy='15'%20r='5.2'%20fill='%2322E3D6'/%3E%3C/svg%3E" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2052%2052'%20fill='none'%3E%3Cpath%20d='M11%2045%20C%2016%2026,%2024%2018,%2035%2015%20M21%2039%20L%2030%2024%20L%2043%2045'%20stroke='%239D8BFF'%20stroke-width='4.2'%20stroke-linecap='round'%20stroke-linejoin='round'/%3E%3Ccircle%20cx='37'%20cy='15'%20r='5.2'%20fill='%23FF8A4D'/%3E%3C/svg%3E" />
 <link rel="stylesheet" href="./sa.css" />
 <link rel="stylesheet" href="./sa-paywall.css" />
+<!-- P3 "Ultraviolet Ember" cohesion source (tokens + .sa-strip shell chrome).
+     Imported AFTER sa.css so its tokens win; the local :root below keeps only
+     genuinely local / a11y-hardened overrides. -->
+<link rel="stylesheet" href="./sa-p3.css" />
 <style>
+  /* Cross-document View Transitions (home ↔ this destination). Named pairs:
+     sa-logo (home wordmark-mark ↔ this page's .sa-strip__home) + sa-stage
+     (tapped home card ↔ #stage). Disabled under reduced-motion by sa-p3.css. */
+  @view-transition{ navigation:auto; }
+
   :root{
-    --accent:#22E3D6; --accent-soft:rgba(34,227,214,.16); --accent-line:rgba(34,227,214,.55);
-    --ink:#e8f0fb; --muted:#9aabc6;                     /* unified ink + AAA-ish muted */
-    --bg:#0A0E12; --bg-top:#0b1220;
-    --panel:rgba(12,20,33,.72); --line:rgba(255,255,255,.30);  /* line raised to ≥3:1 */
-    --radius-pill:999px; --radius-card:16px; --radius-control:12px;
+    /* ── P3 "Ultraviolet Ember" tokens are inherited from ./sa-p3.css.
+         Only genuinely local / a11y-hardened overrides live here so future
+         palette swaps stay token-only in sa-p3.css. ─────────────────────── */
+    --bg-top:#140E24;                  /* P3 scene-gradient top (body radial) */
+    --line:rgba(255,255,255,.30);      /* a11y: borders kept ≥3:1 (overrides sa-p3 .10) */
+    --panel:rgba(17,13,28,.72);        /* violet-shifted glass chrome */
+    --radius-control:12px;
     --blur-surface:10px; --blur-overlay:18px;
-    --plate:#0E141C;
-    /* anatomy colours (ported hexApprox from direction-height-arrows-layout.ts) */
-    --c-face:#EE4954; --c-path:#8FB4D4; --c-loft:#A66BFF; --c-attack:#FF7AA8; --c-launch:#F4D000;
-    /* outcome/ghost tokens (stage 3+; stage 5 uses them more) */
-    --good:#4ADE80; --warn:#FBBF24; --bad:#F87171; --ghost:#9FB2C8;
+    /* anatomy colours (lens-overlay params — labelled trios, ported hexApprox
+       from direction-height-arrows-layout.ts; distinct param roles, not accent) */
+    --c-face:#EE4954; --c-path:#8FB4D4; --c-loft:#A66BFF; --c-attack:#4DE8D2; --c-launch:#F4D000;
+    --ghost:#9FB2C8;                   /* neutral reference-trace grey (never accent) */
     --dim:0.55;
   }
   *{box-sizing:border-box;margin:0;padding:0}
@@ -143,7 +153,8 @@
      so the opposite lens's arrows are always visible (Sivert's redesign). Flight
      stays a separate overlay (#flightScrim), reached via the top-strip Play-flight
      button — the old [Direction|Launch|Flight] toggle + mini-panels are retired. */
-  .main{flex:1 1 auto;position:relative;padding:2px;min-height:0;display:flex;gap:6px}
+  /* primary stage — the morph target a tapped home card expands INTO (spec §5) */
+  .main{flex:1 1 auto;position:relative;padding:2px;min-height:0;display:flex;gap:6px;view-transition-name:sa-stage}
   .focusPanel{
     display:none;flex:1 1 0;gap:6px;min-height:0;min-width:0;
     opacity:0;transform:scale(.985);
@@ -161,7 +172,7 @@
   .heroLens{
     flex:1 1 auto;min-width:0;border-radius:20px;position:relative;
     background:
-      radial-gradient(120% 90% at 50% 18%, rgba(34,227,214,.07), rgba(10,14,18,0) 62%),
+      radial-gradient(120% 90% at 50% 18%, rgba(255,138,77,.07), rgba(10,14,18,0) 62%),
       #0A0E12;
     border:1px solid rgba(255,255,255,.07);
     box-shadow:inset 0 1px 0 rgba(255,255,255,.04), 0 14px 40px -22px rgba(0,0,0,.8);
@@ -193,7 +204,7 @@
   .mini.k-face input{accent-color:var(--c-face)} .mini.k-face .mname{color:#ffb0b6}
   .mini.k-path input{accent-color:var(--c-path)} .mini.k-path .mname{color:#bcd6ea}
   .mini.k-loft input{accent-color:var(--c-loft)} .mini.k-loft .mname{color:#cdb0ff}
-  .mini.k-attack input{accent-color:var(--c-attack)} .mini.k-attack .mname{color:#ffc0d4}
+  .mini.k-attack input{accent-color:var(--c-attack)} .mini.k-attack .mname{color:#a9f2e8}
 
   /* hero results row — max 4 metric cards under the hero lens (per-focus).
      REBALANCE: these read as SECONDARY/supporting chips now (the lens is the
@@ -640,11 +651,11 @@
   .flightCarry{position:absolute;top:15%;left:max(3.4%,env(safe-area-inset-left));z-index:5;pointer-events:none;line-height:1;text-align:left;
     text-shadow:0 0 22px rgba(0,0,0,.65)}
   .flightCarry .num{font-size:clamp(30px,8vh,60px);font-weight:800;letter-spacing:-.03em;color:#fff;line-height:.9;
-    font-variant-numeric:tabular-nums;text-shadow:0 0 28px rgba(34,227,214,.6)}
+    font-variant-numeric:tabular-nums;text-shadow:0 0 28px rgba(255,138,77,.6)}
   .flightCarry .num .u{font-size:.4em;font-weight:700;color:var(--accent);margin-left:3px;vertical-align:.2em}
   .flightCarry .lab{font-size:clamp(8px,1.6vh,11px);letter-spacing:.24em;text-transform:uppercase;color:var(--muted);margin-top:4px}
   .flightCarry .offline{margin-top:10px;font-variant-numeric:tabular-nums;font-weight:800;
-    font-size:clamp(15px,3.4vh,24px);color:var(--accent);line-height:1;text-shadow:0 0 18px rgba(34,227,214,.4)}
+    font-size:clamp(15px,3.4vh,24px);color:var(--accent);line-height:1;text-shadow:0 0 18px rgba(255,138,77,.4)}
   .flightCarry .offline .side{font-size:.6em;font-weight:700;letter-spacing:.06em;margin-left:3px;color:#fff}
 
   /* ── LAYOUT B (BOTTOM ONLY): one aligned rectangle along the bottom ──
@@ -703,14 +714,14 @@
   .fData .cell .v{font-weight:800;font-variant-numeric:tabular-nums;font-size:clamp(12.5px,1.7vw,22px);color:var(--ink);white-space:nowrap;line-height:1;min-width:0;padding-right:11px;letter-spacing:-.012em}
   .fData .cell .v small{font-size:.52em;color:var(--muted);font-weight:600;margin-left:2px}
   /* hero chips (Carry/Ball Speed/Smash): cyan accent value */
-  .fData .cell.hero .v{color:var(--accent);text-shadow:0 0 14px rgba(34,227,214,.35)}
+  .fData .cell.hero .v{color:var(--accent);text-shadow:0 0 14px rgba(255,138,77,.35)}
   /* A2 range underline — thin 2px bar along the bottom edge, cyan fill shows
      the value's position in its range (signed metrics fill from CENTRE). */
   .fData .cell .rng{position:absolute;left:11px;right:11px;bottom:7px;height:2px;border-radius:2px;
     background:rgba(255,255,255,.10);display:block}
   .fData .cell .rng .fill{position:absolute;top:0;bottom:0;border-radius:2px;background:var(--accent);width:0;
     transition:width .6s cubic-bezier(.2,.7,.2,1)}
-  .fData .cell[data-signed] .rng .fill{background:rgba(34,227,214,.7)}
+  .fData .cell[data-signed] .rng .fill{background:rgba(255,138,77,.7)}
   /* Shape — text-only, no underline. Its value can be a two-word string
      ("Pull Hook"), so allow it to scale a touch smaller than the numeric chips
      and lose the chevron padding so it always fits on one line. */
@@ -837,9 +848,15 @@
     /* K5 (carried over): ≥6px vertical + 26px horizontal padding so the
        first/last chip's focus ring clears the container edge and the
        decorative edge fades. */
-    padding:6px max(26px,env(safe-area-inset-right)) 8px max(26px,env(safe-area-inset-left));
-    scroll-padding:0 26px}
+    padding:6px max(26px,env(safe-area-inset-right)) 8px max(50px,env(safe-area-inset-left));
+    scroll-padding:0 26px 0 50px}
   .chipScroll::-webkit-scrollbar{display:none}
+  /* shared app-shell home affordance — leading edge of the VISIBLE input strip
+     (the .topstrip is the hidden state-backbone here). Reveals/hides with the
+     strip; sits above the left edge-fade; chips are padded clear (above). */
+  .fTop__home{position:absolute; z-index:3;
+    left:max(8px,env(safe-area-inset-left));
+    top:calc(max(4px,env(safe-area-inset-top)) + 13px);}
   .chipRow{display:flex;gap:8px;width:max-content;align-items:stretch}
   /* edge fades — scroll affordance (decorative, pointer-events none) */
   .fTop::before,.fTop::after{content:"";position:absolute;top:0;bottom:0;width:26px;
@@ -907,7 +924,7 @@
   /* distance emphasis inside Vertical (owner's nod): Carry/Total in the
      live-ball cyan — every plate here IS live-shot data, so the colour law
      (cyan = live ball + its data only) holds. */
-  .dTile.dist .dv{color:var(--accent);text-shadow:0 0 12px rgba(34,227,214,.3)}
+  .dTile.dist .dv{color:var(--accent);text-shadow:0 0 12px rgba(255,138,77,.3)}
   @media (prefers-reduced-motion:reduce){ .fTop,.fDash{transition:none} }
 
   /* ── move 2: TUNE DOCK — a full-width transient editor bar. ROUND 4: it
@@ -991,12 +1008,12 @@
     <!-- ══ TOP STRIP ══ -->
     <div class="topstrip">
       <div class="ts-left">
+        <!-- NOTE: in the viz-primary layout this .topstrip is the hidden STATE
+             BACKBONE (.topstrip{display:none!important}). The shared app-shell
+             home affordance therefore lives in the VISIBLE input strip's leading
+             edge instead (see .fTop__home in #fInputStrip). The old sibling tabs
+             (Geometry / Impact) are dropped in the hub-and-spoke cohesion pass. -->
         <span class="ts-title">See the Shot</span>
-        <nav class="modnav" aria-label="Modules">
-          <a class="home" href="./index.html" aria-label="Home"><svg width="20" height="20" viewBox="0 0 52 52" fill="none" aria-hidden="true"><path d="M11 45 C 16 26, 24 18, 35 15 M21 39 L 30 24 L 43 45" stroke="currentColor" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="37" cy="15" r="5.2" fill="currentColor"/></svg></a>
-          <a class="tab" href="./geometry.html">Geometry</a>
-          <a class="tab" href="#" aria-current="page">Impact</a>
-        </nav>
       </div>
       <!-- DUAL-LENS: the [Direction|Launch|Flight] focus toggle is retired — both
            lenses are shown at once and Flight opens via the Play-flight button. -->
@@ -1032,12 +1049,12 @@
              lens's static aria-label so screen readers get a calm, single update. -->
         <div class="sr-only" id="predLive" aria-live="polite" aria-atomic="true"></div>
         <svg id="svgDir" viewBox="0 0 400 360" preserveAspectRatio="xMidYMid meet" role="img"
-             aria-label="Top-down view from the ball. A vertical target line runs straight ahead. A red face arrow and a blue path arrow rotate from the ball to show clubface aim and swing direction. A yellow launch arrow shows the start line, bending toward the spin side. A cyan marker shows the predicted landing position.">
+             aria-label="Top-down view from the ball. A vertical target line runs straight ahead. A red face arrow and a blue path arrow rotate from the ball to show clubface aim and swing direction. A yellow launch arrow shows the start line, bending toward the spin side. An orange marker shows the predicted landing position.">
           <defs>
             <!-- userSpaceOnUse so the glow stays anchored to the ball/target axis even
                  though fitLenses() widens the background rect to the live viewBox -->
             <radialGradient id="dirGlow" gradientUnits="userSpaceOnUse" cx="200" cy="281" r="240">
-              <stop offset="0" stop-color="rgba(34,227,214,.10)"/><stop offset="1" stop-color="rgba(34,227,214,0)"/>
+              <stop offset="0" stop-color="rgba(255,138,77,.10)"/><stop offset="1" stop-color="rgba(255,138,77,0)"/>
             </radialGradient>
           </defs>
           <rect x="-600" y="0" width="1600" height="360" fill="url(#dirGlow)"/>
@@ -1046,7 +1063,7 @@
           <circle cx="200" cy="40" r="4" fill="none" stroke="var(--accent)" stroke-width="1.5" opacity=".8"/>
           <text x="200" y="30" text-anchor="middle" font-size="20" fill="var(--muted)" style="font-family:inherit;letter-spacing:.1em">TARGET</text>
           <!-- face↔path gap field (subtle, curved outer arc) -->
-          <path id="dirCone" fill="rgba(34,227,214,.04)" stroke="none"/>
+          <path id="dirCone" fill="rgba(255,138,77,.04)" stroke="none"/>
           <!-- STAGE 6 — LANDING PREDICTOR: neutral reference geometry (centre tick +
                lateral scale hints) in the far zone, BEHIND the arrows in z-order.
                Purely decorative reference lines — neutral white-alpha per the app's
@@ -1144,7 +1161,7 @@
             <!-- userSpaceOnUse so the glow stays anchored to the impact zone even
                  though fitLenses() widens the background rect to the live viewBox -->
             <radialGradient id="htGlow" gradientUnits="userSpaceOnUse" cx="88" cy="223" r="280">
-              <stop offset="0" stop-color="rgba(34,227,214,.10)"/><stop offset="1" stop-color="rgba(34,227,214,0)"/>
+              <stop offset="0" stop-color="rgba(255,138,77,.10)"/><stop offset="1" stop-color="rgba(255,138,77,0)"/>
             </radialGradient>
           </defs>
           <rect x="-700" y="0" width="2800" height="360" fill="url(#htGlow)"/>
@@ -1154,7 +1171,7 @@
           <!-- impact point + ball -->
           <circle cx="80" cy="250" r="5" fill="#fff" opacity=".9"/>
           <!-- attack↔loft gap field (subtle, curved outer arc) — behind the arrows -->
-          <path id="htCone" fill="rgba(34,227,214,.04)" stroke="none"/>
+          <path id="htCone" fill="rgba(255,138,77,.04)" stroke="none"/>
           <!-- ATTACK arrow (shorter, lower of the pair) -->
           <g class="arrowG" id="g_attack" data-key="attack" aria-hidden="true">
             <line class="aline" id="line_attack" x1="80" y1="250" x2="284" y2="250" stroke="var(--c-attack)" stroke-width="7"/>
@@ -1222,6 +1239,18 @@
            tap → tune dock). FIRST in the DOM so the tab/reading order is
            inputs → outcome strip → right-hand controls → scene. ══ -->
       <div class="fTop is-hidden" id="fInputStrip">
+        <!-- Shared app-shell home affordance (sa-p3.css .sa-strip__home): arc-mark
+             glyph, 30px visual / 44px hit, violet arc + ember ball, focus-visible
+             double-ring, view-transition-name:sa-logo. Pinned to the strip's
+             leading edge; the chip scroller is padded clear so it never overlaps
+             an instrument control. -->
+        <a class="sa-strip__home fTop__home" href="./home-mock.html" aria-label="Home">
+          <svg viewBox="0 0 52 52" fill="none" aria-hidden="true">
+            <path class="sa-arc" d="M11 45 C 16 26, 24 18, 35 15 M21 39 L 30 24 L 43 45"
+                  stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle class="sa-ball" cx="37" cy="15" r="5.2"/>
+          </svg>
+        </a>
         <div class="chipScroll" id="chipScroll">
           <div class="chipRow" id="chipRow" role="toolbar" aria-orientation="horizontal"
                aria-label="Shot inputs. Each chip opens an editor. Use left and right arrow keys to move"></div>
@@ -1277,33 +1306,36 @@
       <svg id="fScene" viewBox="0 0 960 540" preserveAspectRatio="xMidYMid slice" role="img"
            aria-label="Driving-range ball flight: the ball launches from the tee, rises to apex and lands downrange on the fairway.">
         <defs>
-          <!-- cyan/teal duotone grade overlay -->
+          <!-- P3 NIGHT GRADE — violet-shifted duotone wash (top #0a1a3a@.02, mid
+               @.06, ground @.10). No ember in the grade: the colour law reserves
+               ember for the live ball + its data. -->
           <linearGradient id="ftealGrade" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stop-color="#0a3a3a" stop-opacity=".06"/>
-            <stop offset=".55" stop-color="#147878" stop-opacity=".20"/>
-            <stop offset="1" stop-color="#22E3D6" stop-opacity=".15"/>
+            <stop offset="0" stop-color="#0a1a3a" stop-opacity=".02"/>
+            <stop offset=".55" stop-color="#0a1a3a" stop-opacity=".06"/>
+            <stop offset="1" stop-color="#0a1a3a" stop-opacity=".10"/>
           </linearGradient>
+          <!-- ground tint — violet-shifted (cools the turf toward the UV world) -->
           <linearGradient id="fground" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stop-color="#0c2a1c"/><stop offset=".5" stop-color="#0a3320"/><stop offset="1" stop-color="#06351f"/>
+            <stop offset="0" stop-color="#140b26"/><stop offset=".5" stop-color="#1c1240"/><stop offset="1" stop-color="#100822"/>
           </linearGradient>
           <radialGradient id="fapexGlow" cx="50%" cy="50%" r="50%">
-            <stop offset="0" stop-color="#22E3D6" stop-opacity=".9"/><stop offset="1" stop-color="#22E3D6" stop-opacity="0"/>
+            <stop offset="0" stop-color="#FF8A4D" stop-opacity=".9"/><stop offset="1" stop-color="#FF8A4D" stop-opacity="0"/>
           </radialGradient>
           <radialGradient id="flandGlow" cx="50%" cy="50%" r="50%">
-            <stop offset="0" stop-color="#22E3D6" stop-opacity=".75"/><stop offset="1" stop-color="#22E3D6" stop-opacity="0"/>
+            <stop offset="0" stop-color="#FF8A4D" stop-opacity=".75"/><stop offset="1" stop-color="#FF8A4D" stop-opacity="0"/>
           </radialGradient>
           <!-- haze softness lives in the gradient shape; the BAND's element
                opacity (.22 base) carries the level so ambient breathing only
                ever animates element opacity, never the gradient. -->
           <linearGradient id="fhaze" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stop-color="#9fd8d2" stop-opacity="0"/>
-            <stop offset=".5" stop-color="#bfeae4" stop-opacity="1"/>
-            <stop offset="1" stop-color="#bfeae4" stop-opacity="0"/>
+            <stop offset="0" stop-color="#9D8BFF" stop-opacity="0"/>
+            <stop offset=".5" stop-color="#C7BBFF" stop-opacity="1"/>
+            <stop offset="1" stop-color="#C7BBFF" stop-opacity="0"/>
           </linearGradient>
           <linearGradient id="ftracerGrad" x1="0" y1="1" x2="0" y2="0">
-            <stop offset="0" stop-color="#22E3D6" stop-opacity=".15"/>
-            <stop offset=".5" stop-color="#22E3D6" stop-opacity=".95"/>
-            <stop offset="1" stop-color="#eafffb"/>
+            <stop offset="0" stop-color="#FF8A4D" stop-opacity=".15"/>
+            <stop offset=".5" stop-color="#FF8A4D" stop-opacity=".95"/>
+            <stop offset="1" stop-color="#FFF3E8"/>
           </linearGradient>
           <clipPath id="fclip"><rect x="0" y="0" width="960" height="540"/></clipPath>
           <!-- VIZ MOCK move 2: soft dark plate under the transient arrow trios —
@@ -1316,15 +1348,17 @@
         </defs>
 
         <g clip-path="url(#fclip)">
-          <!-- dusk range photo, darkened (scene C base) -->
-          <image id="fBgImg" href="./assets/range-day.png" x="-40" y="-40" width="1040" height="620"
-                 preserveAspectRatio="xMidYMid slice" opacity="0.46"/>
-          <rect x="0" y="0" width="960" height="540" fill="#06121a" opacity="0.42"/>
-          <!-- ground tint — starts at the photo tree-line (yH≈265) so it greens
-               only the grass, not the sky -->
-          <rect id="fGroundRect" x="-200" y="263" width="1360" height="420" fill="url(#fground)" opacity="0.55"/>
+          <!-- P3 night range photo (E2 backdrop), night-grade opacity .78 -->
+          <image id="fBgImg" href="./assets/range-night-3d-33.png" x="-40" y="-40" width="1040" height="620"
+                 preserveAspectRatio="xMidYMid slice" opacity="0.78"/>
+          <!-- night-grade dark rect at .16 (was .42) -->
+          <rect x="0" y="0" width="960" height="540" fill="#06121a" opacity="0.16"/>
+          <!-- ground tint — starts at the -33 photo horizon (yH≈375, recalibrated
+               to the pixel-sampled grass/tree line — see the projection constants
+               below) so it cools only the turf, not the sky -->
+          <rect id="fGroundRect" x="-200" y="375" width="1360" height="420" fill="url(#fground)" opacity="0.50"/>
           <!-- horizon haze (Atmosphere) — sits on the tree-line band -->
-          <rect id="fHazeBand" x="-200" y="240" width="1360" height="56" fill="url(#fhaze)" opacity=".22"/>
+          <rect id="fHazeBand" x="-200" y="350" width="1360" height="56" fill="url(#fhaze)" opacity=".22"/>
           <!-- converging fairway rails -->
           <path id="fRailL" fill="none" stroke="rgba(230,240,250,.14)" stroke-width="1.2"/>
           <path id="fRailR" fill="none" stroke="rgba(230,240,250,.14)" stroke-width="1.2"/>
@@ -1336,17 +1370,17 @@
           <path id="fCentre" fill="none" stroke="rgba(230,240,250,.28)" stroke-width="1.4" stroke-dasharray="6 8"/>
           <!-- tee marker (re-centred + re-based to TEE_X / yBottom in fBuild) -->
           <g id="fTee">
-            <ellipse id="fTeeShadow" cx="480" cy="356" rx="34" ry="7" fill="#000" opacity=".35"/>
-            <ellipse id="fTeeRing" cx="480" cy="356" rx="30" ry="6" fill="none" stroke="rgba(34,227,214,.45)" stroke-width="1.4"/>
+            <ellipse id="fTeeShadow" cx="480" cy="518" rx="34" ry="7" fill="#000" opacity=".35"/>
+            <ellipse id="fTeeRing" cx="480" cy="518" rx="30" ry="6" fill="none" stroke="rgba(255,138,77,.45)" stroke-width="1.4"/>
           </g>
           <!-- soft under-glow arc (pre-baked softness: wide low-opacity stroke
                UNDER the gradient tracer — no blur filters on animated strokes) -->
-          <path id="fTrail" fill="none" stroke="#22E3D6" stroke-width="14" stroke-linecap="round" opacity="0"/>
+          <path id="fTrail" fill="none" stroke="#FF8A4D" stroke-width="14" stroke-linecap="round" opacity="0"/>
           <!-- flight tracer -->
           <path id="fTracer" fill="none" stroke="url(#ftracerGrad)" stroke-width="3.8" stroke-linecap="round" opacity=".96"/>
-          <path id="fTracerCore" fill="none" stroke="#eafffb" stroke-width="1.5" stroke-linecap="round" opacity=".95"/>
+          <path id="fTracerCore" fill="none" stroke="#FFF3E8" stroke-width="1.5" stroke-linecap="round" opacity=".95"/>
           <!-- ground roll -->
-          <path id="fRoll" fill="none" stroke="#22E3D6" stroke-width="2.2" stroke-linecap="round" stroke-dasharray="3 5" opacity=".7"/>
+          <path id="fRoll" fill="none" stroke="#FF8A4D" stroke-width="2.2" stroke-linecap="round" stroke-dasharray="3 5" opacity=".7"/>
           <!-- OUTCOME MOCK move 2: landing connector — REFERENCE GEOMETRY
                (never cyan): neutral white-alpha dashed line from the reference
                landing point (pin, else newest ghost) to the live landing
@@ -1363,11 +1397,11 @@
                top-centre outcome strip. -->
           <g id="fApexMark" opacity="0">
             <circle id="fApexHalo" r="16" fill="url(#fapexGlow)"/>
-            <circle r="4.5" fill="none" stroke="#22E3D6" stroke-width="2"/>
-            <line id="fApexStem" x1="0" y1="-9" x2="0" y2="-26" stroke="#22E3D6" stroke-width="1.2" opacity=".7"/>
+            <circle r="4.5" fill="none" stroke="#FF8A4D" stroke-width="2"/>
+            <line id="fApexStem" x1="0" y1="-9" x2="0" y2="-26" stroke="#FF8A4D" stroke-width="1.2" opacity=".7"/>
             <g id="fApexLblG" transform="translate(0,-30)">
-              <rect x="-40" y="-15" width="80" height="18" rx="5" fill="rgba(8,16,20,.72)" stroke="rgba(34,227,214,.22)"/>
-              <text id="fApexTxt" x="0" y="-2" text-anchor="middle" fill="#22E3D6" font-size="11" font-weight="700" font-family="inherit">Apex</text>
+              <rect x="-40" y="-15" width="80" height="18" rx="5" fill="rgba(8,16,20,.72)" stroke="rgba(255,138,77,.22)"/>
+              <text id="fApexTxt" x="0" y="-2" text-anchor="middle" fill="#FF8A4D" font-size="11" font-weight="700" font-family="inherit">Apex</text>
             </g>
           </g>
           <!-- landing marker — ROUND 4: dot + splash ring ONLY (geometry).
@@ -1376,8 +1410,8 @@
                hero + the bottom dashboard now. -->
           <g id="fLandMark" opacity="0">
             <!-- subtle, PERSISTENT ground splash ring at the landing point (no pulse) -->
-            <ellipse id="fSplash" cx="0" cy="0" rx="13" ry="4.5" fill="none" stroke="#22E3D6" stroke-width="1.4" opacity=".42"/>
-            <circle r="3.6" fill="#22E3D6"/>
+            <ellipse id="fSplash" cx="0" cy="0" rx="13" ry="4.5" fill="none" stroke="#FF8A4D" stroke-width="1.4" opacity=".42"/>
+            <circle r="3.6" fill="#FF8A4D"/>
           </g>
           <!-- teal colour grade overlay (above scene, below HUD) -->
           <rect id="fTealOverlay" x="0" y="0" width="960" height="540" fill="url(#ftealGrade)" pointer-events="none"/>
@@ -2207,7 +2241,7 @@ const DIAGRAMS = {
      <circle cx="100" cy="72" r="4" fill="#fff" opacity=".9"/>
      ${arrow(100,72,124,14,'var(--c-face)',5.5)}
      ${arrow(100,72,80,18,'var(--c-path)',2.5)}
-     <text x="132" y="18" font-size="8" fill="var(--c-face)" font-weight="700">FACE ~75%</text>
+     <text x="132" y="18" font-size="8" fill="#ffb0b6" font-weight="700">FACE ~75%</text>
      <text x="46" y="26" text-anchor="middle" font-size="8" fill="var(--c-path)" font-weight="700">PATH ~25%</text>`),
   // Launch angle — side-view launch vector vs ground with angle arc.
   launchAng: () => svgWrap('Side view: a ball launches upward from the ground at an angle, with an arc marking the launch angle.',
@@ -2281,7 +2315,7 @@ const DIAGRAMS = {
      <line x1="30" y1="72" x2="66" y2="46" stroke="var(--c-face)" stroke-width="3" stroke-linecap="round"/>
      <path d="M 66 46 Q 90 20 152 14" fill="none" stroke="var(--accent)" stroke-width="2.6"/>
      <circle cx="152" cy="14" r="3.4" fill="var(--accent)"/>
-     <text x="46" y="60" font-size="7.5" fill="var(--c-face)" font-weight="700">START</text>
+     <text x="46" y="60" font-size="7.5" fill="#ffb0b6" font-weight="700">START</text>
      <text x="140" y="28" text-anchor="middle" font-size="7.5" fill="var(--accent)" font-weight="700">BEND</text>`),
   // Shape — three mini top-down paths (draw / straight / fade family).
   shape: () => svgWrap('Three small top-down paths side by side, showing a draw curving left, a straight path, and a fade curving right.',
@@ -2298,7 +2332,7 @@ const DIAGRAMS = {
      <g>
        <line x1="170" y1="70" x2="170" y2="14" stroke="${REF}" stroke-width=".8" stroke-dasharray="2 3"/>
        <path d="M 170 70 Q 190 40 178 14" fill="none" stroke="var(--c-face)" stroke-width="2.2"/>
-       <text x="170" y="8" text-anchor="middle" font-size="7" fill="var(--c-face)" font-weight="700">FADE</text>
+       <text x="170" y="8" text-anchor="middle" font-size="7" fill="#ffb0b6" font-weight="700">FADE</text>
      </g>`),
   // Face-to-path — top-down face + path arrows with the gap between them shaded.
   faceToPath: () => svgWrap('Top-down view: a red face arrow and a blue path arrow both point up from the ball, with the angular gap between them shaded to show the face-to-path difference.',
@@ -2307,7 +2341,7 @@ const DIAGRAMS = {
      ${arrow(100,72,128,16,'var(--c-face)',5.5)}
      ${arrow(100,72,78,20,'var(--c-path)',3.5)}
      ${arcBetween(100,72,34,-1.75,-1.15,'var(--accent)',1.6)}
-     <text x="140" y="20" font-size="8" fill="var(--c-face)" font-weight="700">FACE</text>
+     <text x="140" y="20" font-size="8" fill="#ffb0b6" font-weight="700">FACE</text>
      <text x="52" y="26" text-anchor="middle" font-size="8" fill="var(--c-path)" font-weight="700">PATH</text>`),
 };
 
@@ -2661,7 +2695,7 @@ function recomputeAngles(){ Object.keys(ARROWS).forEach(computeTarget); Object.k
 // keep each lens SVG's aria-label in sync with the live data it depicts
 function updateLensAria(){
   $('svgDir').setAttribute('aria-label',
-    `Top-down direction view. Clubface aim ${fmtDeg(state.faceAngle)} and swing path ${fmtDeg(state.clubPath)} relative to the target line (negative is left, positive is right). A yellow launch arrow shows the start line, bending toward the spin side. A cyan marker shows the predicted landing position.`);
+    `Top-down direction view. Clubface aim ${fmtDeg(state.faceAngle)} and swing path ${fmtDeg(state.clubPath)} relative to the target line (negative is left, positive is right). A yellow launch arrow shows the start line, bending toward the spin side. An orange marker shows the predicted landing position.`);
   $('svgHt').setAttribute('aria-label',
     `Side-on height view. Angle of attack ${fmtDeg(state.attackAngle)} and dynamic loft ${fmtLoftStr(state.dynamicLoft)} at impact (negative attack is descending). A yellow arrow shows the launch angle.`);
 }
@@ -3185,26 +3219,41 @@ let lastFocus=null, fTL=null;
 // centred at VB.w/2 so the trajectory geometry is never distorted — the scene
 // just gets WIDER, never stretched.
 const VB = { w:960, h:540 };
-// ── HORIZON aligned to the PHOTO's receding tree-line ──
-// range-day.png (1376×768) maps into the #fBgImg box (y=-40, height=620,
-// "slice"): native_y → svg_y ≈ -40 + native_y·0.808. The grass→tree transition
-// sits at native_y ≈ 375–395, i.e. svg_y ≈ 263–279. yH=265 lands the 50–300 m
-// grid lines + horizon on the photo's ground, not up in the sky (was 196).
-const yH = 265;            // horizon screen-Y (on the photo tree-line)
-// ── TEE baseline raised ABOVE the bottom chip band ──
-// The chip frame (.fBottom) tops out at ≈ svg-y 380 (≈70% of the 540-tall
-// viewBox). yBottom=356 keeps the tee + the lowest tracer/roll points clear of
-// the chips with ~20px margin, so the trajectory never enters the chip rect.
-const yBottom = 356;       // tee / launch baseline screen-Y (above the chip band)
-const PE_A = 2.2;          // perspective recession density (denser near horizon)
-const GROUND_K = 0.86;     // fraction of (yBottom..yH) reached at f=1 (lands BELOW horizon)
+// ── HORIZON calibrated to the -33 PHOTO's actual grass band (BUG FIX) ──
+// range-night-3d-33.png (native 1376×768) maps into the #fBgImg box
+// (x=-40, y=-40, width=vbw+80, height=620, "slice") via the SAME crop the
+// range-round3-compare.html verification page uses at this aspect ratio
+// (≈932×430 → vbw≈1170 → width≈1250): vbY = row·(1250/1376) − 78.84.
+// A PREVIOUS attempt here deliberately pulled yH/yBottom UP off the photo's
+// real grass (yH 300 / yBottom 356) to dodge the bottom .fDash chip band —
+// that desync is exactly what the owner caught: the trajectory teed off in
+// mid-air, the landing ellipse floated above the grass, and the distance
+// grid sat up near the treeline. Recalibrated to the pixel-sampled ground
+// truth for -33 (re-verified independently via sharp/canvas luminance
+// sampling before writing these numbers — see window.__rangeCheck below):
+// yH=375 (grass/tree convergence), grassTop=382 (5% safety margin, same
+// formula as the compare page), yBottom=518 (foreground grass tee — the E2
+// family value, restored). The .fDash dashboard is a translucent HUD that
+// only reveals AFTER the ball lands (or immediately in the static/resting
+// render) — it may visually sit over the tee, same as the compare pages'
+// own verified-correct framing; the ground plane must match the PHOTO, not
+// dodge the UI.
+const yH = 375;            // horizon screen-Y — pixel-sampled grass/tree line for -33
+const grassTop = 382;      // pixel-sampled grass-band top for -33 (yH + (yBottom-yH)*0.05)
+const yBottom = 518;       // tee / launch baseline screen-Y — foreground grass (E2, restored)
+const PE_A = 2.75;         // E2 perspective recession density (denser near horizon)
+const GROUND_K = 0.93;     // E2 — fraction of (yBottom..yH) reached at f=1
 let TEE_X = 480;           // re-centred on resize to VB.w/2
 const LAT_PX = 300;        // lateral half-width near the tee (grid + rails)
 const TOP_MARGIN = 150;    // px reserved at top for the apex orb + label.
                            // ROUND 4: raised 92→150 so the apex LABEL (the one
                            // in-canvas label that survives) clears the new
                            // full-width top input strip (~81 viewBox units on
-                           // a 375px-tall phone) with margin.
+                           // a 375px-tall phone) with margin. Re-verified after
+                           // the yH/yBottom recalibration above: the taller
+                           // (yBottom−yH) ground band only INCREASES groundY(fa)
+                           // headroom above TOP_MARGIN, so this still clears —
+                           // see window.__rangeCheck().
 const APEX_AT = 0.50;      // apex as a fraction of carry
 // WIDER BOW: screen-space lateral budget for the side-curve. Raised from the
 // mock's 150 to 290 so climb & descent visibly separate into a pretty arc while
@@ -3215,6 +3264,53 @@ const pe = f => f * (1 + PE_A) / (1 + PE_A * f);
 const groundY = f => yBottom - (yBottom - yH) * GROUND_K * pe(f);
 const lateralScale = f => 1 - GROUND_K * pe(f) * 0.92;
 const heightScale  = f => 1 - 0.22 * pe(f);
+
+// ════════════════════════════════════════════════════════════════
+//  GROUND-PLANE VERIFICATION SYSTEM — window.__rangeCheck() (dev hook, no UI)
+//  Ported verbatim (structure) from range-round3-compare.html's
+//  window.__rangeCheck(): projects the visible grid lines + the landing
+//  point + the tee at 5 test distances spanning the auto-fit maxD range
+//  (90–250m) and asserts every one falls inside the -33 photo's own
+//  pixel-sampled grass band [grassTop, yBottom]. This is the permanent
+//  guard against this exact bug (ground plane drifting off the backdrop)
+//  recurring on a future repaint. Pure geometry — no swing-physics engine
+//  dependency, so it runs standalone in the console.
+// ════════════════════════════════════════════════════════════════
+const RC_TEST_TOTALS = [100, 130, 162, 200, 240];   // total distance (m) — spans maxD 90–250m auto-fit
+const RC_GRID_METERS = [50, 100, 150, 200, 250, 300]; // mirrors buildGrid()'s band list
+const RC_OFFLINE_M = 4;                              // mirrors carry→total roll-back used elsewhere
+function __rangeCheckRun(){
+  const rows = RC_TEST_TOTALS.map(totalM => {
+    const carryM = Math.max(1, totalM - RC_OFFLINE_M);
+    const maxD = 1.06 * totalM;
+    const teeY = yBottom;
+    const teeAtBottom = Math.abs(teeY - yBottom) < 0.5;
+    const landF = Math.max(0, Math.min(1, carryM / maxD));
+    const landY = groundY(landF);
+    const landingOnGrass = landY >= grassTop && landY <= yBottom;
+    const visibleBands = RC_GRID_METERS.filter(m => m < maxD);
+    const bandChecks = visibleBands.map(m => {
+      const f = m / maxD, y = groundY(f);
+      return { m, y:+y.toFixed(1), onGrass: y >= grassTop && y <= yBottom };
+    });
+    const gridOnGrass = bandChecks.length > 0 && bandChecks.every(b => b.onGrass);
+    return {
+      totalM, maxD:+maxD.toFixed(1), visibleBands: visibleBands.join('/') || '(none)',
+      bandChecks, gridOnGrass, landingOnGrass, teeAtBottom,
+      landY:+landY.toFixed(1), landYPct:+(100*landY/VB.h).toFixed(1),
+      allPass: gridOnGrass && landingOnGrass && teeAtBottom
+    };
+  });
+  console.table(rows.map(r => ({
+    totalM:r.totalM, maxD:r.maxD, bands:r.visibleBands,
+    gridOnGrass:r.gridOnGrass, landingOnGrass:r.landingOnGrass, teeAtBottom:r.teeAtBottom,
+    landY:r.landY, landYPct:r.landYPct+'%', allPass:r.allPass
+  })));
+  const passCount = rows.filter(r => r.allPass).length;
+  console.log(`[RangeCheck] range-night-3d-33 (impact-viz-mock): ${passCount}/${rows.length} distances PASS (grid+landing+tee on grass)` + (passCount===rows.length ? '' : ' — FAIL present, see table'));
+  return { yH, grassTop, yBottom, testTotals: RC_TEST_TOTALS, rows, passCount, totalCount: rows.length, allPass: passCount === rows.length };
+}
+window.__rangeCheck = __rangeCheckRun;
 
 let fModel=null, trajLen=0, rollLen=0, apexScreen=null, landScreen=null, restScreen=null;
 
@@ -4393,12 +4489,12 @@ function ensureFX(){
   fSceneEl.querySelector('defs').insertAdjacentHTML('beforeend',
     '<radialGradient id="fflashGrad" cx="50%" cy="50%" r="50%">'
     + '<stop offset="0" stop-color="#ffffff" stop-opacity=".95"/>'
-    + '<stop offset=".35" stop-color="#7FF0E6" stop-opacity=".55"/>'
-    + '<stop offset="1" stop-color="#22E3D6" stop-opacity="0"/>'
+    + '<stop offset=".35" stop-color="#FFC08A" stop-opacity=".55"/>'
+    + '<stop offset="1" stop-color="#FF8A4D" stop-opacity="0"/>'
     + '</radialGradient>'
     + '<radialGradient id="fheadGrad" cx="50%" cy="50%" r="50%">'
-    + '<stop offset="0" stop-color="#eafffb" stop-opacity=".9"/>'
-    + '<stop offset="1" stop-color="#22E3D6" stop-opacity="0"/>'
+    + '<stop offset="0" stop-color="#FFF3E8" stop-opacity=".9"/>'
+    + '<stop offset="1" stop-color="#FF8A4D" stop-opacity="0"/>'
     + '</radialGradient>');
   // ghost-flight group BELOW the tracer layers
   fTrail.insertAdjacentHTML('beforebegin', '<g id="fGhosts"></g>');
@@ -4406,8 +4502,8 @@ function ensureFX(){
   fTrail.insertAdjacentHTML('beforebegin', '<g id="fTuneRefG"></g>');
   // ── COMET — 3 dash-segment strokes riding the tracer path + hot head ──
   fTracerCore.insertAdjacentHTML('afterend',
-    '<path id="fCometGlow" fill="none" stroke="#22E3D6" stroke-width="10" stroke-linecap="round" opacity="0"/>'
-    + '<path id="fCometMid" fill="none" stroke="#7FF0E6" stroke-width="5" stroke-linecap="round" opacity="0"/>'
+    '<path id="fCometGlow" fill="none" stroke="#FF8A4D" stroke-width="10" stroke-linecap="round" opacity="0"/>'
+    + '<path id="fCometMid" fill="none" stroke="#FFC08A" stroke-width="5" stroke-linecap="round" opacity="0"/>'
     + '<path id="fCometHot" fill="none" stroke="#FFFFFF" stroke-width="2.6" stroke-linecap="round" opacity="0"/>'
     + '<g id="fCometHead" opacity="0"><circle r="9" fill="url(#fheadGrad)"/><circle r="2.4" fill="#fff"/></g>');
   // ── AMBIENT — 6 slow-drifting 1px dust motes in the lower scene ──
@@ -4415,7 +4511,7 @@ function ensureFX(){
   for (let i = 0; i < 6; i++){
     const mx = (0.10 + i * 0.16) * VB.w;
     const my = 300 + ((i * 37) % 110);
-    motes += `<circle cx="${mx.toFixed(0)}" cy="${my}" r=".5" fill="#bfeae4" opacity="${(0.12 + (i % 3) * 0.04).toFixed(2)}"/>`;
+    motes += `<circle cx="${mx.toFixed(0)}" cy="${my}" r=".5" fill="#C7BBFF" opacity="${(0.12 + (i % 3) * 0.04).toFixed(2)}"/>`;
   }
   motes += '</g>';
   $('fTee').insertAdjacentHTML('beforebegin', motes);
@@ -4424,11 +4520,11 @@ function ensureFX(){
   const grassCols = ['#2e4a33','#35543a','#24402b','#3d5c40'];
   let fx = '<g id="fFlash" opacity="0">'
     + '<circle id="fFlashDisc" r="26" fill="url(#fflashGrad)"/>'
-    + '<ellipse id="fFlashRing" rx="4" ry="1.6" fill="none" stroke="#7FF0E6" stroke-width="1.6"/>'
+    + '<ellipse id="fFlashRing" rx="4" ry="1.6" fill="none" stroke="#FFC08A" stroke-width="1.6"/>'
     + '<g id="fFlashKick">'
-    + '<line x1="0" y1="-9" x2="0" y2="-22" stroke="#eafffb" stroke-width="1.7" stroke-linecap="round"/>'
-    + '<line x1="-7" y1="-7" x2="-15" y2="-17" stroke="#22E3D6" stroke-width="1.4" stroke-linecap="round"/>'
-    + '<line x1="7" y1="-7" x2="15" y2="-17" stroke="#22E3D6" stroke-width="1.4" stroke-linecap="round"/>'
+    + '<line x1="0" y1="-9" x2="0" y2="-22" stroke="#FFF3E8" stroke-width="1.7" stroke-linecap="round"/>'
+    + '<line x1="-7" y1="-7" x2="-15" y2="-17" stroke="#FF8A4D" stroke-width="1.4" stroke-linecap="round"/>'
+    + '<line x1="7" y1="-7" x2="15" y2="-17" stroke="#FF8A4D" stroke-width="1.4" stroke-linecap="round"/>'
     + '</g></g>';
   fx += '<g id="fFX" opacity="0">';
   for (let i = 0; i < 8; i++){                       // grass flecks: 2–5px lines
@@ -4438,11 +4534,11 @@ function ensureFX(){
         + ` stroke="${grassCols[i % 4]}" stroke-width="1.3" stroke-linecap="round" opacity="0"/>`;
   }
   for (let i = 0; i < 6; i++){                       // dust dots: 1.5–2.5px
-    fx += `<circle class="fxDust" r="${(0.75 + (i % 3) * 0.25).toFixed(2)}" fill="#bfeae4" opacity="0"/>`;
+    fx += `<circle class="fxDust" r="${(0.75 + (i % 3) * 0.25).toFixed(2)}" fill="#C7BBFF" opacity="0"/>`;
   }
-  fx += '<ellipse id="fDustPuff" rx="4" ry="1.6" fill="#bfeae4" opacity="0"/></g>';
+  fx += '<ellipse id="fDustPuff" rx="4" ry="1.6" fill="#C7BBFF" opacity="0"/></g>';
   fx += '<g id="fSparks" opacity="0">';
-  const sparkCols = ['#eafffb','#22E3D6','#eafffb','#22E3D6','#eafffb'];
+  const sparkCols = ['#FFF3E8','#FF8A4D','#FFF3E8','#FF8A4D','#FFF3E8'];
   for (let i = 0; i < 5; i++){                       // fan −150°..−30° around the crest
     const a = (-150 + i * 30) * Math.PI / 180;
     fx += `<line class="fxSpark" x1="${(Math.cos(a)*6).toFixed(2)}" y1="${(Math.sin(a)*6).toFixed(2)}"`

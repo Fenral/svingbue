@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#07060C">
+<meta name="robots" content="noindex">
+<title>StrikeArc</title>
+
+<!-- favicon: arc-mark (violet strokes) + ember ball — the P3 lockup exception -->
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2052%2052'%20fill='none'%3E%3Cpath%20d='M11%2045%20C%2016%2026,%2024%2018,%2035%2015%20M21%2039%20L%2030%2024%20L%2043%2045'%20stroke='%239D8BFF'%20stroke-width='4.2'%20stroke-linecap='round'%20stroke-linejoin='round'/%3E%3Ccircle%20cx='37'%20cy='15'%20r='5.2'%20fill='%23FF8A4D'/%3E%3C/svg%3E">
+
+<!-- preload the backdrop so nothing flashes white during decode -->
+<link rel="preload" as="image" href="./assets/range-night-3d-33.png">
+
+<!-- shared P3 tokens + shell contract -->
+<link rel="stylesheet" href="./sa-p3.css">
+
+<style>
+  /* cross-document View Transitions (MPA). Reduced-motion + no-support fall
+     back to instant swaps (guarded in sa-p3.css and by feature detection). */
+  @view-transition{ navigation:auto; }
+
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;}
+  html{background:var(--bg);}
+  body{
+    min-height:100dvh;
+    /* layer 1 of the scene stack — visible during image decode; never white */
+    background:var(--scene-bg);
+    color:var(--ink);
+    overflow:hidden;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+  }
+
+  /* ══ SCENE STACK (bottom → top), the NIGHT GRADE recipe (spec §1.3) ══════ */
+  .scene{position:fixed;inset:0;overflow:hidden;z-index:0;pointer-events:none;}
+  .scene__img{                              /* 2. backdrop, cover(slice) @ .78 */
+    position:absolute;inset:0;width:100%;height:100%;
+    object-fit:cover;object-position:50% 50%;opacity:.78;}
+  .scene__dark{position:absolute;inset:0;background:#07060C;opacity:.16;}   /* 3 */
+  .scene__grade{position:absolute;inset:0;                                  /* 4 */
+    background:linear-gradient(180deg,
+      rgba(20,14,36,.42) 0%,
+      rgba(20,14,36,.10) 42%,
+      rgba(157,139,255,.10) 62%,
+      rgba(20,14,36,.38) 100%);}
+  .scene__scrim{position:absolute;left:0;right:0;bottom:0;height:180px;      /* 5 */
+    background:linear-gradient(0deg, rgba(7,6,12,.88), transparent 46%);}
+  .scene__tracer{position:absolute;inset:0;width:100%;height:100%;}         /* 6 */
+
+  /* ══ HEADER — centred lockup, help top-right (spec §2.1 / §6) ═══════════ */
+  header.sa-header{position:fixed;top:0;left:0;right:0;z-index:12;height:60px;pointer-events:none;}
+  .sa-wordmark{
+    position:absolute;left:50%;transform:translateX(-50%);
+    top:max(14px, env(safe-area-inset-top));
+    display:inline-flex;align-items:center;gap:9px;
+    pointer-events:none;                       /* home wordmark is not a link */
+    filter:drop-shadow(0 2px 18px rgba(0,0,0,.65));
+    view-transition-name:sa-logo;              /* ↔ destination home button */
+  }
+  .sa-wordmark .mark{width:24px;height:24px;flex:0 0 auto;display:block;}
+  .sa-wordmark .mark .arc{stroke:var(--secondary);}   /* cold arc */
+  .sa-wordmark .mark .ball{fill:var(--accent);}        /* hot ball (logo law) */
+  .sa-wordmark .wm-text{
+    font-size:15px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;line-height:1;}
+  .sa-wordmark .wm-text .s{color:var(--ink);}
+  .sa-wordmark .wm-text .a{color:var(--accent);}
+
+  .sa-help{
+    position:fixed;top:max(10px, env(safe-area-inset-top));
+    right:max(8px, env(safe-area-inset-right));z-index:13;
+    width:44px;height:44px;display:inline-flex;align-items:center;justify-content:center;
+    background:none;border:0;color:var(--muted);cursor:pointer;
+    -webkit-tap-highlight-color:transparent;pointer-events:auto;
+    filter:drop-shadow(0 1px 8px rgba(0,0,0,.6));}
+  .sa-help svg{width:22px;height:22px;display:block;}
+  .sa-help:hover{color:var(--ink);}
+  .sa-help:focus-visible{outline:none;border-radius:12px;
+    box-shadow:inset 0 0 0 1px rgba(0,0,0,.85), inset 0 0 0 3px var(--ink);}
+
+  /* ══ MAIN — the empty middle band; the restraint is the luxury ═══════════ */
+  .sa-main{position:fixed;left:0;right:0;top:60px;bottom:120px;z-index:1;pointer-events:none;}
+
+  /* ══ RAIL — 4 equal cards, single row, causal order (spec §2.1) ══════════ */
+  nav.sa-rail{
+    position:fixed;left:0;right:0;bottom:0;z-index:11;
+    padding-inline:max(16px, env(safe-area-inset-left), env(safe-area-inset-right));
+    padding-bottom:max(12px, env(safe-area-inset-bottom));padding-top:8px;}
+  .sa-rail ul{list-style:none;display:flex;gap:10px;justify-content:center;align-items:stretch;}
+  .sa-rail li{display:flex;flex:1 1 0;min-width:0;max-width:200px;}
+
+  .sa-card{
+    position:relative;flex:1 1 0;min-width:150px;max-width:200px;height:108px;
+    display:flex;flex-direction:column;gap:6px;
+    padding:10px 12px 11px;
+    text-decoration:none;color:var(--ink);
+    background:var(--plate);
+    -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+    border:1px solid var(--line);border-radius:var(--radius-card);
+    -webkit-tap-highlight-color:transparent;overflow:hidden;
+    transition:transform .15s var(--ease), border-color .15s var(--ease);
+  }
+  .sa-card:hover,.sa-card:focus-visible{border-color:var(--secondary-line);transform:translateY(-2px);}
+  .sa-card:active{transform:scale(.985);}
+  .sa-card:focus-visible{outline:none;
+    box-shadow:inset 0 0 0 1px rgba(0,0,0,.85), inset 0 0 0 3px var(--ink);}
+
+  /* resume / hero promotion — ember hairline on the TOP edge + soft glow */
+  .sa-card.is-promoted{border-top-width:2px;border-top-color:var(--accent-line);
+    box-shadow:0 -1px 14px -6px rgba(255,138,77,.6), inset 0 2px 10px -8px var(--accent);}
+
+  .sa-card__eyebrow{
+    font-size:9px;font-weight:600;letter-spacing:.22em;text-transform:uppercase;
+    color:var(--muted);line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .sa-card__eyebrow .cont{color:var(--accent);}   /* CONTINUE · / START HERE · */
+
+  .sa-glyph{width:26px;height:26px;display:block;color:var(--secondary);margin-top:1px;}
+  .sa-glyph.sa-hex text{fill:var(--ink);font-family:inherit;}
+
+  .sa-card__body{margin-top:auto;}
+  .sa-card__stat{font-size:0;line-height:1.25;}          /* reset inline whitespace */
+  .sa-card__stat .v{
+    font-size:17px;font-weight:700;color:var(--ink);
+    font-variant-numeric:tabular-nums;letter-spacing:.01em;}
+  .sa-card__stat .l{font-size:10px;font-weight:600;color:var(--muted);margin-left:5px;}
+  .sa-card.is-promoted .sa-card__stat .v{color:var(--accent);}   /* live stat = ember */
+
+  .sa-card__teach{font-size:12px;font-weight:500;color:var(--ink);letter-spacing:.01em;}
+
+  /* Academy warm surface — XP bar + gold XP numeral + level title */
+  .sa-aca{display:flex;flex-direction:column;gap:5px;}
+  /* author-origin display:flex would otherwise beat the UA [hidden] rule on
+     true first-run (§2.3 — never show zero-state gamification chrome) */
+  .sa-aca[hidden]{display:none;}
+  .sa-aca__bar{position:relative;height:4px;border-radius:999px;background:var(--line);overflow:hidden;}
+  .sa-aca__bar .fill{position:absolute;inset:0 auto 0 0;
+    background:linear-gradient(90deg, var(--celebrate), var(--secondary));border-radius:999px;}
+  .sa-aca__txt{font-size:11px;font-weight:600;color:var(--muted);
+    font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .sa-aca__txt .xp{color:var(--warn);font-weight:700;}   /* Academy's gold law */
+
+  /* wide (>832pt) → centre the row, don't stretch the cards */
+  @media (min-width:833px){ .sa-rail ul{max-width:832px;margin:0 auto;} }
+  /* below the landscape lock (should not occur) → 2×2 wrap, no h-scroll */
+  @media (max-width:666px){
+    .sa-rail ul{flex-wrap:wrap;}
+    .sa-rail li{flex:1 1 calc(50% - 5px);max-width:none;}
+    .sa-card{max-width:none;}
+  }
+
+  /* reduced-motion: everything simply present at full value (also in sa-p3.css) */
+  @media (prefers-reduced-motion: reduce){
+    .sa-wordmark{opacity:1 !important;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ══ SCENE (decorative) ═══════════════════════════════════════════════════ -->
+<div class="scene" aria-hidden="true">
+  <img class="scene__img" src="./assets/range-night-3d-33.png" alt="" decoding="async" fetchpriority="high">
+  <div class="scene__dark"></div>
+  <div class="scene__grade"></div>
+  <div class="scene__scrim"></div>
+
+  <!-- Ember tracer — 960×540 viewBox mapped slice; geometry per spec §7.
+       P0(480,551) → apex(≈486,184) → land(490,302). Under-glow duplicate
+       behind the gradient stroke; white-hot 1.5px core on top. No blur filters. -->
+  <svg class="scene__tracer" viewBox="0 0 960 540" preserveAspectRatio="xMidYMid slice">
+    <defs>
+      <linearGradient id="tracerGrad" x1="0" y1="1" x2="0" y2="0">
+        <stop offset="0" stop-color="#FF8A4D" stop-opacity=".15"/>
+        <stop offset=".5" stop-color="#FF8A4D" stop-opacity=".95"/>
+        <stop offset="1" stop-color="#FFF3E8"/>
+      </linearGradient>
+    </defs>
+    <path id="saTrail"  d="M480 551 Q485 -24 490 302" fill="none" stroke="#FF8A4D"          stroke-width="14"  stroke-linecap="round" opacity="0"/>
+    <path id="saTracer" d="M480 551 Q485 -24 490 302" fill="none" stroke="url(#tracerGrad)" stroke-width="3.8" stroke-linecap="round" opacity="0"/>
+    <path id="saCore"   d="M480 551 Q485 -24 490 302" fill="none" stroke="#FFF3E8"          stroke-width="1.5" stroke-linecap="round" opacity="0"/>
+    <g id="saLand" opacity="0">
+      <ellipse id="saSplash" cx="490" cy="302" rx="13" ry="4.5" fill="none" stroke="#FF8A4D" stroke-width="1.4" opacity=".42"/>
+      <circle  id="saDot"    cx="490" cy="302" r="3" fill="#FF8A4D"/>
+    </g>
+  </svg>
+</div>
+
+<!-- ══ HEADER ═══════════════════════════════════════════════════════════════ -->
+<header class="sa-header">
+  <h1 class="sa-wordmark" aria-label="StrikeArc">
+    <svg class="mark" viewBox="0 0 52 52" fill="none" aria-hidden="true">
+      <path class="arc" d="M11 45 C 16 26, 24 18, 35 15 M21 39 L 30 24 L 43 45"
+            stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle class="ball" cx="37" cy="15" r="5.2"/>
+    </svg>
+    <span class="wm-text" aria-hidden="true"><span class="s">STRIKE</span><span class="a">ARC</span></span>
+  </h1>
+  <!-- a11y fix (cohesion review, Major 1): the Help button had no handler — a
+       dead interactive control (WCAG 2.1.1/4.1.2). Until a real help surface
+       exists, it links to the Academy (the app's learn-layer) as an <a>, so
+       the control is honest. Swap to a proper help sheet when one is built. -->
+  <a class="sa-help" href="academy.html" aria-label="Help — open the Academy">
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="12" cy="12" r="9.2" stroke="currentColor" stroke-width="1.6"/>
+      <path d="M9.4 9.3 A2.7 2.7 0 1 1 12.4 12.4 V13.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" fill="none"/>
+      <circle cx="12" cy="17" r="1.05" fill="currentColor"/>
+    </svg>
+  </a>
+</header>
+
+<!-- ══ MAIN — the empty scene band ═════════════════════════════════════════ -->
+<main class="sa-main" aria-label="Driving range"></main>
+
+<!-- ══ RAIL — destinations (fixed causal order) ════════════════════════════ -->
+<nav class="sa-rail" aria-label="Destinations">
+  <ul>
+    <li>
+      <a class="sa-card" id="cardGeometry" href="./geometry-window-mock.html"
+         aria-label="Geometry — model your strike.">
+        <span class="sa-card__eyebrow" id="ebGeometry">Geometry</span>
+        <svg class="sa-glyph" viewBox="0 0 28 28" fill="none" aria-hidden="true">
+          <path d="M3 19 C 8 9, 19 8, 25 13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+          <circle cx="13.4" cy="10.4" r="1.9" fill="currentColor"/>
+          <path d="M4.5 23 L 23.5 23" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".65"/>
+        </svg>
+        <span class="sa-card__body"><span class="sa-card__teach" id="stGeometry">Model your strike</span></span>
+      </a>
+    </li>
+    <li>
+      <a class="sa-card" id="cardFlight" href="./impact-viz-mock.html"
+         aria-label="Ball flight — see the shot. Start here.">
+        <span class="sa-card__eyebrow" id="ebFlight">Ball Flight</span>
+        <svg class="sa-glyph" viewBox="0 0 28 28" fill="none" aria-hidden="true">
+          <path d="M3.5 24 Q 9 5, 25 16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+          <circle cx="10.6" cy="9.7" r="1.8" fill="currentColor"/>
+        </svg>
+        <span class="sa-card__body"><span class="sa-card__teach" id="stFlight">See the shot →</span></span>
+      </a>
+    </li>
+    <li>
+      <a class="sa-card" id="cardOutcome" href="./impact-outcome-mock.html"
+         aria-label="Outcome — read the launch.">
+        <span class="sa-card__eyebrow" id="ebOutcome">Outcome</span>
+        <svg class="sa-glyph" viewBox="0 0 28 28" fill="none" aria-hidden="true">
+          <circle cx="8.6" cy="14" r="5.3" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M8.6 17 L 8.6 10.4 M6.7 12 L 8.6 10.2 L 10.5 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="19.4" cy="14" r="5.3" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M16.4 16 Q 19.4 9.5, 22.4 16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        <span class="sa-card__body"><span class="sa-card__teach" id="stOutcome">Read the launch</span></span>
+      </a>
+    </li>
+    <li>
+      <a class="sa-card" id="cardAcademy" href="./academy.html"
+         aria-label="Academy — learn the physics, level 1.">
+        <span class="sa-card__eyebrow" id="ebAcademy">Academy</span>
+        <svg class="sa-glyph sa-hex" viewBox="0 0 28 28" fill="none" aria-hidden="true">
+          <path d="M14 2.6 L 23 7.8 L 23 20.2 L 14 25.4 L 5 20.2 L 5 7.8 Z" stroke="currentColor" stroke-width="1.6" fill="none"/>
+          <text id="acaLvl" x="14" y="18" text-anchor="middle" font-size="11" font-weight="700">1</text>
+        </svg>
+        <span class="sa-card__body">
+          <span class="sa-card__teach" id="stAcademy">Learn the physics · Lv 1</span>
+          <span class="sa-aca" id="acaWrap" hidden>
+            <span class="sa-aca__bar" id="acaBar" role="progressbar" aria-label="Experience to next level" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+              <span class="fill" id="acaFill" aria-hidden="true" style="width:0%"></span>
+            </span>
+            <span class="sa-aca__txt"><span class="xp" id="acaXp">0</span> XP · <span class="lvt" id="acaTitle">Apprentice</span></span>
+          </span>
+        </span>
+      </a>
+    </li>
+  </ul>
+</nav>
+
+<script type="module">
+  import haptics from './sa-haptics.js';
+
+  const $ = (id) => document.getElementById(id);
+  const reduce = (() => { try { return matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { return false; } })();
+
+  /* ── storage helpers ────────────────────────────────────────────────────── */
+  const readJSON = (k) => { try { const r = localStorage.getItem(k); return r ? JSON.parse(r) : null; } catch (e) { return null; } };
+  const readStr  = (k) => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+  const writeStr = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
+  const NOW = Date.now();
+  const STALE = 30 * 864e5;                 // 30 days
+  const fresh = (s) => s && typeof s.ts === 'number' && (NOW - s.ts) < STALE;
+  const minus = (n) => (n < 0 ? '−' : (n > 0 ? '+' : '')) + Math.abs(n).toFixed(1);
+
+  /* ── Academy level derivation (MUST mirror academy.html levelInfo) ───────── */
+  const LEVELS = [
+    { lvl:1, xp:0,    title:'Apprentice' },
+    { lvl:2, xp:150,  title:'Student' },
+    { lvl:3, xp:350,  title:'Analyst' },
+    { lvl:4, xp:650,  title:'Technician' },
+    { lvl:5, xp:1000, title:'Engineer' },
+    { lvl:6, xp:1500, title:'Master' },
+  ];
+  function levelInfo(xp){
+    let idx = 0;
+    for (let i = 0; i < LEVELS.length; i++) if (xp >= LEVELS[i].xp) idx = i;
+    let lvl = LEVELS[idx].lvl, title = LEVELS[idx].title, curXp = LEVELS[idx].xp, nextXp;
+    if (idx < LEVELS.length - 1) nextXp = LEVELS[idx + 1].xp;
+    else { const extra = Math.floor((xp - 1500) / 600); lvl = 6 + extra; curXp = 1500 + extra * 600; nextXp = curXp + 600; title = 'Master'; }
+    const span = nextXp - curXp, into = xp - curXp;
+    return { lvl, title, curXp, nextXp, pct: span > 0 ? into / span : 1 };
+  }
+
+  /* ── read state (§2.4 contract) ─────────────────────────────────────────── */
+  const flight   = readJSON('sa.stat.flight');
+  const geometry = readJSON('sa.stat.geometry');
+  const outcome  = readJSON('sa.stat.outcome');
+  const acaStore = readJSON('strikearc.academy.v1');       // Academy's OWN store
+  const acaXp    = acaStore && typeof acaStore.xp === 'number' ? acaStore.xp : 0;
+  const li       = levelInfo(acaXp);
+
+  const hasFlight = fresh(flight), hasGeo = fresh(geometry), hasOut = fresh(outcome);
+  const firstRun  = !(hasFlight || hasGeo || hasOut || acaXp > 0);
+
+  // resume target (returning only); default Ball Flight
+  let last = readStr('sa.home.last');
+  if (!['flight','geometry','outcome','academy'].includes(last)) last = 'flight';
+
+  /* ── render cards ───────────────────────────────────────────────────────── */
+  function statHTML(v, l){ return `<span class="sa-card__stat"><span class="v" ${l && l.count ? `data-count="${v}"` : ''}>${v}</span>${l && l.text ? `<span class="l">${l.text}</span>` : ''}</span>`; }
+  function teachHTML(t){ return `<span class="sa-card__teach">${t}</span>`; }
+  function setBody(cardId, html){ $(cardId).querySelector('.sa-card__body').innerHTML = html; }
+
+  // GEOMETRY
+  if (hasGeo){
+    const band = geometry.band || '—';
+    setBody('cardGeometry', `<span class="sa-card__stat"><span class="v">${band}</span><span class="l">· ${minus(Number(geometry.attack)||0)}° attack</span></span>`);
+    $('cardGeometry').setAttribute('aria-label', `Geometry — ${band} strike, ${minus(Number(geometry.attack)||0)} degrees attack.`);
+  } else {
+    setBody('cardGeometry', teachHTML('Model your strike'));
+    $('cardGeometry').setAttribute('aria-label', 'Geometry — model your strike.');
+  }
+
+  // BALL FLIGHT
+  if (hasFlight){
+    const t = Math.round(Number(flight.total) || 0);
+    const off = Math.round(Number(flight.offlineM) || 0);
+    const side = flight.offlineSide || '';
+    setBody('cardFlight', `<span class="sa-card__stat"><span class="v"><span data-count="${t}">${t}</span> m</span><span class="l">· ${off} m ${side}</span></span>`);
+    $('cardFlight').setAttribute('aria-label', `Ball flight — last shot ${t} metres, ${off} metres ${side === 'R' ? 'right' : side === 'L' ? 'left' : 'on line'}.`);
+  } else {
+    setBody('cardFlight', teachHTML('See the shot →'));
+    $('cardFlight').setAttribute('aria-label', 'Ball flight — see the shot. Start here.');
+  }
+
+  // OUTCOME
+  if (hasOut){
+    const carry = Math.round(Number(outcome.carry) || 0);
+    if (outcome.shape){
+      setBody('cardOutcome', `<span class="sa-card__stat"><span class="v">${outcome.shape}</span><span class="l">· <span data-count="${carry}">${carry}</span> m</span></span>`);
+      $('cardOutcome').setAttribute('aria-label', `Outcome — ${outcome.shape}, ${carry} metres.`);
+    } else {
+      setBody('cardOutcome', `<span class="sa-card__stat"><span class="v"><span data-count="${carry}">${carry}</span> m</span><span class="l">· carry</span></span>`);
+      $('cardOutcome').setAttribute('aria-label', `Outcome — ${carry} metres carry.`);
+    }
+  } else {
+    setBody('cardOutcome', teachHTML('Read the launch'));
+    $('cardOutcome').setAttribute('aria-label', 'Outcome — read the launch.');
+  }
+
+  // ACADEMY
+  $('acaLvl').textContent = String(li.lvl);
+  if (acaXp > 0){
+    $('stAcademy').hidden = true;
+    $('acaWrap').hidden = false;
+    $('acaFill').style.width = Math.round(li.pct * 100) + '%';
+    $('acaXp').textContent = String(acaXp);
+    $('acaXp').setAttribute('data-count', String(acaXp));
+    $('acaTitle').textContent = li.title;
+    const bar = $('acaBar');
+    bar.setAttribute('aria-valuemin', String(li.curXp));
+    bar.setAttribute('aria-valuemax', String(li.nextXp));
+    bar.setAttribute('aria-valuenow', String(acaXp));
+    $('cardAcademy').setAttribute('aria-label', `Academy — ${acaXp} XP, level ${li.lvl}, ${li.title}.`);
+  } else {
+    $('stAcademy').textContent = 'Learn the physics · Lv 1';
+    $('cardAcademy').setAttribute('aria-label', 'Academy — learn the physics, level 1.');
+  }
+
+  /* ── promotion: first-run hero (Ball Flight) OR resume (sa.home.last) ────── */
+  const promoteMap = { flight:'cardFlight', geometry:'cardGeometry', outcome:'cardOutcome', academy:'cardAcademy' };
+  const ebMap      = { flight:'ebFlight',   geometry:'ebGeometry',   outcome:'ebOutcome',   academy:'ebAcademy'   };
+  const nameMap    = { flight:'Ball Flight', geometry:'Geometry', outcome:'Outcome', academy:'Academy' };
+
+  if (firstRun){
+    // hero → BALL FLIGHT: START HERE + ember hairline + "See the shot →"
+    $('cardFlight').classList.add('is-promoted');
+    $('ebFlight').innerHTML = `<span class="cont">START HERE · </span>Ball Flight`;
+    // Academy is the second pull
+    $('stAcademy').textContent = 'Learn the physics · Lv 1';
+  } else {
+    // resume-in-place: CONTINUE + ember hairline + ember stat
+    const card = promoteMap[last], eb = ebMap[last];
+    $(card).classList.add('is-promoted');
+    $(eb).innerHTML = `<span class="cont">CONTINUE · </span>${nameMap[last]}`;
+    // compose "Continue where you left off." onto the resume card's label
+    const a = $(card);
+    a.setAttribute('aria-label', a.getAttribute('aria-label').replace(/\.$/, '.') + ' Continue where you left off.');
+  }
+
+  /* ── level-up badgePop (compare stored level vs sa.home.seenLevel) ───────── */
+  const seenLevel = parseInt(readStr('sa.home.seenLevel') || '0', 10) || 0;
+  if (!firstRun && acaXp > 0 && li.lvl > seenLevel){
+    if (!reduce){
+      const hex = $('cardAcademy').querySelector('.sa-hex');
+      hex.animate([{ transform:'scale(1)' }, { transform:'scale(1.18)' }, { transform:'scale(1)' }],
+                  { duration:500, easing:'cubic-bezier(.2,.8,.2,1)' });
+    }
+    try { haptics.notify('success'); } catch (e) {}
+  }
+  writeStr('sa.home.seenLevel', String(li.lvl));
+
+  /* ══ IDENTITY MOMENT — cold-launch tracer (spec §3) ═══════════════════════ */
+  const trail = $('saTrail'), tracer = $('saTracer'), core = $('saCore');
+  const land = $('saLand'), splash = $('saSplash'), dot = $('saDot');
+  const wordmark = document.querySelector('.sa-wordmark');
+  const cards = [...document.querySelectorAll('.sa-card')];
+
+  const len = (p) => { try { return p.getTotalLength(); } catch (e) { return 1200; } };
+
+  function breathe(){
+    if (reduce) return;
+    dot.animate([{ opacity:.35 }, { opacity:.6 }, { opacity:.35 }],
+                { duration:4000, iterations:Infinity, easing:'cubic-bezier(.45,0,.55,1)' });
+  }
+  function countUp(el){
+    const finalStr = el.getAttribute('data-count'); const target = parseInt(finalStr, 10);
+    if (!isFinite(target)) return;
+    el.style.display = 'inline-block'; el.style.minWidth = finalStr.length + 'ch'; el.style.textAlign = 'right';
+    const dur = 300, t0 = performance.now();
+    (function step(t){ const p = Math.min(1, (t - t0) / dur); el.textContent = Math.round(target * (1 - Math.pow(1 - p, 2))).toString();
+      if (p < 1) requestAnimationFrame(step); else el.textContent = finalStr; })(performance.now());
+  }
+  const runCountUps = () => document.querySelectorAll('[data-count]').forEach(countUp);
+
+  let traced = false; try { traced = sessionStorage.getItem('sa.home.traced') === '1'; } catch (e) {}
+
+  if (reduce){
+    // static: tracer pre-drawn @ .5, dot at landing, no count-ups / breathing / stagger
+    [trail, tracer, core].forEach(p => { p.style.strokeDasharray = 'none'; p.style.strokeDashoffset = '0'; });
+    trail.style.opacity = '.10'; tracer.style.opacity = '.5'; core.style.opacity = '.5';
+    land.style.opacity = '1'; splash.style.opacity = '0';   // dot only at rest
+    try { sessionStorage.setItem('sa.home.traced', '1'); } catch (e) {}
+  } else if (traced){
+    // warm return: no tracer replay — resting ember dot only, breathing idle
+    land.style.opacity = '1'; splash.style.opacity = '0';
+    breathe();
+  } else {
+    // COLD LAUNCH choreography
+    // t0: plate stagger (interactive throughout — opacity:0 still hit-tests)
+    cards.forEach((c, i) => c.animate(
+      [{ opacity:0, transform:'translateY(4px)' }, { opacity:1, transform:'none' }],
+      { duration:240, delay:i * 40, easing:'cubic-bezier(0,0,.2,1)', fill:'backwards' }));
+    // t120: wordmark
+    wordmark.animate([{ opacity:0 }, { opacity:1 }], { duration:240, delay:120, easing:'ease-out', fill:'backwards' });
+
+    // t420: tracer launches (draw-on 1500ms ease-out)
+    const Lt = len(tracer), Lc = len(core), Lg = len(trail);
+    tracer.style.strokeDasharray = Lt; tracer.style.strokeDashoffset = Lt; tracer.style.opacity = '.96';
+    core.style.strokeDasharray   = Lc; core.style.strokeDashoffset   = Lc; core.style.opacity   = '.95';
+    trail.style.strokeDasharray  = Lg; trail.style.strokeDashoffset  = Lg; trail.style.opacity  = '.5';
+    const draw = { duration:1500, delay:420, easing:'cubic-bezier(.16,.84,.34,1)', fill:'forwards' };
+    tracer.animate([{ strokeDashoffset:Lt }, { strokeDashoffset:0 }], draw);
+    core.animate(  [{ strokeDashoffset:Lc }, { strokeDashoffset:0 }], draw);
+    trail.animate( [{ strokeDashoffset:Lg }, { strokeDashoffset:0 }], draw);
+
+    // t1920: landing splash ring + breathing dot + stat count-ups
+    setTimeout(() => {
+      land.style.opacity = '1';
+      const sL = len(splash);
+      splash.style.strokeDasharray = sL; splash.style.strokeDashoffset = sL;
+      splash.animate([{ strokeDashoffset:sL }, { strokeDashoffset:0 }], { duration:420, easing:'ease-out', fill:'forwards' });
+      splash.animate([{ opacity:.42 }, { opacity:.42, offset:.82 }, { opacity:0 }], { duration:420 + 1800, fill:'forwards' });
+      breathe();
+      runCountUps();
+    }, 1920);
+
+    try { sessionStorage.setItem('sa.home.traced', '1'); } catch (e) {}
+  }
+
+  /* ══ NAV — haptics + card→stage View Transition (spec §5) ═════════════════ */
+  cards.forEach(card => {
+    card.addEventListener('pointerdown', () => { try { haptics.impact('light'); } catch (e) {} });
+    card.addEventListener('click', () => {
+      try { haptics.impact('medium'); } catch (e) {}
+      // name ONLY the tapped card sa-stage (four identical names would abort the VT)
+      if (!reduce) { try { card.style.viewTransitionName = 'sa-stage'; } catch (e) {} }
+    });
+  });
+</script>
+</body>
+</html>

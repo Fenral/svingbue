@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<meta name="theme-color" content="#0A0E12" />
+<meta name="theme-color" content="#07060C" />
 <meta name="robots" content="noindex" />
 <title>OUTCOME MOCK — See the Shot (outcome strip + landing connector + cause chips)</title>
 <!-- ═════════════════════════════════════════════════════════════════════
@@ -75,25 +75,42 @@
                composed sentence lands in #fDeltaSR ~700ms after settle.
      Engine files (impact-flight.js etc.) are byte-identical imports.
      ═════════════════════════════════════════════════════════════════════ -->
-<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2052%2052'%20fill='none'%3E%3Cpath%20d='M11%2045%20C%2016%2026,%2024%2018,%2035%2015%20M21%2039%20L%2030%2024%20L%2043%2045'%20stroke='%2322E3D6'%20stroke-width='4.2'%20stroke-linecap='round'%20stroke-linejoin='round'/%3E%3Ccircle%20cx='37'%20cy='15'%20r='5.2'%20fill='%2322E3D6'/%3E%3C/svg%3E" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2052%2052'%20fill='none'%3E%3Cpath%20d='M11%2045%20C%2016%2026,%2024%2018,%2035%2015%20M21%2039%20L%2030%2024%20L%2043%2045'%20stroke='%239D8BFF'%20stroke-width='4.2'%20stroke-linecap='round'%20stroke-linejoin='round'/%3E%3Ccircle%20cx='37'%20cy='15'%20r='5.2'%20fill='%23FF8A4D'/%3E%3C/svg%3E" />
 <link rel="stylesheet" href="./sa.css" />
 <link rel="stylesheet" href="./sa-paywall.css" />
+<link rel="stylesheet" href="./sa-p3.css" />
 <style>
   :root{
-    --accent:#22E3D6; --accent-soft:rgba(34,227,214,.16); --accent-line:rgba(34,227,214,.55);
-    --ink:#e8f0fb; --muted:#9aabc6;                     /* unified ink + AAA-ish muted */
-    --bg:#0A0E12; --bg-top:#0b1220;
-    --panel:rgba(12,20,33,.72); --line:rgba(255,255,255,.30);  /* line raised to ≥3:1 */
+    /* ── P3 "Ultraviolet Ember" — tokens from ./sa-p3.css (imported above);
+         restated here for the extra local names this instrument uses. The ONE
+         real local override is --line (raised to ≥3:1 for non-text a11y) and
+         --plate (a SOLID popover background, not sa-p3's rgba photo-plate). ── */
+    /* ember accent — live ball / live DATA + interactive readouts only */
+    --accent:#FF8A4D; --accent-soft:rgba(255,138,77,.16); --accent-line:rgba(255,138,77,.55);
+    /* violet secondary — chrome, glyphs, reference axes, ambient glow */
+    --secondary:#9D8BFF; --secondary-soft:rgba(157,139,255,.14); --secondary-line:rgba(157,139,255,.45);
+    --ink:#F5F2FF; --muted:#A79FC7;                     /* unified ink + AAA-ish muted */
+    --bg:#07060C; --bg-top:#0d0a18;
+    --panel:rgba(17,13,28,.72); --line:rgba(255,255,255,.30);  /* line raised to ≥3:1 */
     --radius-pill:999px; --radius-card:16px; --radius-control:12px;
     --blur-surface:10px; --blur-overlay:18px;
-    --plate:#0E141C;
-    /* anatomy colours (ported hexApprox from direction-height-arrows-layout.ts) */
-    --c-face:#E83B47; --c-path:#8FB4D4; --c-loft:#A66BFF; --c-attack:#FF7AA8; --c-launch:#F4D000;
-    /* outcome/ghost tokens (stage 3+; stage 5 uses them more) */
-    --good:#4ADE80; --warn:#FBBF24; --bad:#F87171; --ghost:#9FB2C8;
+    --plate:#150F22;
+    /* dual-lens param colours — P3 param block (attack = demoted mint) */
+    --c-face:#FF5C6B; --c-path:#6FC6FF; --c-loft:#B9A0FF; --c-attack:#4DE8D2; --c-launch:#F4D000;
+    /* outcome/ghost/status tokens */
+    --good:#58E6A8; --warn:#FFD056; --bad:#FF7B8A; --ghost:#9FB2C8;
     --dim:0.55;
   }
   *{box-sizing:border-box;margin:0;padding:0}
+
+  /* ══ Cross-document View Transitions (cohesion pass) — home ↔ this screen.
+       sa-logo = home button ↔ home wordmark-mark (named in sa-p3.css on
+       .sa-strip__home); sa-stage = the tapped home card ↔ this screen's
+       primary stage. No-support → instant nav; prefers-reduced-motion → the
+       VT animations are killed in sa-p3.css (instant swap). ══ */
+  @view-transition{navigation:auto}
+  #stage{view-transition-name:sa-stage}
+
   html,body{height:100%;overflow:hidden}
   body{
     background:radial-gradient(130% 120% at 50% -10%, var(--bg-top), var(--bg));
@@ -108,7 +125,7 @@
     flex:0 0 auto;display:flex;align-items:center;gap:10px;
     height:40px;padding:0 max(12px,env(safe-area-inset-right)) 0 max(12px,env(safe-area-inset-left));
     border-bottom:1px solid rgba(255,255,255,.06);
-    background:linear-gradient(180deg, rgba(12,20,33,.55), rgba(10,14,18,.2));
+    background:linear-gradient(180deg, rgba(17,13,28,.55), rgba(7,6,12,.2));
   }
   .ts-left{display:flex;align-items:center;gap:8px;flex:0 0 auto;min-width:0}
   .ts-title{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink);white-space:nowrap}
@@ -188,8 +205,8 @@
   .heroLens{
     flex:1 1 auto;min-width:0;border-radius:20px;position:relative;
     background:
-      radial-gradient(120% 90% at 50% 18%, rgba(34,227,214,.07), rgba(10,14,18,0) 62%),
-      #0A0E12;
+      radial-gradient(120% 90% at 50% 18%, rgba(157,139,255,.08), rgba(13,10,24,0) 62%),
+      #0d0a18;
     border:1px solid rgba(255,255,255,.07);
     box-shadow:inset 0 1px 0 rgba(255,255,255,.04), 0 14px 40px -22px rgba(0,0,0,.8);
     display:flex;flex-direction:column;overflow:hidden;
@@ -220,7 +237,7 @@
   .mini.k-face input{accent-color:var(--c-face)} .mini.k-face .mname{color:#ffb0b6}
   .mini.k-path input{accent-color:var(--c-path)} .mini.k-path .mname{color:#bcd6ea}
   .mini.k-loft input{accent-color:var(--c-loft)} .mini.k-loft .mname{color:#cdb0ff}
-  .mini.k-attack input{accent-color:var(--c-attack)} .mini.k-attack .mname{color:#ffc0d4}
+  .mini.k-attack input{accent-color:var(--c-attack)} .mini.k-attack .mname{color:#a9f2e8}
 
   /* hero results row — max 4 metric cards under the hero lens (per-focus).
      REBALANCE: these read as SECONDARY/supporting chips now (the lens is the
@@ -331,10 +348,10 @@
   }
   .rwrap input[type=range].premium-range:focus-visible{outline:none}
   .rwrap input[type=range].premium-range:focus-visible::-webkit-slider-thumb{
-    box-shadow:0 2px 7px rgba(0,0,0,.5), 0 0 0 3px #0A0E12, 0 0 0 6px var(--rc);
+    box-shadow:0 2px 7px rgba(0,0,0,.5), 0 0 0 3px #07060C, 0 0 0 6px var(--rc);
   }
   .rwrap input[type=range].premium-range:focus-visible::-moz-range-thumb{
-    box-shadow:0 2px 7px rgba(0,0,0,.5), 0 0 0 3px #0A0E12, 0 0 0 6px var(--rc);
+    box-shadow:0 2px 7px rgba(0,0,0,.5), 0 0 0 3px #07060C, 0 0 0 6px var(--rc);
   }
   /* CENTRE TICK at 0 — only for ± (signed) sliders. A 2px notch on the track. */
   .rwrap.signed::before{
@@ -347,7 +364,7 @@
     position:absolute;top:-2px;left:0;transform:translate(-50%,-100%) scale(.9);
     padding:2px 7px;border-radius:7px;white-space:nowrap;
     font-size:11px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.25;
-    color:#fff;background:color-mix(in srgb, var(--rc) 66%, #0A0E12);
+    color:#fff;background:color-mix(in srgb, var(--rc) 66%, #07060C);
     border:1px solid rgba(255,255,255,.28);
     box-shadow:0 4px 12px rgba(0,0,0,.45);
     opacity:0;pointer-events:none;z-index:3;
@@ -496,7 +513,7 @@
     display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;
     background:rgba(255,255,255,.08);color:var(--muted)}
   .pop .driver:first-child .dRank{background:var(--accent-soft);color:var(--accent)}
-  .pop .driver .dName{color:#e8f0fb;font-weight:600;flex:1 1 auto;min-width:0}
+  .pop .driver .dName{color:#F5F2FF;font-weight:600;flex:1 1 auto;min-width:0}
   .pop .driver .dTrend{flex:0 0 auto;font-weight:800;font-size:11.5px;font-variant-numeric:tabular-nums}
   .pop .driver .dTrend.up{color:var(--good)}
   .pop .driver .dTrend.down{color:#ffb0a0}
@@ -629,7 +646,7 @@
   .fChip-ghost[aria-pressed="false"] .cl,.fChip-ghost[aria-pressed="false"] .cd{text-decoration:line-through}
   .fChip-ghost[aria-pressed="false"] .dashSwatch{opacity:.35}
   /* pinned state is NOT colour-only: label text changes Pin → <carry>m */
-  .fChip-pin[aria-pressed="true"]{color:#E8F0FB;border-color:rgba(232,240,251,.6)}
+  .fChip-pin[aria-pressed="true"]{color:#F5F2FF;border-color:rgba(245,242,255,.6)}
   .fChip-pin .pinGlyph{font-size:14px;line-height:1}
   /* ── STAGE 3: "what changed" micro-label under the left hero stack ── */
   .fDelta{position:absolute;left:max(3.4%,env(safe-area-inset-left));top:calc(15% + clamp(84px,19vh,118px));z-index:5;pointer-events:none;
@@ -656,11 +673,11 @@
   .flightCarry{position:absolute;top:15%;left:max(3.4%,env(safe-area-inset-left));z-index:5;pointer-events:none;line-height:1;text-align:left;
     text-shadow:0 0 22px rgba(0,0,0,.65)}
   .flightCarry .num{font-size:clamp(30px,8vh,60px);font-weight:800;letter-spacing:-.03em;color:#fff;line-height:.9;
-    font-variant-numeric:tabular-nums;text-shadow:0 0 28px rgba(34,227,214,.6)}
+    font-variant-numeric:tabular-nums;text-shadow:0 0 28px rgba(255,138,77,.6)}
   .flightCarry .num .u{font-size:.4em;font-weight:700;color:var(--accent);margin-left:3px;vertical-align:.2em}
   .flightCarry .lab{font-size:clamp(8px,1.6vh,11px);letter-spacing:.24em;text-transform:uppercase;color:var(--muted);margin-top:4px}
   .flightCarry .offline{margin-top:10px;font-variant-numeric:tabular-nums;font-weight:800;
-    font-size:clamp(15px,3.4vh,24px);color:var(--accent);line-height:1;text-shadow:0 0 18px rgba(34,227,214,.4)}
+    font-size:clamp(15px,3.4vh,24px);color:var(--accent);line-height:1;text-shadow:0 0 18px rgba(255,138,77,.4)}
   .flightCarry .offline .side{font-size:.6em;font-weight:700;letter-spacing:.06em;margin-left:3px;color:#fff}
 
   /* ── move 6 UNIFY — BOTTOM I/O STACK (replaces LAYOUT B's club-speed block
@@ -699,8 +716,8 @@
      + offline badge (STAGE 5 keeps the offline badge cyan — it IS live-ball data) */
   #fLatRef line{stroke:rgba(230,240,250,.20)}
   #fLatRef text{fill:rgba(230,240,250,.55);font-family:inherit;font-weight:600}
-  #fOfflineBox{fill:rgba(8,16,20,.72);stroke:rgba(34,227,214,.28)}
-  #fOfflineTxt{fill:#22E3D6;font-family:inherit;font-weight:700}
+  #fOfflineBox{fill:rgba(8,5,14,.72);stroke:rgba(255,138,77,.28)}
+  #fOfflineTxt{fill:#FF8A4D;font-family:inherit;font-weight:700}
 
   /* ══ move 5 VIZ-PORT — BOTTOM I/O BARS (input chip row + ONE output row) ══
      .ioBar is a normal flex-column sibling of .main: OUTPUT row on top
@@ -731,7 +748,7 @@
   /* edge chevrons ride ON the fades (same .can-* gate) — a literal "more this
      way" pointer for anyone who doesn't read the fade or the cut chip. */
   .edgeChev{position:absolute;top:50%;transform:translateY(-50%);z-index:3;pointer-events:none;
-    font-size:16px;font-weight:800;color:#e8f0fb;line-height:1;opacity:0;transition:opacity .25s ease;
+    font-size:16px;font-weight:800;color:#F5F2FF;line-height:1;opacity:0;transition:opacity .25s ease;
     text-shadow:0 1px 3px rgba(0,0,0,.8)}
   .edgeChev.left{left:7px} .edgeChev.right{right:7px}
   .rowWrap.can-left .edgeChev.left{opacity:.9}
@@ -852,12 +869,18 @@
     <!-- ══ TOP STRIP ══ -->
     <div class="topstrip">
       <div class="ts-left">
+        <!-- Shared app-shell home affordance (sa-p3.css contract): arc-mark,
+             30px visual / 44px hit, violet arc + ember ball, view-transition
+             morph target `sa-logo`. Replaces the retired sibling-tab modnav
+             (cohesion pass — hub-and-spoke, no persistent nav row). -->
+        <a class="sa-strip__home" href="./home-mock.html" aria-label="Home">
+          <svg viewBox="0 0 52 52" fill="none" aria-hidden="true">
+            <path class="sa-arc" d="M11 45 C 16 26, 24 18, 35 15 M21 39 L 30 24 L 43 45"
+                  stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle class="sa-ball" cx="37" cy="15" r="5.2"/>
+          </svg>
+        </a>
         <span class="ts-title">See the Shot</span>
-        <nav class="modnav" aria-label="Modules">
-          <a class="home" href="./index.html" aria-label="Home"><svg width="20" height="20" viewBox="0 0 52 52" fill="none" aria-hidden="true"><path d="M11 45 C 16 26, 24 18, 35 15 M21 39 L 30 24 L 43 45" stroke="currentColor" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="37" cy="15" r="5.2" fill="currentColor"/></svg></a>
-          <a class="tab" href="./geometry.html">Geometry</a>
-          <a class="tab" href="#" aria-current="page">Impact</a>
-        </nav>
       </div>
       <!-- DUAL-LENS: the [Direction|Launch|Flight] focus toggle is retired — both
            lenses are shown at once and Flight opens via the Play-flight button. -->
@@ -888,21 +911,21 @@
              lens's static aria-label so screen readers get a calm, single update. -->
         <div class="sr-only" id="predLive" aria-live="polite" aria-atomic="true"></div>
         <svg id="svgDir" viewBox="0 0 400 360" preserveAspectRatio="xMidYMid meet" role="img"
-             aria-label="Top-down view from the ball. A vertical target line runs straight ahead. A red face arrow and a blue path arrow rotate from the ball to show clubface aim and swing direction. A yellow launch arrow shows the start line, bending toward the spin side. A cyan marker shows the predicted landing position.">
+             aria-label="Top-down view from the ball. A vertical target line runs straight ahead. A red face arrow and a blue path arrow rotate from the ball to show clubface aim and swing direction. A yellow launch arrow shows the start line, bending toward the spin side. An orange marker shows the predicted landing position.">
           <defs>
             <!-- userSpaceOnUse so the glow stays anchored to the ball/target axis even
                  though fitLenses() widens the background rect to the live viewBox -->
             <radialGradient id="dirGlow" gradientUnits="userSpaceOnUse" cx="200" cy="281" r="240">
-              <stop offset="0" stop-color="rgba(34,227,214,.10)"/><stop offset="1" stop-color="rgba(34,227,214,0)"/>
+              <stop offset="0" stop-color="rgba(157,139,255,.12)"/><stop offset="1" stop-color="rgba(157,139,255,0)"/>
             </radialGradient>
           </defs>
           <rect x="-600" y="0" width="1600" height="360" fill="url(#dirGlow)"/>
-          <!-- target line up from the ball -->
-          <line x1="200" y1="330" x2="200" y2="40" stroke="var(--accent-line)" stroke-width="1.5" stroke-dasharray="5 8"/>
-          <circle cx="200" cy="40" r="4" fill="none" stroke="var(--accent)" stroke-width="1.5" opacity=".8"/>
+          <!-- target line up from the ball — reference axis: violet chrome, NOT ember -->
+          <line x1="200" y1="330" x2="200" y2="40" stroke="var(--secondary-line)" stroke-width="1.5" stroke-dasharray="5 8"/>
+          <circle cx="200" cy="40" r="4" fill="none" stroke="var(--secondary)" stroke-width="1.5" opacity=".8"/>
           <text x="200" y="30" text-anchor="middle" font-size="20" fill="var(--muted)" style="font-family:inherit;letter-spacing:.1em">TARGET</text>
           <!-- face↔path gap field (subtle, curved outer arc) -->
-          <path id="dirCone" fill="rgba(34,227,214,.04)" stroke="none"/>
+          <path id="dirCone" fill="rgba(157,139,255,.05)" stroke="none"/>
           <!-- STAGE 6 — LANDING PREDICTOR: neutral reference geometry (centre tick +
                lateral scale hints) in the far zone, BEHIND the arrows in z-order.
                Purely decorative reference lines — neutral white-alpha per the app's
@@ -991,7 +1014,7 @@
             <!-- userSpaceOnUse so the glow stays anchored to the impact zone even
                  though fitLenses() widens the background rect to the live viewBox -->
             <radialGradient id="htGlow" gradientUnits="userSpaceOnUse" cx="88" cy="223" r="280">
-              <stop offset="0" stop-color="rgba(34,227,214,.10)"/><stop offset="1" stop-color="rgba(34,227,214,0)"/>
+              <stop offset="0" stop-color="rgba(157,139,255,.12)"/><stop offset="1" stop-color="rgba(157,139,255,0)"/>
             </radialGradient>
           </defs>
           <rect x="-700" y="0" width="2800" height="360" fill="url(#htGlow)"/>
@@ -1001,7 +1024,7 @@
           <!-- impact point + ball -->
           <circle cx="80" cy="250" r="5" fill="#fff" opacity=".9"/>
           <!-- attack↔loft gap field (subtle, curved outer arc) — behind the arrows -->
-          <path id="htCone" fill="rgba(34,227,214,.04)" stroke="none"/>
+          <path id="htCone" fill="rgba(157,139,255,.05)" stroke="none"/>
           <!-- ATTACK arrow (shorter, lower of the pair) -->
           <g class="arrowG" id="g_attack" data-key="attack" aria-hidden="true">
             <line class="aline" id="line_attack" x1="80" y1="250" x2="284" y2="250" stroke="var(--c-attack)" stroke-width="7"/>
@@ -1174,47 +1197,48 @@
       <svg id="fScene" viewBox="0 0 960 540" preserveAspectRatio="xMidYMid slice" role="img"
            aria-label="Driving-range ball flight: the ball launches from the tee, rises to apex and lands downrange on the fairway.">
         <defs>
-          <!-- cyan/teal duotone grade overlay -->
+          <!-- P3 NIGHT GRADE — violet-shifted duotone grade overlay (ember owns all warmth) -->
           <linearGradient id="ftealGrade" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stop-color="#0a3a3a" stop-opacity=".06"/>
-            <stop offset=".55" stop-color="#147878" stop-opacity=".20"/>
-            <stop offset="1" stop-color="#22E3D6" stop-opacity=".15"/>
+            <stop offset="0" stop-color="#0a1a3a" stop-opacity=".02"/>
+            <stop offset=".55" stop-color="#3a2f6a" stop-opacity=".06"/>
+            <stop offset="1" stop-color="#9D8BFF" stop-opacity=".10"/>
           </linearGradient>
           <linearGradient id="fground" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stop-color="#0c2a1c"/><stop offset=".5" stop-color="#0a3320"/><stop offset="1" stop-color="#06351f"/>
+            <stop offset="0" stop-color="#140b26"/><stop offset=".5" stop-color="#1c1240"/><stop offset="1" stop-color="#100822"/>
           </linearGradient>
           <radialGradient id="fapexGlow" cx="50%" cy="50%" r="50%">
-            <stop offset="0" stop-color="#22E3D6" stop-opacity=".9"/><stop offset="1" stop-color="#22E3D6" stop-opacity="0"/>
+            <stop offset="0" stop-color="#FF8A4D" stop-opacity=".9"/><stop offset="1" stop-color="#FF8A4D" stop-opacity="0"/>
           </radialGradient>
           <radialGradient id="flandGlow" cx="50%" cy="50%" r="50%">
-            <stop offset="0" stop-color="#22E3D6" stop-opacity=".75"/><stop offset="1" stop-color="#22E3D6" stop-opacity="0"/>
+            <stop offset="0" stop-color="#FF8A4D" stop-opacity=".75"/><stop offset="1" stop-color="#FF8A4D" stop-opacity="0"/>
           </radialGradient>
           <!-- haze softness lives in the gradient shape; the BAND's element
                opacity (.22 base) carries the level so ambient breathing only
-               ever animates element opacity, never the gradient. -->
+               ever animates element opacity, never the gradient. Violet-shifted. -->
           <linearGradient id="fhaze" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stop-color="#9fd8d2" stop-opacity="0"/>
-            <stop offset=".5" stop-color="#bfeae4" stop-opacity="1"/>
-            <stop offset="1" stop-color="#bfeae4" stop-opacity="0"/>
+            <stop offset="0" stop-color="#9D8BFF" stop-opacity="0"/>
+            <stop offset=".5" stop-color="#C7BBFF" stop-opacity="1"/>
+            <stop offset="1" stop-color="#C7BBFF" stop-opacity="0"/>
           </linearGradient>
           <linearGradient id="ftracerGrad" x1="0" y1="1" x2="0" y2="0">
-            <stop offset="0" stop-color="#22E3D6" stop-opacity=".15"/>
-            <stop offset=".5" stop-color="#22E3D6" stop-opacity=".95"/>
-            <stop offset="1" stop-color="#eafffb"/>
+            <stop offset="0" stop-color="#FF8A4D" stop-opacity=".15"/>
+            <stop offset=".5" stop-color="#FF8A4D" stop-opacity=".95"/>
+            <stop offset="1" stop-color="#FFF3E8"/>
           </linearGradient>
           <clipPath id="fclip"><rect x="0" y="0" width="960" height="540"/></clipPath>
         </defs>
 
         <g clip-path="url(#fclip)">
-          <!-- dusk range photo, darkened (scene C base) -->
-          <image id="fBgImg" href="./assets/range-day.png" x="-40" y="-40" width="1040" height="620"
-                 preserveAspectRatio="xMidYMid slice" opacity="0.46"/>
-          <rect x="0" y="0" width="960" height="540" fill="#06121a" opacity="0.42"/>
-          <!-- ground tint — starts at the photo tree-line (yH≈265) so it greens
-               only the grass, not the sky -->
-          <rect id="fGroundRect" x="-200" y="263" width="1360" height="420" fill="url(#fground)" opacity="0.55"/>
+          <!-- night range photo (P3 night grade — brighter photo, lighter dark rect) -->
+          <image id="fBgImg" href="./assets/range-night-3d-33.png" x="-40" y="-40" width="1040" height="620"
+                 preserveAspectRatio="xMidYMid slice" opacity="0.78"/>
+          <rect x="0" y="0" width="960" height="540" fill="#06121a" opacity="0.16"/>
+          <!-- ground tint — starts at the photo tree-line (yH≈375, recalibrated to
+               the pixel-sampled grass/tree line — see the projection constants
+               below) so it violets only the grass, not the sky -->
+          <rect id="fGroundRect" x="-200" y="375" width="1360" height="420" fill="url(#fground)" opacity="0.50"/>
           <!-- horizon haze (Atmosphere) — sits on the tree-line band -->
-          <rect id="fHazeBand" x="-200" y="240" width="1360" height="56" fill="url(#fhaze)" opacity=".22"/>
+          <rect id="fHazeBand" x="-200" y="350" width="1360" height="56" fill="url(#fhaze)" opacity=".22"/>
           <!-- converging fairway rails -->
           <path id="fRailL" fill="none" stroke="rgba(230,240,250,.14)" stroke-width="1.2"/>
           <path id="fRailR" fill="none" stroke="rgba(230,240,250,.14)" stroke-width="1.2"/>
@@ -1226,17 +1250,17 @@
           <path id="fCentre" fill="none" stroke="rgba(230,240,250,.28)" stroke-width="1.4" stroke-dasharray="6 8"/>
           <!-- tee marker (re-centred + re-based to TEE_X / yBottom in fBuild) -->
           <g id="fTee">
-            <ellipse id="fTeeShadow" cx="480" cy="356" rx="34" ry="7" fill="#000" opacity=".35"/>
-            <ellipse id="fTeeRing" cx="480" cy="356" rx="30" ry="6" fill="none" stroke="rgba(34,227,214,.45)" stroke-width="1.4"/>
+            <ellipse id="fTeeShadow" cx="480" cy="518" rx="34" ry="7" fill="#000" opacity=".35"/>
+            <ellipse id="fTeeRing" cx="480" cy="518" rx="30" ry="6" fill="none" stroke="rgba(255,138,77,.45)" stroke-width="1.4"/>
           </g>
           <!-- soft under-glow arc (pre-baked softness: wide low-opacity stroke
                UNDER the gradient tracer — no blur filters on animated strokes) -->
-          <path id="fTrail" fill="none" stroke="#22E3D6" stroke-width="14" stroke-linecap="round" opacity="0"/>
+          <path id="fTrail" fill="none" stroke="#FF8A4D" stroke-width="14" stroke-linecap="round" opacity="0"/>
           <!-- flight tracer -->
           <path id="fTracer" fill="none" stroke="url(#ftracerGrad)" stroke-width="3.8" stroke-linecap="round" opacity=".96"/>
-          <path id="fTracerCore" fill="none" stroke="#eafffb" stroke-width="1.5" stroke-linecap="round" opacity=".95"/>
+          <path id="fTracerCore" fill="none" stroke="#FFF3E8" stroke-width="1.5" stroke-linecap="round" opacity=".95"/>
           <!-- ground roll -->
-          <path id="fRoll" fill="none" stroke="#22E3D6" stroke-width="2.2" stroke-linecap="round" stroke-dasharray="3 5" opacity=".7"/>
+          <path id="fRoll" fill="none" stroke="#FF8A4D" stroke-width="2.2" stroke-linecap="round" stroke-dasharray="3 5" opacity=".7"/>
           <!-- OUTCOME MOCK move 2: landing connector — REFERENCE GEOMETRY
                (never cyan): neutral white-alpha dashed line from the reference
                landing point (pin, else newest ghost) to the live landing
@@ -1249,19 +1273,19 @@
           <!-- apex marker -->
           <g id="fApexMark" opacity="0">
             <circle id="fApexHalo" r="16" fill="url(#fapexGlow)"/>
-            <circle r="4.5" fill="none" stroke="#22E3D6" stroke-width="2"/>
-            <line x1="0" y1="-9" x2="0" y2="-26" stroke="#22E3D6" stroke-width="1.2" opacity=".7"/>
+            <circle r="4.5" fill="none" stroke="#FF8A4D" stroke-width="2"/>
+            <line x1="0" y1="-9" x2="0" y2="-26" stroke="#FF8A4D" stroke-width="1.2" opacity=".7"/>
             <g transform="translate(0,-30)">
-              <rect x="-40" y="-15" width="80" height="18" rx="5" fill="rgba(8,16,20,.72)" stroke="rgba(34,227,214,.22)"/>
-              <text id="fApexTxt" x="0" y="-2" text-anchor="middle" fill="#22E3D6" font-size="11" font-weight="700" font-family="inherit">Apex</text>
+              <rect x="-40" y="-15" width="80" height="18" rx="5" fill="rgba(8,5,14,.72)" stroke="rgba(255,138,77,.22)"/>
+              <text id="fApexTxt" x="0" y="-2" text-anchor="middle" fill="#FF8A4D" font-size="11" font-weight="700" font-family="inherit">Apex</text>
             </g>
           </g>
           <!-- landing marker -->
           <g id="fLandMark" opacity="0">
             <!-- subtle, PERSISTENT ground splash ring at the landing point (no pulse) -->
-            <ellipse id="fSplash" cx="0" cy="0" rx="13" ry="4.5" fill="none" stroke="#22E3D6" stroke-width="1.4" opacity=".42"/>
-            <circle r="3.6" fill="#22E3D6"/>
-            <rect id="fLandBox" x="6" y="-22" width="62" height="17" rx="5" fill="rgba(8,16,20,.72)" stroke="rgba(34,227,214,.22)"/>
+            <ellipse id="fSplash" cx="0" cy="0" rx="13" ry="4.5" fill="none" stroke="#FF8A4D" stroke-width="1.4" opacity=".42"/>
+            <circle r="3.6" fill="#FF8A4D"/>
+            <rect id="fLandBox" x="6" y="-22" width="62" height="17" rx="5" fill="rgba(8,5,14,.72)" stroke="rgba(255,138,77,.22)"/>
             <text id="fLandTxt" x="37" y="-10" text-anchor="middle" fill="#fff" font-size="10" font-weight="700" font-family="inherit">Carry</text>
             <!-- offline side badge: "NN m R" / "NN m L" (right = positive) -->
             <g id="fOffline" opacity="0">
@@ -1271,8 +1295,8 @@
             <!-- land-angle plate: "↘ 55°" — reveals WITH the data beat, offset
                  below/right of the carry plate + offline badge so it never collides -->
             <g id="fLandAngMark" opacity="0">
-              <rect id="fLandAngBox" x="6" y="16" width="52" height="17" rx="5" fill="rgba(8,16,20,.72)" stroke="rgba(34,227,214,.22)"/>
-              <text id="fLandAngTxt" x="32" y="28" text-anchor="middle" fill="#9FE6DF" font-size="10" font-weight="700" font-family="inherit">↘ 0°</text>
+              <rect id="fLandAngBox" x="6" y="16" width="52" height="17" rx="5" fill="rgba(8,5,14,.72)" stroke="rgba(255,138,77,.22)"/>
+              <text id="fLandAngTxt" x="32" y="28" text-anchor="middle" fill="#FFC08A" font-size="10" font-weight="700" font-family="inherit">↘ 0°</text>
             </g>
           </g>
           <!-- teal colour grade overlay (above scene, below HUD) -->
@@ -1988,7 +2012,7 @@ const DIAGRAMS = {
      <circle cx="100" cy="72" r="4" fill="#fff" opacity=".9"/>
      ${arrow(100,72,124,14,'var(--c-face)',5.5)}
      ${arrow(100,72,80,18,'var(--c-path)',2.5)}
-     <text x="132" y="18" font-size="8" fill="var(--c-face)" font-weight="700">FACE ~75%</text>
+     <text x="132" y="18" font-size="8" fill="#ffb0b6" font-weight="700">FACE ~75%</text>
      <text x="46" y="26" text-anchor="middle" font-size="8" fill="var(--c-path)" font-weight="700">PATH ~25%</text>`),
   // Launch angle — side-view launch vector vs ground with angle arc.
   launchAng: () => svgWrap('Side view: a ball launches upward from the ground at an angle, with an arc marking the launch angle.',
@@ -2062,7 +2086,7 @@ const DIAGRAMS = {
      <line x1="30" y1="72" x2="66" y2="46" stroke="var(--c-face)" stroke-width="3" stroke-linecap="round"/>
      <path d="M 66 46 Q 90 20 152 14" fill="none" stroke="var(--accent)" stroke-width="2.6"/>
      <circle cx="152" cy="14" r="3.4" fill="var(--accent)"/>
-     <text x="46" y="60" font-size="7.5" fill="var(--c-face)" font-weight="700">START</text>
+     <text x="46" y="60" font-size="7.5" fill="#ffb0b6" font-weight="700">START</text>
      <text x="140" y="28" text-anchor="middle" font-size="7.5" fill="var(--accent)" font-weight="700">BEND</text>`),
   // Shape — three mini top-down paths (draw / straight / fade family).
   shape: () => svgWrap('Three small top-down paths side by side, showing a draw curving left, a straight path, and a fade curving right.',
@@ -2079,7 +2103,7 @@ const DIAGRAMS = {
      <g>
        <line x1="170" y1="70" x2="170" y2="14" stroke="${REF}" stroke-width=".8" stroke-dasharray="2 3"/>
        <path d="M 170 70 Q 190 40 178 14" fill="none" stroke="var(--c-face)" stroke-width="2.2"/>
-       <text x="170" y="8" text-anchor="middle" font-size="7" fill="var(--c-face)" font-weight="700">FADE</text>
+       <text x="170" y="8" text-anchor="middle" font-size="7" fill="#ffb0b6" font-weight="700">FADE</text>
      </g>`),
   // Face-to-path — top-down face + path arrows with the gap between them shaded.
   faceToPath: () => svgWrap('Top-down view: a red face arrow and a blue path arrow both point up from the ball, with the angular gap between them shaded to show the face-to-path difference.',
@@ -2088,7 +2112,7 @@ const DIAGRAMS = {
      ${arrow(100,72,128,16,'var(--c-face)',5.5)}
      ${arrow(100,72,78,20,'var(--c-path)',3.5)}
      ${arcBetween(100,72,34,-1.75,-1.15,'var(--accent)',1.6)}
-     <text x="140" y="20" font-size="8" fill="var(--c-face)" font-weight="700">FACE</text>
+     <text x="140" y="20" font-size="8" fill="#ffb0b6" font-weight="700">FACE</text>
      <text x="52" y="26" text-anchor="middle" font-size="8" fill="var(--c-path)" font-weight="700">PATH</text>`),
 };
 
@@ -2442,7 +2466,7 @@ function recomputeAngles(){ Object.keys(ARROWS).forEach(computeTarget); Object.k
 // keep each lens SVG's aria-label in sync with the live data it depicts
 function updateLensAria(){
   $('svgDir').setAttribute('aria-label',
-    `Top-down direction view. Clubface aim ${fmtDeg(state.faceAngle)} and swing path ${fmtDeg(state.clubPath)} relative to the target line (negative is left, positive is right). A yellow launch arrow shows the start line, bending toward the spin side. A cyan marker shows the predicted landing position.`);
+    `Top-down direction view. Clubface aim ${fmtDeg(state.faceAngle)} and swing path ${fmtDeg(state.clubPath)} relative to the target line (negative is left, positive is right). A yellow launch arrow shows the start line, bending toward the spin side. An orange marker shows the predicted landing position.`);
   $('svgHt').setAttribute('aria-label',
     `Side-on height view. Angle of attack ${fmtDeg(state.attackAngle)} and dynamic loft ${fmtLoftStr(state.dynamicLoft)} at impact (negative attack is descending). A yellow arrow shows the launch angle.`);
 }
@@ -3349,22 +3373,38 @@ let lastFocus=null, fTL=null;
 // centred at VB.w/2 so the trajectory geometry is never distorted — the scene
 // just gets WIDER, never stretched.
 const VB = { w:960, h:540 };
-// ── HORIZON aligned to the PHOTO's receding tree-line ──
-// range-day.png (1376×768) maps into the #fBgImg box (y=-40, height=620,
-// "slice"): native_y → svg_y ≈ -40 + native_y·0.808. The grass→tree transition
-// sits at native_y ≈ 375–395, i.e. svg_y ≈ 263–279. yH=265 lands the 50–300 m
-// grid lines + horizon on the photo's ground, not up in the sky (was 196).
-const yH = 265;            // horizon screen-Y (on the photo tree-line)
-// ── TEE baseline raised ABOVE the bottom chip band ──
-// The chip frame (.fBottom) tops out at ≈ svg-y 380 (≈70% of the 540-tall
-// viewBox). yBottom=356 keeps the tee + the lowest tracer/roll points clear of
-// the chips with ~20px margin, so the trajectory never enters the chip rect.
-const yBottom = 356;       // tee / launch baseline screen-Y (above the chip band)
+// ── HORIZON calibrated to the -33 PHOTO's actual grass band (BUG FIX) ──
+// range-night-3d-33.png (native 1376×768 — the "1408×768"/"·0.808" figures
+// in the previous version of this comment were stale/wrong) maps into the
+// #fBgImg box (x=-40, y=-40, width=vbw+80, height=620, "slice") via the SAME
+// crop the range-round3-compare.html verification page uses at this aspect
+// ratio (≈932×430 → vbw≈1170 → width≈1250): vbY = row·(1250/1376) − 78.84.
+// A PREVIOUS attempt here deliberately pulled yH/yBottom UP off the photo's
+// real grass (yH 265 / yBottom 356) to dodge the bottom .fBottom chip band —
+// that desync is exactly what the owner caught on the flight overlay: the
+// trajectory teed off in mid-air, the landing ellipse floated above the
+// grass, and the distance grid sat up near the treeline. Recalibrated to the
+// pixel-sampled ground truth for -33 (re-verified independently via
+// sharp/canvas luminance sampling, and against THIS file's own PE_A/GROUND_K
+// pair — see window.__rangeCheck below): yH=375 (grass/tree convergence),
+// grassTop=382 (5% safety margin, same formula as the compare page),
+// yBottom=518 (foreground grass tee — the E2 family value, restored). yH/
+// yBottom are pure screen-space endpoints of the photo's ground band — they
+// hold regardless of this file's own (non-E2) PE_A/GROUND_K pair below,
+// which only shapes the recession CURVE between them; re-verified by
+// __rangeCheck() at 5 distances with THIS file's actual PE_A/GROUND_K.
+const yH = 375;            // horizon screen-Y — pixel-sampled grass/tree line for -33
+const grassTop = 382;      // pixel-sampled grass-band top for -33 (yH + (yBottom-yH)*0.05)
+const yBottom = 518;       // tee / launch baseline screen-Y — foreground grass (E2, restored)
 const PE_A = 2.2;          // perspective recession density (denser near horizon)
 const GROUND_K = 0.86;     // fraction of (yBottom..yH) reached at f=1 (lands BELOW horizon)
 let TEE_X = 480;           // re-centred on resize to VB.w/2
 const LAT_PX = 300;        // lateral half-width near the tee (grid + rails)
-const TOP_MARGIN = 92;     // px reserved at top for the apex orb + label
+const TOP_MARGIN = 92;     // px reserved at top for the apex orb + label. Re-verified
+                           // after the yH/yBottom recalibration above: the taller
+                           // (yBottom−yH) ground band only INCREASES groundY(fa)
+                           // headroom above TOP_MARGIN, so this still clears —
+                           // see window.__rangeCheck().
 const APEX_AT = 0.50;      // apex as a fraction of carry
 // WIDER BOW: screen-space lateral budget for the side-curve. Raised from the
 // mock's 150 to 290 so climb & descent visibly separate into a pretty arc while
@@ -3375,6 +3415,53 @@ const pe = f => f * (1 + PE_A) / (1 + PE_A * f);
 const groundY = f => yBottom - (yBottom - yH) * GROUND_K * pe(f);
 const lateralScale = f => 1 - GROUND_K * pe(f) * 0.92;
 const heightScale  = f => 1 - 0.22 * pe(f);
+
+// ════════════════════════════════════════════════════════════════
+//  GROUND-PLANE VERIFICATION SYSTEM — window.__rangeCheck() (dev hook, no UI)
+//  Ported verbatim (structure) from range-round3-compare.html's
+//  window.__rangeCheck(): projects the visible grid lines + the landing
+//  point + the tee at 5 test distances spanning the auto-fit maxD range
+//  (90–250m) and asserts every one falls inside the -33 photo's own
+//  pixel-sampled grass band [grassTop, yBottom]. This is the permanent
+//  guard against this exact bug (ground plane drifting off the backdrop)
+//  recurring on a future repaint. Pure geometry — no swing-physics engine
+//  dependency, so it runs standalone in the console.
+// ════════════════════════════════════════════════════════════════
+const RC_TEST_TOTALS = [100, 130, 162, 200, 240];   // total distance (m) — spans maxD 90–250m auto-fit
+const RC_GRID_METERS = [50, 100, 150, 200, 250, 300]; // mirrors buildGrid()'s band list
+const RC_OFFLINE_M = 4;                              // mirrors carry→total roll-back used elsewhere
+function __rangeCheckRun(){
+  const rows = RC_TEST_TOTALS.map(totalM => {
+    const carryM = Math.max(1, totalM - RC_OFFLINE_M);
+    const maxD = 1.06 * totalM;
+    const teeY = yBottom;
+    const teeAtBottom = Math.abs(teeY - yBottom) < 0.5;
+    const landF = Math.max(0, Math.min(1, carryM / maxD));
+    const landY = groundY(landF);
+    const landingOnGrass = landY >= grassTop && landY <= yBottom;
+    const visibleBands = RC_GRID_METERS.filter(m => m < maxD);
+    const bandChecks = visibleBands.map(m => {
+      const f = m / maxD, y = groundY(f);
+      return { m, y:+y.toFixed(1), onGrass: y >= grassTop && y <= yBottom };
+    });
+    const gridOnGrass = bandChecks.length > 0 && bandChecks.every(b => b.onGrass);
+    return {
+      totalM, maxD:+maxD.toFixed(1), visibleBands: visibleBands.join('/') || '(none)',
+      bandChecks, gridOnGrass, landingOnGrass, teeAtBottom,
+      landY:+landY.toFixed(1), landYPct:+(100*landY/VB.h).toFixed(1),
+      allPass: gridOnGrass && landingOnGrass && teeAtBottom
+    };
+  });
+  console.table(rows.map(r => ({
+    totalM:r.totalM, maxD:r.maxD, bands:r.visibleBands,
+    gridOnGrass:r.gridOnGrass, landingOnGrass:r.landingOnGrass, teeAtBottom:r.teeAtBottom,
+    landY:r.landY, landYPct:r.landYPct+'%', allPass:r.allPass
+  })));
+  const passCount = rows.filter(r => r.allPass).length;
+  console.log(`[RangeCheck] range-night-3d-33 (impact-outcome-mock): ${passCount}/${rows.length} distances PASS (grid+landing+tee on grass)` + (passCount===rows.length ? '' : ' — FAIL present, see table'));
+  return { yH, grassTop, yBottom, testTotals: RC_TEST_TOTALS, rows, passCount, totalCount: rows.length, allPass: passCount === rows.length };
+}
+window.__rangeCheck = __rangeCheckRun;
 
 let fModel=null, trajLen=0, rollLen=0, apexScreen=null, landScreen=null, restScreen=null;
 
@@ -3503,7 +3590,7 @@ function buildAirPath(shot){
 
 const fTracer=$('fTracer'), fTracerCore=$('fTracerCore'), fTrail=$('fTrail'), fRoll=$('fRoll');
 const fApexMark=$('fApexMark'), fApexTxt=$('fApexTxt');
-const fLandMark=$('fLandMark'), fLandTxt=$('fLandTxt'), fSplash=$('fSplash');
+const fLandMark=$('fLandMark'), fLandTxt=$('fLandTxt'), fSplash=$('fSplash'), fLandBox=$('fLandBox');
 const fOffline=$('fOffline'), fOfflineTxt=$('fOfflineTxt');
 const fLandAngMark=$('fLandAngMark'), fLandAngTxt=$('fLandAngTxt');
 const fGrid=$('fGrid'), fLatRef=$('fLatRef'), fCentre=$('fCentre'), fRailL=$('fRailL'), fRailR=$('fRailR');
@@ -3663,7 +3750,7 @@ function outcomeContent(){
     .sort((a,b) => Math.abs(lv.params[b]-g.params[b])/PARAM_RANGE[b]
                  - Math.abs(lv.params[a]-g.params[a])/PARAM_RANGE[a]);
   const top = changed.slice(0, 2);          // cap: 2 most significant params
-  const NEU_DOT = 'rgba(232,240,251,.75)';  // derived/outcome chips: NEUTRAL dot (never cyan — comparison data, not live-ball)
+  const NEU_DOT = 'rgba(245,242,255,.75)';  // derived/outcome chips: NEUTRAL dot (never cyan — comparison data, not live-ball)
   const chip = (dot, txt, outcome) =>
     `<span class="cchip${outcome?' outcome':''}"><span class="cdot" style="background:${dot}"></span>${txt}</span>`;
   const chips = [], parts = [];
@@ -3827,6 +3914,17 @@ outcomeStripEl.addEventListener('click', ()=>{
 // ════════════════════════════════════════════════════════════════
 let badgeBoxes = [];
 const BADGE_PAD = 4;   // breathing room so near-touching plates also dodge
+// GROUND-PLANE FIX FOLLOW-UP: recalibrating yBottom to the true photo grass
+// (see the projection constants above) put landScreen much closer to the
+// bottom .fBottom data frame than the old (buggy, artificially-raised)
+// calibration ever did — close enough that the live landing plate cluster
+// (carry / offline / land-angle, fixed offsets below the dot) could collide
+// with that frame at long carries. plateDY is the whole-cluster upward shift
+// (never sideways, and the dot/splash never move — they must stay exactly on
+// the true landing point) computed once per fBuild(), applied to the plates,
+// and reused here so the ghost/connector dodge set matches the ACTUAL
+// rendered plate positions instead of their un-shifted fixed offsets.
+let plateDY = 0;
 function badgeOverlap(a, b){
   return a.x - BADGE_PAD < b.x + b.w + BADGE_PAD && a.x + a.w + BADGE_PAD > b.x - BADGE_PAD
       && a.y - BADGE_PAD < b.y + b.h + BADGE_PAD && a.y + a.h + BADGE_PAD > b.y - BADGE_PAD;
@@ -3834,9 +3932,9 @@ function badgeOverlap(a, b){
 function resetBadgeBoxes(){
   badgeBoxes = [];
   if (landScreen){
-    badgeBoxes.push({ x:landScreen.x+6, y:landScreen.y-22, w:62, h:17 });  // carry plate (fLandBox)
-    badgeBoxes.push({ x:landScreen.x+6, y:landScreen.y-3,  w:56, h:16 });  // offline badge (fOfflineBox)
-    badgeBoxes.push({ x:landScreen.x+6, y:landScreen.y+16, w:52, h:17 });  // land-angle plate (fLandAngBox)
+    badgeBoxes.push({ x:landScreen.x+6, y:landScreen.y-22+plateDY, w:62, h:17 });  // carry plate (fLandBox)
+    badgeBoxes.push({ x:landScreen.x+6, y:landScreen.y-3+plateDY,  w:56, h:16 });  // offline badge (fOfflineBox)
+    badgeBoxes.push({ x:landScreen.x+6, y:landScreen.y+16+plateDY, w:52, h:17 });  // land-angle plate (fLandAngBox)
   }
   // the bottom data frame (.fBottom) is a virtual obstacle: a badge dodged
   // DOWN must never end up hidden behind the chip grid. Convert its live
@@ -3879,7 +3977,7 @@ function buildGhostLayer(){
     const rect = document.createElementNS(ns,'rect');
     rect.setAttribute('x', bx.toFixed(1)); rect.setAttribute('y', by.toFixed(1));
     rect.setAttribute('width', w.toFixed(0)); rect.setAttribute('height','14'); rect.setAttribute('rx','4');
-    rect.setAttribute('fill','rgba(8,16,20,.78)'); rect.setAttribute('stroke', fill==='#E8F0FB' ? 'rgba(232,240,251,.35)' : 'rgba(159,178,200,.30)');
+    rect.setAttribute('fill','rgba(8,16,20,.78)'); rect.setAttribute('stroke', fill==='#F5F2FF' ? 'rgba(245,242,255,.35)' : 'rgba(159,178,200,.30)');
     grp.appendChild(rect);
     const t = document.createElementNS(ns,'text');
     t.setAttribute('x',(bx+w/2).toFixed(1)); t.setAttribute('y',(by+10.5).toFixed(1));
@@ -3899,16 +3997,16 @@ function buildGhostLayer(){
     grp.setAttribute('opacity','.55'); grp.dataset.op = .55;
     const p = document.createElementNS(ns,'path');
     p.setAttribute('d', buildAirPath(bs));
-    p.setAttribute('fill','none'); p.setAttribute('stroke','#E8F0FB');
+    p.setAttribute('fill','none'); p.setAttribute('stroke','#F5F2FF');
     p.setAttribute('stroke-width','2.2'); p.setAttribute('stroke-linecap','round');
     p.setAttribute('stroke-dasharray','10 6');
     grp.appendChild(p);
     const land = project(bs.carryM, 0, lateralAt(bs.carryM, bs));
     const dot = document.createElementNS(ns,'circle');
     dot.setAttribute('cx', land.x.toFixed(1)); dot.setAttribute('cy', land.y.toFixed(1));
-    dot.setAttribute('r','2.6'); dot.setAttribute('fill','#E8F0FB');
+    dot.setAttribute('r','2.6'); dot.setAttribute('fill','#F5F2FF');
     grp.appendChild(dot);
-    addBadge(grp, land, '⊙ ' + Math.round(bs.carryM) + ' m', '#E8F0FB');
+    addBadge(grp, land, '⊙ ' + Math.round(bs.carryM) + ' m', '#F5F2FF');
     host.appendChild(grp);
   }
 
@@ -3962,14 +4060,14 @@ function buildTuneRefLayer(){
   grp.setAttribute('opacity','.62');
   const p = document.createElementNS(ns,'path');
   p.setAttribute('d', buildAirPath(ts));
-  p.setAttribute('fill','none'); p.setAttribute('stroke','#E8F0FB');
+  p.setAttribute('fill','none'); p.setAttribute('stroke','#F5F2FF');
   p.setAttribute('stroke-width','2'); p.setAttribute('stroke-linecap','round');
   p.setAttribute('stroke-dasharray','2.5 5.5');
   grp.appendChild(p);
   const land = project(ts.carryM, 0, lateralAt(ts.carryM, ts));
   const dot = document.createElementNS(ns,'circle');
   dot.setAttribute('cx', land.x.toFixed(1)); dot.setAttribute('cy', land.y.toFixed(1));
-  dot.setAttribute('r','2.4'); dot.setAttribute('fill','#E8F0FB');
+  dot.setAttribute('r','2.4'); dot.setAttribute('fill','#F5F2FF');
   grp.appendChild(dot);
   host.appendChild(grp);
 }
@@ -4004,9 +4102,9 @@ function buildConnector(){
   // strip (✓ closer / → further, sign+icon never colour alone)
   const dLat = Math.round((Math.abs(lv.flight.offline) - Math.abs(g.flight.offline)) * YD2M);
   let lbl, fill;
-  if (dLat <= -1){ lbl = '✓ ' + Math.abs(dLat) + ' m'; fill = '#4ADE80'; }
-  else if (dLat >= 1){ lbl = '→ ' + dLat + ' m'; fill = '#FBBF24'; }
-  else { lbl = '±0 m'; fill = '#E8F0FB'; }
+  if (dLat <= -1){ lbl = '✓ ' + Math.abs(dLat) + ' m'; fill = '#58E6A8'; }
+  else if (dLat >= 1){ lbl = '→ ' + dLat + ' m'; fill = '#FFD056'; }
+  else { lbl = '±0 m'; fill = '#F5F2FF'; }
   const mid = { x:(refLand.x + landScreen.x)/2, y:(refLand.y + landScreen.y)/2 };
   const w = lbl.length*5.6 + 12;
   const bx = mid.x - w/2;
@@ -4260,6 +4358,26 @@ function fBuild(){
   fApexTxt.textContent=`Apex ${Math.round(fModel.apexM)} m`;
   fLandMark.setAttribute('transform',`translate(${landScreen.x.toFixed(1)},${landScreen.y.toFixed(1)})`);
   fLandTxt.textContent=`${Math.round(fModel.carryM)} m`;
+  // whole-cluster upward dodge against the bottom .fBottom data frame (see the
+  // plateDY comment above resetBadgeBoxes) — the dot/splash stay exactly on
+  // landScreen; only the 3 text plates shift.
+  plateDY = 0;
+  {
+    const card = $('flightCard');
+    const ch = card ? card.clientHeight : 0;
+    if (fBottomEl && ch > 0){
+      const fb = fBottomEl.getBoundingClientRect();
+      if (fb.height > 0){
+        const fBottomTopVB = (fb.top / ch) * 540;
+        const clusterBottom = landScreen.y + 33;   // fLandAngBox's own bottom edge (y=16, h=17)
+        if (clusterBottom > fBottomTopVB - BADGE_PAD) plateDY = (fBottomTopVB - BADGE_PAD) - clusterBottom;
+      }
+    }
+  }
+  fLandBox.setAttribute('y', (-22 + plateDY).toFixed(1));
+  fLandTxt.setAttribute('y', (-10 + plateDY).toFixed(1));
+  fOffline.setAttribute('transform', `translate(0,${plateDY.toFixed(1)})`);
+  fLandAngMark.setAttribute('transform', `translate(0,${plateDY.toFixed(1)})`);
   // CHANGE 2 — offline side badge ("NN m R" / "NN m L"; right = positive)
   const offAbs = Math.round(Math.abs(fModel.offlineM));
   if (offAbs >= 1){
@@ -4621,12 +4739,12 @@ function ensureFX(){
   fSceneEl.querySelector('defs').insertAdjacentHTML('beforeend',
     '<radialGradient id="fflashGrad" cx="50%" cy="50%" r="50%">'
     + '<stop offset="0" stop-color="#ffffff" stop-opacity=".95"/>'
-    + '<stop offset=".35" stop-color="#7FF0E6" stop-opacity=".55"/>'
-    + '<stop offset="1" stop-color="#22E3D6" stop-opacity="0"/>'
+    + '<stop offset=".35" stop-color="#FFC08A" stop-opacity=".55"/>'
+    + '<stop offset="1" stop-color="#FF8A4D" stop-opacity="0"/>'
     + '</radialGradient>'
     + '<radialGradient id="fheadGrad" cx="50%" cy="50%" r="50%">'
-    + '<stop offset="0" stop-color="#eafffb" stop-opacity=".9"/>'
-    + '<stop offset="1" stop-color="#22E3D6" stop-opacity="0"/>'
+    + '<stop offset="0" stop-color="#FFF3E8" stop-opacity=".9"/>'
+    + '<stop offset="1" stop-color="#FF8A4D" stop-opacity="0"/>'
     + '</radialGradient>');
   // ghost-flight group BELOW the tracer layers
   fTrail.insertAdjacentHTML('beforebegin', '<g id="fGhosts"></g>');
@@ -4636,8 +4754,8 @@ function ensureFX(){
   fTrail.insertAdjacentHTML('beforebegin', '<g id="fTuneRefG"></g>');
   // ── COMET — 3 dash-segment strokes riding the tracer path + hot head ──
   fTracerCore.insertAdjacentHTML('afterend',
-    '<path id="fCometGlow" fill="none" stroke="#22E3D6" stroke-width="10" stroke-linecap="round" opacity="0"/>'
-    + '<path id="fCometMid" fill="none" stroke="#7FF0E6" stroke-width="5" stroke-linecap="round" opacity="0"/>'
+    '<path id="fCometGlow" fill="none" stroke="#FF8A4D" stroke-width="10" stroke-linecap="round" opacity="0"/>'
+    + '<path id="fCometMid" fill="none" stroke="#FFC08A" stroke-width="5" stroke-linecap="round" opacity="0"/>'
     + '<path id="fCometHot" fill="none" stroke="#FFFFFF" stroke-width="2.6" stroke-linecap="round" opacity="0"/>'
     + '<g id="fCometHead" opacity="0"><circle r="9" fill="url(#fheadGrad)"/><circle r="2.4" fill="#fff"/></g>');
   // ── AMBIENT — 6 slow-drifting 1px dust motes in the lower scene ──
@@ -4645,7 +4763,7 @@ function ensureFX(){
   for (let i = 0; i < 6; i++){
     const mx = (0.10 + i * 0.16) * VB.w;
     const my = 300 + ((i * 37) % 110);
-    motes += `<circle cx="${mx.toFixed(0)}" cy="${my}" r=".5" fill="#bfeae4" opacity="${(0.12 + (i % 3) * 0.04).toFixed(2)}"/>`;
+    motes += `<circle cx="${mx.toFixed(0)}" cy="${my}" r=".5" fill="#C7BBFF" opacity="${(0.12 + (i % 3) * 0.04).toFixed(2)}"/>`;
   }
   motes += '</g>';
   $('fTee').insertAdjacentHTML('beforebegin', motes);
@@ -4654,11 +4772,11 @@ function ensureFX(){
   const grassCols = ['#2e4a33','#35543a','#24402b','#3d5c40'];
   let fx = '<g id="fFlash" opacity="0">'
     + '<circle id="fFlashDisc" r="26" fill="url(#fflashGrad)"/>'
-    + '<ellipse id="fFlashRing" rx="4" ry="1.6" fill="none" stroke="#7FF0E6" stroke-width="1.6"/>'
+    + '<ellipse id="fFlashRing" rx="4" ry="1.6" fill="none" stroke="#FFC08A" stroke-width="1.6"/>'
     + '<g id="fFlashKick">'
-    + '<line x1="0" y1="-9" x2="0" y2="-22" stroke="#eafffb" stroke-width="1.7" stroke-linecap="round"/>'
-    + '<line x1="-7" y1="-7" x2="-15" y2="-17" stroke="#22E3D6" stroke-width="1.4" stroke-linecap="round"/>'
-    + '<line x1="7" y1="-7" x2="15" y2="-17" stroke="#22E3D6" stroke-width="1.4" stroke-linecap="round"/>'
+    + '<line x1="0" y1="-9" x2="0" y2="-22" stroke="#FFF3E8" stroke-width="1.7" stroke-linecap="round"/>'
+    + '<line x1="-7" y1="-7" x2="-15" y2="-17" stroke="#FF8A4D" stroke-width="1.4" stroke-linecap="round"/>'
+    + '<line x1="7" y1="-7" x2="15" y2="-17" stroke="#FF8A4D" stroke-width="1.4" stroke-linecap="round"/>'
     + '</g></g>';
   fx += '<g id="fFX" opacity="0">';
   for (let i = 0; i < 8; i++){                       // grass flecks: 2–5px lines
@@ -4668,11 +4786,11 @@ function ensureFX(){
         + ` stroke="${grassCols[i % 4]}" stroke-width="1.3" stroke-linecap="round" opacity="0"/>`;
   }
   for (let i = 0; i < 6; i++){                       // dust dots: 1.5–2.5px
-    fx += `<circle class="fxDust" r="${(0.75 + (i % 3) * 0.25).toFixed(2)}" fill="#bfeae4" opacity="0"/>`;
+    fx += `<circle class="fxDust" r="${(0.75 + (i % 3) * 0.25).toFixed(2)}" fill="#C7BBFF" opacity="0"/>`;
   }
-  fx += '<ellipse id="fDustPuff" rx="4" ry="1.6" fill="#bfeae4" opacity="0"/></g>';
+  fx += '<ellipse id="fDustPuff" rx="4" ry="1.6" fill="#C7BBFF" opacity="0"/></g>';
   fx += '<g id="fSparks" opacity="0">';
-  const sparkCols = ['#eafffb','#22E3D6','#eafffb','#22E3D6','#eafffb'];
+  const sparkCols = ['#FFF3E8','#FF8A4D','#FFF3E8','#FF8A4D','#FFF3E8'];
   for (let i = 0; i < 5; i++){                       // fan −150°..−30° around the crest
     const a = (-150 + i * 30) * Math.PI / 180;
     fx += `<line class="fxSpark" x1="${(Math.cos(a)*6).toFixed(2)}" y1="${(Math.sin(a)*6).toFixed(2)}"`

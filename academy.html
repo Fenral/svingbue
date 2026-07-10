@@ -3,27 +3,44 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#07060C" />
+<meta name="robots" content="noindex" />
 <title>StrikeArc Academy</title>
 <link rel="icon" href="data:," />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Azeret+Mono:wght@400;500;600;700&family=Archivo:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<!-- P3 "Ultraviolet Ember" shared cohesion source: tokens + .sa-strip shell contract (relative import) -->
+<link rel="stylesheet" href="./sa-p3.css" />
 <style>
   :root{
-    /* surfaces */
-    --bg:#0A0E12; --bg-2:#0b1220; --bg-3:#0e1722; --bg-4:#10202c;
-    /* signal */
-    --cyan:#22E3D6; --cyan-deep:#06181b; --amber:#FFB534; --magenta:#FF4D8D;
-    --gain:#4ADE80;
-    /* rules / glow */
-    --rule:rgba(232,240,251,.10); --rule-2:rgba(232,240,251,.06);
-    --rule-hot:rgba(34,227,214,.42); --glow-cyan:rgba(34,227,214,.20);
-    /* ink */
-    --ink:#e8f0fb; --ink-dim:#9aabc6; --ink-faint:#7e90ac;
-    --cyan-soft:rgba(34,227,214,.10); --amber-soft:rgba(255,181,52,.12); --mag-soft:rgba(255,77,141,.12);
-    --gain-soft:rgba(74,222,128,.12);
-    /* dark text plate */
-    --plate:rgba(8,16,20,.78); --plate-hi:rgba(8,16,20,.86);
+    /* ══ P3 "Ultraviolet Ember" repaint ══
+       Local token NAMES are kept so the whole stylesheet + diagram JS repaint through
+       them; ROLES are reassigned to the P3 system (imported via sa-p3.css above).
+       COLOUR LAWS in Academy:
+         • --cyan  → VIOLET SECONDARY  (#9D8BFF): all chrome / controls / nav / node base.
+         • ember (--accent, from sa-p3) : diagram LIVE-OUTPUT lane ONLY (trajectory, ball,
+           rpm, meter, start-dir / launch outputs) + the wordmark "ARC" ball (logo exception).
+         • --celebrate (#FF5CE1) : XP-bar fill + earned badges + completion firework ONLY.
+         • --amber → WARN GOLD (#FFD056): XP numerals, EST pills, current-node, environmental
+           (wind) + caution/loss status.
+         • --magenta → BAD (#FF7B8A): quiz-wrong + myth ✗.  --gain → GOOD green (#58E6A8).
+         • diagram param vectors carry their P3 semantic tokens: face #FF5C6B · path #6FC6FF
+           · attack (mint) #4DE8D2 · loft #B9A0FF. */
+    /* surfaces — violet-black ramp (bg → surface-high), stepped for violet-on-violet depth */
+    --bg:#07060C; --bg-2:#0E0A18; --bg-3:#160F28; --bg-4:#20183A;
+    /* signal — remapped roles (see laws above) */
+    --cyan:#9D8BFF; --cyan-deep:#0A0716; --amber:#FFD056; --magenta:#FF7B8A;
+    --gain:#58E6A8;
+    /* rules / glow — violet-shifted */
+    --rule:rgba(245,242,255,.10); --rule-2:rgba(245,242,255,.055);
+    --rule-hot:rgba(157,139,255,.45); --glow-cyan:rgba(157,139,255,.22);
+    /* ink — P3 ink / muted / faint (faint lifted to clear 4.5:1 on the violet surfaces) */
+    --ink:#F5F2FF; --ink-dim:#A79FC7; --ink-faint:#8E85A8;
+    --cyan-soft:rgba(157,139,255,.14); --amber-soft:rgba(255,208,86,.13); --mag-soft:rgba(255,123,138,.13);
+    --gain-soft:rgba(88,230,168,.13);
+    /* dark text plate — violet-black (P3 --plate composite) */
+    --plate:rgba(8,5,14,.80); --plate-hi:rgba(8,5,14,.88);
     /* fonts */
     --f-display:"Chakra Petch",system-ui,sans-serif;
     --f-mono:"Azeret Mono",ui-monospace,monospace;
@@ -36,8 +53,8 @@
   html,body{margin:0;padding:0}
   body{
     background:
-      radial-gradient(1200px 600px at 82% -12%, rgba(34,227,214,.07), transparent 60%),
-      radial-gradient(900px 500px at -6% 112%, rgba(255,77,141,.045), transparent 55%),
+      radial-gradient(1200px 600px at 82% -12%, rgba(157,139,255,.11), transparent 60%),
+      radial-gradient(900px 500px at -6% 112%, rgba(20,14,36,.55), transparent 55%),
       var(--bg);
     color:var(--ink); font-family:var(--f-body); font-size:15px; line-height:1.55;
     -webkit-font-smoothing:antialiased; letter-spacing:.005em; min-height:100vh;
@@ -79,7 +96,11 @@
   /* ── app shell ──
      Portrait-first single column. Cap at a comfortable reading width so LANDSCAPE
      centres the same column (usable, not stretched) while PORTRAIT fills the phone. */
-  #app{position:relative;z-index:1;max-width:640px;margin:0 auto}
+  #app{position:relative;z-index:1;max-width:640px;margin:0 auto;view-transition-name:sa-stage}   /* primary stage: card→screen morph target (spec §5) */
+  /* Cross-document View Transitions (MPA): home-mock.html ↔ academy. sa-logo pair = home
+     wordmark-mark ↔ this page's .sa-strip__home; sa-stage = tapped card ↔ #app.
+     No-support (older WebKit) → instant nav; reduced-motion disabled in sa-p3.css. */
+  @view-transition{navigation:auto}
   .view{animation:viewIn .22s var(--ease)}
   @keyframes viewIn{from{opacity:0;transform:translateX(2%)}to{opacity:1;transform:none}}
 
@@ -87,22 +108,22 @@
   .hdr{display:flex;align-items:center;flex-wrap:wrap;gap:14px 18px;padding:14px 20px;border-bottom:1px solid var(--rule);
     background:linear-gradient(180deg,rgba(11,18,32,.72),rgba(10,14,18,.35));position:sticky;top:0;z-index:20;backdrop-filter:blur(6px)}
   .wordmark{font-family:var(--f-display);font-weight:700;font-size:17px;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}
-  .wordmark b{color:var(--cyan);font-weight:700}
+  .wordmark b{color:var(--accent);font-weight:700}   /* "ARC" = ember (logo exception: the ball in the mark IS the ball) */
   .medallion{display:flex;align-items:center;gap:12px;min-width:0}
   .hex{width:52px;height:58px;flex:none;display:grid;place-items:center;position:relative;
     background:linear-gradient(180deg,var(--bg-3),var(--bg-2));border:1px solid var(--rule-hot);
     clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%)}
-  .hex .lv{font-family:var(--f-mono);font-weight:700;font-size:19px;color:var(--cyan);line-height:1}
+  .hex .lv{font-family:var(--f-mono);font-weight:700;font-size:19px;color:var(--ink);line-height:1}   /* level numeral = ink (spec §2.5) */
   .hex .lk{font-family:var(--f-display);font-size:7.5px;letter-spacing:.18em;color:var(--ink-faint);text-transform:uppercase}
   .lvmeta{min-width:120px}
   .lvmeta .t{font-family:var(--f-display);font-weight:600;font-size:13px;letter-spacing:.03em;text-transform:uppercase;color:var(--ink)}
   .lvmeta .x{font-family:var(--f-mono);font-size:11px;color:var(--ink-dim);margin-top:2px}
   .xpbar{height:5px;border-radius:3px;background:var(--rule);margin-top:6px;overflow:hidden;width:140px;max-width:34vw}
-  .xpbar .fill{height:100%;background:linear-gradient(90deg,var(--cyan),rgba(34,227,214,.55));border-radius:3px;transition:width .5s var(--ease)}
+  .xpbar .fill{height:100%;background:linear-gradient(90deg,var(--celebrate),var(--secondary));border-radius:3px;transition:width .5s var(--ease)}   /* celebrate treatment: magenta → violet */
   .badgerail{display:flex;gap:8px;margin-left:auto;flex-wrap:wrap;justify-content:flex-end}
   .badge{width:38px;height:38px;border-radius:9px;display:grid;place-items:center;font-size:16px;position:relative;cursor:pointer;
     border:1px solid var(--rule);background:var(--bg-3);color:var(--ink-faint);transition:transform .2s var(--ease),border-color .2s var(--ease)}
-  .badge.earned{border-color:var(--rule-hot);background:linear-gradient(180deg,var(--cyan-soft),var(--bg-3));color:var(--cyan);box-shadow:0 0 14px var(--glow-cyan)}
+  .badge.earned{border-color:rgba(255,92,225,.5);background:linear-gradient(180deg,rgba(255,92,225,.16),var(--bg-3));color:var(--celebrate);box-shadow:0 0 14px rgba(255,92,225,.28)}   /* earned = celebrate magenta (reward) */
   .badge.earned.pop{animation:badgePop .5s var(--ease)}
   @keyframes badgePop{0%{transform:scale(.4);opacity:0}60%{transform:scale(1.18)}100%{transform:scale(1);opacity:1}}
   .badge:hover,.badge:focus-visible{transform:translateY(-2px)}
@@ -139,7 +160,7 @@
   .node--available .nglyph{color:var(--cyan)}
   .node--available:hover,.node--available:focus-visible{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.35)}
   .node--available .ring{width:11px;height:11px;border-radius:50%;border:2px solid var(--cyan);animation:ringpulse 2s var(--ease) infinite}
-  @keyframes ringpulse{0%,100%{box-shadow:0 0 0 0 var(--glow-cyan)}50%{box-shadow:0 0 0 5px rgba(34,227,214,0)}}
+  @keyframes ringpulse{0%,100%{box-shadow:0 0 0 0 var(--glow-cyan)}50%{box-shadow:0 0 0 5px rgba(157,139,255,0)}}
   .node--completed{background:linear-gradient(180deg,var(--cyan-soft),var(--bg-2));border-color:var(--rule-hot);color:var(--ink);cursor:pointer}
   .node--completed .nlabel{color:var(--ink)}
   .node--completed .nglyph{color:var(--cyan)}
@@ -148,7 +169,7 @@
   .node--current::before{content:"";position:absolute;top:-1px;right:-1px;width:0;height:0;
     border-top:14px solid var(--amber);border-left:14px solid transparent;border-top-right-radius:7px}
   .node.justdone{animation:justdone 1.1s var(--ease)}
-  @keyframes justdone{0%{box-shadow:0 0 0 0 var(--glow-cyan)}30%{box-shadow:0 0 0 6px var(--glow-cyan)}100%{box-shadow:0 0 0 0 rgba(34,227,214,0)}}
+  @keyframes justdone{0%{box-shadow:0 0 0 0 var(--glow-cyan)}30%{box-shadow:0 0 0 6px var(--glow-cyan)}100%{box-shadow:0 0 0 0 rgba(157,139,255,0)}}
 
   .tooltip{position:fixed;z-index:45;max-width:230px;background:var(--plate-hi);border:1px solid var(--rule);border-radius:8px;
     padding:9px 11px;font-size:12px;color:var(--ink-dim);line-height:1.45;pointer-events:none;opacity:0;transition:opacity .12s var(--ease-snap)}
@@ -229,7 +250,7 @@
   .mcard .myth{color:var(--ink-faint);font-size:13.5px;line-height:1.5;position:relative;padding-left:20px}
   .mcard .myth::before{content:"\2717";position:absolute;left:0;top:0;color:var(--magenta);font-weight:700}
   .mcard .truth{color:var(--ink);font-size:13.5px;line-height:1.55;margin-top:10px;padding-top:10px;border-top:1px solid var(--rule-2);position:relative;padding-left:20px}
-  .mcard .truth::before{content:"\2713";position:absolute;left:0;top:10px;color:var(--cyan);font-weight:700}
+  .mcard .truth::before{content:"\2713";position:absolute;left:0;top:10px;color:var(--good);font-weight:700}   /* truth ✓ = good green (myth ✗ = bad red) */
 
   /* real-world section — tour benchmarks + scenarios + what-it-means-for-you */
   .rw-k{font-family:var(--f-display);font-weight:600;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--cyan);margin:20px 0 10px}
@@ -295,13 +316,13 @@
   .formula .fx{font-family:var(--f-mono);font-weight:600;font-size:15px;color:var(--cyan);line-height:1.5;word-break:break-word}
   .formula .fx .op{color:var(--ink-faint)}
   .formula .fnote{font-family:var(--f-mono);font-size:10px;color:var(--amber);margin-top:6px}
-  .rpmbig{font-family:var(--f-mono);font-weight:700;font-size:44px;letter-spacing:-.02em;color:var(--cyan);line-height:1;text-shadow:0 0 26px var(--glow-cyan)}
+  .rpmbig{font-family:var(--f-mono);font-weight:700;font-size:44px;letter-spacing:-.02em;color:var(--accent);line-height:1;text-shadow:0 0 26px rgba(255,138,77,.30)}   /* live backspin output = ember */
   .rpmbig .u{font-family:var(--f-display);font-size:13px;letter-spacing:.1em;color:var(--ink-dim);text-shadow:none;margin-left:6px}
   .meterwrap{display:flex;gap:12px;align-items:stretch}
   .meter{width:26px;flex:none;height:150px;border:1px solid var(--rule);border-radius:8px;background:var(--bg);position:relative;overflow:hidden}
   .meter .band{position:absolute;left:0;right:0;background:var(--cyan-soft);border-top:1px dashed var(--rule-hot);border-bottom:1px dashed var(--rule-hot)}
-  .meter .fill{position:absolute;left:0;right:0;bottom:0;background:linear-gradient(180deg,var(--cyan),rgba(34,227,214,.5));transition:height .2s var(--ease)}
-  .meter.flyer .fill{background:linear-gradient(180deg,var(--ink-faint),rgba(93,110,135,.5))}
+  .meter .fill{position:absolute;left:0;right:0;bottom:0;background:linear-gradient(180deg,var(--accent),rgba(255,138,77,.5));transition:height .2s var(--ease)}   /* live spin output = ember */
+  .meter.flyer .fill{background:linear-gradient(180deg,var(--ink-faint),rgba(126,116,154,.5))}
   .meterlabels{flex:1;display:flex;flex-direction:column;justify-content:space-between;font-family:var(--f-mono);font-size:10px;color:var(--ink-faint);padding:2px 0}
   .meterlabels .bandlbl{color:var(--cyan)}
   .minitraj{width:100%;height:96px;background:var(--bg);border:1px solid var(--rule);border-radius:10px}
@@ -322,8 +343,8 @@
      Every diagram archetype (trajectory-carry, dplane-topdown, launch-sideon,
      bar-drivers) shares this frame; spin-machine keeps its own .bs-* layout. */
   .arch{display:flex;flex-direction:column;gap:16px}
-  .arch-svg{width:100%;height:auto;display:block;border:1px solid var(--rule);border-radius:10px;background:linear-gradient(180deg,#0c2029,#0a141a)}
-  .traj-svg{background:linear-gradient(180deg,#0c2029,#0a141a)}
+  .arch-svg{width:100%;height:auto;display:block;border:1px solid var(--rule);border-radius:10px;background:linear-gradient(180deg,#12102A,#0A0816)}
+  .traj-svg{background:linear-gradient(180deg,#12102A,#0A0816)}
   .arch-controls{width:100%}
   .arch-ledger{width:100%}
   .ctl-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:0 18px}
@@ -331,7 +352,7 @@
   /* the big numeric readout lives ABOVE the arc — never overlapping it (owner fix) */
   .bigread{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;background:var(--plate);border:1px solid var(--rule-hot);border-radius:10px;padding:12px 16px}
   .bigread .brk{font-family:var(--f-display);font-weight:600;font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint)}
-  .bigread .brv{font-family:var(--f-mono);font-weight:700;font-size:36px;color:var(--cyan);line-height:1;font-variant-numeric:tabular-nums;text-shadow:0 0 24px var(--glow-cyan)}
+  .bigread .brv{font-family:var(--f-mono);font-weight:700;font-size:36px;color:var(--accent);line-height:1;font-variant-numeric:tabular-nums;text-shadow:0 0 24px rgba(255,138,77,.28)}   /* live readout = ember */
   .bigread .brv .u{font-family:var(--f-display);font-size:13px;color:var(--ink-dim);text-shadow:none;margin-left:5px}
 
   /* ledger + reset (reused by trajectory-carry when config.ledger / config.air) */
@@ -343,9 +364,9 @@
   .lrow .lv{font-family:var(--f-mono);font-size:12px;color:var(--ink);font-variant-numeric:tabular-nums}
   .lbar{height:14px;border-radius:5px;background:var(--rule);overflow:hidden;position:relative}
   .lbar .lf{height:100%;border-radius:5px;transition:width .25s var(--ease)}
-  .lbar .lf.base{background:linear-gradient(90deg,#4a6b78,#2f4a54)}
-  .lbar .lf.pos{background:linear-gradient(90deg,var(--gain),rgba(74,222,128,.5))}
-  .lbar .lf.neg{background:linear-gradient(90deg,var(--amber),rgba(255,181,52,.5))}
+  .lbar .lf.base{background:linear-gradient(90deg,#4A4368,#2F2A48)}
+  .lbar .lf.pos{background:linear-gradient(90deg,var(--gain),rgba(88,230,168,.5))}
+  .lbar .lf.neg{background:linear-gradient(90deg,var(--amber),rgba(255,208,86,.5))}
   .resetbtn{margin-top:10px;min-height:40px;padding:9px 14px;border-radius:8px;border:1px solid var(--rule-hot);background:transparent;color:var(--cyan);
     font-family:var(--f-display);font-weight:600;font-size:11px;letter-spacing:.06em;text-transform:uppercase;cursor:pointer}
   .resetbtn:hover{background:var(--cyan-soft)}
@@ -369,15 +390,15 @@
   .quiz .opt:hover{border-color:var(--rule-hot)}
   .quiz .opt .mark{width:20px;height:20px;border-radius:50%;border:1.5px solid var(--ink-faint);flex:none;display:grid;place-items:center;font-size:12px}
   .quiz .opt[aria-checked="true"]{border-color:var(--rule-hot);background:var(--bg-4)}
-  .quiz .opt.correct{border-color:var(--cyan);background:var(--cyan-soft)}
-  .quiz .opt.correct .mark{border-color:var(--cyan);color:var(--cyan)}
+  .quiz .opt.correct{border-color:var(--good);background:var(--gain-soft)}
+  .quiz .opt.correct .mark{border-color:var(--good);color:var(--good)}
   .quiz .opt.wrong{border-color:var(--magenta);background:var(--mag-soft)}
   .quiz .opt.wrong .mark{border-color:var(--magenta);color:var(--magenta)}
   .quiz .opt[aria-disabled="true"]{cursor:default;pointer-events:none}
   .quiz .expl{margin-top:11px;background:var(--plate);border:1px solid var(--rule);border-radius:8px;padding:11px 13px;font-size:13.5px;color:var(--ink-dim);line-height:1.55;display:none}
   .quiz .expl.show{display:block}
   .quiz .expl .el{font-family:var(--f-display);font-weight:600;font-size:10px;letter-spacing:.14em;text-transform:uppercase;margin-bottom:5px}
-  .quiz .expl.ok .el{color:var(--cyan)}
+  .quiz .expl.ok .el{color:var(--good)}
   .quiz .expl.no .el{color:var(--amber)}
   .quiz .qfoot{display:flex;align-items:center;gap:10px;margin-top:12px}
   .retrybtn{background:transparent;border:1px solid var(--rule);color:var(--ink-dim);border-radius:7px;min-height:38px;padding:8px 13px;
@@ -391,19 +412,19 @@
 
   /* completion */
   .completion{border:1px solid var(--rule-hot);border-radius:14px;background:linear-gradient(180deg,rgba(14,23,34,.9),rgba(10,14,18,.7));padding:26px;margin-top:8px;position:relative;overflow:hidden}
-  .completion::before{content:"";position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--cyan),transparent)}
-  .completion .ck{font-family:var(--f-display);font-weight:600;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--cyan)}
+  .completion::before{content:"";position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--celebrate),transparent)}   /* firework hairline = celebrate */
+  .completion .ck{font-family:var(--f-display);font-weight:600;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--celebrate)}
   .completion h2{font-family:var(--f-display);font-weight:700;font-size:clamp(26px,4vw,44px);text-transform:uppercase;margin:8px 0 4px;letter-spacing:-.01em}
   .completion .cscore{font-family:var(--f-mono);font-size:15px;color:var(--ink-dim);margin-bottom:18px}
-  .completion .cscore b{color:var(--cyan)}
-  .xptally{font-family:var(--f-mono);font-weight:700;font-size:56px;color:var(--cyan);line-height:1;text-shadow:0 0 30px var(--glow-cyan)}
+  .completion .cscore b{color:var(--warn)}   /* earned XP = gold numeral */
+  .xptally{font-family:var(--f-mono);font-weight:700;font-size:56px;color:var(--warn);line-height:1;text-shadow:0 0 30px rgba(255,208,86,.26)}   /* XP TOTAL = gold (Academy XP law) */
   .xptally .u{font-family:var(--f-display);font-size:16px;color:var(--ink-dim);letter-spacing:.1em;margin-left:8px;text-shadow:none}
-  .levelup{display:none;margin:16px 0;padding:12px 16px;border:1px solid var(--amber-soft);background:var(--amber-soft);border-radius:10px;
-    font-family:var(--f-display);font-weight:600;font-size:14px;letter-spacing:.04em;color:var(--amber)}
+  .levelup{display:none;margin:16px 0;padding:12px 16px;border:1px solid rgba(255,92,225,.4);background:rgba(255,92,225,.14);border-radius:10px;
+    font-family:var(--f-display);font-weight:600;font-size:14px;letter-spacing:.04em;color:var(--celebrate)}   /* level-up = celebrate reward moment */
   .levelup.show{display:block;animation:badgePop .5s var(--ease)}
   .cbadges{display:flex;gap:12px;flex-wrap:wrap;margin:16px 0}
-  .cbadge{display:flex;align-items:center;gap:10px;border:1px solid var(--rule-hot);background:var(--cyan-soft);border-radius:10px;padding:10px 14px}
-  .cbadge .g{font-size:20px;color:var(--cyan)}
+  .cbadge{display:flex;align-items:center;gap:10px;border:1px solid rgba(255,92,225,.4);background:rgba(255,92,225,.13);border-radius:10px;padding:10px 14px}
+  .cbadge .g{font-size:20px;color:var(--celebrate)}
   .cbadge .n{font-family:var(--f-display);font-weight:600;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink)}
   .cbadge .d{font-size:11px;color:var(--ink-dim)}
   .cctas{display:flex;gap:12px;flex-wrap:wrap;margin-top:18px}
@@ -1172,6 +1193,12 @@
         <span class="pop-info"><span class="bn">${esc(b.label)}</span><span class="bd">${esc(b.desc)}</span></span></button>`;
     }).join('');
     return `<header class="hdr">
+      <a class="sa-strip__home" href="./home-mock.html" aria-label="Home">
+        <svg viewBox="0 0 52 52" fill="none" aria-hidden="true">
+          <path class="sa-arc" d="M11 45 C 16 26, 24 18, 35 15 M21 39 L 30 24 L 43 45" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle class="sa-ball" cx="37" cy="15" r="5.2"/>
+        </svg>
+      </a>
       <div class="wordmark">STRIKE<b>ARC</b> ACADEMY</div>
       <div class="medallion">
         <div class="hex"><span class="lv mono" id="hdr-lv">${li.lvl}</span><span class="lk">LVL</span></div>
@@ -1316,7 +1343,7 @@
       else { y1 = A.y; y2 = B.y + NODE_H; }             // upward (e.g. Environment → Outcomes)
       const dy = (y2 - y1) * 0.5;
       const hot = ['available','completed'].includes(nodeState(e.from)) || ['available','completed'].includes(nodeState(e.to));
-      edges += `<path d="M${x1},${y1.toFixed(1)} C${x1},${(y1+dy).toFixed(1)} ${x2},${(y2-dy).toFixed(1)} ${x2},${y2.toFixed(1)}" fill="none" stroke="${hot?'rgba(34,227,214,.42)':'rgba(232,240,251,.10)'}" stroke-width="1" vector-effect="non-scaling-stroke"/>`;
+      edges += `<path d="M${x1},${y1.toFixed(1)} C${x1},${(y1+dy).toFixed(1)} ${x2},${(y2-dy).toFixed(1)} ${x2},${y2.toFixed(1)}" fill="none" stroke="${hot?'rgba(157,139,255,.45)':'rgba(245,242,255,.10)'}" stroke-width="1" vector-effect="non-scaling-stroke"/>`;
     }
     // tier heads — full-width bands stacked down the climb
     let heads = '';
@@ -1416,9 +1443,9 @@
       const p = L.pos[id], st = nodeState(id);
       const cx = p.x * sx, cy = (p.y + NODE_H/2) * sy;
       const cur = id === currentId;
-      const fill = cur ? '#22E3D6' : (st==='completed' ? 'rgba(34,227,214,.55)' : st==='available' ? 'rgba(154,171,198,.7)' : 'rgba(93,110,135,.5)');
+      const fill = cur ? '#FFD056' : (st==='completed' ? 'rgba(157,139,255,.6)' : st==='available' ? 'rgba(167,159,199,.7)' : 'rgba(126,116,154,.5)');
       dots += `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${cur?4.5:2.4}" fill="${fill}"/>`;
-      if (cur) dots += `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="7" fill="none" stroke="#22E3D6" stroke-width="1"/>`;
+      if (cur) dots += `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="7" fill="none" stroke="#FFD056" stroke-width="1"/>`;
     }
     return `<svg viewBox="0 0 ${VW} ${VH}" width="100%" height="${VH}" preserveAspectRatio="xMidYMid meet" style="display:block;max-width:150px;margin:0 auto" aria-hidden="true">${dots}</svg>`;
   }
@@ -1491,6 +1518,12 @@
     document.title = d.parameter + ' — StrikeArc Academy';
     app.innerHTML = `<div class="view lesson">
       <div class="topbar">
+        <a class="sa-strip__home" href="./home-mock.html" aria-label="Home">
+          <svg viewBox="0 0 52 52" fill="none" aria-hidden="true">
+            <path class="sa-arc" d="M11 45 C 16 26, 24 18, 35 15 M21 39 L 30 24 L 43 45" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle class="sa-ball" cx="37" cy="15" r="5.2"/>
+          </svg>
+        </a>
         <button class="backbtn" id="backBtn" aria-label="Back to path">← Path</button>
         <div class="tb-lv"><span class="x mono" id="tb-xp">${store.xp} XP</span><span class="t" id="tb-lvtitle">Lv ${li.lvl} ${esc(li.title)}</span></div>
       </div>
@@ -1804,13 +1837,13 @@
         <div role="img" id="tj-fig" aria-label="">
           <svg class="arch-svg traj-svg" viewBox="0 0 340 300" aria-hidden="true">
             <g id="tj-ticks"></g>
-            <line x1="30" y1="250" x2="326" y2="250" stroke="rgba(232,240,251,.18)" stroke-width="1.5"/>
-            <line id="tj-apexln" x1="0" y1="0" x2="0" y2="0" stroke="rgba(34,227,214,.30)" stroke-width="1" stroke-dasharray="3 4"/>
-            <path id="tj-ghost" d="" fill="none" stroke="rgba(154,171,198,.40)" stroke-width="2" stroke-dasharray="5 5"/>
-            <path id="tj-live" d="" fill="none" stroke="#22E3D6" stroke-width="2.6"/>
-            <circle id="tj-ball" r="5.5" fill="#22E3D6" style="filter:drop-shadow(0 0 7px rgba(34,227,214,.8))"/>
-            <text id="tj-apexlbl" x="0" y="0" font-family="Azeret Mono" font-size="10" fill="#22E3D6" text-anchor="middle"></text>
-            <text id="tj-ghostlbl" x="0" y="0" font-family="Azeret Mono" font-size="9.5" fill="#9aabc6" text-anchor="end"></text>
+            <line x1="30" y1="250" x2="326" y2="250" stroke="rgba(245,242,255,.18)" stroke-width="1.5"/>
+            <line id="tj-apexln" x1="0" y1="0" x2="0" y2="0" stroke="rgba(255,138,77,.30)" stroke-width="1" stroke-dasharray="3 4"/>
+            <path id="tj-ghost" d="" fill="none" stroke="rgba(167,159,199,.40)" stroke-width="2" stroke-dasharray="5 5"/>
+            <path id="tj-live" d="" fill="none" stroke="#FF8A4D" stroke-width="2.6"/>
+            <circle id="tj-ball" r="5.5" fill="#FF8A4D" style="filter:drop-shadow(0 0 7px rgba(255,138,77,.8))"/>
+            <text id="tj-apexlbl" x="0" y="0" font-family="Azeret Mono" font-size="10" fill="#FF8A4D" text-anchor="middle"></text>
+            <text id="tj-ghostlbl" x="0" y="0" font-family="Azeret Mono" font-size="9.5" fill="#A79FC7" text-anchor="end"></text>
           </svg>
         </div>
         ${chipsHTML(cfg.chips, 'tj-c')}
@@ -1829,7 +1862,7 @@
     const MAXYD=300, MAXAP=55, GX0=30, GX1=326, GY0=250, GY1=30;
     const SX=yd=>GX0+clamp(yd/MAXYD,0,1)*(GX1-GX0);
     const SY=h =>GY0-clamp(h/MAXAP,0,1)*(GY0-GY1);
-    let ticks=''; for(let yd=0; yd<=MAXYD; yd+=50){ const X=SX(yd); ticks+=`<line x1="${X.toFixed(0)}" y1="246" x2="${X.toFixed(0)}" y2="254" stroke="rgba(232,240,251,.16)" stroke-width="1"/><text x="${X.toFixed(0)}" y="268" font-family="Azeret Mono" font-size="9" fill="#7e90ac" text-anchor="middle">${yd}</text>`; }
+    let ticks=''; for(let yd=0; yd<=MAXYD; yd+=50){ const X=SX(yd); ticks+=`<line x1="${X.toFixed(0)}" y1="246" x2="${X.toFixed(0)}" y2="254" stroke="rgba(245,242,255,.16)" stroke-width="1"/><text x="${X.toFixed(0)}" y="268" font-family="Azeret Mono" font-size="9" fill="#8E85A8" text-anchor="middle">${yd}</text>`; }
     el('#tj-ticks').innerHTML=ticks;
     function arcPath(carry, apex, f){ const s=trajectorySamples(f,64); let d=''; s.forEach((p,i)=>{ d+=(i===0?'M':'L')+SX(p.d*carry).toFixed(1)+','+SY(p.h*apex).toFixed(1); }); return d; }
 
@@ -1898,20 +1931,20 @@
           <div role="img" id="sm-fig" aria-label="">
             <svg class="bs-svg" viewBox="0 0 300 262" aria-hidden="true">
               <style>@keyframes saSpin{to{transform:rotate(-360deg)}}</style>
-              <line x1="26" y1="200" x2="288" y2="200" stroke="rgba(232,240,251,.10)" stroke-width="1" stroke-dasharray="4 5"/>
-              <text x="30" y="216" font-family="Azeret Mono" font-size="9" fill="#7e90ac">TARGET LINE</text>
-              <polygon id="sm-wedge" points="" fill="rgba(34,227,214,.10)" stroke="#22E3D6" stroke-width="1"/>
-              <line id="sm-path" x1="140" y1="200" x2="250" y2="200" stroke="#9aabc6" stroke-width="2.4" marker-end="url(#sm-ah)"/>
-              <line id="sm-face" x1="140" y1="200" x2="235" y2="120" stroke="#22E3D6" stroke-width="2.4" marker-end="url(#sm-ahc)"/>
+              <line x1="26" y1="200" x2="288" y2="200" stroke="rgba(245,242,255,.10)" stroke-width="1" stroke-dasharray="4 5"/>
+              <text x="30" y="216" font-family="Azeret Mono" font-size="9" fill="#8E85A8">TARGET LINE</text>
+              <polygon id="sm-wedge" points="" fill="rgba(255,138,77,.10)" stroke="#FF8A4D" stroke-width="1"/>
+              <line id="sm-path" x1="140" y1="200" x2="250" y2="200" stroke="#6FC6FF" stroke-width="2.4" marker-end="url(#sm-ah)"/>
+              <line id="sm-face" x1="140" y1="200" x2="235" y2="120" stroke="#FF5C6B" stroke-width="2.4" marker-end="url(#sm-ahc)"/>
               <defs>
-                <marker id="sm-ah" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#9aabc6"/></marker>
-                <marker id="sm-ahc" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#22E3D6"/></marker>
+                <marker id="sm-ah" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#6FC6FF"/></marker>
+                <marker id="sm-ahc" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#FF5C6B"/></marker>
               </defs>
               <g id="sm-ball">
-                <circle cx="140" cy="200" r="15" fill="#0e1722" stroke="rgba(232,240,251,.5)" stroke-width="1"/>
+                <circle cx="140" cy="200" r="15" fill="#160F28" stroke="rgba(245,242,255,.5)" stroke-width="1"/>
                 <g id="sm-spin" style="transform-origin:140px 200px">
-                  <path d="M140,187 A13,13 0 1 1 128,193" fill="none" stroke="#22E3D6" stroke-width="2" stroke-linecap="round"/>
-                  <path d="M128,193 l-3,-5 l6,-1 Z" fill="#22E3D6"/>
+                  <path d="M140,187 A13,13 0 1 1 128,193" fill="none" stroke="#FF8A4D" stroke-width="2" stroke-linecap="round"/>
+                  <path d="M128,193 l-3,-5 l6,-1 Z" fill="#FF8A4D"/>
                 </g>
               </g>
               <g id="sm-pathlbl"></g><g id="sm-facelbl"></g><g id="sm-wedgelbl"></g>
@@ -1919,13 +1952,13 @@
           </div>
           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
             <span class="flyertag mono" id="sm-flyer">⚑ FLYER — grip lost</span>
-            <span class="mono" style="font-size:10px;color:#7e90ac">Path (grey) vs face-normal (cyan); shaded wedge = spin loft.</span>
+            <span class="mono" style="font-size:10px;color:#8E85A8">Path (blue) vs face-normal (red); shaded wedge = spin loft.</span>
           </div>
         </div>
         <div class="bs-right">
           <div class="formula">
             <div class="fk">Backspin formula (engine)</div>
-            <div class="fx"><span id="sm-f-sl">33</span> <span class="op">×</span> <span id="sm-f-bs">120</span> <span class="op">×</span> ${cfg.spinK||1.8} <span class="op">=</span> <span id="sm-f-res" style="text-shadow:0 0 18px var(--glow-cyan)">7,099</span> rpm</div>
+            <div class="fx"><span id="sm-f-sl">33</span> <span class="op">×</span> <span id="sm-f-bs">120</span> <span class="op">×</span> ${cfg.spinK||1.8} <span class="op">=</span> <span id="sm-f-res" style="color:var(--accent);text-shadow:0 0 18px rgba(255,138,77,.32)">7,099</span> rpm</div>
             <div class="fnote" id="sm-f-note"></div>
           </div>
           <div>
@@ -1937,9 +1970,9 @@
             <div class="meterlabels"><span>9,000</span><span class="bandlbl" id="sm-bandlbl">7-iron window</span><span>1,500</span></div>
           </div>
           <svg class="minitraj" id="sm-traj" viewBox="0 0 300 96" role="img" aria-label="Trajectory preview">
-            <line x1="16" y1="86" x2="292" y2="86" stroke="rgba(232,240,251,.10)" stroke-width="1"/>
-            <path id="sm-arc" d="" fill="none" stroke="#22E3D6" stroke-width="2"/>
-            <circle id="sm-apexdot" r="3" fill="#22E3D6"/>
+            <line x1="16" y1="86" x2="292" y2="86" stroke="rgba(245,242,255,.10)" stroke-width="1"/>
+            <path id="sm-arc" d="" fill="none" stroke="#FF8A4D" stroke-width="2"/>
+            <circle id="sm-apexdot" r="3" fill="#FF8A4D"/>
           </svg>
           ${chipsHTML(cfg.chips, 'sm-c')}
         </div>
@@ -1969,12 +2002,12 @@
       const rW=66; let pts=IX+','+IY; for(let i=0;i<=12;i++){ const ang=aa+(dl-aa)*(i/12); const p=ptRay(IX,IY,ang,rW); pts+=' '+p.x.toFixed(1)+','+p.y.toFixed(1); }
       el('#sm-wedge').setAttribute('points',pts);
       const pl=ptRay(IX,IY,aa,118), fl=ptRay(IX,IY,dl,104), wl=ptRay(IX,IY,(aa+dl)/2,40);
-      el('#sm-pathlbl').innerHTML=`<rect x="${(pl.x-16).toFixed(0)}" y="${(pl.y-8).toFixed(0)}" width="34" height="14" rx="2" fill="rgba(8,16,20,.78)"/><text x="${pl.x.toFixed(0)}" y="${(pl.y+2).toFixed(0)}" text-anchor="middle" font-family="Azeret Mono" font-size="8.5" fill="#9aabc6">PATH</text>`;
-      el('#sm-facelbl').innerHTML=`<rect x="${(fl.x-16).toFixed(0)}" y="${(fl.y-8).toFixed(0)}" width="34" height="14" rx="2" fill="rgba(8,16,20,.78)"/><text x="${fl.x.toFixed(0)}" y="${(fl.y+2).toFixed(0)}" text-anchor="middle" font-family="Azeret Mono" font-size="8.5" fill="#22E3D6">FACE</text>`;
-      el('#sm-wedgelbl').innerHTML=`<rect x="${(wl.x-22).toFixed(0)}" y="${(wl.y-9).toFixed(0)}" width="46" height="16" rx="2" fill="rgba(8,16,20,.86)"/><text x="${(wl.x+1).toFixed(0)}" y="${(wl.y+3).toFixed(0)}" text-anchor="middle" font-family="Azeret Mono" font-weight="600" font-size="10" fill="#22E3D6">${f.spinLoft.toFixed(0)}° SL</text>`;
+      el('#sm-pathlbl').innerHTML=`<rect x="${(pl.x-16).toFixed(0)}" y="${(pl.y-8).toFixed(0)}" width="34" height="14" rx="2" fill="rgba(8,5,14,.78)"/><text x="${pl.x.toFixed(0)}" y="${(pl.y+2).toFixed(0)}" text-anchor="middle" font-family="Azeret Mono" font-size="8.5" fill="#6FC6FF">PATH</text>`;
+      el('#sm-facelbl').innerHTML=`<rect x="${(fl.x-16).toFixed(0)}" y="${(fl.y-8).toFixed(0)}" width="34" height="14" rx="2" fill="rgba(8,5,14,.78)"/><text x="${fl.x.toFixed(0)}" y="${(fl.y+2).toFixed(0)}" text-anchor="middle" font-family="Azeret Mono" font-size="8.5" fill="#FF5C6B">FACE</text>`;
+      el('#sm-wedgelbl').innerHTML=`<rect x="${(wl.x-22).toFixed(0)}" y="${(wl.y-9).toFixed(0)}" width="46" height="16" rx="2" fill="rgba(8,5,14,.86)"/><text x="${(wl.x+1).toFixed(0)}" y="${(wl.y+3).toFixed(0)}" text-anchor="middle" font-family="Azeret Mono" font-weight="600" font-size="10" fill="#FF8A4D">${f.spinLoft.toFixed(0)}° SL</text>`;
       const spd=clamp(9000/Math.max(rpmShown,400),0.4,6), spin=el('#sm-spin'); spin.style.animation='saSpin '+spd.toFixed(2)+'s linear infinite';
-      spin.querySelectorAll('path').forEach(p=>p.setAttribute('stroke', fr?'#7e90ac':'#22E3D6'));
-      spin.querySelectorAll('path[fill]').forEach(p=>{ if(p.getAttribute('fill')!=='none') p.setAttribute('fill', fr?'#7e90ac':'#22E3D6'); });
+      spin.querySelectorAll('path').forEach(p=>p.setAttribute('stroke', fr?'#8E85A8':'#FF8A4D'));
+      spin.querySelectorAll('path[fill]').forEach(p=>{ if(p.getAttribute('fill')!=='none') p.setAttribute('fill', fr?'#8E85A8':'#FF8A4D'); });
       if(el('#sm-flyer')) el('#sm-flyer').classList.toggle('on', !!fr);
       el('#sm-f-sl').textContent=f.spinLoft.toFixed(0); el('#sm-f-bs').textContent=f.ballSpeed.toFixed(1);
       const clamped=Math.round(f.spinRpmRaw)!==Math.round(f.backspin);
@@ -2029,16 +2062,16 @@
           </div>
           <div role="img" id="w-fig" aria-label="">
             <svg class="arch-svg" viewBox="0 0 300 300" aria-hidden="true">
-              <defs><marker id="w-ahw" markerWidth="9" markerHeight="9" refX="6" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 Z" fill="#FFB534"/></marker></defs>
-              <line x1="150" y1="262" x2="150" y2="26" stroke="rgba(232,240,251,.16)" stroke-width="1" stroke-dasharray="4 5"/>
-              <text x="156" y="36" font-family="Azeret Mono" font-size="9" fill="#7e90ac">TARGET</text>
-              <path id="w-ghost" d="" fill="none" stroke="rgba(154,171,198,.45)" stroke-width="2" stroke-dasharray="5 5"/>
-              <path id="w-live" d="" fill="none" stroke="#22E3D6" stroke-width="2.6"/>
-              <line id="w-windarrow" x1="0" y1="0" x2="0" y2="0" stroke="#FFB534" stroke-width="2.4" marker-end="url(#w-ahw)"/>
-              <text id="w-windlbl" x="0" y="0" font-family="Azeret Mono" font-size="8.5" fill="#FFB534" text-anchor="middle"></text>
-              <circle id="w-land" r="5" fill="#22E3D6" style="filter:drop-shadow(0 0 7px rgba(34,227,214,.8))"/>
-              <circle cx="150" cy="262" r="7" fill="#0e1722" stroke="rgba(232,240,251,.5)" stroke-width="1"/>
-              <text id="w-landlbl" x="0" y="0" font-family="Azeret Mono" font-size="9" fill="#22E3D6" text-anchor="middle"></text>
+              <defs><marker id="w-ahw" markerWidth="9" markerHeight="9" refX="6" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 Z" fill="#FFD056"/></marker></defs>
+              <line x1="150" y1="262" x2="150" y2="26" stroke="rgba(245,242,255,.16)" stroke-width="1" stroke-dasharray="4 5"/>
+              <text x="156" y="36" font-family="Azeret Mono" font-size="9" fill="#8E85A8">TARGET</text>
+              <path id="w-ghost" d="" fill="none" stroke="rgba(167,159,199,.45)" stroke-width="2" stroke-dasharray="5 5"/>
+              <path id="w-live" d="" fill="none" stroke="#FF8A4D" stroke-width="2.6"/>
+              <line id="w-windarrow" x1="0" y1="0" x2="0" y2="0" stroke="#FFD056" stroke-width="2.4" marker-end="url(#w-ahw)"/>
+              <text id="w-windlbl" x="0" y="0" font-family="Azeret Mono" font-size="8.5" fill="#FFD056" text-anchor="middle"></text>
+              <circle id="w-land" r="5" fill="#FF8A4D" style="filter:drop-shadow(0 0 7px rgba(255,138,77,.8))"/>
+              <circle cx="150" cy="262" r="7" fill="#160F28" stroke="rgba(245,242,255,.5)" stroke-width="1"/>
+              <text id="w-landlbl" x="0" y="0" font-family="Azeret Mono" font-size="9" fill="#FF8A4D" text-anchor="middle"></text>
             </svg>
           </div>
           ${chipsHTML(cfg.chips, 'w-c')}
@@ -2112,24 +2145,24 @@
         <div role="img" id="dp-fig" aria-label="">
           <svg class="arch-svg" viewBox="0 0 300 300" aria-hidden="true">
             <defs>
-              <marker id="dp-ahp" markerWidth="9" markerHeight="9" refX="6" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 Z" fill="#9aabc6"/></marker>
-              <marker id="dp-ahf" markerWidth="9" markerHeight="9" refX="6" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 Z" fill="#22E3D6"/></marker>
-              <marker id="dp-ahs" markerWidth="9" markerHeight="9" refX="6" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 Z" fill="#FFB534"/></marker>
+              <marker id="dp-ahp" markerWidth="9" markerHeight="9" refX="6" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 Z" fill="#6FC6FF"/></marker>
+              <marker id="dp-ahf" markerWidth="9" markerHeight="9" refX="6" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 Z" fill="#FF5C6B"/></marker>
+              <marker id="dp-ahs" markerWidth="9" markerHeight="9" refX="6" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 Z" fill="#FF8A4D"/></marker>
             </defs>
-            <line x1="150" y1="258" x2="150" y2="30" stroke="rgba(232,240,251,.16)" stroke-width="1" stroke-dasharray="4 5"/>
-            <text x="156" y="40" font-family="Azeret Mono" font-size="9" fill="#7e90ac">TARGET</text>
-            <polygon id="dp-wedge" points="150,258" fill="rgba(34,227,214,.08)" stroke="none"/>
-            <line id="dp-path" x1="150" y1="258" x2="150" y2="80" stroke="#9aabc6" stroke-width="2.4" marker-end="url(#dp-ahp)"/>
-            <line id="dp-face" x1="150" y1="258" x2="150" y2="70" stroke="#22E3D6" stroke-width="2.4" marker-end="url(#dp-ahf)"/>
-            <line id="dp-start" x1="150" y1="258" x2="150" y2="96" stroke="#FFB534" stroke-width="2.2" stroke-dasharray="2 3" marker-end="url(#dp-ahs)"/>
-            <circle cx="150" cy="258" r="7" fill="#0e1722" stroke="rgba(232,240,251,.5)" stroke-width="1"/>
+            <line x1="150" y1="258" x2="150" y2="30" stroke="rgba(245,242,255,.16)" stroke-width="1" stroke-dasharray="4 5"/>
+            <text x="156" y="40" font-family="Azeret Mono" font-size="9" fill="#8E85A8">TARGET</text>
+            <polygon id="dp-wedge" points="150,258" fill="rgba(255,138,77,.08)" stroke="none"/>
+            <line id="dp-path" x1="150" y1="258" x2="150" y2="80" stroke="#6FC6FF" stroke-width="2.4" marker-end="url(#dp-ahp)"/>
+            <line id="dp-face" x1="150" y1="258" x2="150" y2="70" stroke="#FF5C6B" stroke-width="2.4" marker-end="url(#dp-ahf)"/>
+            <line id="dp-start" x1="150" y1="258" x2="150" y2="96" stroke="#FF8A4D" stroke-width="2.2" stroke-dasharray="2 3" marker-end="url(#dp-ahs)"/>
+            <circle cx="150" cy="258" r="7" fill="#160F28" stroke="rgba(245,242,255,.5)" stroke-width="1"/>
             <g id="dp-lbls"></g>
           </svg>
         </div>
         ${chipsHTML(chipList, 'dp-c')}
         <div class="arch-controls">
           <div class="ctl-grid">${slidersHTML(eng)}</div>
-          <div class="footnote">Top-down. Cyan = face-normal, grey = club path, amber = start direction (engine blend ≈75% face / 25% path, loft-weighted). Straight up = target line.</div>
+          <div class="footnote">Top-down. Red = face-normal, blue = club path, ember = start direction (engine blend ≈75% face / 25% path, loft-weighted). Straight up = target line.</div>
           <button class="datatoggle" id="dp-datatoggle" aria-expanded="false">Show data table</button>
           <div class="datatable" id="dp-datatable"><table><caption class="sr-only">${esc(cfg.title)} values</caption><tbody id="dp-datarows"></tbody></table></div>
         </div>
@@ -2148,8 +2181,8 @@
       el('#dp-wedge').setAttribute('points',pts);
       const Fl=topPt(face,204), Pl=topPt(path,150);
       el('#dp-lbls').innerHTML=
-        `<rect x="${(Fl.x-16).toFixed(0)}" y="${(Fl.y-8).toFixed(0)}" width="34" height="14" rx="2" fill="rgba(8,16,20,.8)"/><text x="${Fl.x.toFixed(0)}" y="${(Fl.y+2).toFixed(0)}" text-anchor="middle" font-family="Azeret Mono" font-size="8.5" fill="#22E3D6">FACE</text>`+
-        `<rect x="${(Pl.x-16).toFixed(0)}" y="${(Pl.y-8).toFixed(0)}" width="34" height="14" rx="2" fill="rgba(8,16,20,.8)"/><text x="${Pl.x.toFixed(0)}" y="${(Pl.y+2).toFixed(0)}" text-anchor="middle" font-family="Azeret Mono" font-size="8.5" fill="#9aabc6">PATH</text>`;
+        `<rect x="${(Fl.x-16).toFixed(0)}" y="${(Fl.y-8).toFixed(0)}" width="34" height="14" rx="2" fill="rgba(8,5,14,.8)"/><text x="${Fl.x.toFixed(0)}" y="${(Fl.y+2).toFixed(0)}" text-anchor="middle" font-family="Azeret Mono" font-size="8.5" fill="#FF5C6B">FACE</text>`+
+        `<rect x="${(Pl.x-16).toFixed(0)}" y="${(Pl.y-8).toFixed(0)}" width="34" height="14" rx="2" fill="rgba(8,5,14,.8)"/><text x="${Pl.x.toFixed(0)}" y="${(Pl.y+2).toFixed(0)}" text-anchor="middle" font-family="Azeret Mono" font-size="8.5" fill="#6FC6FF">PATH</text>`;
       setNum(el('#dp-read'), f[readout], {dp:rDef.dp, signed:rDef.signed});
       const shp=el('#dp-shape'); shp.textContent=f.shape; shp.className='deltachip mono '+(Math.abs(f.faceToPath)<0.75?'gain':(f.faceToPath>0?'loss':'gain'));
       updateChips(mount, chipList, f, 'dp-c');
@@ -2177,24 +2210,24 @@
         <div role="img" id="ls-fig" aria-label="">
           <svg class="arch-svg" viewBox="0 0 300 250" aria-hidden="true">
             <defs>
-              <marker id="ls-ahp" markerWidth="9" markerHeight="9" refX="6" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 Z" fill="#9aabc6"/></marker>
-              <marker id="ls-ahf" markerWidth="9" markerHeight="9" refX="6" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 Z" fill="#22E3D6"/></marker>
-              <marker id="ls-ahl" markerWidth="9" markerHeight="9" refX="6" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 Z" fill="#FFB534"/></marker>
+              <marker id="ls-ahp" markerWidth="9" markerHeight="9" refX="6" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 Z" fill="#4DE8D2"/></marker>
+              <marker id="ls-ahf" markerWidth="9" markerHeight="9" refX="6" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 Z" fill="#B9A0FF"/></marker>
+              <marker id="ls-ahl" markerWidth="9" markerHeight="9" refX="6" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 Z" fill="#FF8A4D"/></marker>
             </defs>
-            <line x1="30" y1="200" x2="288" y2="200" stroke="rgba(232,240,251,.18)" stroke-width="1.5"/>
-            <text x="246" y="214" font-family="Azeret Mono" font-size="9" fill="#7e90ac">→ TARGET</text>
-            <polygon id="ls-wedge" points="60,200" fill="rgba(34,227,214,.10)" stroke="none"/>
-            <line id="ls-attack" x1="60" y1="200" x2="240" y2="200" stroke="#9aabc6" stroke-width="2.4" marker-end="url(#ls-ahp)"/>
-            <line id="ls-loft" x1="60" y1="200" x2="230" y2="110" stroke="#22E3D6" stroke-width="2.4" marker-end="url(#ls-ahf)"/>
-            <line id="ls-launch" x1="60" y1="200" x2="235" y2="100" stroke="#FFB534" stroke-width="2.2" stroke-dasharray="2 3" marker-end="url(#ls-ahl)"/>
-            <circle cx="60" cy="200" r="7" fill="#0e1722" stroke="rgba(232,240,251,.5)" stroke-width="1"/>
+            <line x1="30" y1="200" x2="288" y2="200" stroke="rgba(245,242,255,.18)" stroke-width="1.5"/>
+            <text x="246" y="214" font-family="Azeret Mono" font-size="9" fill="#8E85A8">→ TARGET</text>
+            <polygon id="ls-wedge" points="60,200" fill="rgba(255,138,77,.10)" stroke="none"/>
+            <line id="ls-attack" x1="60" y1="200" x2="240" y2="200" stroke="#4DE8D2" stroke-width="2.4" marker-end="url(#ls-ahp)"/>
+            <line id="ls-loft" x1="60" y1="200" x2="230" y2="110" stroke="#B9A0FF" stroke-width="2.4" marker-end="url(#ls-ahf)"/>
+            <line id="ls-launch" x1="60" y1="200" x2="235" y2="100" stroke="#FF8A4D" stroke-width="2.2" stroke-dasharray="2 3" marker-end="url(#ls-ahl)"/>
+            <circle cx="60" cy="200" r="7" fill="#160F28" stroke="rgba(245,242,255,.5)" stroke-width="1"/>
             <g id="ls-lbls"></g>
           </svg>
         </div>
         ${chipsHTML(chipList, 'ls-c')}
         <div class="arch-controls">
           <div class="ctl-grid">${slidersHTML(eng)}</div>
-          <div class="footnote">Side-on. Grey = attack (club path up/down), cyan = dynamic loft (face), amber = launch (engine ≈ 0.62·loft + 0.25·attack). Shaded wedge = spin loft = loft − attack.</div>
+          <div class="footnote">Side-on. Mint = attack (club path up/down), lavender = dynamic loft (face), ember = launch (engine ≈ 0.62·loft + 0.25·attack). Shaded wedge = spin loft = loft − attack.</div>
           <button class="datatoggle" id="ls-datatoggle" aria-expanded="false">Show data table</button>
           <div class="datatable" id="ls-datatable"><table><caption class="sr-only">${esc(cfg.title)} values</caption><tbody id="ls-datarows"></tbody></table></div>
         </div>
@@ -2213,8 +2246,8 @@
       el('#ls-wedge').setAttribute('points',pts);
       const Fl=sidePt(dl,196), Al=sidePt(aa,150);
       el('#ls-lbls').innerHTML=
-        `<rect x="${(Fl.x-16).toFixed(0)}" y="${(Fl.y-8).toFixed(0)}" width="34" height="14" rx="2" fill="rgba(8,16,20,.8)"/><text x="${Fl.x.toFixed(0)}" y="${(Fl.y+2).toFixed(0)}" text-anchor="middle" font-family="Azeret Mono" font-size="8.5" fill="#22E3D6">LOFT</text>`+
-        `<rect x="${(Al.x-21).toFixed(0)}" y="${(Al.y-8).toFixed(0)}" width="44" height="14" rx="2" fill="rgba(8,16,20,.8)"/><text x="${(Al.x+1).toFixed(0)}" y="${(Al.y+2).toFixed(0)}" text-anchor="middle" font-family="Azeret Mono" font-size="8.5" fill="#9aabc6">ATTACK</text>`;
+        `<rect x="${(Fl.x-16).toFixed(0)}" y="${(Fl.y-8).toFixed(0)}" width="34" height="14" rx="2" fill="rgba(8,5,14,.8)"/><text x="${Fl.x.toFixed(0)}" y="${(Fl.y+2).toFixed(0)}" text-anchor="middle" font-family="Azeret Mono" font-size="8.5" fill="#B9A0FF">LOFT</text>`+
+        `<rect x="${(Al.x-21).toFixed(0)}" y="${(Al.y-8).toFixed(0)}" width="44" height="14" rx="2" fill="rgba(8,5,14,.8)"/><text x="${(Al.x+1).toFixed(0)}" y="${(Al.y+2).toFixed(0)}" text-anchor="middle" font-family="Azeret Mono" font-size="8.5" fill="#4DE8D2">ATTACK</text>`;
       setNum(el('#ls-read'), f[readout], {dp:rDef.dp, commas:rDef.commas});
       el('#ls-sl').textContent=f.spinLoft.toFixed(0)+'° spin loft';
       updateChips(mount, chipList, f, 'ls-c');
