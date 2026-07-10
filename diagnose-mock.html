@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#07060C" />
+<meta name="robots" content="noindex" />
+<title>DIAGNOSE MOCK — Describe your shot, see the delivery</title>
+<!-- ═════════════════════════════════════════════════════════════════════
+     diagnose-mock.html — DESIGN MOCK, NOT SHIPPED (the -mock.html suffix
+     keeps it out of scripts/copy-web.mjs's native allowlist).
+     Spec: docs/diagnose-spec.md v1 (design locked, Fable 5). Standalone page:
+     imports ./diagnose-engine.js (which imports ./impact-flight.js DIRECTLY —
+     byte-identical) + ./sa-haptics.js. P3 tokens + shell from ./sa-p3.css.
+     The user DESCRIBES the shot (5 taps, no jargon); the engine reconstructs
+     the delivery, replays it in ember over the user's cold-violet memory
+     sketch, names the cause in plain language with the real terms taught
+     inline, and hands the delivery to Ball Flight to fix.
+     ═════════════════════════════════════════════════════════════════════ -->
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2052%2052'%20fill='none'%3E%3Cpath%20d='M11%2045%20C%2016%2026,%2024%2018,%2035%2015%20M21%2039%20L%2030%2024%20L%2043%2045'%20stroke='%239D8BFF'%20stroke-width='4.2'%20stroke-linecap='round'%20stroke-linejoin='round'/%3E%3Ccircle%20cx='37'%20cy='15'%20r='5.2'%20fill='%23FF8A4D'/%3E%3C/svg%3E" />
+<link rel="stylesheet" href="./sa-p3.css" />
+<style>
+  @view-transition{ navigation:auto; }
+
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  html,body{ height:100%; }
+  body{
+    background:var(--scene-bg);
+    color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-tap-highlight-color:transparent;
+    overflow:hidden;
+    font-variant-numeric:tabular-nums;
+  }
+
+  /* ══ APP FRAME — question rail (left) drives a live scene (right) ══════ */
+  .app{
+    position:fixed; inset:0;
+    padding-top:calc(40px + env(safe-area-inset-top));
+    display:flex; flex-direction:row;
+    overflow:hidden;
+  }
+  .rail{
+    flex:0 0 300px; min-width:264px; max-width:300px;
+    height:100%;
+    display:flex; flex-direction:column;
+    border-right:1px solid var(--line);
+    background:linear-gradient(180deg, rgba(17,13,28,.42), rgba(7,6,12,.10));
+  }
+  .railBody{
+    flex:1 1 auto; overflow-y:auto; -webkit-overflow-scrolling:touch;
+    padding:12px; padding-left:max(12px,env(safe-area-inset-left));
+    display:flex; flex-direction:column; gap:12px;
+  }
+  .scene{
+    flex:1 1 auto; position:relative; overflow:hidden; min-width:0;
+    background:
+      linear-gradient(rgba(7,6,12,.20), rgba(7,6,12,.44)),
+      url(./assets/range-night-3d-33.png) center bottom / cover no-repeat,
+      var(--scene-bg);
+  }
+  .scene canvas#sceneCanvas{ position:absolute; inset:0; width:100%; height:100%; display:block; }
+
+  /* ══ SUMMARY CHIP ROW (answered descriptors — dock pattern) ═══════════ */
+  .chips{ display:flex; flex-wrap:wrap; gap:6px; }
+  .schip{
+    position:relative; display:inline-flex; align-items:center; gap:6px;
+    min-height:32px; padding:0 11px; border-radius:var(--radius-pill);
+    background:var(--secondary-soft); border:1px solid var(--secondary-line);
+    color:var(--ink); font:600 12px/1 inherit; cursor:pointer;
+  }
+  .schip::after{ content:""; position:absolute; left:0; right:0; top:50%; height:44px; transform:translateY(-50%); }
+  .schip .ed{ color:var(--muted); font-size:11px; }
+  .schip.pulse{ animation:pulse .5s var(--ease); }
+  @keyframes pulse{ 0%{ box-shadow:0 0 0 0 var(--secondary-line);} 50%{ box-shadow:0 0 0 4px var(--secondary-soft);} 100%{ box-shadow:0 0 0 0 transparent;} }
+
+  /* ══ QUESTION BLOCK (only one ever expanded) ══════════════════════════ */
+  .qblock{ display:flex; flex-direction:column; gap:8px; }
+  .eyebrow{ font:600 11px/1.2 inherit; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); }
+  .qtitle{ font:700 15px/1.3 inherit; color:var(--ink); }
+  .qhint{ font:400 11px/1.45 inherit; color:var(--muted); }
+  .qhint b{ color:var(--secondary); font-weight:600; }
+  .qrow{ display:flex; flex-wrap:wrap; gap:8px; }
+
+  /* option chips (radiogroup) — 36px visual + 44px hit pad */
+  .chip{
+    position:relative; display:inline-flex; align-items:center; justify-content:center;
+    min-height:36px; padding:0 13px; border-radius:var(--radius-pill);
+    background:var(--secondary-soft); border:1px solid var(--secondary-line);
+    color:var(--ink); font:600 13px/1 inherit; cursor:pointer; white-space:nowrap;
+    transition:background .12s var(--ease), border-color .12s var(--ease);
+  }
+  .chip::after{ content:""; position:absolute; left:0; right:0; top:50%; height:44px; transform:translateY(-50%); }
+  .chip[aria-checked="true"]{ background:var(--secondary); color:#0b0913; border-color:var(--secondary); }
+  .chip .sub{ font-weight:500; opacity:.8; margin-left:4px; }
+
+  /* the 3×3 flight picker */
+  .picker{ display:grid; grid-template-columns:repeat(3,72px); gap:8px; }
+  .phead{ display:grid; grid-template-columns:repeat(3,72px); gap:8px; font:600 9px/1 inherit; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); }
+  .phead span{ text-align:center; }
+  .tile{
+    position:relative; width:72px; height:72px; border-radius:12px;
+    background:var(--secondary-soft); border:1px solid var(--line); cursor:pointer; padding:0;
+    transition:border-color .12s var(--ease), box-shadow .12s var(--ease);
+  }
+  .tile svg{ width:100%; height:100%; display:block; }
+  .tile[aria-checked="true"]{ border-color:var(--secondary); box-shadow:inset 0 0 0 1px var(--secondary), 0 0 0 1px var(--secondary); }
+  .footnote{ font:400 10px/1.4 inherit; color:var(--muted); }
+
+  /* ══ CLUB PILL (honest — the only calibrated club) ════════════════════ */
+  .clubpill{
+    flex:0 0 auto; margin:0 12px 12px; margin-bottom:calc(12px + env(safe-area-inset-bottom));
+    display:inline-flex; align-items:center; gap:6px; align-self:flex-start;
+    padding:7px 12px; border-radius:var(--radius-pill);
+    background:var(--secondary-soft); border:1px solid var(--line);
+    font:600 12px/1 inherit; color:var(--ink);
+  }
+  .clubpill small{ font-size:10px; color:var(--muted); font-weight:500; }
+
+  /* ══ RECONSTRUCTING BEAT ══════════════════════════════════════════════ */
+  .beat{ padding:14px; border-radius:16px; background:var(--plate); border:1px solid var(--line); color:var(--muted); font:500 13px/1.4 inherit; }
+
+  /* ══ RESULTS ══════════════════════════════════════════════════════════ */
+  .wink{ font:500 12px/1.45 inherit; color:var(--secondary); }
+  .stories{ list-style:none; display:flex; flex-direction:column; gap:10px; padding:0; margin:0; }
+  .card{ background:var(--plate); border:1px solid var(--line); border-radius:16px; padding:13px; -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); }
+  .card.compact{ padding:11px; }
+  .cardhead{ display:flex; gap:10px; align-items:flex-start; }
+  .cardhead .glyphwrap{ flex:0 0 auto; }
+  .cardhead .txt{ flex:1 1 auto; min-width:0; }
+  .cardeye{ font:600 11px/1.2 inherit; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); }
+  .cardeye .emb{ color:var(--accent); }
+  .cardeye .refined{ color:var(--secondary); }
+  .ctitle{ font:700 15px/1.3 inherit; color:var(--ink); margin-top:3px; }
+  .cbody{ font:400 13px/1.5 inherit; color:var(--ink); margin-top:7px; }
+  .term{ color:var(--secondary); background:none; border:0; padding:0; margin:0; font:inherit; cursor:pointer; border-bottom:1px dotted var(--secondary-line); }
+  .termdef{ display:block; font:400 12px/1.4 inherit; color:var(--muted); margin-top:5px; padding-left:10px; border-left:2px solid var(--secondary-soft); }
+  .termdef[hidden]{ display:none; }
+
+  .variants{ margin-top:10px; display:flex; flex-direction:column; gap:6px; }
+  .variant{ display:flex; align-items:center; gap:8px; font:500 12px/1.3 inherit; color:var(--ink); }
+  .vtrack{ flex:0 0 56px; height:6px; border-radius:3px; background:var(--secondary-soft); overflow:hidden; }
+  .vbar{ height:100%; background:var(--secondary); border-radius:3px; }
+  .vpct{ flex:0 0 auto; color:var(--muted); font-size:11px; }
+
+  .divotq{ margin-top:11px; padding-top:11px; border-top:1px solid var(--line); display:flex; flex-direction:column; gap:8px; }
+
+  .cta{
+    position:relative; display:inline-flex; align-items:center; justify-content:center;
+    min-height:44px; margin-top:12px; padding:0 16px; border-radius:12px;
+    background:var(--plate); border:1px solid var(--accent-line); color:var(--accent);
+    font:700 14px/1 inherit; cursor:pointer; text-decoration:none; align-self:stretch; text-align:center;
+  }
+  .cta-sub{ font:400 11px/1.4 inherit; color:var(--muted); margin-top:6px; }
+  .qcta{
+    position:relative; display:inline-flex; align-items:center; min-height:36px; margin-top:8px;
+    background:none; border:0; padding:2px 0; color:var(--accent); font:600 12px/1 inherit; cursor:pointer; text-decoration:none;
+  }
+  .qcta::after{ content:""; position:absolute; left:0; right:0; top:50%; height:44px; transform:translateY(-50%); }
+
+  .honesty{ font:400 12px/1.5 inherit; color:var(--muted); }
+  .honesty b{ color:var(--ink); font-weight:600; }
+
+  /* contact card — separate model, never blended */
+  .contactcard{ background:var(--plate); border:1px dashed var(--secondary-line); border-radius:16px; padding:13px; }
+  .contactcard .cardeye{ color:var(--secondary); }
+
+  .miss{ background:var(--plate); border:1px solid var(--line); border-radius:16px; padding:13px; display:flex; flex-direction:column; gap:9px; }
+  .miss .mtitle{ font:700 14px/1.3 inherit; color:var(--ink); }
+  .miss .mbody{ font:400 12px/1.45 inherit; color:var(--muted); }
+
+  .textbtn{
+    position:relative; background:none; border:0; padding:4px 0; color:var(--secondary);
+    font:600 12px/1 inherit; cursor:pointer; align-self:flex-start; text-decoration:underline; text-underline-offset:3px;
+  }
+  .textbtn::after{ content:""; position:absolute; left:0; right:0; top:50%; height:44px; transform:translateY(-50%); }
+
+  .errbox{ background:var(--plate); border:1px solid var(--bad); border-radius:16px; padding:13px; display:flex; flex-direction:column; gap:9px; color:var(--ink); font:400 13px/1.4 inherit; }
+
+  /* ══ SCENE OVERLAYS ═══════════════════════════════════════════════════ */
+  .scene-ghost{
+    position:absolute; left:50%; top:46%; transform:translate(-50%,-50%);
+    font:500 13px/1.4 inherit; color:var(--muted); text-align:center; pointer-events:none;
+  }
+  .sideinset{
+    position:absolute; right:12px; bottom:12px; width:172px; height:84px;
+    padding:6px 8px; overflow:hidden;
+  }
+  .sideinset .slabel{ position:absolute; left:8px; top:5px; font:600 9px/1 inherit; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); }
+  .sideinset canvas{ position:absolute; inset:0; width:100%; height:100%; }
+  .readout{
+    position:absolute; left:12px; bottom:12px; max-width:calc(100% - 200px);
+    display:flex; flex-wrap:wrap; gap:6px;
+  }
+  .pchip{
+    display:inline-flex; align-items:center; gap:5px; padding:4px 9px; border-radius:var(--radius-pill);
+    background:var(--plate); border:1px solid var(--line); font:600 11px/1 inherit; color:var(--ink);
+    -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px);
+  }
+  .pchip b{ color:var(--muted); font-weight:600; letter-spacing:.04em; }
+  .pdot{ width:8px; height:8px; border-radius:50%; flex:0 0 auto; }
+
+  .vh{ position:absolute !important; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+
+  /* ══ PORTRAIT FALLBACK (web only — the app is landscape-locked) ═══════ */
+  @media (orientation:portrait){
+    .app{ flex-direction:column; }
+    .scene{ flex:0 0 40vh; order:1; width:100%; border-bottom:1px solid var(--line); }
+    .rail{ flex:1 1 auto; order:2; max-width:none; min-width:0; width:100%; border-right:0; }
+    .readout{ max-width:calc(100% - 24px); }
+    .sideinset{ width:132px; height:66px; }
+  }
+</style>
+</head>
+<body>
+  <div class="sa-strip">
+    <a class="sa-strip__home" href="./home-mock.html" aria-label="Home">
+      <svg viewBox="0 0 52 52" fill="none" aria-hidden="true">
+        <path class="sa-arc" d="M11 45 C 16 26, 24 18, 35 15 M21 39 L 30 24 L 43 45" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle class="sa-ball" cx="37" cy="15" r="5.2"/>
+      </svg>
+    </a>
+    <span class="sa-strip__title">DIAGNOSE</span>
+    <span class="sa-strip__spacer"></span>
+  </div>
+
+  <div class="app">
+    <div class="rail">
+      <div class="railBody" id="railBody"></div>
+      <div class="clubpill" id="clubPill">7-IRON&nbsp;·&nbsp;<small>more clubs soon</small></div>
+    </div>
+    <div class="scene" id="scene">
+      <canvas id="sceneCanvas" aria-hidden="true"></canvas>
+      <div class="scene-ghost" id="sceneGhost">Tap a flight to sketch it</div>
+      <div class="readout" id="readout" hidden></div>
+      <div class="sideinset sa-plate" id="sideInset" hidden>
+        <span class="slabel">Side profile</span>
+        <canvas id="sideCanvas" aria-hidden="true"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- one polite live region (visually hidden), throttled ≥800ms -->
+  <p id="saLive" class="vh" aria-live="polite" role="status"></p>
+  <!-- scene text alternative (visually hidden, NOT aria-hidden) -->
+  <p id="sceneAlt" class="vh"></p>
+
+<script type="module">
+import haptics from './sa-haptics.js';
+import * as DX from './diagnose-engine.js';
+
+const Y2M = 0.9144;
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const wait = ms => new Promise(r => setTimeout(r, ms));
+
+/* ── DOM ─────────────────────────────────────────────────────────────── */
+const railBody  = document.getElementById('railBody');
+const sceneEl   = document.getElementById('scene');
+const sceneGhost= document.getElementById('sceneGhost');
+const readoutEl = document.getElementById('readout');
+const sideInset = document.getElementById('sideInset');
+const liveEl    = document.getElementById('saLive');
+const sceneAlt  = document.getElementById('sceneAlt');
+const sceneCanvas = document.getElementById('sceneCanvas');
+const sideCanvas  = document.getElementById('sideCanvas');
+
+/* ── state ───────────────────────────────────────────────────────────── */
+const state = {
+  club:'7iron',
+  startLine:null, curveDir:null, curve:null,
+  height:null, distance:null, contact:null, divot:null,
+  active:'shape', phase:'input', hasResults:false,
+};
+let MAP = null;
+
+/* trace state (module-scope so canvas redraws share it) */
+let sketchPts=null, sketchAbs=null;
+let emberSamples=null, emberAbs=null, emberProgress=0;
+let currentEntry=null, currentCon=null, currentDesc=null, sceneDimAmt=0;
+
+/* ── vocab / display maps ────────────────────────────────────────────── */
+const DIST_DISPLAY = { 'Long (gained distance)':'Longer', 'Full (normal distance)':'Normal distance', 'Slight loss':'A bit short', 'Noticeable loss':'Way short' };
+const START_WORD = { Left:'Starts left', Straight:'Starts straight', Right:'Starts right' };
+const HEIGHT_WORD = { Low:'Low flight', Normal:'Normal height', High:'High flight', Ballooned:'Ballooned' };
+const CURVE_WORD = { Straight:'Straight', Draw:'Draw', Hook:'Hook', Fade:'Fade', Slice:'Slice' };
+
+const PICKER_LABELS = {
+  '0,0':'Starts left, keeps curving left',  '0,1':'Starts left, flies straight',   '0,2':'Starts left, curves back right',
+  '1,0':'Starts straight, curves left',     '1,1':'Dead straight',                 '1,2':'Starts straight, curves right',
+  '2,0':'Starts right, curves back left',   '2,1':'Starts right, flies straight',  '2,2':'Starts right, keeps curving right',
+};
+const START_BY_COL = ['Left','Straight','Right'];
+const DIR_BY_ROW = ['left','straight','right'];
+
+function curveDirFromCurve(c){ return (c==='Slice'||c==='Fade')?'right' : (c==='Hook'||c==='Draw')?'left' : 'straight'; }
+function provisionalCurve(){ return state.curveDir==='left' ? 'Draw' : state.curveDir==='right' ? 'Fade' : 'Straight'; }
+
+function descriptor(){
+  return {
+    curve: state.curve || provisionalCurve(),
+    startLine: state.startLine || 'Straight',
+    height: state.height || 'Normal',
+    distanceLoss: state.distance || 'Full (normal distance)',
+  };
+}
+function isWayShort(){ return state.distance === 'Noticeable loss'; }
+
+/* ── live region (throttled ≥800ms) ──────────────────────────────────── */
+let lastAnnounce = -Infinity, pendingT = null;
+function announce(msg){
+  const now = performance.now(), gap = now - lastAnnounce;
+  if (gap >= 800){ liveEl.textContent = msg; lastAnnounce = now; }
+  else { clearTimeout(pendingT); pendingT = setTimeout(()=>{ liveEl.textContent = msg; lastAnnounce = performance.now(); }, 800 - gap); }
+}
+
+/* ── escape helper ───────────────────────────────────────────────────── */
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* ══ CANVAS ═══════════════════════════════════════════════════════════ */
+function fit(canvas){
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const w = canvas.clientWidth, h = canvas.clientHeight;
+  if (canvas.width !== Math.round(w*dpr) || canvas.height !== Math.round(h*dpr)){
+    canvas.width = Math.round(w*dpr); canvas.height = Math.round(h*dpr);
+  }
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  return { ctx, w, h };
+}
+
+function sceneScale(){
+  let maxD = 40, maxLat = 15;
+  const scan = (pts, abs) => { if(!pts) return; for(const p of pts){ maxD = Math.max(maxD, abs.carryM*p.d); maxLat = Math.max(maxLat, Math.abs(abs.offlineM*p.x)); } };
+  scan(sketchPts, sketchAbs); scan(emberSamples, emberAbs);
+  return { maxD: maxD*1.15, maxLat: maxLat*1.15 };
+}
+
+function drawPathTop(ctx, pts, abs, toXY, o){
+  ctx.save();
+  if (o.glow){ ctx.shadowColor='rgba(255,138,77,.35)'; ctx.shadowBlur=8; }
+  ctx.strokeStyle=o.color; ctx.lineWidth=o.width; ctx.lineJoin='round'; ctx.lineCap='round';
+  if (o.dash) ctx.setLineDash(o.dash);
+  ctx.beginPath();
+  const prog = o.progress==null ? 1 : o.progress;
+  let started=false;
+  for (const p of pts){
+    if (p.d > prog + 1e-9) break;
+    const [x,y] = toXY(abs.carryM*p.d, abs.offlineM*p.x);
+    if (!started){ ctx.moveTo(x,y); started=true; } else ctx.lineTo(x,y);
+  }
+  ctx.stroke(); ctx.restore();
+}
+function markX(ctx,x,y,color){ ctx.save(); ctx.strokeStyle=color; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(x-4,y-4); ctx.lineTo(x+4,y+4); ctx.moveTo(x+4,y-4); ctx.lineTo(x-4,y+4); ctx.stroke(); ctx.restore(); }
+
+function drawTopDown(){
+  const { ctx, w, h } = fit(sceneCanvas);
+  ctx.clearRect(0,0,w,h);
+  if (sceneDimAmt>0){ ctx.save(); ctx.fillStyle=`rgba(7,6,12,${sceneDimAmt})`; ctx.fillRect(0,0,w,h); ctx.restore(); }
+  const { maxD, maxLat } = sceneScale();
+  const padTop=26, padBottom=26, padSide=30;
+  const groundY=h-padBottom, usableH=groundY-padTop, cx=w/2, halfW=w/2-padSide;
+  const toXY=(dM,lM)=>[cx+(lM/maxLat)*halfW, groundY-(dM/maxD)*usableH];
+
+  ctx.font='9px -apple-system,sans-serif'; ctx.textBaseline='alphabetic';
+  for (let m=25; m<=maxD; m+=25){
+    const y=groundY-(m/maxD)*usableH;
+    ctx.strokeStyle='rgba(255,255,255,.06)'; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(padSide,y); ctx.lineTo(w-padSide,y); ctx.stroke();
+    ctx.fillStyle='rgba(167,159,199,.45)'; ctx.fillText(m+' m', 6, y-2);
+  }
+  // target line (faint violet)
+  ctx.strokeStyle='rgba(157,139,255,.30)'; ctx.lineWidth=1.5; ctx.setLineDash([4,5]);
+  ctx.beginPath(); ctx.moveTo(cx,groundY); ctx.lineTo(cx,padTop); ctx.stroke(); ctx.setLineDash([]);
+  // tee
+  ctx.fillStyle='#F5F2FF'; ctx.beginPath(); ctx.arc(cx,groundY,3,0,7); ctx.fill();
+
+  // sketch (cold violet — the memory)
+  if (sketchPts){
+    drawPathTop(ctx, sketchPts, sketchAbs, toXY, { color:'rgba(157,139,255,.78)', width:2, dash:[5,4] });
+    const [lx,ly]=toXY(sketchAbs.carryM, sketchAbs.offlineM);
+    markX(ctx,lx,ly,'rgba(157,139,255,.9)');
+    ctx.fillStyle='rgba(167,159,199,.85)'; ctx.font='9px -apple-system,sans-serif'; ctx.fillText('AS DESCRIBED', lx+7, ly+3);
+  }
+  // ember (hot — the physics)
+  if (emberSamples && emberProgress>0){
+    drawPathTop(ctx, emberSamples, emberAbs, toXY, { color:'#FF8A4D', width:3, glow:true, progress:emberProgress });
+    if (emberProgress>=0.999){
+      const [ex,ey]=toXY(emberAbs.carryM, emberAbs.offlineM);
+      ctx.save(); ctx.shadowColor='rgba(255,138,77,.5)'; ctx.shadowBlur=8; ctx.fillStyle='#FF8A4D';
+      ctx.beginPath(); ctx.arc(ex,ey,4,0,7); ctx.fill(); ctx.restore();
+    }
+  }
+}
+
+function drawSide(){
+  if (sideInset.hidden) return;
+  const { ctx, w, h } = fit(sideCanvas);
+  ctx.clearRect(0,0,w,h);
+  const { maxD } = sceneScale();
+  let maxApex=20; if(sketchAbs) maxApex=Math.max(maxApex,sketchAbs.apexM); if(emberAbs) maxApex=Math.max(maxApex,emberAbs.apexM);
+  maxApex*=1.2;
+  const padL=8, padR=8, padT=18, padB=10;
+  const ground=h-padB, usableH=ground-padT, usableW=w-padL-padR;
+  const toXY=(dM,htM)=>[padL+(dM/maxD)*usableW, ground-(htM/maxApex)*usableH];
+  ctx.strokeStyle='rgba(255,255,255,.10)'; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(padL,ground); ctx.lineTo(w-padR,ground); ctx.stroke();
+  const sidePath=(pts,abs,o)=>{
+    ctx.save(); if(o.glow){ctx.shadowColor='rgba(255,138,77,.35)';ctx.shadowBlur=6;}
+    ctx.strokeStyle=o.color; ctx.lineWidth=o.width; ctx.lineJoin='round'; ctx.lineCap='round'; if(o.dash)ctx.setLineDash(o.dash);
+    ctx.beginPath(); const prog=o.progress==null?1:o.progress; let started=false;
+    for(const p of pts){ if(p.d>prog+1e-9) break; const [x,y]=toXY(abs.carryM*p.d, abs.apexM*p.h); if(!started){ctx.moveTo(x,y);started=true;}else ctx.lineTo(x,y);} ctx.stroke(); ctx.restore();
+  };
+  if (sketchPts) sidePath(sketchPts, sketchAbs, { color:'rgba(157,139,255,.78)', width:2, dash:[4,4] });
+  if (emberSamples && emberProgress>0) sidePath(emberSamples, emberAbs, { color:'#FF8A4D', width:2.5, glow:true, progress:emberProgress });
+}
+
+function drawAll(){ drawTopDown(); drawSide(); }
+
+/* ══ SKETCH / SOLVE ═══════════════════════════════════════════════════ */
+function updateSketch(){
+  const d = descriptor();
+  sketchPts = DX.sketchTrace(d);
+  sketchAbs = { carryM:sketchPts.carryM, apexM:sketchPts.apexM, offlineM:sketchPts.offlineM };
+  sceneGhost.hidden = true;
+  sideInset.hidden = false;
+  sceneAlt.textContent = sceneAltText(d);
+  drawAll();
+}
+function sceneAltText(d){
+  const start = { Left:'starts left', Straight:'starts straight', Right:'starts right' }[d.startLine];
+  const curve = { Slice:'curves hard right', Fade:'curves gently right', Draw:'curves gently left', Hook:'curves hard left', Straight:'flies straight' }[d.curve];
+  const ht    = { Low:'low', Normal:'normal height', High:'high', Ballooned:'ballooned high' }[d.height];
+  const dist  = (DIST_DISPLAY[d.distanceLoss]||'').toLowerCase();
+  return `Your described shot: ${start}, ${curve}, ${ht}, ${dist}.`;
+}
+
+/* ══ RENDER: input flow ═══════════════════════════════════════════════ */
+function chipRow(){
+  // summary chips for answered dimensions NOT currently being edited
+  const chips = [];
+  if (state.startLine && state.curve) chips.push({ dim:'shape', label:`${START_WORD[state.startLine]} · ${CURVE_WORD[state.curve]}` });
+  if (state.height)   chips.push({ dim:'height', label:HEIGHT_WORD[state.height] });
+  if (state.distance) chips.push({ dim:'distance', label:DIST_DISPLAY[state.distance] });
+  if (state.contact && state.contact!=='skip') chips.push({ dim:'contact', label:contactWord(state.contact) });
+  return chips.filter(c => c.dim !== state.active);
+}
+function contactWord(c){ return c==='Not sure' ? 'Contact: not sure' : `Contact: ${c.toLowerCase()}`; }
+
+function renderChips(host){
+  const chips = chipRow();
+  if (!chips.length) return;
+  const wrap = document.createElement('div'); wrap.className='chips'; wrap.setAttribute('role','group'); wrap.setAttribute('aria-label','Your description so far — tap to change');
+  for (const c of chips){
+    const b=document.createElement('button'); b.type='button'; b.className='schip sa-focus'; b.dataset.dim=c.dim;
+    b.innerHTML = `${esc(c.label)} <span class="ed" aria-hidden="true">edit</span>`;
+    b.setAttribute('aria-label', `${c.label}. Edit`);
+    b.addEventListener('click', ()=> openQuestion(c.dim));
+    wrap.appendChild(b);
+  }
+  host.appendChild(wrap);
+}
+
+/* generic 1-D radiogroup of chips */
+function radiogroup(label, options, checkedVal, onSelect){
+  const grp=document.createElement('div'); grp.className='qrow'; grp.setAttribute('role','radiogroup'); grp.setAttribute('aria-label',label);
+  const radios=[];
+  options.forEach((o,i)=>{
+    const el=document.createElement('button'); el.type='button'; el.className='chip sa-focus'; el.setAttribute('role','radio');
+    const checked = o.value===checkedVal;
+    el.setAttribute('aria-checked', checked?'true':'false');
+    el.tabIndex = (checkedVal==null ? i===0 : checked) ? 0 : -1;
+    el.innerHTML = o.html || esc(o.label);
+    el.addEventListener('click', ()=> onSelect(o.value, el));
+    el.addEventListener('keydown', e=> radioKey(e, radios, i, onSelect, options));
+    radios.push(el); grp.appendChild(el);
+  });
+  return grp;
+}
+function radioKey(e, radios, i, onSelect, options){
+  let ni=null;
+  if (e.key==='ArrowRight'||e.key==='ArrowDown') ni=(i+1)%radios.length;
+  else if (e.key==='ArrowLeft'||e.key==='ArrowUp') ni=(i-1+radios.length)%radios.length;
+  else if (e.key===' '||e.key==='Enter'){ e.preventDefault(); onSelect(options[i].value, radios[i]); return; }
+  if (ni!=null){ e.preventDefault(); radios.forEach(r=>r.tabIndex=-1); radios[ni].tabIndex=0; radios[ni].focus(); }
+}
+
+function renderInput(){
+  state.phase='input'; readoutEl.hidden=true;
+  railBody.innerHTML='';
+  renderChips(railBody);
+
+  const block=document.createElement('div'); block.className='qblock';
+
+  if (state.active==='shape'){
+    block.appendChild(mk('div','eyebrow','Describe your last shot'));
+    block.appendChild(mk('div','qtitle','Which flight looks like yours?'));
+    const head=document.createElement('div'); head.className='phead'; head.setAttribute('aria-hidden','true');
+    head.innerHTML='<span>Left</span><span>Straight</span><span>Right</span>';
+    block.appendChild(head);
+    block.appendChild(buildPicker());
+    block.appendChild(mk('div','footnote','Right-handed flights — mirrored left-hand mode is on the list.'));
+  }
+  else if (state.active==='severity'){
+    const right = state.curveDir==='right';
+    block.appendChild(mk('div','eyebrow','How much curve?'));
+    const opts = right
+      ? [ {value:'Fade', html:'A little <span class="sub">— a fade</span>'}, {value:'Slice', html:'A lot <span class="sub">— a slice</span>'} ]
+      : [ {value:'Draw', html:'A little <span class="sub">— a draw</span>'}, {value:'Hook', html:'A lot <span class="sub">— a hook</span>'} ];
+    block.appendChild(radiogroup('How much curve?', opts, state.curve, onSeverity));
+    block.appendChild(mk('div','qhint', right
+      ? 'Small curve = <b>fade</b>. Big curve = <b>slice</b>.'
+      : 'Small curve = <b>draw</b>. Big curve = <b>hook</b>.', true));
+  }
+  else if (state.active==='height'){
+    block.appendChild(mk('div','eyebrow','How high did it fly?'));
+    block.appendChild(radiogroup('How high did it fly?', [
+      {value:'Low',label:'Low'},{value:'Normal',label:'Normal'},{value:'High',label:'High'},{value:'Ballooned',label:'Ballooned'}
+    ], state.height, onHeight));
+    if (state.height==='Ballooned') block.appendChild(mk('div','qhint','Climbed steep, dropped short of its usual flight.'));
+  }
+  else if (state.active==='distance'){
+    block.appendChild(mk('div','eyebrow','Distance, next to your normal 7-iron?'));
+    block.appendChild(radiogroup('Distance, next to your normal 7-iron?', [
+      {value:'Long (gained distance)',label:'Longer'},{value:'Full (normal distance)',label:'Normal'},
+      {value:'Slight loss',label:'A bit short'},{value:'Noticeable loss',label:'Way short'}
+    ], state.distance, onDistance));
+  }
+  else if (state.active==='contact'){
+    block.appendChild(mk('div','eyebrow','How did it feel off the face? (optional)'));
+    block.appendChild(radiogroup('How did it feel off the face? Optional', [
+      {value:'Pure',label:'Pure'},{value:'Thin',label:'Thin'},{value:'Fat',label:'Fat'},{value:'Not sure',label:'Not sure'}
+    ], state.contact, onContact));
+    const skip=document.createElement('button'); skip.type='button'; skip.className='textbtn sa-focus'; skip.textContent='Skip';
+    skip.addEventListener('click', ()=> onContact('skip'));
+    block.appendChild(skip);
+  }
+  railBody.appendChild(block);
+  // focus the active group's first control when reopening
+  focusActiveGroup(block);
+}
+function mk(tag, cls, html, isHTML){ const e=document.createElement(tag); if(cls)e.className=cls; if(html!=null){ if(isHTML||/[<&]/.test(html)) e.innerHTML=html; else e.textContent=html; } return e; }
+
+function focusActiveGroup(block){
+  // only steal focus on an explicit reopen (not first paint)
+  if (!state._reopen) return; state._reopen=false;
+  const first = block.querySelector('[role="radio"],[role="radiogroup"] .chip, .tile');
+  if (first){ const target = block.querySelector('[tabindex="0"]') || first; target.focus(); }
+}
+
+/* 3×3 picker with 2-D roving tabindex + arrow keys */
+function buildPicker(){
+  const grid=document.createElement('div'); grid.className='picker'; grid.setAttribute('role','radiogroup'); grid.setAttribute('aria-label','Which flight looks like yours?');
+  const tiles=[];
+  const checkedCol = state.startLine? START_BY_COL.indexOf(state.startLine):-1;
+  const checkedRow = state.curveDir? DIR_BY_ROW.indexOf(state.curveDir):-1;
+  for (let row=0; row<3; row++){
+    for (let col=0; col<3; col++){
+      const t=document.createElement('button'); t.type='button'; t.className='tile sa-focus'; t.setAttribute('role','radio');
+      t.dataset.col=col; t.dataset.row=row;
+      const checked = col===checkedCol && row===checkedRow;
+      t.setAttribute('aria-checked', checked?'true':'false');
+      t.setAttribute('aria-label', PICKER_LABELS[`${col},${row}`]);
+      const first = (checkedCol<0 && col===0 && row===0);
+      t.tabIndex = (checked || first) ? 0 : -1;
+      t.innerHTML = tileSVG(col,row);
+      t.addEventListener('click', ()=> onShape(col,row));
+      t.addEventListener('keydown', e=> pickerKey(e, tiles, col, row));
+      tiles.push({el:t,col,row}); grid.appendChild(t);
+    }
+  }
+  grid._tiles = tiles;
+  return grid;
+}
+function pickerKey(e, tiles, col, row){
+  let nc=col, nr=row, move=false;
+  if (e.key==='ArrowRight'){ nc=(col+1)%3; move=true; }
+  else if (e.key==='ArrowLeft'){ nc=(col+2)%3; move=true; }
+  else if (e.key==='ArrowDown'){ nr=(row+1)%3; move=true; }
+  else if (e.key==='ArrowUp'){ nr=(row+2)%3; move=true; }
+  else if (e.key===' '||e.key==='Enter'){ e.preventDefault(); onShape(col,row); return; }
+  if (move){ e.preventDefault(); const next=tiles.find(t=>t.col===nc&&t.row===nr); tiles.forEach(t=>t.el.tabIndex=-1); next.el.tabIndex=0; next.el.focus(); }
+}
+function tileSVG(col,row){
+  const sdx = {0:-13,1:0,2:13}[col];
+  const cdx = {0:-15,1:0,2:15}[row];
+  const ex = 36+sdx+cdx, ey=12;
+  const c1x=(36+sdx*0.55).toFixed(1), c1y=42;
+  const c2x=(36+sdx+cdx*0.35).toFixed(1), c2y=24;
+  return `<svg viewBox="0 0 72 72" aria-hidden="true">
+    <path d="M36 60 C ${c1x} ${c1y} ${c2x} ${c2y} ${ex} ${ey}" fill="none" stroke="#9D8BFF" stroke-width="2.4" stroke-linecap="round"/>
+    <circle cx="36" cy="60" r="3" fill="#F5F2FF"/>
+  </svg>`;
+}
+
+/* ── input handlers (auto-advance) ───────────────────────────────────── */
+function onShape(col,row){
+  state.startLine = START_BY_COL[col];
+  state.curveDir  = DIR_BY_ROW[row];
+  haptics.tick('shape');
+  if (state.curveDir==='straight'){
+    state.curve='Straight';
+    updateSketch();
+    const msg = `Sketched: ${START_WORD[state.startLine].toLowerCase()}, straight.`;
+    afterAnswer('shape', msg);
+  } else {
+    state.curve=null;
+    updateSketch();
+    state._reopen=true; state.active='severity'; renderInput();
+    announce(`Sketched: ${START_WORD[state.startLine].toLowerCase()}, curving ${state.curveDir}. How much curve?`);
+  }
+}
+function onSeverity(val){
+  state.curve=val; haptics.tick('sev'); updateSketch();
+  afterAnswer('severity', `A ${val.toLowerCase()}. Next: height.`);
+}
+function onHeight(val){
+  state.height=val; haptics.tick('h'); updateSketch();
+  afterAnswer('height', `Height: ${HEIGHT_WORD[val].toLowerCase()}. Next: distance.`);
+}
+function onDistance(val){
+  state.distance=val; haptics.tick('d'); updateSketch();
+  afterAnswer('distance', `Distance: ${DIST_DISPLAY[val].toLowerCase()}. Last: contact feel, or skip.`);
+}
+function onContact(val){
+  state.contact=val; haptics.tick('c');
+  afterAnswer('contact', val==='skip' ? 'Reconstructing your delivery…' : `Contact: ${val.toLowerCase()}.`);
+}
+
+function nextQuestion(){
+  if (!state.startLine) return 'shape';
+  if (state.curveDir!=='straight' && !state.curve) return 'severity';
+  if (!state.height) return 'height';
+  if (!state.distance) return 'distance';
+  if (state.contact===null) return 'contact';
+  return null;
+}
+function afterAnswer(justAnswered, msg){
+  if (state.hasResults){
+    // editing an answered chip after results → re-solve back to S6 (static)
+    state.active=null;
+    recomputeResults();
+    if (msg) announce(msg);
+    return;
+  }
+  const next = nextQuestion();
+  if (next){ state._reopen=true; state.active=next; renderInput(); if (msg) announce(msg); }
+  else { if (msg) announce(msg); goReveal(); }
+}
+function openQuestion(dim){
+  state._reopen=true; state.active=dim;
+  if (dim==='shape'){ /* keep startLine/curveDir so picker shows current */ }
+  renderInput();
+  announce(`Change ${dim==='shape'?'your flight':dim}.`);
+}
+
+/* ══ REVEAL ═══════════════════════════════════════════════════════════ */
+function solveNow(){
+  const d = descriptor();
+  currentDesc = d;
+  const res = DX.lookup(MAP, d);
+  if (!res.exact){ currentEntry=null; return { miss:true, nearest:res.nearest, d }; }
+  currentEntry = res.entry;
+  const filt = state.divot ? DX.divotFilter(state.divot) : null;
+  currentCon = DX.consolidateStories(currentEntry, filt);
+  return { miss:false, con:currentCon, d };
+}
+function setEmberFromTop(top){
+  const { flight, samples } = DX.solveTrace(top.rep);
+  emberSamples = samples;
+  emberAbs = { carryM:flight.carry*Y2M, apexM:flight.apex*Y2M, offlineM:flight.offline*Y2M, flight };
+  return flight;
+}
+function animateEmber(ms){
+  return new Promise(res=>{
+    const t0=performance.now();
+    (function step(t){ emberProgress=Math.min(1,(t-t0)/ms); drawAll(); if(emberProgress<1) requestAnimationFrame(step); else res(); })(performance.now());
+  });
+}
+async function goReveal(){
+  state.phase='reveal';
+  const sol = solveNow();
+  if (sol.miss){ renderMiss(sol.nearest, sol.d); return; }
+  const top = sol.con.stories[0];
+  const flight = setEmberFromTop(top);
+  emberProgress = 0;
+
+  if (reduce){
+    emberProgress=1; drawAll();
+    renderResults(sol.con, sol.d, flight);
+    return;
+  }
+  // reveal beat: rail shows reconstructing, scene dims 8%
+  railBody.innerHTML=''; renderChips(railBody);
+  railBody.appendChild(mk('div','beat','Reconstructing your delivery…'));
+  announce('Reconstructing your delivery…');
+  sceneDimAmt=0.08; drawAll();
+  await wait(420);
+  sceneDimAmt=0; drawAll();
+  await animateEmber(720);
+  haptics.notify('success');
+  renderResults(sol.con, sol.d, flight);
+}
+function recomputeResults(){
+  const sol = solveNow();
+  if (sol.miss){ renderMiss(sol.nearest, sol.d); return; }
+  const top = sol.con.stories[0];
+  const flight = setEmberFromTop(top);
+  emberProgress=1; drawAll();
+  renderResults(sol.con, sol.d, flight);
+}
+
+/* ══ RESULTS (S6) ═════════════════════════════════════════════════════ */
+function revealHeadline(con, refined){
+  const top=con.stories[0]; const conf=DX.confidenceLabel(top.pct);
+  return `${refined?'Refined. ':''}${conf.label}: ${DX.storyTitle(top)} — about ${conf.n} in 10.`;
+}
+function renderResults(con, d, flight, opts={}){
+  state.phase='results'; state.hasResults=true; state.active=null;
+  railBody.innerHTML='';
+  renderChips(railBody);
+
+  // perfect-shot wink
+  if (d.curve==='Straight' && d.startLine==='Straight' && d.height==='Normal' && d.distanceLoss==='Full (normal distance)'){
+    railBody.appendChild(mk('div','wink', "That's the one you're trying to repeat. Here's a delivery that does it:"));
+  }
+  // divot-empty honesty
+  if (con.filterEmpty){
+    railBody.appendChild(mk('div','honesty', `A ${divotLabel(state.divot)} doesn't fit this flight in the model — showing all patterns.`));
+  }
+
+  const shown = con.stories.slice(0,3);
+  const ol=document.createElement('ol'); ol.className='stories';
+  const wayShort = isWayShort();
+  shown.forEach((story,i)=>{
+    ol.appendChild(storyCard(story, i, d, con, opts));
+    if (i===0 && wayShort && (state.contact==='Thin'||state.contact==='Fat')){
+      // promote contact card directly under card 1
+      ol.appendChild(wrapLi(contactCard()));
+    }
+  });
+  railBody.appendChild(ol);
+
+  // honesty line (only when there is genuine "other" mass)
+  if (con.otherCount>0 && con.otherPct>0){
+    const shownN = shown.length;
+    railBody.appendChild(mk('div','honesty',
+      `This flight matches <b>${con.gridCount.toLocaleString('en-US')}</b> deliveries in ${con.clusterCount} patterns. Showing the ${shownN} biggest — ${con.otherCount} rarer patterns share the remaining ${con.otherPct}%.`, true));
+  }
+
+  // contact card (not promoted case): render after stories when Thin/Fat and not way-short
+  if ((state.contact==='Thin'||state.contact==='Fat') && !(wayShort)){
+    railBody.appendChild(contactCard());
+  }
+
+  // re-diagnose
+  const again=document.createElement('button'); again.type='button'; again.className='textbtn sa-focus'; again.textContent='Describe another shot';
+  again.addEventListener('click', resetFlow);
+  railBody.appendChild(again);
+
+  // scene readout strip (top story delivery)
+  renderReadout(con.stories[0].rep);
+  drawAll();
+
+  announce(revealHeadline(con, !!opts.refined));
+}
+function wrapLi(node){ const li=document.createElement('li'); li.appendChild(node); return li; }
+
+function storyCard(story, i, d, con, opts){
+  const li=document.createElement('li');
+  const card=document.createElement('article'); card.className='card' + (i>0?' compact':'');
+  const conf=DX.confidenceLabel(story.pct);
+  const n = conf.n;
+
+  // eyebrow (confidence FIRST — first DOM content of the card)
+  const eye=document.createElement('div'); eye.className='cardeye';
+  const embN = i===0 ? `<span class="emb">${n}</span>` : `${n}`;
+  const refinedTag = (i===0 && opts.refined && !con.filterEmpty) ? ` · <span class="refined">Refined by your divot</span>` : '';
+  eye.innerHTML = `${esc(conf.label)} · About ${embN} in 10 matches${refinedTag}`;
+
+  const head=document.createElement('div'); head.className='cardhead';
+  const glyphwrap=document.createElement('div'); glyphwrap.className='glyphwrap';
+  glyphwrap.innerHTML = dplaneSVG(story.rep);
+  const gvh=document.createElement('span'); gvh.className='vh'; gvh.textContent = dplaneAlt(story.rep);
+  glyphwrap.appendChild(gvh);
+  const txt=document.createElement('div'); txt.className='txt';
+  txt.appendChild(eye);
+  txt.appendChild(mk('div','ctitle', DX.storyTitle(story)));
+  if (i===0){
+    head.appendChild(glyphwrap); head.appendChild(txt); card.appendChild(head);
+  } else {
+    card.appendChild(eye); card.appendChild(mk('div','ctitle', DX.storyTitle(story)));
+  }
+
+  // body (plain-language + real terms taught) — card 1 full, cards 2-3 shorter
+  const body=document.createElement('div'); body.className='cbody';
+  renderBody(body, story, d.curve, i>0);
+  card.appendChild(body);
+
+  if (i===0){
+    // variant rows
+    const vwrap=document.createElement('div'); vwrap.className='variants';
+    story.variants.slice(0,3).forEach(v=>{
+      const share = story.pct>0 ? v.pct/story.pct : 0;
+      const vn = Math.max(1, Math.round(share*10));
+      const row=document.createElement('div'); row.className='variant';
+      row.innerHTML = `<span style="flex:1 1 auto">${esc(cap(DX.attackWord(v.attack)))} swing</span>` +
+        `<span class="vtrack" aria-hidden="true"><span class="vbar" style="width:${Math.round(share*100)}%"></span></span>` +
+        `<span class="vpct">${vn} in 10</span>`;
+      row.setAttribute('aria-label', `${DX.attackWord(v.attack)} swing — about ${vn} in 10 within this pattern`);
+      vwrap.appendChild(row);
+    });
+    card.appendChild(vwrap);
+
+    // divot follow-up
+    if (DX.needsFollowUp(con.stories) && !state.divot){
+      card.appendChild(divotBlock());
+    }
+
+    // primary CTA (writes §2.4 handoff)
+    card.appendChild(tryCTA(story.rep, DX.storyTitle(story), true, d.curve));
+    card.appendChild(mk('div','cta-sub','Loads these numbers into Ball Flight — drag them to fix the shot.'));
+  } else {
+    // quiet text CTA for cards 2-3
+    card.appendChild(tryCTA(story.rep, DX.storyTitle(story), false, d.curve));
+  }
+
+  li.appendChild(card);
+  return li;
+}
+function cap(s){ return s.charAt(0).toUpperCase()+s.slice(1); }
+
+function renderBody(host, story, curve, short){
+  const parts = DX.storyBody(story, curve);
+  const use = short ? parts.slice(0, parts.length) : parts; // full for all; terms still tappable
+  for (const p of use){
+    if (p.t==='text'){ host.appendChild(document.createTextNode(p.v)); }
+    else {
+      const btn=document.createElement('button'); btn.type='button'; btn.className='term sa-focus';
+      btn.textContent=p.v; btn.setAttribute('aria-expanded','false');
+      const def=document.createElement('span'); def.className='termdef'; def.textContent=p.def; def.hidden=true;
+      btn.addEventListener('click', ()=>{
+        const open = btn.getAttribute('aria-expanded')==='true';
+        btn.setAttribute('aria-expanded', open?'false':'true'); def.hidden=open;
+      });
+      host.appendChild(btn); host.appendChild(def);
+    }
+  }
+}
+
+/* D-plane mini glyph (top-down schematic, aria-hidden; ×2 visual gain) */
+function dplaneSVG(rep){
+  const L=40, tx=36, ty=60;
+  const fa=rep.faceAngle*2*Math.PI/180, pa=rep.clubPath*2*Math.PI/180;
+  const fe=[(tx+L*Math.sin(fa)).toFixed(1),(ty-L*Math.cos(fa)).toFixed(1)];
+  const pe=[(tx+L*Math.sin(pa)).toFixed(1),(ty-L*Math.cos(pa)).toFixed(1)];
+  const mx=((+fe[0]+ +pe[0])/2 + (+fe[0]-+pe[0])*0.5).toFixed(1), my=((+fe[1]+ +pe[1])/2).toFixed(1);
+  return `<svg viewBox="0 0 72 72" width="72" height="72" aria-hidden="true">
+    <path d="M${tx} ${ty} L${fe[0]} ${fe[1]} L${pe[0]} ${pe[1]} Z" fill="rgba(157,139,255,.14)"/>
+    <line x1="36" y1="8" x2="36" y2="64" stroke="rgba(255,255,255,.30)" stroke-width="1.4" stroke-dasharray="3 3"/>
+    <line x1="${tx}" y1="${ty}" x2="${pe[0]}" y2="${pe[1]}" stroke="#6FC6FF" stroke-width="2.4" stroke-linecap="round"/>
+    <line x1="${tx}" y1="${ty}" x2="${fe[0]}" y2="${fe[1]}" stroke="#FF5C6B" stroke-width="2.4" stroke-linecap="round"/>
+    <path d="M${pe[0]} ${pe[1]} Q ${mx} ${my} ${fe[0]} ${fe[1]}" fill="none" stroke="#9D8BFF" stroke-width="1.2" opacity=".5"/>
+    <circle cx="36" cy="60" r="2.6" fill="#F5F2FF"/>
+  </svg>`;
+}
+function dplaneAlt(rep){
+  const f=rep.faceAngle, p=rep.clubPath;
+  const fw = f>0?`${Math.abs(f).toFixed(1)} degrees open`:f<0?`${Math.abs(f).toFixed(1)} degrees closed`:'square';
+  const pw = p<0?`${Math.abs(p).toFixed(1)} degrees left of target`:p>0?`${Math.abs(p).toFixed(1)} degrees right of target`:'down the line';
+  const rel = (f-p)>1?'face right of path':(f-p)<-1?'face left of path':'face and path aligned';
+  return `Diagram: face ${fw}, path ${pw} — ${rel}.`;
+}
+
+/* readout strip in scene (param-coloured labelled chips) */
+function renderReadout(rep){
+  const ph=DX.deliveryPhrases(rep);
+  const chip=(label,val,color)=>`<span class="pchip"><span class="pdot" style="background:${color}"></span><b>${label}</b> ${esc(val)}</span>`;
+  readoutEl.innerHTML =
+    chip('FACE',ph.face,'var(--face)') + chip('PATH',ph.path,'var(--path)') +
+    chip('ATTACK',ph.attack,'var(--attack)') + chip('LOFT',ph.loft,'var(--loft)') +
+    chip('SPEED',ph.speed,'var(--ink)');
+  readoutEl.hidden=false;
+}
+
+/* try-this-delivery (writes localStorage seed + mirrored query string, §2.4) */
+function tryCTA(rep, title, primary, curve){
+  const label = `${title} — ${(CURVE_WORD[curve]||'shot').toLowerCase()}`;
+  const url = DX.handoff(rep, label);                 // href carries params (inspectable + shareable)
+  const a=document.createElement('a'); a.className=(primary?'cta':'qcta')+' sa-focus'; a.href=url;
+  a.innerHTML = primary ? 'Try this delivery →' : 'Try this delivery →';
+  a.setAttribute('aria-label', `Try this delivery: ${label}. Opens Ball Flight.`);
+  a.addEventListener('click', ()=>{ DX.handoff(rep, label); persistStatFor(); }); // write fresh on tap, then navigate
+  return a;
+}
+function persistStatFor(){
+  const top = currentCon && currentCon.stories[0];
+  if (!top) return;
+  DX.persistStat({ shape: currentDesc.curve, story: DX.storyTitle(top), face: top.rep.faceAngle, path: top.rep.clubPath });
+}
+
+/* divot follow-up (§3.3) */
+function divotLabel(a){ return { deep:'deep', brushed:'brushed', none:'no', unsure:'' }[a] + ' divot'; }
+function divotBlock(){
+  const wrap=document.createElement('div'); wrap.className='divotq';
+  wrap.appendChild(mk('div','eyebrow','One more clue — your divot?'));
+  wrap.appendChild(radiogroup('One more clue — your divot?', [
+    {value:'deep',label:'Deep divot'},{value:'brushed',label:'Brushed the grass'},
+    {value:'none',label:'No divot'},{value:'unsure',label:"Didn't notice"}
+  ], state.divot, onDivot));
+  return wrap;
+}
+function onDivot(answer){
+  state.divot=answer; haptics.tick('divot');
+  const filt = DX.divotFilter(answer);
+  const con = DX.consolidateStories(currentEntry, filt);
+  currentCon = con;
+  const flight = setEmberFromTop(con.stories[0]);
+  emberProgress=1; drawAll();
+  renderResults(con, currentDesc, flight, { refined:true });
+}
+
+/* contact card (§6.6 — parallel model, never blended) */
+function contactCard(){
+  const c=document.createElement('article'); c.className='contactcard';
+  c.appendChild(mk('div','cardeye','The strike, separately'));
+  const feel = state.contact==='Thin' ? 'Thin' : 'Fat';
+  c.appendChild(mk('div','cbody',
+    `${feel} contact comes from where your swing bottoms out — that's strike geometry, and this flight engine genuinely can't see it. A pure strike at this same delivery loses only a few percent of distance; a big loss is the strike talking.`));
+  const a=document.createElement('a'); a.className='qcta sa-focus'; a.href='./geometry-window-mock.html';
+  a.textContent='Open the Strike Window →'; a.setAttribute('aria-label','Open the Strike Window');
+  c.appendChild(a);
+  return c;
+}
+
+/* ══ S-MISS ═══════════════════════════════════════════════════════════ */
+function renderMiss(nearest, d){
+  state.phase='miss'; readoutEl.hidden=true;
+  railBody.innerHTML=''; renderChips(railBody);
+  const box=document.createElement('div'); box.className='miss';
+  box.appendChild(mk('div','mtitle',"That mix doesn't come out of the physics"));
+  box.appendChild(mk('div','mbody','A mid-iron can’t fly that exact combination in our model — usually one detail reads differently than it felt. Closest real flights:'));
+  if (nearest && nearest.length){
+    const row=document.createElement('div'); row.className='qrow';
+    nearest.forEach(nd=>{
+      const b=document.createElement('button'); b.type='button'; b.className='chip sa-focus';
+      b.textContent = missChipLabel(nd, d);
+      b.addEventListener('click', ()=> applyNearest(nd.descriptor));
+      row.appendChild(b);
+    });
+    box.appendChild(row);
+  } else {
+    box.appendChild(mk('div','mbody','Try changing the height or distance a notch.'));
+  }
+  railBody.appendChild(box);
+  announce("That mix doesn't fit the model. Pick one of the closest real flights.");
+  drawAll();
+}
+function missChipLabel(nd, oldD){
+  const v=nd.descriptor;
+  if (nd.changed==='distance'){ return { 'Long (gained distance)':'Same, but longer','Full (normal distance)':'Same, normal distance','Slight loss':'Same, but a bit short','Noticeable loss':'Same, but way short' }[v.distanceLoss]; }
+  if (nd.changed==='height'){ return `Same, ${HEIGHT_WORD[v.height].toLowerCase()}`; }
+  if (nd.changed==='severity'){
+    const gentler = (oldD.curve==='Slice'&&v.curve==='Fade')||(oldD.curve==='Hook'&&v.curve==='Draw');
+    return gentler ? 'Gentler curve' : 'Sharper curve';
+  }
+  return 'Closest flight';
+}
+function applyNearest(nd){
+  state.curve=nd.curve; state.curveDir=curveDirFromCurve(nd.curve);
+  state.startLine=nd.startLine; state.height=nd.height; state.distance=nd.distance;
+  updateSketch();
+  state.active=null;
+  if (state.hasResults) recomputeResults(); else goReveal();
+}
+
+/* ══ reset ════════════════════════════════════════════════════════════ */
+function resetFlow(){
+  state.startLine=state.curveDir=state.curve=state.height=state.distance=state.contact=state.divot=null;
+  state.active='shape'; state.phase='input'; state.hasResults=false;
+  sketchPts=sketchAbs=emberSamples=emberAbs=null; emberProgress=0;
+  readoutEl.hidden=true; sideInset.hidden=true; sceneGhost.hidden=false; sceneAlt.textContent='';
+  renderInput(); drawAll();
+  announce('Describe another shot. Which flight looks like yours?');
+}
+
+/* ══ boot ═════════════════════════════════════════════════════════════ */
+function renderError(retry){
+  railBody.innerHTML='';
+  const box=document.createElement('div'); box.className='errbox';
+  box.appendChild(mk('div',null,'Diagnosis needs its physics map — check your connection and retry.'));
+  const b=document.createElement('button'); b.type='button'; b.className='chip sa-focus'; b.textContent='Retry';
+  b.addEventListener('click', retry); box.appendChild(b);
+  railBody.appendChild(box);
+}
+async function boot(){
+  renderInput(); drawAll();
+  try {
+    MAP = await DX.loadMap();
+    if (location.search.includes('selftest')) runSelfTest();
+  } catch(e){
+    // picker stays interactive (sketch still works); show retry
+    renderError(boot);
+  }
+}
+const ro = new ResizeObserver(()=> drawAll());
+ro.observe(sceneEl);
+window.addEventListener('orientationchange', ()=> setTimeout(drawAll,120));
+boot();
+
+/* ── optional self-test (?selftest) — build-order step 1 asserts ─────── */
+function runSelfTest(){
+  const checks=[];
+  for (const s of MAP.spotChecks){
+    const {entry,exact}=DX.lookup(MAP,s.descriptor);
+    const con=exact&&DX.consolidateStories(entry);
+    const top=con&&con.stories[0];
+    checks.push([`spot ${s.name}`, top && top.face===s.topCause.face && top.path===s.topCause.path && top.variants[0].attack===s.topCause.attack]);
+  }
+  const slice=DX.lookup(MAP,{curve:'Slice',startLine:'Right',height:'Normal',distanceLoss:'Full (normal distance)'}).entry;
+  checks.push(['slice needsFollowUp', DX.needsFollowUp(DX.consolidateStories(slice).stories)===true]);
+  const deep=DX.consolidateStories(slice, DX.divotFilter('deep'));
+  checks.push(['deep re-rank', deep.filtered && Math.abs(deep.stories.reduce((a,b)=>a+b.pct,0)-100)<0.5]);
+  const fails=checks.filter(c=>!c[1]);
+  if (fails.length) console.error('[diagnose selftest] FAIL', fails.map(f=>f[0]));
+  else console.info('[diagnose selftest] all', checks.length, 'passed');
+}
+</script>
+</body>
+</html>
