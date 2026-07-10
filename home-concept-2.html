@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#07060C">
+<meta name="robots" content="noindex">
+<title>StrikeArc — Summon</title>
+
+<!-- favicon: arc-mark (violet strokes) + ember ball — the P3 lockup exception -->
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2052%2052'%20fill='none'%3E%3Cpath%20d='M11%2045%20C%2016%2026,%2024%2018,%2035%2015%20M21%2039%20L%2030%2024%20L%2043%2045'%20stroke='%239D8BFF'%20stroke-width='4.2'%20stroke-linecap='round'%20stroke-linejoin='round'/%3E%3Ccircle%20cx='37'%20cy='15'%20r='5.2'%20fill='%23FF8A4D'/%3E%3C/svg%3E">
+
+<!-- shared P3 tokens + shell contract (READ-ONLY consumer) -->
+<link rel="stylesheet" href="./sa-p3.css">
+
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;}
+  html{background:var(--bg);}
+  body{
+    min-height:100dvh;
+    /* K2 is the anti-scene: no photo backdrop — deep UV void only */
+    background:
+      radial-gradient(120% 90% at 44% 56%, #16112A 0%, #0B0817 42%, #060409 78%),
+      var(--bg);
+    color:var(--ink);
+    overflow:hidden;
+    font-family:var(--font-ui);
+    -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+    -webkit-tap-highlight-color:transparent;
+  }
+
+  /* deep vignette that hugs the ball — sells "one light in the dark" */
+  .sa-void{position:fixed;inset:0;z-index:0;pointer-events:none;
+    background:radial-gradient(60% 70% at var(--vx,44%) var(--vy,56%),
+      rgba(157,139,255,.05) 0%, rgba(7,6,12,0) 46%),
+      radial-gradient(140% 120% at 50% 120%, rgba(0,0,0,.55), transparent 60%);}
+
+  /* ══ HEADER — wordmark top-left, MENU + help top-right ═══════════════════ */
+  header.sa-header{position:fixed;top:0;left:0;right:0;z-index:100;height:60px;pointer-events:none;}
+  .sa-wordmark{
+    position:absolute;
+    top:max(14px, env(safe-area-inset-top));
+    left:max(16px, env(safe-area-inset-left));
+    display:inline-flex;align-items:center;gap:9px;
+    pointer-events:none;
+    filter:drop-shadow(0 2px 18px rgba(0,0,0,.65));}
+  .sa-wordmark .mark{width:24px;height:24px;flex:0 0 auto;display:block;}
+  .sa-wordmark .mark .arc{stroke:var(--secondary);}
+  .sa-wordmark .mark .ball{fill:var(--accent);}
+  .sa-wordmark .wm-text{
+    font-family:var(--font-display);
+    font-size:15px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;line-height:1;}
+  .sa-wordmark .wm-text .s{color:var(--ink);}
+  /* SYS-08 keeps only the wordmark ball-dot as ember — the "ARC" letters stay
+     cold ink so the breathing ball is the single ember at rest (colour law). */
+  .sa-wordmark .wm-text .a{color:var(--ink);}
+
+  .sa-top-right{
+    position:fixed;z-index:101;
+    top:max(4px, calc(env(safe-area-inset-top) - 10px));
+    right:max(8px, env(safe-area-inset-right));
+    display:inline-flex;align-items:center;gap:2px;pointer-events:none;}
+
+  .sa-menu{
+    pointer-events:auto;cursor:pointer;
+    min-height:44px;padding:0 12px;display:inline-flex;align-items:center;
+    background:none;border:0;color:var(--muted);
+    font-family:var(--font-ui);font-size:11px;font-weight:600;
+    letter-spacing:.16em;text-transform:uppercase;line-height:1;
+    filter:drop-shadow(0 1px 8px rgba(0,0,0,.6));
+    transition:color .15s var(--ease);}
+  .sa-menu:hover{color:var(--ink);}
+
+  .sa-help{
+    pointer-events:auto;cursor:pointer;
+    width:44px;height:44px;display:inline-flex;align-items:center;justify-content:center;
+    background:none;border:0;color:var(--muted);text-decoration:none;
+    filter:drop-shadow(0 1px 8px rgba(0,0,0,.6));
+    transition:color .15s var(--ease);}
+  .sa-help svg{width:22px;height:22px;display:block;}
+  .sa-help:hover{color:var(--ink);}
+
+  /* backdrop-proof double focus ring, reused from sa-p3.css .sa-focus */
+  .sa-focus:focus-visible{outline:none;border-radius:12px;
+    box-shadow:inset 0 0 0 1px rgba(0,0,0,.85), inset 0 0 0 3px var(--ink);}
+
+  /* ══ STAGE — the interactive void ════════════════════════════════════════ */
+  .sa-stage{position:fixed;inset:0;z-index:1;}
+
+  /* dark scrim — catches "tap the dark" to collapse, only live when open */
+  .sa-scrim{position:absolute;inset:0;z-index:5;border:0;background:transparent;
+    opacity:0;pointer-events:none;cursor:default;
+    transition:opacity .3s var(--ease);}
+  .sa-stage.is-open .sa-scrim{pointer-events:auto;opacity:1;
+    background:radial-gradient(70% 80% at var(--vx,44%) var(--vy,56%), rgba(6,4,11,.30), rgba(6,4,11,.66) 78%);}
+
+  /* ══ THE BALL — the app's only light ═════════════════════════════════════ */
+  .sa-ball{
+    position:absolute;z-index:50;
+    width:116px;height:116px;
+    display:grid;place-items:center;
+    transform:translate(-50%,-50%);           /* static centering base */
+    background:none;border:0;padding:0;cursor:pointer;
+    -webkit-tap-highlight-color:transparent;}
+  .sa-ball__glow{
+    position:absolute;width:116px;height:116px;border-radius:50%;
+    background:radial-gradient(circle, rgba(255,138,77,.30) 0%, rgba(255,138,77,.10) 38%, transparent 66%);
+    animation:glowBreath 4s cubic-bezier(.45,0,.55,1) infinite;}
+  .sa-ball__core{
+    position:relative;width:34px;height:34px;border-radius:50%;
+    background:radial-gradient(circle at 38% 34%, #FFF3E8 0%, var(--accent) 52%, #E8622A 100%);
+    box-shadow:0 0 22px 5px rgba(255,138,77,.55), 0 0 54px 16px rgba(255,138,77,.22);
+    animation:coreBreath 4s cubic-bezier(.45,0,.55,1) infinite;}
+  @keyframes coreBreath{0%,100%{transform:scale(1);}50%{transform:scale(1.045);}}
+  @keyframes glowBreath{0%,100%{transform:scale(1);opacity:.85;}50%{transform:scale(1.12);opacity:1;}}
+  .sa-ball:focus-visible{outline:none;border-radius:50%;
+    box-shadow:0 0 0 3px var(--bg), 0 0 0 6px var(--ink);}
+
+  /* quiet instruction under the ball (closed state only) */
+  .sa-hint{
+    position:absolute;z-index:40;transform:translateX(-50%);
+    font-family:var(--font-ui);font-size:11px;font-weight:600;
+    letter-spacing:.1em;color:var(--muted);white-space:nowrap;pointer-events:none;
+    transition:opacity .28s var(--ease);}
+  .sa-stage.is-open .sa-hint{opacity:0;}
+
+  /* ══ RING — 5 dark-glass tiles orbiting the ball ═════════════════════════ */
+  .sa-ring{position:absolute;inset:0;z-index:10;pointer-events:none;}
+  .sa-slot{position:absolute;left:0;top:0;will-change:transform;}
+  .sa-tile{
+    position:relative;display:block;width:156px;height:88px;
+    padding:12px 14px;overflow:hidden;cursor:pointer;
+    text-align:left;text-decoration:none;
+    background:var(--plate-solid);
+    border:1px solid var(--line-strong);border-radius:var(--radius-control);
+    box-shadow:0 8px 24px -12px rgba(0,0,0,.8);
+    transform-origin:50% 50%;will-change:transform,opacity;
+    opacity:0;pointer-events:none;
+    -webkit-tap-highlight-color:transparent;}
+  /* rim light — lit only on the ball-facing edge (radial-gradient rim trick) */
+  .sa-tile::before{
+    content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+    background:radial-gradient(circle at var(--rimx,50%) var(--rimy,20%),
+      rgba(245,242,255,.12) 0%, transparent 60%);}
+  .sa-tile.is-front::before{
+    background:radial-gradient(circle at var(--rimx,50%) var(--rimy,20%),
+      rgba(157,139,255,.42) 0%, rgba(157,139,255,.10) 34%, transparent 64%);}
+  .sa-tile.is-front{border-color:var(--secondary-line);}
+  .sa-stage.is-open .sa-tile{pointer-events:auto;}
+  .sa-tile__label{
+    position:relative;display:block;
+    font-family:var(--font-ui);font-size:10px;font-weight:600;
+    letter-spacing:.14em;text-transform:uppercase;color:var(--muted);line-height:1.3;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    transition:color .18s var(--ease);}
+  .sa-tile.is-front .sa-tile__label{color:var(--ink);}
+  .sa-tile__stat{
+    position:relative;display:block;margin-top:12px;
+    font-family:var(--font-mono);font-size:15px;font-weight:600;
+    color:var(--ink);font-variant-numeric:tabular-nums;letter-spacing:0;line-height:1.15;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .sa-tile__stat.is-teach{
+    font-family:var(--font-ui);font-size:12px;font-weight:500;color:var(--ink);letter-spacing:.01em;}
+  .sa-tile:focus-visible{outline:none;
+    box-shadow:0 8px 24px -12px rgba(0,0,0,.8), inset 0 0 0 1px rgba(0,0,0,.85), inset 0 0 0 3px var(--ink);}
+
+  /* swallow cover — the target grows past viewport before navigation */
+  .sa-cover{position:fixed;inset:0;z-index:90;background:var(--bg);opacity:0;pointer-events:none;}
+
+  .sa-sr{position:absolute!important;width:1px;height:1px;overflow:hidden;
+    clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0;padding:0;margin:-1px;}
+
+  /* reduced-motion: kill JS-independent motion; JS branches gate the rest */
+  @media (prefers-reduced-motion: reduce){
+    .sa-ball__core,.sa-ball__glow{animation:none!important;}
+    .sa-scrim,.sa-hint,.sa-menu,.sa-help,.sa-tile__label{transition:none!important;}
+  }
+  /* ?rm=1 review hook mirrors the OS media feature so the ball stops breathing
+     under the test hook too — full parity with real prefers-reduced-motion
+     (JS sets html.rm whenever the reduced-motion branch is active). */
+  html.rm .sa-ball__core,html.rm .sa-ball__glow{animation:none!important;}
+  html.rm .sa-scrim,html.rm .sa-hint,html.rm .sa-menu,html.rm .sa-help,html.rm .sa-tile__label{transition:none!important;}
+</style>
+</head>
+<body>
+
+<div class="sa-void" aria-hidden="true"></div>
+
+<!-- ══ HEADER ═══════════════════════════════════════════════════════════════ -->
+<header class="sa-header">
+  <h1 class="sa-wordmark" aria-label="StrikeArc">
+    <svg class="mark" viewBox="0 0 52 52" fill="none" aria-hidden="true">
+      <path class="arc" d="M11 45 C 16 26, 24 18, 35 15 M21 39 L 30 24 L 43 45"
+            stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle class="ball" cx="37" cy="15" r="5.2"/>
+    </svg>
+    <span class="wm-text" aria-hidden="true"><span class="s">STRIKE</span><span class="a">ARC</span></span>
+  </h1>
+
+  <!-- MENU + help live inside the banner landmark (M1: no bare-div chrome) -->
+  <div class="sa-top-right">
+    <!-- mandatory non-gesture path to the ring (guardrail ¶2) -->
+    <button class="sa-menu sa-focus" id="menuBtn" type="button"
+            aria-haspopup="true" aria-expanded="false" aria-controls="ring">Menu</button>
+    <!-- help affordance — honest <a> to the learn layer, matches home-mock -->
+    <a class="sa-help sa-focus" href="./academy.html" aria-label="Help — open the Academy">
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <circle cx="12" cy="12" r="9.2" stroke="currentColor" stroke-width="1.6"/>
+        <path d="M9.4 9.3 A2.7 2.7 0 1 1 12.4 12.4 V13.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" fill="none"/>
+        <circle cx="12" cy="17" r="1.05" fill="currentColor"/>
+      </svg>
+    </a>
+  </div>
+</header>
+
+<!-- ══ STAGE — the interactive void, wrapped in <main> (M1 landmark) ═══════════ -->
+<main class="sa-stage" id="stage">
+  <button class="sa-scrim" id="scrim" type="button" tabindex="-1" aria-hidden="true"></button>
+
+  <!-- the one hot light -->
+  <button class="sa-ball sa-focus" id="ball" type="button"
+          aria-haspopup="true" aria-expanded="false" aria-controls="ring"
+          aria-label="Open StrikeArc menu">
+    <span class="sa-ball__glow" aria-hidden="true"></span>
+    <span class="sa-ball__core" aria-hidden="true"></span>
+  </button>
+
+  <p class="sa-hint" id="hint">Hold the ball</p>
+
+  <!-- five tiles live permanently in DOM; hidden until fanned -->
+  <div class="sa-ring" id="ring" role="menu" aria-label="StrikeArc destinations">
+    <div class="sa-slot"><button class="sa-tile sa-focus" role="menuitem" type="button" data-key="flight"   data-href="./impact-viz-mock.html"><span class="sa-tile__label">Ball Flight</span><span class="sa-tile__stat"></span></button></div>
+    <div class="sa-slot"><button class="sa-tile sa-focus" role="menuitem" type="button" data-key="outcome"  data-href="./impact-outcome-mock.html"><span class="sa-tile__label">Outcome</span><span class="sa-tile__stat"></span></button></div>
+    <div class="sa-slot"><button class="sa-tile sa-focus" role="menuitem" type="button" data-key="geometry" data-href="./geometry-window-mock.html"><span class="sa-tile__label">Strike Window</span><span class="sa-tile__stat"></span></button></div>
+    <div class="sa-slot"><button class="sa-tile sa-focus" role="menuitem" type="button" data-key="academy"  data-href="./academy.html"><span class="sa-tile__label">Academy</span><span class="sa-tile__stat"></span></button></div>
+    <div class="sa-slot"><button class="sa-tile sa-focus" role="menuitem" type="button" data-key="diagnose" data-href="./diagnose-mock.html"><span class="sa-tile__label">Diagnose</span><span class="sa-tile__stat"></span></button></div>
+  </div>
+</main>
+
+<div class="sa-cover" id="cover" aria-hidden="true"></div>
+<div class="sa-sr" id="live" role="status" aria-live="polite"></div>
+
+<!-- vendored GSAP (UMD global) — no CDN, same path the existing pages use -->
+<script src="./vendor/gsap/gsap.min.js"></script>
+<script type="module">
+import haptics from './sa-haptics.js';
+
+const G = window.gsap || null;
+const $ = (id) => document.getElementById(id);
+const reduce = (() => {
+  try {
+    // review/test hook: ?rm=1 forces the reduced-motion branch (media emulation
+    // is not always available in the harness). Production reads the real query.
+    if (new URLSearchParams(location.search).get('rm') === '1') return true;
+    return matchMedia('(prefers-reduced-motion: reduce)').matches;
+  } catch (e) { return false; }
+})();
+// mirror the reduced-motion branch to CSS so the ?rm=1 hook also stops the
+// CSS-driven ball breathing (parity with the real prefers-reduced-motion block).
+if (reduce) document.documentElement.classList.add('rm');
+
+/* Haptics fire only on the native (Capacitor) target. On web the shared module
+   is a silent no-op that still console.debug()s each call — gate it here so the
+   web console stays clean without touching the read-only sa-haptics.js. */
+const NATIVE = (() => { try { return !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()); } catch (e) { return false; } })();
+const hap = {
+  impact: (s) => { if (NATIVE) { try { haptics.impact(s); } catch (e) {} } },
+  tick:   (k) => { if (NATIVE) { try { haptics.tick(k); } catch (e) {} } },
+};
+
+/* ── storage helpers (mirror home-mock's sa.stat.* contract exactly) ──────── */
+const readJSON = (k) => { try { const r = localStorage.getItem(k); return r ? JSON.parse(r) : null; } catch (e) { return null; } };
+const readStr  = (k) => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+const writeStr = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
+const NOW = Date.now();
+const STALE = 30 * 864e5;
+const fresh = (s) => s && typeof s.ts === 'number' && (NOW - s.ts) < STALE;
+const MINUS = '−';
+const signDeg = (n) => (n < 0 ? MINUS : '') + Math.abs(Number(n) || 0).toFixed(1) + '°';
+
+/* ── review seeding: ?seed=1 self-seeds plausible stats · ?fresh=1 clears ─── */
+const params = new URLSearchParams(location.search);
+if (params.get('fresh') === '1') {
+  ['sa.stat.flight','sa.stat.geometry','sa.stat.outcome','strikearc.academy.v1','sa.home.last'].forEach(k => { try { localStorage.removeItem(k); } catch (e) {} });
+}
+if (params.get('seed') === '1') {
+  try {
+    localStorage.setItem('sa.stat.flight',   JSON.stringify({ ts: NOW, total: 162, offlineM: 4, offlineSide: 'R' }));
+    localStorage.setItem('sa.stat.geometry', JSON.stringify({ ts: NOW, band: 'FLUSH', attack: -2.4 }));
+    localStorage.setItem('sa.stat.outcome',  JSON.stringify({ ts: NOW, carry: 158, shape: 'DRAW' }));
+    localStorage.setItem('strikearc.academy.v1', JSON.stringify({ xp: 420 }));
+    localStorage.setItem('sa.home.last', 'flight');
+  } catch (e) {}
+}
+
+/* ── Academy level derivation (mirrors home-mock / academy.html) ──────────── */
+const LEVELS = [
+  { lvl:1, xp:0,    title:'Apprentice' }, { lvl:2, xp:150,  title:'Student' },
+  { lvl:3, xp:350,  title:'Analyst' },    { lvl:4, xp:650,  title:'Technician' },
+  { lvl:5, xp:1000, title:'Engineer' },   { lvl:6, xp:1500, title:'Master' },
+];
+function levelInfo(xp){
+  let idx = 0; for (let i=0;i<LEVELS.length;i++) if (xp >= LEVELS[i].xp) idx = i;
+  let lvl = LEVELS[idx].lvl, title = LEVELS[idx].title;
+  if (idx === LEVELS.length - 1) { const extra = Math.floor((xp - 1500) / 600); lvl = 6 + extra; }
+  return { lvl, title };
+}
+
+/* ── read state ───────────────────────────────────────────────────────────── */
+const flight   = readJSON('sa.stat.flight');
+const geometry = readJSON('sa.stat.geometry');
+const outcome  = readJSON('sa.stat.outcome');
+const acaStore = readJSON('strikearc.academy.v1');
+const acaXp    = acaStore && typeof acaStore.xp === 'number' ? acaStore.xp : 0;
+const li       = levelInfo(acaXp);
+const hasFlight = fresh(flight), hasGeo = fresh(geometry), hasOut = fresh(outcome);
+const firstRun  = !(hasFlight || hasGeo || hasOut || acaXp > 0);
+
+let last = readStr('sa.home.last');
+if (!['flight','geometry','outcome','academy'].includes(last)) last = 'flight';
+
+/* ── per-tile content (mono stat when returning · teach copy first-run) ───── */
+const CONTENT = {
+  flight:   () => hasFlight
+    ? { stat: `${Math.round(Number(flight.total)||0)} m · ${Math.round(Number(flight.offlineM)||0)} ${flight.offlineSide||''}`.trim(),
+        aria: `Ball Flight — last shot ${Math.round(Number(flight.total)||0)} metres, ${Math.round(Number(flight.offlineM)||0)} metres ${flight.offlineSide==='R'?'right':flight.offlineSide==='L'?'left':'on line'}.` }
+    : { stat: 'See the shot', teach: true, aria: 'Ball Flight — see the shot. Start here.' },
+  outcome:  () => hasOut
+    ? { stat: outcome.shape ? `${outcome.shape} · ${Math.round(Number(outcome.carry)||0)} m` : `${Math.round(Number(outcome.carry)||0)} m carry`,
+        aria: `Outcome — ${outcome.shape ? outcome.shape.toLowerCase()+', ' : ''}${Math.round(Number(outcome.carry)||0)} metres carry.` }
+    : { stat: 'Read the launch', teach: true, aria: 'Outcome — read the launch.' },
+  geometry: () => hasGeo
+    ? { stat: `${geometry.band||'—'} · ${signDeg(geometry.attack)}`,
+        aria: `Strike Window — ${(geometry.band||'').toLowerCase()} strike, ${Math.abs(Number(geometry.attack)||0).toFixed(1)} degrees attack.` }
+    : { stat: 'Model your strike', teach: true, aria: 'Strike Window — model your strike.' },
+  academy:  () => acaXp > 0
+    ? { stat: `${acaXp} XP · Lv ${li.lvl}`, aria: `Academy — ${acaXp} XP, level ${li.lvl}, ${li.title}.` }
+    : { stat: 'Learn the physics', teach: true, aria: 'Academy — learn the physics, level 1.' },
+  diagnose: () => ({ stat: 'Why did it do that?', teach: true, aria: 'Diagnose — why did it do that?' }),
+};
+
+/* ── build tile state ─────────────────────────────────────────────────────── */
+const slots = [...document.querySelectorAll('.sa-slot')];
+const N = slots.length;
+const STEP = (Math.PI * 2) / N;
+const W = 156, H = 88;
+
+const tiles = slots.map((slot) => {
+  const el = slot.querySelector('.sa-tile');
+  const key = el.dataset.key;
+  const c = CONTENT[key]();
+  const statEl = el.querySelector('.sa-tile__stat');
+  statEl.textContent = c.stat;
+  if (c.teach) statEl.classList.add('is-teach');
+  el.setAttribute('aria-label', c.aria);
+  return { key, el, slot, statEl, href: el.dataset.href,
+           fan: 0, sw: 0, swPrev: 0 };
+});
+
+/* default front tile: resume target (returning) or Ball Flight (first-run) */
+const KEY_ORDER = tiles.map(t => t.key);
+let front = Math.max(0, KEY_ORDER.indexOf(firstRun ? 'flight' : last));
+
+/* ── geometry (recomputed on resize) ──────────────────────────────────────── */
+let cx, cy, rx, ry;
+function computeGeom(){
+  const vw = innerWidth, vh = innerHeight;
+  cx = Math.round(vw * 0.44);
+  cy = Math.round(vh * 0.56);
+  rx = Math.round(Math.min(vw * 0.30, 300));
+  ry = Math.round(Math.min(vh * 0.27, 118));
+  ball.style.left = cx + 'px'; ball.style.top = cy + 'px';
+  hint.style.left = cx + 'px'; hint.style.top = (cy + 74) + 'px';
+  document.body.style.setProperty('--vx', (cx / vw * 100) + '%');
+  document.body.style.setProperty('--vy', (cy / vh * 100) + '%');
+  layout();
+}
+
+/* ── physics state ────────────────────────────────────────────────────────── */
+const stage = $('stage'), ball = $('ball'), hint = $('hint'), scrim = $('scrim');
+const menuBtn = $('menuBtn'), cover = $('cover'), live = $('live');
+let open = false, rotation = -front * STEP, targetRot = rotation, vel = 0;
+let dragging = false, dragged = false, swallowing = false;
+let rafId = 0, running = false, lastFrontTick = front;
+
+/* one rAF owns every tile transform; GSAP only tweens scalar fan values */
+function layout(){
+  for (let i = 0; i < N; i++){
+    const t = tiles[i];
+    const a = rotation + i * STEP + t.sw * 0.16;   // + microscopic thread sway
+    const s = Math.sin(a), co = Math.cos(a);
+    const depth = (co + 1) / 2;                     // 0 back … 1 front
+    const x = cx + rx * t.fan * s;
+    const y = cy + ry * t.fan * co;
+    const sc = t.fan * (0.74 + 0.26 * depth);
+    t.slot.style.transform = `translate3d(${(x - W/2).toFixed(2)}px, ${(y - H/2).toFixed(2)}px, 0)`;
+    t.el.style.transform = `scale(${sc.toFixed(3)})`;
+    t.el.style.opacity = (t.fan * (0.80 + 0.20 * depth)).toFixed(3);
+    t.slot.style.zIndex = String(Math.round(20 + 60 * depth));
+    // rim light rides the ball-facing edge
+    t.el.style.setProperty('--rimx', (50 - 42 * s).toFixed(1) + '%');
+    t.el.style.setProperty('--rimy', (50 - 42 * co).toFixed(1) + '%');
+  }
+}
+
+function currentFront(){ return ((-Math.round(rotation / STEP)) % N + N) % N; }
+
+function tick(){
+  rafId = 0;
+  if (!dragging && !swallowing){
+    // spring toward the target detent (carries release momentum)
+    const acc = (targetRot - rotation) * 0.10;
+    vel = (vel + acc) * 0.86;
+    rotation += vel;
+    if (Math.abs(vel) < 1e-4 && Math.abs(targetRot - rotation) < 1e-4){ rotation = targetRot; vel = 0; }
+  }
+  // verlet "hung on a thread" sway — alive only while open, never under reduce
+  if (open && !reduce){
+    for (let i = 0; i < N; i++){
+      const t = tiles[i];
+      const tmp = t.sw;
+      t.sw += (t.sw - t.swPrev) * 0.94 - t.sw * 0.02;
+      t.swPrev = tmp;
+    }
+  }
+  layout();
+
+  // haptic detent as the front tile changes
+  const f = currentFront();
+  if (f !== lastFrontTick){ lastFrontTick = f; if (open) hap.tick('summon'); }
+
+  const settled = Math.abs(vel) < 1e-4 && Math.abs(targetRot - rotation) < 1e-4;
+  const swayLive = open && !reduce;
+  running = dragging || !settled || swayLive || swallowing;
+  if (running) rafId = requestAnimationFrame(tick);
+}
+function wake(){ if (!running && !rafId){ running = true; rafId = requestAnimationFrame(tick); } }
+
+/* ── roving tabindex + live announce ──────────────────────────────────────── */
+function markFront(idx, focusIt){
+  front = idx;
+  tiles.forEach((t, i) => {
+    const on = i === idx;
+    t.el.classList.toggle('is-front', on && open);
+    t.el.tabIndex = (open && on) ? 0 : -1;
+  });
+  if (focusIt && open) { try { tiles[idx].el.focus(); } catch (e) {} }
+}
+function announce(msg){ live.textContent = ''; setTimeout(() => { live.textContent = msg; }, 30); }
+function tileSpeech(idx){ return (tiles[idx].el.getAttribute('aria-label') || '') + ' Press Enter to open.'; }
+
+/* ── open / close ─────────────────────────────────────────────────────────── */
+function setInteractive(on){
+  tiles.forEach((t, i) => {
+    t.el.setAttribute('aria-hidden', on ? 'false' : 'true');
+    t.el.tabIndex = (on && i === front) ? 0 : -1;
+  });
+}
+function openRing(viaKey){
+  if (open || swallowing) return;
+  open = true;
+  stage.classList.add('is-open');
+  ball.setAttribute('aria-expanded', 'true');
+  menuBtn.setAttribute('aria-expanded', 'true'); menuBtn.textContent = 'Close';
+  setInteractive(true);
+  targetRot = -front * STEP; rotation = targetRot; vel = 0;
+  tiles.forEach(t => { t.sw = t.swPrev = 0; });
+  markFront(front, false);
+  if (reduce || !G){ tiles.forEach(t => t.fan = 1); layout(); }
+  else { G.killTweensOf(tiles); G.to(tiles, { fan: 1, duration: 0.5, ease: 'power3.out', stagger: 0.04, overwrite: true, onUpdate: layout }); }
+  wake();
+  hap.impact('medium');
+  if (viaKey) markFront(front, true);
+  announce('Menu open. ' + tileSpeech(front));
+}
+function closeRing(viaKey){
+  if (!open || swallowing) return;
+  open = false;
+  stage.classList.remove('is-open');
+  ball.setAttribute('aria-expanded', 'false');
+  menuBtn.setAttribute('aria-expanded', 'false'); menuBtn.textContent = 'Menu';
+  tiles.forEach(t => t.el.classList.remove('is-front'));
+  const done = () => { setInteractive(false); };
+  if (reduce || !G){ tiles.forEach(t => t.fan = 0); layout(); done(); }
+  else { G.killTweensOf(tiles); G.to(tiles, { fan: 0, duration: 0.32, ease: 'power2.in', stagger: 0.03, overwrite: true, onUpdate: layout, onComplete: done }); }
+  wake();
+  if (viaKey) { try { ball.focus(); } catch (e) {} }
+  announce('Menu closed.');
+}
+
+/* ── swallow → navigate (spatial continuity) ──────────────────────────────── */
+function activate(idx){
+  if (swallowing) return;
+  const t = tiles[idx];
+  swallowing = true;
+  hap.impact('heavy');
+  if (reduce || !G){
+    cover.style.opacity = '1';                 // fade-cut
+    setTimeout(() => { location.href = t.href; }, 90);
+    return;
+  }
+  const a = rotation + idx * STEP;
+  const startX = cx + rx * Math.sin(a), startY = cy + ry * Math.cos(a);
+  const depth = (Math.cos(a) + 1) / 2;
+  const big = Math.ceil(Math.max(innerWidth, innerHeight) / Math.min(W, H)) + 3;
+  const p = { x: startX, y: startY, s: t.fan * (0.74 + 0.26 * depth) };
+  running = false; if (rafId) cancelAnimationFrame(rafId); rafId = 0;
+  t.slot.style.zIndex = '95';
+  tiles.forEach((o, i) => { if (i !== idx) G.to(o.el, { opacity: 0, duration: 0.22, ease: 'power1.in' }); });
+  G.to(p, { x: cx, y: cy, s: big, duration: 0.5, ease: 'power2.in',
+    onUpdate(){ t.slot.style.transform = `translate3d(${p.x - W/2}px, ${p.y - H/2}px, 0)`; t.el.style.transform = `scale(${p.s})`; },
+    onComplete(){ location.href = t.href; } });
+  G.to(cover, { opacity: 1, duration: 0.5, ease: 'power2.in' });
+}
+
+/* ── ball / menu / scrim wiring ───────────────────────────────────────────── */
+ball.addEventListener('pointerdown', (e) => { e.preventDefault(); hap.impact('light'); });
+// keyboard activation of a native <button> fires a click with detail===0 — use
+// that to move focus into the ring, so there is no redundant keydown open-branch
+// that could double-fire (M2). Pointer/tap keeps detail>=1 → no focus jump.
+ball.addEventListener('click', (e) => { const viaKey = e.detail === 0; open ? closeRing(viaKey) : openRing(viaKey); });
+menuBtn.addEventListener('click', (e) => { const viaKey = e.detail === 0; open ? closeRing(viaKey) : openRing(viaKey); });
+scrim.addEventListener('click', () => closeRing(false));
+
+/* ── drag-to-rotate with momentum (ring is a turntable) ───────────────────── */
+const K = 0.0060, THRESH = 6;
+let downX = 0, lastX = 0, lastT = 0, downTargetTile = null;
+stage.addEventListener('pointerdown', (e) => {
+  if (!open || swallowing) return;
+  if (ball.contains(e.target)) return;                 // ball handles itself
+  downX = lastX = e.clientX; lastT = e.timeStamp;
+  dragging = false; dragged = false; vel = 0;
+  downTargetTile = e.target.closest('.sa-tile');
+});
+window.addEventListener('pointermove', (e) => {
+  if (!open || swallowing || e.buttons === 0) return;
+  if (downX === 0 && lastX === 0) return;
+  const dx = e.clientX - lastX;
+  if (!dragging && Math.abs(e.clientX - downX) > THRESH){ dragging = true; try { stage.setPointerCapture(e.pointerId); } catch (er) {} }
+  if (dragging){
+    rotation += dx * K;
+    const dt = Math.max(1, e.timeStamp - lastT);
+    vel = (e.clientX - lastX) * K * (16 / dt);
+    lastX = e.clientX; lastT = e.timeStamp; dragged = true;
+    wake();
+  }
+});
+window.addEventListener('pointerup', () => {
+  if (dragging){
+    dragging = false;
+    const projected = rotation + vel * 8;              // throw toward a detent
+    targetRot = Math.round(projected / STEP) * STEP;
+    markFront(currentFrontOf(targetRot), false);
+    for (let i = 0; i < N; i++){ tiles[i].sw += 0.06 * (i % 2 ? 1 : -1); }  // flick → neighbours swing
+    wake();
+    setTimeout(() => { dragged = false; }, 40);
+  }
+  downX = lastX = 0; downTargetTile = null;
+});
+function currentFrontOf(rot){ return ((-Math.round(rot / STEP)) % N + N) % N; }
+
+/* ── tile activation (tap or keyboard), guarded against drags ─────────────── */
+tiles.forEach((t, i) => {
+  t.el.addEventListener('click', (e) => {
+    if (dragged){ e.preventDefault(); return; }
+    activate(i);
+  });
+});
+
+/* ── keyboard ─────────────────────────────────────────────────────────────── */
+function rotateTo(idx){
+  const raw = -idx * STEP;
+  // choose the 2π-equivalent nearest to current rotation (minimal travel)
+  const k = Math.round((rotation - raw) / (Math.PI * 2));
+  targetRot = raw + k * Math.PI * 2;
+  markFront(idx, true);
+  wake();
+  announce(tileSpeech(idx));
+}
+document.addEventListener('keydown', (e) => {
+  if (swallowing) return;
+  if (e.key === 'Escape' && open){ e.preventDefault(); closeRing(true); return; }
+  // Opening flows through the native <button> click (detail===0) — no keydown
+  // open-branch here, so Enter/Space can never double-activate (M2).
+  if (!open) return;
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown'){ e.preventDefault(); rotateTo((front + 1) % N); }
+  else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp'){ e.preventDefault(); rotateTo((front - 1 + N) % N); }
+  else if (e.key === 'Home'){ e.preventDefault(); rotateTo(0); }
+  else if (e.key === 'End'){ e.preventDefault(); rotateTo(N - 1); }
+  else if ((e.key === 'Enter' || e.key === ' ') && e.target.classList && e.target.classList.contains('sa-tile')){ e.preventDefault(); activate(front); }
+});
+
+/* ── pause all motion when backgrounded (¶14) ─────────────────────────────── */
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden){
+    document.body.style.setProperty('animation-play-state', 'paused');
+    if (rafId){ cancelAnimationFrame(rafId); rafId = 0; running = false; }
+    document.querySelectorAll('.sa-ball__core,.sa-ball__glow').forEach(el => el.style.animationPlayState = 'paused');
+  } else {
+    document.querySelectorAll('.sa-ball__core,.sa-ball__glow').forEach(el => el.style.animationPlayState = '');
+    if (open || Math.abs(targetRot - rotation) > 1e-4) wake();
+  }
+});
+
+/* ── subtle silent-fallback parallax (IMU garnish; never required) ────────── */
+if (!reduce){
+  window.addEventListener('pointermove', (e) => {
+    if (dragging) return;
+    const px = (e.clientX / innerWidth - 0.5), py = (e.clientY / innerHeight - 0.5);
+    ball.style.transform = `translate(calc(-50% + ${(px*6).toFixed(1)}px), calc(-50% + ${(py*5).toFixed(1)}px))`;
+  }, { passive: true });
+}
+
+/* ── boot ─────────────────────────────────────────────────────────────────── */
+setInteractive(false);
+computeGeom();
+layout();
+markFront(front, false);
+window.addEventListener('resize', computeGeom);
+</script>
+</body>
+</html>

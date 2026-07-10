@@ -16,8 +16,10 @@
      • --celebrate #FF5CE1 + --warn gold #FFD056 = XP / badges ONLY (Academy).
      • everything else is the cold ultraviolet world (--secondary violet chrome,
        --ink, --muted, plates).
-   The wordmark/home-button lockup is the ONE codified exception: the ball dot in
-   the mark is ember because the ball in the logo *is* the ball.
+   Two codified ember exceptions beyond live-ball / live-data (SYS-08 budget):
+     (1) the wordmark / home-button ball dot — the ball in the logo *is* the ball;
+     (2) the HOME promotion prefix "START HERE ·" / "CONTINUE ·" — the first-run
+         pull is intentional and the screen carries no other heat at rest.
 
    HOME-BUTTON MARKUP CONTRACT (place in each destination's existing strip/header,
    far left, never inside an instrument canvas):
@@ -31,6 +33,21 @@
      </a>
    ══════════════════════════════════════════════════════════════════════════ */
 
+/* ══ TYPE ROLES (SYS-01) — self-hosted woff2, font-display:swap, sys fallbacks ═
+   ui = Inter (labels/eyebrows/buttons/captions) · display = Space Grotesk
+   (hero numerals ≥28px + wordmark) · mono = IBM Plex Mono (data values ONLY,
+   always tabular-nums + U+2212). Tokens: --font-ui / --font-display / --font-mono */
+@font-face{font-family:'Inter';font-style:normal;font-weight:400;font-display:swap;src:url('./vendor/fonts/Inter-Regular.woff2') format('woff2');}
+@font-face{font-family:'Inter';font-style:normal;font-weight:500;font-display:swap;src:url('./vendor/fonts/Inter-Medium.woff2') format('woff2');}
+@font-face{font-family:'Inter';font-style:normal;font-weight:600;font-display:swap;src:url('./vendor/fonts/Inter-SemiBold.woff2') format('woff2');}
+@font-face{font-family:'Inter';font-style:normal;font-weight:700;font-display:swap;src:url('./vendor/fonts/Inter-Bold.woff2') format('woff2');}
+@font-face{font-family:'Space Grotesk';font-style:normal;font-weight:500;font-display:swap;src:url('./vendor/fonts/SpaceGrotesk-Medium.woff2') format('woff2');}
+@font-face{font-family:'Space Grotesk';font-style:normal;font-weight:600;font-display:swap;src:url('./vendor/fonts/SpaceGrotesk-SemiBold.woff2') format('woff2');}
+@font-face{font-family:'Space Grotesk';font-style:normal;font-weight:700;font-display:swap;src:url('./vendor/fonts/SpaceGrotesk-Bold.woff2') format('woff2');}
+@font-face{font-family:'IBM Plex Mono';font-style:normal;font-weight:400;font-display:swap;src:url('./vendor/fonts/IBMPlexMono-Regular.woff2') format('woff2');}
+@font-face{font-family:'IBM Plex Mono';font-style:normal;font-weight:500;font-display:swap;src:url('./vendor/fonts/IBMPlexMono-Medium.woff2') format('woff2');}
+@font-face{font-family:'IBM Plex Mono';font-style:normal;font-weight:600;font-display:swap;src:url('./vendor/fonts/IBMPlexMono-SemiBold.woff2') format('woff2');}
+
 :root{
   /* ── identity / surface ──────────────────────────────────────────────── */
   --bg:#07060C;
@@ -38,11 +55,13 @@
   --plate:rgba(8,5,14,.86);
   --ink:#F5F2FF;
   --muted:#A79FC7;
+  --muted-2:#8E85A8;   /* third grey — dimmer telemetry labels; ≥4.5:1 on the violet-black ramp (SYS-04 / aca-10) */
 
   /* ── ember accent — live ball / live data ONLY ───────────────────────── */
   --accent:#FF8A4D;
   --accent-soft:rgba(255,138,77,.16);
   --accent-line:rgba(255,138,77,.55);
+  --accent-line-strong:rgba(255,138,77,.8);   /* crisp promotion top hairline */
 
   /* ── violet secondary — chrome, glyphs, labels ───────────────────────── */
   --secondary:#9D8BFF;
@@ -72,6 +91,53 @@
 
   /* scene: violet-shifted grade over range-13 (matches the horizon glow) */
   --scene-bg:radial-gradient(130% 120% at 50% -10%, #140E24, #07060C);
+
+  /* ── type roles (SYS-01) ─────────────────────────────────────────────── */
+  --font-ui:'Inter',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  --font-display:'Space Grotesk','Inter',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,"SF Mono","JetBrains Mono",Menlo,monospace;
+
+  /* ── launch param (SYS-02 / out-03) — desaturated gold tuned into the
+       ultraviolet world; ≥4.5:1 on the lens bg #0D0A18 (measured ~11.5:1) and
+       clearly duller/greener than --warn #FFD056 so "estimated gold" ≠ "launch". */
+  --launch:#E3C468;
+
+  /* ── ghost reference-trace grey (SYS-04 / out-17) — violet-leaning neutral,
+       replaces the teal-era #9FB2C8. Reserved for reference TRACE STROKES only,
+       never control chrome. */
+  --ghost:#A7A0C4;
+
+  /* ── surface + spacing tiers (SYS-07) ────────────────────────────────────
+       radii: 12 = controls · 16 = plates/cards · 20 = lenses · 999 = pills.
+       plate fills: blur (on-scene, = --plate) · solid (lens/panel). */
+  --radius-control:12px;
+  --radius-lens:20px;
+  --plate-solid:#0D0A18;
+
+  /* ── ONE HUE · ONE MEANING — param-quantity dictionary (SYS-11) ──────────
+       Each param hue binds to EXACTLY ONE physical quantity app-wide. Screens
+       consume the semantic --q-* alias (the quantity), never the raw hue, so a
+       hue can never drift to a second meaning. The full 1:1 table + geometry
+       rewire map live in the SYS-11 law block below. Two NEW hues give the
+       geometry quantities that had no honest home: plane was stealing --loft,
+       depth was stealing --face/coral — both now leave those hues. */
+  --plane:#93A4F2;   /* periwinkle — swing plane  (was stealing --loft)   ≥7.2:1 */
+  --depth:#C98AE6;   /* orchid     — strike depth (MUST leave coral --face) ≥7.4:1 */
+  --q-face:var(--face);       /* face angle                                    */
+  --q-path:var(--path);       /* club-path direction (== geometry swing dir)   */
+  --q-attack:var(--attack);   /* attack angle (== geometry low-point locus)    */
+  --q-loft:var(--loft);       /* dynamic loft                                  */
+  --q-launch:var(--launch);   /* launch angle                                  */
+  --q-plane:var(--plane);     /* swing plane                                   */
+  --q-depth:var(--depth);     /* strike depth                                  */
+  --q-ball:var(--ink);        /* ball marker — neutral, NOT a param hue        */
+
+  /* ── REWARD GOLD alias (SYS-15) — same hex as --warn, different intent. ──
+       Reward usage (XP / badges / mastery) references --reward-gold; --warn's
+       *status* usage (instrument band verdicts) keeps referencing --warn. One
+       hex, two named intents, so a scorer never miscounts a status band as a
+       reward leak. */
+  --reward-gold:var(--warn);
 }
 
 /* ── PLATE PATTERN ──────────────────────────────────────────────────────────
@@ -151,6 +217,105 @@
   text-transform:uppercase;
   color:var(--muted);
 }
+
+/* ══ PASS-B SYSTEM LAWS (SYS-11…15) ═════════════════════════════════════════
+   Additive tokens + helper classes + written laws so every screen can comply
+   by grep. Nothing above this block is renamed or removed. */
+
+/* ── [SYS-11] ONE HUE · ONE MEANING — the param-colour dictionary ───────────
+   A param hue teaches ONE physics quantity, app-wide. Re-using a hue for an
+   unrelated meaning (coral=face on the instruments, coral=depth on geometry)
+   makes the colour language contradict itself: the Academy teaches "coral is
+   the face" while the geometry screen teaches "coral is depth". Fix: consume
+   the semantic --q-<quantity> alias; each hue binds 1:1 below.
+
+     HUE (token)             → PHYSICAL QUANTITY (its one meaning)
+     ────────────────────────────────────────────────────────────────────────
+     --face   #FF5C6B coral    Face angle
+     --path   #6FC6FF blue     Club-path direction  (geometry "swing dir" = same quantity ✓ documented reuse)
+     --attack #4DE8D2 mint     Attack angle         (geometry "low point"  = the attack locus  ✓ documented reuse)
+     --loft   #B9A0FF lav.     Dynamic loft
+     --launch #E3C468 gold     Launch angle
+     --plane  #93A4F2 peri.    Swing plane          (NEW — was illegally sharing --loft)
+     --depth  #C98AE6 orchid   Strike depth         (NEW — MUST leave coral --face)
+     (ball marker)             Ball position → --ink (neutral; a ball is not a param)
+
+   GEOMETRY REWIRE (apply in geometry-window-mock.html — token swap only):
+     --c-plane: var(--q-plane);   (was var(--loft))
+     --c-dir:   var(--q-path);    (documented reuse — swing direction)
+     --c-lpx:   var(--q-attack);  (documented reuse — low point)
+     --c-depth: var(--q-depth);   (was var(--face) — the coral collision)
+     --c-ball:  var(--q-ball);    (was #E6ECF4 — now codified --ink)
+   Acceptance: this 1:1 table exists; no screen binds a listed hue to a 2nd quantity. */
+
+/* ── [SYS-12] NO EMOJI · NO FONT DINGBATS — drawn SVG glyphs only ───────────
+   Emoji render differently per OS and carry uncontrolled colour — fatal to an
+   instrument voice. Iconography = SVG strokes on the home-glyph grid (1.6
+   weight, round caps/joins), inheriting currentColor. Banned codepoints that
+   MUST NOT appear in UI markup/templates:
+     ⌂ (U+2302)  ⛳ (U+26F3)  🔒 (U+1F512)  📱 (U+1F4F1)  ✦ (U+2726)
+     ⟳ (U+27F3)  ◎ (U+25CE)  ★ (U+2605)  ⌖ (U+2316)  ✷ (U+2737)
+   Use the .sa-glyph primitive (or any inline <svg>) instead. Acceptance: grep
+   finds no emoji/dingbat codepoints in markup; the icon inventory is SVG-only. */
+.sa-glyph{
+  width:1em; height:1em;
+  display:inline-block; flex:0 0 auto;
+  vertical-align:middle;
+  fill:none;
+  stroke:currentColor;
+  stroke-width:1.6;               /* home-glyph grid weight */
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
+
+/* ── [SYS-13] OPAQUE STICKY CHROME (extends SYS-10 from scene-plates to chrome)
+   Any position:sticky/fixed bar OVER SCROLLING CONTENT (Academy topbar, jump
+   rail, path header) must be an opaque plate: composite ≥.95, P3 hex fill, a
+   hairline --line bottom. Gradient-to-half-alpha chrome (read-through under
+   ~.92) is banned — scrolled cards must never be legible through the bar.
+   (The .sa-strip contract is deliberately out of scope: it floats over a
+   NON-scrolling instrument canvas, not a scroll surface.) Apply .sa-chrome to
+   scroll-surface chrome. Acceptance: no underlying content legible within
+   chrome bounds at any scroll position, both viewports. */
+.sa-chrome{
+  background:var(--plate-solid);  /* #0D0A18 — fully opaque, ≥.95 composite */
+  border-bottom:1px solid var(--line);
+}
+
+/* ── [SYS-14] COPY-VOICE LAW ────────────────────────────────────────────────
+   (1) NO caps-for-emphasis in running/body copy — emphasise with weight
+       (.sa-em) or an ink shift (.sa-em--ink), never by shouting a word.
+   (2) NO implementation vocabulary in user copy. Banned list (verbatim):
+       { vertical slice, engine solve, display-layer, gate, slice engine,
+         ENGINE-LIVE (as a compound) }.
+   (3) PRECISION CLAUSE — real golf/physics terms are KEPT and TAUGHT, not
+       dumbed out: attack angle, spin loft, COR, Magnus, flyer, etc. stay, each
+       with a first-use explanation (Academy bottom-sheets are their home).
+   Acronym allowlist for rule (1) (these MAY stay upper-case): EST, XP, RPM,
+   PGA, LPGA, COR, USGA. Acceptance: greps for the banned list = 0; no 3+ letter
+   all-caps emphasis word inside a sentence-case run. */
+.sa-em{font-weight:600;}          /* emphasis without caps */
+.sa-em--ink{color:var(--ink);}    /* …or via an ink shift  */
+
+/* ── [SYS-15] REWARD-COLOUR ENFORCEMENT ─────────────────────────────────────
+   Gold #FFD056-family (--warn / --reward-gold) and --celebrate #FF5CE1 are
+   spent on REWARD ONLY. Allowlist for computed #FFD056 as reward:
+     • XP numerals   — always --font-mono, tabular-nums, via .sa-xp
+     • level / badge / mastery surfaces — badges wear --celebrate (.sa-badge)
+     • celebrate stamps on the completion card
+   Nothing else may wear gold-as-reward: not locks, footnotes, "not-quite"
+   quiz headers, active toggles, or a "you-are-here" map dot.
+   DUAL-ROLE NOTE (do not miscount): the SAME hex #FFD056 is also --warn's
+   STATUS role — the caution band verdict on the instruments (e.g. Fat = gold).
+   That is a status signal, NOT a reward, and is exempt from this ledger.
+   One XP colour everywhere → one gold, via .sa-xp. Acceptance: the app-wide
+   computed-#FFD056 census matches this allowlist. */
+.sa-xp{
+  font-family:var(--font-mono);
+  font-variant-numeric:tabular-nums;
+  color:var(--reward-gold);
+}
+.sa-badge{color:var(--celebrate);}   /* badge glyphs wear celebrate, never gold */
 
 /* ══ REDUCED-MOTION KILL ════════════════════════════════════════════════════
    Everything present at full value — no stagger, no count-ups, no breathing,

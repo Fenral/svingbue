@@ -60,23 +60,21 @@
      Only the SCREEN-LOCAL vars sa-p3 doesn't own are (re)declared here, mapped
      onto P3 — this keeps the override surface minimal.                        */
   :root{
-    /* instrument card surfaces (violet-tinted near-black; no photo behind) */
-    --panel:rgba(23,18,40,.80); --panel-2:rgba(23,18,40,.94);
-    /* the mock's border system is stronger than sa-p3 --line(.10); keep it   */
-    --line:rgba(255,255,255,.30); --line-soft:rgba(255,255,255,.12);
+    /* instrument card surfaces — the codified plate tiers (SYS-07 / win-15).
+       No photo behind, so the on-scene plate reads as a subtle violet-black. */
+    --panel:var(--plate); --panel-2:var(--plate-solid);
+    /* [win-01] --line (.10 decorative) / --line-strong (.30 interactive) are
+       consumed directly from sa-p3 — this screen no longer overrides either. */
     /* turf/soil = literal earth tone (orthogonal to the palette; never ember) */
     --soil:#8a5a2b; --soil-ink:#d9b489;
-    /* low-point mark = the demoted-mint attack param; ghost = muted violet-grey */
-    --yellow:var(--attack); --ghost:var(--muted);
-    /* input-param hues → the P3 param family (distinct, non-ember, non-status) */
-    --c-plane:var(--loft);   /* violet — swing plane            */
-    --c-dir:var(--path);     /* blue   — swing direction        */
-    --c-lpx:var(--attack);   /* mint   — low point (→ marker)   */
-    --c-depth:var(--face);   /* coral  — depth                  */
-    --c-ball:#E6ECF4;        /* ball white (neutral, echoes ball) */
-    /* attack tangent + attack readout = the EMBER lane */
-    --c-attack:var(--accent);
-    --radius-ctl:10px;
+    /* [SYS-11] input-param hues → the semantic --q-* aliases (one hue, one
+       meaning app-wide): plane leaves --loft, depth leaves coral --face, so
+       geometry stops teaching "coral is depth" against the Academy's face. */
+    --c-plane:var(--q-plane);  /* periwinkle — swing plane          */
+    --c-dir:var(--q-path);     /* blue   — swing direction (reuse)   */
+    --c-lpx:var(--q-attack);   /* mint   — low point / marker (reuse) */
+    --c-depth:var(--q-depth);  /* orchid — strike depth              */
+    --c-ball:var(--q-ball);    /* --ink  — ball marker (neutral)     */
   }
   @view-transition{ navigation:auto; }  /* cross-doc morph; sa-p3 kills it under reduced-motion */
   *{box-sizing:border-box;margin:0;padding:0}
@@ -84,7 +82,7 @@
   body{
     background:var(--scene-bg);
     color:var(--ink);
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    font-family:var(--font-ui);   /* SYS-01 ui role (Inter) */
     -webkit-tap-highlight-color:transparent;
     font-variant-numeric:tabular-nums;
   }
@@ -93,112 +91,127 @@
 
   .stage{
     position:fixed;inset:0;display:flex;flex-direction:column;
-    padding:calc(6px + env(safe-area-inset-top)) calc(8px + env(safe-area-inset-right))
-            calc(6px + env(safe-area-inset-bottom)) calc(8px + env(safe-area-inset-left));
-    gap:6px;
+    padding:calc(8px + env(safe-area-inset-top)) calc(8px + env(safe-area-inset-right))
+            calc(8px + env(safe-area-inset-bottom)) calc(8px + env(safe-area-inset-left));
+    gap:8px;   /* [win-16] one 4/8-grid gap set */
     view-transition-name:sa-stage;   /* card→instrument morph target (front-page-spec §5) */
   }
 
-  /* ── TOP BAR: title · presets · band chip ─────────────────────────────── */
-  .topbar{flex:0 0 auto;display:flex;align-items:center;gap:10px;height:34px}
-  .brand{display:flex;align-items:center;gap:7px;flex:0 0 auto}
-  .brand svg{width:20px;height:20px;display:block}
-  .brand .t{font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--ink);white-space:nowrap}
-  .brand .t small{color:var(--muted);font-weight:700;letter-spacing:.1em}
+  /* ── TOP BAR: title · presets (verdict lives on the window, [win-02]) ──── */
+  .topbar{flex:0 0 auto;display:flex;align-items:center;gap:8px;height:40px}
+  .brand{display:flex;align-items:center;flex:0 0 auto}
+  /* [win-19] adopt the .sa-strip__title role: 600 / 11px / .14em / muted */
+  .brand .t{font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+  .brand .t small{font-size:10px;color:var(--muted);font-weight:600;letter-spacing:.1em;opacity:.8}
 
-  .presets{display:flex;gap:6px;flex:1 1 auto;justify-content:center;overflow-x:auto;scrollbar-width:none}
+  .presets{display:flex;gap:8px;flex:1 1 auto;justify-content:center;overflow-x:auto;scrollbar-width:none}
   .presets::-webkit-scrollbar{display:none}
   .preset{
     appearance:none;cursor:pointer;flex:0 0 auto;height:28px;padding:0 13px;
-    border-radius:var(--radius-pill);border:1px solid var(--line);
-    background:rgba(23,18,40,.6);color:var(--muted);
-    font-size:11.5px;font-weight:700;letter-spacing:.03em;position:relative;
-    transition:background .16s ease,color .16s ease,border-color .16s ease;
+    border-radius:var(--radius-pill);border:1px solid var(--line-strong);
+    background:var(--plate);color:var(--muted);
+    font-size:11.5px;font-weight:600;letter-spacing:.03em;position:relative;
+    transition:background .16s ease,color .16s ease,border-color .16s ease,transform .08s ease;
   }
   .preset::after{content:"";position:absolute;inset:-6px}   /* ≥44px hit target */
-  .preset:hover{color:var(--ink);border-color:var(--line)}
-  .preset[aria-pressed="true"]{color:#0A0713;background:var(--secondary);border-color:var(--secondary);font-weight:800}
-  .preset:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-
-  .bandchip{
-    flex:0 0 auto;height:28px;padding:0 14px;border-radius:var(--radius-pill);
-    display:flex;align-items:center;gap:7px;font-size:12px;font-weight:800;letter-spacing:.08em;
-    border:1px solid var(--line-soft);white-space:nowrap;
-  }
-  .bandchip .dot{width:8px;height:8px;border-radius:50%}
+  .preset:hover{color:var(--ink);border-color:var(--line-strong)}
+  .preset:active{transform:scale(.97)}   /* [SYS-03] pressed spec */
+  .preset[aria-pressed="true"]{color:#0A0713;background:var(--secondary);border-color:var(--secondary);font-weight:700}
 
   /* ── HERO ─────────────────────────────────────────────────────────────── */
   .hero{flex:1 1 auto;display:flex;gap:8px;min-height:0}
-  .card{background:var(--panel);border:1px solid var(--line-soft);border-radius:var(--radius-card);position:relative;overflow:hidden}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius-card);position:relative;overflow:hidden}
 
-  .windowcol{flex:1 1 62%;display:flex;flex-direction:column;gap:6px;min-width:0}
+  .windowcol{flex:1 1 62%;display:flex;flex-direction:column;gap:8px;min-width:0}
   .wincard{flex:1 1 auto;min-height:0}
   #winSvg{position:absolute;inset:0;width:100%;height:100%;display:block}
-  .wintag{position:absolute;left:11px;top:9px;font-size:9.5px;font-weight:700;letter-spacing:.14em;
+  /* [win-21] before-trace ghost layer — under winSvg, non-interactive; opacity is
+     ramped in JS on session end so the ghost fades instead of popping in one frame */
+  #ghostSvg{position:absolute;inset:0;width:100%;height:100%;display:block;pointer-events:none}
+  .wintag{position:absolute;left:11px;top:9px;font-size:10px;font-weight:600;letter-spacing:.14em;
     text-transform:uppercase;color:var(--muted);pointer-events:none}
-  .winhint{position:absolute;right:11px;bottom:8px;font-size:9.5px;font-weight:600;color:var(--muted);
+  .winhint{position:absolute;right:11px;bottom:8px;font-size:10px;font-weight:500;color:var(--muted);
     opacity:.85;pointer-events:none}
+
+  /* [win-02] the band verdict — the screen's primary answer — lives on the
+     window card as a ≥15px display word + status dot (never the preset row). */
+  .winverdict{position:absolute;top:8px;right:11px;z-index:2;display:flex;align-items:center;gap:7px;
+    padding:4px 10px;border-radius:var(--radius-control);
+    background:var(--plate-solid);border:1px solid var(--line);pointer-events:none}
+  .winverdict .wvdot{width:9px;height:9px;border-radius:50%;flex:0 0 auto}
+  .winverdict .wvlabel{font-family:var(--font-display);font-size:16px;font-weight:700;letter-spacing:.01em;line-height:1}
+
   /* on-canvas draggable handles are transparent hit/focus zones over the SVG marks */
   .handle{position:absolute;transform:translate(-50%,-50%);border-radius:50%;cursor:grab;touch-action:none;
     background:transparent;border:0;padding:0;z-index:3}
   .handle::after{content:"";position:absolute;inset:0;border-radius:50%}
+  /* [win-23] affordance halo hugging the mark on hover/focus + one-time pulse */
+  .handle::before{content:"";position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+    width:18px;height:18px;border-radius:50%;border:1.5px solid var(--secondary);
+    opacity:0;transition:opacity .15s ease;pointer-events:none}
+  .handle:hover::before,.handle:focus-visible::before{opacity:.9}
   .handle:active{cursor:grabbing}
-  .handle:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+  @keyframes hpulse{0%{opacity:0}30%{opacity:.85}100%{opacity:0}}
+  .handle.pulse::before{animation:hpulse 1.4s ease 1}
   #hLow{width:40px;height:40px}
   #hBall{width:40px;height:40px}
 
-  .seqcard{flex:0 0 auto;height:52px}
+  .seqcard{flex:0 0 auto;height:58px}
   #seqSvg{position:absolute;inset:0;width:100%;height:100%;display:block}
 
   /* ── SIDE COLUMN: outputs · face · dial ───────────────────────────────── */
-  .sidecol{flex:0 0 37%;display:flex;flex-direction:column;gap:6px;min-width:0}
-  .outputs{flex:0 0 auto;display:grid;grid-template-columns:1fr 1fr;gap:6px}
+  .sidecol{flex:0 0 37%;display:flex;flex-direction:column;gap:8px;min-width:0}
+  .outputs{flex:0 0 auto;display:grid;grid-template-columns:1fr 1fr;gap:8px}
   .otile{
-    background:var(--panel);border:1px solid var(--line-soft);border-radius:var(--radius-ctl);
+    background:var(--panel);border:1px solid var(--line);border-radius:var(--radius-control);
     padding:6px 9px;display:flex;flex-direction:column;gap:1px;min-width:0;position:relative;overflow:hidden;
   }
-  .otile .ok{font-size:9px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
-  .otile .ov{font-size:16px;font-weight:800;letter-spacing:.01em;line-height:1.05;white-space:nowrap;display:flex;align-items:baseline;gap:4px}
+  .otile .ok{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+  /* [win-13] all four values one size + one colour (--ink), set by JS; numeric
+     tiles wear the mono data role (SYS-01), the phrase tile (#oSeq) stays ui. */
+  .otile .ov{font-size:16px;font-weight:700;letter-spacing:.01em;line-height:1.05;white-space:nowrap;
+    display:flex;align-items:baseline;gap:4px;color:var(--ink);
+    font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+  #oSeq .ov{font-family:var(--font-ui)}
   .otile .ov .arw{font-size:13px}
-  .otile .ov .u{font-size:10px;font-weight:700;color:var(--muted)}
-  .otile .osub{font-size:9.5px;font-weight:700;color:var(--ghost);white-space:nowrap;min-height:12px}
-  .otile .osub.hot{color:var(--accent)}
+  .otile .ov .u{font-size:10px;font-weight:600;color:var(--muted)}
+  .otile .osub{font-size:10.5px;font-weight:600;color:var(--muted);white-space:nowrap;min-height:12px}
+  .otile .osub.hot{color:var(--accent);font-family:var(--font-mono);font-variant-numeric:tabular-nums}
 
-  .sidelower{flex:1 1 auto;display:flex;gap:6px;min-height:0}
+  .sidelower{flex:1 1 auto;display:flex;gap:8px;min-height:0}
   .facecard{flex:1 1 52%;min-width:0}
   .dialcard{flex:1 1 48%;min-width:0}
   #faceSvg,#dialSvg{position:absolute;inset:0;width:100%;height:100%;display:block}
-  .panel-tag{position:absolute;left:9px;top:7px;font-size:9px;font-weight:800;letter-spacing:.12em;
+  .panel-tag{position:absolute;left:9px;top:7px;font-size:10px;font-weight:600;letter-spacing:.12em;
     text-transform:uppercase;color:var(--muted);pointer-events:none;z-index:1}
 
   /* ── BOTTOM BAR: input chips + 3D pill ────────────────────────────────── */
   .bottombar{flex:0 0 auto;height:52px;display:flex;align-items:stretch;gap:8px}
-  .chiprow{display:flex;gap:7px;flex:1 1 auto;align-items:stretch;overflow-x:auto;scrollbar-width:none;padding-bottom:1px}
+  .chiprow{display:flex;gap:8px;flex:1 1 auto;align-items:stretch;overflow-x:auto;scrollbar-width:none;padding-bottom:1px}
   .chiprow::-webkit-scrollbar{display:none}
   .chip{
-    appearance:none;cursor:pointer;flex:1 1 0;min-width:118px;position:relative;
+    appearance:none;cursor:pointer;flex:1 1 0;min-width:112px;position:relative;
     display:flex;align-items:center;gap:8px;padding:0 11px;
-    border-radius:var(--radius-ctl);border:1px solid var(--line-soft);
-    background:rgba(23,18,40,.55);color:var(--ink);text-align:left;
-    transition:border-color .15s ease,background .15s ease;
+    border-radius:var(--radius-control);border:1px solid var(--line);
+    background:var(--plate);color:var(--ink);text-align:left;
+    transition:border-color .15s ease,background .15s ease,transform .08s ease;
   }
-  .chip:hover{border-color:var(--line)}
-  .chip[aria-expanded="true"]{border-color:var(--pc,var(--accent));background:rgba(255,255,255,.05)}
-  .chip:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-  .chip .cdot{width:9px;height:9px;border-radius:50%;background:var(--pc,var(--accent));flex:0 0 auto}
+  .chip:hover{border-color:var(--line-strong)}
+  .chip:active{transform:scale(.98)}   /* [SYS-03] pressed spec */
+  .chip[aria-expanded="true"]{border-color:var(--pc,var(--secondary));background:rgba(255,255,255,.05)}
+  .chip .cdot{width:9px;height:9px;border-radius:50%;background:var(--pc,var(--secondary));flex:0 0 auto}
   .chip .cbody{display:flex;flex-direction:column;gap:1px;min-width:0;flex:1 1 auto}
-  .chip .ck{font-size:9.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .chip .cv{font-size:14px;font-weight:800;color:var(--ink);white-space:nowrap}
+  .chip .ck{font-size:10px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .chip .cv{font-size:14px;font-weight:700;color:var(--ink);white-space:nowrap;font-family:var(--font-mono);font-variant-numeric:tabular-nums}
   .chip .tglyph{flex:0 0 auto;color:var(--muted);opacity:.85;display:flex}
 
   .pill3d{
     flex:0 0 auto;align-self:center;height:38px;padding:0 15px;border-radius:var(--radius-pill);
     display:flex;align-items:center;gap:7px;text-decoration:none;
-    border:1px solid var(--line);background:rgba(23,18,40,.6);color:var(--muted);
-    font-size:11.5px;font-weight:800;letter-spacing:.05em;position:relative;
+    border:1px solid var(--line-strong);background:var(--plate);color:var(--muted);
+    font-size:11.5px;font-weight:700;letter-spacing:.05em;position:relative;
   }
-  .pill3d:hover{color:var(--ink);border-color:var(--line)}
-  .pill3d:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .pill3d:hover{color:var(--ink);border-color:var(--line-strong)}
   .pill3d .cube{width:14px;height:14px}
 
   /* ── TUNE DOCK (floats above the bottom bar) ─────────────────────────── */
@@ -215,26 +228,45 @@
   .tuneDock[hidden]{display:none}
   .tuneDock.fading{opacity:0;pointer-events:none}
   .tuneDock .tdTop{display:flex;flex-direction:column;gap:1px;min-width:98px;flex:0 0 auto}
-  .tuneDock .tdName{font-size:10px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--pc,var(--accent))}
-  .tuneDock .tdVal{font-size:17px;font-weight:800;color:var(--ink);white-space:nowrap}
+  .tuneDock .tdName{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--pc,var(--secondary))}
+  .tuneDock .tdVal{font-size:17px;font-weight:700;color:var(--ink);white-space:nowrap;font-family:var(--font-mono);font-variant-numeric:tabular-nums}
   .tuneDock .tdCtrl{display:flex;align-items:center;gap:8px;flex:1 1 auto;min-width:0}
   .tuneDock .tdStep{
-    appearance:none;cursor:pointer;flex:0 0 auto;width:34px;height:34px;border-radius:9px;
-    border:1px solid var(--line);background:rgba(255,255,255,.05);color:var(--ink);
+    appearance:none;cursor:pointer;flex:0 0 auto;width:34px;height:34px;border-radius:var(--radius-control);
+    border:1px solid var(--line-strong);background:rgba(255,255,255,.05);color:var(--ink);
     font-size:19px;font-weight:700;line-height:1;display:flex;align-items:center;justify-content:center;
+    transition:background .12s ease,transform .08s ease;
   }
   .tuneDock .tdStep:hover{background:rgba(255,255,255,.1)}
   .tuneDock .tdStep:active{transform:scale(.94)}
-  .tuneDock .tdStep:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-  .tuneDock input[type=range]{flex:1 1 auto;min-width:0;height:40px;cursor:pointer;accent-color:var(--pc,var(--accent))}
-  .tuneDock input[type=range]:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:8px}
-  .tuneDock .tdDone{
-    appearance:none;cursor:pointer;flex:0 0 auto;height:34px;padding:0 14px;border-radius:9px;
-    border:1px solid var(--line);background:rgba(255,255,255,.06);color:var(--ink);
-    font-size:12px;font-weight:800;letter-spacing:.03em;
+  /* [win-20] custom slider: white .20 unfilled, param-coloured fill, ink thumb */
+  .tuneDock input[type=range]{
+    -webkit-appearance:none;appearance:none;flex:1 1 auto;min-width:0;height:40px;cursor:pointer;background:transparent;
   }
+  .tuneDock input[type=range]::-webkit-slider-runnable-track{
+    height:4px;border-radius:999px;
+    background:linear-gradient(90deg,var(--pc,var(--secondary)) var(--fill,50%),rgba(255,255,255,.20) var(--fill,50%));
+  }
+  .tuneDock input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;appearance:none;width:16px;height:16px;border-radius:50%;margin-top:-6px;
+    background:var(--ink);border:2px solid var(--pc,var(--secondary));box-shadow:0 1px 3px rgba(0,0,0,.5);
+  }
+  .tuneDock input[type=range]::-moz-range-track{height:4px;border-radius:999px;background:rgba(255,255,255,.20)}
+  .tuneDock input[type=range]::-moz-range-progress{height:4px;border-radius:999px;background:var(--pc,var(--secondary))}
+  .tuneDock input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--ink);border:2px solid var(--pc,var(--secondary))}
+  .tuneDock .tdDone{
+    appearance:none;cursor:pointer;flex:0 0 auto;height:34px;padding:0 14px;border-radius:var(--radius-control);
+    border:1px solid var(--line-strong);background:rgba(255,255,255,.06);color:var(--ink);
+    font-size:12px;font-weight:700;letter-spacing:.03em;transition:background .12s ease}
   .tuneDock .tdDone:hover{background:rgba(255,255,255,.12)}
-  .tuneDock .tdDone:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+  /* ── [win-09 / SYS-03] ONE focus ring — the sa-p3 double ink ring, everywhere.
+     Replaces the 7 ember outlines. Grep target: no `outline:2px solid var(--accent)`. */
+  .preset:focus-visible,.handle:focus-visible,.chip:focus-visible,.pill3d:focus-visible,
+  .tuneDock .tdStep:focus-visible,.tuneDock input[type=range]:focus-visible,.tuneDock .tdDone:focus-visible{
+    outline:none;
+    box-shadow:inset 0 0 0 1px rgba(0,0,0,.85), inset 0 0 0 3px var(--ink);
+  }
 
   @media (prefers-reduced-motion:reduce){
     *{transition:none!important;animation:none!important}
@@ -242,7 +274,9 @@
 </style>
 </head>
 <body>
-  <div class="stage" id="stage">
+  <main class="stage" id="stage">
+    <!-- [F3] document heading for AT (the visible brand is aria-hidden decoration) -->
+    <h1 class="sr">Strike Window. A side-on view of how the swing arc meets the ball and the ground.</h1>
 
     <!-- ── TOP BAR ────────────────────────────────────────────────────── -->
     <div class="topbar">
@@ -256,16 +290,15 @@
         </svg>
       </a>
       <div class="brand" aria-hidden="true">
-        <span class="t">Strike Window <small>· side-on</small></span>
+        <span class="t">Strike Window <small>· Side-on</small></span>
       </div>
       <div class="presets" role="group" aria-label="Strike presets">
-        <button type="button" class="preset" data-preset="Pure">Pure</button>
-        <button type="button" class="preset" data-preset="Thin">Thin</button>
-        <button type="button" class="preset" data-preset="Fat">Fat</button>
-        <button type="button" class="preset" data-preset="Duff">Duff</button>
-        <button type="button" class="preset" data-preset="Topped">Topped</button>
+        <button type="button" class="preset" data-preset="Pure" aria-pressed="true">Pure</button>
+        <button type="button" class="preset" data-preset="Thin" aria-pressed="false">Thin</button>
+        <button type="button" class="preset" data-preset="Fat" aria-pressed="false">Fat</button>
+        <button type="button" class="preset" data-preset="Duff" aria-pressed="false">Duff</button>
+        <button type="button" class="preset" data-preset="Topped" aria-pressed="false">Topped</button>
       </div>
-      <div class="bandchip" id="bandChip"><span class="dot" id="bandDot"></span><span id="bandLabel">Pure</span></div>
     </div>
 
     <!-- ── HERO ───────────────────────────────────────────────────────── -->
@@ -274,9 +307,14 @@
       <!-- WINDOW COLUMN -->
       <div class="windowcol">
         <div class="card wincard" id="winCard">
+          <!-- [win-21] the before-trace ghost gets its OWN decorative layer, BELOW
+               winSvg in paint order, so it can fade out on session end without the
+               winSvg innerHTML rebuild wiping it in a single frame. -->
+          <svg id="ghostSvg" aria-hidden="true" role="presentation" preserveAspectRatio="xMidYMid meet"></svg>
           <svg id="winSvg" aria-hidden="true" role="presentation" preserveAspectRatio="xMidYMid meet"></svg>
           <span class="wintag">Impact zone · orthographic</span>
-          <span class="winhint">drag low point ⌂ or ball ⛳</span>
+          <div class="winverdict" id="winVerdict" aria-hidden="true"><span class="wvdot" id="bandDot"></span><span class="wvlabel" id="bandLabel">Pure</span></div>
+          <span class="winhint">Drag the low point or the ball</span>
           <!-- draggable handles: keyboard-operable (role=slider) AND redundant with the dock sliders -->
           <button type="button" class="handle" id="hLow" role="slider"
             aria-label="Low point marker. Drag or use arrow keys: left and right move it fore and aft, up and down change its depth. Also editable from the Low point and Depth sliders."
@@ -310,7 +348,7 @@
           </div>
           <div class="otile" id="oSeq">
             <span class="ok">Contact order</span>
-            <span class="ov" style="font-size:13px"><span id="oSeqV">—</span></span>
+            <span class="ov"><span id="oSeqV">—</span></span>
             <span class="osub" id="oSeqSub"></span>
           </div>
         </div>
@@ -349,7 +387,7 @@
 
     <!-- ONE polite live region — announced on settle (srHold), never per-frame -->
     <div class="sr" id="srLive" aria-live="polite" aria-atomic="true"></div>
-  </div>
+  </main>
 
 <script type="module">
 import {
@@ -413,10 +451,11 @@ const dirWord= v => Math.abs(v)<0.05?'square':(Math.abs(v).toFixed(1)+' degrees 
 const ballWord=m => { const c=Math.round(m*100); return c===0?'centre of stance':(Math.abs(c)+' cm '+(c>0?'forward, toward the target':'back')); };
 
 const INPUTS = [
-  { key:'plane', label:'Swing plane', color:'var(--c-plane)', min:45, max:70, step:1, big:2,
+  // [win-07] short canonical chip names (SYS-05) so nothing clips at 812
+  { key:'plane', label:'Plane', color:'var(--c-plane)', min:45, max:70, step:1, big:2,
     get:()=>state.planeAngle, set:v=>state.planeAngle=v, fmt:v=>Math.round(v)+'°',
     aria:'Swing plane angle in degrees', vt:v=>Math.round(v)+' degrees' },
-  { key:'dir', label:'Swing dir', color:'var(--c-dir)', min:-8, max:8, step:0.5, big:1,
+  { key:'dir', label:'Direction', color:'var(--c-dir)', min:-8, max:8, step:0.5, big:1,
     get:()=>state.swingDirection, set:v=>state.swingDirection=v, fmt:v=>sgn1(v),
     aria:'Swing direction in degrees, positive is in to out', vt:v=>dirWord(v) },
   { key:'lpx', label:'Low point', color:'var(--c-lpx)', min:-0.10, max:0.20, step:0.005, big:0.02,
@@ -425,7 +464,7 @@ const INPUTS = [
   { key:'depth', label:'Depth', color:'var(--c-depth)', min:-0.05, max:0.05, step:0.002, big:0.01,
     get:()=>state.lowPoint.z, set:v=>state.lowPoint.z=v, fmt:v=>mmTxt(v),
     aria:'Low point depth in millimetres, negative digs below the ground', vt:v=>mmWord(v) },
-  { key:'ball', label:'Ball pos', color:'var(--c-ball)', min:-0.10, max:0.10, step:0.005, big:0.02,
+  { key:'ball', label:'Ball', color:'var(--c-ball)', min:-0.10, max:0.10, step:0.005, big:0.02,
     get:()=>state.ballPosition, set:v=>state.ballPosition=v, fmt:v=>cmTxt(v),
     aria:'Ball position in centimetres, positive is forward toward the target', vt:v=>ballWord(v) },
 ];
@@ -460,14 +499,20 @@ function beginSession(){
 }
 function endSession(){
   if (!sessionActive && !before) return;
-  sessionActive = false; before = null;
+  sessionActive = false;
   clearTimeout(fadeTimer); fadeTimer = null;
+  clearTimeout(settleTimer);            // [F8] no stale settle can double-announce
+  clearGhost(true);                     // [win-21] fade the before-trace out (150ms), don't pop; sets before=null
   renderAll(); flushLive();
 }
 function armSessionFade(){
   if (reduce) return;                 // reduced motion: ghost persists until next preset
   clearTimeout(fadeTimer);
-  fadeTimer = setTimeout(endSession, 1800);
+  // [win-22] 3s to read three was→is deltas; and hold the before-trace while a dock is open
+  fadeTimer = setTimeout(function tick(){
+    if (tuneKey){ fadeTimer = setTimeout(tick, 1000); return; }
+    endSession();
+  }, 3000);
 }
 
 // ── settle / srHold: hold live-region writes during a drag, flush once ───
@@ -481,7 +526,7 @@ function scheduleSettle(){
 // ════════════════════════════════════════════════════════════════════════
 //  LAYOUT MEASURE
 // ════════════════════════════════════════════════════════════════════════
-const HSPAN = 0.90, OX_FRAC = 0.46, GY_FRAC = 0.58;   // orthographic window mapping
+const HSPAN = 0.90, OX_FRAC = 0.46, GY_FRAC = 0.78;   // [win-17] ground lower → underground void <=55px
 const win = { w:0,h:0,S:0,ox:0,gy:0 };
 function measure(){
   const wr = $('winCard').getBoundingClientRect();
@@ -491,6 +536,7 @@ function measure(){
   win.ox = win.w * OX_FRAC;
   win.gy = win.h * GY_FRAC;
   $('winSvg').setAttribute('viewBox', `0 0 ${win.w.toFixed(1)} ${win.h.toFixed(1)}`);
+  $('ghostSvg').setAttribute('viewBox', `0 0 ${win.w.toFixed(1)} ${win.h.toFixed(1)}`);   // [win-21] same frame as winSvg
   const sr = $('seqCard').getBoundingClientRect();
   $('seqSvg').setAttribute('viewBox', `0 0 ${sr.width.toFixed(1)} ${sr.height.toFixed(1)}`);
   const fr = $('faceCard').getBoundingClientRect();
@@ -504,6 +550,15 @@ function measure(){
 }
 const mapX = sx => win.ox + sx * win.S;              // stance-frame X (m) → px
 const mapY = z  => win.gy - z * win.S;               // world Z (m, up) → px
+
+// ── [craft] TWO-STEP stroke scale for every drawing (pass-A §6 craft band) ──
+//   SW_HAIR = all guides / chrome / reference / outlines / ghost (one hairline)
+//   SW_DATA = every meaning-carrying stroke: arc core, attack tangent, dial
+//             rays, face contact line, seq… (differentiated by COLOUR + DASH,
+//             never by a third weight — cf. pass-A [out-02]'s 2-step rule).
+//   SW_GLOW = the arc's diffuse under-bloom (.10 opacity halo, not a counted
+//             line — same exception the tracer under-glow gets in pass A).
+const SW_HAIR = 1.25, SW_DATA = 2.5, SW_GLOW = 6;
 
 // ════════════════════════════════════════════════════════════════════════
 //  DRAW — STRIKE WINDOW (orthographic side-on)
@@ -525,7 +580,7 @@ function drawWindow(m){
   const S = win.S, gy = win.gy, W = win.w, H = win.h;
   const ballPos = state.ballPosition;
   const ballR = Math.max(6, BALL_RADIUS_M * S);
-  const ACC = 'var(--accent)', DIM = 'var(--secondary)', YEL = 'var(--yellow)';  // arc = ember lane; dimension callout = violet chrome; low-point mark = mint
+  const ACC = 'var(--accent)', DIM = 'var(--secondary)', YEL = 'var(--c-lpx)';  // arc = the ONE ember lane; dimension callout = violet chrome; low-point mark = mint (--q-attack)
   const parts = [];
 
   // defs (ball gradient)
@@ -540,22 +595,11 @@ function drawWindow(m){
 
   // faint impact plumb (guide at the ball/impact x)
   const bScreenX = mapX(ballPos);
-  parts.push(`<line x1="${bScreenX.toFixed(1)}" y1="10" x2="${bScreenX.toFixed(1)}" y2="${(H-8).toFixed(1)}" stroke="rgba(255,255,255,.06)" stroke-width="1"/>`);
+  parts.push(`<line x1="${bScreenX.toFixed(1)}" y1="10" x2="${bScreenX.toFixed(1)}" y2="${(H-8).toFixed(1)}" stroke="rgba(255,255,255,.06)" stroke-width="${SW_HAIR}"/>`);
 
-  // BEFORE-TRACE ghost (dashed) — drawn UNDER the live marks
-  if (before){
-    const gd = arcPathD(before.eng, before.ball);
-    if (gd) parts.push(`<path d="${gd}" fill="none" stroke="var(--ghost)" stroke-width="1.5" stroke-dasharray="4 4" opacity=".55" stroke-linecap="round"/>`);
-    // ghost low point
-    const glpx = lpWorld(before.eng).x, glpz = before.eng.lowPoint.z;
-    const gx = mapX(glpx + before.ball), gyv = mapY(glpz);
-    parts.push(`<circle cx="${gx.toFixed(1)}" cy="${gyv.toFixed(1)}" r="3" fill="none" stroke="var(--ghost)" stroke-width="1.4" opacity=".7"/>`);
-    // ghost turf entry
-    if (before.entryX != null){
-      const gex = mapX(before.entryX + before.ball);
-      parts.push(`<circle cx="${gex.toFixed(1)}" cy="${gy.toFixed(1)}" r="2.4" fill="none" stroke="var(--ghost)" stroke-width="1.3" opacity=".65"/>`);
-    }
-  }
+  // BEFORE-TRACE ghost lives in its OWN #ghostSvg layer (drawGhost) so it can
+  // fade out on session end ([win-21]) independently of this winSvg rebuild —
+  // drawn UNDER the live marks by z-order (ghostSvg is the first winCard child).
 
   // TURF strip + entry (fat/duff) — first-class element
   if (t0 != null){
@@ -564,21 +608,28 @@ function drawWindow(m){
     const xa = Math.max(4, Math.min(ex, xx)), xb = Math.min(W-4, Math.max(ex, xx));
     if (xb > xa) parts.push(`<rect x="${xa.toFixed(1)}" y="${(gy-3).toFixed(1)}" width="${(xb-xa).toFixed(1)}" height="7" rx="2.5" fill="url(#turfG)"/>`);
     const exC = Math.max(8, Math.min(W-8, ex));
-    parts.push(`<circle cx="${exC.toFixed(1)}" cy="${gy.toFixed(1)}" r="4" fill="var(--soil)" stroke="#c9a878" stroke-width="1"/>`);
+    parts.push(`<circle cx="${exC.toFixed(1)}" cy="${gy.toFixed(1)}" r="4" fill="var(--soil)" stroke="#c9a878" stroke-width="${SW_HAIR}"/>`);
     const turfCm = Math.round(entry.x*100);
-    const lbl = turfCm<=0 ? `turf ${Math.abs(turfCm)} cm BEFORE ball` : `turf ${turfCm} cm after ball`;
+    // [win-11] no caps-for-emphasis; [win-24] the soil label rides its OWN dark tag
+    // plate so the descending arc (which reaches this depth at deep Duff) is occluded
+    // behind it and never grazes the type — the "standard tag plate" option.
+    const lbl = turfCm<=0 ? `turf ${Math.abs(turfCm)} cm before ball` : `turf ${turfCm} cm after ball`;
     const anchor = exC < W*0.2 ? 'start' : (exC > W*0.8 ? 'end' : 'middle');
-    parts.push(`<text x="${exC.toFixed(1)}" y="${(gy+17).toFixed(1)}" text-anchor="${anchor}" fill="var(--soil-ink)" font-size="10" font-weight="700" font-family="inherit">${lbl}</text>`);
+    const twf = Math.min(W-8, lbl.length*5.6 + 12);
+    let tpx = anchor==='middle' ? exC - twf/2 : (anchor==='end' ? exC - twf + 4 : exC - 4);
+    tpx = Math.max(4, Math.min(W-4-twf, tpx));
+    parts.push(`<rect x="${tpx.toFixed(1)}" y="${(gy+6).toFixed(1)}" width="${twf.toFixed(1)}" height="16" rx="4" fill="var(--plate-solid)" stroke="var(--line)" stroke-width="${SW_HAIR}"/>`);
+    parts.push(`<text x="${exC.toFixed(1)}" y="${(gy+17).toFixed(1)}" text-anchor="${anchor}" fill="var(--soil-ink)" font-size="10" font-weight="600" font-family="inherit">${lbl}</text>`);
   }
 
   // GROUND line
-  parts.push(`<line x1="4" y1="${gy.toFixed(1)}" x2="${(W-4).toFixed(1)}" y2="${gy.toFixed(1)}" stroke="rgba(255,255,255,.34)" stroke-width="1.4"/>`);
+  parts.push(`<line x1="4" y1="${gy.toFixed(1)}" x2="${(W-4).toFixed(1)}" y2="${gy.toFixed(1)}" stroke="rgba(255,255,255,.34)" stroke-width="${SW_HAIR}"/>`);
 
-  // ARC-BOTTOM curve (engine samples, orthographic) — glow + core
+  // ARC-BOTTOM curve (engine samples, orthographic) — glow bloom + data core
   const d = arcPathD(m.eng, ballPos);
   if (d){
-    parts.push(`<path d="${d}" fill="none" stroke="${ACC}" stroke-width="6" opacity=".10" stroke-linecap="round"/>`);
-    parts.push(`<path d="${d}" fill="none" stroke="${ACC}" stroke-width="2" opacity=".85" stroke-linecap="round"/>`);
+    parts.push(`<path d="${d}" fill="none" stroke="${ACC}" stroke-width="${SW_GLOW}" opacity=".10" stroke-linecap="round"/>`);
+    parts.push(`<path d="${d}" fill="none" stroke="${ACC}" stroke-width="${SW_DATA}" opacity=".85" stroke-linecap="round"/>`);
   }
 
   // ATTACK TANGENT at impact — slope drawn EXACTLY = attackAngle (orthographic honesty)
@@ -592,23 +643,25 @@ function drawWindow(m){
     const len = Math.min(W*0.30, 150);
     const x1 = ix - len, y1 = iy + slope*len;
     const x2 = ix + len, y2 = iy - slope*len;
-    parts.push(`<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="var(--c-attack)" stroke-width="2" stroke-linecap="round" opacity=".95"/>`);
+    // [win-03] attack tangent = a data-weight stroke, but INK + DASHED so it never
+    //          reads as the solid ember arc (colour + dash carry the difference, not a 3rd weight)
+    parts.push(`<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="var(--ink)" stroke-width="${SW_DATA}" stroke-dasharray="5 6" stroke-linecap="round" opacity=".8"/>`);
     // label rides the forward end of the tangent
     const lx = ix + len*0.60, ly = iy - slope*(len*0.60);
-    parts.push(`<text x="${(lx+6).toFixed(1)}" y="${(ly + (di.attackAngle<=0?-6:15)).toFixed(1)}" fill="var(--c-attack)" font-size="10.5" font-weight="800" font-family="inherit">Attack ${sgn1(di.attackAngle)}</text>`);
+    parts.push(`<text x="${(lx+6).toFixed(1)}" y="${(ly + (di.attackAngle<=0?-6:15)).toFixed(1)}" fill="var(--ink)" font-size="10.5" font-weight="700" font-family="inherit">Attack ${sgn1(di.attackAngle)}</text>`);
   }
 
   // BALL (draggable) — stance position
   parts.push(`<circle cx="${bScreenX.toFixed(1)}" cy="${(gy-ballR).toFixed(1)}" r="${ballR.toFixed(1)}" fill="url(#ballG)"/>`);
-  parts.push(`<circle cx="${bScreenX.toFixed(1)}" cy="${(gy-ballR).toFixed(1)}" r="${ballR.toFixed(1)}" fill="none" stroke="rgba(255,255,255,.25)" stroke-width="1"/>`);
+  parts.push(`<circle cx="${bScreenX.toFixed(1)}" cy="${(gy-ballR).toFixed(1)}" r="${ballR.toFixed(1)}" fill="none" stroke="rgba(255,255,255,.25)" stroke-width="${SW_HAIR}"/>`);
 
   // LOW-POINT marker + plumb + cm dimension (ball ↔ low point = effectiveLpx)
   const lpx = mapX(lpW.x + ballPos), lpy = mapY(m.eng.lowPoint.z);
   if (Math.abs(lpy - gy) > 2){
-    parts.push(`<line x1="${lpx.toFixed(1)}" y1="${lpy.toFixed(1)}" x2="${lpx.toFixed(1)}" y2="${gy.toFixed(1)}" stroke="${YEL}" stroke-width="1" stroke-dasharray="2 3" opacity=".8"/>`);
+    parts.push(`<line x1="${lpx.toFixed(1)}" y1="${lpy.toFixed(1)}" x2="${lpx.toFixed(1)}" y2="${gy.toFixed(1)}" stroke="${YEL}" stroke-width="${SW_HAIR}" stroke-dasharray="2 3" opacity=".8"/>`);
   }
   parts.push(`<circle cx="${lpx.toFixed(1)}" cy="${lpy.toFixed(1)}" r="4.5" fill="${YEL}"/>`);
-  parts.push(`<circle cx="${lpx.toFixed(1)}" cy="${lpy.toFixed(1)}" r="4.5" fill="none" stroke="rgba(0,0,0,.4)" stroke-width="1"/>`);
+  parts.push(`<circle cx="${lpx.toFixed(1)}" cy="${lpy.toFixed(1)}" r="4.5" fill="none" stroke="rgba(0,0,0,.4)" stroke-width="${SW_HAIR}"/>`);
   // dimension: ball(top) ↔ low point, cm label
   {
     const cmVal = Math.round(effLpxV*100);
@@ -617,10 +670,10 @@ function drawWindow(m){
     const midX = (bScreenX + lpx)/2;
     const cmLabel = cmVal===0 ? 'at ball' : (Math.abs(cmVal)+' cm '+(cmVal>0?'ahead':'behind'));
     parts.push(
-      `<line x1="${bScreenX.toFixed(1)}" y1="${(gy-ballR*2-2).toFixed(1)}" x2="${bScreenX.toFixed(1)}" y2="${topY.toFixed(1)}" stroke="${DIM}" stroke-width="1" stroke-dasharray="2 3" opacity=".5"/>`,
-      `<line x1="${lpx.toFixed(1)}" y1="${(lpy-5).toFixed(1)}" x2="${lpx.toFixed(1)}" y2="${topY.toFixed(1)}" stroke="${DIM}" stroke-width="1" stroke-dasharray="2 3" opacity=".5"/>`,
-      `<line x1="${leftX.toFixed(1)}" y1="${topY.toFixed(1)}" x2="${rightX.toFixed(1)}" y2="${topY.toFixed(1)}" stroke="${DIM}" stroke-width="1.4"/>`,
-      `<rect x="${(midX-38).toFixed(1)}" y="${(topY-19).toFixed(1)}" width="76" height="16" rx="4" fill="var(--surface)" stroke="var(--secondary-line)"/>`,
+      `<line x1="${bScreenX.toFixed(1)}" y1="${(gy-ballR*2-2).toFixed(1)}" x2="${bScreenX.toFixed(1)}" y2="${topY.toFixed(1)}" stroke="${DIM}" stroke-width="${SW_HAIR}" stroke-dasharray="2 3" opacity=".5"/>`,
+      `<line x1="${lpx.toFixed(1)}" y1="${(lpy-5).toFixed(1)}" x2="${lpx.toFixed(1)}" y2="${topY.toFixed(1)}" stroke="${DIM}" stroke-width="${SW_HAIR}" stroke-dasharray="2 3" opacity=".5"/>`,
+      `<line x1="${leftX.toFixed(1)}" y1="${topY.toFixed(1)}" x2="${rightX.toFixed(1)}" y2="${topY.toFixed(1)}" stroke="${DIM}" stroke-width="${SW_HAIR}"/>`,
+      `<rect x="${(midX-38).toFixed(1)}" y="${(topY-19).toFixed(1)}" width="76" height="16" rx="4" fill="var(--surface)" stroke="var(--secondary-line)" stroke-width="${SW_HAIR}"/>`,
       `<text x="${midX.toFixed(1)}" y="${(topY-7).toFixed(1)}" text-anchor="middle" fill="var(--ink)" font-size="10.5" font-weight="700" font-family="inherit">low pt ${cmLabel}</text>`
     );
     // store handle positions
@@ -640,22 +693,59 @@ function positionHandle(id, pt){
   el.style.top  = pt.y + 'px';
 }
 
+// ── BEFORE-TRACE ghost, drawn into its OWN #ghostSvg layer ([win-21]) ──────
+//    While a session is live drawGhost repaints it at full strength every frame;
+//    clearGhost ramps its opacity to 0 over 150ms on session end (or hard-clears
+//    under reduced-motion) so it never vanishes in a single frame.
+let ghostClearTimer = null;
+function drawGhost(){
+  const g = $('ghostSvg');
+  if (!before){ return; }              // rest / mid-fade → clearGhost owns the layer
+  clearTimeout(ghostClearTimer);
+  g.style.transition = ''; g.style.opacity = '';   // full strength while the session is live
+  const gy = win.gy;
+  const parts = [];
+  const gd = arcPathD(before.eng, before.ball);
+  if (gd) parts.push(`<path d="${gd}" fill="none" stroke="var(--ghost)" stroke-width="${SW_HAIR}" stroke-dasharray="4 4" opacity=".55" stroke-linecap="round"/>`);
+  const glpx = lpWorld(before.eng).x, glpz = before.eng.lowPoint.z;
+  const gx = mapX(glpx + before.ball), gyv = mapY(glpz);
+  parts.push(`<circle cx="${gx.toFixed(1)}" cy="${gyv.toFixed(1)}" r="3" fill="none" stroke="var(--ghost)" stroke-width="${SW_HAIR}" opacity=".7"/>`);
+  if (before.entryX != null){
+    const gex = mapX(before.entryX + before.ball);
+    parts.push(`<circle cx="${gex.toFixed(1)}" cy="${gy.toFixed(1)}" r="2.4" fill="none" stroke="var(--ghost)" stroke-width="${SW_HAIR}" opacity=".65"/>`);
+  }
+  g.innerHTML = parts.join('');
+}
+function clearGhost(fade){
+  before = null;
+  const g = $('ghostSvg');
+  if (!g) return;
+  clearTimeout(ghostClearTimer);
+  if (fade && !reduce && g.innerHTML){
+    g.style.transition = 'opacity .15s ease';
+    requestAnimationFrame(()=>{ g.style.opacity = '0'; });          // [win-21] 150ms ramp
+    ghostClearTimer = setTimeout(()=>{ g.innerHTML=''; g.style.transition=''; g.style.opacity=''; }, 180);
+  } else {
+    g.style.transition=''; g.style.opacity=''; g.innerHTML='';       // reduced-motion / hard clear
+  }
+}
+
 // ════════════════════════════════════════════════════════════════════════
 //  DRAW — SEQUENCE BAR (reading order literal)
 // ════════════════════════════════════════════════════════════════════════
 function drawSequence(m){
   const { t0, entryX, effLpxV, lpW } = m;
   const W = win.seqW, H = win.seqH, gy = win.gy;
-  const trackY = H*0.44;
+  const trackY = H*0.42;
   const ballPos = state.ballPosition;
   const parts = [];
-  parts.push(`<line x1="8" y1="${trackY.toFixed(1)}" x2="${(W-8).toFixed(1)}" y2="${trackY.toFixed(1)}" stroke="rgba(255,255,255,.16)" stroke-width="2"/>`);
+  parts.push(`<line x1="8" y1="${trackY.toFixed(1)}" x2="${(W-8).toFixed(1)}" y2="${trackY.toFixed(1)}" stroke="rgba(255,255,255,.16)" stroke-width="${SW_HAIR}"/>`);
 
-  // events in stance X
+  // events in stance X ([F5] all pips light-filled so the near-black index reads)
   const events = [];
-  if (t0 != null) events.push({ kind:'turf', sx: entryX + ballPos, color:'var(--soil)', ring:'#c9a878', label:'TURF' });
+  if (t0 != null) events.push({ kind:'turf', sx: entryX + ballPos, color:'var(--soil-ink)', ring:'var(--soil)', label:'TURF' });
   events.push({ kind:'ball', sx: ballPos, color:'#e6ecf4', ring:'rgba(255,255,255,.6)', label:'BALL' });
-  events.push({ kind:'low',  sx: lpW.x + ballPos, color:'var(--yellow)', ring:'rgba(0,0,0,.4)', label:'LOW PT' });
+  events.push({ kind:'low',  sx: lpW.x + ballPos, color:'var(--c-lpx)', ring:'rgba(0,0,0,.4)', label:'LOW PT' });
   events.sort((a,b)=>a.sx-b.sx);   // left→right = time order (club travels +X)
 
   let prevPx = -999, prevRow = 1;
@@ -666,24 +756,22 @@ function drawSequence(m){
     // stagger the text label onto a 2nd row when pips crowd (<36px apart)
     const row = (x - prevPx) < 36 ? (prevRow===0?1:0) : 0;
     prevRow = row; prevPx = x;
-    parts.push(`<circle cx="${x.toFixed(1)}" cy="${trackY.toFixed(1)}" r="6.5" fill="${e.color}" stroke="${e.ring}" stroke-width="1.3"/>`);
-    parts.push(`<text x="${x.toFixed(1)}" y="${(trackY+1).toFixed(1)}" text-anchor="middle" fill="#0A0713" font-size="8.5" font-weight="900" font-family="inherit">${i+1}</text>`);
+    parts.push(`<circle cx="${x.toFixed(1)}" cy="${trackY.toFixed(1)}" r="6.5" fill="${e.color}" stroke="${e.ring}" stroke-width="${SW_HAIR}"/>`);
+    parts.push(`<text x="${x.toFixed(1)}" y="${(trackY+1).toFixed(1)}" text-anchor="middle" fill="#0A0713" font-size="10" font-weight="800" font-family="inherit">${i+1}</text>`);
     const anchor = x < W*0.12 ? 'start' : (x > W*0.88 ? 'end' : 'middle');
-    parts.push(`<text x="${x.toFixed(1)}" y="${(trackY+20+row*11).toFixed(1)}" text-anchor="${anchor}" fill="var(--muted)" font-size="9" font-weight="700" letter-spacing=".04em" font-family="inherit">${e.label}</text>`);
+    parts.push(`<text x="${x.toFixed(1)}" y="${(trackY+20+row*11).toFixed(1)}" text-anchor="${anchor}" fill="var(--muted)" font-size="10" font-weight="600" letter-spacing=".04em" font-family="inherit">${e.label}</text>`);
   });
 
-  // headline verdict — the duff/ball-first binary
-  let verdict, vcolor;
+  // headline verdict — [win-04] ink text (band colour lives only in the winVerdict + face line); [win-11] no caps
+  let verdict;
   if (t0 != null){
     const turfCm = Math.round(entryX*100);
-    verdict = turfCm<=0 ? `Turf ${Math.abs(turfCm)} cm BEFORE ball` : `Turf ${turfCm} cm after ball`;
-    vcolor = 'var(--bad)';
+    verdict = turfCm<=0 ? `Turf ${Math.abs(turfCm)} cm before ball` : `Turf ${turfCm} cm after ball`;
   } else {
     verdict = 'Ball first · no turf';
-    vcolor = 'var(--good)';
   }
-  parts.push(`<text x="${(W-8).toFixed(1)}" y="14" text-anchor="end" fill="${vcolor}" font-size="10.5" font-weight="800" font-family="inherit">${verdict}</text>`);
-  parts.push(`<text x="8" y="14" text-anchor="start" fill="var(--muted)" font-size="9" font-weight="700" letter-spacing=".1em" font-family="inherit">SEQUENCE →</text>`);
+  parts.push(`<text x="${(W-8).toFixed(1)}" y="15" text-anchor="end" fill="var(--ink)" font-size="10.5" font-weight="700" font-family="inherit">${verdict}</text>`);
+  parts.push(`<text x="8" y="15" text-anchor="start" fill="var(--muted)" font-size="10" font-weight="600" letter-spacing=".1em" font-family="inherit">SEQUENCE →</text>`);
 
   $('seqSvg').innerHTML = parts.join('');
 }
@@ -700,22 +788,19 @@ function drawFace(m){
   parts.push(`<defs><radialGradient id="faceBallG" cx="38%" cy="32%" r="72%">
     <stop offset="0" stop-color="#ffffff"/><stop offset="0.55" stop-color="#e6ecf4"/><stop offset="1" stop-color="#9fb0c4"/></radialGradient></defs>`);
   // ground line under the ball
-  parts.push(`<line x1="${(cx-cR-14).toFixed(1)}" y1="${(cy+cR).toFixed(1)}" x2="${(cx+cR+14).toFixed(1)}" y2="${(cy+cR).toFixed(1)}" stroke="rgba(255,255,255,.28)" stroke-width="1.2"/>`);
+  parts.push(`<line x1="${(cx-cR-14).toFixed(1)}" y1="${(cy+cR).toFixed(1)}" x2="${(cx+cR+14).toFixed(1)}" y2="${(cy+cR).toFixed(1)}" stroke="rgba(255,255,255,.28)" stroke-width="${SW_HAIR}"/>`);
   parts.push(`<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${cR.toFixed(1)}" fill="url(#faceBallG)"/>`);
   // equator reference
-  parts.push(`<line x1="${(cx-cR).toFixed(1)}" y1="${cy.toFixed(1)}" x2="${(cx+cR).toFixed(1)}" y2="${cy.toFixed(1)}" stroke="rgba(10,14,18,.28)" stroke-width="1" stroke-dasharray="3 3"/>`);
-  const mmVal = Math.round(ct.offset*1000);
+  parts.push(`<line x1="${(cx-cR).toFixed(1)}" y1="${cy.toFixed(1)}" x2="${(cx+cR).toFixed(1)}" y2="${cy.toFixed(1)}" stroke="rgba(10,14,18,.28)" stroke-width="${SW_HAIR}" stroke-dasharray="3 3"/>`);
   const ratio = Math.max(-1.45, Math.min(1.45, ct.offsetRatio));
   const cyLine = cy - ratio*cR;
-  const col = bandColor(disp), tcol = col;   // P3 status token (line + mm text)
+  const col = bandColor(disp);   // [win-04] band colour lives here — the contact line IS the drawing
   if (!disp.contact){
-    parts.push(`<line x1="${(cx-cR-12).toFixed(1)}" y1="${cyLine.toFixed(1)}" x2="${(cx+cR+12).toFixed(1)}" y2="${cyLine.toFixed(1)}" stroke="${col}" stroke-width="2.4" stroke-dasharray="5 4" stroke-linecap="round"/>`);
+    parts.push(`<line x1="${(cx-cR-12).toFixed(1)}" y1="${cyLine.toFixed(1)}" x2="${(cx+cR+12).toFixed(1)}" y2="${cyLine.toFixed(1)}" stroke="${col}" stroke-width="${SW_DATA}" stroke-dasharray="5 4" stroke-linecap="round"/>`);
   } else {
-    parts.push(`<line x1="${(cx-cR-12).toFixed(1)}" y1="${cyLine.toFixed(1)}" x2="${(cx+cR+12).toFixed(1)}" y2="${cyLine.toFixed(1)}" stroke="${col}" stroke-width="3" stroke-linecap="round"/>`);
+    parts.push(`<line x1="${(cx-cR-12).toFixed(1)}" y1="${cyLine.toFixed(1)}" x2="${(cx+cR+12).toFixed(1)}" y2="${cyLine.toFixed(1)}" stroke="${col}" stroke-width="${SW_DATA}" stroke-linecap="round"/>`);
   }
-  const mmShort = !disp.contact ? 'no contact'
-    : (Math.abs(mmVal)<1.5 ? 'centre' : (mmVal>0 ? `+${mmVal} mm high` : `−${Math.abs(mmVal)} mm low`));
-  parts.push(`<text x="${cx.toFixed(1)}" y="${(H-8).toFixed(1)}" text-anchor="middle" fill="${tcol}" font-size="12" font-weight="800" font-family="inherit">${mmShort}</text>`);
+  // [win-14] the mm number lives ONCE, in the Strike-height tile — panel keeps the drawing only
   $('faceSvg').innerHTML = parts.join('');
 }
 
@@ -730,9 +815,9 @@ function drawDial(m){
   const GAIN = 4.2, CAP = 62;
   const parts = [];
   // dial ring
-  parts.push(`<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${r.toFixed(1)}" fill="none" stroke="rgba(255,255,255,.14)" stroke-width="1.2"/>`);
+  parts.push(`<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${r.toFixed(1)}" fill="none" stroke="rgba(255,255,255,.14)" stroke-width="${SW_HAIR}"/>`);
   // target line up (the dashed vertical reads as the target line — no extra label)
-  parts.push(`<line x1="${cx.toFixed(1)}" y1="${cy.toFixed(1)}" x2="${cx.toFixed(1)}" y2="${(cy-r-6).toFixed(1)}" stroke="rgba(255,255,255,.30)" stroke-width="1.2" stroke-dasharray="3 3"/>`);
+  parts.push(`<line x1="${cx.toFixed(1)}" y1="${cy.toFixed(1)}" x2="${cx.toFixed(1)}" y2="${(cy-r-6).toFixed(1)}" stroke="rgba(255,255,255,.30)" stroke-width="${SW_HAIR}" stroke-dasharray="3 3"/>`);
   parts.push(`<path d="M${cx.toFixed(1)} ${(cy-r-6).toFixed(1)} l-3 5 l6 0 z" fill="rgba(255,255,255,.4)"/>`);
   const ray = (val,color,wdt)=>{
     const a = deg2rad(clamp(val*GAIN, -CAP, CAP));   // +val = in-to-out = clockwise (right)
@@ -743,72 +828,71 @@ function drawDial(m){
     return `<line x1="${cx.toFixed(1)}" y1="${cy.toFixed(1)}" x2="${hx.toFixed(1)}" y2="${hy.toFixed(1)}" stroke="${color}" stroke-width="${wdt}" stroke-linecap="round"/>`
       + `<polygon points="${ex.toFixed(1)},${ey.toFixed(1)} ${(hx-px).toFixed(1)},${(hy-py).toFixed(1)} ${(hx+px).toFixed(1)},${(hy+py).toFixed(1)}" fill="${color}"/>`;
   };
-  parts.push(ray(state.swingDirection, 'var(--c-dir)', 2.4));   // swing direction
-  parts.push(ray(di.clubPath, 'var(--accent)', 3.2));           // resulting path
+  parts.push(ray(state.swingDirection, 'var(--c-dir)', SW_DATA));   // swing direction (input) — blue carries it
+  parts.push(ray(di.clubPath, 'var(--ink)', SW_DATA));             // [win-03] resulting path = ink (arc is the only ember); ink vs blue separates the two rays, not weight
   parts.push(`<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="3" fill="#fff" opacity=".9"/>`);
-  // printed value
-  parts.push(`<text x="${cx.toFixed(1)}" y="${(H-8).toFixed(1)}" text-anchor="middle" fill="var(--accent)" font-size="12.5" font-weight="800" font-family="inherit">Path ${sgn1(di.clubPath)}</text>`);
+  // [win-14] the ° lives once, in the Club-path tile; [win-18] disclose the exaggerated drawing on-surface
+  parts.push(`<text x="${cx.toFixed(1)}" y="${(H-8).toFixed(1)}" text-anchor="middle" fill="var(--muted)" font-size="10" font-weight="600" font-family="inherit">×4 view</text>`);
   $('dialSvg').innerHTML = parts.join('');
 }
 
 // ════════════════════════════════════════════════════════════════════════
 //  OUTPUT TILES + BAND CHIP
 // ════════════════════════════════════════════════════════════════════════
+// [win-08] signed, U+2212 minus, units on BOTH sides — the app's number grammar (SYS-06)
+function sgnU(v, dp, unit){ return (v>=0?'+':'−')+Math.abs(v).toFixed(dp)+unit; }
 function fmtDelta(now, was, unit, dp){
-  const d = now - was;
-  if (Math.abs(d) < (dp===0?0.5:0.05)) return `was ${was.toFixed(dp)}${unit} · no change`;
-  return `${was.toFixed(dp)} → ${now.toFixed(dp)}${unit}`;
+  const eps = dp===0 ? 0.5 : 0.05;
+  if (Math.abs(now-was) < eps) return `no change · ${sgnU(now,dp,unit)}`;
+  return `${sgnU(was,dp,unit)} → ${sgnU(now,dp,unit)}`;
 }
 function updateOutputs(m){
   const { di, ct, disp, t0, entryX } = m;
 
-  // Attack
+  // Attack — value is ink/mono; [win-12] arrow is DATA, always muted (ascending isn't "good")
   const atk = di.attackAngle;
   $('oAttackV').textContent = sgn1(atk);
   const arw = Math.abs(atk)<0.05 ? '→' : (atk<0 ? '↓' : '↑');
   const arwEl = $('oAttackArw'); arwEl.textContent = arw;
-  arwEl.style.color = atk<0 ? 'var(--c-attack)' : (atk>0 ? 'var(--good)' : 'var(--muted)');
+  arwEl.style.color = 'var(--muted)';
   const aSub = $('oAttackSub');
   if (before){ aSub.textContent = fmtDelta(atk, before.di.attackAngle, '°', 1); aSub.classList.add('hot'); }
   else { aSub.textContent = atk<0?'descending':(atk>0?'ascending':'level'); aSub.classList.remove('hot'); }
 
-  // Path
+  // Path — ink/mono
   const pth = di.clubPath;
   $('oPathV').textContent = sgn1(pth);
   const pSub = $('oPathSub');
   if (before){ pSub.textContent = fmtDelta(pth, before.di.clubPath, '°', 1); pSub.classList.add('hot'); }
   else { pSub.textContent = Math.abs(pth)<0.05?'square':(pth>0?'in-to-out':'out-to-in'); pSub.classList.remove('hot'); }
 
-  // Strike height (face mm)
+  // Strike height (face mm) — [win-04] value is INK (band colour lives only in the winVerdict + face-line)
   const mmVal = Math.round(ct.offset*1000);
   const fEl = $('oFaceV');
   fEl.innerHTML = !disp.contact ? 'no contact'
     : (Math.abs(mmVal)<1.5 ? 'centre' : `${mmVal>0?'+':'−'}${Math.abs(mmVal)}<span class="u"> mm ${mmVal>0?'high':'low'}</span>`);
-  fEl.style.color = bandColor(disp);
+  fEl.style.color = 'var(--ink)';
   const fSub = $('oFaceSub');
-  if (before){ fSub.textContent = `${Math.round(before.ct.offset*1000)} → ${mmVal} mm`; fSub.classList.add('hot'); }
+  if (before){ fSub.textContent = fmtDelta(mmVal, Math.round(before.ct.offset*1000), ' mm', 0); fSub.classList.add('hot'); }
   else { fSub.textContent = 'on the clubface'; fSub.classList.remove('hot'); }
 
-  // Contact order (sequence / turf)
+  // Contact order — [win-13] short who-first phrase (ink); the cm detail sits in the sub
   const sEl = $('oSeqV'), sSub = $('oSeqSub');
   if (t0 != null){
     const turfCm = Math.round(entryX*100);
-    sEl.textContent = turfCm<=0 ? `Turf ${Math.abs(turfCm)} cm first` : `Turf ${turfCm} cm after`;
-    sEl.style.color = turfCm<=0 ? 'var(--bad)' : 'var(--warn)';
-    sSub.textContent = turfCm<=0 ? 'ground before ball' : 'ball before ground';
-    sSub.classList.remove('hot');
+    if (turfCm<=0){ sEl.textContent = 'Turf first'; sSub.textContent = `${Math.abs(turfCm)} cm before ball`; }
+    else { sEl.textContent = 'Ball first'; sSub.textContent = `turf ${turfCm} cm after`; }
   } else {
-    sEl.textContent = 'Ball first';
-    sEl.style.color = 'var(--good)';
-    sSub.textContent = 'no turf contact'; sSub.classList.remove('hot');
+    sEl.textContent = 'Ball first'; sSub.textContent = 'no turf contact';
   }
+  sEl.style.color = 'var(--ink)';
+  sSub.classList.remove('hot');
 
-  // Band chip
+  // Verdict — the ONE band-coloured readout, on the window card ([win-02]/[win-04])
   $('bandLabel').textContent = disp.label;
-  $('bandChip').style.color = bandColor(disp);
-  $('bandChip').style.background = 'rgba(255,255,255,.04)';
-  $('bandChip').style.borderColor = bandColor(disp);
-  $('bandDot').style.background = bandColor(disp);
+  const bc = bandColor(disp);
+  $('bandLabel').style.color = bc;
+  $('bandDot').style.background = bc;
 }
 
 // ════════════════════════════════════════════════════════════════════════
@@ -843,9 +927,16 @@ function liveSentence(){
     `Club path ${Math.abs(di.clubPath).toFixed(1)} degrees ${pathDir}. ` +
     `Low point ${lpDesc}. Ball position ${bpDesc}. Strike ${mmDesc}.` + turfDesc;
 }
+let lastCore = null;
 function flushLive(){
   if (srHold) return;
-  $('srLive').textContent = liveSentence();
+  const s = liveSentence();
+  // [F8] dedupe the settle announcement vs the endSession re-announce (same core,
+  // differing only by the "Adjusting from …" prefix) so AT hears it once.
+  const core = s.replace(/^Adjusting from [^.]*\. /, '');
+  if (core === lastCore) return;
+  lastCore = core;
+  $('srLive').textContent = s;
 }
 
 // ════════════════════════════════════════════════════════════════════════
@@ -869,6 +960,7 @@ function renderAll(){
   if (!measure()) return;
   const m = computeModel();
   drawWindow(m);
+  drawGhost();          // [win-21] before-trace on its own fade-able layer
   drawSequence(m);
   drawFace(m);
   drawDial(m);
@@ -879,12 +971,19 @@ function renderAll(){
 function renderStatic(){ renderAll(); }
 
 function syncHandleAria(m){
-  const lpcm = Math.round(m.effLpxV*100);
+  // [F1] hLow's ARIA value model = the RAW low-point x (cm) so it matches the
+  //      Low-point slider + the arrow keys (all three edit state.lowPoint.x).
+  // [F2] the effective (ball-relative) cm keeps a persistent text home in the
+  //      valuetext (and the on-window dimension + live sentence), so it is never lost.
+  const rawcm = Math.round(state.lowPoint.x*100);
+  const effcm = Math.round(m.effLpxV*100);
   const depthmm = Math.round(state.lowPoint.z*1000);
   const hLow = $('hLow');
-  hLow.setAttribute('aria-valuenow', String(lpcm));
+  hLow.setAttribute('aria-valuenow', String(rawcm));
   hLow.setAttribute('aria-valuetext',
-    `${lpcm===0?'at the ball':Math.abs(lpcm)+' cm '+(lpcm>0?'ahead':'behind')}, depth ${depthmm===0?'level':Math.abs(depthmm)+' mm '+(depthmm>0?'above':'below')}`);
+    `${rawcm===0?'centre of stance':Math.abs(rawcm)+' cm '+(rawcm>0?'forward':'back')}, `
+    + `${effcm===0?'at the ball':Math.abs(effcm)+' cm '+(effcm>0?'ahead of':'behind')+' the ball'}, `
+    + `depth ${depthmm===0?'level':Math.abs(depthmm)+' mm '+(depthmm>0?'above':'below')}`);
   const bpcm = Math.round(state.ballPosition*100);
   const hBall = $('hBall');
   hBall.setAttribute('aria-valuenow', String(bpcm));
@@ -895,24 +994,41 @@ function syncHandleAria(m){
 //  TUNE DOCK (tap chip → dock; live static redraw; auto-fade; aria)
 // ════════════════════════════════════════════════════════════════════════
 const tuneDock = $('tuneDock'), tdName = $('tdName'), tdVal = $('tdVal'), tdRange = $('tdRange');
-let tuneKey = null, dockFadeTimer = null, dockPointerDown = false, lastChipPointerTs = 0;
+let tuneKey = null, dockFadeTimer = null, dockPointerDown = false;
 
 function chipExpanded(key, on){ const c = $('icell_'+key); if (c) c.setAttribute('aria-expanded', on?'true':'false'); }
+function setRangeFill(cfg){   // [win-20] paint the filled side of the slider track
+  const pct = (cfg.get()-cfg.min)/(cfg.max-cfg.min)*100;
+  tdRange.style.setProperty('--fill', Math.max(0,Math.min(100,pct)).toFixed(1)+'%');
+}
 function syncDockUI(){
   if (!tuneKey) return;
   const cfg = INPUT_BY[tuneKey];
   tdVal.textContent = cfg.fmt(cfg.get());
   tdRange.value = cfg.get();
   tdRange.setAttribute('aria-valuetext', cfg.vt(cfg.get()));
+  setRangeFill(cfg);
   // reflect on the chip too
   const cv = $('iv_'+tuneKey); if (cv) cv.textContent = cfg.fmt(cfg.get());
 }
 function placeDock(){
-  const bb = $('chipRow').getBoundingClientRect();
   const stageR = $('stage').getBoundingClientRect();
-  tuneDock.style.bottom = (stageR.bottom - bb.top + 8) + 'px';
+  const seqR = $('seqCard').getBoundingClientRect();
+  // [win-05] vertical: the dock's BOTTOM edge sits >=8px ABOVE the sequence card's
+  //          top, over the (mostly empty) lower band of the window — never over the
+  //          sequence output it is changing.
+  tuneDock.style.bottom = (stageR.bottom - seqR.top + 8) + 'px';
+  // [win-05] horizontal: anchor the dock's left edge to the active chip, clamped to margins.
+  const chip = tuneKey ? $('icell_'+tuneKey) : null;
+  const dockW = tuneDock.offsetWidth || 340;
+  const margin = 8;
+  let left = (stageR.width - dockW)/2;   // fallback: centred
+  if (chip){ left = chip.getBoundingClientRect().left - stageR.left; }
+  left = Math.max(margin, Math.min(left, stageR.width - dockW - margin));
+  tuneDock.style.left = left + 'px';
+  tuneDock.style.right = 'auto';
 }
-function openTune(key){
+function openTune(key, ev){
   if (tuneKey === key){ closeTune(true); return; }
   if (tuneKey) chipExpanded(tuneKey, false);
   tuneKey = key;
@@ -929,8 +1045,10 @@ function openTune(key){
   tuneDock.setAttribute('aria-label', 'Adjust ' + cfg.aria);
   syncDockUI();
   placeDock();
-  const byPointer = (performance.now() - lastChipPointerTs) < 600;
-  if (!byPointer) tdRange.focus({ preventScroll:true });
+  // [F4] keyboard/AT activation reports detail===0 (a real pointer reports >=1) —
+  //      a touch-AT-robust signal for whether to pull focus into the slider.
+  const byKeyboard = !!(ev && ev.detail === 0);
+  if (byKeyboard) tdRange.focus({ preventScroll:true });
   armDockFade();
   document.addEventListener('pointerdown', onTuneOutside, true);
 }
@@ -1006,8 +1124,7 @@ $('tdDone').addEventListener('click', ()=> closeTune(true));
     b.setAttribute('aria-controls','tuneDock');
     b.innerHTML = '<span class="cdot" aria-hidden="true"></span>'
       + '<span class="cbody"><span class="ck">'+cfg.label+'</span><span class="cv" id="iv_'+cfg.key+'">—</span></span>'+tuneGlyph;
-    b.addEventListener('pointerdown', ()=>{ lastChipPointerTs = performance.now(); });
-    b.addEventListener('click', ()=> openTune(cfg.key));
+    b.addEventListener('click', (e)=> openTune(cfg.key, e));
     row.appendChild(b);
   });
   Array.from(row.querySelectorAll('.chip')).forEach((b,i)=>{ b.tabIndex = i===0?0:-1; });
@@ -1041,8 +1158,10 @@ function markPreset(name){
 function activePresetClear(){ if (activePreset){ activePreset=null; document.querySelectorAll('.preset').forEach(b=>b.setAttribute('aria-pressed','false')); } }
 function applyPreset(name){
   const p = PRESETS[name]; if (!p) return;
-  // a preset is a fresh start → end any session (clears before-trace)
-  sessionActive = false; before = null; clearTimeout(fadeTimer); fadeTimer = null;
+  // a preset is a fresh start → end any session; fade the before-trace ([win-21])
+  sessionActive = false; clearTimeout(fadeTimer); fadeTimer = null;
+  clearTimeout(settleTimer);   // [F8] a preset must not fire a stale settle announcement
+  clearGhost(!reduce);         // fade under motion; hard-clear under reduced-motion (persist-until-preset)
   state.planeAngle = p.planeAngle;
   state.swingDirection = p.swingDirection;
   state.lowPoint.x = p.lowPoint.x;
@@ -1138,6 +1257,8 @@ function boot(){
   renderAll();
   syncChipValues();
   flushLive();
+  // [win-23] one-time affordance pulse on the default-active low-point handle
+  if (!reduce){ const h=$('hLow'); h.classList.add('pulse'); h.addEventListener('animationend', ()=>h.classList.remove('pulse'), { once:true }); }
 }
 addEventListener('resize', ()=>{ renderAll(); if (tuneKey) placeDock(); });
 if (typeof ResizeObserver==='function'){

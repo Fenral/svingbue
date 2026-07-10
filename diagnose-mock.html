@@ -5,17 +5,19 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <meta name="theme-color" content="#07060C" />
 <meta name="robots" content="noindex" />
-<title>DIAGNOSE MOCK — Describe your shot, see the delivery</title>
+<title>DIAGNOSE MOCK — The coach interview</title>
 <!-- ═════════════════════════════════════════════════════════════════════
      diagnose-mock.html — DESIGN MOCK, NOT SHIPPED (the -mock.html suffix
-     keeps it out of scripts/copy-web.mjs's native allowlist).
-     Spec: docs/diagnose-spec.md v1 (design locked, Fable 5). Standalone page:
-     imports ./diagnose-engine.js (which imports ./impact-flight.js DIRECTLY —
+     keeps it out of scripts/copy-web.mjs's native allowlist). REBUILT v2.
+     Specs: docs/diagnose-spec-v2.md (delta) over docs/diagnose-spec.md (v1).
+     Physics ground truth: docs/diagnose-harness-v2-findings.md + diagnose-map-v2.json.
+     The user answers a coach's anamnesis — club · speed · shape · height ·
+     distance · (contact if way short) · divot — the engine reweights clusters
+     in place (never duplicating maps), reconstructs the delivery, and replays
+     it in ember over the user's cold-violet memory sketch AT THEIR SPEED. The
+     ONE thing (v1 §10) is untouched: the ember reveal over the violet sketch.
+     Imports ./diagnose-engine-v2.js (imports ./impact-flight.js DIRECTLY —
      byte-identical) + ./sa-haptics.js. P3 tokens + shell from ./sa-p3.css.
-     The user DESCRIBES the shot (5 taps, no jargon); the engine reconstructs
-     the delivery, replays it in ember over the user's cold-violet memory
-     sketch, names the cause in plain language with the real terms taught
-     inline, and hands the delivery to Ball Flight to fix.
      ═════════════════════════════════════════════════════════════════════ -->
 <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2052%2052'%20fill='none'%3E%3Cpath%20d='M11%2045%20C%2016%2026,%2024%2018,%2035%2015%20M21%2039%20L%2030%2024%20L%2043%2045'%20stroke='%239D8BFF'%20stroke-width='4.2'%20stroke-linecap='round'%20stroke-linejoin='round'/%3E%3Ccircle%20cx='37'%20cy='15'%20r='5.2'%20fill='%23FF8A4D'/%3E%3C/svg%3E" />
 <link rel="stylesheet" href="./sa-p3.css" />
@@ -50,6 +52,7 @@
   .railBody{
     flex:1 1 auto; overflow-y:auto; -webkit-overflow-scrolling:touch;
     padding:12px; padding-left:max(12px,env(safe-area-inset-left));
+    padding-bottom:calc(12px + env(safe-area-inset-bottom));
     display:flex; flex-direction:column; gap:12px;
   }
   .scene{
@@ -93,6 +96,22 @@
   .chip::after{ content:""; position:absolute; left:0; right:0; top:50%; height:44px; transform:translateY(-50%); }
   .chip[aria-checked="true"]{ background:var(--secondary); color:#0b0913; border-color:var(--secondary); }
   .chip .sub{ font-weight:500; opacity:.8; margin-left:4px; }
+  .chip.glyphchip{ gap:7px; padding-left:10px; }
+  .chip.glyphchip svg{ width:18px; height:18px; flex:0 0 auto; }
+  .chip[aria-checked="true"] svg *{ stroke:#0b0913 !important; }
+
+  /* speed = stacked radio cards (chip label + curious-golfer anchor copy) */
+  .speedlist{ display:flex; flex-direction:column; gap:8px; }
+  .speedopt{
+    position:relative; display:flex; flex-direction:column; gap:3px; text-align:left;
+    min-height:44px; padding:9px 12px; border-radius:14px; cursor:pointer;
+    background:var(--secondary-soft); border:1px solid var(--secondary-line); color:var(--ink);
+    transition:background .12s var(--ease), border-color .12s var(--ease);
+  }
+  .speedopt .sl-label{ font:700 13px/1.2 inherit; }
+  .speedopt .sl-anchor{ font:400 11px/1.4 inherit; color:var(--muted); }
+  .speedopt[aria-checked="true"]{ background:var(--secondary); border-color:var(--secondary); color:#0b0913; }
+  .speedopt[aria-checked="true"] .sl-anchor{ color:rgba(11,9,19,.8); }
 
   /* the 3×3 flight picker */
   .picker{ display:grid; grid-template-columns:repeat(3,72px); gap:8px; }
@@ -107,20 +126,20 @@
   .tile[aria-checked="true"]{ border-color:var(--secondary); box-shadow:inset 0 0 0 1px var(--secondary), 0 0 0 1px var(--secondary); }
   .footnote{ font:400 10px/1.4 inherit; color:var(--muted); }
 
-  /* ══ CLUB PILL (honest — the only calibrated club) ════════════════════ */
-  .clubpill{
-    flex:0 0 auto; margin:0 12px 12px; margin-bottom:calc(12px + env(safe-area-inset-bottom));
-    display:inline-flex; align-items:center; gap:6px; align-self:flex-start;
-    padding:7px 12px; border-radius:var(--radius-pill);
-    background:var(--secondary-soft); border:1px solid var(--line);
-    font:600 12px/1 inherit; color:var(--ink);
-  }
-  .clubpill small{ font-size:10px; color:var(--muted); font-weight:500; }
+  /* driver honesty strip — real text, 11px muted (spec v2 §1, non-negotiable) */
+  .honeststrip{ font:400 11px/1.5 inherit; color:var(--muted); }
 
   /* ══ RECONSTRUCTING BEAT ══════════════════════════════════════════════ */
   .beat{ padding:14px; border-radius:16px; background:var(--plate); border:1px solid var(--line); color:var(--muted); font:500 13px/1.4 inherit; }
 
   /* ══ RESULTS ══════════════════════════════════════════════════════════ */
+  /* focusable results region — after each reveal/refine, focus lands here so
+     keyboard & SR users don't have to Tab from the top (a11y focus mgmt). It is
+     only ever focused programmatically (tabindex=-1, not Tab-reachable), so no
+     visible ring is needed; layout matches the rail's own flex column. */
+  .results{ display:flex; flex-direction:column; gap:12px; width:100%; }
+  .results:focus{ outline:none; }
+  .miss:focus{ outline:none; }
   .wink{ font:500 12px/1.45 inherit; color:var(--secondary); }
   .stories{ list-style:none; display:flex; flex-direction:column; gap:10px; padding:0; margin:0; }
   .card{ background:var(--plate); border:1px solid var(--line); border-radius:16px; padding:13px; -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); }
@@ -132,6 +151,9 @@
   .cardeye .emb{ color:var(--accent); }
   .cardeye .refined{ color:var(--secondary); }
   .ctitle{ font:700 15px/1.3 inherit; color:var(--ink); margin-top:3px; }
+  /* coach story line — the dynamic-loft→spin-loft chain, spoken by the physics */
+  .coach{ font:500 13px/1.5 inherit; color:var(--ink); margin-top:6px; }
+  .coach .sl{ font-weight:700; }
   .cbody{ font:400 13px/1.5 inherit; color:var(--ink); margin-top:7px; }
   .term{ color:var(--secondary); background:none; border:0; padding:0; margin:0; font:inherit; cursor:pointer; border-bottom:1px dotted var(--secondary-line); }
   .termdef{ display:block; font:400 12px/1.4 inherit; color:var(--muted); margin-top:5px; padding-left:10px; border-left:2px solid var(--secondary-soft); }
@@ -140,10 +162,36 @@
   .variants{ margin-top:10px; display:flex; flex-direction:column; gap:6px; }
   .variant{ display:flex; align-items:center; gap:8px; font:500 12px/1.3 inherit; color:var(--ink); }
   .vtrack{ flex:0 0 56px; height:6px; border-radius:3px; background:var(--secondary-soft); overflow:hidden; }
-  .vbar{ height:100%; background:var(--secondary); border-radius:3px; }
+  .vbar{ height:100%; background:var(--secondary); border-radius:3px; transition:width .32s var(--ease); }
   .vpct{ flex:0 0 auto; color:var(--muted); font-size:11px; }
 
-  .divotq{ margin-top:11px; padding-top:11px; border-top:1px solid var(--line); display:flex; flex-direction:column; gap:8px; }
+  /* teaching moment — quiet muted paragraph, never a warning banner (spec v2 §2) */
+  .teach{ font:400 12px/1.5 inherit; color:var(--muted); margin-top:10px; padding-top:10px; border-top:1px solid var(--line); }
+
+  /* ══ SHARPEN-ROW (post-reveal refiners, spec v2 §3) ═══════════════════ */
+  .sharpen{ margin-top:12px; padding-top:11px; border-top:1px solid var(--line); display:flex; flex-direction:column; gap:9px; }
+  .refiner{ display:flex; flex-direction:column; gap:8px; }
+  .rf-toggle{
+    position:relative; display:flex; align-items:center; justify-content:space-between; gap:8px;
+    min-height:40px; padding:0 12px; border-radius:12px; cursor:pointer; text-align:left;
+    background:var(--secondary-soft); border:1px solid var(--secondary-line); color:var(--ink); font:600 13px/1.2 inherit;
+  }
+  .rf-toggle .rf-caret{ color:var(--muted); font-size:11px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; }
+  .rf-body{ display:flex; flex-direction:column; gap:8px; padding-left:2px; }
+  .rf-body[hidden]{ display:none; }
+  .rf-why{ font:400 11px/1.45 inherit; color:var(--muted); }
+
+  /* carry detent slider — 44px thumb, arrow-key parity native to <input range> */
+  .carrywrap{ display:flex; flex-direction:column; gap:8px; }
+  .carryval{ font:600 13px/1 inherit; color:var(--ink); }
+  .carryval b{ color:var(--secondary); }
+  input[type="range"].carry{
+    -webkit-appearance:none; appearance:none; width:100%; height:44px; background:transparent; cursor:pointer; margin:0;
+  }
+  input[type="range"].carry::-webkit-slider-runnable-track{ height:6px; border-radius:3px; background:var(--secondary-soft); border:1px solid var(--secondary-line); }
+  input[type="range"].carry::-moz-range-track{ height:6px; border-radius:3px; background:var(--secondary-soft); border:1px solid var(--secondary-line); }
+  input[type="range"].carry::-webkit-slider-thumb{ -webkit-appearance:none; appearance:none; width:22px; height:22px; margin-top:-9px; border-radius:50%; background:var(--secondary); border:3px solid #0b0913; box-shadow:0 0 0 1px var(--secondary); }
+  input[type="range"].carry::-moz-range-thumb{ width:22px; height:22px; border-radius:50%; background:var(--secondary); border:3px solid #0b0913; box-shadow:0 0 0 1px var(--secondary); }
 
   .cta{
     position:relative; display:inline-flex; align-items:center; justify-content:center;
@@ -168,6 +216,7 @@
   .miss{ background:var(--plate); border:1px solid var(--line); border-radius:16px; padding:13px; display:flex; flex-direction:column; gap:9px; }
   .miss .mtitle{ font:700 14px/1.3 inherit; color:var(--ink); }
   .miss .mbody{ font:400 12px/1.45 inherit; color:var(--muted); }
+  .miss .mbody b{ color:var(--ink); font-weight:600; }
 
   .textbtn{
     position:relative; background:none; border:0; padding:4px 0; color:var(--secondary);
@@ -227,11 +276,10 @@
   <div class="app">
     <div class="rail">
       <div class="railBody" id="railBody"></div>
-      <div class="clubpill" id="clubPill">7-IRON&nbsp;·&nbsp;<small>more clubs soon</small></div>
     </div>
     <div class="scene" id="scene">
       <canvas id="sceneCanvas" aria-hidden="true"></canvas>
-      <div class="scene-ghost" id="sceneGhost">Tap a flight to sketch it</div>
+      <div class="scene-ghost" id="sceneGhost">Pick your club to begin</div>
       <div class="readout" id="readout" hidden></div>
       <div class="sideinset sa-plate" id="sideInset" hidden>
         <span class="slabel">Side profile</span>
@@ -247,42 +295,57 @@
 
 <script type="module">
 import haptics from './sa-haptics.js';
-import * as DX from './diagnose-engine.js';
+import * as DX from './diagnose-engine-v2.js';
 
 const Y2M = 0.9144;
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const wait = ms => new Promise(r => setTimeout(r, ms));
+const DEV = /[?&]dev=1\b/.test(location.search);
 
 /* ── DOM ─────────────────────────────────────────────────────────────── */
-const railBody  = document.getElementById('railBody');
-const sceneEl   = document.getElementById('scene');
-const sceneGhost= document.getElementById('sceneGhost');
-const readoutEl = document.getElementById('readout');
-const sideInset = document.getElementById('sideInset');
-const liveEl    = document.getElementById('saLive');
-const sceneAlt  = document.getElementById('sceneAlt');
-const sceneCanvas = document.getElementById('sceneCanvas');
-const sideCanvas  = document.getElementById('sideCanvas');
+const railBody   = document.getElementById('railBody');
+const sceneEl    = document.getElementById('scene');
+const sceneGhost = document.getElementById('sceneGhost');
+const readoutEl  = document.getElementById('readout');
+const sideInset  = document.getElementById('sideInset');
+const liveEl     = document.getElementById('saLive');
+const sceneAlt   = document.getElementById('sceneAlt');
+const sceneCanvas= document.getElementById('sceneCanvas');
+const sideCanvas = document.getElementById('sideCanvas');
 
-/* ── state ───────────────────────────────────────────────────────────── */
+/* ── state (v2 machine: S0 CLUB → S1 SPEED → S2 SHAPE → S3 HEIGHT →
+      S4 DISTANCE [→S4b CONTACT if way short] → S5 DIVOT → REVEAL) ──────── */
 const state = {
-  club:'7iron',
+  club:null, speed:null,
   startLine:null, curveDir:null, curve:null,
-  height:null, distance:null, contact:null, divot:null,
-  active:'shape', phase:'input', hasResults:false,
+  height:null, distance:null,
+  contact:null, contactSource:null,       // 's4b' | 'sharpen'
+  divot:null,
+  // sharpen refiners (post-reveal)
+  secondary:null, carry:null,
+  active:'club', phase:'input', hasResults:false, _reopen:false,
 };
 let MAP = null;
 
 /* trace state (module-scope so canvas redraws share it) */
 let sketchPts=null, sketchAbs=null;
 let emberSamples=null, emberAbs=null, emberProgress=0;
-let currentEntry=null, currentCon=null, currentDesc=null, sceneDimAmt=0;
+let currentEntry=null, currentCon=null, currentBase=null, currentDesc=null, sceneDimAmt=0;
+let lastRefinedBy=null;
+
+/* ── club helpers (per-club bands, never free-typed) ─────────────────── */
+function CM(){ return MAP ? DX.clubMap(MAP, state.club || '7iron') : null; }
+function BANDS(){ const cm=CM(); return cm ? cm.meta.bands : null; }
+function clubLabel(club){ return MAP ? DX.clubMap(MAP, club).meta.label : (club==='driver'?'Driver':'7-iron'); }
+function carryTrusted(){ const b=BANDS(); return !b || b.speed.absoluteCarryTrusted !== false; }
 
 /* ── vocab / display maps ────────────────────────────────────────────── */
 const DIST_DISPLAY = { 'Long (gained distance)':'Longer', 'Full (normal distance)':'Normal distance', 'Slight loss':'A bit short', 'Noticeable loss':'Way short' };
-const START_WORD = { Left:'Starts left', Straight:'Starts straight', Right:'Starts right' };
+const DIST_UIWORD  = ['Longer','Normal','A bit short','Way short'];
+const START_WORD  = { Left:'Starts left', Straight:'Starts straight', Right:'Starts right' };
 const HEIGHT_WORD = { Low:'Low flight', Normal:'Normal height', High:'High flight', Ballooned:'Ballooned' };
-const CURVE_WORD = { Straight:'Straight', Draw:'Draw', Hook:'Hook', Fade:'Fade', Slice:'Slice' };
+const CURVE_WORD  = { Straight:'Straight', Draw:'Draw', Hook:'Hook', Fade:'Fade', Slice:'Slice' };
+const SPEED_LABEL = { slow:'Gentle', mid:'Mid', fast:'Fast', unsure:'Not sure' };
 
 const PICKER_LABELS = {
   '0,0':'Starts left, keeps curving left',  '0,1':'Starts left, flies straight',   '0,2':'Starts left, curves back right',
@@ -294,7 +357,6 @@ const DIR_BY_ROW = ['left','straight','right'];
 
 function curveDirFromCurve(c){ return (c==='Slice'||c==='Fade')?'right' : (c==='Hook'||c==='Draw')?'left' : 'straight'; }
 function provisionalCurve(){ return state.curveDir==='left' ? 'Draw' : state.curveDir==='right' ? 'Fade' : 'Straight'; }
-
 function descriptor(){
   return {
     curve: state.curve || provisionalCurve(),
@@ -304,6 +366,8 @@ function descriptor(){
   };
 }
 function isWayShort(){ return state.distance === 'Noticeable loss'; }
+function isStartStraight(){ return state.startLine === 'Straight'; }
+function descriptorComplete(){ return !!(state.startLine && state.curve && state.height && state.distance); }
 
 /* ── live region (throttled ≥800ms) ──────────────────────────────────── */
 let lastAnnounce = -Infinity, pendingT = null;
@@ -312,8 +376,6 @@ function announce(msg){
   if (gap >= 800){ liveEl.textContent = msg; lastAnnounce = now; }
   else { clearTimeout(pendingT); pendingT = setTimeout(()=>{ liveEl.textContent = msg; lastAnnounce = performance.now(); }, 800 - gap); }
 }
-
-/* ── escape helper ───────────────────────────────────────────────────── */
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
 /* ══ CANVAS ═══════════════════════════════════════════════════════════ */
@@ -327,14 +389,12 @@ function fit(canvas){
   ctx.setTransform(dpr,0,0,dpr,0,0);
   return { ctx, w, h };
 }
-
 function sceneScale(){
   let maxD = 40, maxLat = 15;
   const scan = (pts, abs) => { if(!pts) return; for(const p of pts){ maxD = Math.max(maxD, abs.carryM*p.d); maxLat = Math.max(maxLat, Math.abs(abs.offlineM*p.x)); } };
   scan(sketchPts, sketchAbs); scan(emberSamples, emberAbs);
   return { maxD: maxD*1.15, maxLat: maxLat*1.15 };
 }
-
 function drawPathTop(ctx, pts, abs, toXY, o){
   ctx.save();
   if (o.glow){ ctx.shadowColor='rgba(255,138,77,.35)'; ctx.shadowBlur=8; }
@@ -361,26 +421,26 @@ function drawTopDown(){
   const groundY=h-padBottom, usableH=groundY-padTop, cx=w/2, halfW=w/2-padSide;
   const toXY=(dM,lM)=>[cx+(lM/maxLat)*halfW, groundY-(dM/maxD)*usableH];
 
+  // range depth rings. Absolute metre LABELS only when the club's carry is
+  // trusted (7-iron). Driver: rings stay for depth, but NO absolute yardage is
+  // ever printed (absoluteCarryTrusted=false — the honesty law).
+  const labelRings = carryTrusted();
   ctx.font='9px -apple-system,sans-serif'; ctx.textBaseline='alphabetic';
   for (let m=25; m<=maxD; m+=25){
     const y=groundY-(m/maxD)*usableH;
     ctx.strokeStyle='rgba(255,255,255,.06)'; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(padSide,y); ctx.lineTo(w-padSide,y); ctx.stroke();
-    ctx.fillStyle='rgba(167,159,199,.45)'; ctx.fillText(m+' m', 6, y-2);
+    if (labelRings){ ctx.fillStyle='rgba(167,159,199,.45)'; ctx.fillText(m+' m', 6, y-2); }
   }
-  // target line (faint violet)
   ctx.strokeStyle='rgba(157,139,255,.30)'; ctx.lineWidth=1.5; ctx.setLineDash([4,5]);
   ctx.beginPath(); ctx.moveTo(cx,groundY); ctx.lineTo(cx,padTop); ctx.stroke(); ctx.setLineDash([]);
-  // tee
   ctx.fillStyle='#F5F2FF'; ctx.beginPath(); ctx.arc(cx,groundY,3,0,7); ctx.fill();
 
-  // sketch (cold violet — the memory)
   if (sketchPts){
     drawPathTop(ctx, sketchPts, sketchAbs, toXY, { color:'rgba(157,139,255,.78)', width:2, dash:[5,4] });
     const [lx,ly]=toXY(sketchAbs.carryM, sketchAbs.offlineM);
     markX(ctx,lx,ly,'rgba(157,139,255,.9)');
     ctx.fillStyle='rgba(167,159,199,.85)'; ctx.font='9px -apple-system,sans-serif'; ctx.fillText('AS DESCRIBED', lx+7, ly+3);
   }
-  // ember (hot — the physics)
   if (emberSamples && emberProgress>0){
     drawPathTop(ctx, emberSamples, emberAbs, toXY, { color:'#FF8A4D', width:3, glow:true, progress:emberProgress });
     if (emberProgress>=0.999){
@@ -390,7 +450,6 @@ function drawTopDown(){
     }
   }
 }
-
 function drawSide(){
   if (sideInset.hidden) return;
   const { ctx, w, h } = fit(sideCanvas);
@@ -411,13 +470,12 @@ function drawSide(){
   if (sketchPts) sidePath(sketchPts, sketchAbs, { color:'rgba(157,139,255,.78)', width:2, dash:[4,4] });
   if (emberSamples && emberProgress>0) sidePath(emberSamples, emberAbs, { color:'#FF8A4D', width:2.5, glow:true, progress:emberProgress });
 }
-
 function drawAll(){ drawTopDown(); drawSide(); }
 
-/* ══ SKETCH / SOLVE ═══════════════════════════════════════════════════ */
+/* ══ SKETCH (violet — the user's memory, engine-independent, club-scaled) ═ */
 function updateSketch(){
   const d = descriptor();
-  sketchPts = DX.sketchTrace(d);
+  sketchPts = DX.sketchTrace(d, state.club || '7iron');
   sketchAbs = { carryM:sketchPts.carryM, apexM:sketchPts.apexM, offlineM:sketchPts.offlineM };
   sceneGhost.hidden = true;
   sideInset.hidden = false;
@@ -429,30 +487,37 @@ function sceneAltText(d){
   const curve = { Slice:'curves hard right', Fade:'curves gently right', Draw:'curves gently left', Hook:'curves hard left', Straight:'flies straight' }[d.curve];
   const ht    = { Low:'low', Normal:'normal height', High:'high', Ballooned:'ballooned high' }[d.height];
   const dist  = (DIST_DISPLAY[d.distanceLoss]||'').toLowerCase();
-  return `Your described shot: ${start}, ${curve}, ${ht}, ${dist}.`;
+  return `Your described shot with the ${clubLabel(state.club)}: ${start}, ${curve}, ${ht}, ${dist}.`;
 }
 
-/* ══ RENDER: input flow ═══════════════════════════════════════════════ */
+/* ══ RENDER: helpers ══════════════════════════════════════════════════ */
+function mk(tag, cls, html, isHTML){ const e=document.createElement(tag); if(cls)e.className=cls; if(html!=null){ if(isHTML||/[<&]/.test(html)) e.innerHTML=html; else e.textContent=html; } return e; }
+function cap(s){ return s.charAt(0).toUpperCase()+s.slice(1); }
+function wrapLi(node){ const li=document.createElement('li'); li.appendChild(node); return li; }
+
+/* summary chips (now include club + speed — v2 §5) */
 function chipRow(){
-  // summary chips for answered dimensions NOT currently being edited
   const chips = [];
+  if (state.club)  chips.push({ dim:'club',  label:clubLabel(state.club) });
+  if (state.speed) chips.push({ dim:'speed', label:`${SPEED_LABEL[state.speed]} speed` });
   if (state.startLine && state.curve) chips.push({ dim:'shape', label:`${START_WORD[state.startLine]} · ${CURVE_WORD[state.curve]}` });
   if (state.height)   chips.push({ dim:'height', label:HEIGHT_WORD[state.height] });
   if (state.distance) chips.push({ dim:'distance', label:DIST_DISPLAY[state.distance] });
-  if (state.contact && state.contact!=='skip') chips.push({ dim:'contact', label:contactWord(state.contact) });
+  if (state.contact && state.contactSource==='s4b' && state.contact!=='skip') chips.push({ dim:'contact', label:contactWord(state.contact) });
   return chips.filter(c => c.dim !== state.active);
 }
-function contactWord(c){ return c==='Not sure' ? 'Contact: not sure' : `Contact: ${c.toLowerCase()}`; }
-
+function contactWord(c){ return (c==='Not sure'||c==='unsure') ? 'Contact: not sure' : `Contact: ${c.toLowerCase()}`; }
 function renderChips(host){
   const chips = chipRow();
   if (!chips.length) return;
   const wrap = document.createElement('div'); wrap.className='chips'; wrap.setAttribute('role','group'); wrap.setAttribute('aria-label','Your description so far — tap to change');
+  const pulseDim = state._pulseDim; state._pulseDim = null;   // consume the one-shot pulse flag
   for (const c of chips){
     const b=document.createElement('button'); b.type='button'; b.className='schip sa-focus'; b.dataset.dim=c.dim;
     b.innerHTML = `${esc(c.label)} <span class="ed" aria-hidden="true">edit</span>`;
     b.setAttribute('aria-label', `${c.label}. Edit`);
     b.addEventListener('click', ()=> openQuestion(c.dim));
+    if (pulseDim===c.dim){ b.classList.add('pulse'); }
     wrap.appendChild(b);
   }
   host.appendChild(wrap);
@@ -463,11 +528,29 @@ function radiogroup(label, options, checkedVal, onSelect){
   const grp=document.createElement('div'); grp.className='qrow'; grp.setAttribute('role','radiogroup'); grp.setAttribute('aria-label',label);
   const radios=[];
   options.forEach((o,i)=>{
-    const el=document.createElement('button'); el.type='button'; el.className='chip sa-focus'; el.setAttribute('role','radio');
+    const el=document.createElement('button'); el.type='button'; el.className='chip sa-focus'+(o.cls?' '+o.cls:''); el.setAttribute('role','radio');
     const checked = o.value===checkedVal;
     el.setAttribute('aria-checked', checked?'true':'false');
     el.tabIndex = (checkedVal==null ? i===0 : checked) ? 0 : -1;
     el.innerHTML = o.html || esc(o.label);
+    if (o.aria) el.setAttribute('aria-label', o.aria);
+    el.addEventListener('click', ()=> onSelect(o.value, el));
+    el.addEventListener('keydown', e=> radioKey(e, radios, i, onSelect, options));
+    radios.push(el); grp.appendChild(el);
+  });
+  return grp;
+}
+/* radiogroup rendered as stacked cards (speed anchors) */
+function radioCards(label, options, checkedVal, onSelect){
+  const grp=document.createElement('div'); grp.className='speedlist'; grp.setAttribute('role','radiogroup'); grp.setAttribute('aria-label',label);
+  const radios=[];
+  options.forEach((o,i)=>{
+    const el=document.createElement('button'); el.type='button'; el.className='speedopt sa-focus'; el.setAttribute('role','radio');
+    const checked = o.value===checkedVal;
+    el.setAttribute('aria-checked', checked?'true':'false');
+    el.tabIndex = (checkedVal==null ? i===0 : checked) ? 0 : -1;
+    el.innerHTML = `<span class="sl-label">${esc(o.label)}</span><span class="sl-anchor">${esc(o.anchor)}</span>`;
+    el.setAttribute('aria-label', `${o.label}. ${o.anchor}`);
     el.addEventListener('click', ()=> onSelect(o.value, el));
     el.addEventListener('keydown', e=> radioKey(e, radios, i, onSelect, options));
     radios.push(el); grp.appendChild(el);
@@ -482,15 +565,52 @@ function radioKey(e, radios, i, onSelect, options){
   if (ni!=null){ e.preventDefault(); radios.forEach(r=>r.tabIndex=-1); radios[ni].tabIndex=0; radios[ni].focus(); }
 }
 
+/* small club glyphs (SVG only, SYS-12) */
+function clubGlyph(club){
+  if (club==='driver') return `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 4 L5 15" stroke="#9D8BFF" stroke-width="2" stroke-linecap="round"/><path d="M5 15 q0 4 5 4 l4 0" stroke="#9D8BFF" stroke-width="2" stroke-linecap="round" fill="none"/><circle cx="18" cy="19" r="2.2" stroke="#9D8BFF" stroke-width="1.6" fill="none"/></svg>`;
+  return `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M8 4 L6 16" stroke="#9D8BFF" stroke-width="2" stroke-linecap="round"/><path d="M6 16 l7 3" stroke="#9D8BFF" stroke-width="2.4" stroke-linecap="round"/><circle cx="16" cy="20" r="2.2" stroke="#9D8BFF" stroke-width="1.6" fill="none"/></svg>`;
+}
+
+/* ══ INPUT FLOW ═══════════════════════════════════════════════════════ */
 function renderInput(){
   state.phase='input'; readoutEl.hidden=true;
   railBody.innerHTML='';
   renderChips(railBody);
-
   const block=document.createElement('div'); block.className='qblock';
 
-  if (state.active==='shape'){
+  if (state.active==='club'){
     block.appendChild(mk('div','eyebrow','Describe your last shot'));
+    block.appendChild(mk('div','qtitle','Which club?'));
+    const preselect = state.club || safeGet('sa.diagnose.club') || '7iron';
+    block.appendChild(radiogroup('Which club?', [
+      { value:'7iron',  label:'7-iron', cls:'glyphchip', html:`${clubGlyph('7iron')}<span>7-iron</span>`, aria:'7-iron' },
+      { value:'driver', label:'Driver', cls:'glyphchip', html:`${clubGlyph('driver')}<span>Driver</span>`, aria:'Driver' },
+    ], preselect, onClub));
+    const strip=document.createElement('p'); strip.className='honeststrip'; strip.id='clubHonesty';
+    strip.textContent = preselect==='driver' ? BANDS_FOR(preselect).speed.note : '';
+    block.appendChild(strip);
+    // update the honesty strip as the user arrows across the club radios (before the confirming tap)
+    block.querySelectorAll('[role="radio"]').forEach(r=>{
+      r.addEventListener('focus', ()=>{ strip.textContent = r.getAttribute('aria-label')==='Driver' ? BANDS_FOR('driver').speed.note : ''; });
+    });
+  }
+  else if (state.active==='speed'){
+    const b = BANDS();
+    block.appendChild(mk('div','eyebrow','How fast do you swing?'));
+    block.appendChild(mk('div','qtitle',`Your ${clubLabel(state.club)} speed`));
+    const ac = b.speed.anchorCopy;
+    block.appendChild(radioCards('How fast do you swing?', [
+      { value:'slow',   label:'Gentle',   anchor:ac.slow },
+      { value:'mid',    label:'Mid',      anchor:ac.mid },
+      { value:'fast',   label:'Fast',     anchor:ac.fast },
+      { value:'unsure', label:'Not sure', anchor:"No problem — the reveal just won't be pinned to a speed band." },
+    ], state.speed, onSpeed));
+    // driver honesty note (why we read shape/cause, not driver carry) — spec §1 S1
+    if (b.speed.note) block.appendChild(mk('p','honeststrip', b.speed.note));
+    block.appendChild(mk('div','qhint','Speed pins how far it flew — not the fault. We ask early so the reveal flies at <b>your</b> speed.', true));
+  }
+  else if (state.active==='shape'){
+    block.appendChild(mk('div','eyebrow','Your last shot'));
     block.appendChild(mk('div','qtitle','Which flight looks like yours?'));
     const head=document.createElement('div'); head.className='phead'; head.setAttribute('aria-hidden','true');
     head.innerHTML='<span>Left</span><span>Straight</span><span>Right</span>';
@@ -505,45 +625,56 @@ function renderInput(){
       ? [ {value:'Fade', html:'A little <span class="sub">— a fade</span>'}, {value:'Slice', html:'A lot <span class="sub">— a slice</span>'} ]
       : [ {value:'Draw', html:'A little <span class="sub">— a draw</span>'}, {value:'Hook', html:'A lot <span class="sub">— a hook</span>'} ];
     block.appendChild(radiogroup('How much curve?', opts, state.curve, onSeverity));
-    block.appendChild(mk('div','qhint', right
-      ? 'Small curve = <b>fade</b>. Big curve = <b>slice</b>.'
-      : 'Small curve = <b>draw</b>. Big curve = <b>hook</b>.', true));
+    block.appendChild(mk('div','qhint', right ? 'Small curve = <b>fade</b>. Big curve = <b>slice</b>.' : 'Small curve = <b>draw</b>. Big curve = <b>hook</b>.', true));
   }
   else if (state.active==='height'){
+    const labels = BANDS().height.labels; // per-club labels, never free-typed
     block.appendChild(mk('div','eyebrow','How high did it fly?'));
-    block.appendChild(radiogroup('How high did it fly?', [
-      {value:'Low',label:'Low'},{value:'Normal',label:'Normal'},{value:'High',label:'High'},{value:'Ballooned',label:'Ballooned'}
-    ], state.height, onHeight));
+    block.appendChild(radiogroup('How high did it fly?',
+      labels.map(l=>({value:l,label:l})), state.height, onHeight));
     if (state.height==='Ballooned') block.appendChild(mk('div','qhint','Climbed steep, dropped short of its usual flight.'));
+    block.appendChild(mk('div','qhint', `Next to a well-struck <b>${esc(clubLabel(state.club))}</b>.`, true));
   }
   else if (state.active==='distance'){
-    block.appendChild(mk('div','eyebrow','Distance, next to your normal 7-iron?'));
-    block.appendChild(radiogroup('Distance, next to your normal 7-iron?', [
-      {value:'Long (gained distance)',label:'Longer'},{value:'Full (normal distance)',label:'Normal'},
-      {value:'Slight loss',label:'A bit short'},{value:'Noticeable loss',label:'Way short'}
-    ], state.distance, onDistance));
+    const labels = BANDS().distance.labels; // per-club edges/labels
+    const q = `Distance, next to your normal ${state.club==='driver'?'drive':'7-iron'}?`;
+    block.appendChild(mk('div','eyebrow', q));
+    block.appendChild(radiogroup(q,
+      labels.map((l,i)=>({value:l,label:DIST_UIWORD[i]})), state.distance, onDistance));
   }
   else if (state.active==='contact'){
-    block.appendChild(mk('div','eyebrow','How did it feel off the face? (optional)'));
-    block.appendChild(radiogroup('How did it feel off the face? Optional', [
+    // S4b — conditional (way short only): matched-speed geometry can't lose real distance
+    block.appendChild(mk('div','eyebrow','Way short — how did it feel off the face?'));
+    block.appendChild(radiogroup('How did it feel off the face?', [
       {value:'Pure',label:'Pure'},{value:'Thin',label:'Thin'},{value:'Fat',label:'Fat'},{value:'Not sure',label:'Not sure'}
     ], state.contact, onContact));
-    const skip=document.createElement('button'); skip.type='button'; skip.className='textbtn sa-focus'; skip.textContent='Skip';
-    skip.addEventListener('click', ()=> onContact('skip'));
-    block.appendChild(skip);
+    block.appendChild(mk('div','qhint','Geometry alone barely loses distance — a big loss is usually the strike.'));
+  }
+  else if (state.active==='divot'){
+    // S5 — divot: highest-value resolver of the residual attack fog (1.292 bits)
+    block.appendChild(mk('div','eyebrow','Last clue — your divot?'));
+    let opts = [
+      {value:'deep',label:'Deep divot'},{value:'brushed',label:'Brushed the grass'},
+      {value:'none',label:'No divot'},{value:'unsure',label:"Didn't notice"}
+    ];
+    // driver: No divot is normal — lead with it
+    if (state.club==='driver') opts = [opts[2],opts[1],opts[0],opts[3]];
+    block.appendChild(radiogroup('Last clue — your divot?', opts, state.divot, onDivot));
+    if (state.club==='driver') block.appendChild(mk('div','qhint','No divot is normal for a driver.'));
   }
   railBody.appendChild(block);
-  // focus the active group's first control when reopening
   focusActiveGroup(block);
 }
-function mk(tag, cls, html, isHTML){ const e=document.createElement(tag); if(cls)e.className=cls; if(html!=null){ if(isHTML||/[<&]/.test(html)) e.innerHTML=html; else e.textContent=html; } return e; }
-
 function focusActiveGroup(block){
-  // only steal focus on an explicit reopen (not first paint)
   if (!state._reopen) return; state._reopen=false;
-  const first = block.querySelector('[role="radio"],[role="radiogroup"] .chip, .tile');
+  const first = block.querySelector('[role="radio"]');
   if (first){ const target = block.querySelector('[tabindex="0"]') || first; target.focus(); }
 }
+
+/* helpers that read a specific club's bands even before state.club is committed */
+function BANDS_FOR(club){ return DX.clubMap(MAP, club).meta.bands; }
+function safeGet(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+function safeSet(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
 
 /* 3×3 picker with 2-D roving tabindex + arrow keys */
 function buildPicker(){
@@ -566,7 +697,6 @@ function buildPicker(){
       tiles.push({el:t,col,row}); grid.appendChild(t);
     }
   }
-  grid._tiles = tiles;
   return grid;
 }
 function pickerKey(e, tiles, col, row){
@@ -591,76 +721,98 @@ function tileSVG(col,row){
 }
 
 /* ── input handlers (auto-advance) ───────────────────────────────────── */
+function onClub(val){
+  state.club=val; safeSet('sa.diagnose.club', val); haptics.tick('club');
+  afterAnswer('club', `${clubLabel(val)}. How fast do you swing?`);
+}
+function onSpeed(val){
+  state.speed=val; haptics.tick('speed');
+  afterAnswer('speed', `Speed: ${SPEED_LABEL[val].toLowerCase()}. Which flight looks like yours?`);
+}
 function onShape(col,row){
   state.startLine = START_BY_COL[col];
   state.curveDir  = DIR_BY_ROW[row];
   haptics.tick('shape');
   if (state.curveDir==='straight'){
-    state.curve='Straight';
-    updateSketch();
-    const msg = `Sketched: ${START_WORD[state.startLine].toLowerCase()}, straight.`;
-    afterAnswer('shape', msg);
+    state.curve='Straight'; updateSketch();
+    afterAnswer('shape', `Sketched: ${START_WORD[state.startLine].toLowerCase()}, straight.`);
   } else {
-    state.curve=null;
-    updateSketch();
+    state.curve=null; updateSketch();
     state._reopen=true; state.active='severity'; renderInput();
     announce(`Sketched: ${START_WORD[state.startLine].toLowerCase()}, curving ${state.curveDir}. How much curve?`);
   }
 }
-function onSeverity(val){
-  state.curve=val; haptics.tick('sev'); updateSketch();
-  afterAnswer('severity', `A ${val.toLowerCase()}. Next: height.`);
-}
-function onHeight(val){
-  state.height=val; haptics.tick('h'); updateSketch();
-  afterAnswer('height', `Height: ${HEIGHT_WORD[val].toLowerCase()}. Next: distance.`);
-}
+function onSeverity(val){ state.curve=val; haptics.tick('sev'); updateSketch(); afterAnswer('severity', `A ${val.toLowerCase()}. Next: height.`); }
+function onHeight(val){ state.height=val; haptics.tick('h'); updateSketch(); afterAnswer('height', `Height: ${HEIGHT_WORD[val].toLowerCase()}. Next: distance.`); }
 function onDistance(val){
   state.distance=val; haptics.tick('d'); updateSketch();
-  afterAnswer('distance', `Distance: ${DIST_DISPLAY[val].toLowerCase()}. Last: contact feel, or skip.`);
+  const msg = isWayShort() ? `Way short. How did it feel off the face?` : `Distance noted. Last clue: your divot.`;
+  afterAnswer('distance', msg);
 }
-function onContact(val){
-  state.contact=val; haptics.tick('c');
-  afterAnswer('contact', val==='skip' ? 'Reconstructing your delivery…' : `Contact: ${val.toLowerCase()}.`);
-}
+function onContact(val){ state.contact=val; state.contactSource='s4b'; haptics.tick('c'); afterAnswer('contact', `Contact: ${(val==='Not sure'?'not sure':val.toLowerCase())}. Reconstructing your delivery…`); }
+function onDivot(val){ state.divot=val; haptics.tick('divot'); afterAnswer('divot', 'Reconstructing your delivery…'); }
 
 function nextQuestion(){
+  if (!state.club) return 'club';
+  if (!state.speed) return 'speed';
   if (!state.startLine) return 'shape';
   if (state.curveDir!=='straight' && !state.curve) return 'severity';
   if (!state.height) return 'height';
   if (!state.distance) return 'distance';
-  if (state.contact===null) return 'contact';
+  if (isWayShort() && state.contact==null) return 'contact';  // S4b
+  // S5 divot pre-reveal — asked on every NON-way-short branch (it earns the last
+  // pre-reveal slot, findings §4). On the way-short branch that slot already went
+  // to S4b contact (way-short is a contact/speed conversation, finding #1), so
+  // divot moves to a post-reveal SHARPEN refiner there. This keeps every branch
+  // within the spec's 6–7 tap budget: curved+way-short is 7 pre-reveal taps
+  // (club·speed·shape·severity·height·distance·contact), not 8.
+  if (!isWayShort() && !state.divot) return 'divot';          // S5
   return null;
 }
 function afterAnswer(justAnswered, msg){
-  if (state.hasResults){
-    // editing an answered chip after results → re-solve back to S6 (static)
-    state.active=null;
-    recomputeResults();
-    if (msg) announce(msg);
-    return;
+  // pre-reveal S-MISS gate: the moment the descriptor is complete, if the exact
+  // flight isn't in the model, surface S-MISS instead of asking more questions.
+  if (descriptorComplete()){
+    const cm = CM(); const res = DX.lookup(cm, descriptor());
+    if (!res.exact){
+      if (state.hasResults){ renderMiss(res.nearest, descriptor()); return; }
+      // gate the moment a descriptor field is (re)answered into a non-existent flight
+      if (justAnswered==='distance' || justAnswered==='height' || justAnswered==='severity' || justAnswered==='shape'){
+        renderMiss(res.nearest, descriptor()); return;
+      }
+    }
   }
+  if (state.hasResults){ state.active=null; recomputeResults(); if (msg) announce(msg); return; }
   const next = nextQuestion();
   if (next){ state._reopen=true; state.active=next; renderInput(); if (msg) announce(msg); }
   else { if (msg) announce(msg); goReveal(); }
 }
 function openQuestion(dim){
-  state._reopen=true; state.active=dim;
-  if (dim==='shape'){ /* keep startLine/curveDir so picker shows current */ }
-  renderInput();
-  announce(`Change ${dim==='shape'?'your flight':dim}.`);
+  state._reopen=true; state.active=dim; renderInput();
+  const nm = dim==='shape' ? 'your flight' : dim==='club' ? 'your club' : dim;
+  announce(`Change ${nm}.`);
 }
 
-/* ══ REVEAL ═══════════════════════════════════════════════════════════ */
+/* ══ REVEAL ═══════════════════════════════════════════════════════════
+   Pre-reveal conditioning pipeline (findings §6 call order): lookup →
+   consolidate baseline (honesty totals) → reweightSpeed (S1) → applyDivot (S5)
+   → [+ any post-reveal sharpen refiners already chosen] → consolidate. The
+   ember reveal is a REAL solveFlight solve of the speed-matched top rep. */
 function solveNow(){
-  const d = descriptor();
-  currentDesc = d;
-  const res = DX.lookup(MAP, d);
+  const d = descriptor(); currentDesc = d;
+  const cm = CM();
+  const res = DX.lookup(cm, d);
   if (!res.exact){ currentEntry=null; return { miss:true, nearest:res.nearest, d }; }
   currentEntry = res.entry;
-  const filt = state.divot ? DX.divotFilter(state.divot) : null;
-  currentCon = DX.consolidateStories(currentEntry, filt);
-  return { miss:false, con:currentCon, d };
+  currentBase = DX.consolidateStories(res.entry);        // true all-delivery shares + folded tail
+  let clusters = res.entry.clusters;
+  let divotEmpty = false;
+  if (state.speed && state.speed!=='unsure') clusters = DX.reweightSpeed(clusters, state.speed);
+  if (state.divot && state.divot!=='unsure'){ const dr = DX.applyDivot(clusters, state.divot); clusters=dr.clusters; divotEmpty=dr.empty; }
+  if (state.secondary && state.secondary!=='skip' && !isStartStraight()) clusters = DX.reweightSecondary(clusters, state.secondary);
+  if (state.carry!=null && state.carry!=='skip' && carryTrusted()) clusters = DX.reweightCarry(clusters, +state.carry, 10);
+  currentCon = DX.consolidateStories(clusters);
+  return { miss:false, con:currentCon, base:currentBase, d, divotEmpty };
 }
 function setEmberFromTop(top){
   const { flight, samples } = DX.solveTrace(top.rep);
@@ -683,20 +835,24 @@ async function goReveal(){
   emberProgress = 0;
 
   if (reduce){
+    // reduced motion: no beat, no draw — both traces + results render complete
     emberProgress=1; drawAll();
-    renderResults(sol.con, sol.d, flight);
+    renderResults(sol, {});
     return;
   }
-  // reveal beat: rail shows reconstructing, scene dims 8%
+  // reveal beat (v1 §6.1): rail shows reconstructing, scene dims 8% — nothing
+  // else moves; ember draws itself over the violet sketch ≤500 ms after last tap
   railBody.innerHTML=''; renderChips(railBody);
   railBody.appendChild(mk('div','beat','Reconstructing your delivery…'));
-  announce('Reconstructing your delivery…');
+  // No announce() here — every path's final answer message already ends with
+  // "Reconstructing your delivery…"; a duplicate eats the live-region throttle
+  // and delays the headline announcement (verifier finding).
   sceneDimAmt=0.08; drawAll();
   await wait(420);
   sceneDimAmt=0; drawAll();
   await animateEmber(720);
   haptics.notify('success');
-  renderResults(sol.con, sol.d, flight);
+  renderResults(sol, {});
 }
 function recomputeResults(){
   const sol = solveNow();
@@ -704,26 +860,36 @@ function recomputeResults(){
   const top = sol.con.stories[0];
   const flight = setEmberFromTop(top);
   emberProgress=1; drawAll();
-  renderResults(sol.con, sol.d, flight);
+  renderResults(sol, {});
 }
 
-/* ══ RESULTS (S6) ═════════════════════════════════════════════════════ */
-function revealHeadline(con, refined){
+/* ══ RESULTS ══════════════════════════════════════════════════════════ */
+function revealHeadline(con, refinedBy){
   const top=con.stories[0]; const conf=DX.confidenceLabel(top.pct);
-  return `${refined?'Refined. ':''}${conf.label}: ${DX.storyTitle(top)} — about ${conf.n} in 10.`;
+  const pre = refinedBy ? `Refined by your ${refinedBy}. ` : '';
+  return `${pre}${conf.label}: ${DX.storyTitle(top)} — about ${conf.n} in 10.`;
 }
-function renderResults(con, d, flight, opts={}){
+function renderResults(sol, opts={}){
+  const con = sol.con, base = sol.base, d = sol.d;
   state.phase='results'; state.hasResults=true; state.active=null;
+  lastRefinedBy = opts.refinedBy || null;
   railBody.innerHTML='';
   renderChips(railBody);
 
-  // perfect-shot wink
+  // focusable results region — the reveal/refine wipes railBody, so without this
+  // keyboard focus would drop to <body> and a keyboard/SR user would have to Tab
+  // from the top to reach the diagnosis. We wrap the diagnosis in a named region
+  // (tabindex=-1) and move focus into it below. Summary chips stay ABOVE the
+  // region (Shift+Tab reaches them), cards/CTA/refiners are AFTER (Tab flows in).
+  const region=document.createElement('section'); region.className='results'; region.id='diagResults';
+  region.tabIndex=-1; region.setAttribute('role','region'); region.setAttribute('aria-label','Your diagnosis');
+
+  // perfect-shot wink (the "one you're trying to repeat")
   if (d.curve==='Straight' && d.startLine==='Straight' && d.height==='Normal' && d.distanceLoss==='Full (normal distance)'){
-    railBody.appendChild(mk('div','wink', "That's the one you're trying to repeat. Here's a delivery that does it:"));
+    region.appendChild(mk('div','wink', "That's the one you're trying to repeat. Here's a delivery that does it:"));
   }
-  // divot-empty honesty
-  if (con.filterEmpty){
-    railBody.appendChild(mk('div','honesty', `A ${divotLabel(state.divot)} doesn't fit this flight in the model — showing all patterns.`));
+  if (sol.divotEmpty){
+    region.appendChild(mk('div','honesty', `A ${divotLabel(state.divot)} doesn't fit this flight in the model — showing all patterns.`));
   }
 
   const shown = con.stories.slice(0,3);
@@ -731,37 +897,42 @@ function renderResults(con, d, flight, opts={}){
   const wayShort = isWayShort();
   shown.forEach((story,i)=>{
     ol.appendChild(storyCard(story, i, d, con, opts));
-    if (i===0 && wayShort && (state.contact==='Thin'||state.contact==='Fat')){
-      // promote contact card directly under card 1
-      ol.appendChild(wrapLi(contactCard()));
+    if (i===0){
+      // teaching moment 1 + contact card: promote directly under card 1 when way short
+      if (wayShort) ol.appendChild(wrapLi(contactCard('wayshort')));
+      else if (state.contact==='Thin'||state.contact==='Fat') ol.appendChild(wrapLi(contactCard('feel')));
     }
   });
-  railBody.appendChild(ol);
+  region.appendChild(ol);
 
-  // honesty line (only when there is genuine "other" mass)
-  if (con.otherCount>0 && con.otherPct>0){
+  // honesty line (v1 §3.2) — bucket totals from base (unconditioned), share from con.
+  // "patterns" = raw delivery clusters throughout; the cards are consolidated
+  // "groups" (face|path stories) that each bundle several patterns — so the shown
+  // count (groups) is named distinctly from the pattern counts to avoid the word
+  // "patterns" reading as the same unit as the grouped cards.
+  if (con.otherPct>0 && base.clusterCount>shown.reduce((s,st)=>s+st.variants.length,0)){
     const shownN = shown.length;
-    railBody.appendChild(mk('div','honesty',
-      `This flight matches <b>${con.gridCount.toLocaleString('en-US')}</b> deliveries in ${con.clusterCount} patterns. Showing the ${shownN} biggest — ${con.otherCount} rarer patterns share the remaining ${con.otherPct}%.`, true));
+    const shownClusterN = shown.reduce((s,st)=>s+st.variants.length,0);
+    const rarerN = Math.max(1, base.clusterCount-shownClusterN);
+    region.appendChild(mk('div','honesty',
+      `This flight matches <b>${base.gridCount.toLocaleString('en-US')}</b> deliveries in ${base.clusterCount} patterns. Showing the ${shownN} biggest ${shownN===1?'group':'groups'} — ${rarerN} rarer ${rarerN===1?'pattern shares':'patterns share'} the remaining ${con.otherPct}%.`, true));
   }
 
-  // contact card (not promoted case): render after stories when Thin/Fat and not way-short
-  if ((state.contact==='Thin'||state.contact==='Fat') && !(wayShort)){
-    railBody.appendChild(contactCard());
-  }
+  // SHARPEN-ROW (post-reveal refiners)
+  const sharpen = buildSharpenRow(d);
+  if (sharpen) region.appendChild(sharpen);
 
   // re-diagnose
   const again=document.createElement('button'); again.type='button'; again.className='textbtn sa-focus'; again.textContent='Describe another shot';
   again.addEventListener('click', resetFlow);
-  railBody.appendChild(again);
+  region.appendChild(again);
 
-  // scene readout strip (top story delivery)
+  railBody.appendChild(region);
   renderReadout(con.stories[0].rep);
   drawAll();
-
-  announce(revealHeadline(con, !!opts.refined));
+  region.focus({ preventScroll:false });   // land keyboard/SR focus in the diagnosis
+  announce(revealHeadline(con, opts.refinedBy));
 }
-function wrapLi(node){ const li=document.createElement('li'); li.appendChild(node); return li; }
 
 function storyCard(story, i, d, con, opts){
   const li=document.createElement('li');
@@ -769,10 +940,9 @@ function storyCard(story, i, d, con, opts){
   const conf=DX.confidenceLabel(story.pct);
   const n = conf.n;
 
-  // eyebrow (confidence FIRST — first DOM content of the card)
   const eye=document.createElement('div'); eye.className='cardeye';
   const embN = i===0 ? `<span class="emb">${n}</span>` : `${n}`;
-  const refinedTag = (i===0 && opts.refined && !con.filterEmpty) ? ` · <span class="refined">Refined by your divot</span>` : '';
+  const refinedTag = (i===0 && opts.refinedBy) ? ` · <span class="refined">Refined by your ${esc(opts.refinedBy)}</span>` : '';
   eye.innerHTML = `${esc(conf.label)} · About ${embN} in 10 matches${refinedTag}`;
 
   const head=document.createElement('div'); head.className='cardhead';
@@ -783,15 +953,19 @@ function storyCard(story, i, d, con, opts){
   const txt=document.createElement('div'); txt.className='txt';
   txt.appendChild(eye);
   txt.appendChild(mk('div','ctitle', DX.storyTitle(story)));
+
   if (i===0){
+    // coach story line (the dynamic-loft → spin-loft chain, spoken by the physics)
+    const coach=document.createElement('div'); coach.className='coach';
+    renderParts(coach, DX.coachStory(story, CM().meta));
+    txt.appendChild(coach);
     head.appendChild(glyphwrap); head.appendChild(txt); card.appendChild(head);
   } else {
     card.appendChild(eye); card.appendChild(mk('div','ctitle', DX.storyTitle(story)));
   }
 
-  // body (plain-language + real terms taught) — card 1 full, cards 2-3 shorter
   const body=document.createElement('div'); body.className='cbody';
-  renderBody(body, story, d.curve, i>0);
+  renderParts(body, DX.storyBody(story, d.curve));
   card.appendChild(body);
 
   if (i===0){
@@ -809,29 +983,34 @@ function storyCard(story, i, d, con, opts){
     });
     card.appendChild(vwrap);
 
-    // divot follow-up
-    if (DX.needsFollowUp(con.stories) && !state.divot){
-      card.appendChild(divotBlock());
+    // teaching moment 2 — the pull-hook / snap-hook truth (finding #2)
+    if ((d.curve==='Hook'||d.curve==='Draw') && d.startLine==='Left'){
+      const t=document.createElement('div'); t.className='teach';
+      renderParts(t, [
+        { t:'text', v:'Read it this way: your low duck-hook is a ' },
+        { t:'term', v:'club path', def:DX.TERMS['club path'] },
+        { t:'text', v:' swinging out to the right with a slammed-shut ' },
+        { t:'term', v:'face angle', def:DX.TERMS['face angle'] },
+        { t:'text', v:' — a snap-hook, not an over-the-top move. A shut face on an out-to-in path can only make a pull-draw.' },
+      ]);
+      card.appendChild(t);
     }
 
-    // primary CTA (writes §2.4 handoff)
     card.appendChild(tryCTA(story.rep, DX.storyTitle(story), true, d.curve));
     card.appendChild(mk('div','cta-sub','Loads these numbers into Ball Flight — drag them to fix the shot.'));
   } else {
-    // quiet text CTA for cards 2-3
     card.appendChild(tryCTA(story.rep, DX.storyTitle(story), false, d.curve));
   }
 
   li.appendChild(card);
   return li;
 }
-function cap(s){ return s.charAt(0).toUpperCase()+s.slice(1); }
 
-function renderBody(host, story, curve, short){
-  const parts = DX.storyBody(story, curve);
-  const use = short ? parts.slice(0, parts.length) : parts; // full for all; terms still tappable
-  for (const p of use){
+/* render a parts array ([{t:'text'|'strong'|'term',v,def}]) with taught terms */
+function renderParts(host, parts){
+  for (const p of parts){
     if (p.t==='text'){ host.appendChild(document.createTextNode(p.v)); }
+    else if (p.t==='strong'){ const s=document.createElement('span'); s.className='sl'; s.textContent=p.v; host.appendChild(s); }
     else {
       const btn=document.createElement('button'); btn.type='button'; btn.className='term sa-focus';
       btn.textContent=p.v; btn.setAttribute('aria-expanded','false');
@@ -869,7 +1048,8 @@ function dplaneAlt(rep){
   return `Diagram: face ${fw}, path ${pw} — ${rel}.`;
 }
 
-/* readout strip in scene (param-coloured labelled chips) */
+/* readout strip in scene (param-coloured labelled chips). No carry anywhere —
+   speed is the trustworthy club-speed input, safe for driver too. */
 function renderReadout(rep){
   const ph=DX.deliveryPhrases(rep);
   const chip=(label,val,color)=>`<span class="pchip"><span class="pdot" style="background:${color}"></span><b>${label}</b> ${esc(val)}</span>`;
@@ -880,77 +1060,188 @@ function renderReadout(rep){
   readoutEl.hidden=false;
 }
 
-/* try-this-delivery (writes localStorage seed + mirrored query string, §2.4) */
+/* try-this-delivery — speed-matched rep; writes seed + mirrored query (§2.4) */
 function tryCTA(rep, title, primary, curve){
   const label = `${title} — ${(CURVE_WORD[curve]||'shot').toLowerCase()}`;
-  const url = DX.handoff(rep, label);                 // href carries params (inspectable + shareable)
+  const url = DX.handoff(rep, label);
   const a=document.createElement('a'); a.className=(primary?'cta':'qcta')+' sa-focus'; a.href=url;
-  a.innerHTML = primary ? 'Try this delivery →' : 'Try this delivery →';
+  a.textContent='Try this delivery →';
   a.setAttribute('aria-label', `Try this delivery: ${label}. Opens Ball Flight.`);
-  a.addEventListener('click', ()=>{ DX.handoff(rep, label); persistStatFor(); }); // write fresh on tap, then navigate
+  a.addEventListener('click', ()=>{ DX.handoff(rep, label); persistStatFor(); });
   return a;
 }
 function persistStatFor(){
   const top = currentCon && currentCon.stories[0];
   if (!top) return;
-  DX.persistStat({ shape: currentDesc.curve, story: DX.storyTitle(top), face: top.rep.faceAngle, path: top.rep.clubPath });
+  DX.persistStat({ club: state.club, shape: currentDesc.curve, story: DX.storyTitle(top), face: top.rep.faceAngle, path: top.rep.clubPath });
 }
 
-/* divot follow-up (§3.3) */
-function divotLabel(a){ return { deep:'deep', brushed:'brushed', none:'no', unsure:'' }[a] + ' divot'; }
-function divotBlock(){
-  const wrap=document.createElement('div'); wrap.className='divotq';
-  wrap.appendChild(mk('div','eyebrow','One more clue — your divot?'));
-  wrap.appendChild(radiogroup('One more clue — your divot?', [
-    {value:'deep',label:'Deep divot'},{value:'brushed',label:'Brushed the grass'},
-    {value:'none',label:'No divot'},{value:'unsure',label:"Didn't notice"}
-  ], state.divot, onDivot));
+/* ══ SHARPEN-ROW (spec v2 §3) ═════════════════════════════════════════ */
+function buildSharpenRow(d){
+  const refiners=[];
+  // 0. divot — deferred here from pre-reveal ONLY on the way-short branch (its
+  //    pre-reveal slot went to S4b contact, tap-budget ≤7). It is the highest-value
+  //    refiner (1.292 bits, findings §4), so it leads the row and survives the
+  //    ~2-visible cap below.
+  if (isWayShort() && state.divot==null) refiners.push('divot');
+  // 1. pattern question — hidden on start-straight shapes (≈0 bits there)
+  if (!isStartStraight() && state.secondary==null) refiners.push('pattern');
+  // 2. exact carry — 7-IRON only (driver absoluteCarryTrusted=false, honesty law)
+  if (carryTrusted() && state.club==='7iron' && state.carry==null) refiners.push('carry');
+  // 3. contact feel — only if S4b never fired (distance !== way short)
+  if (!isWayShort() && state.contactSource!=='sharpen' && state.contact==null) refiners.push('contact');
+  const visible = refiners.slice(0,2);   // at most ~2 refiners visible
+  if (!visible.length) return null;
+
+  const wrap=document.createElement('div'); wrap.className='sharpen';
+  wrap.appendChild(mk('div','eyebrow', 'Sharpen it — two more coach questions'));
+  visible.forEach(kind=> wrap.appendChild(buildRefiner(kind)));
   return wrap;
 }
-function onDivot(answer){
-  state.divot=answer; haptics.tick('divot');
-  const filt = DX.divotFilter(answer);
-  const con = DX.consolidateStories(currentEntry, filt);
-  currentCon = con;
-  const flight = setEmberFromTop(con.stories[0]);
-  emberProgress=1; drawAll();
-  renderResults(con, currentDesc, flight, { refined:true });
+function buildRefiner(kind){
+  const wrap=document.createElement('div'); wrap.className='refiner';
+  const toggle=document.createElement('button'); toggle.type='button'; toggle.className='rf-toggle sa-focus'; toggle.setAttribute('aria-expanded','false');
+  const body=document.createElement('div'); body.className='rf-body'; body.hidden=true;
+  const titles={ pattern:'Do you also hit other shots often?', carry:'Know your carry?', contact:'How did it feel off the face?', divot:'Your divot?' };
+  toggle.innerHTML = `<span>${esc(titles[kind])}</span><span class="rf-caret" aria-hidden="true">Answer</span>`;
+  toggle.addEventListener('click', ()=>{ const open=toggle.getAttribute('aria-expanded')==='true'; toggle.setAttribute('aria-expanded', open?'false':'true'); body.hidden=open; if(!open){ const r=body.querySelector('[role="radio"]'); if(r) r.focus(); } });
+  wrap.appendChild(toggle); wrap.appendChild(body);
+
+  if (kind==='pattern'){
+    body.appendChild(radiogroup('Do you also hit other shots often?', [
+      {value:'pulls',label:'Pulls'},{value:'pushes',label:'Pushes'},{value:'straights',label:'Straight ones'},{value:'skip',label:'No / not sure'}
+    ], state.secondary, (val)=> applyRefiner('pattern', val)));
+    body.appendChild(mk('div','rf-why','Same swing — the face just arrives a touch different each time. This confirms the read; it doesn\'t decide it.'));
+  }
+  else if (kind==='carry'){
+    body.appendChild(buildCarrySlider());
+  }
+  else if (kind==='contact'){
+    body.appendChild(radiogroup('How did it feel off the face?', [
+      {value:'Pure',label:'Pure'},{value:'Thin',label:'Thin'},{value:'Fat',label:'Fat'},{value:'unsure',label:'Not sure'}
+    ], state.contact, (val)=> applyRefiner('contact', val)));
+  }
+  else if (kind==='divot'){
+    // same question/mapping as pre-reveal S5 (driver leads with "No divot")
+    let opts = [
+      {value:'deep',label:'Deep divot'},{value:'brushed',label:'Brushed the grass'},
+      {value:'none',label:'No divot'},{value:'unsure',label:"Didn't notice"}
+    ];
+    if (state.club==='driver') opts = [opts[2],opts[1],opts[0],opts[3]];
+    body.appendChild(radiogroup('Your divot?', opts, state.divot, (val)=> applyRefiner('divot', val)));
+    body.appendChild(mk('div','rf-why','The divot reads your attack angle — it sharpens which delivery within this pattern, even though the way-short distance itself is a strike/speed story.'));
+  }
+  return wrap;
+}
+function buildCarrySlider(){
+  const wrap=document.createElement('div'); wrap.className='carrywrap';
+  const val=document.createElement('div'); val.className='carryval';
+  const start = 145;
+  val.innerHTML = `Carry: <b>${start} m</b>`;
+  const s=document.createElement('input'); s.type='range'; s.className='carry sa-focus';
+  s.min='110'; s.max='185'; s.step='5'; s.value=String(start);
+  s.setAttribute('aria-label','Your 7-iron carry in metres, 5 metre steps');
+  s.setAttribute('aria-valuetext', `${start} metres`);
+  s.addEventListener('input', ()=>{ val.innerHTML = `Carry: <b>${s.value} m</b>`; s.setAttribute('aria-valuetext', `${s.value} metres`); });
+  s.addEventListener('change', ()=> applyRefiner('carry', +s.value));
+  const skip=document.createElement('button'); skip.type='button'; skip.className='textbtn sa-focus'; skip.textContent='Skip';
+  skip.addEventListener('click', ()=> applyRefiner('carry','skip'));
+  wrap.appendChild(val); wrap.appendChild(s); wrap.appendChild(skip);
+  return wrap;
+}
+function applyRefiner(kind, value){
+  if (kind==='pattern'){ state.secondary=value; }
+  else if (kind==='carry'){ state.carry=value; }
+  else if (kind==='contact'){ state.contact=value; state.contactSource='sharpen'; }
+  else if (kind==='divot'){ state.divot=value; }
+  haptics.tick('refine');
+  const sol = solveNow();
+  if (sol.miss){ renderMiss(sol.nearest, sol.d); return; }
+  const top = sol.con.stories[0];
+  setEmberFromTop(top);
+  emberProgress=1; drawAll();   // ember redraws from the new top rep (static — the reveal beat is not re-run)
+  let refinedBy=null;
+  if (kind==='pattern' && value!=='skip') refinedBy='pattern';
+  else if (kind==='carry' && value!=='skip') refinedBy='carry';
+  else if (kind==='divot' && value!=='unsure' && !sol.divotEmpty) refinedBy='divot';
+  renderResults(sol, { refinedBy });
 }
 
-/* contact card (§6.6 — parallel model, never blended) */
-function contactCard(){
+/* divot label for the empty-filter honesty line */
+function divotLabel(a){ return ({ deep:'deep', brushed:'brushed', none:'no', unsure:'' }[a]||'') + ' divot'; }
+
+/* ══ CONTACT CARD (§6.6 — parallel model, never blended into the ranking) ══
+   Way-short case arms it with the club's real geometry-loss ceiling from
+   meta.bands.distance (bandLossPct / worstGeometryLossPct / lossNote), so
+   nothing implies a bigger geometry loss than the grid supports. */
+function contactCard(reason){
   const c=document.createElement('article'); c.className='contactcard';
   c.appendChild(mk('div','cardeye','The strike, separately'));
-  const feel = state.contact==='Thin' ? 'Thin' : 'Fat';
-  c.appendChild(mk('div','cbody',
-    `${feel} contact comes from where your swing bottoms out — that's strike geometry, and this flight engine genuinely can't see it. A pure strike at this same delivery loses only a few percent of distance; a big loss is the strike talking.`));
+  const body=document.createElement('div'); body.className='cbody';
+  const worst = BANDS().distance.worstGeometryLossPct;
+  if (reason==='wayshort'){
+    const feel = (state.contact==='Thin'||state.contact==='Fat') ? `You felt it ${state.contact.toLowerCase()} — and that fits: ` : '';
+    body.textContent = `${feel}delivery geometry alone can only cost about ${worst}% of carry with this club. A genuinely huge loss is strike or club speed talking — not the shape of your swing. This flight engine can't see the strike; the Strike Window can.`;
+  } else {
+    const feel = state.contact==='Thin' ? 'Thin' : 'Fat';
+    body.textContent = `${feel} contact comes from where your swing bottoms out — that's strike geometry, and this flight engine genuinely can't see it. A pure strike at this same delivery loses only a few percent of distance; a big loss is the strike talking.`;
+  }
+  c.appendChild(body);
   const a=document.createElement('a'); a.className='qcta sa-focus'; a.href='./geometry-window-mock.html';
   a.textContent='Open the Strike Window →'; a.setAttribute('aria-label','Open the Strike Window');
   c.appendChild(a);
   return c;
 }
 
-/* ══ S-MISS ═══════════════════════════════════════════════════════════ */
+/* ══ S-MISS ═══════════════════════════════════════════════════════════
+   Descriptor not in the model. Upgraded: a LOW slice that's also way short is
+   teaching moment 3 (finding #3) — the physics REFUSES it, and says why. */
 function renderMiss(nearest, d){
   state.phase='miss'; readoutEl.hidden=true;
   railBody.innerHTML=''; renderChips(railBody);
+  // focusable region — the rail was wiped, so move focus here (not to <body>)
   const box=document.createElement('div'); box.className='miss';
-  box.appendChild(mk('div','mtitle',"That mix doesn't come out of the physics"));
-  box.appendChild(mk('div','mbody','A mid-iron can’t fly that exact combination in our model — usually one detail reads differently than it felt. Closest real flights:'));
+  box.tabIndex=-1; box.setAttribute('role','region'); box.setAttribute('aria-label','No exact match — closest real flights');
+
+  const lowShortSlice = (d.curve==='Slice'||d.curve==='Fade') && d.height==='Low' && d.distanceLoss==='Noticeable loss';
+  if (lowShortSlice){
+    box.appendChild(mk('div','mtitle','That one can’t come out of the swing shape'));
+    const p=document.createElement('div'); p.className='mbody';
+    renderParts(p, [
+      { t:'text', v:'A low slice that is also way short doesn’t exist in the physics: low means ' },
+      { t:'term', v:'spin loft', def:DX.TERMS['spin loft'] },
+      { t:'text', v:' is down (de-lofted), which comes out ' },
+    ]);
+    const emb=document.createElement('b'); emb.textContent='hotter and longer'; p.appendChild(emb);
+    p.appendChild(document.createTextNode(', not shorter. Low '));
+    const emb2=document.createElement('b'); emb2.textContent='and'; p.appendChild(emb2);
+    p.appendChild(document.createTextNode(' short is contact or club speed — never delivery geometry. Closest real flights:'));
+    box.appendChild(p);
+  } else {
+    box.appendChild(mk('div','mtitle',"That mix doesn't come out of the physics"));
+    box.appendChild(mk('div','mbody',`A ${state.club==='driver'?'driver':'mid-iron'} can't fly that exact combination in our model — usually one detail reads differently than it felt. Closest real flights:`));
+  }
+
   if (nearest && nearest.length){
-    const row=document.createElement('div'); row.className='qrow';
+    const row=document.createElement('div'); row.className='qrow'; row.setAttribute('role','group'); row.setAttribute('aria-label','Closest real flights');
     nearest.forEach(nd=>{
       const b=document.createElement('button'); b.type='button'; b.className='chip sa-focus';
       b.textContent = missChipLabel(nd, d);
-      b.addEventListener('click', ()=> applyNearest(nd.descriptor));
+      b.addEventListener('click', ()=> applyNearest(nd));
       row.appendChild(b);
     });
     box.appendChild(row);
   } else {
     box.appendChild(mk('div','mbody','Try changing the height or distance a notch.'));
   }
+  const again=document.createElement('button'); again.type='button'; again.className='textbtn sa-focus'; again.textContent='Describe another shot';
+  again.addEventListener('click', resetFlow);
+  box.appendChild(again);
   railBody.appendChild(box);
-  announce("That mix doesn't fit the model. Pick one of the closest real flights.");
+  box.focus({ preventScroll:false });
+  announce(lowShortSlice
+    ? "A low, way-short slice isn't delivery geometry — it's contact or speed. Pick one of the closest real flights."
+    : "That mix doesn't fit the model. Pick one of the closest real flights.");
   drawAll();
 }
 function missChipLabel(nd, oldD){
@@ -964,21 +1255,31 @@ function missChipLabel(nd, oldD){
   return 'Closest flight';
 }
 function applyNearest(nd){
-  state.curve=nd.curve; state.curveDir=curveDirFromCurve(nd.curve);
-  state.startLine=nd.startLine; state.height=nd.height; state.distance=nd.distance;
+  const v = nd.descriptor;
+  state.curve=v.curve; state.curveDir=curveDirFromCurve(v.curve);
+  state.startLine=v.startLine; state.height=v.height; state.distance=v.distanceLoss;
   updateSketch();
+  // pulse the changed summary chip once on next paint (spec §5.5)
+  state._pulseDim = ({ distance:'distance', height:'height', severity:'shape' })[nd.changed] || null;
   state.active=null;
-  if (state.hasResults) recomputeResults(); else goReveal();
+  if (state.hasResults){ recomputeResults(); return; }
+  const next = nextQuestion();
+  if (next){ state._reopen=true; state.active=next; renderInput(); announce('Updated. '+(next==='contact'?'How did it feel off the face?':next==='divot'?'Last clue: your divot.':'')); }
+  else goReveal();
 }
 
 /* ══ reset ════════════════════════════════════════════════════════════ */
 function resetFlow(){
-  state.startLine=state.curveDir=state.curve=state.height=state.distance=state.contact=state.divot=null;
-  state.active='shape'; state.phase='input'; state.hasResults=false;
+  const keepClub = state.club;   // keep the club (v1 §9 re-diagnose keeps the club)
+  state.club=keepClub; state.speed=null;
+  state.startLine=state.curveDir=state.curve=state.height=state.distance=null;
+  state.contact=state.contactSource=state.divot=null;
+  state.secondary=state.carry=null;
+  state.active = keepClub ? 'speed' : 'club'; state.phase='input'; state.hasResults=false;
   sketchPts=sketchAbs=emberSamples=emberAbs=null; emberProgress=0;
   readoutEl.hidden=true; sideInset.hidden=true; sceneGhost.hidden=false; sceneAlt.textContent='';
   renderInput(); drawAll();
-  announce('Describe another shot. Which flight looks like yours?');
+  announce('Describe another shot.');
 }
 
 /* ══ boot ═════════════════════════════════════════════════════════════ */
@@ -991,12 +1292,15 @@ function renderError(retry){
   railBody.appendChild(box);
 }
 async function boot(){
+  // preselect the last club but never skip the confirming tap (spec §1 S0)
+  const last = safeGet('sa.diagnose.club');
+  if (last==='7iron'||last==='driver') state.club=null; // still ask, just preselect in the UI
   renderInput(); drawAll();
   try {
-    MAP = await DX.loadMap();
-    if (location.search.includes('selftest')) runSelfTest();
+    MAP = await DX.loadMapV2();
+    renderInput();  // re-render now that per-club bands are available (honesty strip, anchors)
+    if (DEV) DX.devAsserts(MAP);
   } catch(e){
-    // picker stays interactive (sketch still works); show retry
     renderError(boot);
   }
 }
@@ -1004,24 +1308,6 @@ const ro = new ResizeObserver(()=> drawAll());
 ro.observe(sceneEl);
 window.addEventListener('orientationchange', ()=> setTimeout(drawAll,120));
 boot();
-
-/* ── optional self-test (?selftest) — build-order step 1 asserts ─────── */
-function runSelfTest(){
-  const checks=[];
-  for (const s of MAP.spotChecks){
-    const {entry,exact}=DX.lookup(MAP,s.descriptor);
-    const con=exact&&DX.consolidateStories(entry);
-    const top=con&&con.stories[0];
-    checks.push([`spot ${s.name}`, top && top.face===s.topCause.face && top.path===s.topCause.path && top.variants[0].attack===s.topCause.attack]);
-  }
-  const slice=DX.lookup(MAP,{curve:'Slice',startLine:'Right',height:'Normal',distanceLoss:'Full (normal distance)'}).entry;
-  checks.push(['slice needsFollowUp', DX.needsFollowUp(DX.consolidateStories(slice).stories)===true]);
-  const deep=DX.consolidateStories(slice, DX.divotFilter('deep'));
-  checks.push(['deep re-rank', deep.filtered && Math.abs(deep.stories.reduce((a,b)=>a+b.pct,0)-100)<0.5]);
-  const fails=checks.filter(c=>!c[1]);
-  if (fails.length) console.error('[diagnose selftest] FAIL', fails.map(f=>f[0]));
-  else console.info('[diagnose selftest] all', checks.length, 'passed');
-}
 </script>
 </body>
 </html>

@@ -70,10 +70,9 @@
     --panel:rgba(17,13,28,.72);        /* violet-shifted glass chrome */
     --radius-control:12px;
     --blur-surface:10px; --blur-overlay:18px;
-    /* anatomy colours (lens-overlay params — labelled trios, ported hexApprox
-       from direction-height-arrows-layout.ts; distinct param roles, not accent) */
-    --c-face:#EE4954; --c-path:#8FB4D4; --c-loft:#A66BFF; --c-attack:#4DE8D2; --c-launch:#F4D000;
-    --ghost:#9FB2C8;                   /* neutral reference-trace grey (never accent) */
+    /* anatomy colours (lens-overlay params) — SYS-02: single-sourced from
+       sa-p3.css param tokens (no local hexes; --ghost also inherits sa-p3). */
+    --c-face:var(--face); --c-path:var(--path); --c-loft:var(--loft); --c-attack:var(--attack); --c-launch:var(--launch);
     --dim:0.55;
   }
   *{box-sizing:border-box;margin:0;padding:0}
@@ -81,7 +80,7 @@
   body{
     background:radial-gradient(130% 120% at 50% -10%, var(--bg-top), var(--bg));
     color:var(--ink);
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    font-family:var(--font-ui);
     -webkit-tap-highlight-color:transparent;
   }
   .app{position:fixed;inset:0;display:flex;flex-direction:column;overflow:hidden}
@@ -112,7 +111,7 @@
      already wide enough that only vertical expansion is needed). */
   .modnav a.home::after{left:50%;right:auto;top:50%;width:44px;height:44px;transform:translate(-50%,-50%)}
   .modnav a:hover{background:rgba(255,255,255,.08);color:var(--ink)}
-  .modnav a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .modnav a:focus-visible{outline:none;box-shadow:inset 0 0 0 1px rgba(0,0,0,.85), inset 0 0 0 3px var(--ink)}
   .modnav a[aria-current="page"]{color:var(--accent);border-color:var(--accent-line);background:var(--accent-soft)}
 
   .ts-center{flex:1 1 auto;display:flex;align-items:center;justify-content:center;gap:9px;min-width:0}
@@ -142,7 +141,7 @@
   .playpill::after{content:"";position:absolute;left:0;right:0;top:50%;height:44px;transform:translateY(-50%)}
   .playpill:hover{background:var(--accent-soft);border-color:var(--accent)}
   .playpill:active{transform:translateY(1px)}
-  .playpill:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .playpill:focus-visible{outline:none;box-shadow:inset 0 0 0 1px rgba(0,0,0,.85), inset 0 0 0 3px var(--ink)}
   .playpill .pico{font-size:10px}
 
   /* ══ MAIN — FOCUS-MODE STAGE (Direction | Launch | Flight) ═══════
@@ -200,7 +199,7 @@
   .mini .mval{font-size:12.5px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--ink)}
 
   input[type=range]{width:100%;height:18px;cursor:pointer;accent-color:var(--accent);background:transparent}
-  input[type=range]:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:6px}
+  input[type=range]:focus-visible{outline:none;box-shadow:0 0 0 1px rgba(0,0,0,.85), 0 0 0 4px var(--ink);border-radius:8px}
   .mini.k-face input{accent-color:var(--c-face)} .mini.k-face .mname{color:#ffb0b6}
   .mini.k-path input{accent-color:var(--c-path)} .mini.k-path .mname{color:#bcd6ea}
   .mini.k-loft input{accent-color:var(--c-loft)} .mini.k-loft .mname{color:#cdb0ff}
@@ -227,7 +226,7 @@
   .mcard::after{content:"";position:absolute;left:0;right:0;top:50%;height:44px;transform:translateY(-50%)}
   .mcard:hover{border-color:rgba(255,255,255,.18);background:linear-gradient(180deg, rgba(26,40,58,.78), rgba(14,22,33,.78))}
   .mcard:active,.mcard[aria-expanded="true"]{transform:scale(.97);border-color:rgba(255,255,255,.2)}
-  .mcard:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .mcard:focus-visible{outline:none;box-shadow:inset 0 0 0 1px rgba(0,0,0,.85), inset 0 0 0 3px var(--ink)}
   .mcard .mk{font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .mcard .mv{font-size:19px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--accent);letter-spacing:-.01em;white-space:nowrap}
   .mcard .mv small{font-size:.55em;color:var(--muted);font-weight:600;margin-left:2px}
@@ -514,14 +513,17 @@
     display:flex;align-items:center;justify-content:center}
   .flightClose::after{content:"";position:absolute;inset:-5px;border-radius:999px} /* ≥44px hit target */
   .flightClose:hover{background:rgba(255,255,255,.12)}
-  .flightClose:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .flightClose:focus-visible{outline:none;box-shadow:inset 0 0 0 1px rgba(0,0,0,.85), inset 0 0 0 3px var(--ink)}
   .flightReplay{position:absolute;top:max(10px,env(safe-area-inset-top));right:calc(max(10px,env(safe-area-inset-right)) + 44px);z-index:6;height:36px;padding:0 15px;border-radius:999px;
     border:1px solid var(--accent-line);background:rgba(10,18,30,.7);color:var(--accent);
     font-size:12px;font-weight:700;line-height:1;cursor:pointer;font-family:inherit;letter-spacing:.04em;
     display:inline-flex;align-items:center;gap:6px}
   .flightReplay::after{content:"";position:absolute;left:0;right:0;top:50%;height:46px;transform:translateY(-50%)} /* ≥44px hit target */
   .flightReplay:hover{background:var(--accent-soft);border-color:var(--accent)}
-  .flightReplay:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  /* SYS-03 pressed spec: scale(.97) + white .06 overlay, 80ms */
+  .flightReplay:active{transform:scale(.97);transition:transform .08s ease-out, background .08s ease-out;
+    background:linear-gradient(rgba(255,255,255,.06),rgba(255,255,255,.06)), var(--accent-soft)}
+  .flightReplay:focus-visible{outline:none;box-shadow:inset 0 0 0 1px rgba(0,0,0,.85), inset 0 0 0 3px var(--ink)}
   /* ── MONETIZATION: discreet "N free shots left" nudge — top-center, clear
        of the top-left carry hero and the top-right pill stack. Toggled via
        the [hidden] attribute (not display, so the base rule never fights the
@@ -552,9 +554,10 @@
     background:rgba(8,16,20,.86);border:1px solid rgba(255,255,255,.18);
     color:var(--ink);box-shadow:0 8px 22px rgba(0,0,0,.42);
     transition:opacity .4s ease, transform .4s ease;}
+  .outcomeStrip[hidden]{display:none}   /* a11y: display:flex must not defeat [hidden] — else an invisible, inert button stays a Tab stop over the scene (mirrors .tuneDock[hidden]) */
   .outcomeStrip.is-hidden{opacity:0;transform:translateX(-50%) translateY(-8px);pointer-events:none}
   .outcomeStrip:hover{border-color:rgba(255,255,255,.3)}
-  .outcomeStrip:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .outcomeStrip:focus-visible{outline:none;box-shadow:inset 0 0 0 1px rgba(0,0,0,.85), inset 0 0 0 3px var(--ink)}
   .outcomeStrip.below-nudge{top:calc(max(10px,env(safe-area-inset-top)) + 34px)}
   .outcomeStrip .osLine{display:flex;align-items:baseline;gap:6px;line-height:1.15;white-space:nowrap;
     font-variant-numeric:tabular-nums}
@@ -580,14 +583,19 @@
   .cchip.outcome{border-color:rgba(255,255,255,.3)}
   .chipChain .clink{color:var(--muted);font-weight:800;font-size:11px;flex:0 0 auto}
   /* ── STAGE 3: ghost toggle pill + clear control (same pill family as Replay) ── */
+  /* viz-08/SYS-04: control chrome is --muted/--line-strong (the teal-era grey is
+     retired); the ghost dot stays the ghost TRACE colour (its one legitimate use). */
   .ghostPill{position:absolute;top:max(10px,env(safe-area-inset-top));right:calc(max(10px,env(safe-area-inset-right)) + 142px);z-index:6;height:36px;padding:0 15px;border-radius:999px;
-    border:1px solid rgba(159,178,200,.5);background:rgba(10,18,30,.7);color:var(--ghost);
+    border:1px solid var(--line-strong);background:rgba(10,18,30,.7);color:var(--muted);
     font-size:12px;font-weight:700;line-height:1;cursor:pointer;font-family:inherit;letter-spacing:.04em;
     display:inline-flex;align-items:center;gap:6px}
   .ghostPill::after{content:"";position:absolute;inset:-5px;border-radius:999px} /* ≥44px hit target */
   .ghostPill .gdot{width:8px;height:8px;border-radius:50%;background:var(--ghost);flex:0 0 auto;box-sizing:border-box}
-  .ghostPill:hover{background:rgba(159,178,200,.14)}
-  .ghostPill:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .ghostPill:hover{background:rgba(255,255,255,.12)}
+  /* SYS-03 pressed spec: scale(.97) + white .06 overlay, 80ms */
+  .ghostPill:active{transform:scale(.97);transition:transform .08s ease-out, background .08s ease-out;
+    background:linear-gradient(rgba(255,255,255,.06),rgba(255,255,255,.06)), rgba(10,18,30,.7)}
+  .ghostPill:focus-visible{outline:none;box-shadow:inset 0 0 0 1px rgba(0,0,0,.85), inset 0 0 0 3px var(--ink)}
   /* off-state is NOT colour-only: hollow dot + aria-pressed carry the state */
   .ghostPill[aria-pressed="false"]{color:var(--muted);border-color:var(--line)}
   .ghostPill[aria-pressed="false"] .gdot{background:transparent;border:1.5px solid var(--muted)}
@@ -596,17 +604,23 @@
     display:flex;align-items:center;justify-content:center;font-family:inherit}
   .ghostClear::after{content:"";position:absolute;inset:-5px;border-radius:999px} /* ≥44px hit target */
   .ghostClear:hover{background:rgba(255,255,255,.12);color:var(--ink)}
-  .ghostClear:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  /* SYS-03 pressed spec: scale(.97) + white .06 overlay, 80ms */
+  .ghostClear:active{transform:scale(.97);transition:transform .08s ease-out, background .08s ease-out;
+    background:linear-gradient(rgba(255,255,255,.06),rgba(255,255,255,.06)), rgba(10,18,30,.7)}
+  .ghostClear:focus-visible{outline:none;box-shadow:inset 0 0 0 1px rgba(0,0,0,.85), inset 0 0 0 3px var(--ink)}
   /* ── GHOST LAB: legend column (pin + per-ghost chips), below the top pill row ── */
   .fLegend{position:absolute;top:calc(max(10px,env(safe-area-inset-top)) + 46px);right:max(10px,env(safe-area-inset-right));
     z-index:6;display:flex;flex-direction:column;gap:8px;align-items:flex-end}
   .fChip{position:relative;height:36px;padding:0 12px;border-radius:999px;
-    border:1px solid rgba(159,178,200,.5);background:rgba(10,18,30,.7);color:var(--ghost);
+    border:1px solid var(--line-strong);background:rgba(10,18,30,.7);color:var(--muted);
     font-size:12px;font-weight:700;line-height:1;cursor:pointer;font-family:inherit;letter-spacing:.03em;
     display:inline-flex;align-items:center;gap:7px;font-variant-numeric:tabular-nums}
   .fChip::after{content:"";position:absolute;left:0;right:0;top:-4px;bottom:-4px;border-radius:999px} /* 44px hit target; 8px gap keeps neighbours clear */
-  .fChip:hover{background:rgba(159,178,200,.14)}
-  .fChip:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .fChip:hover{background:rgba(255,255,255,.12)}
+  /* SYS-03 pressed spec: scale(.97) + white .06 overlay, 80ms (covers #fPinBtn + ghost chips) */
+  .fChip:active{transform:scale(.97);transition:transform .08s ease-out, background .08s ease-out;
+    background:linear-gradient(rgba(255,255,255,.06),rgba(255,255,255,.06)), rgba(10,18,30,.7)}
+  .fChip:focus-visible{outline:none;box-shadow:inset 0 0 0 1px rgba(0,0,0,.85), inset 0 0 0 3px var(--ink)}
   .fChip .dashSwatch{flex:0 0 auto;display:block}
   /* hidden-ghost state is NOT colour-only: strikethrough + dimmed swatch + aria-pressed */
   .fChip-ghost[aria-pressed="false"]{color:var(--muted);border-color:var(--line)}
@@ -648,15 +662,19 @@
   /* ── LEFT HERO STACK (Layout B): big TOTAL + offline only ──
      Fullscreen overlay: left inset stays clear of a device's safe area
      (notch/rounded corner) in addition to the existing 3.4% breathing room. */
-  .flightCarry{position:absolute;top:15%;left:max(3.4%,env(safe-area-inset-left));z-index:5;pointer-events:none;line-height:1;text-align:left;
+  .flightCarry{position:absolute;top:15%;left:max(16px,env(safe-area-inset-left));z-index:5;pointer-events:none;line-height:1;text-align:left;
     text-shadow:0 0 22px rgba(0,0,0,.65)}
-  .flightCarry .num{font-size:clamp(30px,8vh,60px);font-weight:800;letter-spacing:-.03em;color:#fff;line-height:.9;
-    font-variant-numeric:tabular-nums;text-shadow:0 0 28px rgba(255,138,77,.6)}
+  /* viz-19 / SYS-09: the screen names itself (doubles as the hero label) */
+  .flightCarry .scr{font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
+  /* viz-05: glow blur ≤0.4×font-size (crisp edges); viz-15: TOTAL is the ONE ember hero value; SYS-01 display role */
+  .flightCarry .num{font-family:var(--font-display);font-size:clamp(30px,8vh,60px);font-weight:700;letter-spacing:-.03em;color:var(--accent);line-height:.9;
+    font-variant-numeric:tabular-nums;text-shadow:0 1px 6px rgba(255,138,77,.30)}
   .flightCarry .num .u{font-size:.4em;font-weight:700;color:var(--accent);margin-left:3px;vertical-align:.2em}
-  .flightCarry .lab{font-size:clamp(8px,1.6vh,11px);letter-spacing:.24em;text-transform:uppercase;color:var(--muted);margin-top:4px}
-  .flightCarry .offline{margin-top:10px;font-variant-numeric:tabular-nums;font-weight:800;
-    font-size:clamp(15px,3.4vh,24px);color:var(--accent);line-height:1;text-shadow:0 0 18px rgba(255,138,77,.4)}
-  .flightCarry .offline .side{font-size:.6em;font-weight:700;letter-spacing:.06em;margin-left:3px;color:#fff}
+  .flightCarry .lab{font-size:clamp(10px,1.6vh,11px);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-top:4px}
+  /* viz-15: hero offline demoted to ink (keeps ember for TOTAL only); SYS-01 mono data */
+  .flightCarry .offline{margin-top:10px;font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-weight:600;
+    font-size:clamp(15px,3.4vh,24px);color:var(--ink);line-height:1}
+  .flightCarry .offline .side{font-size:.7em;font-weight:600;letter-spacing:.06em;margin-left:3px;color:var(--muted)}
 
   /* ── LAYOUT B (BOTTOM ONLY): one aligned rectangle along the bottom ──
      [ club-speed block (2 chip-rows tall) ] + [ 4×2 parameter chips ].
@@ -701,7 +719,7 @@
   .fData .cell:active,
   .fData .cell[aria-expanded="true"]{transform:scale(.97);
     box-shadow:0 4px 10px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.05);border-color:rgba(255,255,255,.2)}
-  .fData .cell:focus-visible{outline:3px solid #fff;outline-offset:2px}
+  .fData .cell:focus-visible{outline:none;box-shadow:inset 0 0 0 1px rgba(0,0,0,.85), inset 0 0 0 3px var(--ink)}
   /* chevron affordance — bottom-right corner */
   .fData .cell::after{content:"›";position:absolute;right:8px;bottom:6px;
     color:var(--muted);font-weight:800;font-size:clamp(10px,1.3vw,13px);opacity:.5;line-height:1}
@@ -747,9 +765,9 @@
     font-weight:700;font-size:18px;line-height:1;display:flex;align-items:center;justify-content:center;font-family:inherit}
   .fSpeed .step:hover{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.26)}
   .fSpeed .step:active{transform:scale(.94)}
-  .fSpeed .step:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .fSpeed .step:focus-visible{outline:none;box-shadow:inset 0 0 0 1px rgba(0,0,0,.85), inset 0 0 0 3px var(--ink)}
   .fSpeed input[type=range]{flex:1 1 auto;width:100%;height:44px;min-width:0;accent-color:var(--accent);background:transparent;cursor:pointer}
-  .fSpeed input[type=range]:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:8px}
+  .fSpeed input[type=range]:focus-visible{outline:none;box-shadow:0 0 0 1px rgba(0,0,0,.85), 0 0 0 4px var(--ink);border-radius:8px}
   /* once wrapped in .rwrap, the wrapper becomes the flex item in the −/slider/+ ctrl */
   .fSpeed .ctrl .rwrap{flex:1 1 auto;min-width:0}
 
@@ -865,31 +883,36 @@
   .fTop::after{right:0;background:linear-gradient(270deg, rgba(4,10,14,.72), rgba(4,10,14,0))}
   .chip{appearance:none;font-family:inherit;cursor:pointer;position:relative;flex:0 0 auto;
     display:flex;align-items:center;gap:7px;min-height:44px;padding:5px 12px;color:var(--ink);
-    background:linear-gradient(180deg, rgba(22,34,50,.88), rgba(12,19,29,.88));
-    border:1px solid rgba(255,255,255,.12);border-radius:12px;
+    background:var(--plate);
+    border:1px solid var(--line-strong);border-radius:var(--radius-control);
     box-shadow:0 6px 16px rgba(0,0,0,.32), inset 0 1px 0 rgba(255,255,255,.06);
     backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
     transition:transform .12s ease, border-color .15s ease, background .15s ease}
-  .chip:hover{border-color:rgba(255,255,255,.22)}
-  .chip:active{transform:scale(.97)}
-  .chip:focus-visible{outline:3px solid #fff;outline-offset:2px}
+  .chip:hover{background:linear-gradient(rgba(255,255,255,.06),rgba(255,255,255,.06)), var(--plate)}
+  /* SYS-03 pressed spec: scale(.97) + white .06 overlay, 80ms */
+  .chip:active{transform:scale(.97);transition:transform .08s ease, background .08s ease;
+    background:linear-gradient(rgba(255,255,255,.06),rgba(255,255,255,.06)), var(--plate)}
+  .chip:focus-visible{outline:none;box-shadow:inset 0 0 0 1px rgba(0,0,0,.85), inset 0 0 0 3px var(--ink)}
   .chip .ck{font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);
     font-weight:700;white-space:nowrap;line-height:1}
-  .chip .cv{font-size:15px;font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap;
+  .chip .cv{font-family:var(--font-mono);font-size:14px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap;
     line-height:1;letter-spacing:-.01em}
-  .chip .cv small{font-size:10px;color:var(--muted);font-weight:600;margin-left:2px}
+  .chip .cv small{font-family:var(--font-ui);font-size:10px;color:var(--muted);font-weight:600;margin-left:2px}
   .chip .cbody{display:flex;flex-direction:column;gap:3px;align-items:flex-start}
   /* INPUT chips: coloured dot + coloured baseline + tune glyph — visibly a control */
-  .chip.input{border-color:rgba(255,255,255,.18)}
-  .chip.input::after{content:"";position:absolute;left:11px;right:11px;bottom:4px;height:2.5px;
-    border-radius:2px;background:var(--pc,var(--accent));opacity:.85}
+  .chip.input{border-color:var(--line-strong)}
+  /* viz-09: resting underlines dimmed to 55%, 2px; the active chip lights to full */
+  .chip.input::after{content:"";position:absolute;left:11px;right:11px;bottom:4px;height:2px;
+    border-radius:2px;background:var(--pc,var(--accent));opacity:.55;transition:opacity .18s ease}
+  .chip.input[aria-expanded="true"]::after{opacity:1}
   .chip.input .cdot{width:8px;height:8px;border-radius:50%;background:var(--pc,var(--accent));
     flex:0 0 auto;box-shadow:0 0 8px color-mix(in srgb, var(--pc,var(--accent)) 60%, transparent)}
   .chip.input .tglyph{color:var(--muted);flex:0 0 auto;display:flex;align-items:center}
   .chip.input[aria-expanded="true"]{border-color:var(--pc,var(--accent));
-    background:linear-gradient(180deg, rgba(28,42,60,.92), rgba(14,22,33,.92))}
-  .chip .esttag{font-size:10px;font-weight:800;letter-spacing:.08em;color:var(--warn);
-    border:1px solid rgba(251,191,36,.5);border-radius:4px;padding:1px 4px;line-height:1}
+    background:linear-gradient(rgba(255,255,255,.06),rgba(255,255,255,.06)), var(--plate)}
+  /* viz-11: EST is a muted outline badge (gold reserved for XP/badges only) */
+  .chip .esttag{font-size:10px;font-weight:700;letter-spacing:.08em;color:var(--muted);
+    border:1px solid var(--line-strong);border-radius:4px;padding:1px 4px;line-height:1}
 
   /* ── ZONE 3 (BOTTOM) — OUTPUT DASHBOARD (round 4). Read-only result
      plates in two labelled buckets: HORIZONTAL (side/direction plane):
@@ -900,14 +923,14 @@
      beat; the tune dock opens ABOVE it (never over it) so the outputs are
      always visible while dragging — "the output lies on the slider". ── */
   .fDash{position:absolute;z-index:5;
-    left:max(12px,env(safe-area-inset-left));right:max(12px,env(safe-area-inset-right));
+    left:max(16px,env(safe-area-inset-left));right:max(16px,env(safe-area-inset-right));
     bottom:max(10px,env(safe-area-inset-bottom));
     display:flex;align-items:stretch;gap:8px;
     transition:opacity .5s ease, transform .5s ease}
   .fDash.is-hidden{opacity:0;transform:translateY(12px);pointer-events:none}
-  .dashGroup{border-radius:14px;padding:6px 12px 8px;min-width:0;
-    background:linear-gradient(180deg, rgba(20,32,48,.9), rgba(11,17,26,.9));
-    border:1px solid rgba(255,255,255,.12);
+  .dashGroup{border-radius:var(--radius-card);padding:6px 12px 8px;min-width:0;
+    background:var(--plate);
+    border:1px solid var(--line);
     box-shadow:0 8px 22px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,255,255,.06);
     backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px)}
   .dashGroup.h{flex:0 0 auto}
@@ -918,13 +941,11 @@
   .dTile{display:flex;flex-direction:column;gap:2px;min-width:0}
   .dTile .dk{font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;
     color:var(--muted);white-space:nowrap;line-height:1.1}
-  .dTile .dv{font-size:15.5px;font-weight:800;font-variant-numeric:tabular-nums;
+  /* SYS-01: dashboard values are the mono data voice; every tile reads --ink
+     (viz-06/SYS-08: the ember budget is tracer + hero TOTAL + Replay only). */
+  .dTile .dv{font-family:var(--font-mono);font-size:15px;font-weight:600;font-variant-numeric:tabular-nums;
     color:var(--ink);white-space:nowrap;letter-spacing:-.01em;line-height:1.1}
-  .dTile .dv small{font-size:10.5px;color:var(--muted);font-weight:600;margin-left:1px}
-  /* distance emphasis inside Vertical (owner's nod): Carry/Total in the
-     live-ball cyan — every plate here IS live-shot data, so the colour law
-     (cyan = live ball + its data only) holds. */
-  .dTile.dist .dv{color:var(--accent);text-shadow:0 0 12px rgba(255,138,77,.3)}
+  .dTile .dv small{font-family:var(--font-ui);font-size:10.5px;color:var(--muted);font-weight:600;margin-left:1px}
   @media (prefers-reduced-motion:reduce){ .fTop,.fDash{transition:none} }
 
   /* ── move 2: TUNE DOCK — a full-width transient editor bar. ROUND 4: it
@@ -933,50 +954,65 @@
      --dash-clear = the dashboard's live height + gap, measured by
      placeDock() (CSS fallback 72px). ── */
   .tuneDock{position:absolute;z-index:7;
-    left:max(12px,env(safe-area-inset-left));right:max(12px,env(safe-area-inset-right));
+    left:max(16px,env(safe-area-inset-left));right:max(16px,env(safe-area-inset-right));
     bottom:calc(max(10px,env(safe-area-inset-bottom)) + var(--dash-clear,72px));
     display:flex;align-items:center;gap:12px;
-    padding:5px 13px;border-radius:16px;
-    background:rgba(10,17,24,.94);border:1px solid rgba(255,255,255,.18);
+    padding:5px 13px;border-radius:var(--radius-card);
+    background:var(--plate);border:1px solid var(--line-strong);
     box-shadow:0 14px 34px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.07);
     backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
-    opacity:1;transition:opacity .3s ease}
+    opacity:1;transition:opacity .12s ease, transform .12s ease}
   .tuneDock[hidden]{display:none}   /* display:flex must not defeat [hidden] */
   .tuneDock [hidden]{display:none!important}   /* …nor on the mode sub-panels */
-  .tuneDock.fading{opacity:0;pointer-events:none}
+  /* viz-20: 120ms rise+fade on enter (td-in, toggled by openTune) and exit (fading) */
+  .tuneDock.td-in{opacity:0;transform:translateY(4px)}
+  .tuneDock.fading{opacity:0;transform:translateY(4px);pointer-events:none}
   .tuneDock .tdTop{flex:0 0 auto;display:flex;flex-direction:column;gap:3px;min-width:96px}
   .tuneDock .tdName{font-size:10.5px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;
     color:var(--pc,var(--accent));white-space:nowrap}
-  .tuneDock .tdVal{font-size:16px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--ink);white-space:nowrap}
-  .tuneDock .tdEst{align-self:flex-start;font-size:10px;font-weight:800;letter-spacing:.08em;color:var(--warn);
-    border:1px solid rgba(251,191,36,.5);border-radius:4px;padding:1.5px 5px;line-height:1}
+  .tuneDock .tdVal{font-family:var(--font-mono);font-size:15px;font-weight:600;font-variant-numeric:tabular-nums;color:var(--ink);white-space:nowrap}
+  /* viz-11: EST is a muted outline badge (gold is XP/badges only) */
+  .tuneDock .tdEst{align-self:flex-start;font-size:10px;font-weight:700;letter-spacing:.08em;color:var(--muted);
+    border:1px solid var(--line-strong);border-radius:4px;padding:1.5px 5px;line-height:1}
   .tuneDock #tdParamCtrl{flex:1 1 auto;min-width:0}
   .tuneDock #tdWindCtrl{flex:1 1 auto;min-width:0}
   .tuneDock .tdDone{appearance:none;font-family:inherit;cursor:pointer;flex:0 0 auto;position:relative;
     height:30px;padding:0 13px;border-radius:999px;font-size:11px;font-weight:700;letter-spacing:.03em;
-    background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.2);color:var(--ink)}
+    background:rgba(255,255,255,.07);border:1px solid var(--line-strong);color:var(--ink)}
   .tuneDock .tdDone::after{content:"";position:absolute;left:0;right:0;top:50%;height:44px;transform:translateY(-50%)}
   .tuneDock .tdDone:hover{background:rgba(255,255,255,.13)}
-  .tuneDock .tdDone:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .tuneDock .tdDone:focus-visible{outline:none;box-shadow:inset 0 0 0 1px rgba(0,0,0,.85), inset 0 0 0 3px var(--ink)}
   .tuneDock .tdCtrl{display:flex;align-items:center;gap:8px;min-height:44px}
+  /* viz-13: steppers share the chip border (white .18) + radius 12 */
   .tuneDock .tdStep{appearance:none;font-family:inherit;cursor:pointer;flex:0 0 auto;
-    width:44px;height:44px;border-radius:11px;font-size:18px;font-weight:700;line-height:1;
-    background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.16);color:var(--ink);
+    width:44px;height:44px;border-radius:var(--radius-control);font-size:18px;font-weight:700;line-height:1;
+    background:rgba(255,255,255,.05);border:1px solid var(--line-strong);color:var(--ink);
     display:flex;align-items:center;justify-content:center}
   .tuneDock .tdStep:hover{background:rgba(255,255,255,.1)}
   .tuneDock .tdStep:active{transform:scale(.94)}
-  .tuneDock .tdStep:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .tuneDock .tdStep:focus-visible{outline:none;box-shadow:inset 0 0 0 1px rgba(0,0,0,.85), inset 0 0 0 3px var(--ink)}
+  /* viz-12: the near-white default track outshone the data — dim the track to
+     white .22, thumb = --ink ringed in the live param colour (never a bright
+     unfilled rail). Fully custom so the UA's bright track can't leak through. */
   .tuneDock input[type=range]{flex:1 1 auto;min-width:0;height:44px;cursor:pointer;
-    accent-color:var(--pc,var(--accent));background:transparent}
-  .tuneDock input[type=range]:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:8px}
+    -webkit-appearance:none;appearance:none;background:transparent}
+  .tuneDock input[type=range]::-webkit-slider-runnable-track{-webkit-appearance:none;
+    height:5px;border-radius:999px;background:rgba(255,255,255,.22)}
+  .tuneDock input[type=range]::-moz-range-track{height:5px;border-radius:999px;background:rgba(255,255,255,.22)}
+  .tuneDock input[type=range]::-moz-range-progress{height:5px;border-radius:999px;background:var(--pc,var(--accent))}
+  .tuneDock input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;
+    margin-top:-6.5px;background:var(--ink);border:2px solid var(--pc,var(--accent));box-shadow:0 2px 6px rgba(0,0,0,.5)}
+  .tuneDock input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;
+    background:var(--ink);border:2px solid var(--pc,var(--accent));box-shadow:0 2px 6px rgba(0,0,0,.5)}
+  .tuneDock input[type=range]:focus-visible{outline:none;box-shadow:0 0 0 1px rgba(0,0,0,.85), 0 0 0 4px var(--ink);border-radius:8px}
   .tuneDock .tdWindDirs{display:flex;gap:6px;margin:4px 0 2px}
   .tuneDock .tdWindDirs button{appearance:none;font-family:inherit;cursor:pointer;flex:1 1 0;position:relative;
-    height:32px;border-radius:9px;font-size:11px;font-weight:700;letter-spacing:.02em;
-    background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.16);color:var(--muted)}
+    height:32px;border-radius:var(--radius-control);font-size:11px;font-weight:700;letter-spacing:.02em;
+    background:rgba(255,255,255,.05);border:1px solid var(--line-strong);color:var(--muted)}
   .tuneDock .tdWindDirs button::after{content:"";position:absolute;left:0;right:0;top:50%;height:44px;transform:translateY(-50%)}
-  .tuneDock .tdWindDirs button[aria-pressed="true"]{color:var(--ink);border-color:var(--accent-line);
-    background:var(--accent-soft)}
-  .tuneDock .tdWindDirs button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .tuneDock .tdWindDirs button[aria-pressed="true"]{color:var(--ink);border-color:var(--secondary-line);
+    background:var(--secondary-soft)}
+  .tuneDock .tdWindDirs button:focus-visible{outline:none;box-shadow:inset 0 0 0 1px rgba(0,0,0,.85), inset 0 0 0 3px var(--ink)}
   .tuneDock .tdEstNote{font-size:10px;color:var(--muted);line-height:1.3;margin-top:5px}
   @media (prefers-reduced-motion:reduce){ .tuneDock{transition:none} }
 
@@ -987,16 +1023,16 @@
   .ovTrio .ovHit{pointer-events:none;cursor:grab}
   .ovTrio .ovLine{stroke-linecap:round}
   .ovTrio .ovChip rect{fill:rgba(10,17,24,.92);stroke:rgba(255,255,255,.2)}
-  .ovTrio .ovChip text{font-size:17px;font-weight:800;font-variant-numeric:tabular-nums;font-family:inherit}
+  .ovTrio .ovChip text{font-size:16px;font-weight:600;font-variant-numeric:tabular-nums;font-family:var(--font-mono)}
   @media (prefers-reduced-motion:reduce){ .ovTrio{transition:none} }
 
   /* ── move 4: wind scene tag (decorative — the chip carries the value).
      ROUND 4: sits just above the output dashboard, left side; hidden while
      the tune dock is open (the dock lands in the same band). ── */
-  .windTag{position:absolute;z-index:5;left:max(12px,env(safe-area-inset-left));
+  .windTag{position:absolute;z-index:5;left:max(16px,env(safe-area-inset-left));
     bottom:calc(max(10px,env(safe-area-inset-bottom)) + var(--dash-clear,72px));
     height:26px;padding:0 11px;border-radius:999px;pointer-events:none;
-    border:1px solid rgba(251,191,36,.45);background:rgba(10,17,24,.8);color:var(--warn);
+    border:1px solid var(--secondary-line);background:rgba(10,17,24,.8);color:var(--muted);
     font-size:10.5px;font-weight:700;letter-spacing:.04em;white-space:nowrap;
     display:flex;align-items:center;gap:6px}
   .windTag[hidden]{display:none}
@@ -1099,8 +1135,8 @@
           <circle cx="200" cy="330" r="5" fill="#fff" opacity=".9"/>
           <!-- PATH arrow (pointer enhancement; the docked slider is the accessible control) -->
           <g class="arrowG" id="g_path" data-key="path" aria-hidden="true">
-            <line class="aline" id="line_path" x1="200" y1="330" x2="200" y2="111" stroke="var(--c-path)" stroke-width="9"/>
-            <polygon id="head_path" points="200,95 184,125 200,116 216,125" fill="var(--c-path)"/>
+            <line class="aline" id="line_path" x1="200" y1="330" x2="200" y2="111" stroke="var(--c-path)" stroke-width="5"/>
+            <polygon id="head_path" points="200,100 194.5,111 200,107.5 205.5,111" fill="var(--c-path)"/>
           </g>
           <!-- LAUNCH DIRECTION (derived 0.75·face+0.25·path). PURELY VISUAL:
                decorative indicator only — no role/tabindex/hit-rect, aria-hidden.
@@ -1112,13 +1148,13 @@
                rides on top = physically honest (starts on the start-line, curves
                with the spin). Replaces the old separate curve line. -->
           <g class="launchG" id="g_launchDir" aria-hidden="true">
-            <path class="lline" id="line_launchDir" d="M200,330 Q200,231 200,132" fill="none" stroke="var(--c-launch)" stroke-width="5.5" stroke-linecap="round"/>
-            <polygon id="head_launchDir" points="0,0 -12,26 0,18 12,26" fill="var(--c-launch)" transform="translate(200,132)"/>
+            <path class="lline" id="line_launchDir" d="M200,330 Q200,231 200,132" fill="none" stroke="var(--c-launch)" stroke-width="3" stroke-linecap="round"/>
+            <polygon id="head_launchDir" points="0,0 -5.5,11 0,7.5 5.5,11" fill="var(--c-launch)" transform="translate(200,132)"/>
           </g>
           <!-- FACE arrow (pointer enhancement; the docked slider is the accessible control) -->
           <g class="arrowG" id="g_face" data-key="face" aria-hidden="true">
-            <line class="aline" id="line_face" x1="200" y1="330" x2="200" y2="111" stroke="var(--c-face)" stroke-width="9"/>
-            <polygon id="head_face" points="200,95 184,125 200,116 216,125" fill="var(--c-face)"/>
+            <line class="aline" id="line_face" x1="200" y1="330" x2="200" y2="111" stroke="var(--c-face)" stroke-width="5"/>
+            <polygon id="head_face" points="200,100 194.5,111 200,107.5 205.5,111" fill="var(--c-face)"/>
           </g>
           <!-- value chips (chip-fade ON) -->
           <g class="vchipWrap" id="vchip_path" aria-hidden="true"><rect class="vchip" x="0" y="0" width="58" height="22" rx="6"/><text class="vchipText" x="0" y="0" text-anchor="middle" fill="var(--c-path)"></text></g>
@@ -1174,20 +1210,20 @@
           <path id="htCone" fill="rgba(255,138,77,.04)" stroke="none"/>
           <!-- ATTACK arrow (shorter, lower of the pair) -->
           <g class="arrowG" id="g_attack" data-key="attack" aria-hidden="true">
-            <line class="aline" id="line_attack" x1="80" y1="250" x2="284" y2="250" stroke="var(--c-attack)" stroke-width="7"/>
-            <polygon id="head_attack" points="300,250 270,234 279,250 270,266" fill="var(--c-attack)"/>
+            <line class="aline" id="line_attack" x1="80" y1="250" x2="284" y2="250" stroke="var(--c-attack)" stroke-width="5"/>
+            <polygon id="head_attack" points="295,250 284,244.5 287.5,250 284,255.5" fill="var(--c-attack)"/>
           </g>
           <!-- LAUNCH ANGLE (derived 0.62·loft+0.25·attack). PURELY VISUAL:
                decorative indicator only — no role/tabindex/hit-rect, aria-hidden.
                Still NON-draggable (no data-key). Explanation lives on the hero cards. -->
           <g class="launchG" id="g_launchAng" aria-hidden="true">
-            <line class="lline" id="line_launchAng" x1="80" y1="250" x2="264" y2="250" stroke="var(--c-launch)" stroke-width="4"/>
-            <polygon id="head_launchAng" points="280,250 254,238 262,250 254,262" fill="var(--c-launch)"/>
+            <line class="lline" id="line_launchAng" x1="80" y1="250" x2="264" y2="250" stroke="var(--c-launch)" stroke-width="3"/>
+            <polygon id="head_launchAng" points="275,250 264,244.5 267.5,250 264,255.5" fill="var(--c-launch)"/>
           </g>
           <!-- DYNAMIC LOFT arrow (longer) -->
           <g class="arrowG" id="g_loft" data-key="loft" aria-hidden="true">
-            <line class="aline" id="line_loft" x1="80" y1="250" x2="284" y2="250" stroke="var(--c-loft)" stroke-width="7"/>
-            <polygon id="head_loft" points="300,250 270,234 279,250 270,266" fill="var(--c-loft)"/>
+            <line class="aline" id="line_loft" x1="80" y1="250" x2="284" y2="250" stroke="var(--c-loft)" stroke-width="5"/>
+            <polygon id="head_loft" points="295,250 284,244.5 287.5,250 284,255.5" fill="var(--c-loft)"/>
           </g>
           <g class="vchipWrap" id="vchip_attack" aria-hidden="true"><rect class="vchip" x="0" y="0" width="58" height="22" rx="6"/><text class="vchipText" x="0" y="0" text-anchor="middle" fill="var(--c-attack)"></text></g>
           <!-- LAUNCH ANGLE value chip (fades with the Height-lens arrows) -->
@@ -1285,10 +1321,10 @@
       <!-- LEFT HERO STACK (Layout B): big TOTAL count-up + offline only.
            Visual hero is aria-hidden (updates every frame); #fCarryLive is the ONLY live region. -->
       <div class="flightCarry" aria-hidden="true">
+        <div class="scr">Ball flight</div>
         <div class="num"><span id="fCarryNum">0</span><span class="u">m</span></div>
         <div class="lab">Total</div>
-        <!-- VIZ MOCK: resting-state trio = Total / Carry / Offline (owner spec) -->
-        <div class="carrySub"><span class="cl">Carry</span><span id="fHeroCarryNum">0</span> m</div>
+        <!-- viz-06: hero owns TOTAL + OFFLINE only; CARRY lives once in the dashboard -->
         <div class="offline"><span id="fHeroOffNum">0</span> m<span class="side" id="fHeroOffSide">R</span></div>
       </div>
       <!-- move 4: wind scene tag — decorative duplicate of the wind chip's value -->
@@ -1395,13 +1431,18 @@
                fBuild() flips it below the crest (fApexStem mirrors) whenever
                the default above-the-crest plate would hide behind the
                top-centre outcome strip. -->
+          <!-- SYS-08 ember budget: the apex TAG (ring/stem/border/numeral) is
+               demoted OFF ember so the screen's ≤3 heat = tracer/ball + hero
+               TOTAL + Replay. The apex ring/stem are reference-trace grey
+               (--ghost, SYS-04); the numeral is --ink; only the soft halo (part
+               of the ember shot's peak) stays warm. -->
           <g id="fApexMark" opacity="0">
             <circle id="fApexHalo" r="16" fill="url(#fapexGlow)"/>
-            <circle r="4.5" fill="none" stroke="#FF8A4D" stroke-width="2"/>
-            <line id="fApexStem" x1="0" y1="-9" x2="0" y2="-26" stroke="#FF8A4D" stroke-width="1.2" opacity=".7"/>
+            <circle r="4.5" fill="none" stroke="var(--ghost)" stroke-width="2"/>
+            <line id="fApexStem" x1="0" y1="-9" x2="0" y2="-26" stroke="var(--ghost)" stroke-width="1.2" opacity=".7"/>
             <g id="fApexLblG" transform="translate(0,-30)">
-              <rect x="-40" y="-15" width="80" height="18" rx="5" fill="rgba(8,16,20,.72)" stroke="rgba(255,138,77,.22)"/>
-              <text id="fApexTxt" x="0" y="-2" text-anchor="middle" fill="#FF8A4D" font-size="11" font-weight="700" font-family="inherit">Apex</text>
+              <rect x="-40" y="-15" width="80" height="18" rx="5" fill="rgba(8,16,20,.72)" stroke="var(--line)"/>
+              <text id="fApexTxt" x="0" y="-2" text-anchor="middle" fill="var(--ink)" font-size="11" font-weight="700" font-family="inherit">Apex</text>
             </g>
           </g>
           <!-- landing marker — ROUND 4: dot + splash ring ONLY (geometry).
@@ -1478,23 +1519,23 @@
            NOT a live region; last in the DOM reading order. The visible
            bucket titles are aria-hidden — each group's role=group aria-label
            carries the same name, so it isn't read twice. ══ -->
+      <!-- viz-06/viz-16: TOTAL + OFFLINE moved to the hero (each datum once);
+           groups renamed to the plane they describe. CARRY lives here once. -->
       <div class="fDash is-hidden" id="fDash" role="group" aria-label="Shot result">
-        <div class="dashGroup h" role="group" aria-label="Result — horizontal">
-          <div class="dgLab" aria-hidden="true">Horizontal</div>
+        <div class="dashGroup h" role="group" aria-label="Result — direction">
+          <div class="dgLab" aria-hidden="true">Direction</div>
           <div class="dgTiles">
-            <div class="dTile"><span class="dk">Offline</span><span class="dv" id="dv_offline">—</span></div>
             <div class="dTile"><span class="dk">Curve</span><span class="dv" id="dv_curve">—</span></div>
           </div>
         </div>
-        <div class="dashGroup v" role="group" aria-label="Result — vertical">
-          <div class="dgLab" aria-hidden="true">Vertical</div>
+        <div class="dashGroup v" role="group" aria-label="Result — flight">
+          <div class="dgLab" aria-hidden="true">Flight</div>
           <div class="dgTiles">
             <div class="dTile"><span class="dk">Launch angle</span><span class="dv" id="dv_launchAng">—</span></div>
             <div class="dTile"><span class="dk">Apex</span><span class="dv" id="dv_apex">—</span></div>
             <div class="dTile"><span class="dk">Land angle</span><span class="dv" id="dv_landAng">—</span></div>
             <div class="dTile"><span class="dk">Spin loft</span><span class="dv" id="dv_spinLoft">—</span></div>
-            <div class="dTile dist"><span class="dk">Carry</span><span class="dv" id="dv_carry">—</span></div>
-            <div class="dTile dist"><span class="dk">Total</span><span class="dv" id="dv_total">—</span></div>
+            <div class="dTile"><span class="dk">Carry</span><span class="dv" id="dv_carry">—</span></div>
           </div>
         </div>
       </div>
@@ -1554,7 +1595,9 @@ const reduceMq = matchMedia('(prefers-reduced-motion: reduce)');
 let reduce = reduceMq.matches;
 reduceMq.addEventListener('change', e => { reduce = e.matches; });   // contrast#5 fix: live-update, not a one-time snapshot
 const YD2M = 0.9144;
-const f1 = v => (v>=0?'+':'') + v.toFixed(1);
+// SYS-06: data minus is always U+2212 (−), never ASCII hyphen.
+const f1 = v => (v>=0?'+':'−') + Math.abs(v).toFixed(1);
+const um = s => (''+s).replace(/-/g,'−');   // U+2212 for any direct toFixed output
 
 // ── live club state (standalone defaults — NO Geometry / localStorage seeding) ──
 const state = { clubSpeed: 90, faceAngle: -2, clubPath: 2, attackAngle: -3, dynamicLoft: 30 };
@@ -2127,8 +2170,8 @@ const FCELLS = [
 const fmtSign1 = v => f1(v)+'°';
 const INPUT_CHIPS = [
   { key:'speed',  label:'Club speed', aria:'Club speed in miles per hour', state:'clubSpeed',
-    min:40, max:130, step:1, btnStep:1, color:'var(--accent)', trio:null, slider:'s_speed',
-    fmt:v=>Math.round(v)+' mph', fmtHtml:v=>Math.round(v)+'<small>mph</small>' },
+    min:40, max:130, step:1, btnStep:1, color:'var(--secondary)', trio:null, slider:'s_speed',
+    fmt:v=>Math.round(v)+' mph', fmtHtml:v=>Math.round(v)+' <small>mph</small>' },
   { key:'face',   label:'Face', aria:'Face angle in degrees', state:'faceAngle',
     min:-20, max:20, step:0.1, btnStep:1, color:'var(--c-face)', trio:'dir', slider:'s_face',
     fmt:fmtSign1, fmtHtml:fmtSign1 },
@@ -2142,7 +2185,7 @@ const INPUT_CHIPS = [
     min:0, max:60, step:0.1, btnStep:1, color:'var(--c-loft)', trio:'ht', slider:'s_loft',
     fmt:v=>v.toFixed(1)+'°', fmtHtml:v=>v.toFixed(1)+'°' },
   { key:'wind',   label:'Wind', aria:'Wind, estimate', state:null,
-    color:'var(--warn)', trio:null, est:true },
+    color:'var(--secondary)', trio:null, est:true },
 ];
 const INPUT_BY_KEY = {};
 INPUT_CHIPS.forEach(c => INPUT_BY_KEY[c.key] = c);
@@ -3710,10 +3753,14 @@ function showOutcomeStrip(immediate){
   outcomeStripEl.setAttribute('aria-label',
     `Outcome vs ${oc.refName}: total ${oc.dTot>=0?'plus':'minus'} ${Math.abs(oc.dTot)} metres, ${latPhrase}. Toggle explanation`);
   outcomeStripEl.hidden = false;
-  outcomeStripEl.classList.remove('is-hidden');
+  // [hidden]{display:none} is now honoured (a11y: not a Tab stop while hidden),
+  // so is-hidden must be released a frame AFTER display flips from none, or the
+  // opacity/transform reveal won't animate (mirrors the tune dock's td-in enter).
   if (immediate || reduce){
+    outcomeStripEl.classList.remove('is-hidden');
     paintStrip(oc.dTot, oc.dLat, latMode);
   } else {
+    requestAnimationFrame(()=>requestAnimationFrame(()=>outcomeStripEl.classList.remove('is-hidden')));
     const o = { p:0 };
     paintStrip(0, 0, latMode);
     osCountTween = gsap.to(o, { p:1, duration:.7, ease:'power2.out',
@@ -3819,14 +3866,14 @@ function buildGhostLayer(){
     if (ghosts[i].hidden) grp.style.display = 'none';
     const p = document.createElementNS(ns,'path');
     p.setAttribute('d', buildAirPath(gs));
-    p.setAttribute('fill','none'); p.setAttribute('stroke','#9FB2C8');
+    p.setAttribute('fill','none'); p.style.stroke='var(--ghost)';   /* SYS-04: ghost trace token */
     p.setAttribute('stroke-width','2'); p.setAttribute('stroke-linecap','round');
     if (GHOST_DASH[i] !== 'none') p.setAttribute('stroke-dasharray', GHOST_DASH[i]);
     grp.appendChild(p);
     const land = project(gs.carryM, 0, lateralAt(gs.carryM, gs));
     const dot = document.createElementNS(ns,'circle');
     dot.setAttribute('cx', land.x.toFixed(1)); dot.setAttribute('cy', land.y.toFixed(1));
-    dot.setAttribute('r','2.6'); dot.setAttribute('fill','#9FB2C8');
+    dot.setAttribute('r','2.6'); dot.style.fill='var(--ghost)';   /* SYS-04: ghost trace token */
     grp.appendChild(dot);
     host.appendChild(grp);
   }
@@ -3913,7 +3960,7 @@ function buildGhostLegend(){
     b.setAttribute('aria-label', 'Ghost ' + GHOST_LETTER[i] + (pTxt ? ', ' + pTxt : '') + ', ' + Math.round(gs.carryM) + ' metres. Show or hide');
     const dash = GHOST_DASH[i] === 'none' ? '' : ' stroke-dasharray="' + GHOST_DASH[i] + '"';
     b.innerHTML = '<svg class="dashSwatch" width="18" height="6" aria-hidden="true">'
-      + '<line x1="1" y1="3" x2="17" y2="3" stroke="#9FB2C8" stroke-width="2" stroke-linecap="round"' + dash + '/></svg>'
+      + '<line x1="1" y1="3" x2="17" y2="3" style="stroke:var(--ghost)" stroke-width="2" stroke-linecap="round"' + dash + '/></svg>'
       + '<span class="cl">' + GHOST_LETTER[i] + '</span><span class="cd">' + Math.round(gs.carryM) + 'm</span>';
     host.appendChild(b);
   });
@@ -3993,7 +4040,9 @@ function buildGrid(){
     fGrid.appendChild(line);
     const t=document.createElementNS(ns,'text');
     t.setAttribute('x',(TEE_X+halfW+6).toFixed(1)); t.setAttribute('y',(gy-2).toFixed(1));
-    t.setAttribute('fill','rgba(230,240,250,1)'); t.setAttribute('font-size',(7+ls*5).toFixed(1));
+    // viz-07/SYS-01: perspective still shrinks far labels, but never below the
+    // 10px on-glass floor (was 7+ls*5 → 7–12, dipping to ~7.9 at 150m).
+    t.setAttribute('fill','rgba(230,240,250,1)'); t.setAttribute('font-size',Math.max(10,10+ls*2.5).toFixed(1));
     t.setAttribute('font-weight','600'); t.setAttribute('opacity',(0.25+ls*0.4).toFixed(2));
     t.setAttribute('font-family','inherit'); t.textContent=m;
     fGrid.appendChild(t);
@@ -4029,7 +4078,7 @@ function buildLateralRefs(){
       const t = document.createElementNS(ns,'text');
       t.setAttribute('x',(b.x + sign*5).toFixed(1)); t.setAttribute('y',(b.y - 3).toFixed(1));
       t.setAttribute('text-anchor', sign<0 ? 'end' : 'start');
-      t.setAttribute('font-size','9'); t.setAttribute('opacity','0.4');
+      t.setAttribute('font-size','11'); t.setAttribute('opacity','0.4');   /* viz-07: ≥10px on-glass floor (was 9) */
       t.textContent = m + (sign<0 ? ' L' : ' R');
       fLatRef.appendChild(t);
     }
@@ -4130,6 +4179,7 @@ function fBuild(){
   renderOvTrios();       // VIZ MOCK move 2: re-anchor the transient trios to the (resized) tee
   updateWindTag();       // VIZ MOCK move 4: scene wind tag
   placeDock();           // ROUND 4: keep the tune dock riding just above the live dashboard height
+  fitTrioAboveDock();    // viz-04: keep the trio tags clear of the dock at any viewport
 }
 
 // carry counter — textContent written ONLY when the rounded integer changes
@@ -4167,20 +4217,20 @@ function updateData(){
 // shot: fModel.carryM/totalM/apexM/offlineM are already in metres; the
 // angular results come straight off fModel.f.
 const sideVal = m => Math.abs(m) < 0.5 ? 'On line'
-  : Math.round(Math.abs(m)) + '<small>m</small> ' + (m >= 0 ? 'R' : 'L');
+  : Math.round(Math.abs(m)) + ' <small>m</small> ' + (m >= 0 ? 'R' : 'L');
 function updateDash(){
   if (!fModel || !fDashEl) return;
   const f = fModel.f;
-  // HORIZONTAL (side/direction plane)
-  $('dv_offline').innerHTML = sideVal(fModel.offlineM);
+  // viz-06: Offline + Total live in the hero now; the dashboard is the
+  // technical record (each datum once). SYS-06: space before unit, U+2212 minus.
+  // DIRECTION plane
   $('dv_curve').innerHTML   = sideVal(f.curve * YD2M);
-  // VERTICAL (height/distance plane; Carry/Total carry the distance accent)
-  $('dv_launchAng').textContent = f.launchAngle.toFixed(1) + '°';
-  $('dv_apex').innerHTML     = Math.round(fModel.apexM) + '<small>m</small>';
-  $('dv_landAng').textContent = Math.round(f.landingAngle) + '°';
-  $('dv_spinLoft').textContent = f.spinLoft.toFixed(1) + '°';
-  $('dv_carry').innerHTML    = Math.round(fModel.carryM) + '<small>m</small>';
-  $('dv_total').innerHTML    = Math.round(fModel.totalM) + '<small>m</small>';
+  // FLIGHT plane (Carry lives here once, --ink like every other tile)
+  $('dv_launchAng').textContent = um(f.launchAngle.toFixed(1)) + '°';
+  $('dv_apex').innerHTML     = Math.round(fModel.apexM) + ' <small>m</small>';
+  $('dv_landAng').textContent = um(Math.round(f.landingAngle)) + '°';
+  $('dv_spinLoft').textContent = um(f.spinLoft.toFixed(1)) + '°';
+  $('dv_carry').innerHTML    = Math.round(fModel.carryM) + ' <small>m</small>';
 }
 
 // keep the tune dock (and wind tag) riding directly ABOVE the dashboard:
@@ -4806,11 +4856,16 @@ function placeOvChip(id, deg, r, txt){
 // viewBox units; the top-down (dir) trio lifts a hair (14) so its pivot dot
 // isn't clipped by the dock's top edge on 375px-tall phones.
 const OV_LIFT = { dir:14, ht:60 };
+// viz-04: while a tune dock is open the trio must clear the dock plate. The
+// dock lands just above the dashboard, so lift the trio enough that its LOWEST
+// value tag (the r≈152 chip) stops ≥8px above the dock's top edge.
+const OV_LIFT_DOCKED = { dir:48, ht:110 };
 function renderOvTrios(){
   const ovDir = $('ovDir');
   if (!ovDir) return;
-  ovDir.setAttribute('transform', `translate(${TEE_X.toFixed(1)},${yBottom - OV_LIFT.dir})`);
-  $('ovHt').setAttribute('transform', `translate(${TEE_X.toFixed(1)},${yBottom - OV_LIFT.ht})`);
+  const lift = tuneKey ? OV_LIFT_DOCKED : OV_LIFT;
+  ovDir.setAttribute('transform', `translate(${TEE_X.toFixed(1)},${yBottom - lift.dir})`);
+  $('ovHt').setAttribute('transform', `translate(${TEE_X.toFixed(1)},${yBottom - lift.ht})`);
   const f = solveFlight(state);
   // — direction trio (top-down semantics: up-screen = downrange) —
   $('ov_face').setAttribute('transform', `rotate(${(state.faceAngle*GAIN_DIR).toFixed(2)})`);
@@ -4840,6 +4895,36 @@ function renderOvTrios(){
 function showTrio(which){
   $('ovDir').classList.toggle('show', which === 'dir');
   $('ovHt').classList.toggle('show', which === 'ht');
+}
+// viz-04: the trio value tags must never sit behind the open dock. Measure the
+// active trio's chips against the live dock rect and lift the whole group just
+// enough that its lowest tag stops ≥8px above the dock's top edge. Runs after
+// placeDock() (final dock position) so it is correct at ANY viewport. The scene
+// uses `slice` (cover), so a viewBox unit = max(w/960, h/540) screen px.
+function fitTrioAboveDock(){
+  if (!tuneKey) return;
+  const cfg = INPUT_BY_KEY[tuneKey], which = cfg && cfg.trio;
+  if (!which) return;                                   // wind has no trio
+  const dock = tuneDock; if (dock.hidden) return;
+  const scene = $('fScene'); if (!scene) return;
+  const grp = which === 'dir' ? $('ovDir') : $('ovHt');
+  const base = OV_LIFT_DOCKED[which];
+  // IDEMPOTENT: reset to the base docked lift first, THEN measure the overlap
+  // at that known position — so repeated calls (e.g. deferred after the dock's
+  // enter-settle) converge instead of oscillating.
+  grp.setAttribute('transform', `translate(${TEE_X.toFixed(1)},${(yBottom - base).toFixed(1)})`);
+  const dr = dock.getBoundingClientRect(), sr = scene.getBoundingClientRect();
+  const sc = Math.max(sr.width / 960, sr.height / 540) || 1;
+  let maxOver = 0;
+  grp.querySelectorAll('.ovChip').forEach(c => {
+    const b = c.getBoundingClientRect(); if (!b.width) return;
+    const over = b.bottom - (dr.top - 10);           // target ≥10px clearance
+    if (over > maxOver) maxOver = over;
+  });
+  if (maxOver > 0){
+    const extra = Math.ceil(maxOver / sc) + 20;       // generous vb safety so the tag clears the plate with margin (lifting the schematic is design-safe)
+    grp.setAttribute('transform', `translate(${TEE_X.toFixed(1)},${(yBottom - base - extra).toFixed(1)})`);
+  }
 }
 
 // ════════════════════════════════════════════════════════════════
@@ -4885,7 +4970,7 @@ function updateInputChips(){
     const el = $('iv_'+cfg.key); if (!el) return;
     let html, aria;
     if (cfg.key === 'wind'){
-      html = wind.speed ? (wind.speed + '<small>m/s</small> ' + WIND_LABEL[wind.mode]) : 'Off';
+      html = wind.speed ? (wind.speed + ' <small>m/s</small> ' + WIND_LABEL[wind.mode]) : 'Off';
       aria = 'Wind ' + (wind.speed ? (wind.speed + ' metres per second, ' + WIND_ARIA[wind.mode]) : 'off')
            + ', estimate. Opens editor';
     } else {
@@ -4924,6 +5009,9 @@ function openTune(key){
   const isWind = key === 'wind';
   tuneDock.hidden = false;
   tuneDock.classList.remove('fading');
+  // viz-20: 120ms rise+fade on enter (reduced-motion killed globally)
+  if (!reduce){ tuneDock.classList.add('td-in');
+    requestAnimationFrame(()=>requestAnimationFrame(()=>tuneDock.classList.remove('td-in'))); }
   tuneDock.style.setProperty('--pc', cfg.color);
   tdName.textContent = cfg.label;
   tdEst.hidden = !isWind;
@@ -4941,6 +5029,11 @@ function openTune(key){
   showTrio(cfg.trio);
   renderOvTrios();
   placeDock();        // ROUND 4: dock rides just above the output dashboard
+  fitTrioAboveDock(); // viz-04: lift the trio tags clear of the just-placed dock
+  // re-fit once the dock's 120ms enter (td-in) + dash-clear have settled, so the
+  // measurement is against the dock's FINAL top edge (idempotent, so safe).
+  requestAnimationFrame(()=>requestAnimationFrame(fitTrioAboveDock));
+  setTimeout(fitTrioAboveDock, 180);
   updateWindTag();    // ROUND 4: the wind tag yields the band to the dock
   // keyboard opens move focus into the editor; pointer opens leave focus on
   // the chip (so the idle fade can run — focus-in-dock blocks it by design)

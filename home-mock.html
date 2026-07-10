@@ -30,7 +30,7 @@
     background:var(--scene-bg);
     color:var(--ink);
     overflow:hidden;
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    font-family:var(--font-ui);              /* SYS-01 ui role (Inter) */
     -webkit-font-smoothing:antialiased;
     text-rendering:optimizeLegibility;
   }
@@ -49,7 +49,11 @@
       rgba(20,14,36,.38) 100%);}
   .scene__scrim{position:absolute;left:0;right:0;bottom:0;height:180px;      /* 5 */
     background:linear-gradient(0deg, rgba(7,6,12,.88), transparent 46%);}
-  .scene__tracer{position:absolute;inset:0;width:100%;height:100%;}         /* 6 */
+  .scene__tracer{position:absolute;inset:0;width:100%;height:100%;         /* 6 */
+    /* home-01: never let a tracer/trail pixel render inside the rail cards.
+       Card top = viewport bottom − (card height 108 + rail padding-bottom).
+       Clips through the entire draw + at rest; landing dot sits well above. */
+    clip-path:inset(0 0 calc(108px + max(12px, env(safe-area-inset-bottom))) 0);}
 
   /* ══ HEADER — centred lockup, help top-right (spec §2.1 / §6) ═══════════ */
   header.sa-header{position:fixed;top:0;left:0;right:0;z-index:12;height:60px;pointer-events:none;}
@@ -65,12 +69,15 @@
   .sa-wordmark .mark .arc{stroke:var(--secondary);}   /* cold arc */
   .sa-wordmark .mark .ball{fill:var(--accent);}        /* hot ball (logo law) */
   .sa-wordmark .wm-text{
+    font-family:var(--font-display);         /* SYS-01 display role (Space Grotesk) */
     font-size:15px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;line-height:1;}
   .sa-wordmark .wm-text .s{color:var(--ink);}
   .sa-wordmark .wm-text .a{color:var(--accent);}
 
   .sa-help{
-    position:fixed;top:max(10px, env(safe-area-inset-top));
+    /* home-02: 44px box, svg optically centred → align its centre (top+22)
+       to the wordmark centre (wordmark top + 12). top = wordmark.top − 10. */
+    position:fixed;top:max(4px, calc(env(safe-area-inset-top) - 10px));
     right:max(8px, env(safe-area-inset-right));z-index:13;
     width:44px;height:44px;display:inline-flex;align-items:center;justify-content:center;
     background:none;border:0;color:var(--muted);cursor:pointer;
@@ -108,30 +115,37 @@
   .sa-card:focus-visible{outline:none;
     box-shadow:inset 0 0 0 1px rgba(0,0,0,.85), inset 0 0 0 3px var(--ink);}
 
-  /* resume / hero promotion — ember hairline on the TOP edge + soft glow */
-  .sa-card.is-promoted{border-top-width:2px;border-top-color:var(--accent-line);
-    box-shadow:0 -1px 14px -6px rgba(255,138,77,.6), inset 0 2px 10px -8px var(--accent);}
+  /* resume / hero promotion — crisp ember hairline on the TOP edge + one soft
+     under-glow. home-04: inset amber wash deleted (was tinting whole perimeter). */
+  .sa-card.is-promoted{border-top-width:2px;border-top-color:var(--accent-line-strong);
+    box-shadow:0 -1px 14px -6px rgba(255,138,77,.6);}
 
   .sa-card__eyebrow{
-    font-size:9px;font-weight:600;letter-spacing:.22em;text-transform:uppercase;
+    /* home-03: 10px/600/.14em — clears the 10px floor, same role as strip title */
+    font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;
     color:var(--muted);line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .sa-card__eyebrow .cont{color:var(--accent);}   /* CONTINUE · / START HERE · */
 
   .sa-glyph{width:26px;height:26px;display:block;color:var(--secondary);margin-top:1px;}
-  .sa-glyph.sa-hex text{fill:var(--ink);font-family:inherit;}
+  .sa-glyph.sa-hex text{fill:var(--ink);font-family:var(--font-mono);}   /* level numeral = data */
+  /* home-07: when the XP row is visible, drop the hex "1" to --muted so only
+     two reward accents remain (XP numeral + bar fill). */
+  .sa-card.is-xp .sa-glyph.sa-hex text{fill:var(--muted);}
 
   .sa-card__body{margin-top:auto;}
   .sa-card__stat{font-size:0;line-height:1.25;}          /* reset inline whitespace */
   .sa-card__stat .v{
-    font-size:17px;font-weight:700;color:var(--ink);
-    font-variant-numeric:tabular-nums;letter-spacing:.01em;}
+    /* home-05 → SYS-01: data values wear the mono role, tabular figures */
+    font-family:var(--font-mono);
+    font-size:17px;font-weight:600;color:var(--ink);
+    font-variant-numeric:tabular-nums;letter-spacing:0;}
   .sa-card__stat .l{font-size:10px;font-weight:600;color:var(--muted);margin-left:5px;}
   .sa-card.is-promoted .sa-card__stat .v{color:var(--accent);}   /* live stat = ember */
 
   .sa-card__teach{font-size:12px;font-weight:500;color:var(--ink);letter-spacing:.01em;}
 
   /* Academy warm surface — XP bar + gold XP numeral + level title */
-  .sa-aca{display:flex;flex-direction:column;gap:5px;}
+  .sa-aca{display:flex;flex-direction:column;gap:6px;}   /* home-07: 6px grid gap */
   /* author-origin display:flex would otherwise beat the UA [hidden] rule on
      true first-run (§2.3 — never show zero-state gamification chrome) */
   .sa-aca[hidden]{display:none;}
@@ -140,7 +154,7 @@
     background:linear-gradient(90deg, var(--celebrate), var(--secondary));border-radius:999px;}
   .sa-aca__txt{font-size:11px;font-weight:600;color:var(--muted);
     font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  .sa-aca__txt .xp{color:var(--warn);font-weight:700;}   /* Academy's gold law */
+  .sa-aca__txt .xp{color:var(--warn);font-weight:600;font-family:var(--font-mono);}   /* Academy's gold law · mono data */
 
   /* wide (>832pt) → centre the row, don't stretch the cards */
   @media (min-width:833px){ .sa-rail ul{max-width:832px;margin:0 auto;} }
@@ -244,10 +258,10 @@
          aria-label="Outcome — read the launch.">
         <span class="sa-card__eyebrow" id="ebOutcome">Outcome</span>
         <svg class="sa-glyph" viewBox="0 0 28 28" fill="none" aria-hidden="true">
-          <circle cx="8.6" cy="14" r="5.3" stroke="currentColor" stroke-width="1.5"/>
-          <path d="M8.6 17 L 8.6 10.4 M6.7 12 L 8.6 10.2 L 10.5 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-          <circle cx="19.4" cy="14" r="5.3" stroke="currentColor" stroke-width="1.5"/>
-          <path d="M16.4 16 Q 19.4 9.5, 22.4 16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          <circle cx="8.6" cy="14" r="5.3" stroke="currentColor" stroke-width="1.6"/>
+          <path d="M8.6 17 L 8.6 10.4 M6.7 12 L 8.6 10.2 L 10.5 12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="19.4" cy="14" r="5.3" stroke="currentColor" stroke-width="1.6"/>
+          <path d="M16.4 16 Q 19.4 9.5, 22.4 16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
         </svg>
         <span class="sa-card__body"><span class="sa-card__teach" id="stOutcome">Read the launch</span></span>
       </a>
@@ -370,6 +384,8 @@
   if (acaXp > 0){
     $('stAcademy').hidden = true;
     $('acaWrap').hidden = false;
+    $('cardAcademy').classList.add('is-xp');   // home-07: demote hex badge to --muted
+
     $('acaFill').style.width = Math.round(li.pct * 100) + '%';
     $('acaXp').textContent = String(acaXp);
     $('acaXp').setAttribute('data-count', String(acaXp));

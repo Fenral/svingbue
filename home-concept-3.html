@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#07060C">
+<meta name="robots" content="noindex">
+<title>StrikeArc — The Arc</title>
+
+<!-- favicon: arc-mark (violet strokes) + ember ball — the P3 lockup exception -->
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2052%2052'%20fill='none'%3E%3Cpath%20d='M11%2045%20C%2016%2026,%2024%2018,%2035%2015%20M21%2039%20L%2030%2024%20L%2043%2045'%20stroke='%239D8BFF'%20stroke-width='4.2'%20stroke-linecap='round'%20stroke-linejoin='round'/%3E%3Ccircle%20cx='37'%20cy='15'%20r='5.2'%20fill='%23FF8A4D'/%3E%3C/svg%3E">
+
+<!-- shared P3 tokens + shell contract (READ-ONLY consume) -->
+<link rel="stylesheet" href="./sa-p3.css">
+
+<style>
+  /* Cross-document View Transitions (MPA) — reduced-motion / no-support fall
+     back to instant swaps (guarded in sa-p3.css + feature detection). */
+  @view-transition{ navigation:auto; }
+
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;}
+  html{background:var(--bg);}
+  body{
+    min-height:100dvh;
+    background:var(--scene-bg);            /* night-void, never white on decode */
+    color:var(--ink);
+    overflow:hidden;
+    font-family:var(--font-ui);
+    -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+    -webkit-tap-highlight-color:transparent;
+  }
+
+  .visually-hidden{
+    position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;
+    overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0;}
+
+  /* ══ STAGE — the whole home is one frozen ball flight ══════════════════════ */
+  #stage{position:fixed;inset:0;z-index:0;touch-action:none;}
+
+  /* the night-void: horizon + receding range rings (decorative, aria-hidden) */
+  .void{position:absolute;inset:0;z-index:0;pointer-events:none;
+    /* IMU idle-parallax hook — silent 0 fallback, never required */
+    transform:translate3d(calc(var(--par-x,0) * 1px), calc(var(--par-y,0) * 1px), 0);
+    transition:transform .5s var(--ease);}
+
+  /* ══ ARC SVG — ember flight, wall to wall (the single hot line) ═══════════ */
+  #arc{position:absolute;inset:0;z-index:1;pointer-events:none;display:block;}
+  #arc .ring{fill:none;stroke:var(--secondary);opacity:.10;}
+  #arc .horizon{stroke:var(--secondary);opacity:.16;stroke-width:1;}
+  #arc .stn-mark{fill:none;stroke:var(--secondary);stroke-width:1.4;opacity:.5;
+    transition:opacity .2s var(--ease), stroke .2s var(--ease);}
+  #arc .stn-mark.is-armed{opacity:1;stroke:var(--ink);}
+  #arc .stn-mark.is-apex{stroke:var(--secondary);opacity:.7;}
+
+  /* ══ BALL — bright ember bead riding the arc (compositor transform) ════════ */
+  #ball{position:absolute;left:0;top:0;z-index:3;width:16px;height:16px;
+    margin:-8px 0 0 -8px;border-radius:50%;pointer-events:none;
+    background:radial-gradient(circle at 50% 42%, #FFF3E8 0%, #FF8A4D 46%, rgba(255,138,77,.5) 74%, rgba(255,138,77,0) 100%);
+    box-shadow:0 0 14px 3px rgba(255,138,77,.55), 0 0 4px 1px rgba(255,243,232,.8);
+    will-change:transform;}
+  #ballGlow{position:absolute;left:0;top:0;z-index:2;width:52px;height:52px;
+    margin:-26px 0 0 -26px;border-radius:50%;pointer-events:none;
+    background:radial-gradient(circle, rgba(255,138,77,.28), rgba(255,138,77,0) 68%);
+    will-change:transform,opacity;}
+
+  /* ══ FINGERTIP READOUT — THE ONE THING: numbers held under the thumb ══════ */
+  #readout{position:absolute;left:0;top:0;z-index:5;pointer-events:none;
+    display:flex;gap:14px;align-items:flex-end;
+    padding:8px 12px;border-radius:var(--radius-control);
+    background:var(--plate);border:1px solid var(--line);
+    -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+    box-shadow:0 6px 22px -10px rgba(0,0,0,.7);
+    transform:translate3d(var(--rx,0), var(--ry,0), 0);
+    opacity:0;transition:opacity .18s var(--ease);will-change:transform,opacity;}
+  #readout.is-on{opacity:1;}
+  .rd{display:flex;flex-direction:column;gap:2px;min-width:40px;}
+  .rd__l{font-size:9px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);line-height:1;}
+  .rd__v{font-family:var(--font-mono);font-size:15px;font-weight:600;color:var(--ink);
+    font-variant-numeric:tabular-nums;letter-spacing:0;line-height:1;white-space:nowrap;}
+  .rd__v .u{font-size:10px;color:var(--muted);margin-left:2px;}
+  #readout.is-on .rd.rd--dist .rd__v{color:var(--accent);}   /* the held-shot readout carries the 3rd ember (dist under the thumb) */
+  #readout .hint{position:absolute;left:12px;top:calc(100% + 7px);white-space:nowrap;
+    font-size:11px;font-weight:500;color:var(--muted);display:none;}
+  #readout.show-hint .hint{display:block;}
+  #readout .hint b{color:var(--ink);font-weight:600;}
+
+  /* ══ STATIONS — real links at the physics moments (pedagogy = nav) ════════ */
+  .stn{position:absolute;z-index:4;display:flex;flex-direction:column;gap:3px;
+    min-height:46px;justify-content:center;
+    padding:7px 11px;border-radius:var(--radius-control);
+    text-decoration:none;color:var(--ink);
+    background:var(--plate);border:1px solid var(--line);
+    -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+    transition:transform .16s var(--ease), border-color .16s var(--ease), box-shadow .16s var(--ease), opacity .16s var(--ease);
+    will-change:transform,opacity;}
+  .stn__eyebrow{font-size:10px;font-weight:600;letter-spacing:.13em;text-transform:uppercase;
+    color:var(--muted);line-height:1.2;white-space:nowrap;}
+  .stn__val{font-size:12px;font-weight:500;color:var(--ink);line-height:1.25;white-space:nowrap;}
+  .stn__val .v{font-family:var(--font-mono);font-weight:600;font-variant-numeric:tabular-nums;}
+  .stn__val .l{color:var(--muted);}
+  .stn:hover,.stn:focus-visible{border-color:var(--secondary-line);transform:translateY(-1px);}
+  .stn:focus-visible{outline:none;box-shadow:inset 0 0 0 1px rgba(0,0,0,.85), inset 0 0 0 3px var(--ink);}
+  .stn:active{transform:scale(.985);}
+  /* armed (ball settled on it during scrub / focus) — brighten, still cold */
+  .stn.is-armed{border-color:var(--secondary-line);box-shadow:0 6px 20px -10px rgba(157,139,255,.5);}
+  /* primary at rest (numeric station holding the ball) — ember hairline + ember value */
+  .stn.is-primary{border-top-width:2px;border-top-color:var(--accent-line-strong);
+    box-shadow:0 -1px 14px -7px rgba(255,138,77,.6);}
+  .stn.is-primary .stn__val .v{color:var(--accent);}
+
+  /* Diagnose apex tag — always violet WHY?, never ember */
+  .stn--why{align-items:center;padding:6px 12px;gap:1px;}
+  .stn--why .why{font-family:var(--font-display);font-size:14px;font-weight:700;letter-spacing:.04em;color:var(--secondary);line-height:1;}
+  .stn--why .sub{font-size:9px;font-weight:600;letter-spacing:.11em;text-transform:uppercase;color:var(--muted);line-height:1;}
+  .stn--why.is-armed{border-color:var(--secondary-line);}
+
+  /* ══ ACADEMY RIM — thin XP band under the horizon (reward colours only) ════ */
+  #rim{position:fixed;left:0;right:0;bottom:0;z-index:6;
+    display:flex;align-items:center;gap:12px;min-height:44px;
+    padding:7px max(16px, env(safe-area-inset-left)) max(9px, env(safe-area-inset-bottom));
+    text-decoration:none;color:var(--ink);
+    background:linear-gradient(0deg, rgba(7,6,12,.86), rgba(7,6,12,.18));
+    -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+    border-top:1px solid var(--line);
+    transition:border-color .16s var(--ease);}
+  #rim:hover,#rim:focus-visible{border-top-color:var(--secondary-line);}
+  #rim:focus-visible{outline:none;box-shadow:inset 0 0 0 1px rgba(0,0,0,.85), inset 0 0 0 3px var(--ink);}
+  #rim .rim__eyebrow{font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);white-space:nowrap;}
+  #rim .rim__lvl{font-family:var(--font-mono);font-size:11px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap;}
+  #rim .rim__bar{position:relative;flex:1 1 auto;height:4px;border-radius:999px;background:var(--line);overflow:hidden;max-width:340px;}
+  #rim .rim__bar .fill{position:absolute;inset:0 auto 0 0;width:0%;
+    background:linear-gradient(90deg, var(--celebrate), var(--secondary));border-radius:999px;}
+  #rim .rim__xp{font-family:var(--font-mono);font-size:11px;font-weight:600;color:var(--warn);font-variant-numeric:tabular-nums;white-space:nowrap;}
+  #rim .rim__title{font-size:11px;font-weight:600;color:var(--muted);white-space:nowrap;}
+  #rim .rim__teach{font-size:11px;font-weight:500;color:var(--muted);white-space:nowrap;}
+
+  /* ══ HEADER — wordmark top-left, help top-right ═══════════════════════════ */
+  header.sa-header{position:fixed;top:0;left:0;right:0;z-index:12;height:56px;pointer-events:none;}
+  .sa-wordmark{
+    position:absolute;left:max(14px, env(safe-area-inset-left));
+    top:max(12px, env(safe-area-inset-top));
+    display:inline-flex;align-items:center;gap:9px;pointer-events:none;
+    filter:drop-shadow(0 2px 18px rgba(0,0,0,.65));
+    view-transition-name:sa-logo;}
+  .sa-wordmark .mark{width:24px;height:24px;flex:0 0 auto;display:block;}
+  .sa-wordmark .mark .arc{stroke:var(--secondary);}
+  .sa-wordmark .mark .ball{fill:var(--accent);}
+  .sa-wordmark .wm-text{
+    font-family:var(--font-display);
+    font-size:15px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;line-height:1;}
+  .sa-wordmark .wm-text .s{color:var(--ink);}
+  .sa-wordmark .wm-text .a{color:var(--accent);}
+
+  .sa-help{
+    position:fixed;top:max(4px, calc(env(safe-area-inset-top) - 8px));
+    right:max(8px, env(safe-area-inset-right));z-index:13;
+    width:44px;height:44px;display:inline-flex;align-items:center;justify-content:center;
+    background:none;border:0;color:var(--muted);cursor:pointer;
+    -webkit-tap-highlight-color:transparent;pointer-events:auto;
+    filter:drop-shadow(0 1px 8px rgba(0,0,0,.6));}
+  .sa-help svg{width:22px;height:22px;display:block;}
+  .sa-help:hover{color:var(--ink);}
+  .sa-help:focus-visible{outline:none;border-radius:12px;
+    box-shadow:inset 0 0 0 1px rgba(0,0,0,.85), inset 0 0 0 3px var(--ink);}
+
+  /* reduced motion: kill ambient/settle transitions; scrub (user-driven) stays */
+  @media (prefers-reduced-motion: reduce){
+    .void{transition:none!important;}
+    #readout{transition:opacity .001ms!important;}
+    .stn{transition:none!important;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ══ HEADER (banner first: h1 wordmark + help lead the DOM & focus order,
+     WCAG 2.4.3 / 1.3.2; position:fixed so visual placement is unchanged) ═════ -->
+<header class="sa-header">
+  <h1 class="sa-wordmark" aria-label="StrikeArc">
+    <svg class="mark" viewBox="0 0 52 52" fill="none" aria-hidden="true">
+      <path class="arc" d="M11 45 C 16 26, 24 18, 35 15 M21 39 L 30 24 L 43 45"
+            stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle class="ball" cx="37" cy="15" r="5.2"/>
+    </svg>
+    <span class="wm-text" aria-hidden="true"><span class="s">STRIKE</span><span class="a">ARC</span></span>
+  </h1>
+  <a class="sa-help" href="academy.html" aria-label="Help — open the Academy">
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="12" cy="12" r="9.2" stroke="currentColor" stroke-width="1.6"/>
+      <path d="M9.4 9.3 A2.7 2.7 0 1 1 12.4 12.4 V13.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" fill="none"/>
+      <circle cx="12" cy="17" r="1.05" fill="currentColor"/>
+    </svg>
+  </a>
+</header>
+
+<!-- SR text alternative for the (aria-hidden) arc scene -->
+<p id="shotAlt" class="visually-hidden"></p>
+<!-- polite live region: announces which station is armed -->
+<div id="live" class="visually-hidden" role="status" aria-live="polite"></div>
+
+<!-- ══ STAGE ═══════════════════════════════════════════════════════════════ -->
+<main id="stage" aria-label="Your ball flight — drag the ball along its arc, or step between stations with the arrow keys.">
+
+  <!-- night-void: horizon + receding range rings -->
+  <svg class="void" id="void" aria-hidden="true" preserveAspectRatio="none"></svg>
+
+  <!-- the ember arc + station markers -->
+  <svg id="arc" aria-hidden="true">
+    <defs>
+      <linearGradient id="arcGrad" x1="0" y1="1" x2="0" y2="0">
+        <stop offset="0"  stop-color="#FF8A4D" stop-opacity=".18"/>
+        <stop offset=".5" stop-color="#FF8A4D" stop-opacity=".95"/>
+        <stop offset="1"  stop-color="#FFF3E8"/>
+      </linearGradient>
+    </defs>
+    <g id="voidLines"></g>
+    <path id="arcUnder" fill="none" stroke="#FF8A4D"          stroke-width="13"  stroke-linecap="round" opacity="0"/>
+    <path id="arcMain"  fill="none" stroke="url(#arcGrad)"    stroke-width="3.6" stroke-linecap="round" opacity="0"/>
+    <path id="arcCore"  fill="none" stroke="#FFF3E8"          stroke-width="1.4" stroke-linecap="round" opacity="0"/>
+    <g id="marks"></g>
+  </svg>
+
+  <div id="ballGlow"></div>
+  <div id="ball"></div>
+
+  <!-- THE ONE THING — fingertip readout -->
+  <div id="readout" aria-hidden="true">
+    <div class="rd rd--height"><span class="rd__l">Height</span><span class="rd__v" id="rdHeight">0<span class="u">m</span></span></div>
+    <div class="rd rd--dist"><span class="rd__l">Dist</span><span class="rd__v" id="rdDist">0<span class="u">m</span></span></div>
+    <div class="rd rd--side"><span class="rd__l">Side</span><span class="rd__v" id="rdSide">0<span class="u">m</span></span></div>
+    <span class="hint">Drag the ball <b>← →</b></span>
+  </div>
+
+  <!-- STATIONS (real links, DOM order: strike → flight → diagnose → outcome) -->
+  <a class="stn" id="stnStrike" href="./geometry-window-mock.html" data-key="geometry" data-d="0">
+    <span class="stn__eyebrow">Strike Window</span>
+    <span class="stn__val" id="valStrike">How it's made</span>
+  </a>
+  <a class="stn" id="stnFlight" href="./impact-viz-mock.html" data-key="flight" data-d="0.30">
+    <span class="stn__eyebrow">Ball Flight</span>
+    <span class="stn__val" id="valFlight">Fly it</span>
+  </a>
+  <a class="stn stn--why" id="stnDiagnose" href="./diagnose-mock.html" data-key="diagnose" data-d="0.52">
+    <span class="why">WHY?</span>
+    <span class="sub">Diagnose</span>
+  </a>
+  <a class="stn" id="stnOutcome" href="./impact-outcome-mock.html" data-key="outcome" data-d="1">
+    <span class="stn__eyebrow">Outcome</span>
+    <span class="stn__val" id="valOutcome">Read it</span>
+  </a>
+</main>
+
+<!-- ACADEMY RIM (5th station, real link) -->
+<a id="rim" href="./academy.html" aria-label="Academy — learn the physics.">
+  <span class="rim__eyebrow">Academy</span>
+  <span class="rim__lvl" id="rimLvl" hidden>LVL 1</span>
+  <span class="rim__bar" id="rimBar" role="progressbar" aria-label="Experience to next level" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" hidden>
+    <span class="fill" id="rimFill"></span>
+  </span>
+  <span class="rim__xp" id="rimXp" hidden>0</span>
+  <span class="rim__title" id="rimTitle" hidden></span>
+  <span class="rim__teach" id="rimTeach">Learn the physics · Lv 1</span>
+</a>
+
+<!-- vendored GSAP (global) — must run before the module below -->
+<script src="./vendor/gsap/gsap.min.js"></script>
+
+<script type="module">
+import { solveFlight, trajectorySamples } from './impact-flight.js';
+import haptics from './sa-haptics.js';
+
+const $ = (id) => document.getElementById(id);
+const clamp = (v,lo,hi) => Math.max(lo, Math.min(hi, v));
+const Y2M = 0.9144;                                  // yards → metres
+const reduce = (() => { try { return matchMedia('(prefers-reduced-motion: reduce)').matches || /[?&]rm=1/.test(location.search); } catch(e){ return false; } })();
+const hasGsap = typeof window.gsap !== 'undefined';
+// verification-only: count uncaught errors so ?selftest can report err0
+window.__errs = 0; window.addEventListener('error', () => { window.__errs++; });
+
+/* ── storage helpers (mirror home-mock's contract + staleness) ────────────── */
+const readJSON = (k) => { try { const r = localStorage.getItem(k); return r ? JSON.parse(r) : null; } catch(e){ return null; } };
+const writeJSON = (k,v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} };
+const readStr = (k) => { try { return localStorage.getItem(k); } catch(e){ return null; } };
+const writeStr = (k,v) => { try { localStorage.setItem(k,v); } catch(e){} };
+const del = (k) => { try { localStorage.removeItem(k); } catch(e){} };
+const NOW = Date.now();
+const STALE = 30 * 864e5;                             // 30 days (home-mock rule)
+const fresh = (s) => s && typeof s.ts === 'number' && (NOW - s.ts) < STALE;
+const minus = (n) => (n < 0 ? '−' : (n > 0 ? '+' : '')) + Math.abs(n).toFixed(1);
+
+/* ── Academy level derivation (MUST mirror academy.html / home-mock) ──────── */
+const LEVELS = [
+  {lvl:1,xp:0,title:'Apprentice'},{lvl:2,xp:150,title:'Student'},{lvl:3,xp:350,title:'Analyst'},
+  {lvl:4,xp:650,title:'Technician'},{lvl:5,xp:1000,title:'Engineer'},{lvl:6,xp:1500,title:'Master'},
+];
+function levelInfo(xp){
+  let idx=0; for(let i=0;i<LEVELS.length;i++) if(xp>=LEVELS[i].xp) idx=i;
+  let lvl=LEVELS[idx].lvl, title=LEVELS[idx].title, curXp=LEVELS[idx].xp, nextXp;
+  if(idx<LEVELS.length-1) nextXp=LEVELS[idx+1].xp;
+  else { const extra=Math.floor((xp-1500)/600); lvl=6+extra; curXp=1500+extra*600; nextXp=curXp+600; title='Master'; }
+  const span=nextXp-curXp, into=xp-curXp;
+  return { lvl, title, curXp, nextXp, pct: span>0 ? into/span : 1 };
+}
+
+/* ── canonical shots — ALWAYS solved honestly through solveFlight ─────────── */
+// First-run demo: a beautiful stock 7-iron (real physics, not the user's).
+const DEMO_SHOT = { clubPath:1, faceAngle:-0.5, attackAngle:-3, dynamicLoft:30, clubSpeed:84, club:'7iron' };
+// ?seed=1 returning shot: a clean fade that finishes right (real physics).
+const SEED_SHOT = { clubPath:-1, faceAngle:2, attackAngle:-3.5, dynamicLoft:29, clubSpeed:86, club:'7iron' };
+const SEED_GEO  = { band:'Flush', attack:-3.5 };
+const SEED_XP   = 2300;   // → Academy LVL 7 (Master)
+
+/* ── ?seed / ?reset controls (self-seed plausible stats for review) ───────── */
+const params = new URLSearchParams(location.search);
+const KEYS = ['sa.stat.flight','sa.stat.geometry','sa.stat.outcome','sa.stat.shot',
+              'strikearc.academy.v1','sa.home.last','sa.home.seenLevel','sa.home.k3.hint'];
+function clearAll(){ KEYS.forEach(del); try{ sessionStorage.removeItem('sa.home.k3.drawn'); }catch(e){} }
+function seedReturning(){
+  const f = solveFlight(SEED_SHOT);
+  const totalM = Math.round(f.total*Y2M), carryM = Math.round(f.carry*Y2M);
+  const offAbs = Math.round(Math.abs(f.offline*Y2M)), side = f.offline>0?'R':(f.offline<0?'L':'');
+  writeJSON('sa.stat.shot',    {ts:NOW, ...SEED_SHOT});
+  writeJSON('sa.stat.flight',  {ts:NOW, total:totalM, offlineM:offAbs, offlineSide:side});
+  writeJSON('sa.stat.outcome', {ts:NOW, carry:carryM, shape:f.shape});
+  writeJSON('sa.stat.geometry',{ts:NOW, band:SEED_GEO.band, attack:SEED_GEO.attack});
+  writeJSON('strikearc.academy.v1', {xp:SEED_XP});
+  writeStr('sa.home.last','flight');
+}
+if(params.has('seed')){ const v=params.get('seed'); (v==='0'||v==='reset') ? clearAll() : seedReturning(); }
+if(params.has('reset')) clearAll();
+
+/* ── read state (§2.4 contract, same reads as home-mock) ──────────────────── */
+const flightStat = readJSON('sa.stat.flight');
+const geoStat    = readJSON('sa.stat.geometry');
+const outStat    = readJSON('sa.stat.outcome');
+const shotStat   = readJSON('sa.stat.shot');
+const acaStore   = readJSON('strikearc.academy.v1');
+const acaXp      = acaStore && typeof acaStore.xp==='number' ? acaStore.xp : 0;
+const li         = levelInfo(acaXp);
+
+const hasFlight = fresh(flightStat), hasGeo = fresh(geoStat), hasOut = fresh(outStat);
+const firstRun  = !(hasFlight || hasGeo || hasOut || acaXp>0);
+
+let last = readStr('sa.home.last');
+if(!['flight','geometry','outcome','academy'].includes(last)) last='flight';
+
+/* ── resolve THE arc flight — one solved trajectory drives everything ──────── */
+// Honest inverse fit for the theoretical real-app case (summary stored, raw shot
+// not): recover club inputs that reproduce the stored total + offline sign, then
+// solve them. When we seed, sa.stat.shot is authoritative so this never runs.
+function reconstructShot(fs, os, gs){
+  const totalYd = clamp((fs.total||150)/Y2M, 40, 320);
+  const carryYd = totalYd/1.03;
+  const bs = Math.pow(carryYd/0.232, 1/1.389);            // invert carry model
+  const dynamicLoft = 30;
+  const attackAngle = gs && isFinite(+gs.attack) ? +gs.attack : -3;
+  const spinLoft = dynamicLoft - attackAngle;
+  const smashEff = clamp(1.46 - 0.004*spinLoft, 1.15, 1.42);
+  const clubSpeed = bs/smashEff;
+  const offYd = ((fs.offlineM||0)/Y2M) * (fs.offlineSide==='L' ? -1 : fs.offlineSide==='R' ? 1 : 0);
+  const shape = (os && os.shape) || '';
+  // split the offline into a face/path pair that yields the same sign + a
+  // fade/draw consistent with the stored shape label.
+  const bendRight = /fade|slice/i.test(shape) ? 1 : /draw|hook/i.test(shape) ? -1 : Math.sign(offYd)||1;
+  const faceAngle = clamp((offYd/Math.max(carryYd,1))*30, -6, 6) + bendRight*1.4;
+  const clubPath  = faceAngle - bendRight*2.4;            // face-to-path drives the bend
+  return { clubPath, faceAngle, attackAngle, dynamicLoft, clubSpeed, club:'7iron' };
+}
+
+let flight;
+if(fresh(shotStat))      flight = solveFlight(shotStat);
+else if(hasFlight)       flight = solveFlight(reconstructShot(flightStat, outStat, geoStat));
+else                     flight = solveFlight(DEMO_SHOT);
+
+const samples = trajectorySamples(flight, 64);           // normalized {d,h,x} shape
+const apexM   = flight.apex  * Y2M;
+const carryM  = flight.carry * Y2M;
+const totalM  = flight.total * Y2M;
+const offSign = flight.offline >= 0 ? 1 : -1;
+const offAbsM = Math.abs(flight.offline * Y2M);
+const sideLbl = offSign>0 ? 'R' : 'L';
+
+/* interpolate the real trajectory samples at any downrange fraction d */
+function sampleAt(d){
+  d = clamp(d,0,1);
+  const f = d*(samples.length-1), i = Math.floor(f), t = f-i;
+  const a = samples[i], b = samples[Math.min(i+1, samples.length-1)];
+  return { h: a.h+(b.h-a.h)*t, x: a.x+(b.x-a.x)*t };
+}
+const hAt = (d)=>sampleAt(d).h;
+const xAt = (d)=>sampleAt(d).x;
+
+/* ── station model (DOM order = pedagogy: strike → flight → diagnose → outcome) */
+const STN = [
+  { id:'stnStrike',   d:0.00, key:'geometry', numeric:hasGeo },
+  { id:'stnFlight',   d:0.30, key:'flight',   numeric:hasFlight },
+  { id:'stnDiagnose', d:0.52, key:'diagnose', numeric:false },
+  { id:'stnOutcome',  d:1.00, key:'outcome',  numeric:hasOut },
+];
+STN.forEach(s => s.el = $(s.id));
+const CAP = 0.075;                                       // capture zone half-width
+
+/* ── fill station copy (returning = stored stats · first-run = teach labels) ─ */
+function fillStations(){
+  // Strike Window
+  if(hasGeo){
+    const band = geoStat.band || '—';
+    $('valStrike').innerHTML = `<span class="v">${band}</span> <span class="l">· ${minus(Number(geoStat.attack)||0)}° attack</span>`;
+    $('stnStrike').setAttribute('aria-label', `Strike Window — ${band} strike, ${minus(Number(geoStat.attack)||0)} degrees attack. Press Enter to open.`);
+  } else {
+    $('valStrike').textContent = 'How it’s made';
+    $('stnStrike').setAttribute('aria-label', 'Strike Window — model your strike. Press Enter to open.');
+  }
+  // Ball Flight
+  if(hasFlight){
+    const t = Math.round(Number(flightStat.total)||0), off = Math.round(Number(flightStat.offlineM)||0), side = flightStat.offlineSide||'';
+    $('valFlight').innerHTML = `<span class="v">${t}</span> <span class="l">m · ${off} m ${side}</span>`;
+    $('stnFlight').setAttribute('aria-label', `Ball Flight — ${t} metres, ${off} metres ${side==='R'?'right':side==='L'?'left':'on line'}. Press Enter to open.`);
+  } else {
+    $('valFlight').textContent = 'Fly it';
+    $('stnFlight').setAttribute('aria-label', 'Ball Flight — see the shot. Press Enter to open.');
+  }
+  // Diagnose
+  $('stnDiagnose').setAttribute('aria-label', 'Diagnose — why did it do that? Press Enter to open.');
+  // Outcome
+  if(hasOut){
+    const carry = Math.round(Number(outStat.carry)||0);
+    if(outStat.shape){
+      $('valOutcome').innerHTML = `<span class="v">${outStat.shape}</span> <span class="l">· ${carry} m</span>`;
+      $('stnOutcome').setAttribute('aria-label', `Outcome — ${outStat.shape}, ${carry} metres. Press Enter to open.`);
+    } else {
+      $('valOutcome').innerHTML = `<span class="v">${carry}</span> <span class="l">m carry</span>`;
+      $('stnOutcome').setAttribute('aria-label', `Outcome — ${carry} metres carry. Press Enter to open.`);
+    }
+  } else {
+    $('valOutcome').textContent = 'Read it';
+    $('stnOutcome').setAttribute('aria-label', 'Outcome — read the launch. Press Enter to open.');
+  }
+}
+
+/* ── Academy rim ──────────────────────────────────────────────────────────── */
+function fillRim(){
+  if(acaXp>0){
+    $('rimTeach').hidden = true;
+    ['rimLvl','rimBar','rimXp','rimTitle'].forEach(id => $(id).hidden=false);
+    $('rimLvl').textContent = 'LVL '+li.lvl;
+    $('rimFill').style.width = Math.round(li.pct*100)+'%';
+    $('rimXp').textContent = acaXp+' XP';
+    $('rimTitle').textContent = li.title;
+    const bar=$('rimBar'); bar.setAttribute('aria-valuemin',String(li.curXp));
+    bar.setAttribute('aria-valuemax',String(li.nextXp)); bar.setAttribute('aria-valuenow',String(acaXp));
+    $('rim').setAttribute('aria-label', `Academy — ${acaXp} XP, level ${li.lvl}, ${li.title}. Press Enter to open.`);
+  } else {
+    $('rimTeach').hidden = false;
+    ['rimLvl','rimBar','rimXp','rimTitle'].forEach(id => $(id).hidden=true);
+    $('rimTeach').textContent = 'Learn the physics · Lv 1';
+    $('rim').setAttribute('aria-label', 'Academy — learn the physics, level 1. Press Enter to open.');
+  }
+}
+
+/* ── SR text alternative describing the frozen shot ───────────────────────── */
+function fillAlt(){
+  const total = Math.round(totalM), apex = Math.round(apexM), off = Math.round(offAbsM);
+  $('shotAlt').textContent = firstRun
+    ? `A demonstration ball flight: a ${flight.shape.toLowerCase()} carrying about ${Math.round(carryM)} metres, peaking near ${apex} metres high. Drag the ball, or use the arrow keys, to explore the five stations of the shot.`
+    : `Your last shot: ${flight.shape}, ${total} metres total, ${off} metres ${sideLbl==='R'?'right':'left'}, apex about ${apex} metres. Drag the ball, or use the arrow keys, to explore the five stations of the shot.`;
+}
+
+/* ══ GEOMETRY / LAYOUT ════════════════════════════════════════════════════ */
+let W=0, H=0, ax0=0, ax1=0, groundY=0, arcTop=0, arcH=0, pathLen=0;
+const arcSvg=$('arc'), voidSvg=$('void');
+const arcUnder=$('arcUnder'), arcMain=$('arcMain'), arcCore=$('arcCore');
+const marks=$('marks'), voidLines=$('voidLines');
+const ballEl=$('ball'), glowEl=$('ballGlow'), readout=$('readout');
+
+function screenX(d){ return ax0 + d*(ax1-ax0); }
+function screenY(d){ return groundY - hAt(d)*arcH; }
+
+function buildArcPath(){
+  let dpath='';
+  const N=72;
+  for(let i=0;i<=N;i++){ const d=i/N; dpath += (i?'L':'M') + screenX(d).toFixed(1) + ' ' + screenY(d).toFixed(1) + ' '; }
+  return dpath.trim();
+}
+
+function layoutVoid(){
+  voidSvg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  voidLines.innerHTML='';
+  // horizon
+  const hz=document.createElementNS('http://www.w3.org/2000/svg','line');
+  hz.setAttribute('class','horizon'); hz.setAttribute('x1',0); hz.setAttribute('x2',W);
+  hz.setAttribute('y1',groundY.toFixed(1)); hz.setAttribute('y2',groundY.toFixed(1));
+  voidLines.appendChild(hz);
+  // receding range rings (perspective ellipses on the ground plane)
+  const cx=W*0.5;
+  for(let i=1;i<=4;i++){
+    const rx=W*(0.14*i), ry=Math.max(4, 9*i*0.55);
+    const el=document.createElementNS('http://www.w3.org/2000/svg','ellipse');
+    el.setAttribute('class','ring'); el.setAttribute('cx',cx.toFixed(1));
+    el.setAttribute('cy',groundY.toFixed(1)); el.setAttribute('rx',rx.toFixed(1)); el.setAttribute('ry',ry.toFixed(1));
+    el.setAttribute('opacity', (0.12 - i*0.018).toFixed(3));
+    voidLines.appendChild(el);
+  }
+}
+
+function layoutMarks(){
+  marks.innerHTML='';
+  STN.forEach(s=>{
+    const c=document.createElementNS('http://www.w3.org/2000/svg','circle');
+    c.setAttribute('cx',screenX(s.d).toFixed(1)); c.setAttribute('cy',screenY(s.d).toFixed(1));
+    c.setAttribute('r', s.key==='diagnose' ? 4.5 : 3.5);
+    c.setAttribute('class','stn-mark'+(s.key==='diagnose'?' is-apex':''));
+    c.dataset.for=s.id; s.mark=c; marks.appendChild(c);
+  });
+}
+
+function layoutStations(){
+  const pad=10, pw=146, dgw=78;
+  STN.forEach(s=>{
+    const sx=screenX(s.d), sy=screenY(s.d), el=s.el;
+    const w=el.offsetWidth||pw, h=el.offsetHeight||46;
+    let L, T;
+    if(s.key==='geometry'){ L=sx+14;            T=groundY - h; }            // address: right of point
+    else if(s.key==='flight'){ L=sx - w - 16;   T=sy - h/2; }               // rising limb: left of point (keeps interior clear)
+    else if(s.key==='diagnose'){ L=sx - (el.offsetWidth||dgw)/2; T=sy - h - 14; } // apex: above
+    else { L=sx - w - 14;                        T=groundY - h; }           // landing: left of point
+    L=clamp(L, pad, W-w-pad);
+    T=clamp(T, 58, groundY - h + 2);
+    el.style.left=L.toFixed(1)+'px'; el.style.top=T.toFixed(1)+'px';
+  });
+}
+
+let restD = firstRun ? 0.52 : (STN.find(s=>s.key===last && s.numeric)?.d ?? 0.52);
+let curD = restD;
+
+function positionBall(d){
+  const sx=screenX(d), sy=screenY(d);
+  if(hasGsap){ gsap.set(ballEl,{x:sx,y:sy}); gsap.set(glowEl,{x:sx,y:sy}); }
+  else { ballEl.style.transform=`translate3d(${sx}px,${sy}px,0)`; glowEl.style.transform=`translate3d(${sx}px,${sy}px,0)`; }
+  positionReadout(sx,sy);
+}
+function positionReadout(sx,sy){
+  const rw=readout.offsetWidth||150, rh=readout.offsetHeight||48;
+  let rx = sx - rw*0.5, ry = sy - rh - 16;
+  if(sy < 150) ry = sy + 18;                              // ball high → readout below
+  rx=clamp(rx, 10, W-rw-10); ry=clamp(ry, 58, groundY-rh-2);
+  readout.style.setProperty('--rx', rx.toFixed(1)+'px');
+  readout.style.setProperty('--ry', ry.toFixed(1)+'px');
+}
+
+function layout(){
+  W=window.innerWidth; H=window.innerHeight;
+  groundY = H - 72; arcTop = 92; arcH = groundY - arcTop;
+  ax0 = W*0.10; ax1 = W*0.90;
+  arcSvg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  const dp=buildArcPath();
+  [arcUnder,arcMain,arcCore].forEach(p=>p.setAttribute('d',dp));
+  pathLen = (()=>{ try{ return arcMain.getTotalLength(); }catch(e){ return 1200; } })();
+  layoutVoid(); layoutMarks(); layoutStations();
+  positionBall(curD);
+}
+
+/* ══ READOUT VALUES (real interpolated trajectory) ════════════════════════ */
+function fmt(n){ return Math.round(n); }
+function updateReadout(d){
+  const heightM = hAt(d)*apexM;
+  const distM   = d*carryM;
+  const sideM   = xAt(d)*offAbsM;
+  $('rdHeight').innerHTML = `${fmt(heightM)}<span class="u">m</span>`;
+  $('rdDist').innerHTML   = `${fmt(distM)}<span class="u">m</span>`;
+  const sv = sideM<0.5 ? '0' : `${fmt(sideM)} ${sideLbl}`;
+  $('rdSide').innerHTML   = `${sv}<span class="u">${sideM<0.5?'m':''}</span>`;
+}
+
+/* ══ ARMING / EMBER-BUDGET STATE ══════════════════════════════════════════ */
+let armed=null;           // station currently under the ball
+let lastAnnounced=null;
+
+function setArmed(s, {announce=true}={}){
+  if(armed===s) return;
+  armed=s;
+  STN.forEach(x=>{ x.el.classList.toggle('is-armed', x===s); if(x.mark) x.mark.classList.toggle('is-armed', x===s); });
+  if(s){ try{ haptics.band('stn'); }catch(e){}
+    if(announce && s!==lastAnnounced){ lastAnnounced=s; $('live').textContent = s.el.getAttribute('aria-label')||''; }
+  }
+}
+
+// Rest ember law: exactly ONE ember value at rest.
+//  · numeric station holding the ball → its plate value is ember, readout hidden
+//  · else (apex/free/first-run) → readout dist is ember, plate none
+function settleRest(s){
+  STN.forEach(x=>x.el.classList.remove('is-primary'));
+  readout.classList.remove('is-live');
+  if(s){                                   // settled ON a station → its plate is the focus
+    if(s.numeric) s.el.classList.add('is-primary');   // numeric → ember value on the plate
+    readout.classList.remove('is-on','show-hint');    // hide the floating readout (no corner overlap)
+  } else {                                 // free rest / first-run apex invitation → readout carries the heat
+    updateReadout(curD);
+    readout.classList.add('is-on');
+    readout.classList.toggle('show-hint', firstRun && !hintDismissed);
+  }
+}
+
+/* ══ SCRUB ════════════════════════════════════════════════════════════════ */
+let scrubbing=false, dragMoved=false, justDragged=false, downX=0, downY=0, downOnStation=null;
+const DRAG_THRESH=7;
+
+function nearest(d){ let best=null; for(const s of STN){ if(Math.abs(d-s.d)<=CAP){ if(!best||Math.abs(d-s.d)<Math.abs(d-best.d)) best=s; } } return best; }
+
+function placeDirect(d){
+  curD=d;
+  const sx=screenX(d), sy=screenY(d);
+  if(hasGsap){ gsap.killTweensOf(ballEl); gsap.killTweensOf(glowEl); gsap.set(ballEl,{x:sx,y:sy}); gsap.set(glowEl,{x:sx,y:sy}); }
+  else { ballEl.style.transform=`translate3d(${sx}px,${sy}px,0)`; glowEl.style.transform=`translate3d(${sx}px,${sy}px,0)`; }
+  positionReadout(sx,sy); updateReadout(d);
+}
+function settleTo(d, cb){
+  const sx=screenX(d), sy=screenY(d);
+  if(reduce || !hasGsap){ curD=d; positionBall(d); updateReadout(d); cb&&cb(); return; }
+  gsap.killTweensOf(ballEl); gsap.killTweensOf(glowEl);
+  const o={p:curD};
+  gsap.to(o,{p:d, duration:0.42, ease:'elastic.out(1,0.72)', onUpdate:()=>{ curD=o.p; const x=screenX(o.p),y=screenY(o.p); gsap.set(ballEl,{x,y}); gsap.set(glowEl,{x,y}); positionReadout(x,y); updateReadout(o.p); }, onComplete:cb });
+}
+
+function scrubToPointer(clientX){
+  const d = clamp((clientX-ax0)/(ax1-ax0), 0, 1);
+  const near = nearest(d);
+  if(near){
+    if(armed!==near){ setArmed(near); settleTo(near.d); }
+    else { /* stay settled on it */ }
+    readout.classList.add('is-on','is-live'); readout.classList.remove('show-hint');
+  } else {
+    if(armed) setArmed(null);
+    placeDirect(d);
+    readout.classList.add('is-on','is-live'); readout.classList.remove('show-hint');
+  }
+}
+
+const stage=$('stage');
+stage.addEventListener('pointerdown', e=>{
+  if(e.button!==undefined && e.button!==0) return;
+  downX=e.clientX; downY=e.clientY; dragMoved=false; scrubbing=true;
+  downOnStation = e.target.closest ? e.target.closest('.stn') : null;
+  dismissHint();
+  try{ stage.setPointerCapture(e.pointerId); }catch(err){}
+}, {passive:true});
+
+stage.addEventListener('pointermove', e=>{
+  if(!scrubbing) return;
+  if(!dragMoved){
+    if(Math.abs(e.clientX-downX) < DRAG_THRESH && Math.abs(e.clientY-downY) < DRAG_THRESH) return;
+    dragMoved=true;                                       // promoted to a scrub
+  }
+  scrubToPointer(e.clientX);
+}, {passive:true});
+
+function endScrub(e){
+  if(!scrubbing) return;
+  scrubbing=false;
+  try{ stage.releasePointerCapture(e.pointerId); }catch(err){}
+  if(dragMoved){
+    justDragged=true; setTimeout(()=>{ justDragged=false; }, 60);   // suppress the click a drag would fire
+    readout.classList.remove('is-live');
+    settleRest(armed);
+  }
+  // a plain tap on a station falls through to the native <a> click (navigate)
+}
+stage.addEventListener('pointerup', endScrub);
+stage.addEventListener('pointercancel', endScrub);
+
+/* ══ NAVIGATE (tap / Enter) — swallow grow, then go ═══════════════════════ */
+function navigate(el){
+  const href=el.getAttribute('href'); if(!href) return;
+  try{ haptics.impact('medium'); }catch(e){}
+  if(reduce || !hasGsap){ location.href=href; return; }
+  try{ el.style.viewTransitionName='sa-stage'; }catch(e){}
+  const others=[...document.querySelectorAll('.stn, #rim')].filter(x=>x!==el);
+  gsap.to(others,{opacity:0, duration:0.2, ease:'power1.out'});
+  gsap.to([ballEl,glowEl,readout,arcMain,arcUnder,arcCore],{opacity:0, duration:0.28, ease:'power1.out'});
+  gsap.to(el,{scale:14, opacity:0, duration:0.42, ease:'power2.in', transformOrigin:'50% 50%',
+    onComplete:()=>{ location.href=href; }});
+  // safety: never strand the user if the anim is interrupted
+  setTimeout(()=>{ location.href=href; }, 520);
+}
+[...document.querySelectorAll('.stn'), $('rim')].forEach(el=>{
+  el.addEventListener('click', e=>{
+    if(justDragged){ e.preventDefault(); return; }          // it was a scrub, not a tap
+    e.preventDefault(); navigate(el);
+  });
+});
+
+/* ══ KEYBOARD PARITY — arrows step the ball between stations ═══════════════ */
+function focusStation(s){
+  s.el.focus();
+  setArmed(s,{announce:false});   // arrow-step: browser speaks the focused link; #live stays quiet
+  settleTo(s.d, ()=>settleRest(s));
+}
+STN.forEach((s,i)=>{
+  // Keyboard focus/arrow-step: the browser already speaks the focused link's
+  // accessible name, so DON'T also write it into #live (that double-announces).
+  // The polite #live region is reserved for the pointer-scrub path (no focus move).
+  s.el.addEventListener('focus', ()=>{ if(!scrubbing){ setArmed(s,{announce:false}); positionBall(s.d); curD=s.d; settleRest(s); } });
+  s.el.addEventListener('keydown', e=>{
+    let ni=null;
+    if(e.key==='ArrowRight'||e.key==='ArrowDown') ni=Math.min(STN.length-1, i+1);
+    else if(e.key==='ArrowLeft'||e.key==='ArrowUp') ni=Math.max(0, i-1);
+    else if(e.key==='Home') ni=0;
+    else if(e.key==='End') ni=STN.length-1;
+    else return;
+    e.preventDefault(); dismissHint(); focusStation(STN[ni]);
+  });
+});
+
+/* ══ COACH HINT (first-run, once) ═════════════════════════════════════════ */
+let hintDismissed = !firstRun || readStr('sa.home.k3.hint')==='1';
+function dismissHint(){
+  if(hintDismissed) return;
+  hintDismissed=true; readout.classList.remove('show-hint');
+  writeStr('sa.home.k3.hint','1');
+}
+
+/* ══ INTRO — first-run draws the demo shot once (≤1.6s, skippable) ═════════ */
+let sessionDrawn=false; try{ sessionDrawn = sessionStorage.getItem('sa.home.k3.drawn')==='1'; }catch(e){}
+function presentArcInstant(){
+  arcUnder.style.strokeDasharray='none'; arcMain.style.strokeDasharray='none'; arcCore.style.strokeDasharray='none';
+  arcUnder.style.opacity='.5'; arcMain.style.opacity='.96'; arcCore.style.opacity='.95';
+}
+function breathe(){
+  if(reduce || !hasGsap) return;
+  breatheTween = gsap.to(glowEl,{scale:1.12, opacity:0.72, duration:2.0, ease:'sine.inOut', yoyo:true, repeat:-1, transformOrigin:'50% 50%'});
+}
+let breatheTween=null, introTween=null, introDone=false;
+
+function finishIntro(){
+  if(introDone) return; introDone=true;
+  if(introTween){ introTween.progress(1); introTween.kill(); }
+  presentArcInstant();
+  settleRest(firstRun ? null : armed);
+  if(firstRun){ readout.classList.add('is-on'); readout.classList.toggle('show-hint', !hintDismissed); updateReadout(curD); }
+  breathe();
+}
+
+function runIntro(){
+  if(reduce || sessionDrawn || !firstRun || !hasGsap){
+    presentArcInstant();
+    settleRest(firstRun ? null : armed);
+    if(firstRun){ readout.classList.add('is-on'); readout.classList.toggle('show-hint', !hintDismissed); updateReadout(curD); }
+    breathe();
+    return;
+  }
+  try{ sessionStorage.setItem('sa.home.k3.drawn','1'); }catch(e){}
+  const Lu=arcUnder.getTotalLength?arcUnder.getTotalLength():pathLen;
+  const Lm=pathLen, Lc=arcCore.getTotalLength?arcCore.getTotalLength():pathLen;
+  arcUnder.style.strokeDasharray=Lu; arcUnder.style.strokeDashoffset=Lu; arcUnder.style.opacity='.5';
+  arcMain.style.strokeDasharray=Lm;  arcMain.style.strokeDashoffset=Lm;  arcMain.style.opacity='.96';
+  arcCore.style.strokeDasharray=Lc;  arcCore.style.strokeDashoffset=Lc;  arcCore.style.opacity='.95';
+  // ball rides the draw from address to its rest point
+  ballEl.style.opacity='0'; glowEl.style.opacity='0';
+  const o={p:0};
+  introTween = gsap.timeline({ onComplete:finishIntro })
+    .to([arcUnder,arcMain,arcCore], { strokeDashoffset:0, duration:1.35, ease:'power2.out' }, 0)
+    .to([ballEl,glowEl], { opacity:1, duration:0.3 }, 0.15)
+    .to(o, { p:restD, duration:1.35, ease:'power2.out', onUpdate:()=>{ curD=o.p; const x=screenX(o.p),y=screenY(o.p); gsap.set(ballEl,{x,y}); gsap.set(glowEl,{x,y}); positionReadout(x,y); } }, 0);
+}
+
+/* ══ VISIBILITY — pause ambient on background (¶14) ═══════════════════════ */
+document.addEventListener('visibilitychange', ()=>{
+  if(!hasGsap) return;
+  if(document.hidden){ breatheTween&&breatheTween.pause(); }
+  else { breatheTween&&breatheTween.resume(); }
+});
+
+/* ══ IMU idle-parallax — silent, never required, never throws ═════════════ */
+function onOrient(e){
+  if(reduce) return;
+  const g = typeof e.gamma==='number' ? e.gamma : 0;      // left/right tilt
+  const b = typeof e.beta==='number'  ? e.beta  : 0;      // front/back tilt
+  document.documentElement.style.setProperty('--par-x', clamp(g*0.14,-6,6).toFixed(2));
+  document.documentElement.style.setProperty('--par-y', clamp((b-45)*0.06,-5,5).toFixed(2));
+}
+try{ if(window.DeviceOrientationEvent && !reduce) window.addEventListener('deviceorientation', onOrient, {passive:true}); }catch(e){}
+
+/* ══ BOOT ═════════════════════════════════════════════════════════════════ */
+fillStations(); fillRim(); fillAlt();
+// initial arm (returning: resume station; first-run: none/apex)
+if(!firstRun){ const r=STN.find(s=>s.key===last && s.numeric); if(r){ setArmed(r,{announce:false}); } }
+layout();
+runIntro();
+
+let rT=null;
+window.addEventListener('resize', ()=>{ clearTimeout(rT); rT=setTimeout(()=>{ layout(); if(introDone||!firstRun||reduce||sessionDrawn) settleRest(firstRun?null:armed); }, 120); });
+
+/* level-up haptic (parity with home-mock) */
+const seenLevel = parseInt(readStr('sa.home.seenLevel')||'0',10)||0;
+if(!firstRun && acaXp>0 && li.lvl>seenLevel){ try{ haptics.notify('success'); }catch(e){} }
+writeStr('sa.home.seenLevel', String(li.lvl));
+
+/* ══ SELF-TEST (verification only; ?selftest=1) — encodes result into title ═
+   Present because a shared browser makes select→evaluate racy; the page list
+   returned by new_page carries document.title race-free. Inert without the
+   query flag; ships harmless. */
+if(params.has('selftest')){
+  const run = ()=>{
+    try{
+      finishIntro();
+      const w=innerWidth, a0=w*0.10, a1=w*0.90, xOf=(d)=>Math.round(a0+d*(a1-a0));
+      const st=$('stage'), ev=(t,x)=>st.dispatchEvent(new PointerEvent(t,{clientX:x,clientY:Math.round(innerHeight*0.6),pointerId:1,button:0,bubbles:true,cancelable:true}));
+      const hs=[],ds=[],ss=[]; const armedSeen=new Set();
+      ev('pointerdown',xOf(0.1)); ev('pointermove',xOf(0.1)+14);
+      for(const d of [0.05,0.15,0.22,0.30,0.40,0.52,0.62,0.75,0.88,1.0]){
+        ev('pointermove',xOf(d));
+        hs.push(parseFloat($('rdHeight').innerText)||0);
+        ds.push(parseFloat($('rdDist').innerText)||0);
+        ss.push(parseFloat($('rdSide').innerText)||0);
+        const arm=STN.find(s=>s.el.classList.contains('is-armed')); if(arm) armedSeen.add(arm.id);
+      }
+      ev('pointerup',xOf(1.0));
+      const dRange=(A)=>Math.round(Math.max(...A)-Math.min(...A));
+      // keyboard step parity
+      let kb=0; try{ STN[0].el.focus(); STN[0].el.dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowRight',bubbles:true,cancelable:true})); kb = document.activeElement===STN[1].el?1:0; }catch(e){}
+      // rest ember source after settling on outcome (returning) or apex (first-run)
+      const primary=STN.find(s=>s.el.classList.contains('is-primary'));
+      const roOn=$('readout').classList.contains('is-on');
+      const restEmber = primary?('P:'+primary.id.replace('stn','')):(roOn?'R':'-');
+      // collisions among VISIBLE chrome boxes only (opacity:0 readout still has layout)
+      const vis=el=>{const s=getComputedStyle(el);return s.visibility!=='hidden'&&s.display!=='none'&&parseFloat(s.opacity)>0.01;};
+      const R=el=>{const r=el.getBoundingClientRect();return{x:r.x,y:r.y,w:r.width,h:r.height};};
+      const ovl=(A,B)=>!(A.x+A.w<=B.x||B.x+B.w<=A.x||A.y+A.h<=B.y||B.y+B.h<=A.y);
+      const bx=['stnStrike','stnFlight','stnDiagnose','stnOutcome','readout','rim'].map(id=>document.getElementById(id))
+        .concat([document.querySelector('.sa-wordmark'),document.querySelector('.sa-help')])
+        .filter(vis).map(el=>({r:R(el)}));
+      let col=0; for(let i=0;i<bx.length;i++)for(let j=i+1;j<bx.length;j++) if(ovl(bx[i].r,bx[j].r)) col++;
+      const rimLvl=($('rimLvl').hidden?'-':($('rimLvl').innerText.replace(/\D/g,'')||'-'));
+      const fV = STN.find(s=>s.key==='flight').numeric?1:0;
+      // M1 fix (double SR announcement): keyboard focus must NOT write #live
+      // (the browser already speaks the focused link's name); only the
+      // pointer-scrub path (no focus move) writes the polite region.
+      let m1F=0, m1S=0;
+      try{
+        const lv=$('live');
+        lv.textContent=''; STN[0].el.focus(); const f0=lv.textContent;
+        lv.textContent=''; STN[3].el.focus(); const f3=lv.textContent;
+        m1F = (f0===''&&f3==='') ? 1 : 0;                 // focus leaves #live silent
+        STN[0].el.focus(); lv.textContent='';             // arm Strike, clear region
+        // scrub across stations ending on Outcome; the polite region must announce
+        // each NEWLY-armed station (dedup only suppresses an immediate repeat).
+        ev('pointerdown',xOf(0.30)); ev('pointermove',xOf(0.30)+14);
+        ev('pointermove',xOf(0.52));                      // arm Diagnose (announces)
+        ev('pointermove',xOf(1.00));                      // arm Outcome (announces, != Diagnose)
+        m1S = /outcome/i.test(lv.textContent) ? 1 : 0;
+        ev('pointerup',xOf(1.00));
+      }catch(e){}
+      // M2 fix (focus/reading order): banner <header> + <h1> lead the DOM & heading order
+      let m2=0;
+      try{
+        const hd=document.querySelector('header.sa-header'), mn=$('stage'), h1=document.querySelector('h1');
+        const hdFirst=document.body.firstElementChild===hd;
+        const hdBeforeMain=!!(hd.compareDocumentPosition(mn)&Node.DOCUMENT_POSITION_FOLLOWING);
+        const h1First=document.querySelectorAll('h1,h2,h3,h4,h5,h6')[0]===h1 && !!h1.closest('header.sa-header');
+        m2 = (hdFirst&&hdBeforeMain&&h1First) ? 1 : 0;
+      }catch(e){}
+      document.title = `ST ${w}w m1F${m1F} m1S${m1S} m2${m2} e${window.__errs} c${col} a${armedSeen.size} k${kb} ${firstRun?'FR':'RET'} r:${restEmber} L${rimLvl} f${fV} d${dRange(ds)} h${dRange(hs)} s${dRange(ss)} arc${getComputedStyle(arcMain).opacity} rm${reduce?1:0}`;
+    }catch(e){ document.title='ST ERR '+(e&&e.message||e); }
+  };
+  setTimeout(run, reduce?80:1550);
+}
+</script>
+</body>
+</html>

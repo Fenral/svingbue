@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#07060C">
+<meta name="robots" content="noindex">
+<title>StrikeArc — Floodlights</title>
+
+<!-- favicon: arc-mark (violet strokes) + ember ball — the P3 lockup exception (matches home-mock) -->
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2052%2052'%20fill='none'%3E%3Cpath%20d='M11%2045%20C%2016%2026,%2024%2018,%2035%2015%20M21%2039%20L%2030%2024%20L%2043%2045'%20stroke='%239D8BFF'%20stroke-width='4.2'%20stroke-linecap='round'%20stroke-linejoin='round'/%3E%3Ccircle%20cx='37'%20cy='15'%20r='5.2'%20fill='%23FF8A4D'/%3E%3C/svg%3E">
+
+<!-- preload the range so nothing flashes white during decode -->
+<link rel="preload" as="image" href="./assets/range-night-3d-33.png">
+
+<!-- shared P3 tokens + type roles + focus ring + reduced-motion kill (READ-ONLY consume) -->
+<link rel="stylesheet" href="./sa-p3.css">
+
+<style>
+  /* ═══════════════════════════════════════════════════════════════════════════
+     K1 · FLOODLIGHTS — the range IS the menu.
+     No page. A night driving-range that runs on its own; the modules are lit
+     PLACES in it. Selecting = travelling to the place (camera dolly → arrival).
+     All chrome motion on the compositor (transform/opacity). One canvas: the
+     ember ball + ambient tracer only. Tokens come from sa-p3.css — no freelance
+     brand hexes; white/black are light & shadow, not palette.
+     ═══════════════════════════════════════════════════════════════════════════ */
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;}
+  html{background:var(--bg);}
+  body{
+    min-height:100dvh;
+    background:var(--scene-bg);          /* never white during decode */
+    color:var(--ink);
+    overflow:hidden;
+    font-family:var(--font-ui);
+    -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+    -webkit-tap-highlight-color:transparent;
+    touch-action:pan-y pinch-zoom;       /* M1 · WCAG 1.4.4: keep pinch-zoom; pan-y allows vertical scroll, horizontal drag still reaches the JS parallax handler */
+  }
+  .sr-only{
+    position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;
+    overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
+
+  /* ══ WORLD — everything that travels together when the camera dollies ═══════ */
+  .world{
+    position:fixed;inset:0;z-index:0;overflow:hidden;
+    transform-origin:50% 50%;
+    will-change:transform;
+    backface-visibility:hidden;
+  }
+  .world.is-traveling{pointer-events:none;}     /* guardrail: no input mid-flight */
+
+  /* parallax planes: each layer nudged by --px (clamped ≤8px at factor 1.0). */
+  .plane{position:absolute;inset:0;will-change:transform;}
+  .plane.photo{
+    width:100%;height:100%;object-fit:cover;object-position:50% 46%;
+    transform:translate3d(calc(var(--px,0px) * .22),0,0) scale(1.06);
+  }
+  .uvgrade{                                      /* violet night grade for palette cohesion */
+    position:absolute;inset:0;pointer-events:none;
+    background:
+      linear-gradient(180deg, rgba(20,14,36,.46) 0%, rgba(20,14,36,.06) 44%, color-mix(in srgb, var(--secondary) 8%, transparent) 62%, rgba(7,6,12,.30) 100%);
+    transform:translate3d(calc(var(--px,0px) * .22),0,0);
+  }
+  .fieldscrim{                                   /* lift text contrast over the bright turf */
+    position:absolute;left:0;right:0;bottom:0;height:46%;pointer-events:none;
+    background:linear-gradient(0deg, rgba(7,6,12,.66), rgba(7,6,12,.12) 60%, transparent);
+  }
+
+  /* floodlight halos — synthetic bloom that "kicks on" pole-by-pole at boot,
+     then breathes imperceptibly. White light (screen-blended), not palette. */
+  .halos{position:absolute;inset:0;pointer-events:none;
+    transform:translate3d(calc(var(--px,0px) * .40),0,0);}
+  .halo{position:absolute;border-radius:50%;
+    transform:translate(-50%,-50%) scale(1);
+    background:radial-gradient(circle, rgba(214,224,255,.55) 0%, rgba(180,196,255,.20) 34%, color-mix(in srgb, var(--secondary) 6%, transparent) 60%, transparent 72%);
+    mix-blend-mode:screen;opacity:0;will-change:opacity,transform;}
+  .halo.breathe{animation:haloBreathe 6.5s var(--ease) infinite;}
+  @keyframes haloBreathe{0%,100%{opacity:var(--rest,.5);}50%{opacity:calc(var(--rest,.5) * .84);}}
+
+  .haze{position:absolute;left:-8%;right:-8%;top:32%;height:34%;pointer-events:none;
+    background:radial-gradient(60% 100% at 50% 40%, var(--secondary-soft), transparent 70%);
+    filter:blur(6px);opacity:.7;
+    transform:translate3d(calc(var(--px,0px) * .62),0,0);
+    animation:hazeDrift 26s ease-in-out infinite;}
+  @keyframes hazeDrift{0%,100%{transform:translate3d(calc(var(--px,0px) * .62 - 10px),0,0);}50%{transform:translate3d(calc(var(--px,0px) * .62 + 10px),0,0);}}
+
+  /* ember canvas — the ONE living hot element (ball) + ambient tracer/ghosts */
+  .ember{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;
+    transform:translate3d(var(--px,0px),0,0);will-change:transform;}
+
+  /* boot veil — the range is dark, then comes online */
+  .veil{position:absolute;inset:0;pointer-events:none;background:var(--bg);opacity:0;z-index:5;}
+
+  /* pause every ambient loop when backgrounded (guardrail 14) */
+  .is-hidden .halo.breathe,
+  .is-hidden .haze{animation-play-state:paused;}
+
+  /* ══ PLACES — real <a> destinations, DOM order tee→window→green→tower→ghost ══ */
+  .places{position:absolute;inset:0;transform:translate3d(var(--px,0px),0,0);will-change:transform;}
+  .places.dimmed .place:not(.is-target){opacity:.28;filter:saturate(.6);}
+
+  .place{
+    position:absolute;left:var(--x);top:var(--y);
+    transform:translate(-50%,-50%);
+    display:flex;flex-direction:column;align-items:center;gap:8px;
+    width:max-content;max-width:44vw;
+    text-decoration:none;color:var(--ink);
+    -webkit-tap-highlight-color:transparent;
+    transition:transform .18s var(--ease), opacity .3s var(--ease);
+  }
+  .place__beacon{position:relative;display:block;}
+  .place__plate{
+    position:relative;
+    display:flex;flex-direction:column;gap:2px;
+    min-width:44px;min-height:44px;justify-content:center;
+    padding:8px 12px 9px;
+    background:var(--plate);
+    -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+    border:1px solid var(--line);
+    border-top:1px solid var(--secondary-line);        /* cold-lit top edge */
+    border-radius:var(--radius-card);
+    box-shadow:0 8px 22px -12px rgba(0,0,0,.7);
+    transition:border-color .16s var(--ease), box-shadow .16s var(--ease), transform .16s var(--ease);
+  }
+  .place__eyebrow{
+    font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--muted);line-height:1.25;white-space:nowrap;}
+  .place__eyebrow .cont{color:var(--accent);}          /* START HERE · / CONTINUE · (codified ember exception) */
+  .place__row{display:flex;align-items:baseline;gap:5px;white-space:nowrap;}
+  .place__val{
+    font-family:var(--font-mono);font-weight:600;font-size:15px;line-height:1.15;
+    color:var(--ink);font-variant-numeric:tabular-nums;letter-spacing:0;}
+  .place__unit{font-family:var(--font-ui);font-size:10px;font-weight:600;color:var(--muted);}
+  .place__teach{font-size:12px;font-weight:500;color:var(--ink);letter-spacing:.01em;white-space:nowrap;}
+
+  /* hover / focus — the place lights up; double focus ring rendered in-world */
+  .place:hover .place__plate{border-color:var(--secondary-line);transform:translateY(-2px);
+    box-shadow:0 12px 26px -12px rgba(0,0,0,.75), 0 0 0 1px var(--secondary-soft);}
+  .place:active .place__plate{transform:scale(.98);}
+  .place:focus-visible{outline:none;}
+  .place:focus-visible .place__plate{
+    border-color:transparent;
+    box-shadow:inset 0 0 0 1px rgba(0,0,0,.85), inset 0 0 0 3px var(--ink),
+               0 0 0 4px color-mix(in srgb, var(--secondary) 28%, transparent), 0 0 22px 2px color-mix(in srgb, var(--secondary) 30%, transparent);}
+
+  /* PROMOTED place — ember hairline + ember live value (the single warm pull) */
+  .place.is-promoted .place__plate{
+    border-top:2px solid var(--accent-line-strong);
+    box-shadow:0 8px 22px -12px rgba(0,0,0,.7), 0 -1px 16px -6px var(--accent-line);}
+  .place.is-promoted .place__val{color:var(--accent);}
+  /* Focus ring must beat the promotion glow (WCAG 2.4.7) — higher specificity + later in source */
+  .place.is-promoted:focus-visible .place__plate,
+  .place:focus-visible .place__plate{
+    border-color:transparent;
+    box-shadow:inset 0 0 0 1px rgba(0,0,0,.85), inset 0 0 0 3px var(--ink),
+               0 0 0 4px color-mix(in srgb, var(--secondary) 28%, transparent), 0 0 22px 2px color-mix(in srgb, var(--secondary) 30%, transparent);}
+
+  /* ── TEE beacon: the lit mat under the ember ball (ball itself is on canvas) ─ */
+  .beacon-mat{width:58px;height:16px;border-radius:50%;
+    background:radial-gradient(closest-side, color-mix(in srgb, var(--accent) 22%, transparent), color-mix(in srgb, var(--accent) 6%, transparent) 62%, transparent 78%);
+    box-shadow:0 0 18px 2px var(--accent-soft);}
+
+  /* ── STRIKE WINDOW beacon: faint etched-glass rectangle, violet hairlines ─── */
+  .beacon-glass{width:66px;height:42px;border-radius:6px;position:relative;
+    border:1px solid var(--secondary-line);
+    background:linear-gradient(150deg, color-mix(in srgb, var(--secondary) 10%, transparent), color-mix(in srgb, var(--secondary) 2%, transparent));
+    box-shadow:inset 0 0 12px var(--secondary-soft), 0 0 14px -4px color-mix(in srgb, var(--secondary) 35%, transparent);}
+  .beacon-glass::before,.beacon-glass::after{content:"";position:absolute;background:color-mix(in srgb, var(--secondary) 35%, transparent);}
+  .beacon-glass::before{left:33%;top:6%;bottom:6%;width:1px;}
+  .beacon-glass::after{left:66%;top:6%;bottom:6%;width:1px;}
+  .beacon-glass i{position:absolute;left:6%;right:6%;top:50%;height:1px;background:color-mix(in srgb, var(--secondary) 28%, transparent);}
+
+  /* ── LANDING GREEN beacon: concentric rings on the turf ─────────────────── */
+  .beacon-rings{display:block;width:60px;height:34px;opacity:.9;}
+  .beacon-rings ellipse{fill:none;stroke:var(--secondary);}
+
+  /* ── ACADEMY TOWER beacon: the far mast lamp, a touch warmer (gold law) ──── */
+  .beacon-lamp{width:20px;height:20px;border-radius:50%;
+    background:radial-gradient(circle, color-mix(in srgb, var(--warn) 85%, transparent) 0%, color-mix(in srgb, var(--warn) 30%, transparent) 40%, color-mix(in srgb, var(--celebrate) 10%, transparent) 66%, transparent 78%);
+    box-shadow:0 0 20px 4px color-mix(in srgb, var(--warn) 30%, transparent);}
+  .place--tower .place__val{font-size:13px;}
+  .place--tower .place__val .lv{color:var(--warn);}    /* Academy's gold law */
+
+  /* ── DIAGNOSE ghost: quiet violet "?" over a faint grass tracer ─────────── */
+  .place--ghost{opacity:.9;}
+  .place--ghost .place__plate{background:rgba(8,5,14,.80);border-top-color:var(--secondary-soft);}
+  .place--ghost .place__teach{color:var(--muted);}
+  .beacon-q{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    color:var(--secondary);font-family:var(--font-display);font-weight:700;font-size:15px;
+    border:1px solid var(--secondary-line);background:color-mix(in srgb, var(--secondary) 6%, transparent);
+    box-shadow:0 0 14px -4px color-mix(in srgb, var(--secondary) 40%, transparent);}
+
+  /* ── HEADER — wordmark top-left + help top-right (home-mock header contract) ─ */
+  header.sa-header{position:fixed;top:0;left:0;right:0;z-index:20;height:60px;pointer-events:none;}
+  .sa-wordmark{
+    position:absolute;
+    top:max(14px, env(safe-area-inset-top));
+    left:max(14px, env(safe-area-inset-left));
+    display:inline-flex;align-items:center;gap:9px;pointer-events:none;
+    filter:drop-shadow(0 2px 18px rgba(0,0,0,.7));}
+  .sa-wordmark .mark{width:24px;height:24px;flex:0 0 auto;display:block;}
+  .sa-wordmark .mark .arc{stroke:var(--secondary);}
+  .sa-wordmark .mark .ball{fill:var(--accent);}         /* logo ball = ember exception */
+  .sa-wordmark .wm-text{
+    font-family:var(--font-display);
+    font-size:15px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;line-height:1;}
+  .sa-wordmark .wm-text .s{color:var(--ink);}
+  .sa-wordmark .wm-text .a{color:var(--accent);}
+
+  .sa-help{
+    position:fixed;top:max(4px, calc(env(safe-area-inset-top) - 10px));
+    right:max(8px, env(safe-area-inset-right));z-index:21;
+    width:44px;height:44px;display:inline-flex;align-items:center;justify-content:center;
+    background:none;border:0;color:var(--muted);cursor:pointer;text-decoration:none;
+    -webkit-tap-highlight-color:transparent;pointer-events:auto;
+    filter:drop-shadow(0 1px 8px rgba(0,0,0,.6));}
+  .sa-help svg{width:22px;height:22px;display:block;}
+  .sa-help:hover{color:var(--ink);}
+  .sa-help:focus-visible{outline:none;border-radius:12px;
+    box-shadow:inset 0 0 0 1px rgba(0,0,0,.85), inset 0 0 0 3px var(--ink);}
+
+  /* ── first-run hint (non-blocking, one-time) — never gates any action ─────── */
+  .hint{
+    position:fixed;left:50%;bottom:max(12px, env(safe-area-inset-bottom));
+    transform:translateX(-50%);z-index:15;
+    padding:7px 14px;border-radius:var(--radius-pill);
+    background:var(--plate);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+    border:1px solid var(--line);
+    font-size:11px;font-weight:600;letter-spacing:.04em;color:var(--muted);
+    display:flex;align-items:center;gap:7px;pointer-events:none;
+    box-shadow:0 8px 22px -12px rgba(0,0,0,.7);}
+  .hint .dot{width:6px;height:6px;border-radius:50%;background:var(--accent);
+    box-shadow:0 0 8px 1px color-mix(in srgb, var(--accent) 60%, transparent);}
+  .hint[hidden]{display:none;}
+
+  /* ══ REDUCED MOTION — static wide shot: no boot, no drift, no camera-travel ══
+     (sa-p3.css also neutralises animations globally; these make intent explicit) */
+  @media (prefers-reduced-motion: reduce){
+    .plane.photo,.uvgrade,.halos,.haze,.ember,.places{transform:none!important;}
+    .plane.photo{transform:scale(1.04)!important;}
+    .halo{animation:none!important;}
+    .haze{animation:none!important;}
+    .hint{display:none!important;}
+  }
+</style>
+</head>
+<body>
+
+<!-- offscreen text alternative for the decorative scene (guardrail 15/7) -->
+<p class="sr-only" id="sceneDesc">
+  StrikeArc home. A floodlit night driving range. The five destinations below are
+  places in the range — select one to travel to it.
+</p>
+
+<!-- ══ THE WORLD ═══════════════════════════════════════════════════════════════ -->
+<div class="world" id="world">
+  <img class="plane photo" src="./assets/range-night-3d-33.png" alt="" aria-hidden="true" decoding="async" fetchpriority="high">
+  <div class="uvgrade" aria-hidden="true"></div>
+  <div class="haze" aria-hidden="true"></div>
+
+  <!-- floodlight bloom, kicked on pole-by-pole at boot; positions trace the photo's masts -->
+  <div class="halos" id="halos" aria-hidden="true">
+    <span class="halo" style="left:6%;top:12%;width:190px;height:190px;--rest:.55;--boot:0"></span>
+    <span class="halo" style="left:93%;top:13%;width:190px;height:190px;--rest:.55;--boot:0"></span>
+    <span class="halo" style="left:24%;top:34%;width:120px;height:120px;--rest:.5;--boot:1"></span>
+    <span class="halo" style="left:76%;top:33%;width:120px;height:120px;--rest:.5;--boot:1"></span>
+    <span class="halo" style="left:31%;top:45%;width:90px;height:90px;--rest:.46;--boot:2"></span>
+    <span class="halo" style="left:69%;top:45%;width:90px;height:90px;--rest:.46;--boot:2"></span>
+    <span class="halo" style="left:37%;top:50%;width:64px;height:64px;--rest:.42;--boot:3"></span>
+    <span class="halo" style="left:63%;top:50%;width:64px;height:64px;--rest:.42;--boot:3"></span>
+  </div>
+
+  <div class="fieldscrim" aria-hidden="true"></div>
+
+  <!-- ember ball (resting on the tee) + ambient tracer + ghosts -->
+  <canvas class="ember" id="ember" aria-hidden="true"></canvas>
+
+  <!-- boot darkness -->
+  <div class="veil" id="veil" aria-hidden="true"></div>
+
+  <!-- ══ THE FIVE PLACES — logical DOM order: tee → window → green → tower → ghost ══ -->
+  <nav class="places" id="places" aria-label="Range destinations">
+
+    <a class="place place--tee" id="pTee" data-key="flight" data-x="26" data-y="67" style="--x:26%;--y:67%"
+       href="./impact-viz-mock.html" aria-label="Ball flight — see the shot. Start here.">
+      <span class="place__beacon" aria-hidden="true"><span class="beacon-mat"></span></span>
+      <span class="place__plate">
+        <span class="place__eyebrow" id="ebTee">Ball Flight</span>
+        <span class="place__body" id="bodyTee"><span class="place__teach">See the shot →</span></span>
+      </span>
+    </a>
+
+    <a class="place place--window" id="pWindow" data-key="geometry" data-x="45" data-y="40" style="--x:45%;--y:40%"
+       href="./geometry-window-mock.html" aria-label="Strike window — model your strike.">
+      <span class="place__beacon" aria-hidden="true"><span class="beacon-glass"><i></i></span></span>
+      <span class="place__plate">
+        <span class="place__eyebrow" id="ebWindow">Strike Window</span>
+        <span class="place__body" id="bodyWindow"><span class="place__teach">Model your strike</span></span>
+      </span>
+    </a>
+
+    <a class="place place--green" id="pGreen" data-key="outcome" data-x="69" data-y="59" style="--x:69%;--y:59%"
+       href="./impact-outcome-mock.html" aria-label="Outcome — read the launch.">
+      <span class="place__beacon" aria-hidden="true">
+        <svg class="beacon-rings" viewBox="0 0 60 34" fill="none" aria-hidden="true">
+          <ellipse cx="30" cy="17" rx="27" ry="12" stroke-width="1.1" opacity=".35"/>
+          <ellipse cx="30" cy="17" rx="17" ry="7.5" stroke-width="1.1" opacity=".55"/>
+          <ellipse cx="30" cy="17" rx="7"  ry="3.2" stroke-width="1.2" opacity=".8"/>
+        </svg>
+      </span>
+      <span class="place__plate">
+        <span class="place__eyebrow" id="ebGreen">Outcome</span>
+        <span class="place__body" id="bodyGreen"><span class="place__teach">Read the launch</span></span>
+      </span>
+    </a>
+
+    <a class="place place--tower" id="pTower" data-key="academy" data-x="83" data-y="30" style="--x:83%;--y:30%"
+       href="./academy.html" aria-label="Academy — learn the physics, level 1.">
+      <span class="place__beacon" aria-hidden="true"><span class="beacon-lamp"></span></span>
+      <span class="place__plate">
+        <span class="place__eyebrow" id="ebTower">Academy</span>
+        <span class="place__body" id="bodyTower"><span class="place__teach">Learn the physics · Lv 1</span></span>
+      </span>
+    </a>
+
+    <a class="place place--ghost" id="pGhost" data-key="diagnose" data-x="50" data-y="81" style="--x:50%;--y:81%"
+       href="./diagnose-mock.html" aria-label="Diagnose — why did the ball do that?">
+      <span class="place__beacon" aria-hidden="true"><span class="beacon-q">?</span></span>
+      <span class="place__plate">
+        <span class="place__eyebrow">Diagnose</span>
+        <span class="place__body"><span class="place__teach">Why did it do that?</span></span>
+      </span>
+    </a>
+
+  </nav>
+</div>
+
+<!-- ══ HEADER ═══════════════════════════════════════════════════════════════════ -->
+<header class="sa-header">
+  <h1 class="sa-wordmark" aria-label="StrikeArc">
+    <svg class="mark" viewBox="0 0 52 52" fill="none" aria-hidden="true">
+      <path class="arc" d="M11 45 C 16 26, 24 18, 35 15 M21 39 L 30 24 L 43 45"
+            stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle class="ball" cx="37" cy="15" r="5.2"/>
+    </svg>
+    <span class="wm-text" aria-hidden="true"><span class="s">STRIKE</span><span class="a">ARC</span></span>
+  </h1>
+  <a class="sa-help" href="academy.html" aria-label="Help — open the Academy">
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="12" cy="12" r="9.2" stroke="currentColor" stroke-width="1.6"/>
+      <path d="M9.4 9.3 A2.7 2.7 0 1 1 12.4 12.4 V13.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" fill="none"/>
+      <circle cx="12" cy="17" r="1.05" fill="currentColor"/>
+    </svg>
+  </a>
+</header>
+
+<!-- first-run coach mark (discoverable, never required) -->
+<p class="hint" id="hint" hidden><span class="dot"></span>Tap a light to travel there</p>
+
+<!-- vendored GSAP (same path geometry.html / geometry-mock.html use) -->
+<script src="./vendor/gsap/gsap.min.js"></script>
+
+<script type="module">
+  import haptics from './sa-haptics.js';
+
+  const gsap = window.gsap;
+  const $ = (id) => document.getElementById(id);
+  const reduce = (() => { try { return matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { return false; } })();
+  const noGsap = !gsap || typeof gsap.to !== 'function';
+
+  /* ── storage helpers (mirror home-mock contract) ─────────────────────────── */
+  const readJSON = (k) => { try { const r = localStorage.getItem(k); return r ? JSON.parse(r) : null; } catch (e) { return null; } };
+  const readStr  = (k) => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+  const writeStr = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
+  const writeJSON = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
+  const NOW = Date.now();
+  const STALE = 30 * 864e5;                          // 30 days (home-mock rule)
+  const fresh = (s) => s && typeof s.ts === 'number' && (NOW - s.ts) < STALE;
+  const signed = (n) => (n < 0 ? '−' : (n > 0 ? '+' : '')) + Math.abs(n).toFixed(1);   // U+2212 minus
+
+  /* ── self-seed / reset for review (?seed=1 / ?reset=1) ───────────────────── */
+  const qs = new URLSearchParams(location.search);
+  if (qs.get('reset') === '1') {
+    ['sa.stat.flight','sa.stat.geometry','sa.stat.outcome','strikearc.academy.v1',
+     'sa.home.last','sa.home.seenLevel','sa.home.k1.ghosts','sa.home.k1.hinted']
+      .forEach(k => { try { localStorage.removeItem(k); } catch (e) {} });
+    try { sessionStorage.removeItem('sa.home.k1.booted'); } catch (e) {}
+    location.replace(location.pathname);
+  }
+  if (qs.get('seed') === '1') {
+    writeJSON('sa.stat.flight',   { ts: NOW, total: 162, offlineM: 6, offlineSide: 'R' });
+    writeJSON('sa.stat.geometry', { ts: NOW, band: 'Flush', attack: -2.4 });
+    writeJSON('sa.stat.outcome',  { ts: NOW, carry: 178, shape: 'Draw' });
+    writeJSON('strikearc.academy.v1', { xp: 2100 });
+    writeStr('sa.home.last', 'flight');
+    writeStr('sa.home.seenLevel', '7');
+    writeJSON('sa.home.k1.ghosts', [               // the range remembers you (gap #5)
+      { x: .47, y: .50, k: .90 }, { x: .55, y: .52, k: .78 }
+    ]);
+    writeStr('sa.home.k1.hinted', '1');
+  }
+
+  /* ── Academy level derivation (MUST mirror academy.html / home-mock) ─────── */
+  const LEVELS = [
+    { lvl:1, xp:0,    title:'Apprentice' }, { lvl:2, xp:150,  title:'Student' },
+    { lvl:3, xp:350,  title:'Analyst' },    { lvl:4, xp:650,  title:'Technician' },
+    { lvl:5, xp:1000, title:'Engineer' },   { lvl:6, xp:1500, title:'Master' },
+  ];
+  function levelInfo(xp){
+    let idx = 0; for (let i = 0; i < LEVELS.length; i++) if (xp >= LEVELS[i].xp) idx = i;
+    let lvl = LEVELS[idx].lvl, title = LEVELS[idx].title, curXp = LEVELS[idx].xp, nextXp;
+    if (idx < LEVELS.length - 1) nextXp = LEVELS[idx + 1].xp;
+    else { const extra = Math.floor((xp - 1500) / 600); lvl = 6 + extra; curXp = 1500 + extra * 600; nextXp = curXp + 600; title = 'Master'; }
+    const span = nextXp - curXp, into = xp - curXp;
+    return { lvl, title, curXp, nextXp, pct: span > 0 ? into / span : 1 };
+  }
+
+  /* ── read state (§2.4 contract, identical keys to home-mock) ─────────────── */
+  const flight   = readJSON('sa.stat.flight');
+  const geometry = readJSON('sa.stat.geometry');
+  const outcome  = readJSON('sa.stat.outcome');
+  const acaStore = readJSON('strikearc.academy.v1');
+  const acaXp    = acaStore && typeof acaStore.xp === 'number' ? acaStore.xp : 0;
+  const li       = levelInfo(acaXp);
+
+  const hasFlight = fresh(flight), hasGeo = fresh(geometry), hasOut = fresh(outcome);
+  const firstRun  = !(hasFlight || hasGeo || hasOut || acaXp > 0);
+
+  let last = readStr('sa.home.last');
+  if (!['flight','geometry','outcome','academy'].includes(last)) last = 'flight';
+
+  /* ── render the plates ───────────────────────────────────────────────────── */
+  const sideWord = (s) => s === 'R' ? 'right' : s === 'L' ? 'left' : 'on line';
+  const setBody = (id, html) => { $(id).innerHTML = html; };
+
+  // TEE · Ball Flight
+  if (hasFlight){
+    const t = Math.round(Number(flight.total) || 0);
+    const off = Math.round(Number(flight.offlineM) || 0);
+    const side = flight.offlineSide || '';
+    setBody('bodyTee', `<span class="place__row"><span class="place__val">${t}</span><span class="place__unit">m · ${off} m ${side || ''}</span></span>`);
+    $('pTee').setAttribute('aria-label', `Ball flight — last shot ${t} metres, ${off} metres ${sideWord(side)}.`);
+  }
+
+  // WINDOW · Strike Window
+  if (hasGeo){
+    const band = geometry.band || '—';
+    const atk = signed(Number(geometry.attack) || 0);
+    setBody('bodyWindow', `<span class="place__row"><span class="place__val">${band}</span><span class="place__unit">${atk}° attack</span></span>`);
+    $('pWindow').setAttribute('aria-label', `Strike window — ${band} strike, ${atk} degrees attack.`);
+  }
+
+  // GREEN · Outcome
+  if (hasOut){
+    const carry = Math.round(Number(outcome.carry) || 0);
+    if (outcome.shape){
+      setBody('bodyGreen', `<span class="place__row"><span class="place__val">${outcome.shape}</span><span class="place__unit">${carry} m</span></span>`);
+      $('pGreen').setAttribute('aria-label', `Outcome — ${outcome.shape}, ${carry} metres carry.`);
+    } else {
+      setBody('bodyGreen', `<span class="place__row"><span class="place__val">${carry}</span><span class="place__unit">m carry</span></span>`);
+      $('pGreen').setAttribute('aria-label', `Outcome — ${carry} metres carry.`);
+    }
+  }
+
+  // TOWER · Academy
+  if (acaXp > 0){
+    setBody('bodyTower', `<span class="place__row"><span class="place__val"><span class="lv">LVL ${li.lvl}</span></span><span class="place__unit">${li.title}</span></span>`);
+    $('pTower').setAttribute('aria-label', `Academy — ${acaXp} XP, level ${li.lvl}, ${li.title}.`);
+  }
+
+  /* ── promotion: first-run hero (tee) OR resume (sa.home.last) ────────────── */
+  const promoteId = { flight:'pTee', geometry:'pWindow', outcome:'pGreen', academy:'pTower' };
+  const eyebrowId = { flight:'ebTee', geometry:'ebWindow', outcome:'ebGreen', academy:'ebTower' };
+  const nameOf    = { flight:'Ball Flight', geometry:'Strike Window', outcome:'Outcome', academy:'Academy' };
+
+  if (firstRun){
+    $('pTee').classList.add('is-promoted', 'is-target-first');
+    $('ebTee').innerHTML = `<span class="cont">START HERE · </span>Ball Flight`;
+  } else {
+    const card = promoteId[last], eb = eyebrowId[last];
+    $(card).classList.add('is-promoted');
+    $(eb).innerHTML = `<span class="cont">CONTINUE · </span>${nameOf[last]}`;
+    const a = $(card);
+    a.setAttribute('aria-label', a.getAttribute('aria-label').replace(/\.?$/, '.') + ' Continue where you left off.');
+  }
+
+  /* ── quiet level-up beat on the tower lamp (compare sa.home.seenLevel) ────── */
+  const seenLevel = parseInt(readStr('sa.home.seenLevel') || '0', 10) || 0;
+  if (!firstRun && acaXp > 0 && li.lvl > seenLevel){
+    if (!reduce){
+      const lamp = $('pTower').querySelector('.beacon-lamp');
+      if (lamp) lamp.animate([{ transform:'scale(1)' },{ transform:'scale(1.25)' },{ transform:'scale(1)' }],
+                             { duration:520, easing:'cubic-bezier(.2,.8,.2,1)' });
+    }
+    try { haptics.notify('success'); } catch (e) {}
+  }
+  writeStr('sa.home.seenLevel', String(li.lvl));
+
+  /* ══════════════════════════════════════════════════════════════════════════
+     EMBER CANVAS — the one living hot element (resting ball) + ambient tracer +
+     persisted ghosts. rAF budgeted for this only; UI chrome rides the compositor.
+     ══════════════════════════════════════════════════════════════════════════ */
+  const cv = $('ember'), ctx = cv.getContext('2d');
+  // Ember colour = the single --accent token. Canvas fillStyle can't read CSS vars,
+  // so resolve --accent ONCE here; every ember glow/alpha below derives from it
+  // (single source of truth). The near-white hot core / peach specular tints stay
+  // literal — they are "light", not palette (concept carve-out). Fallback = #FF8A4D.
+  const _ehex = (getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#FF8A4D');
+  const _em = /^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(_ehex);
+  const EMBER = _em ? { r:parseInt(_em[1],16), g:parseInt(_em[2],16), b:parseInt(_em[3],16) } : { r:255, g:138, b:77 };
+  const EMBER_HEX = `rgb(${EMBER.r},${EMBER.g},${EMBER.b})`;
+  const ember = (a) => `rgba(${EMBER.r},${EMBER.g},${EMBER.b},${a})`;
+  const DPR = Math.min(2, window.devicePixelRatio || 1);
+  let W = 0, H = 0, tee = { x:0, y:0 }, target = { x:0, y:0 };
+
+  function sizeCanvas(){
+    W = window.innerWidth; H = window.innerHeight;
+    cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    tee    = { x: 0.26 * W, y: 0.67 * H - 20 };        // sits just above the tee mat/plate
+    target = { x: 0.50 * W, y: 0.50 * H };             // downrange, into the dark centre
+  }
+
+  // ghost memory: {x,y in 0..1, k intensity} — a few persist between sessions
+  let ghosts = readJSON('sa.home.k1.ghosts');
+  if (!Array.isArray(ghosts)) ghosts = [];
+  const GHOST_MAX = 5;
+  const persistGhosts = () => writeJSON('sa.home.k1.ghosts', ghosts.slice(-GHOST_MAX));
+
+  function arcPoint(a, b, t){
+    // quadratic through a lifted apex control point
+    const cx = (a.x + b.x) / 2 + (b.x - a.x) * 0.02;
+    const cy = Math.min(a.y, b.y) - (0.26 * H);
+    const u = 1 - t;
+    return { x: u*u*a.x + 2*u*t*cx + t*t*b.x, y: u*u*a.y + 2*u*t*cy + t*t*b.y };
+  }
+
+  function drawBall(scale, glow){
+    ctx.save();
+    const r = 5;
+    const g = ctx.createRadialGradient(tee.x, tee.y, 0, tee.x, tee.y, 26 * glow);
+    g.addColorStop(0, ember(.55)); g.addColorStop(1, ember(0));
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(tee.x, tee.y, 26 * glow, 0, 7); ctx.fill();
+    ctx.fillStyle = '#FFCBA6';               /* peach specular tint — light, not palette */
+    ctx.beginPath(); ctx.arc(tee.x, tee.y, r * scale, 0, 7); ctx.fill();
+    ctx.fillStyle = EMBER_HEX;               /* ball body = --accent token */
+    ctx.beginPath(); ctx.arc(tee.x, tee.y, r * scale * 0.72, 0, 7); ctx.fill();
+    ctx.fillStyle = '#FFF3E8';
+    ctx.beginPath(); ctx.arc(tee.x - 1.2, tee.y - 1.2, r * scale * 0.32, 0, 7); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawGhost(gh){
+    const a = tee, b = { x: gh.x * W, y: gh.y * H };
+    ctx.save();
+    ctx.strokeStyle = ember(0.10 * gh.k);
+    ctx.lineWidth = 1.6; ctx.lineCap = 'round';
+    ctx.beginPath();
+    for (let t = 0; t <= 1.0001; t += 0.05){ const p = arcPoint(a, b, t); t === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y); }
+    ctx.stroke();
+    ctx.fillStyle = ember(0.16 * gh.k);
+    ctx.beginPath(); ctx.arc(b.x, b.y, 2.4, 0, 7); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawTracer(a, b, prog){
+    ctx.save(); ctx.lineCap = 'round';
+    const grad = ctx.createLinearGradient(a.x, a.y, b.x, b.y);
+    grad.addColorStop(0, ember(.15)); grad.addColorStop(.6, ember(.95)); grad.addColorStop(1, '#FFF3E8');
+    ctx.strokeStyle = grad; ctx.lineWidth = 3;
+    ctx.beginPath();
+    let head = null;
+    for (let t = 0; t <= prog + 1e-6; t += 0.02){ const p = arcPoint(a, b, Math.min(t, 1)); t === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y); head = p; }
+    ctx.stroke();
+    if (head){
+      const hg = ctx.createRadialGradient(head.x, head.y, 0, head.x, head.y, 10);
+      hg.addColorStop(0, 'rgba(255,243,232,.95)'); hg.addColorStop(1, ember(0));
+      ctx.fillStyle = hg; ctx.beginPath(); ctx.arc(head.x, head.y, 10, 0, 7); ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  // active ambient shot
+  let shot = null;            // { a,b,start }
+  const SHOT_MS = 1300;
+  let paused = false, rafId = 0, spawnTimer = 0;
+
+  function scheduleShot(){
+    if (reduce) return;
+    const delay = 16000 + Math.random() * 8000;      // ~16–24s, lazy
+    spawnTimer = setTimeout(() => {
+      if (!paused && !document.hidden){
+        const b = { x: (0.42 + Math.random() * 0.20) * W, y: (0.46 + Math.random() * 0.08) * H };
+        shot = { a: { ...tee }, b, start: performance.now() };
+      }
+      scheduleShot();
+    }, delay);
+  }
+
+  let t0 = performance.now();
+  function frame(now){
+    rafId = requestAnimationFrame(frame);
+    ctx.clearRect(0, 0, W, H);
+
+    // persisted + accumulated ghosts (the range remembers you)
+    for (const gh of ghosts) drawGhost(gh);
+
+    // active ambient tracer
+    if (shot){
+      const prog = Math.min(1, (now - shot.start) / SHOT_MS);
+      const eased = 1 - Math.pow(1 - prog, 1.7);
+      drawTracer(shot.a, shot.b, eased);
+      if (prog >= 1){
+        ghosts.push({ x: shot.b.x / W, y: shot.b.y / H, k: 0.9 });
+        if (ghosts.length > GHOST_MAX) ghosts.shift();
+        persistGhosts();
+        shot = null;
+      }
+    }
+
+    // resting ember ball — breathing (static under reduced motion)
+    const breath = reduce ? 1 : 1 + Math.sin((now - t0) / 900) * 0.05;
+    const glow   = reduce ? 1 : 1 + Math.sin((now - t0) / 900) * 0.12;
+    drawBall(breath, glow);
+  }
+
+  function drawStatic(){ ctx.clearRect(0, 0, W, H); for (const gh of ghosts) drawGhost(gh); drawBall(1, 1); }
+  function startLoop(){ if (reduce){ drawStatic(); return; }      // reduced motion: one static frame, no rAF
+    if (!rafId) rafId = requestAnimationFrame(frame); }
+  function stopLoop(){ if (rafId){ cancelAnimationFrame(rafId); rafId = 0; } }
+
+  /* ── boot: floodlights kick on pole-by-pole, plates resolve last (≤1.8s) ──── */
+  const halos = [...document.querySelectorAll('.halo')];
+  const placesEl = [...document.querySelectorAll('.place')];
+  const veil = $('veil');
+  let booting = false, bootTl = null;
+  // cache each halo's static rest-opacity + boot group ONCE (read all up front, no
+  // getComputedStyle inside the boot write-loops → zero forced reflow / thrash).
+  const haloMeta = halos.map(h => ({
+    el: h,
+    rest: parseFloat(getComputedStyle(h).getPropertyValue('--rest')) || 0.5,
+    grp: parseInt(h.style.getPropertyValue('--boot') || '0', 10),
+  }));
+
+  function restState(){
+    haloMeta.forEach(m => { m.el.style.opacity = String(m.rest); m.el.classList.add('breathe'); });
+    veil.style.opacity = '0';
+    placesEl.forEach(p => { p.style.opacity = ''; });
+    booting = false;
+  }
+  function finishBoot(){
+    booting = false;
+    halos.forEach(h => h.classList.add('breathe'));
+  }
+
+  function runBoot(){
+    booting = true;
+    // The range is dark, floodlights off, plates hidden. IMPORTANT: boot only ever
+    // animates OPACITY (+ veil) — it never touches a .place / .halo transform, which
+    // carry the translate(-50%,-50%) centering GSAP would otherwise clobber.
+    veil.style.opacity = '.82';
+    halos.forEach(h => { h.style.opacity = '0'; h.classList.remove('breathe'); });
+    placesEl.forEach(p => { p.style.opacity = '0'; });
+
+    bootTl = gsap.timeline({ onComplete: finishBoot });
+    // poles kick on near→far by their cached --boot group (0..3) — no layout reads
+    haloMeta.forEach(m => {
+      bootTl.to(m.el, { opacity:m.rest, duration:0.5, ease:'power2.out' }, 0.12 + m.grp * 0.16);
+    });
+    // veil lifts as the range comes online
+    bootTl.to(veil, { opacity:0, duration:0.9, ease:'power2.inOut' }, 0.25);
+    // plates resolve last (staggered fade-in)
+    bootTl.to(placesEl, { opacity:1, duration:0.4, ease:'power2.out', stagger:0.05 }, 1.1);
+    bootTl.set({}, {}, 1.75);   // hard cap ≤1.8s
+  }
+
+  function skipBoot(){
+    if (!booting) return;
+    if (bootTl){ try { bootTl.progress(1); bootTl.kill(); } catch (e) {} }
+    restState();
+  }
+
+  /* ══ THE ONE THING — selection = TRAVEL. Camera dollies to the place, module
+        opens by arrival. Reduced-motion → instant navigation. ════════════════ */
+  let traveling = false;
+  function travelTo(place){
+    const href = place.getAttribute('href');
+    if (reduce || noGsap){ location.href = href; return; }
+    if (traveling) return; traveling = true;
+
+    const x = parseFloat(place.dataset.x), y = parseFloat(place.dataset.y);
+    const depth = { flight:1.85, geometry:2.05, outcome:2.15, academy:2.55, diagnose:1.9 }[place.dataset.key] || 2.0;
+
+    // gentle bias so the point also glides toward centre — capped (vestibular ¶8)
+    const cap = 0.18;
+    let tx = (0.5 - x / 100) * W * 0.34; tx = Math.max(-W * cap, Math.min(W * cap, tx));
+    let ty = (0.5 - y / 100) * H * 0.34; ty = Math.max(-H * cap, Math.min(H * cap, ty));
+
+    world.style.setProperty('--px', '0px');          // zero any parallax before the dolly
+    world.classList.add('is-traveling');
+    $('places').classList.add('dimmed');
+    place.classList.add('is-target');
+    try { haptics.impact('medium'); } catch (e) {}
+
+    let navigated = false;
+    gsap.to(world, {
+      scale: depth, x: tx, y: ty, transformOrigin: `${x}% ${y}%`,
+      duration: 0.66, ease: 'power2.inOut',
+      onUpdate(){
+        if (!navigated && this.progress() > 0.72){ navigated = true; location.href = href; }
+      },
+      onComplete(){ if (!navigated) location.href = href; }
+    });
+    // fade the veil in slightly as we arrive → seamless hand-off to the module
+    gsap.to(veil, { opacity: 0.5, duration: 0.5, ease: 'power2.in', delay: 0.2 });
+  }
+
+  placesEl.forEach(place => {
+    place.addEventListener('pointerdown', () => { try { haptics.impact('light'); } catch (e) {} skipBoot(); dismissHint(); });
+    place.addEventListener('click', (e) => {
+      e.preventDefault();
+      travelTo(place);
+    });
+  });
+
+  /* ── parallax drift on horizontal drag (≤8px) — graspable, never required ───
+     One value --px lives on .world; each plane reads it at its own depth factor
+     in CSS (photo .22 · uvgrade .22 · halos .40 · haze .62 · ember 1 · places 1),
+     so the ball (ember) and the plates (places) move together and stay aligned. */
+  const PX_CAP = 8;
+  let dragging = false, startX = 0, px = 0, tiltPx = 0;
+
+  function applyParallax(){
+    const total = Math.max(-PX_CAP, Math.min(PX_CAP, px + tiltPx));
+    world.style.setProperty('--px', total + 'px');
+  }
+  window.addEventListener('pointerdown', (e) => {
+    if (traveling || reduce) return;
+    dragging = true; startX = e.clientX;
+  });
+  window.addEventListener('pointermove', (e) => {
+    if (!dragging) return;
+    px = Math.max(-PX_CAP, Math.min(PX_CAP, (e.clientX - startX) * 0.12));
+    applyParallax();
+  });
+  function releaseDrag(){
+    if (!dragging) return; dragging = false;
+    if (noGsap){ px = 0; applyParallax(); return; }
+    gsap.to({ v: px }, { v: 0, duration: 0.5, ease: 'power2.out', onUpdate(){ px = this.targets()[0].v; applyParallax(); } });
+  }
+  window.addEventListener('pointerup', releaseDrag);
+  window.addEventListener('pointercancel', releaseDrag);
+
+  /* ── optional IMU idle-parallax (shared garnish) — silent math fallback ───── */
+  // Never requested via a prompt here (would clutter); if the platform already
+  // grants motion (Android/desktop), a tiny tilt rides the same ≤8px budget.
+  // On iOS (permission required) it stays absent → drag is the fallback (¶10).
+  if (!reduce && typeof DeviceOrientationEvent !== 'undefined' &&
+      typeof DeviceOrientationEvent.requestPermission !== 'function'){
+    try {
+      window.addEventListener('deviceorientation', (e) => {
+        if (traveling || dragging || e.gamma == null) return;
+        tiltPx = Math.max(-PX_CAP, Math.min(PX_CAP, e.gamma * 0.12));
+        applyParallax();
+      }, { passive: true });
+    } catch (e) {}
+  }
+
+  /* ── pause everything on background (guardrail 14) ────────────────────────── */
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden){
+      paused = true; stopLoop(); clearTimeout(spawnTimer);
+      document.body.classList.add('is-hidden');
+    } else {
+      paused = false; document.body.classList.remove('is-hidden');
+      t0 = performance.now(); startLoop(); scheduleShot();
+    }
+  });
+
+  /* ── first-run hint ──────────────────────────────────────────────────────── */
+  const hintEl = $('hint');
+  let hintShown = false;
+  function dismissHint(){ if (hintShown){ hintEl.hidden = true; hintShown = false; } }
+  if (firstRun && !reduce && readStr('sa.home.k1.hinted') !== '1'){
+    hintEl.hidden = false; hintShown = true;
+    writeStr('sa.home.k1.hinted', '1');
+    setTimeout(dismissHint, 5200);
+  }
+
+  // any first input skips the boot + dismisses the hint
+  ['pointerdown','keydown'].forEach(ev => window.addEventListener(ev, () => { skipBoot(); dismissHint(); }, { once:false }));
+
+  /* ── resize (recompute canvas geometry) ──────────────────────────────────── */
+  let rz = 0;
+  window.addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => { sizeCanvas(); if (reduce) drawStatic(); }, 120); });
+
+  /* ── boot the world ──────────────────────────────────────────────────────── */
+  sizeCanvas();
+  startLoop();
+  scheduleShot();
+
+  let booted = false; try { booted = sessionStorage.getItem('sa.home.k1.booted') === '1'; } catch (e) {}
+  if (reduce || noGsap || booted){
+    restState();                                   // static wide shot — no boot
+  } else {
+    runBoot();
+    try { sessionStorage.setItem('sa.home.k1.booted', '1'); } catch (e) {}
+  }
+</script>
+</body>
+</html>

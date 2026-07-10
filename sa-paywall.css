@@ -18,7 +18,7 @@
 
 .sa-pw-scrim{
   --pw-bg: var(--bg, #0A0E12);
-  --pw-cyan: var(--accent, #22E3D6);
+  --pw-cyan: var(--accent, #FF8A4D);
   --pw-ink: var(--ink, #e8f0fb);
   --pw-muted: var(--muted, #9aabc6);
   --pw-muted-2: #7e8b96;          /* AA on near-black even at small sizes */
