@@ -65,17 +65,18 @@ Sound kit (source separately, royalty-free): low ambient range hum · one clean 
 
 **Series follow-ups (same recipe, swap the myth):** "Your duck-hook is NOT over-the-top" (the snap-hook engine finding) · "High and short? That's loft, not power" (spin-loft chain) · "A low slice that's way short doesn't exist" (engine finding #3).
 
-## FILM 4 — "THE METRES YOU LEFT OUT THERE" · potential vs actual (conversion)
-**Goal:** make the value measurable — the reverse function's new insight layer as emotion. Funnel bottom: convert free users. **Format:** 20 s, 9:16.
+## FILM 4 — "THE FAIRWAY YOU LEFT OUT THERE" · potential vs actual (conversion)
+**Goal:** make the value measurable — the reverse function's insight layer as emotion. Funnel bottom: convert free users. **Format:** 20 s, 9:16.
+**REVISED per engine finding V-1 (diagnose-v3-values-spec.md):** matched-speed carry cost of a pattern is tiny (~4 m) — the HONEST big number is the target-line cost (7-iron slice: ~27 m offline; driver: ~41% of carry). Distance is speed; the pattern costs you the FAIRWAY.
 
 | t | Beat | Source | Overlay copy |
 |---|---|---|---|
-| 0–4s | TWO comets leave the same tee in split-screen night: one ember (curving, dying short), one ghost-violet (neutral, carrying long) | U3 + U4 composited | `Same swing speed. Two different balls.` |
-| 4–9s | The ghost comet lands; a thin measuring line draws between the two landings | Higgsfield: "two light trails landing apart on dark range, measuring line draws between them" | `The gap isn't strength. It's geometry.` |
-| 9–15s | REAL UI: Diagnose result — the insight line (`A neutral delivery at your speed carries ~168 m — this pattern costs you ~23 m`) types on | screen rec | `Find your metres.` |
+| 0–4s | TWO comets leave the same tee: ember one curves away into the dark right; ghost-violet one flies the line. Same length of flight. | U3 + U4 composited | `Same speed. Same carry.` |
+| 4–9s | Both land; a thin measuring line draws SIDEWAYS between the two landing points | Higgsfield: "two light trails landing far apart laterally on dark range, thin measuring line draws between them" | `27 metres apart.` → `The gap isn't strength — it's geometry.` |
+| 9–15s | REAL UI: Diagnose result — the insight line types on: `This pattern costs you ~27 m of fairway. Half the face gap wins ~22 back.` | screen rec | `Find your fairway.` |
 | 15–20s | Brand card | — | `StrikeArc — the physics of your golf.` |
 
-**Dependency:** ships after the diagnose-v3 values layer exists (spec in progress). Driver version uses % only (yardage-honesty law).
+**Dependency:** ships after the diagnose-v3 values layer is implemented (spec done: docs/diagnose-v3-values-spec.md). Driver version: % of carry + degrees only (yardage-honesty law, enforced at the API edge).
 
 ## FILM 5 (optional) — "TONIGHT AT THE RANGE" · 10 s brand ident
 Pure atmosphere for the showcase-video intro + channel ident: U1 → U5 constellation draw → the comet crosses → wordmark. One overlay: `Tonight at the range.` No CTA. This doubles as B-roll for the 500k-audience video about the app.
