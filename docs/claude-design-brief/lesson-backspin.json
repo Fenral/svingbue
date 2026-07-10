@@ -1,0 +1,146 @@
+{
+  "parameter": "Backspin",
+  "oneLiner": "Backspin is the ball's backward rotation — the top spinning back toward you — that generates aerodynamic lift and holds the shot in the air.",
+  "whatItIs": "Every well-struck golf shot leaves the face spinning backwards: the top of the ball rotates back toward you at thousands of RPM. That spin drags air faster over the top of the ball than underneath, creating an upward force (the Magnus effect) that fights gravity and keeps the ball climbing long after it \"should\" have fallen. Amounts are big — a 7-iron spins around 7,000 rpm, a driver only about 2,700, a wedge 9,000+. Crucially, backspin is not something you \"add\" with a scoop or a flick of the wrists — it is a by-product of how glancing the strike is (spin loft) and how fast the ball leaves the face. The app's engine encodes exactly this: backspin ≈ spin loft × ball speed × 1.8, where spin loft = dynamic loft − attack angle.",
+  "components": [
+    {
+      "name": "Spin loft",
+      "role": "The master lever. The angle between where the club is travelling and where the face points at impact (dynamic loft minus attack angle). The bigger this gap, the more glancing the blow and the more backspin. It alone decides whether you make 2,700 (driver) or 9,000 (wedge) rpm.",
+      "typicalRange": "iron ~30-35°, driver ~12-16°, wedge ~40-50°"
+    },
+    {
+      "name": "Dynamic loft",
+      "role": "The effective loft actually delivered at impact (not the number stamped on the club). It is the larger half of spin loft and also sets launch height.",
+      "typicalRange": "7-iron ~28-32°, driver ~12-15°"
+    },
+    {
+      "name": "Attack angle",
+      "role": "The up/down direction the club is moving through impact. It subtracts from dynamic loft to set spin loft, so hitting down (negative) raises spin, hitting up (positive) lowers it.",
+      "typicalRange": "iron -4 to -2° (down), driver 0 to +5° (up)"
+    },
+    {
+      "name": "Ball speed (via club speed)",
+      "role": "The near-linear multiplier on spin. For a fixed spin loft, a faster ball skids up the face harder and grips more, so spin scales roughly in proportion to ball speed.",
+      "typicalRange": "7-iron ball ~115-125 mph, driver ~160-175 mph"
+    },
+    {
+      "name": "Friction / strike quality",
+      "role": "The on/off gate. Grooves, ball cover (urethane vs surlyn), a clean dry face, the lie, and moisture decide whether the glancing blow can actually grip. Grass or water between ball and face makes it slide instead of spin (a 'flyer').",
+      "typicalRange": "clean dry urethane = full spin; flyer/wet can cut 20-50% (2,000+ rpm off a wedge)"
+    },
+    {
+      "name": "Air & conditions",
+      "role": "Does not change spin at the face, but re-shapes what that spin does in flight. Denser air (cold, sea level) gives the spin more lift but shorter carry; thin air (altitude, heat) carries farther but the spin lifts less.",
+      "typicalRange": "Denver air ~14% thinner than sea level; 0 C air ~10% denser than 30 C"
+    }
+  ],
+  "howTheyConnect": "Contact between clubface and ball lasts about half a millisecond. In that instant the ball is compressed against the face, and because the face is not pointing exactly where the club is travelling, the ball skids up the face. Friction resists that skid and rolls the ball backwards — the larger the mismatch (spin loft), the more glancing the blow and the more skid there is to convert into spin. So spin rate rises with spin loft, and for a given spin loft it rises with ball speed (a faster skid grips harder). The app's engine states this literally: backspin ≈ spinLoft × ballSpeed × 1.8, and spinLoft = dynamicLoft − attackAngle. That is why hitting down (more negative attack) and holding loft both raise spin, and why teeing a driver up (positive attack, low loft) is the classic low-spin recipe. There is a subtle self-limiter: a bigger spin loft is also a more glancing, less efficient strike, so the engine lowers the smash factor (smashEff = 1.46 − 0.004·spinLoft), trimming ball speed slightly as spin loft climbs — but spin still rises strongly overall. Friction is the gate over all of this: if grass, water, or a slick cover intrudes, the skid can't grip and spin collapses regardless of a perfect spin loft. Once airborne, that backspin generates Magnus lift — at driver-level ball speed the lift can exceed twice the ball's own weight — and then slowly decays a few percent per second, while thin or warm air lets the ball carry farther but gives the spin less air to grab.",
+  "hierarchy": [
+    {
+      "driver": "Spin loft (dynamic loft minus attack angle)",
+      "weight": "dominant — ~216 rpm per degree at a 120-mph 7-iron ball; sets the whole range from ~2,700 (driver) to ~9,000 (wedge) rpm",
+      "why": "It is the single geometric quantity that governs how glancing the blow is. In the engine backspin scales directly with it (spinLoft × ballSpeed × 1.8). Moving from 25° to 40° spin loft shifts spin from ~5,400 to ~8,600 rpm at the same speed. Everything else is a modifier on top of this."
+    },
+    {
+      "driver": "Ball speed (from club speed)",
+      "weight": "near-linear multiplier — ~59 rpm per +1 mph at 33° spin loft; roughly 2x speed ≈ 2x spin",
+      "why": "For a fixed spin loft, a faster ball skids up the face harder and grips more, so spin is close to linear in ball speed. It is why a low-loft driver still makes ~2,700 rpm at 165 mph, and why the same swing on a range mat vs a tight lie changes little if speed and loft are held."
+    },
+    {
+      "driver": "Friction / strike quality (grooves, ball, lie, moisture)",
+      "weight": "large but conditional — a flyer lie or wet face can strip 20-50% (2,000+ rpm off a wedge)",
+      "why": "Friction is the gate that lets the glancing blow become spin. When it is present the top two levers rule; when grass or water intrudes it can dominate everything by killing grip. Ranked below the always-on levers because most of the time (clean, dry) it is near-maxed and invisible."
+    },
+    {
+      "driver": "Dynamic loft",
+      "weight": "~216 rpm per degree via spin loft; also the primary launch-height lever",
+      "why": "It is the bigger, more adjustable half of spin loft — you change it with club selection and shaft lean across a huge range. Each degree adds spin through the same channel as spin loft, and it doubles as the main control of how high the ball launches, so practically it is the knob a golfer turns most."
+    },
+    {
+      "driver": "Attack angle",
+      "weight": "~216 rpm per degree via spin loft (spinLoft = DL − AA); narrower usable range",
+      "why": "Mathematically it carries the exact same per-degree weight as dynamic loft (they are the two terms of spin loft), but a golfer's usable attack-angle range is smaller (roughly -6 to +5°), so it moves the total less than loft does. It is the cleanest way to lower driver spin: hit up."
+    },
+    {
+      "driver": "Air & conditions (altitude, temperature, wind)",
+      "weight": "second-order — does not change face spin; ~14% thinner air (Denver) or ~10% lighter warm air only reshapes the flight",
+      "why": "None of this alters the rpm coming off the face; it changes how much lift that spin produces and how far the ball carries. Real, but a layer removed from the backspin number — grounded by air density falling ~14% at Denver and ~10% from 0 C to 30 C."
+    }
+  ],
+  "misconceptions": [
+    "\"You create backspin by hitting down and 'pinching' or scooping the ball.\" Backspin comes from spin loft (the face-vs-path mismatch) and face friction, not from the divot or a scoop. Hitting down helps only because it keeps spin loft up and ensures clean ball-first contact; the ground itself adds no spin.",
+    "\"More loft always means more backspin.\" It is spin loft (dynamic loft minus attack angle), not loft alone. A high wedge from a flyer lie can spin less than a clean 8-iron because grass kills the friction, and adding loft while also swinging more upward can leave spin loft unchanged.",
+    "\"Backspin makes the ball fly higher and farther, so more is always better.\" Only up to an optimum. Past it the ball balloons — climbs, stalls, drops short. Drivers especially lose carry and roll from excess spin: ~2,700 rpm beats ~3,500 rpm at the same speed.",
+    "\"Backspin is what curves the ball right or left.\" Pure backspin (a level spin axis) only lifts. Sideways curve comes from the spin axis tilting, driven by the face-to-path difference — in the engine that is spinAxis, a completely separate quantity from backspin.",
+    "\"New wedge grooves add loads of spin on every shot.\" On a clean, dry fairway lie the face grips almost fully with or without fresh grooves; the difference is small. Grooves earn their keep in rough and wet, channelling grass and water away so friction survives. Their job is protecting spin, not manufacturing it.",
+    "\"A softer ball spins more with every club.\" Cover friction dominates only on high-spin-loft short shots (wedges), where soft urethane grips more. Off the driver (low spin loft) premium balls are engineered to spin less. Ball choice is shot-dependent, not a blanket 'soft = more spin'."
+  ],
+  "wolframChecks": [
+    "air density at 15 C sea level -> 1.225 kg/m^3 (ISA reference), anchoring the sea-level baseline for lift/drag claims.",
+    "air density at 1600 m (Denver) -> ~1.05 kg/m^3; 1.225 / 1.048 = 1.169, so sea-level air is ~17% denser / Denver air ~14% thinner — grounds the altitude carry effect.",
+    "density of dry air 0 C -> ~1.29 kg/m^3 vs 30 C -> 1.165 kg/m^3; (1.293-1.165)/1.293 = 9.9% -> cold air ~10% denser than warm, grounding the temperature effect on flight.",
+    "7000 rpm -> 733 rad/s; 733 x 0.0213 m (ball radius) = 15.6 m/s -> the ball's surface tangential speed at 7-iron spin.",
+    "spin ratio S = 15.6 / 67 m/s = 0.233 -> the dimensionless spin parameter (surface speed / ball speed), matching iron-flight literature (~0.2).",
+    "Magnus lift 0.5 x rho x v^2 x A x C_L = 0.5 x 1.225 x 67^2 x pi x 0.0213^2 x 0.25 = 0.98 N; ball weight = 0.04593 kg x 9.81 = 0.451 N; 0.98 / 0.4506 = 2.17 -> Magnus lift can exceed the ball's own weight ~2.2x at speed (why a spinning shot climbs).",
+    "engine backspin check: 33° spin loft x 120 mph ball x 1.8 = 7,128 rpm (default 7-iron), and sensitivity 120 x 1.8 = 216 rpm per degree of spin loft; 33 x 1.8 = ~59 rpm per mph of ball speed.",
+    "engine carry curve 0.232 x ballSpeed^1.389 / (1 + (ballSpeed/210)^6): 120 mph -> 173.2 yd, 140 mph -> 204.1 yd (near-linear, +18% carry for +17% ball speed), cross-checking carry vs ball speed.",
+    "spin decay exp(-0.04 x 6) = 0.787 -> at ~4% per second a ball still carries ~79% of its launch spin after a 6-second flight (backspin decays slowly, so launch spin dominates)."
+  ],
+  "quiz": [
+    {
+      "q": "Spin loft is defined as:",
+      "options": [
+        "Dynamic loft plus attack angle",
+        "Dynamic loft minus attack angle",
+        "Club speed times face angle",
+        "The loft number stamped on the club"
+      ],
+      "answerIndex": 1,
+      "explanation": "Spin loft = dynamic loft minus attack angle — the angle between where the face points and where the club is travelling. It is the single biggest driver of backspin. A 30° dynamic loft with a -3° (downward) attack gives 33° of spin loft, which in the app's engine and TrackMan data produces roughly 7,000 rpm for a 7-iron."
+    },
+    {
+      "q": "A player's driver is ballooning and losing distance from too much spin. Which change lowers spin the most?",
+      "options": [
+        "Swing faster with the same delivery",
+        "Hit up on the ball (more positive attack) with the same low loft",
+        "Add loft and hit down",
+        "Switch to an older, more worn ball"
+      ],
+      "answerIndex": 1,
+      "explanation": "Spin loft = dynamic loft minus attack angle, so hitting up (more positive attack) shrinks spin loft and cuts spin — the classic low-spin driver recipe. Swinging faster raises ball speed and adds spin. Adding loft and hitting down both raise spin loft, making the balloon worse."
+    },
+    {
+      "q": "Two 7-irons are struck with an identical 33° spin loft, but one ball leaves at 110 mph and the other at 125 mph. What happens to backspin?",
+      "options": [
+        "It is the same — spin loft is identical",
+        "The faster ball spins meaningfully more",
+        "The faster ball spins less",
+        "Spin depends only on the grooves"
+      ],
+      "answerIndex": 1,
+      "explanation": "For a fixed spin loft, spin is roughly linear in ball speed. In the app's model (rpm = spin loft x ball speed x 1.8) the 33° / 110 mph strike makes ~6,530 rpm and the 33° / 125 mph strike ~7,425 rpm — about 59 rpm for every extra mph of ball speed."
+    },
+    {
+      "q": "From a wet, grassy 'flyer' lie a wedge often comes out lower-spinning than from a clean fairway. Why?",
+      "options": [
+        "The extra grass increases friction",
+        "Water and grass get between ball and face, cutting friction so the ball can't grip",
+        "Spin loft becomes negative",
+        "The ball speed drops to zero"
+      ],
+      "answerIndex": 1,
+      "explanation": "Backspin needs friction to turn the glancing blow into spin. Grass and moisture form a slick film between ball and face, so the ball slides instead of gripping — spin can fall 20-50%. That is the 'flyer'; grooves exist mainly to channel that debris away and protect spin, not to create it."
+    },
+    {
+      "q": "Once the ball is in the air, what does backspin mainly do?",
+      "options": [
+        "Curves the ball sideways",
+        "Creates upward Magnus lift that keeps the ball airborne",
+        "Speeds the ball up",
+        "Nothing until it lands"
+      ],
+      "answerIndex": 1,
+      "explanation": "Backspin drags air faster over the top of the ball, producing an upward Magnus force. At driver ball speeds that lift can exceed twice the ball's own weight (~0.98 N of lift vs ~0.45 N of weight in our grounded check), which is why a spinning shot climbs and hangs. Sideways curve is a separate effect, caused by the spin axis tilting — not by backspin itself."
+    }
+  ]
+}
