@@ -114,7 +114,7 @@ function computeGroundStrikeTrigger(state) {
  *                        early ground-strike FX fires (optional — "turf
  *                        first" cue, GROUND-STRIKE-BEFORE-BALL step 3).
  */
-export function createTimeline3d({ state, sa3d, arc3d, club3d, getReduced, controlsVisible, faceZoomChipEl, faceZoomLiveEl, faceZoomHintEl, faceZoomDismissEl, faceZoomHideNodes, faceZoomHideLabels, groundStrikeLabelEl } = {}) {
+export function createTimeline3d({ state, sa3d, arc3d, club3d, getReduced, controlsVisible, faceZoomChipEl, faceZoomLiveEl, faceZoomHintEl, faceZoomDismissEl, faceZoomHideNodes, faceZoomHideLabels, groundStrikeLabelEl, facezoomEnabled = false } = {}) {
   const fx = createFx(state);
   sa3d.scene.add(fx.group);
 
@@ -156,6 +156,26 @@ export function createTimeline3d({ state, sa3d, arc3d, club3d, getReduced, contr
   let impactFired = false;
   let cameraBaseRig = null; // snapshot of sa3d.rig at swing start, for dolly restore
   let shakeTween = null;
+
+  // ── CONTINUOUS LOOP (RE-HERO 2026-07-11) — the calm default grammar ────────
+  // The club circles the arc forever, calm and slightly slower, no dramatic
+  // slow-mo window and no per-pass FX. A slider settle arms ONE band-correct
+  // impact response on the next impact pass. Pausable via the existing control;
+  // slider drags never stop it. Battery guards: paused on document.hidden, and
+  // after LOOP_MAX_QUIET rounds with zero interaction it freezes at address and
+  // returns to render-on-demand (any interaction resumes). Reduced-motion never
+  // auto-runs this loop (static address pose — see startLoop()).
+  let loopTween = null;
+  let looping = false;         // is the loop tween advancing + a ticker held?
+  let userPaused = false;      // explicit pause via the control
+  let docHidden = false;       // battery — paused while the tab is hidden
+  let frozenAtAddress = false; // battery — idle-frozen at the address pose
+  let loopArmedFx = false;     // a settle armed ONE band-correct impact response
+  let loopLastP = 0;
+  let quietRounds = 0;         // loop rounds since the last interaction
+  let loopImpactPasses = 0;    // verify hook — impact crossings during the loop
+  let loopFxBursts = 0;        // verify hook — FX responses actually fired
+  let LOOP_MAX_QUIET = 8;      // rounds of zero interaction before freezing at address
 
   // ── GROUND-STRIKE-BEFORE-BALL ──────────────────────────────────────────
   // recomputed once per play()/snapReduced() call (state is fixed for the
@@ -280,13 +300,14 @@ export function createTimeline3d({ state, sa3d, arc3d, club3d, getReduced, contr
     }
     if (shakeMs > 0 && cameraBaseRig) startCameraShake(shakeMs);
     if (!reduced) ensureFxLoop();
+    // FACE-ZOOM PARKED (RE-HERO 2026-07-11): freeze only when the dev flag armed it.
     // FIX N — FACE-ZOOM: the camera already cut in APPROACH_P_DELTA earlier
     // (see onU() below) and has been slow-mo tracking the club since; freeze()
     // does the FULL FREEZE (tween.pause()) at this true-impact moment and
     // shows the marker pulse/chip/hint. Fires after shake so shake's own
     // applyRig() calls don't fight the cut; dollyTo/shake are themselves
     // guarded against faceZoom.isActive() below.
-    if (!reduced) faceZoom.freeze(state, tween);
+    if (!reduced && facezoomEnabled) faceZoom.freeze(state, tween);
   }
 
   // ── camera push-in dolly: nudge rig.dist toward the ball during down→impact,
@@ -443,7 +464,10 @@ export function createTimeline3d({ state, sa3d, arc3d, club3d, getReduced, contr
       // trigger than doImpactFx's own pImpact check below); once cut in,
       // trackApproach() re-tracks the camera/marker every frame so the
       // still-moving club (now in slow-mo) stays framed right up to the freeze.
-      if (!impactFired && !reduced && anim3.p >= pApproachCutIn) {
+      // FACE-ZOOM PARKED (RE-HERO 2026-07-11): no UI trigger fires the cut-in.
+      // Only reachable when the caller passed facezoomEnabled (the ?facezoom=1
+      // dev flag). All the machinery below is untouched — just gated off.
+      if (facezoomEnabled && !impactFired && !reduced && anim3.p >= pApproachCutIn) {
         if (!faceZoom.isActive()) faceZoom.runApproach(state, tween, anim3.p, pImpact);
         else faceZoom.trackApproach(state);
       }
@@ -525,6 +549,106 @@ export function createTimeline3d({ state, sa3d, arc3d, club3d, getReduced, contr
     }
   }
 
+  // ── CONTINUOUS LOOP implementation ─────────────────────────────────────────
+  // Single source of truth for "is the loop advancing + holding a ticker" so
+  // startTicking/stopTicking stay perfectly balanced (each state flip toggles
+  // the ticker exactly once).
+  function setLooping(on) {
+    if (on === looping || !loopTween) return;
+    looping = on;
+    if (on) { loopTween.resume(); sa3d.startTicking(); }
+    else { loopTween.pause(); sa3d.stopTicking(); }
+  }
+  function maybeResume() {
+    if (userPaused || docHidden || frozenAtAddress) return;
+    setLooping(true);
+  }
+  function snapLoopAddress() {
+    anim3.p = restP(state);
+    placeAt(anim3.p, { inkP: 1 });
+    sa3d.invalidate();
+  }
+  function fireLoopImpact() {
+    const reduced = getReduced();
+    const sq = strikeQuality(state);
+    const gs = computeGroundStrikeTrigger(state);
+    if (gs) {
+      _entryV.set(gs.entryWorld.x, gs.entryWorld.y, Math.max(gs.entryWorld.z, 0));
+      fx.fireGroundContact(gs.band, { entryV: _entryV, seed: seedFor(), reduced, invalidate: sa3d.invalidate });
+      saHaptics.impact(gs.band === 'Duff' ? 'heavy' : 'medium');
+    }
+    const { lpV, ballV } = worldLpAndBall();
+    fx.fireImpact(sq.band, { lpV, ballV, seed: seedFor(), reduced, camera: sa3d.camera, invalidate: sa3d.invalidate });
+    if (sq.band !== 'Whiff') saHaptics.impact('medium');
+    loopFxBursts++;
+    if (!reduced) ensureFxLoop();
+  }
+  function onLoopUpdate() {
+    // calm: keep the arc fully inked, just circle the club along it — no trail,
+    // no per-pass FX (only the armed response below fires, once, on an impact
+    // crossing). Direction of the delivery arrow is state-driven (updated on
+    // slider change via rebuild3d), so it needs nothing per frame here.
+    placeAt(anim3.p, { inkP: 1 });
+    const pImpact = pAtTheta(thetaAtImpact(state));
+    if (loopLastP < pImpact && anim3.p >= pImpact) {
+      loopImpactPasses++;
+      if (loopArmedFx) { loopArmedFx = false; fireLoopImpact(); }
+    }
+    loopLastP = anim3.p;
+  }
+  function onLoopRepeat() {
+    loopLastP = 0;
+    quietRounds++;
+    if (quietRounds >= LOOP_MAX_QUIET) freezeAtAddress();
+  }
+  function freezeAtAddress() {
+    frozenAtAddress = true;
+    setLooping(false);   // stop advancing + release the ticker (render-on-demand)
+    snapLoopAddress();
+  }
+  /** Start (or, under reduced motion, statically pose) the calm default loop. */
+  function startLoop() {
+    if (getReduced()) { snapLoopAddress(); return; } // reduced-motion: no auto-loop
+    if (loopTween || !window.gsap) return;
+    if (!cameraBaseRig) cameraBaseRig = { ...sa3d.rig };
+    const pRest = restP(state);
+    anim3.p = pRest;
+    loopLastP = pRest;
+    // one calm cycle: windup (pRest→0) · downswing through impact (0→1) · return
+    // (1→pRest). Linear through the strike (no slow-mo window), gentle ends.
+    loopTween = window.gsap.timeline({ paused: true, repeat: -1, onRepeat: onLoopRepeat });
+    loopTween
+      .to(anim3, { p: 0, duration: 1.9, ease: 'sine.inOut', onUpdate: onLoopUpdate }, 0)
+      .to(anim3, { p: 1, duration: 3.4, ease: 'none', onUpdate: onLoopUpdate })
+      .to(anim3, { p: pRest, duration: 1.5, ease: 'sine.inOut', onUpdate: onLoopUpdate });
+    maybeResume();
+  }
+  /** Any pointer/slider/keyboard interaction: reset the idle counter, unfreeze,
+   *  and resume the loop (unless the user has explicitly paused or the tab is hidden). */
+  function noteInteraction() {
+    quietRounds = 0;
+    if (frozenAtAddress) frozenAtAddress = false;
+    maybeResume();
+  }
+  /** The existing control (▶/⏸) — pause/resume the calm loop. */
+  function setLoopPaused(paused) {
+    userPaused = paused;
+    if (paused) setLooping(false);
+    else { quietRounds = 0; frozenAtAddress = false; maybeResume(); }
+  }
+  /** Battery: pause on document.hidden, resume when visible again. */
+  function setDocHidden(hidden) {
+    docHidden = hidden;
+    if (hidden) setLooping(false);
+    else maybeResume();
+  }
+  /** FX-on-change: arm ONE band-correct impact response for the next impact
+   *  pass (a settle is itself an interaction, so this also keeps the loop alive). */
+  function armImpactFx() {
+    loopArmedFx = true;
+    noteInteraction();
+  }
+
   return {
     fx,
     faceZoom,
@@ -535,6 +659,25 @@ export function createTimeline3d({ state, sa3d, arc3d, club3d, getReduced, contr
     seek,
     anim3,
     isPlaying: () => phase !== 'idle',
+    // ── CONTINUOUS LOOP API (RE-HERO 2026-07-11) ──────────────────────────────
+    startLoop,
+    setLoopPaused,
+    setDocHidden,
+    noteInteraction,
+    armImpactFx,
+    isLooping: () => looping,
+    loop: {
+      running: () => looping,
+      userPaused: () => userPaused,
+      frozenAtAddress: () => frozenAtAddress,
+      quietRounds: () => quietRounds,
+      armed: () => loopArmedFx,
+      impactPasses: () => loopImpactPasses,
+      fxBursts: () => loopFxBursts,
+      // verify-only: exercise the idle-freeze/resume path without waiting ~50s
+      _forceIdleFreeze: () => { quietRounds = LOOP_MAX_QUIET; freezeAtAddress(); },
+      _setMaxQuiet: (n) => { LOOP_MAX_QUIET = n; },
+    },
     _internal: { placeAt, restP: () => restP(state), pImpactFor: () => pAtTheta(thetaAtImpact(state)) },
     // GROUND-STRIKE-BEFORE-BALL — test/verify hooks (self-verify + Playwright):
     // groundStrike() is the trigger computed for the swing that just played

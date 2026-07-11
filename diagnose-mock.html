@@ -80,7 +80,8 @@
   /* ══ QUESTION BLOCK (only one ever expanded) ══════════════════════════ */
   .qblock{ display:flex; flex-direction:column; gap:8px; }
   .eyebrow{ font:600 11px/1.2 inherit; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); }
-  .qtitle{ font:700 15px/1.3 inherit; color:var(--ink); }
+  .qtitle{ font:700 15px/1.3 inherit; color:var(--ink); margin:0; }
+  h1.sa-strip__title{ margin:0; }   /* heading semantics; sa-p3.css owns the look (read-only) */
   .qhint{ font:400 11px/1.45 inherit; color:var(--muted); }
   .qhint b{ color:var(--secondary); font-weight:600; }
   .qrow{ display:flex; flex-wrap:wrap; gap:8px; }
@@ -115,7 +116,7 @@
 
   /* the 3×3 flight picker */
   .picker{ display:grid; grid-template-columns:repeat(3,72px); gap:8px; }
-  .phead{ display:grid; grid-template-columns:repeat(3,72px); gap:8px; font:600 9px/1 inherit; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); }
+  .phead{ display:grid; grid-template-columns:repeat(3,72px); gap:8px; font:600 10px/1 inherit; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); }
   .phead span{ text-align:center; }
   .tile{
     position:relative; width:72px; height:72px; border-radius:12px;
@@ -167,6 +168,49 @@
 
   /* teaching moment — quiet muted paragraph, never a warning banner (spec v2 §2) */
   .teach{ font:400 12px/1.5 inherit; color:var(--muted); margin-top:10px; padding-top:10px; border-top:1px solid var(--line); }
+
+  /* ══ v3 VALUES — insight lines (spec §3.1 anatomy) ════════════════════ */
+  /* every inserted value is mono + tabular; outcome values (m/%/°) ride the
+     lane ember (--accent) the page already owns — colour only, never a glow
+     (ember budget ≤3 at rest is untouched). Delivery-param values keep their
+     param token colours exactly as the readout strip does. */
+  .vnum{ font-variant-numeric:tabular-nums; font-feature-settings:"tnum"; white-space:nowrap;
+    font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace; font-weight:700; }
+  .v-accent{ color:var(--accent); }
+  .v-muted{ color:var(--muted); }
+  .v-face{ color:var(--face); } .v-path{ color:var(--path); }
+  .v-attack{ color:var(--attack); } .v-loft{ color:var(--loft); }
+
+  /* THE COST LINE (§3.1 slot 4) — certain-conditional register, 13px, directly
+     under the coach story; inherits the card's ranked hedging from the eyebrow. */
+  .costline{ font:500 13px/1.5 inherit; color:var(--ink); margin-top:8px; }
+  /* THE HALF-GAP LINE (§3.1 slot 5) — 12px muted forecast, IF · mono micro-label */
+  .halfgap{ font:400 12px/1.5 inherit; color:var(--muted); margin-top:6px; }
+  .halfgap .iflabel{ font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+    font-size:10px; font-weight:700; letter-spacing:.08em; color:var(--muted); margin-right:5px; }
+  /* rpm texture (§1.3, alot band only) — one muted line, never a second paragraph */
+  .rpmtex{ font:400 12px/1.5 inherit; color:var(--muted); margin-top:5px; }
+
+  /* the Pro moment (§3.5) — "See both flights side by side" ghost-compare CTA,
+     under the cost line. Gating stub only (no paywall wiring this run). */
+  .procta{
+    position:relative; display:inline-flex; align-items:center; gap:7px; min-height:36px;
+    margin-top:9px; padding:2px 0; background:none; border:0;
+    color:var(--accent); font:600 12px/1.2 inherit; cursor:pointer; text-decoration:none;
+  }
+  .procta::after{ content:""; position:absolute; left:0; right:0; top:50%; height:44px; transform:translateY(-50%); }
+  .procta .probadge{
+    font:700 10px/1 inherit; letter-spacing:.1em; padding:3px 5px; border-radius:5px;
+    background:var(--accent-line); color:var(--accent); border:1px solid var(--accent-line);
+  }
+
+  /* tour benchmark row (§1.4 / §3.1 slot 7) — quiet static bench, above the CTA.
+     Replaces the BANNED grid-quantile "norm"; labelled TOUR, never personalized. */
+  .tourrow{ font:400 11px/1.5 inherit; color:var(--muted); margin-top:11px; padding-top:9px; border-top:1px solid var(--line); }
+  .tourrow .tourlabel{ font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+    font-size:10px; font-weight:700; letter-spacing:.1em; color:var(--muted); margin-right:6px; }
+  /* contact-card carry-delta evidence line (§3.2 way-short → cost line's small Δ) */
+  .conttextnum{ font-variant-numeric:tabular-nums; font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace; font-weight:700; color:var(--accent); }
 
   /* ══ SHARPEN-ROW (post-reveal refiners, spec v2 §3) ═══════════════════ */
   .sharpen{ margin-top:12px; padding-top:11px; border-top:1px solid var(--line); display:flex; flex-direction:column; gap:9px; }
@@ -235,7 +279,7 @@
     position:absolute; right:12px; bottom:12px; width:172px; height:84px;
     padding:6px 8px; overflow:hidden;
   }
-  .sideinset .slabel{ position:absolute; left:8px; top:5px; font:600 9px/1 inherit; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); }
+  .sideinset .slabel{ position:absolute; left:8px; top:5px; font:600 10px/1 inherit; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); }
   .sideinset canvas{ position:absolute; inset:0; width:100%; height:100%; }
   .readout{
     position:absolute; left:12px; bottom:12px; max-width:calc(100% - 200px);
@@ -261,7 +305,7 @@
   }
 </style>
 </head>
-<body>
+<body class="sa-depth">
   <div class="sa-strip">
     <a class="sa-strip__home" href="./home-mock.html" aria-label="Home">
       <svg viewBox="0 0 52 52" fill="none" aria-hidden="true">
@@ -269,7 +313,7 @@
         <circle class="sa-ball" cx="37" cy="15" r="5.2"/>
       </svg>
     </a>
-    <span class="sa-strip__title">DIAGNOSE</span>
+    <h1 class="sa-strip__title">DIAGNOSE</h1>
     <span class="sa-strip__spacer"></span>
   </div>
 
@@ -580,24 +624,26 @@ function renderInput(){
 
   if (state.active==='club'){
     block.appendChild(mk('div','eyebrow','Describe your last shot'));
-    block.appendChild(mk('div','qtitle','Which club?'));
+    block.appendChild(mk('h2','qtitle','Which club?'));
     const preselect = state.club || safeGet('sa.diagnose.club') || '7iron';
     block.appendChild(radiogroup('Which club?', [
       { value:'7iron',  label:'7-iron', cls:'glyphchip', html:`${clubGlyph('7iron')}<span>7-iron</span>`, aria:'7-iron' },
       { value:'driver', label:'Driver', cls:'glyphchip', html:`${clubGlyph('driver')}<span>Driver</span>`, aria:'Driver' },
     ], preselect, onClub));
     const strip=document.createElement('p'); strip.className='honeststrip'; strip.id='clubHonesty';
-    strip.textContent = preselect==='driver' ? BANDS_FOR(preselect).speed.note : '';
+    // guard: on the pre-load renderInput MAP is still null (BANDS_FOR needs it). If
+    // the last-used club was driver, the note fills in on the post-load re-render.
+    strip.textContent = (MAP && preselect==='driver') ? BANDS_FOR(preselect).speed.note : '';
     block.appendChild(strip);
     // update the honesty strip as the user arrows across the club radios (before the confirming tap)
     block.querySelectorAll('[role="radio"]').forEach(r=>{
-      r.addEventListener('focus', ()=>{ strip.textContent = r.getAttribute('aria-label')==='Driver' ? BANDS_FOR('driver').speed.note : ''; });
+      r.addEventListener('focus', ()=>{ strip.textContent = (MAP && r.getAttribute('aria-label')==='Driver') ? BANDS_FOR('driver').speed.note : ''; });
     });
   }
   else if (state.active==='speed'){
     const b = BANDS();
     block.appendChild(mk('div','eyebrow','How fast do you swing?'));
-    block.appendChild(mk('div','qtitle',`Your ${clubLabel(state.club)} speed`));
+    block.appendChild(mk('h2','qtitle',`Your ${clubLabel(state.club)} speed`));
     const ac = b.speed.anchorCopy;
     block.appendChild(radioCards('How fast do you swing?', [
       { value:'slow',   label:'Gentle',   anchor:ac.slow },
@@ -611,7 +657,7 @@ function renderInput(){
   }
   else if (state.active==='shape'){
     block.appendChild(mk('div','eyebrow','Your last shot'));
-    block.appendChild(mk('div','qtitle','Which flight looks like yours?'));
+    block.appendChild(mk('h2','qtitle','Which flight looks like yours?'));
     const head=document.createElement('div'); head.className='phead'; head.setAttribute('aria-hidden','true');
     head.innerHTML='<span>Left</span><span>Straight</span><span>Right</span>';
     block.appendChild(head);
@@ -869,10 +915,122 @@ function revealHeadline(con, refinedBy){
   const pre = refinedBy ? `Refined by your ${refinedBy}. ` : '';
   return `${pre}${conf.label}: ${DX.storyTitle(top)} — about ${conf.n} in 10.`;
 }
+
+/* ══ v3 VALUES — the headline insight per diagnosis (spec §1/§3) ═══════════
+   Finding V-1's inversion: matched-speed carry cost is tiny; the honest big
+   number is the TARGET LINE. One insight line per result (pick, don't stack —
+   decision table §3.2). All numbers are engine solves (costOfPattern / halfGap),
+   converted to metres; driver renders in %/degrees only (the yardage ban). */
+const mNum = v => String(Math.round(v));                                  // metres, integer
+const degTxt = v => { const r=Math.round(Math.abs(v)*10)/10; return Number.isInteger(r)?String(r):r.toFixed(1); };
+const num = (v, tone) => ({ t:'num', tone: tone||'accent', v: String(v) });
+
+/* which single headline this diagnosis earns (§3.2 — pick, don't stack) */
+function headlineClass(d){
+  if (d.curve==='Straight' && d.startLine==='Straight' && d.height==='Normal' && d.distanceLoss==='Full (normal distance)') return 'wink';
+  if (d.distanceLoss==='Noticeable loss') return 'wayshort';                                      // contact card is the headline
+  if (d.height==='Ballooned' || (d.height==='High' && d.distanceLoss==='Slight loss')) return 'spinloft'; // coach line is the headline
+  if (d.curve!=='Straight' || d.startLine!=='Straight') return 'cost';                             // the target-line cost line
+  return 'plain';
+}
+/* 7-iron personalization (§1.6): a typed carry inverts to a club speed and every
+   value line is re-solved at THEIR speed. Driver keeps ratio/degree form always. */
+function effectiveRep(top){
+  if (state.club==='7iron' && state.carry!=null && state.carry!=='skip' && carryTrusted()){
+    const cs = DX.clubSpeedForCarryM(+state.carry);
+    return { rep: { ...top.rep, clubSpeed: cs }, typedCarryM: +state.carry };
+  }
+  return { rep: top.rep, typedCarryM: null };
+}
+/* the carry clause switches by sign/size (§1.1 guard-rails) */
+function carryClauseParts(dCarryM, curve){
+  if (dCarryM >= 1){ const n=Math.round(dCarryM);
+    return { parts:[{t:'text',v:'and only '}, num(mNum(dCarryM)+' m'), {t:'text',v:' of carry'}], plain:`and only ${n} metres of carry` }; }
+  if (dCarryM <= -1){ const n=Math.round(-dCarryM);
+    if (curve==='Hook'||curve==='Draw')
+      return { parts:[{t:'text',v:'and actually squeezes out ~'}, num(n+' m'), {t:'text',v:' more carry — hot, flat and unplayable is still unplayable'}], plain:`and actually squeezes out about ${n} metres more carry — still unplayable` };
+    return { parts:[{t:'text',v:'and actually adds ~'}, num(n+' m'), {t:'text',v:' of carry — distance was never the problem'}], plain:`and actually adds about ${n} metres of carry — distance was never the problem` }; }
+  return { parts:[{t:'text',v:'barely any carry at all — distance was never the problem'}], plain:'barely any carry at all — distance was never the problem' };
+}
+/* THE COST LINE (§1.1) — 7-iron: absolute metres; driver: %/degrees only (ban) */
+function costLineData(cost, club, curve, typedCarryM){
+  if (club==='driver'){
+    const per10 = Math.round(cost.offlinePctOfCarry/10);     // offline/carry as "N m per 10 m" — a pure ratio
+    const ang = Math.round(Math.abs(cost.missAngleDeg));
+    return {
+      parts:[
+        {t:'text',v:'This delivery flies '}, num(ang+'°'), {t:'text',v:' off your target line — '},
+        num(per10+' m'), {t:'text',v:' sideways for every '}, num('10 m','muted'), {t:'text',v:' of flight. A square strike at the same speed flies the same distance, on line: the slice costs you the fairway, not the yards.'},
+      ],
+      plain:`This delivery flies ${ang} degrees off your target line — ${per10} metres sideways for every 10 metres of flight. A square strike flies the same distance, on line.`,
+    };
+  }
+  const offAbs = Math.round(Math.abs(cost.offlineM));
+  const side = cost.offlineM >= 0 ? 'right' : 'left';
+  if (typedCarryM != null){
+    if (Math.abs(cost.dCarryM) >= 2 && cost.dCarryM > 0){
+      const into = Math.round(cost.carryM);
+      return {
+        parts:[{t:'text',v:'This pattern turns your '}, num(typedCarryM+' m'), {t:'text',v:' into '}, num(into+' m'), {t:'text',v:', '}, num(offAbs+' m'), {t:'text',v:` ${side} of your line.`}],
+        plain:`This pattern turns your ${typedCarryM} metres into ${into}, ${offAbs} metres ${side} of your line.`,
+      };
+    }
+    return {
+      parts:[{t:'text',v:'At your '}, num(typedCarryM+' m'), {t:'text',v:' carry, this pattern still finishes '}, num(offAbs+' m'), {t:'text',v:` ${side} of your line — the distance is fine; the line isn’t.`}],
+      plain:`At your ${typedCarryM} metres carry, this pattern still finishes ${offAbs} metres ${side} of your line — the distance is fine, the line isn't.`,
+    };
+  }
+  const neutralM = Math.round(cost.neutralCarryM);
+  const cc = carryClauseParts(cost.dCarryM, curve);
+  return {
+    parts:[{t:'text',v:'A square delivery at this speed lands on your line and carries ~'}, num(neutralM+' m'), {t:'text',v:'. This pattern gives up '}, num(offAbs+' m'), {t:'text',v:' sideways — '}, ...cc.parts, {t:'text',v:'.'}],
+    plain:`A square delivery at this speed carries about ${neutralM} metres. This pattern gives up ${offAbs} metres sideways — ${cc.plain}.`,
+  };
+}
+/* THE HALF-GAP LINE (§1.2) — one real solveFlight, the app's first forecast */
+function halfGapData(cost, half, club, rep){
+  const hm = DX.flightMetrics(half);
+  if (club==='driver'){
+    const fromPct=Math.round(cost.offlinePctOfCarry), toPct=Math.round(hm.offlinePctOfCarry);
+    const fromAng=Math.round(Math.abs(cost.missAngleDeg)), toAng=Math.round(Math.abs(hm.missAngleDeg));
+    return {
+      parts:[{t:'iflabel',v:'IF ·'}, {t:'text',v:' Close half the face gap: '}, num(fromPct+'%'), {t:'text',v:' of carry sideways drops to '}, num(toPct+'%'), {t:'text',v:', and '}, num(fromAng+'°'), {t:'text',v:' becomes '}, num(toAng+'°'), {t:'text',v:'. You don’t need a new swing — you need half the gap.'}],
+      plain:`Close half the face gap and it drops from ${fromPct}% of carry to ${toPct}%, ${fromAng} degrees to ${toAng} degrees.`,
+    };
+  }
+  const gapAbs = degTxt(rep.faceAngle - rep.clubPath);
+  const from=Math.round(Math.abs(cost.offlineM)), to=Math.round(Math.abs(hm.offlineM));
+  return {
+    parts:[{t:'iflabel',v:'IF ·'}, {t:'text',v:' Close half of that '}, num(gapAbs+'°'), {t:'text',v:' face-to-path gap and the miss shrinks from '}, num(from+' m'), {t:'text',v:' to '}, num(to+' m'), {t:'text',v:'. You don’t need a new swing — you need half the gap.'}],
+    plain:`Close half of that ${gapAbs} degree face-to-path gap and the miss shrinks from ${from} to ${to} metres.`,
+  };
+}
+/* assemble the whole insight for a solved result (card-1 only) */
+function buildInsight(sol){
+  const d = sol.d, top = sol.con.stories[0], club = state.club;
+  const klass = headlineClass(d);
+  const { rep: effRep, typedCarryM } = effectiveRep(top);
+  const out = { klass, club, effRep, typedCarryM, costParts:null, halfParts:null, announceCost:null, contactEvidence:null, proSeed:null };
+  if (klass==='cost' || klass==='wayshort'){
+    const cost = DX.costOfPattern(effRep, club);
+    if (klass==='cost'){
+      const half = DX.halfGapSolve(effRep);
+      const cl = costLineData(cost, club, d.curve, typedCarryM);
+      out.costParts = cl.parts; out.announceCost = cl.plain;
+      out.halfParts = halfGapData(cost, half, club, effRep).parts;
+      out.proSeed = { a: effRep, b: { ...(DX.NEUTRAL_DELIVERY[club]||DX.NEUTRAL_DELIVERY['7iron']), clubSpeed: effRep.clubSpeed } };
+    } else {
+      out.contactEvidence = cost;  // way-short: the small Δcarry becomes contact-card evidence (§3.2)
+    }
+  }
+  return out;
+}
 function renderResults(sol, opts={}){
   const con = sol.con, base = sol.base, d = sol.d;
   state.phase='results'; state.hasResults=true; state.active=null;
   lastRefinedBy = opts.refinedBy || null;
+  const insight = buildInsight(sol);
+  const opts2 = Object.assign({}, opts, { insight });
   railBody.innerHTML='';
   renderChips(railBody);
 
@@ -896,10 +1054,10 @@ function renderResults(sol, opts={}){
   const ol=document.createElement('ol'); ol.className='stories';
   const wayShort = isWayShort();
   shown.forEach((story,i)=>{
-    ol.appendChild(storyCard(story, i, d, con, opts));
+    ol.appendChild(storyCard(story, i, d, con, opts2));
     if (i===0){
       // teaching moment 1 + contact card: promote directly under card 1 when way short
-      if (wayShort) ol.appendChild(wrapLi(contactCard('wayshort')));
+      if (wayShort) ol.appendChild(wrapLi(contactCard('wayshort', insight.contactEvidence)));
       else if (state.contact==='Thin'||state.contact==='Fat') ol.appendChild(wrapLi(contactCard('feel')));
     }
   });
@@ -931,7 +1089,11 @@ function renderResults(sol, opts={}){
   renderReadout(con.stories[0].rep);
   drawAll();
   region.focus({ preventScroll:false });   // land keyboard/SR focus in the diagnosis
-  announce(revealHeadline(con, opts.refinedBy));
+  // one polite live region announces the refreshed headline; on a carry refine it
+  // carries the PERSONALIZED cost (§3.4) so the SR user hears their own numbers.
+  let annc = revealHeadline(con, opts.refinedBy);
+  if (opts.refinedBy==='carry' && insight.announceCost) annc = `Refined by your carry. ${insight.announceCost}`;
+  announce(annc);
 }
 
 function storyCard(story, i, d, con, opts){
@@ -958,7 +1120,39 @@ function storyCard(story, i, d, con, opts){
     // coach story line (the dynamic-loft → spin-loft chain, spoken by the physics)
     const coach=document.createElement('div'); coach.className='coach';
     renderParts(coach, DX.coachStory(story, CM().meta));
+    // §1.3 — append the healthy spin-loft window as a ruler (grid-derived edges,
+    // zero new computation). The number gets a scale; not the pure wink (nothing
+    // to contextualize there).
+    if (d.curve!=='Straight' || d.startLine!=='Straight' || d.height!=='Normal' || d.distanceLoss!=='Full (normal distance)'){
+      const e = DX.spinLoftEdges(CM().meta);
+      renderParts(coach, [
+        { t:'text', v:` The healthy ${clubLabel(state.club)} window is about ` },
+        num(`${Math.round(e.low)}–${Math.round(e.alot)}°`, 'muted'),
+        { t:'text', v:'.' },
+      ]);
+    }
     txt.appendChild(coach);
+    // §1.3 supporting texture — only when spin loft is "a lot": backspin vs the
+    // square strike, one muted line, never a second paragraph (engine numbers).
+    if (DX.spinLoftBand(DX.spinLoftOf(story.rep), CM().meta)==='alot'){
+      const cost = DX.costOfPattern(story.rep, state.club);
+      const rpm=document.createElement('div'); rpm.className='rpmtex';
+      renderParts(rpm, [
+        { t:'text', v:'That loft spins it to ' }, num(Math.round(cost.backspin).toLocaleString('en-US')+' rpm'),
+        { t:'text', v:' vs ' }, num(Math.round(cost.neutralBackspin).toLocaleString('en-US')+' rpm', 'muted'),
+        { t:'text', v:' off a square strike — more spin, higher, shorter.' },
+      ]);
+      txt.appendChild(rpm);
+    }
+    // §3.1 slot 4/5 — THE COST LINE + THE HALF-GAP LINE, directly under the coach
+    // story (rendered only for the classes that earn it — §3.2 pick, don't stack).
+    const ins = opts.insight;
+    if (ins && ins.costParts){
+      const cl=document.createElement('div'); cl.className='costline'; renderParts(cl, ins.costParts); txt.appendChild(cl);
+      if (ins.halfParts){ const hl=document.createElement('div'); hl.className='halfgap'; renderParts(hl, ins.halfParts); txt.appendChild(hl); }
+      // §3.5 the Pro moment — "See both flights side by side" ghost-compare CTA
+      if (ins.proSeed){ txt.appendChild(proCompareCTA(ins.proSeed, DX.storyTitle(story))); }
+    }
     head.appendChild(glyphwrap); head.appendChild(txt); card.appendChild(head);
   } else {
     card.appendChild(eye); card.appendChild(mk('div','ctitle', DX.storyTitle(story)));
@@ -996,6 +1190,17 @@ function storyCard(story, i, d, con, opts){
       card.appendChild(t);
     }
 
+    // §1.4 / §3.1 slot 7 — tour benchmark row (replaces the BANNED grid-quantile
+    // "norm"). Static, labelled TOUR, never a personalized claim. Skipped for the
+    // pure wink (no face-to-path gap to benchmark).
+    if (headlineClass(d)!=='wink'){
+      const tr=document.createElement('div'); tr.className='tourrow';
+      const lab=document.createElement('span'); lab.className='tourlabel'; lab.textContent='TOUR'; lab.setAttribute('aria-hidden','true');
+      tr.appendChild(lab); tr.appendChild(document.createTextNode('Tour players keep '));
+      renderParts(tr, [{ t:'term', v:'face-to-path', def:DX.TERMS['face-to-path'] }]);
+      tr.appendChild(document.createTextNode(' inside about 2° on their stock shots.'));
+      card.appendChild(tr);
+    }
     card.appendChild(tryCTA(story.rep, DX.storyTitle(story), true, d.curve));
     card.appendChild(mk('div','cta-sub','Loads these numbers into Ball Flight — drag them to fix the shot.'));
   } else {
@@ -1011,6 +1216,8 @@ function renderParts(host, parts){
   for (const p of parts){
     if (p.t==='text'){ host.appendChild(document.createTextNode(p.v)); }
     else if (p.t==='strong'){ const s=document.createElement('span'); s.className='sl'; s.textContent=p.v; host.appendChild(s); }
+    else if (p.t==='num'){ const s=document.createElement('span'); s.className='vnum v-'+(p.tone||'accent'); s.textContent=p.v; host.appendChild(s); }
+    else if (p.t==='iflabel'){ const s=document.createElement('span'); s.className='iflabel'; s.textContent=p.v; host.appendChild(s); }
     else {
       const btn=document.createElement('button'); btn.type='button'; btn.className='term sa-focus';
       btn.textContent=p.v; btn.setAttribute('aria-expanded','false');
@@ -1076,6 +1283,24 @@ function persistStatFor(){
   DX.persistStat({ club: state.club, shape: currentDesc.curve, story: DX.storyTitle(top), face: top.rep.faceAngle, path: top.rep.clubPath });
 }
 
+/* the Pro moment (§3.5) — "See both flights side by side": loads the actual +
+   neutral pair into Ball Flight as a before/after ghost comparison. Free stays
+   free (numbers + forecast); Pro watches the two flights fly. GATING STUB ONLY —
+   this run writes the sa.handoff.compare seed; no paywall wiring (the ghost view
+   is another workflow's deliverable, behind the existing entitlement). */
+function proCompareCTA(seed, title){
+  const label = `${title} vs a square strike`;
+  const url = DX.handoffCompare(seed.a, seed.b, label);
+  const a=document.createElement('a'); a.className='procta sa-focus'; a.href=url;
+  const t=document.createElement('span'); t.textContent='See both flights side by side';
+  const badge=document.createElement('span'); badge.className='probadge'; badge.textContent='PRO'; badge.setAttribute('aria-hidden','true');
+  const arr=document.createElement('span'); arr.setAttribute('aria-hidden','true'); arr.textContent=' →';
+  a.appendChild(t); a.appendChild(badge); a.appendChild(arr);
+  a.setAttribute('aria-label', `See both flights side by side: your pattern versus a square strike. Pro feature. Opens Ball Flight.`);
+  a.addEventListener('click', ()=> DX.handoffCompare(seed.a, seed.b, label));
+  return a;
+}
+
 /* ══ SHARPEN-ROW (spec v2 §3) ═════════════════════════════════════════ */
 function buildSharpenRow(d){
   const refiners=[];
@@ -1135,18 +1360,23 @@ function buildRefiner(kind){
 }
 function buildCarrySlider(){
   const wrap=document.createElement('div'); wrap.className='carrywrap';
-  const val=document.createElement('div'); val.className='carryval';
-  const start = 145;
+  const val=document.createElement('div'); val.className='carryval'; val.id='carryval';
+  const start = (state.carry!=null && state.carry!=='skip') ? +state.carry : 145;
   val.innerHTML = `Carry: <b>${start} m</b>`;
+  // range 90–200 m, 5 m detents (spec §2: map ground truth cluster carryM p10 min
+  // 91 m … p90 max 198.1 m over 1,459 stats). Native <input range step=5> gives
+  // arrow-key = 1 detent + 44px hit area. Skip keeps the "Not sure" law intact.
   const s=document.createElement('input'); s.type='range'; s.className='carry sa-focus';
-  s.min='110'; s.max='185'; s.step='5'; s.value=String(start);
-  s.setAttribute('aria-label','Your 7-iron carry in metres, 5 metre steps');
-  s.setAttribute('aria-valuetext', `${start} metres`);
-  s.addEventListener('input', ()=>{ val.innerHTML = `Carry: <b>${s.value} m</b>`; s.setAttribute('aria-valuetext', `${s.value} metres`); });
+  s.min='90'; s.max='200'; s.step='5'; s.value=String(start);
+  s.setAttribute('aria-labelledby','carryval');   // visible label IS the name (drift-proof)
+  s.setAttribute('aria-description','Your 7-iron carry in metres, 5 metre steps, 90 to 200');
+  s.setAttribute('aria-valuetext', `${start} metres carry`);
+  s.addEventListener('input', ()=>{ val.innerHTML = `Carry: <b>${s.value} m</b>`; s.setAttribute('aria-valuetext', `${s.value} metres carry`); });
   s.addEventListener('change', ()=> applyRefiner('carry', +s.value));
   const skip=document.createElement('button'); skip.type='button'; skip.className='textbtn sa-focus'; skip.textContent='Skip';
   skip.addEventListener('click', ()=> applyRefiner('carry','skip'));
-  wrap.appendChild(val); wrap.appendChild(s); wrap.appendChild(skip);
+  const why=mk('div','rf-why','Pins your numbers so the cost is measured in your yardstick — it personalizes the read, it doesn’t change the fault.');
+  wrap.appendChild(val); wrap.appendChild(s); wrap.appendChild(skip); wrap.appendChild(why);
   return wrap;
 }
 function applyRefiner(kind, value){
@@ -1170,11 +1400,44 @@ function applyRefiner(kind, value){
 /* divot label for the empty-filter honesty line */
 function divotLabel(a){ return ({ deep:'deep', brushed:'brushed', none:'no', unsure:'' }[a]||'') + ' divot'; }
 
+/* ══ v3 DRIVER HONESTY LAW — render-layer unit test (?dev=1, spec §4) ══════
+   Fails if any driver-mode absolute metres/yards reach the DOM in value lines.
+   It renders the SAME costLineData/halfGapData the real driver card uses (single
+   source), then asserts the value-line text carries no number a carry/offline
+   metre would produce — every honest driver value is a %/degree/ratio ≤ 41. */
+function devRenderContract(){
+  const rows=[]; const push=(name,pass,detail)=>rows.push({name,pass:!!pass,detail});
+  try{
+    const cmd = DX.clubMap(MAP,'driver');
+    const top = DX.consolidateStories(DX.lookup(cmd,{curve:'Slice',startLine:'Right',height:'Normal',distanceLoss:'Full (normal distance)'}).entry).stories[0];
+    const cost = DX.costOfPattern(top.rep,'driver');
+    const half = DX.halfGapSolve(top.rep);
+    const tmp=document.createElement('div');
+    const a=document.createElement('div'); renderParts(a, costLineData(cost,'driver','Slice',null).parts); tmp.appendChild(a);
+    const b=document.createElement('div'); renderParts(b, halfGapData(cost,half,'driver',top.rep).parts); tmp.appendChild(b);
+    const text=tmp.textContent; const ints=(text.match(/\d+/g)||[]).map(Number);
+    const maxInt=ints.length?Math.max(...ints):0;
+    push('driver value lines carry no absolute metres/yards (max int < 50)', maxInt<50, `max ${maxInt} · "${text}"`);
+    const banned=[Math.round(Math.abs(cost.offlineM)),Math.round(cost.carryM),Math.round(cost.neutralCarryM),Math.round(Math.abs(cost.curveM))];
+    push('banned metre magnitudes absent ['+banned.join(', ')+']', banned.every(v=>!ints.includes(v)), 'ints '+ints.join(' '));
+    push('allowed missAngleDeg present (~22°)', ints.includes(Math.round(Math.abs(cost.missAngleDeg))), 'ints '+ints.join(' '));
+    push('allowed offlinePctOfCarry present (~41%)', ints.includes(Math.round(cost.offlinePctOfCarry)), 'ints '+ints.join(' '));
+  }catch(e){ push('render-contract threw', false, String(e)); }
+  const failed=rows.filter(r=>!r.pass);
+  if (typeof console!=='undefined'){
+    console.groupCollapsed(`[diagnose-v3 render-contract] ${rows.length-failed.length}/${rows.length} passed`);
+    for(const r of rows) console[r.pass?'info':'error'](`${r.pass?'PASS':'FAIL'} — ${r.name}`, r.detail||'');
+    console.groupEnd();
+    if(failed.length) console.error('[diagnose-v3 render-contract] FAILURES', failed.map(f=>f.name));
+  }
+  return { passed:rows.length-failed.length, failed:failed.length, rows };
+}
+
 /* ══ CONTACT CARD (§6.6 — parallel model, never blended into the ranking) ══
    Way-short case arms it with the club's real geometry-loss ceiling from
    meta.bands.distance (bandLossPct / worstGeometryLossPct / lossNote), so
    nothing implies a bigger geometry loss than the grid supports. */
-function contactCard(reason){
+function contactCard(reason, evidence){
   const c=document.createElement('article'); c.className='contactcard';
   c.appendChild(mk('div','cardeye','The strike, separately'));
   const body=document.createElement('div'); body.className='cbody';
@@ -1182,6 +1445,16 @@ function contactCard(reason){
   if (reason==='wayshort'){
     const feel = (state.contact==='Thin'||state.contact==='Fat') ? `You felt it ${state.contact.toLowerCase()} — and that fits: ` : '';
     body.textContent = `${feel}delivery geometry alone can only cost about ${worst}% of carry with this club. A genuinely huge loss is strike or club speed talking — not the shape of your swing. This flight engine can't see the strike; the Strike Window can.`;
+    // §3.2 way-short headline — the cost line's small carry delta as supporting
+    // evidence, in the club's honest units (7-iron: metres + %; driver: % only).
+    if (evidence){
+      renderParts(body, [{ t:'text', v:' In fact, this exact pattern gives up just ' }]);
+      if (carryTrusted()){
+        renderParts(body, [ num(Math.round(evidence.dCarryM)+' m'), { t:'text', v:' (' }, num(evidence.dCarryPct.toFixed(1)+'%'), { t:'text', v:') to a square strike.' } ]);
+      } else {
+        renderParts(body, [ num(evidence.dCarryPct.toFixed(1)+'%'), { t:'text', v:' of its carry to a square strike.' } ]);
+      }
+    }
   } else {
     const feel = state.contact==='Thin' ? 'Thin' : 'Fat';
     body.textContent = `${feel} contact comes from where your swing bottoms out — that's strike geometry, and this flight engine genuinely can't see it. A pure strike at this same delivery loses only a few percent of distance; a big loss is the strike talking.`;
@@ -1299,7 +1572,7 @@ async function boot(){
   try {
     MAP = await DX.loadMapV2();
     renderInput();  // re-render now that per-club bands are available (honesty strip, anchors)
-    if (DEV) DX.devAsserts(MAP);
+    if (DEV){ DX.devAsserts(MAP); devRenderContract(); }
   } catch(e){
     renderError(boot);
   }

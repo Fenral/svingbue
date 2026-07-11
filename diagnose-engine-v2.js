@@ -261,6 +261,7 @@ export const TERMS = {
   'club path':   'The direction the clubhead is actually travelling through impact.',
   'spin loft':   'The gap between where the club is moving and where its face points — dynamic loft minus attack angle. More spin loft means more backspin, a higher, shorter, softer-landing shot.',
   'attack angle':'How steeply the club is moving up or down at impact. Minus is descending, plus is on the way up.',
+  'face-to-path':'The gap between where the clubface points and where the club is travelling — that gap is the whole curve.',
 };
 
 /* ── storyBody: three beats (what happened · why · terms taught) as parts. ── */
@@ -448,6 +449,108 @@ export function handoff(rep, label) {
   return './impact-viz-mock.html' + qs;
 }
 
+/* ══════════════════════════════════════════════════════════════════════════
+   v3 VALUES LAYER (delta-spec docs/diagnose-v3-values-spec.md) — PURE, additive.
+   ≤2 extra solveFlight per rendered result. The whole layer exists to answer the
+   owner's brief ("high speed says nothing"): the honest headline is NOT carry
+   (matched-speed geometry costs ~2.6% at worst) — it is the TARGET LINE. Finding
+   V-1. Every number here traces to solveFlight over a map representative; run log
+   in the spec's Appendix B (all reproduced by the shipped ?dev=1 asserts below).
+   ══════════════════════════════════════════════════════════════════════════ */
+const Y2M = 0.9144; // yards → metres (engine solves in yards internally)
+
+// Harness well-struck baselines (findings §1 / map.meta.baseline) — the "square
+// delivery at the same club speed" every cost line is measured against.
+export const NEUTRAL_DELIVERY = {
+  '7iron':  { faceAngle: 0, clubPath: 0, attackAngle: -3, dynamicLoft: 28 },
+  'driver': { faceAngle: 0, clubPath: 0, attackAngle:  2, dynamicLoft: 13 },
+};
+
+// flightMetrics: the render-safe derivations of a raw solveFlight result. missAngle
+// = atan2(offline, carry) (carry scale cancels to first order — safe for driver);
+// offlinePctOfCarry is a pure ratio. offlineM/curveM are ABSOLUTE metres (7-iron
+// only per the ban). Signs preserved: + = right, − = left (RH golfer).
+export function flightMetrics(flight) {
+  return {
+    carryM: flight.carry * Y2M,
+    offlineM: flight.offline * Y2M,
+    curveM: flight.curve * Y2M,
+    offlinePctOfCarry: flight.carry > 0 ? Math.abs(flight.offline) / flight.carry * 100 : 0,
+    missAngleDeg: Math.atan2(flight.offline, flight.carry) * 180 / Math.PI,
+  };
+}
+
+// costOfPattern: THE headline computation (§1.1). Two solveFlight calls — the
+// speed-matched representative, and the club's neutral delivery at the SAME club
+// speed — so carry-cost is quoted at matched speed (small, honest) and the real
+// value is the offline/angle. RENDER CONTRACT: club==='driver' → the UI may
+// consume ONLY dCarryPct, offlinePctOfCarry, missAngleDeg (the yardage ban,
+// enforced at the data edge by the ?dev=1 render-contract test, not copy review).
+export function costOfPattern(rep, club) {
+  const c = NEUTRAL_DELIVERY[club] ? club : '7iron';
+  const actual = solveFlight(rep);
+  const neutral = solveFlight({ ...NEUTRAL_DELIVERY[c], clubSpeed: rep.clubSpeed });
+  const carryM = actual.carry * Y2M, neutralCarryM = neutral.carry * Y2M;
+  const dCarryM = neutralCarryM - carryM;                 // + = neutral (square) longer
+  const dCarryPct = neutralCarryM > 0 ? dCarryM / neutralCarryM * 100 : 0;
+  const m = flightMetrics(actual);
+  return {
+    actual, neutral,
+    carryM, neutralCarryM, dCarryM, dCarryPct,
+    offlineM: m.offlineM, curveM: m.curveM,
+    offlinePctOfCarry: m.offlinePctOfCarry, missAngleDeg: m.missAngleDeg,
+    backspin: actual.backspin, neutralBackspin: neutral.backspin,
+  };
+}
+
+// halfGapSolve: the forecast (§1.2). Move the face HALFWAY to the path and re-solve
+// once — a real solve, never a linear guess. "Half a fix" is what a golfer can
+// actually do; the line turns the diagnosis into a forecast.
+export function halfGapSolve(rep) {
+  const faceAngle = rep.clubPath + (rep.faceAngle - rep.clubPath) / 2;
+  return solveFlight({ ...rep, faceAngle });
+}
+
+// clubSpeedForCarryM: 7-IRON ONLY (the driver carry is banned as untrusted).
+// Monotone bisection on the NEUTRAL solve, 40–130 mph, ±0.1 mph — inverts the
+// trusted 7-iron carry curve so a typed carry personalizes every value line.
+export function clubSpeedForCarryM(metres) {
+  const carryAt = cs => solveFlight({ ...NEUTRAL_DELIVERY['7iron'], clubSpeed: cs }).carry * Y2M;
+  let lo = 40, hi = 130;
+  for (let i = 0; i < 60 && hi - lo > 0.05; i++) {
+    const mid = (lo + hi) / 2;
+    if (carryAt(mid) < metres) lo = mid; else hi = mid;
+  }
+  return +(((lo + hi) / 2)).toFixed(1);
+}
+
+// spinLoftEdges: the 0.44/0.77 cuts spinLoftBand() already computes, EXPOSED so
+// the coach story can print the healthy window as a ruler (§1.3). Zero new math.
+export function spinLoftEdges(clubMeta) {
+  const g = clubMeta.grid, lofts = g.dynamicLoft;
+  const loftMin = Math.min(...lofts), loftMax = Math.max(...lofts);
+  const slMin = loftMin - g.attackAngle[1], slMax = loftMax - g.attackAngle[0];
+  return { min: slMin, max: slMax, low: slMin + 0.44 * (slMax - slMin), alot: slMin + 0.77 * (slMax - slMin) };
+}
+
+// handoffCompare: the Pro "See both flights side by side" seed (§3.5 / §2.4) —
+// writes actual + neutral under sa.handoff.compare {v,a,b,label}, consumed by the
+// Ball Flight ghost view behind the existing entitlement (that view is another
+// workflow's deliverable; this run writes the seed only). Returns the deep-link.
+export function handoffCompare(a, b, label) {
+  const r1 = v => +(+v).toFixed(1);
+  const P = rep => ({
+    clubSpeed: r1(rep.clubSpeed), faceAngle: r1(rep.faceAngle), clubPath: r1(rep.clubPath),
+    attackAngle: r1(rep.attackAngle), dynamicLoft: r1(rep.dynamicLoft),
+  });
+  try {
+    localStorage.setItem('sa.handoff.compare', JSON.stringify({
+      v: 1, ts: Date.now(), source: 'diagnose', label, a: P(a), b: P(b),
+    }));
+  } catch (e) { /* non-fatal */ }
+  return './impact-viz-mock.html?from=diagnose&compare=1';
+}
+
 /* ══ DEV ASSERTS (?dev=1) — the acceptance tests baked into the page ════════
    Reproduce findings scenarios (a)(c)(f)(g) from the shipped JSON. Pure; runs
    against the loaded map. Logs a pass/fail table; returns {passed,failed,rows}.
@@ -520,6 +623,44 @@ export function devAsserts(map) {
       top.face === 'square' && top.path === 'neutral' && approx(top.pct, 100, 0.6), `${top.face}/${top.path} ${top.pct}%`);
     check('(g) rep square face 0 / path 0', approx(top.rep.faceAngle, 0, 0.3) && approx(top.rep.clubPath, 0, 0.3), `face ${top.rep.faceAngle} path ${top.rep.clubPath}`);
   } catch (e) { check('(g) threw', false, String(e)); }
+
+  // ── v3 VALUES layer asserts (spec §4 · Appendix B) ──────────────────────
+  const worst7 = cm7.meta.bands.distance.worstGeometryLossPct;
+  const worstD = cmd.meta.bands.distance.worstGeometryLossPct;
+  // (a) 7-iron cost pair: offlineM ≈ 27.1, dCarryM ≈ 3.8, halfGap offline ≈ 5.4
+  try {
+    const top = consolidateStories(reweightSpeed(lookup(cm7, { curve: 'Slice', startLine: 'Straight', height: 'High', distanceLoss: 'Noticeable loss' }).entry.clusters, 'mid')).stories[0];
+    const cost = costOfPattern(top.rep, '7iron');
+    const half = halfGapSolve(top.rep);
+    check('(a-v3) costOfPattern offlineM ≈ 27.1', approx(cost.offlineM, 27.1, 0.3), cost.offlineM.toFixed(2) + ' m');
+    check('(a-v3) costOfPattern dCarryM ≈ 3.8', approx(cost.dCarryM, 3.8, 0.3), cost.dCarryM.toFixed(2) + ' m');
+    check('(a-v3) dCarryPct ≤ worstGeometryLossPct', cost.dCarryPct <= worst7 + 1e-9, `${cost.dCarryPct.toFixed(2)}% ≤ ${worst7}%`);
+    check('(a-v3) halfGap offlineM ≈ 5.4', approx(half.offline * Y2M, 5.4, 0.3), (half.offline * Y2M).toFixed(2) + ' m');
+  } catch (e) { check('(a-v3) threw', false, String(e)); }
+  // (c) driver render-contract numerics: missAngle ≈ 22.1, offlinePctOfCarry ≈ 41
+  try {
+    const top = consolidateStories(lookup(cmd, { curve: 'Slice', startLine: 'Right', height: 'Normal', distanceLoss: 'Full (normal distance)' }).entry).stories[0];
+    const cost = costOfPattern(top.rep, 'driver');
+    const half = halfGapSolve(top.rep), hm = flightMetrics(half);
+    check('(c-v3) driver missAngleDeg ≈ 22.1', approx(cost.missAngleDeg, 22.1, 0.3), cost.missAngleDeg.toFixed(2) + '°');
+    check('(c-v3) driver offlinePctOfCarry ≈ 41', approx(cost.offlinePctOfCarry, 41, 1), cost.offlinePctOfCarry.toFixed(1) + '%');
+    check('(c-v3) driver dCarryPct ≤ worst', cost.dCarryPct <= worstD + 1e-9, `${cost.dCarryPct.toFixed(2)}% ≤ ${worstD}%`);
+    check('(c-v3) driver half-gap ≈ 15% / 8°', approx(hm.offlinePctOfCarry, 15, 1.5) && approx(Math.abs(hm.missAngleDeg), 8.3, 0.6), `${hm.offlinePctOfCarry.toFixed(1)}% / ${Math.abs(hm.missAngleDeg).toFixed(1)}°`);
+  } catch (e) { check('(c-v3) threw', false, String(e)); }
+  // (f) snap-hook GAINS carry (guard-rail path) + dCarryPct ≤ worst
+  try {
+    const top = consolidateStories(lookup(cm7, { curve: 'Hook', startLine: 'Left', height: 'Low', distanceLoss: 'Long (gained distance)' }).entry).stories[0];
+    const cost = costOfPattern(top.rep, '7iron');
+    check('(f-v3) snap-hook GAINS carry (dCarryM < 0)', cost.dCarryM < 0, cost.dCarryM.toFixed(2) + ' m');
+    check('(f-v3) snap-hook dCarryPct ≤ worst', cost.dCarryPct <= worst7 + 1e-9, `${cost.dCarryPct.toFixed(2)}% ≤ ${worst7}%`);
+  } catch (e) { check('(f-v3) threw', false, String(e)); }
+  // carry inversion + spin-loft edges
+  try {
+    check('(v3) clubSpeedForCarryM(145) ≈ 83.6', approx(clubSpeedForCarryM(145), 83.6, 0.3), clubSpeedForCarryM(145).toFixed(2) + ' mph');
+    const e7 = spinLoftEdges(cm7.meta), ed = spinLoftEdges(cmd.meta);
+    check('(v3) 7-iron healthy window ≈ 25.4–34.0°', approx(e7.low, 25.4, 0.3) && approx(e7.alot, 34.0, 0.3), `${e7.low.toFixed(1)}–${e7.alot.toFixed(1)}°`);
+    check('(v3) driver healthy window ≈ 11.7–18.9°', approx(ed.low, 11.7, 0.3) && approx(ed.alot, 18.9, 0.3), `${ed.low.toFixed(1)}–${ed.alot.toFixed(1)}°`);
+  } catch (e) { check('(v3) edges threw', false, String(e)); }
 
   const failed = rows.filter(r => !r.pass);
   if (typeof console !== 'undefined') {

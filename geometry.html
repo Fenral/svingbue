@@ -171,24 +171,27 @@
   .facezoom-hint.is-visible{opacity:1;transform:translateX(-50%) translateY(0)}
   @media (prefers-reduced-motion:reduce){.facezoom-hint{transition:none}}
 
-  /* persistent ATTACK/PATH readout chips (top-centre, DOM-based — replaces the
-     old in-canvas SVG chip group 1:1 in look/values) */
-  .hud-chips{
-    position:fixed;top:max(10px,env(safe-area-inset-top));left:50%;z-index:3;
-    transform:translateX(-50%);display:flex;gap:8px;pointer-events:none;
+  /* RE-HERO (2026-07-11): ATTACK / PATH are the readout's DOMINANT marks — the
+     largest, mono, param-hued values, at the TOP of the strike-detail card and
+     one glance from the strike verdict below. (Was a small top-centre HUD row;
+     the owner's Q6 coupling verdict wants them big and adjacent to the verdict,
+     not a separate faint chip.) They update live every drag frame via renderReadout. */
+  .strike-detail .sd-metrics{
+    display:flex;flex-direction:column;gap:3px;
+    padding:10px 12px 8px;
+    background:linear-gradient(180deg, rgba(13,20,26,.98), rgba(13,20,26,.94));
   }
-  .hud-chip{
-    display:inline-flex;align-items:center;gap:8px;height:24px;padding:0 10px;
-    border-radius:7px;background:rgba(10,7,18,.8);border:1px solid;
-    font-size:12px;font-weight:600;white-space:nowrap;
-    font-family:var(--font-mono);font-variant-numeric:tabular-nums;   /* data = mono law */
+  .sd-metric{
+    display:flex;align-items:baseline;gap:8px;white-space:nowrap;
+    font-family:var(--font-mono);font-variant-numeric:tabular-nums;
+    font-size:17px;font-weight:600;letter-spacing:-.005em;line-height:1.15;
   }
-  .hud-chip .sw{width:6.4px;height:6.4px;border-radius:50%;flex:none}
+  .sd-metric .sw{width:8px;height:8px;border-radius:50%;flex:none;align-self:center}
   /* SYS-11 param hues: ATTACK = --q-attack mint (attack angle) · PATH = --q-path blue (club-path dir) */
-  .hud-chip.atk{border-color:rgba(77,232,210,.5);color:#bff4ec}
-  .hud-chip.atk .sw{background:var(--q-attack)}
-  .hud-chip.path{border-color:rgba(111,198,255,.5);color:#cfe9ff}
-  .hud-chip.path .sw{background:var(--q-path)}
+  .sd-metric.atk{color:#bff4ec}
+  .sd-metric.atk .sw{background:var(--q-attack)}
+  .sd-metric.path{color:#cfe9ff}
+  .sd-metric.path .sw{background:var(--q-path)}
 
   /* freemium "N free shots left" nudge pill — discreet, top-centre, clear of
      the hud-chips row above it. Shown only in the tail (1-2) of the free
@@ -277,10 +280,11 @@
     padding:9px 11px 7px;
     background:linear-gradient(180deg, rgba(13,20,26,.98), rgba(13,20,26,.94));
   }
-  .strike-detail .ttl{font-family:var(--font-serif);font-variation-settings:'opsz' 30,'wght' 560,'SOFT' 40,'WONK' 0;font-size:12px;font-weight:560;letter-spacing:.06em;color:var(--muted)}
+  /* demoted one step under the ATTACK/PATH hero row (RE-HERO Q6) */
+  .strike-detail .ttl{font-family:var(--font-serif);font-variation-settings:'opsz' 28,'wght' 560,'SOFT' 40,'WONK' 0;font-size:10.5px;font-weight:560;letter-spacing:.06em;color:var(--muted)}
   .strike-detail .chip{
-    display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;
-    padding:3px 9px;border-radius:999px;white-space:nowrap;
+    display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:700;
+    padding:2px 8px;border-radius:999px;white-space:nowrap;
     background:rgba(74,222,128,.12);color:#4ADE80;border:1px solid rgba(74,222,128,.3);
   }
   .strike-detail .chip .pct{opacity:.75;font-weight:600}
@@ -431,12 +435,6 @@
        fallback cover the non-visual dismiss path. -->
   <div class="facezoom-hint" id="faceZoomHint">Tap to continue ▸</div>
 
-  <!-- persistent ATTACK/PATH readout chips (DOM, top-centre) -->
-  <div class="hud-chips" aria-hidden="true">
-    <span class="hud-chip atk" id="chipAtk"><span class="sw"></span><span id="chipAtkTx">ATTACK —</span></span>
-    <span class="hud-chip path" id="chipPath"><span class="sw"></span><span id="chipPathTx">PATH —</span></span>
-  </div>
-
   <!-- freemium nudge pill: "N free shots left" — hidden unless saShots.shouldNudge() -->
   <div class="sa-nudge" id="saNudge" hidden aria-hidden="true"></div>
 
@@ -472,6 +470,12 @@
   <!-- STRIKE DETAIL inset (2026-07-03) — real 3D club/ball/low-point via a
        second scissored viewport (geo3d/insetview.js), annotated live. -->
   <div class="strike-detail" id="strikeDetail" role="group" aria-labelledby="sdTtl">
+    <!-- RE-HERO: ATTACK / PATH lead the readout — dominant, mono, param-hued,
+         adjacent to the strike verdict below. Live every drag frame. -->
+    <div class="sd-metrics" aria-hidden="true">
+      <span class="sd-metric atk" id="chipAtk"><span class="sw"></span><span id="chipAtkTx">ATTACK —</span></span>
+      <span class="sd-metric path" id="chipPath"><span class="sw"></span><span id="chipPathTx">PATH —</span></span>
+    </div>
     <div class="top">
       <span class="ttl" id="sdTtl">Strike detail</span>
       <span class="chip" id="sdChip"><span id="sdChipBand">Pure</span> <span class="pct" id="sdChipPct">100%</span></span>
@@ -564,6 +568,11 @@ const state = {
 
 // ── 3D scene — the default (and only) Geometry scene ──────────────────────
 const reduceMotion3d = matchMedia('(prefers-reduced-motion: reduce)').matches;
+// FACE-ZOOM PARKED (RE-HERO 2026-07-11): the impact face-zoom / 3D-detail
+// choreography is kept in code but no UI trigger fires it. The ?facezoom=1 dev
+// flag restores the old grammar (▶ plays the dramatic one-shot with the cut-in)
+// for later revival. Default (no flag): the calm continuous loop is the grammar.
+const FACEZOOM_ENABLED = new URLSearchParams(location.search).has('facezoom');
 let sa3d = null;   // { scene, camera, rig, POSES, applyRig, renderer, invalidate, startTicking, stopTicking }
 let arc3d = null, plane3d = null, lp3d = null, gc3d = null, club3d = null, timeline3d = null, delivery3d = null;
 let ballTick = null; // FIX J — contact-height tick/ring on the 3D ball
@@ -639,10 +648,17 @@ function init3d() {
     // turf label (gc3dLabel) for a brief emphasis pulse at the moment the
     // early ground-strike FX fires (see timeline.js pulseGroundStrikeLabel()).
     groundStrikeLabelEl: $('gc3dLabel'),
+    facezoomEnabled: FACEZOOM_ENABLED,   // parked unless the ?facezoom=1 dev flag is set
   });
 
   rebuild3d();
   sa3d.invalidate();
+
+  // RE-HERO — the calm continuous loop is the default resting grammar. Under
+  // the ?facezoom=1 dev flag we leave the old one-shot on ▶ instead (no auto
+  // loop) so the parked face-zoom choreography is reachable for revival work.
+  // Reduced-motion: startLoop() no-ops the motion and just poses at address.
+  if (!FACEZOOM_ENABLED) timeline3d.startLoop();
 
   // resize keeps the canvas in sync with the viewport (render-on-demand: just invalidate)
   addEventListener('resize', () => { updateInsetRect(); sa3d.invalidate(); });
@@ -916,11 +932,10 @@ function controlsVisible(show) {
       onStart: () => { if (!show) n.style.pointerEvents = 'none'; },
       onComplete: () => { if (show) { n.style.pointerEvents = ''; n.style.opacity = ''; } } });
   });
-  // delivery arrow: hide while the swing timeline plays (fires at the same
-  // start/settle-complete moments as the control-surface fade), back in at
-  // settle/idle. 150ms fade; reduced-motion snaps instantly (handled inside
-  // delivery.js's setVisible).
-  if (delivery3d) delivery3d.setVisible(show, gsap, reduceMotion3d);
+  // RE-HERO (2026-07-11): the delivery arrow is the hero and is NEVER hidden —
+  // the old "hide during playback" rule is dropped now that the calm loop is
+  // the resting state. (setVisible() stays in delivery.js for the parked
+  // face-zoom path but is no longer called from here.)
 }
 
 // ── §2.5 transient pose-name slate: names the view the moment it settles,
@@ -1150,16 +1165,30 @@ function initCameraGestures() {
   }
   function startDrift() {
     if (reduceMotion3d || document.hidden) return;
+    // RE-HERO (2026-07-11): in the default loop grammar the continuous swing IS
+    // the ambient motion, and the loop's idle-freeze must return to true
+    // render-on-demand for battery. A second idle rAF (the telescope drift)
+    // would keep rendering and defeat that freeze, so it only runs under the
+    // ?facezoom=1 dev grammar (where the scene is otherwise static at address).
+    if (!FACEZOOM_ENABLED) return;
     if (gestureBlocked()) { idleTimer = setTimeout(startDrift, 2000); return; }
     if (driftRaf) return;
     driftStart = performance.now(); driftLastFrame = 0;
     driftRaf = requestAnimationFrame(driftLoop);
   }
-  function noteActivity() { stopDrift(); clearTimeout(idleTimer); idleTimer = setTimeout(startDrift, 6000); }
+  // noteActivity also feeds the RE-HERO loop: any interaction resets the loop's
+  // idle counter and resumes it if it had frozen at address (battery guard).
+  function noteActivity() {
+    stopDrift(); clearTimeout(idleTimer); idleTimer = setTimeout(startDrift, 6000);
+    if (timeline3d) timeline3d.noteInteraction();
+  }
   document.addEventListener('pointerdown', noteActivity, true);
   document.addEventListener('keydown', noteActivity, true);
   document.addEventListener('wheel', noteActivity, { capture: true, passive: true });
-  document.addEventListener('visibilitychange', () => { if (document.hidden) stopDrift(); else noteActivity(); });
+  document.addEventListener('visibilitychange', () => {
+    if (timeline3d) timeline3d.setDocHidden(document.hidden); // battery — pause loop while hidden
+    if (document.hidden) stopDrift(); else noteActivity();
+  });
   ['s_plane', 's_dir', 's_lpx', 's_lpz'].forEach(id => { const el = $(id); if (el) el.addEventListener('input', noteActivity); });
   noteActivity();
 
@@ -1332,6 +1361,11 @@ function setRowsDimmed(activeId, dimmed) {
     if (delivery3d) delivery3d.setDragging(false, window.gsap, reduceMotion3d);
     setRowsDimmed(id, false);
   });
+  // FX-on-change (RE-HERO): a settle with a CHANGED value arms ONE band-correct
+  // impact response on the loop's next impact pass. The native `change` event
+  // fires on release / keyboard-commit only when the value actually changed —
+  // exactly the "settle detection" the spec asks for.
+  el.addEventListener('change', () => { if (timeline3d) timeline3d.armImpactFx(); });
 });
 // set slider positions from state
 $('s_plane').value = state.planeAngle;
@@ -1399,16 +1433,45 @@ function refreshNudge() {
   }
 }
 
+// RE-HERO (2026-07-11): the continuous loop is the default grammar, so the ▶
+// control now PAUSES / RESUMES that calm loop (icon swaps play/pause). It is no
+// longer a "play one shot" trigger and no longer records a freemium shot — the
+// loop is ambient, not a counted play. Under the ?facezoom=1 dev flag we keep
+// the old one-shot grammar (with the parked face-zoom restored + shot gating).
+const HIT_PLAY_SVG = '<svg viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><path d="M8 5.5v13a1 1 0 0 0 1.5.87l11-6.5a1 1 0 0 0 0-1.74l-11-6.5A1 1 0 0 0 8 5.5z"/></svg>';
+const HIT_PAUSE_SVG = '<svg viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><rect x="7" y="5" width="3.4" height="14" rx="1"/><rect x="13.6" y="5" width="3.4" height="14" rx="1"/></svg>';
+let loopPaused = false;
+function setHitIcon(paused) {
+  const b = $('hit');
+  b.innerHTML = paused ? HIT_PLAY_SVG : HIT_PAUSE_SVG;
+  b.setAttribute('aria-label', paused ? 'Resume the looping swing' : 'Pause the looping swing');
+  b.setAttribute('aria-pressed', String(paused));
+  b.title = paused ? 'Play' : 'Pause';
+}
 $('hit').addEventListener('click', () => {
-  // Hit plays the full 3D swing timeline; the readout/band logic is driven
-  // by the sliders (state), not by which swing animation ran.
-  if (timeline3d && timeline3d.isPlaying()) return; // a running swing never double-counts
-  if (saShots.shouldGate()) { openPaywall('geometry'); return; }
-  saHaptics.impact('medium');
-  timeline3d.play();
-  saShots.recordShot(); // one PLAYED swing = one shot
-  refreshNudge();
+  if (FACEZOOM_ENABLED) {
+    // dev flag: old one-shot grammar (drives the parked face-zoom choreography)
+    if (timeline3d && timeline3d.isPlaying()) return; // a running swing never double-counts
+    if (saShots.shouldGate()) { openPaywall('geometry'); return; }
+    saHaptics.impact('medium');
+    timeline3d.play();
+    saShots.recordShot(); // one PLAYED swing = one shot
+    refreshNudge();
+    return;
+  }
+  if (reduceMotion3d) {
+    // no loop exists under reduced motion — ▶ plays ONE user-requested swing, never toggles
+    if (timeline3d && !timeline3d.isPlaying()) { saHaptics.impact('medium'); timeline3d.play(); }
+    return;
+  }
+  loopPaused = !loopPaused;
+  if (timeline3d) timeline3d.setLoopPaused(loopPaused);
+  setHitIcon(loopPaused);
+  saHaptics.selectionStart();
 });
+// initial control icon: pause-glyph while the loop is the live default grammar;
+// play-glyph under the dev flag / reduced-motion (where ▶ is a start trigger).
+if (!FACEZOOM_ENABLED && !reduceMotion3d) setHitIcon(false);
 // strike toggle: show/hide the strike-detail inset so you can study the bare swing arc
 const strikeDetailEl = $('strikeDetail');
 $('strikeBtn').addEventListener('click', () => {
@@ -1482,6 +1545,21 @@ window.__sa = Object.assign(window.__sa || {}, {
       dir: () => { const d = delivery3d ? delivery3d.dir() : { x: 1, y: 0, z: 0 }; return [d.x, d.y, d.z]; },
       visible: () => (delivery3d ? delivery3d.isVisible() : null),
       debug: () => (delivery3d ? delivery3d.debug() : null),
+      endpoints: () => (delivery3d ? delivery3d.endpoints() : null),
+      // project the arrow tail/tip to screen px and return the pixel length +
+      // its fraction of viewport width (RE-HERO verify point 1).
+      screenLen: () => {
+        if (!delivery3d || !sa3d) return null;
+        const e = delivery3d.endpoints();
+        const rect = $('scene3d').getBoundingClientRect();
+        const toPx = (a) => {
+          const v = new THREE.Vector3(a[0], a[1], a[2]).project(sa3d.camera);
+          return { x: (v.x * 0.5 + 0.5) * rect.width, y: (-v.y * 0.5 + 0.5) * rect.height };
+        };
+        const t = toPx(e.tail), h = toPx(e.tip);
+        const px = Math.hypot(h.x - t.x, h.y - t.y);
+        return { px: +px.toFixed(1), frac: +(px / rect.width).toFixed(3) };
+      },
     },
     // FIX J — turf-zone/bracket verification hooks
     groundContact: {

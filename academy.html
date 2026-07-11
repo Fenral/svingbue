@@ -190,6 +190,62 @@
   /* keyboard focus keeps the backdrop-proof double ring even on the elevated node states (SYS-03) */
   .node:focus-visible{box-shadow:0 6px 20px rgba(0,0,0,.45), inset 0 0 0 1px rgba(0,0,0,.85), inset 0 0 0 3px var(--ink)}
 
+  /* ─── path-02 relation-light: edges rest ≤.08 alpha; select/focus lights only the node's own threads violet ─── */
+  .map-edges path{stroke:rgba(157,139,255,.07);transition:stroke .2s var(--ease)}
+  .map-canvas.has-selection .map-edges{opacity:1}
+  .map-canvas.has-selection .map-edges path{stroke:rgba(157,139,255,.03)}
+  .map-edges path.edge--lit{stroke:rgba(157,139,255,.62)}
+  /* ─── path-04 card identity: param-hue dot · mastery ring+star · XP on unlockables ─── */
+  .node .r1l{display:flex;align-items:center;gap:7px;min-width:0}
+  .node .nhue{width:9px;height:9px;border-radius:50%;flex:0 0 auto;box-shadow:0 0 7px -1px currentColor}
+  .node .nstar{width:14px;height:14px;color:var(--reward-gold);display:inline-flex}
+  .node .nstar svg{width:14px;height:14px}
+  .node--completed.is-mastered{box-shadow:inset 0 0 0 1px var(--secondary)}
+  .node .nxp--avail{color:var(--secondary)}
+  .node .naway{font-family:var(--f-body);font-weight:600;font-size:10px;letter-spacing:.03em;color:var(--secondary)}
+  /* ─── path-03 upcoming (1 lesson away): semi-lit dashed card, never a padlock ─── */
+  .node--upcoming{opacity:1;background:var(--bg-2);border:1px dashed var(--secondary-line);cursor:pointer;color:var(--muted)}
+  .node--upcoming .nlabel{color:var(--ink)}
+  .node--upcoming .nglyph{color:var(--secondary)}
+  .node--upcoming:hover,.node--upcoming:focus-visible{transform:translateY(-2px);border-color:var(--secondary)}
+  /* ─── path-03 collapsed tier row: a destination marker, not a barrier ─── */
+  .tsummary{position:absolute;left:4%;width:92%;box-sizing:border-box;display:flex;align-items:center;justify-content:space-between;gap:10px;
+    padding:13px 16px;border-radius:12px;border:1px dashed var(--rule);background:var(--bg-2);color:var(--muted);cursor:pointer;text-align:left;
+    transition:transform .18s var(--ease),border-color .18s var(--ease)}
+  .tsummary:hover,.tsummary:focus-visible{transform:translateY(-1px);border-color:var(--secondary-line)}
+  .tsummary .ts-l{font-family:var(--f-display);font-weight:600;font-size:14px;color:var(--ink)}
+  .tsummary .ts-r{font-family:var(--f-mono);font-size:11px;color:var(--muted-2);display:flex;align-items:center;gap:8px;white-space:nowrap}
+  .tsummary .ts-chev{width:14px;height:14px;color:var(--secondary)}
+  /* ─── path-01 header action row: målskive=Progress · kompass=Where next ─── */
+  .pathacts{display:flex;gap:10px;margin-top:10px}
+  .pathact{flex:1 1 0;display:flex;align-items:center;justify-content:center;gap:8px;min-height:40px;padding:8px 10px;border-radius:12px;
+    border:1px solid var(--secondary-line);background:var(--bg-2);color:var(--ink);cursor:pointer;font-family:var(--f-body);font-weight:600;font-size:13px;
+    transition:transform .16s var(--ease),border-color .16s var(--ease)}
+  .pathact:hover,.pathact:focus-visible{transform:translateY(-1px);border-color:var(--secondary)}
+  .pathact svg{width:18px;height:18px;color:var(--secondary);flex:0 0 auto}
+  /* ─── path-05 fold economy: mission line + real progress bar with tier ticks ─── */
+  .path-intro .mission{font-family:var(--f-body);font-size:15px;line-height:1.5;color:var(--muted);max-width:52ch;margin:2px 0 13px}
+  .path-intro .mission b{color:var(--ink);font-weight:600}
+  .pathprog{margin:2px 0}
+  .pp-top{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:7px}
+  .pp-count{font-family:var(--f-body);font-size:13px;color:var(--muted)}
+  .pp-count .mastered{font-family:var(--f-mono);font-variant-numeric:tabular-nums;color:var(--reward-gold)}
+  .pp-info{font-family:var(--f-body);font-size:12px;color:var(--secondary);background:none;border:0;cursor:pointer;padding:2px;text-decoration:underline;text-underline-offset:2px}
+  .pp-bar{position:relative;height:9px;border-radius:999px;background:var(--bg-4);overflow:hidden}
+  .pp-fill{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(90deg,var(--secondary),var(--celebrate));border-radius:999px;transition:width .45s var(--ease)}
+  .pp-tick{position:absolute;top:0;bottom:0;width:1.5px;background:var(--bg);opacity:.65}
+  /* mastery-progress sheet: tier rows + badge list */
+  .msheet-tier{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--rule-2)}
+  .msheet-tier .mt-l{font-family:var(--f-body);font-size:14px;color:var(--ink)}
+  .msheet-tier .mt-r{font-family:var(--f-mono);font-size:12px;color:var(--muted)}
+  .msheet-badges{display:flex;flex-wrap:wrap;gap:10px;margin-top:6px}
+  .msheet-badge{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:10px;border:1px solid var(--rule);background:var(--bg-2);min-width:0}
+  .msheet-badge.on{border-color:var(--celebrate-line,var(--secondary-line))}
+  .msheet-badge svg{width:18px;height:18px;color:var(--muted-2);flex:0 0 auto}
+  .msheet-badge.on svg{color:var(--celebrate)}
+  .msheet-badge .mb-n{font-family:var(--f-body);font-weight:600;font-size:12px;color:var(--ink)}
+  .msheet-badge .mb-d{font-family:var(--f-body);font-size:11px;color:var(--muted-2)}
+
   /* ═══ LESSON ═══ */
   .lesson{padding-bottom:60px}
   .topbar{display:flex;align-items:center;gap:12px;padding:8px 20px;border-bottom:1px solid var(--line);
@@ -534,7 +590,7 @@
   @media (prefers-reduced-motion:reduce){ *{transition:none!important;animation:none!important} }
 </style>
 </head>
-<body>
+<body class="sa-depth">
   <a class="skip-link" href="#app">Skip to content</a>
   <div class="bench" aria-hidden="true"></div>
 
@@ -553,7 +609,7 @@
   </div>
 
   <script type="application/json" id="graph-data">
-{"nodes":[{"id":"club-speed","label":"Club Speed","tier":"fundamental","blurb":"How fast the head moves at impact — the power source for the whole shot."},{"id":"face-angle","label":"Face Angle","tier":"fundamental","blurb":"Where the face points at impact — the dominant driver of start direction."},{"id":"club-path","label":"Club Path","tier":"fundamental","blurb":"Horizontal direction the head travels through impact — in-to-out or out-to-in."},{"id":"attack-angle","label":"Attack Angle","tier":"fundamental","blurb":"Up or down motion of the head at impact — ascending or descending strike."},{"id":"dynamic-loft","label":"Dynamic Loft","tier":"fundamental","blurb":"Effective loft actually delivered at impact — sets launch and spin."},{"id":"spin-loft","label":"Spin Loft","tier":"derived","blurb":"Dynamic loft minus attack angle — the glancing angle that creates backspin."},{"id":"smash","label":"Smash Factor","tier":"derived","blurb":"Ball speed over club speed — energy transfer; falls as spin loft rises."},{"id":"ball-speed","label":"Ball Speed","tier":"derived","blurb":"Club speed times smash factor — the true engine of distance."},{"id":"launch-angle","label":"Launch Angle","tier":"derived","blurb":"Initial climb angle — loft-dominant, nudged by attack angle."},{"id":"start-direction","label":"Start Direction","tier":"derived","blurb":"Where the ball starts — ~75% face, ~25% path, weighted by loft."},{"id":"spin-axis","label":"Spin Axis","tier":"derived","blurb":"Tilt of the spin from the face-to-path gap — decides which way it bends."},{"id":"backspin","label":"Backspin","tier":"derived","blurb":"Rev rate from spin loft and ball speed — the lift that holds flight."},{"id":"carry","label":"Carry","tier":"outcome","blurb":"Distance flown through the air — driven by ball speed."},{"id":"apex","label":"Apex","tier":"outcome","blurb":"Peak height of the flight — from ball speed and launch angle."},{"id":"landing-angle","label":"Landing Angle","tier":"outcome","blurb":"How steeply the ball descends — from spin loft, launch and apex."},{"id":"total","label":"Total Distance","tier":"outcome","blurb":"Carry plus roll-out — roll shrinks as the landing angle steepens."},{"id":"curve","label":"Curve","tier":"outcome","blurb":"Sideways bend in flight from spin axis — grows with distance squared."},{"id":"offline","label":"Offline","tier":"outcome","blurb":"Total sideways miss from target — start direction plus curve."},{"id":"altitude","label":"Altitude","tier":"environment","blurb":"Thinner air up high — more carry, flatter spin, less curve."},{"id":"wind","label":"Wind","tier":"environment","blurb":"Head, tail and crosswind — reshapes carry and pushes the ball offline."},{"id":"temperature","label":"Temperature","tier":"environment","blurb":"Warm air and a warm ball — more ball speed and more carry."}],"edges":[{"from":"face-angle","to":"start-direction"},{"from":"club-path","to":"start-direction"},{"from":"dynamic-loft","to":"start-direction"},{"from":"dynamic-loft","to":"spin-loft"},{"from":"attack-angle","to":"spin-loft"},{"from":"dynamic-loft","to":"launch-angle"},{"from":"attack-angle","to":"launch-angle"},{"from":"face-angle","to":"spin-axis"},{"from":"club-path","to":"spin-axis"},{"from":"spin-loft","to":"smash"},{"from":"club-speed","to":"ball-speed"},{"from":"smash","to":"ball-speed"},{"from":"spin-loft","to":"backspin"},{"from":"ball-speed","to":"backspin"},{"from":"ball-speed","to":"carry"},{"from":"ball-speed","to":"apex"},{"from":"launch-angle","to":"apex"},{"from":"spin-loft","to":"landing-angle"},{"from":"launch-angle","to":"landing-angle"},{"from":"apex","to":"landing-angle"},{"from":"carry","to":"curve"},{"from":"spin-axis","to":"curve"},{"from":"carry","to":"offline"},{"from":"start-direction","to":"offline"},{"from":"curve","to":"offline"},{"from":"carry","to":"total"},{"from":"landing-angle","to":"total"},{"from":"altitude","to":"carry"},{"from":"altitude","to":"apex"},{"from":"altitude","to":"curve"},{"from":"wind","to":"carry"},{"from":"wind","to":"offline"},{"from":"temperature","to":"ball-speed"},{"from":"temperature","to":"carry"}],"progression":["club-speed","dynamic-loft","attack-angle","face-angle","club-path","spin-loft","smash","ball-speed","launch-angle","start-direction","spin-axis","backspin","carry","apex","landing-angle","total","curve","offline","altitude","wind","temperature"]}
+{"nodes":[{"id":"club-speed","label":"Club Speed","tier":"fundamental","blurb":"How fast the head moves at impact — the power source for the whole shot."},{"id":"face-angle","label":"Face Angle","tier":"fundamental","blurb":"Where the face points at impact — the dominant driver of start direction."},{"id":"club-path","label":"Club Path","tier":"fundamental","blurb":"Horizontal direction the head travels through impact — in-to-out or out-to-in."},{"id":"attack-angle","label":"Attack Angle","tier":"fundamental","blurb":"Up or down motion of the head at impact — ascending or descending strike."},{"id":"dynamic-loft","label":"Dynamic Loft","tier":"fundamental","blurb":"Effective loft actually delivered at impact — sets launch and spin."},{"id":"spin-loft","label":"Spin Loft","tier":"derived","blurb":"Dynamic loft minus attack angle — the glancing angle that creates backspin."},{"id":"smash","label":"Smash Factor","tier":"derived","blurb":"Ball speed over club speed — energy transfer; falls as spin loft rises."},{"id":"ball-speed","label":"Ball Speed","tier":"derived","blurb":"Club speed times smash factor — the true engine of distance."},{"id":"launch-angle","label":"Launch Angle","tier":"derived","blurb":"Initial climb angle — loft-dominant, nudged by attack angle."},{"id":"start-direction","label":"Start Direction","tier":"derived","blurb":"Where the ball starts — ~75% face, ~25% path, weighted by loft."},{"id":"spin-axis","label":"Spin Axis","tier":"derived","blurb":"Tilt of the spin from the face-to-path gap — decides which way it bends."},{"id":"backspin","label":"Backspin","tier":"derived","blurb":"Rev rate from spin loft and ball speed — the lift that holds flight."},{"id":"carry","label":"Carry","tier":"outcome","blurb":"Distance flown through the air — driven by ball speed."},{"id":"apex","label":"Apex","tier":"outcome","blurb":"Peak height of the flight — from ball speed and launch angle."},{"id":"landing-angle","label":"Landing Angle","tier":"outcome","blurb":"How steeply the ball descends — from spin loft, launch and apex."},{"id":"total","label":"Total Distance","tier":"outcome","blurb":"Carry plus roll-out — roll shrinks as the landing angle steepens."},{"id":"curve","label":"Curve","tier":"outcome","blurb":"Sideways bend in flight from spin axis — grows with distance squared."},{"id":"offline","label":"Offline","tier":"outcome","blurb":"Total sideways miss from target — start direction plus curve."},{"id":"altitude","label":"Altitude","tier":"environment","blurb":"Thinner air up high — more carry, flatter spin, less curve."},{"id":"wind","label":"Wind","tier":"environment","blurb":"Head, tail and crosswind — reshapes carry and pushes the ball offline."},{"id":"temperature","label":"Temperature","tier":"environment","blurb":"Warm air and a warm ball — more ball speed and more carry."},{"id":"low-point","label":"Low Point","tier":"geometry","blurb":"The bottom of your swing's circle — where it sits versus the ball decides whether you strike down or up."},{"id":"strike-depth","label":"Strike Depth","tier":"geometry","blurb":"How deep the circle's bottom sits — it moves contact up and down the ball, millimetre for millimetre, but never changes attack angle."},{"id":"plane-coupling","label":"Plane Coupling","tier":"geometry","blurb":"Plane, swing direction and low point are one linked system — change one and the other two move."}],"edges":[{"from":"face-angle","to":"start-direction"},{"from":"club-path","to":"start-direction"},{"from":"dynamic-loft","to":"start-direction"},{"from":"dynamic-loft","to":"spin-loft"},{"from":"attack-angle","to":"spin-loft"},{"from":"dynamic-loft","to":"launch-angle"},{"from":"attack-angle","to":"launch-angle"},{"from":"face-angle","to":"spin-axis"},{"from":"club-path","to":"spin-axis"},{"from":"spin-loft","to":"smash"},{"from":"club-speed","to":"ball-speed"},{"from":"smash","to":"ball-speed"},{"from":"spin-loft","to":"backspin"},{"from":"ball-speed","to":"backspin"},{"from":"ball-speed","to":"carry"},{"from":"ball-speed","to":"apex"},{"from":"launch-angle","to":"apex"},{"from":"spin-loft","to":"landing-angle"},{"from":"launch-angle","to":"landing-angle"},{"from":"apex","to":"landing-angle"},{"from":"carry","to":"curve"},{"from":"spin-axis","to":"curve"},{"from":"carry","to":"offline"},{"from":"start-direction","to":"offline"},{"from":"curve","to":"offline"},{"from":"carry","to":"total"},{"from":"landing-angle","to":"total"},{"from":"altitude","to":"carry"},{"from":"altitude","to":"apex"},{"from":"altitude","to":"curve"},{"from":"wind","to":"carry"},{"from":"wind","to":"offline"},{"from":"temperature","to":"ball-speed"},{"from":"temperature","to":"carry"},{"from":"attack-angle","to":"low-point"},{"from":"low-point","to":"strike-depth"},{"from":"strike-depth","to":"plane-coupling"}],"progression":["club-speed","dynamic-loft","attack-angle","face-angle","club-path","spin-loft","smash","ball-speed","launch-angle","start-direction","spin-axis","backspin","carry","apex","landing-angle","total","curve","offline","altitude","wind","temperature"]}
   </script>
   <script type="application/json" id="lesson-backspin">
 {"parameter":"Backspin","oneLiner":"Backspin is the ball's backward rotation — the top spinning back toward you — that generates aerodynamic lift and holds the shot in the air.","whatItIs":"Every well-struck golf shot leaves the face spinning backwards: the top of the ball rotates back toward you at thousands of RPM. That spin drags air faster over the top of the ball than underneath, creating an upward force (the Magnus effect) that fights gravity and keeps the ball climbing long after it \"should\" have fallen. Amounts are big — a 7-iron spins around 7,000 rpm, a driver only about 2,700, a wedge 9,000+. Crucially, backspin is not something you \"add\" with a scoop or a flick of the wrists — it is a by-product of how glancing the strike is (spin loft) and how fast the ball leaves the face. The app's engine encodes exactly this: backspin ≈ spin loft × ball speed × 1.8, where spin loft = dynamic loft − attack angle.","components":[{"name":"Spin loft","role":"The master lever. The angle between where the club is travelling and where the face points at impact (dynamic loft minus attack angle). The bigger this gap, the more glancing the blow and the more backspin. It alone decides whether you make 2,700 (driver) or 9,000 (wedge) rpm.","typicalRange":"iron ~30-35°, driver ~12-16°, wedge ~40-50°"},{"name":"Dynamic loft","role":"The effective loft actually delivered at impact (not the number stamped on the club). It is the larger half of spin loft and also sets launch height.","typicalRange":"7-iron ~28-32°, driver ~12-15°"},{"name":"Attack angle","role":"The up/down direction the club is moving through impact. It subtracts from dynamic loft to set spin loft, so hitting down (negative) raises spin, hitting up (positive) lowers it.","typicalRange":"iron -4 to -2° (down), driver 0 to +5° (up)"},{"name":"Ball speed (via club speed)","role":"The near-linear multiplier on spin. For a fixed spin loft, a faster ball skids up the face harder and grips more, so spin scales roughly in proportion to ball speed.","typicalRange":"7-iron ball ~115-125 mph, driver ~160-175 mph"},{"name":"Friction / strike quality","role":"The on/off gate. Grooves, ball cover (urethane vs surlyn), a clean dry face, the lie, and moisture decide whether the glancing blow can actually grip. Grass or water between ball and face makes it slide instead of spin (a 'flyer').","typicalRange":"clean dry urethane = full spin; flyer/wet can cut 20-50% (2,000+ rpm off a wedge)"},{"name":"Air & conditions","role":"Does not change spin at the face, but re-shapes what that spin does in flight. Denser air (cold, sea level) gives the spin more lift but shorter carry; thin air (altitude, heat) carries farther but the spin lifts less.","typicalRange":"Denver air ~14% thinner than sea level; 0 C air ~10% denser than 30 C"}],"howTheyConnect":"Contact between clubface and ball lasts about half a millisecond. In that instant the ball is compressed against the face, and because the face is not pointing exactly where the club is travelling, the ball skids up the face. Friction resists that skid and rolls the ball backwards — the larger the mismatch (spin loft), the more glancing the blow and the more skid there is to convert into spin. So spin rate rises with spin loft, and for a given spin loft it rises with ball speed (a faster skid grips harder). The app's engine states this literally: backspin ≈ spinLoft × ballSpeed × 1.8, and spinLoft = dynamicLoft − attackAngle. That is why hitting down (more negative attack) and holding loft both raise spin, and why teeing a driver up (positive attack, low loft) is the classic low-spin recipe. There is a subtle self-limiter: a bigger spin loft is also a more glancing, less efficient strike, so the engine lowers the smash factor (smashEff = 1.46 − 0.004·spinLoft), trimming ball speed slightly as spin loft climbs — but spin still rises strongly overall. Friction is the gate over all of this: if grass, water, or a slick cover intrudes, the skid can't grip and spin collapses regardless of a perfect spin loft. Once airborne, that backspin generates Magnus lift — at driver-level ball speed the lift can exceed twice the ball's own weight — and then slowly decays a few percent per second, while thin or warm air lets the ball carry farther but gives the spin less air to grab.","hierarchy":[{"driver":"Spin loft (dynamic loft minus attack angle)","weight":"dominant — ~216 rpm per degree at a 120-mph 7-iron ball; sets the whole range from ~2,700 (driver) to ~9,000 (wedge) rpm","why":"It is the single geometric quantity that governs how glancing the blow is. In the engine backspin scales directly with it (spinLoft × ballSpeed × 1.8). Moving from 25° to 40° spin loft shifts spin from ~5,400 to ~8,600 rpm at the same speed. Everything else is a modifier on top of this."},{"driver":"Ball speed (from club speed)","weight":"near-linear multiplier — ~59 rpm per +1 mph at 33° spin loft; roughly 2x speed ≈ 2x spin","why":"For a fixed spin loft, a faster ball skids up the face harder and grips more, so spin is close to linear in ball speed. It is why a low-loft driver still makes ~2,700 rpm at 165 mph, and why the same swing on a range mat vs a tight lie changes little if speed and loft are held."},{"driver":"Friction / strike quality (grooves, ball, lie, moisture)","weight":"large but conditional — a flyer lie or wet face can strip 20-50% (2,000+ rpm off a wedge)","why":"Friction is the gate that lets the glancing blow become spin. When it is present the top two levers rule; when grass or water intrudes it can dominate everything by killing grip. Ranked below the always-on levers because most of the time (clean, dry) it is near-maxed and invisible."},{"driver":"Dynamic loft","weight":"~216 rpm per degree via spin loft; also the primary launch-height lever","why":"It is the bigger, more adjustable half of spin loft — you change it with club selection and shaft lean across a huge range. Each degree adds spin through the same channel as spin loft, and it doubles as the main control of how high the ball launches, so practically it is the knob a golfer turns most."},{"driver":"Attack angle","weight":"~216 rpm per degree via spin loft (spinLoft = DL − AA); narrower usable range","why":"Mathematically it carries the exact same per-degree weight as dynamic loft (they are the two terms of spin loft), but a golfer's usable attack-angle range is smaller (roughly -6 to +5°), so it moves the total less than loft does. It is the cleanest way to lower driver spin: hit up."},{"driver":"Air & conditions (altitude, temperature, wind)","weight":"second-order — does not change face spin; ~14% thinner air (Denver) or ~10% lighter warm air only reshapes the flight","why":"None of this alters the rpm coming off the face; it changes how much lift that spin produces and how far the ball carries. Real, but a layer removed from the backspin number — grounded by air density falling ~14% at Denver and ~10% from 0 C to 30 C."}],"misconceptions":["\"You create backspin by hitting down and 'pinching' or scooping the ball.\" Backspin comes from spin loft (the face-vs-path mismatch) and face friction, not from the divot or a scoop. Hitting down helps only because it keeps spin loft up and ensures clean ball-first contact; the ground itself adds no spin.","\"More loft always means more backspin.\" It is spin loft (dynamic loft minus attack angle), not loft alone. A high wedge from a flyer lie can spin less than a clean 8-iron because grass kills the friction, and adding loft while also swinging more upward can leave spin loft unchanged.","\"Backspin makes the ball fly higher and farther, so more is always better.\" Only up to an optimum. Past it the ball balloons — climbs, stalls, drops short. Drivers especially lose carry and roll from excess spin: ~2,700 rpm beats ~3,500 rpm at the same speed.","\"Backspin is what curves the ball right or left.\" Pure backspin (a level spin axis) only lifts. Sideways curve comes from the spin axis tilting, driven by the face-to-path difference — in the engine that is spinAxis, a completely separate quantity from backspin.","\"New wedge grooves add loads of spin on every shot.\" On a clean, dry fairway lie the face grips almost fully with or without fresh grooves; the difference is small. Grooves earn their keep in rough and wet, channelling grass and water away so friction survives. Their job is protecting spin, not manufacturing it.","\"A softer ball spins more with every club.\" Cover friction dominates only on high-spin-loft short shots (wedges), where soft urethane grips more. Off the driver (low spin loft) premium balls are engineered to spin less. Ball choice is shot-dependent, not a blanket 'soft = more spin'."],"wolframChecks":["air density at 15 C sea level -> 1.225 kg/m^3 (ISA reference), anchoring the sea-level baseline for lift/drag claims.","air density at 1600 m (Denver) -> ~1.05 kg/m^3; 1.225 / 1.048 = 1.169, so sea-level air is ~17% denser / Denver air ~14% thinner — grounds the altitude carry effect.","density of dry air 0 C -> ~1.29 kg/m^3 vs 30 C -> 1.165 kg/m^3; (1.293-1.165)/1.293 = 9.9% -> cold air ~10% denser than warm, grounding the temperature effect on flight.","7000 rpm -> 733 rad/s; 733 x 0.0213 m (ball radius) = 15.6 m/s -> the ball's surface tangential speed at 7-iron spin.","spin ratio S = 15.6 / 67 m/s = 0.233 -> the dimensionless spin parameter (surface speed / ball speed), matching iron-flight literature (~0.2).","Magnus lift 0.5 x rho x v^2 x A x C_L = 0.5 x 1.225 x 67^2 x pi x 0.0213^2 x 0.25 = 0.98 N; ball weight = 0.04593 kg x 9.81 = 0.451 N; 0.98 / 0.4506 = 2.17 -> Magnus lift can exceed the ball's own weight ~2.2x at speed (why a spinning shot climbs).","engine backspin check: 33° spin loft x 120 mph ball x 1.8 = 7,128 rpm (default 7-iron), and sensitivity 120 x 1.8 = 216 rpm per degree of spin loft; 33 x 1.8 = ~59 rpm per mph of ball speed.","engine carry curve 0.232 x ballSpeed^1.389 / (1 + (ballSpeed/210)^6): 120 mph -> 173.2 yd, 140 mph -> 204.1 yd (near-linear, +18% carry for +17% ball speed), cross-checking carry vs ball speed.","spin decay exp(-0.04 x 6) = 0.787 -> at ~4% per second a ball still carries ~79% of its launch spin after a 6-second flight (backspin decays slowly, so launch spin dominates)."],"quiz":[{"q":"Spin loft is defined as:","options":["Dynamic loft plus attack angle","Dynamic loft minus attack angle","Club speed times face angle","The loft number stamped on the club"],"answerIndex":1,"explanation":"Spin loft = dynamic loft minus attack angle — the angle between where the face points and where the club is travelling. It is the single biggest driver of backspin. A 30° dynamic loft with a -3° (downward) attack gives 33° of spin loft, which in the app's engine and TrackMan data produces roughly 7,000 rpm for a 7-iron."},{"q":"A player's driver is ballooning and losing distance from too much spin. Which change lowers spin the most?","options":["Swing faster with the same delivery","Hit up on the ball (more positive attack) with the same low loft","Add loft and hit down","Switch to an older, more worn ball"],"answerIndex":1,"explanation":"Spin loft = dynamic loft minus attack angle, so hitting up (more positive attack) shrinks spin loft and cuts spin — the classic low-spin driver recipe. Swinging faster raises ball speed and adds spin. Adding loft and hitting down both raise spin loft, making the balloon worse."},{"q":"Two 7-irons are struck with an identical 33° spin loft, but one ball leaves at 110 mph and the other at 125 mph. What happens to backspin?","options":["It is the same — spin loft is identical","The faster ball spins meaningfully more","The faster ball spins less","Spin depends only on the grooves"],"answerIndex":1,"explanation":"For a fixed spin loft, spin is roughly linear in ball speed. In the app's model (rpm = spin loft x ball speed x 1.8) the 33° / 110 mph strike makes ~6,530 rpm and the 33° / 125 mph strike ~7,425 rpm — about 59 rpm for every extra mph of ball speed."},{"q":"From a wet, grassy 'flyer' lie a wedge often comes out lower-spinning than from a clean fairway. Why?","options":["The extra grass increases friction","Water and grass get between ball and face, cutting friction so the ball can't grip","Spin loft becomes negative","The ball speed drops to zero"],"answerIndex":1,"explanation":"Backspin needs friction to turn the glancing blow into spin. Grass and moisture form a slick film between ball and face, so the ball slides instead of gripping — spin can fall 20-50%. That is the 'flyer'; grooves exist mainly to channel that debris away and protect spin, not to create it."},{"q":"Once the ball is in the air, what does backspin mainly do?","options":["Curves the ball sideways","Creates upward Magnus lift that keeps the ball airborne","Speeds the ball up","Nothing until it lands"],"answerIndex":1,"explanation":"Backspin drags air faster over the top of the ball, producing an upward Magnus force. At driver ball speeds that lift can exceed twice the ball's own weight (~0.98 N of lift vs ~0.45 N of weight in our grounded check), which is why a spinning shot climbs and hangs. Sideways curve is a separate effect, caused by the spin axis tilting — not by backspin itself."}]}
@@ -622,9 +678,19 @@
   <script type="application/json" id="lesson-temperature">
 {"parameter":"Temperature","oneLiner":"Temperature changes how thick the air is: warm air is thinner and lets a struck ball carry a few extra yards, cold air is denser and holds it back — and, separately, a cold ball itself comes off the face a touch less lively.","whatItIs":"Temperature does not touch your swing at all — in the app's engine, ball speed, launch angle, spin loft and backspin are computed by solveFlight() from clubPath/faceAngle/attackAngle/dynamicLoft/clubSpeed alone, and none of those five inputs is temperature. What temperature changes is the air the ball flies through after it leaves the face. Air is a gas: by the ideal gas law, its density is proportional to 1/T (T in absolute/Kelvin terms) at constant pressure — warm air molecules spread out and get lighter per cubic metre, cold air molecules pack in and get heavier. Thinner (warm) air produces less aerodynamic drag, so the same strike coasts a bit farther before it runs out of speed; denser (cold) air produces more drag and pulls the ball up a little short. The app models this exactly the way it models altitude and humidity: as a documented estimate post-solve multiplier applied after the engine-true flight is solved. The live formula is fTemp = 288.15 / (273.15 + tempC) — a ratio against 15°C (288.15 K), the ISA sea-level reference temperature also used for the altitude and humidity layers — which feeds into the same densityRatio = fAltitude × fTemp × fHumidity and carryEnvMult = 1 + 0.70×(1 − densityRatio) used across the whole Environment tier. There is a second, smaller mechanism that is real but not in the current engine: a cold golf ball's core is stiffer and less resilient (lower coefficient of restitution), so a chilled ball can come off the face a touch slower than a warm one at an identical club speed — documented by golf-equipment testing, but absent from solveFlight, so today it is text-only knowledge, not something either the Carry lesson's or this lesson's live diagram can show moving the numbers.","components":[{"name":"Absolute temperature (the actual physics driver)","role":"The ideal-gas law says density is proportional to 1/T with T in Kelvin, not Celsius or Fahrenheit — this is why the effect is nonlinear (bigger jumps near the cold end of a slider than the hot end) and why the app's formula anchors on 288.15 K (15°C) rather than 0.","typicalRange":"playable golf range roughly -5 to 40 degC (268 to 313 K)"},{"name":"Air density (kg/m3)","role":"The direct physical quantity temperature moves. Wolfram-checked dry-air density falls from 1.317 kg/m3 at -5 degC to 1.127 kg/m3 at 40 degC, a 14.4% drop across the app's full slider range.","typicalRange":"-5 degC: 1.317; 0 degC: 1.293; 15 degC (ISA ref): ~1.225; 30 degC: 1.165; 40 degC: 1.127 kg/m3"},{"name":"Drag on the ball","role":"Drag scales with air density times velocity squared. Thinner (warm) air means less drag, so the ball decelerates more slowly and carries farther for an identical launch; denser (cold) air brakes it sooner.","typicalRange":"drag force on a golf ball at typical flight speed ~1 N order of magnitude (2x+ the ball's own ~0.45 N weight)"},{"name":"Magnus lift (backspin's payoff)","role":"Lift from backspin also scales with air density, so thinner warm air gives the same spin rate less lift to hold the ball up. This is why the carry gain from heat is always smaller than the raw density drop alone would suggest — drag falls, but so does lift.","typicalRange":"shared 0.70 coefficient in carryEnvMult damps the raw density swing before it reaches carry"},{"name":"Ball COR / \"liveliness\" (real, not modeled by the engine)","role":"A cold ball's core is stiffer and less resilient, giving a lower coefficient of restitution and slightly less ball speed at the same club speed. Golf-equipment testing documents this as a genuine, separate 'dead ball' effect. solveFlight() has no temperature input, so neither this lesson's diagram nor the Carry lesson's can show it moving — it is a text-only caveat, matching the graph's declared temperature-to-ball-speed edge that the current engine does not yet implement.","typicalRange":"reported by equipment testers as a modest few-yard effect, smaller than the air-density carry swing"},{"name":"Altitude and humidity (the other two Environment layers)","role":"Temperature is one of three multiplicative factors feeding the same densityRatio used across the Environment tier. Its own share of a given day's conditions is usually bigger than humidity's (which is nearly negligible, <1%) but smaller than a large altitude jump like sea level to Denver (~14% thinner air, ~5,280 ft).","typicalRange":"densityRatio = fAltitude x fTemp x fHumidity, each factor near 1.0 at sea-level/15degC/50% baseline"}],"howTheyConnect":"Contact between club and ball is over in half a millisecond — nothing about the day's temperature is in the room for that. All five of solveFlight()'s inputs (clubPath, faceAngle, attackAngle, dynamicLoft, clubSpeed) and everything they derive (ball speed, launch angle, spin loft, backspin, smash) are computed with zero knowledge of temperature; those numbers are identical on a freezing morning and a scorching afternoon for the same swing. What changes is everything that happens next, once the ball is airborne and pushing through a real fluid. By the ideal gas law, air density at a fixed pressure is proportional to 1 / T(Kelvin) — hotter air has the same molecules spread across more volume, so it weighs less per cubic metre. The app captures this with fTemp = 288.15 / (273.15 + tempC): at the 15°C reference fTemp = 1 (no change); at -5°C fTemp = 288.15/268.15 = 1.0746 (denser, ~7.5% above reference); at 40°C fTemp = 288.15/313.15 = 0.9202 (thinner, ~8.0% below reference) — Wolfram-verified, and matching measured air-density tables (1.317 -> 1.127 kg/m3 is a 14.4% real-world drop across the same span) almost exactly, which is why the simple 1/T approximation is trustworthy here. That fTemp multiplies into densityRatio = fAltitude x fTemp x fHumidity, and the same formula used for every Environment node then produces carryEnvMult = 1 + 0.70 x (1 - densityRatio): thinner air (densityRatio < 1) gives a multiplier above 1 (more carry), denser air gives one below 1 (less carry). The 0.70 coefficient is not arbitrary noise — it is the app's way of encoding the two-sided physics: thinner air cuts drag (which alone would push carry up by the full density change) but it also weakens the Magnus lift that backspin generates (which pulls the gain back down), so the net carry swing ends up damped to about 70% of the raw density change. Carry and apex are the only two engine outputs multiplied by this layer; ball speed, launch angle, spin loft and backspin come straight from the base model, unchanged. Separately — and this is not wired into carryEnvMult — a genuinely cold golf ball has a stiffer, less resilient core (lower coefficient of restitution), so in reality a chilled ball can leave the face a hair slower even at an identical club speed. The dependency graph's data literally encodes a temperature-to-ball-speed edge alongside temperature-to-carry, anticipating this mechanism, but solveFlight() has no temperature argument today, so that edge is aspirational: real, teachable, and worth knowing, but the live diagram can only show the air-density half of the story moving.","hierarchy":[{"driver":"Ball speed (club speed x smash) — untouched by temperature","weight":"still dominant for total distance (a 7-iron runs ~149 to ~212 yd carry from 80 to 110 mph club speed), but this lesson's whole point is that temperature does not move this number at all in the engine","why":"solveFlight() takes clubPath/faceAngle/attackAngle/dynamicLoft/clubSpeed only — temperature is never an argument. Every yard temperature adds or removes comes entirely from rescaling the flight of an identical strike through different air, never from the strike itself."},{"driver":"Air density via temperature (the EST carry lever)","weight":"roughly +4.2 yd per +10 degC (about +2.3 yd per +10 degF) near the 15 degC/173-yd reference for a 120-mph-ball-speed 7-iron, widening to about -9.0 yd at -5 degC and +9.7 yd at 40 degC vs the 15 degC baseline (Wolfram-checked) -- an ~18.7 yd swing across the app's full -5 to 40 degC slider on a 172-yard shot","why":"This is the mechanism the app actually implements: fTemp feeds densityRatio, which feeds carryEnvMult = 1 + 0.70x(1-densityRatio), applied to carry and apex only. It is the single lever this lesson's diagram can move live."},{"driver":"Temperature vs its Environment siblings (altitude, humidity)","weight":"a full -5..40 degC run is a 14.4% air-density swing -- bigger than humidity's <1% but smaller than the ~14% thinning of a big altitude jump like sea level to Denver (~5,280 ft, ~+10% carry)","why":"All three share one multiplicative densityRatio, so their yardage contributions are directly comparable: on an ordinary day temperature usually moves carry more than humidity ever will, but less than a serious elevation change."},{"driver":"Ball COR / \"dead ball\" effect (real, not modeled)","weight":"documented by golf-equipment testing as a genuine but modest effect -- clearly smaller than the air-density swing above, and currently absent from the app's carry number entirely","why":"A cold ball's core resists compression less efficiently (lower COR), trimming ball speed slightly at an identical club speed. The dependency graph anticipates this (temperature -> ball-speed edge) but solveFlight() has no temperature input, so it cannot show up in either this lesson's or the Carry lesson's live numbers today."},{"driver":"Swing / body effects in the cold (real, not modeled, often the biggest practical effect)","weight":"not quantified anywhere in the app -- purely anecdotal/behavioral, but frequently the largest real-world distance loss on a genuinely cold tee box","why":"Stiff muscles, tighter grip from cold hands, and extra clothing layers can slow the actual clubhead speed a golfer produces. That is a human-performance effect entirely outside solveFlight() and outside the EST air layer -- it changes clubSpeed itself, the one input everything else is built on, rather than rescaling the flight afterward."}],"misconceptions":["\"Cold air is heavier, so surely it helps the ball fly farther the way thin mountain air does.\" Backwards: it is the thin, warm air that reduces drag and adds carry; dense, cold air does the opposite and costs distance. People conflate 'heavier air feels more substantial' with 'more support for the ball' -- the physics runs the other way.","\"Temperature changes your ball speed and spin the same way altitude and wind can shove a shot around.\" In this engine it does not -- solveFlight() has no temperature input at all, so ball speed, launch angle, spin loft and backspin are byte-identical on a freezing day and a hot one. Only carry and apex get rescaled, by a documented EST post-solve layer.","\"Warming your golf balls before a cold round is a superstition, it can't really do anything.\" It is a small but genuine effect -- a cold ball's core is stiffer and less resilient (lower COR), documented by independent equipment testing -- just much smaller than the air-density swing, and not something the app's own diagram can show since solveFlight() doesn't model it.","\"The temperature effect is basically the same size as altitude.\" They share the exact same densityRatio mechanism, but day-to-day temperature swings (maybe 20-30 degC in most climates) move carry far less than a serious altitude jump like sea level to Denver (~5,280 ft, ~14% thinner air).","\"If it's cold, the ball comes up short because the air is thick -- that's the whole story.\" Air density is real and modeled, but on a genuinely cold tee box the biggest practical yardage loss is often the golfer's own stiff, cold-muscled, extra-clothed swing producing less club speed to begin with -- an effect entirely outside both the air-density layer and the engine's solve.","\"Since it isn't in the engine, the ball-COR effect must not be real.\" 'Not modeled by this app' and 'not real' are different claims -- the graph data even encodes a temperature-to-ball-speed dependency edge anticipating it; it just isn't wired into solveFlight() yet."],"wolframChecks":["Ideal-gas density ratio 288.15/268.15 = 1.0746 -> matches the app's fTemp formula at -5 degC (cold air ~7.5% denser than the 15 degC/288.15K ISA reference).","Ideal-gas density ratio 288.15/313.15 = 0.9202 -> at 40 degC, air is ~8.0% thinner than the 15 degC reference.","Measured dry-air density (1 atm): -5 degC -> 1.317 kg/m3, 0 degC -> 1.293, 10 degC -> 1.247, 20 degC -> 1.205, 30 degC -> 1.165, 40 degC -> 1.127 kg/m3; (1.317-1.127)/1.317 = 14.43% -> real measured density falls 14.4% across the app's full -5..40 degC slider, closely matching the pure 1/T prediction and validating the engine's simplification.","Engine carry at 120 mph ball speed (default 7-iron): 0.232*120^1.389/(1+(120/210)^6) = 173.2 yd -> the baseline the temperature layer scales.","App's EST carry delta at the slider ends: 173.2*0.70*(1-1.07459) = -9.04 yd at -5 degC; 173.2*0.70*(1-0.92017) = +9.68 yd at 40 degC -> both vs the 15 degC baseline, an ~18.7 yd total swing on a 172-yard 7-iron.","10 degF temperature difference = 5.556 degC -> converting the app's per-degC rate to the commonly-cited per-10-degF golf rule of thumb (~+2.3 yd/10 degF near the 15 degC reference, matching published club-fitting guidance of roughly 1-2 yd per 10 degF)."],"quiz":[{"q":"In the app's engine, what does raising the Temperature slider actually change?","options":["Ball speed, launch angle and spin all increase together","Only carry and apex are rescaled by an EST air-density layer; ball speed, launch angle, spin loft and backspin stay exactly the same","Only spin loft changes","Nothing -- temperature has no effect anywhere in the app"],"answerIndex":1,"explanation":"solveFlight() takes clubPath, faceAngle, attackAngle, dynamicLoft and clubSpeed -- temperature is never an input. It only rescales carry and apex through the documented EST post-solve air layer (fTemp -> densityRatio -> carryEnvMult), exactly like altitude and humidity."},{"q":"Why does thinner, warmer air let the ball carry farther?","options":["Warm air pushes the ball upward directly","Air density is proportional to 1/absolute-temperature, so warm air is lighter and produces less drag on the ball","Warm air spins the ball faster","The ball itself gets lighter when warm"],"answerIndex":1,"explanation":"By the ideal gas law, density at constant pressure scales as 1/T (Kelvin). The app's fTemp = 288.15/(273.15+tempC) captures exactly this: at 40 degC, fTemp = 0.920 (Wolfram-checked), meaning the air is about 8% thinner than the 15 degC reference, which cuts drag and adds carry."},{"q":"Going from a chilly -5 degC morning to a hot 40 degC afternoon, roughly how much does the app say a 172-yard 7-iron's carry changes (both vs the 15 degC baseline)?","options":["About 2 yards total -- barely noticeable","About 19 yards total (roughly -9 yd cold, +9.7 yd hot)","About 90 yards total -- nearly half the shot","It gets shorter in both directions"],"answerIndex":1,"explanation":"Wolfram-checked: 173.2 x 0.70 x (1-1.07459) = -9.04 yd at -5 degC and 173.2 x 0.70 x (1-0.92017) = +9.68 yd at 40 degC, both relative to the 15 degC baseline -- an ~18.7 yard total swing across the full slider on this shot, a meaningful but modest fraction of the total carry."},{"q":"Why doesn't the full air-density change translate one-for-one into carry gain (i.e. why is there a 0.70 factor, not 1.0)?","options":["It's an arbitrary safety cap with no physical meaning","Thinner air cuts drag (which alone would add the full density change) but also weakens the Magnus lift from backspin (which pulls some of that gain back), so the net effect is damped","Warm air increases spin, cancelling some of the gain","Humidity always partially cancels temperature"],"answerIndex":1,"explanation":"Drag and Magnus lift both scale with air density. Warm, thin air reduces drag (more carry) but simultaneously gives the same backspin less air to grab for lift (less carry) -- two opposing effects on the same variable, so the net carry gain ends up damped to roughly 70% of the raw density swing rather than the full amount."},{"q":"A player blames a short cold-day drive entirely on 'thick air.' What is this lesson's caution about that explanation?","options":["Thick cold air has zero effect on carry, so the explanation is wrong","Air density is real and modeled, but a genuinely cold ball's stiffer core (lower COR) and the golfer's own stiff, cold-muscled swing are separate, real effects the app's engine does not model at all","Cold air only affects putting, not full swings","The engine already accounts for all cold-weather effects, so nothing else matters"],"answerIndex":1,"explanation":"The EST air-density layer is real and grounded (~9 yd lost at the app's coldest setting for a 7-iron), but it isn't the whole story: a cold ball's lower coefficient of restitution and a golfer's own reduced clubhead speed from cold, stiff muscles are genuine, documented effects that sit entirely outside solveFlight() and the EST air layer -- often the bigger practical loss on a truly freezing tee box."}],"realWorld":{"tourBenchmarks":["Wolfram-checked: dry-air density falls from 1.317 kg/m3 at -5 degC to 1.127 kg/m3 at 40 degC -- a 14.4% drop across the app's full temperature slider, and the ideal-gas ratio 288.15/268.15 = 1.0746 vs 288.15/313.15 = 0.9202 (a 14.4%-wide ratio spread) matches that measured drop almost exactly, validating the app's 1/T simplification.","Wolfram-checked engine baseline: 0.232 x 120^1.389 / (1+(120/210)^6) = 173.2 yd carry for a 120-mph-ball-speed 7-iron (PGA-Tour-typical). Applying the app's EST air layer: 173.2 x 0.70 x (1-1.07459) = -9.04 yd at -5 degC, and 173.2 x 0.70 x (1-0.92017) = +9.68 yd at 40 degC, both versus the 15 degC baseline -- about 19 total yards of swing from temperature alone on this one shot.","Near the 15 degC/59 degF reference this works out to roughly +4.2 yd of carry per +10 degC (about +2.3 yd per +10 degF, since 10 degF = 5.556 degC, Wolfram-confirmed) -- closely matching the club-fitting-industry rule of thumb (TrackMan University and most fitting literature teach roughly 1-2 extra yards of carry per 10 degF of warming).","Golf-equipment testing (cold-ball vs warm-ball comparisons run by independent labs and golf media) documents a real 'dead ball' effect: a chilled ball can leave the face a touch slower than a body-temperature one at an identical club speed, because its core is stiffer and less resilient (lower coefficient of restitution) when cold -- a genuine mechanism the app's engine does not currently implement."],"scenarios":["A frosty 7am tee time versus a 2pm round on the same course, same course same swing: the early ball sits in denser, colder air (and is itself colder), so it comes up shorter than the exact same strike hit after the day warms up.","Instructors and caddies routinely tell golfers to 'take one more club' in cold weather -- a rule of thumb that lines up with the app's own ~9-10 yard EST carry loss at the cold end of its slider for a mid-iron.","Tour pros and caddies on cold-weather tee times (early-morning coastal rounds, late-season cold snaps) are known to keep a spare ball in a jacket pocket to keep its core warm -- a direct, practical response to the documented cold-ball COR effect.","Winter 'flyer' complaints often get blamed entirely on temperature when club-face friction, wet turf, or a stiff cold grip are doing at least as much damage -- temperature is real but it is only one ingredient in a cold-weather short-shot.","A hot desert-swing afternoon versus a cool, breezy links morning: the warm-air carry gain modeled here is real, but on a links day it is easily swamped by the far bigger, separate wind effect (a 10 mph headwind alone costs roughly as much carry as this entire temperature slider)."],"whatItMeansForYou":"Don't blame a whole club's worth of a bad swing on the thermometer: across the app's entire -5 to 40 degC range the pure air-density effect is only about a 19-yard swing on a 172-yard 7-iron (roughly 4-5% each way), and your ball speed, spin and launch never actually change with temperature in this model. What you should expect: a few extra yards on a hot day, a few less on a cold one, growing faster as you get closer to freezing than as you get closer to summer heat (because density runs on 1/T, not a straight line) -- and, separately, a genuinely cold ball in your bag is quietly working against you a little more on top of that, so keeping it warm on a freezing tee time is not superstition."}}
   </script>
+  <script type="application/json" id="lesson-low-point">
+{"parameter":"Low Point","oneLiner":"Your swing is a circle, and every circle has a bottom. Where that bottom sits — behind the ball, at it, or ahead of it — is the single number that decides whether you strike down, level, or up.","whatItIs":"The low point is the lowest point of the arc your clubhead travels on. It is not a feeling and not a technique — it is a place, measured in centimetres along the target line, relative to the ball. In this app's geometry engine (swing-parameters-and-impact.js) it is literally the state variable lowPoint.x, and the whole strike story falls out of one line of trigonometry: theta = asin(−xLP / R) finds where on the circle the ball sits, and deriveImpact() converts that place into the attack angle. Put the bottom of the circle AHEAD of the ball (positive x, toward the target) and the club must still be descending when it arrives at the ball — a negative attack angle and, with turf, a divot that starts after the ball. Put the bottom BEHIND the ball and the club is already climbing — a positive attack angle, which is exactly what a teed driver wants and a grounded 7-iron does not. Engine-run: sliding the low point from 6 cm behind the ball to 15 cm ahead (plane 55°) sweeps attack angle from +2.35° to −5.88° — about 0.4° per centimetre, the famous \"one degree per inch of ball position\" from the range, computed instead of recited.","components":[{"name":"lowPoint.x — the place along the target line","role":"The master input. effectiveLpx() reads it (plus a swing-direction correction taught in lesson 3), thetaAtImpact() converts it to the ball's position on the circle, and deriveImpact() turns that into attack angle. Engine-run at plane 55°: x −6 cm → +2.35° up, x 0 → exactly 0.00°, x +10.5 cm → −4.11° down, x +15 → −5.88°.","typicalRange":"irons: low point 2–15 cm ahead of the ball (the engine's own 'Pure' window, ideal centre +10.5 cm); driver: at or behind the ball"},{"name":"The radius (R = 1.2 m)","role":"The circle's size sets how fast attack angle changes per centimetre of low point. theta = asin(−xLP/R): a bigger circle is flatter near its bottom, so the same offset produces a gentler angle.","typicalRange":"fixed at 1.2 m in the engine — roughly a mid-iron swing radius"},{"name":"Club path, riding along (G-3)","role":"The same geometry moves the head's horizontal direction: strike before the bottom and the head still travels slightly rightward/outward. Engine-run, swing direction held at 0: x +10.5 cm gives path +2.88°, x +15 gives +4.13°. Attack and path are two shadows of one place on the circle.","typicalRange":"≈ +0.28° of in-to-out path per cm of low point ahead (plane 55°)"},{"name":"What it is NOT: depth","role":"lowPoint.x says where along the line the bottom sits. How DEEP the bottom sits (lowPoint.z) is a different axis with a completely different job — the next lesson. Trailer, engine-run: attack angle at z −30 mm, 0 and +30 mm is −4.11°, −4.11°, −4.11°.","typicalRange":"see the Strike Depth lesson"}],"howTheyConnect":"Think of the swing as a wheel rolling through the hitting area, and the ball as a stone on the ground somewhere along its path. Nothing about the wheel changes — only where the stone sits. If the stone is before the wheel's lowest point, the rim is still travelling downward when it hits; past the lowest point, upward. That is the entire mechanism: attack angle is not a move you make at the ball, it is an address — where you placed the bottom of your circle. The engine says it in two lines: theta = asin(−xLP/R) (where is the ball on the circle?) and attackAngle = atan2(sinθ·sinφ, hypot(cosθ, −sinθ·cosφ)) (what direction is the rim moving there?). Two things follow that most golfers have backwards. First, the slope is gentle and linear-ish in the playable zone — about 0.4° per cm (engine-run: 5.1° of attack across the 13 cm from x +2 to x +15) — so small setup drifts make small, predictable attack changes; nobody 'suddenly' hits 5° steeper without the bottom of their circle moving a lot. Second, the far end bites: push the low point 25 cm ahead (z = 0) and the club reaches the ball 21.6 mm above its bottom — equator height — and the band chip flips to Thin at the exact moment the geometry says 'blade'. Steep and thin are neighbours, which is why chasing an ever-more-forward low point without depth control tops the ball. The low point is the cause; attack angle, path nudge, contact height and the divot are all effects read off the same circle.","hierarchy":[{"driver":"Ball position / low-point offset (x)","weight":"dominant — ~0.39°/cm ≈ 1.0°/inch (engine-run: +2 cm → −0.78°, +15 cm → −5.88°, plane 55°)","why":"It is the direct argument of thetaAtImpact(). Nothing else in the geometry moves attack angle as much for a realistic change."},{"driver":"Swing plane angle (φ)","weight":"secondary multiplier — ~+0.05° per degree of plane (engine-run at x +10.5: plane 40° → −3.22°, 70° → −4.72°)","why":"vz = sinθ·sinφ — a steeper plane converts the same circle-position into more vertical motion. Taught fully in lesson 3."},{"driver":"Low-point depth (z)","weight":"ZERO — exactly 0.00° per mm (engine-run: −4.11° at z −30/0/+30 mm)","why":"deriveImpact() never reads lowPoint.z. Depth changes what the strike hits, never the angle it arrives at — the whole point of the next lesson."}],"realWorld":{"tourBenchmarks":["Launch monitors measure this directly: TrackMan's \"Low Point\" number reports cm ahead (A) or behind (B) the ball — tour iron strikes typically bottom out ~7–10 cm ahead, exactly the middle of this app's own Pure window (2–15 cm, ideal +10.5 cm)","Engine cross-check: the ideal +10.5 cm low point at the default 55° plane computes to −4.1° attack — landing on the tour mid-iron −4°..−5° benchmark from the Attack Angle lesson","Tour driver setups place the ball forward specifically to move the strike past the low point — the same single variable, used in the opposite direction"],"scenarios":["Ball creeping back in the stance during a range session — attack quietly steepens ~1° per inch until strikes feel \"trapped\"","The fairway-wood off a tight lie that only works when the low point is barely ahead — the geometry's narrow Pure window at small x, made visible","A \"steep\" swing diagnosed on video that is really a ball position problem — the circle is fine, the stone moved"],"whatItMeansForYou":"Stop thinking of attack angle as something your hands do at impact and start thinking of it as somewhere the bottom of your circle sits. With irons, that bottom belongs a hand-width ahead of the ball; move the ball, not your swing, and watch the attack readout follow at about a degree per inch. When a strike pattern changes overnight, ask \"where is my bottom?\" before asking \"what is wrong with my swing?\"."},"misconceptions":["\"Attack angle is created at impact with the hands.\" It is set by where the low point sits, decided at address and by the swing's overall shape — the engine computes it from lowPoint.x and plane alone; nothing hand-shaped is in the formula.","\"Hitting down means the low point is AT the ball.\" Backwards — hitting down means the low point is AHEAD of the ball; the club passes the ball on its way down to a bottom that comes later.","\"More forward low point is always better ball-striking.\" Only inside the window. At z = 0 the engine blades the ball (Thin, contact at the equator) once the low point passes ~25 cm ahead — steep and thin are neighbours.","\"The low point is where the divot is deepest, so it's behind the ball on good strikes.\" On a good iron strike the low point (and the whole divot) is ahead of the ball — ball first, then turf.","\"A degree of attack angle needs a big swing change.\" ~1° per inch of ball position (engine-run 0.39°/cm) — it is one of the cheapest numbers in golf to move.","\"Low point and attack angle are the same thing.\" One is a place (cm), the other is a direction (degrees) read off that place; lesson 2 shows a third quantity (depth) that moves neither."],"wolframChecks":["thetaAtImpact/deriveImpact sweep, plane 55°, z 0: x −6 cm → attack +2.35°, x 0 → 0.00°, x +2 → −0.78°, x +10.5 → −4.11°, x +15 → −5.88°, x +25 → −9.83° (Thin, contact +0.3 mm above equator), x +30 → −11.82° (Whiff)","slope check: (−5.88 − (−0.78))/13 cm = 0.392°/cm ≈ 1.00°/inch — the range rule of thumb, derived","path coupling: same sweep, clubPath +0.55° (x +2) → +2.88° (x +10.5) → +4.13° (x +15) — deriveImpact's swingDirection term held at 0","band flips (strikeQuality, z=0): x < 0 → Fat (low point behind), x 0..+2 → Thin (\"not far enough ahead\" — engine-run: Thin at exactly x 0), +2..+15 → Pure, +18..+25 → Thin, ≥ +30 → Whiff — matches LP_AHEAD_MIN/MAX 0.02/0.15","sanity: arcPosition(thetaAtImpact(state), state) lands at the ball (x = y = 0.0 mm) for swing directions −6, 0, +5 — the address-compensated lpWorld() keeps impact at the ball, so every drawn number belongs to the same strike"],"quiz":[{"q":"In the engine, what single input does thetaAtImpact() use to locate the ball on the swing's circle?","options":["The golfer's grip pressure","The low point's position along the target line (lowPoint.x)","The club's loft","The depth of the divot"],"answerIndex":1,"explanation":"theta = asin(−effectiveLpx/R). Grip and loft never enter; depth (z) belongs to the next lesson and moves contact, not angle."},{"q":"A well-struck 7-iron hits down about 4°. Where is the low point?","options":["Exactly at the ball","About 10 cm ahead of the ball","About 10 cm behind the ball","Wherever the hands release"],"answerIndex":1,"explanation":"Engine-run: x +10.5 cm → −4.11° at the default 55° plane. Down means the bottom comes AFTER the ball."},{"q":"Roughly how much attack angle does one inch of ball position buy?","options":["~1°","~5°","~0.1°","It depends only on swing speed"],"answerIndex":0,"explanation":"0.39°/cm engine-run = ~1.0°/inch. Speed is nowhere in the geometry."},{"q":"You keep pushing the low point further and further ahead of the ball (depth unchanged). What does the engine eventually do?","options":["The strike gets purer forever","The ball is bladed — contact climbs to the equator and the band flips to Thin","The attack angle stops changing","The divot gets deeper"],"answerIndex":1,"explanation":"At x +25 cm (z = 0) contact height reaches +0.3 mm above the equator — Thin at −9.8° attack. Steep and thin are neighbours."},{"q":"Moving the low point ahead also nudges which other delivery number, according to the same circle geometry?","options":["Club path (slightly more in-to-out)","Clubhead speed","Face angle","Ball compression"],"answerIndex":0,"explanation":"Engine-run: path +0.55° → +4.13° as x goes +2 → +15 cm (swing direction fixed 0). Attack and path are two shadows of one place on the circle."}]}
+  </script>
+  <script type="application/json" id="lesson-strike-depth">
+{"parameter":"Strike Depth","oneLiner":"Depth is the forgotten axis of the low point: how far below (or above) the turf the bottom of your circle sits. It decides what you hit — turf first, ball first, equator, or air — and it never changes your attack angle by even a tenth of a degree.","whatItIs":"Strike depth is lowPoint.z — the height of the arc's bottom relative to the ground. Where lesson 1's x-axis answered \"down or up?\", the z-axis answers \"how much ball, how much earth?\". The engine keeps the two jobs perfectly separate: deriveImpact() (attack angle) never reads z at all — engine-run, attack is −4.11° whether the bottom sits 30 mm below the turf or 30 mm above it — while clubBallContact() moves the contact point on the ball exactly one millimetre per millimetre of depth (clubZ = lowPoint.z + lift). Between the two extremes lives every strike you know: bottom far below turf = the club is underground at the ball (Fat, then Duff); bottom just below = ball first, then a divot ahead (Pure); bottom above the turf = a clean pick with no divot at all — which, and this is the part almost everyone has backwards, can still be a steeply descending blow. The divot is testimony about the arc's DEPTH; it says nothing about the arc's DIRECTION at the ball.","components":[{"name":"lowPoint.z — the depth dial","role":"Moves contact height 1:1: clubZ = z + lift(θ). Engine-run at x +10.5/plane 55: z −30 mm → Duff, −25..−4 → Fat, −2..+15 → Pure, +18..+25 → Thin, +30 → Whiff. Every band edge is just the contact tick crossing a line on the ball.","typicalRange":"playable window ≈ −8 mm (deepest ball-first, far-forward low point) to +15 mm (still Pure); the Geometry screen's slider allows ±20 cm"},{"name":"lift(θ) — how much the arc has climbed at the ball","role":"Because the ball sits BEFORE the bottom (lesson 1), the club is still above its own low point when it arrives: lift = R(1−cosθ)sinφ. Engine-run lift table (plane 55): low point +2 cm ahead → 0.1 mm of lift, +8 → 2.2 mm, +10.5 → 3.8 mm, +15 → 7.7 mm. Lift is the divot budget: it is exactly how deep the bottom may sit below turf while the BALL is still struck cleanly.","typicalRange":"0–8 mm across the Pure window"},{"name":"The divot pair (entry/exit)","role":"Where the arc crosses the turf: groundCrossingTheta0() gives ±θ₀; entry before the bottom, exit after. Engine-run: x +10.5, z −2 mm → divot starts +2.8 cm AFTER the ball, 15.4 cm long — the tour pattern; x +2, z −4 mm → starts 8.8 cm BEHIND the ball — the fat. Same depth axis, opposite stories, because x decides where the dip lands.","typicalRange":"good iron strike: entry 0–5 cm after the ball; model depths are mm-scale (see honesty note)"},{"name":"Contact height on the ball (the \"height\" of the title)","role":"clubBallContact().offset = clubZ − ball radius, the tick on the ball face. −21.3 mm = struck at the very bottom, 0 = equator (blade), above = whiff. This — not divot depth — is what \"hitting down on the ball\" actually moves.","typicalRange":"Pure band: contact 2.5–19.5 mm below the equator (offset −19.5..−2.5 mm engine-run at x +10.5)"}],"howTheyConnect":"Hold the picture from lesson 1 — the wheel and the stone — and now raise or lower the whole wheel. Nothing about \"down or up at the stone\" changes: the rim arrives at the same angle whether the wheel's bottom hangs a centimetre into soft ground or floats a centimetre above it. The engine proves the separation exactly: attack angle at z −30, 0 and +30 mm is −4.11°, −4.11° and −4.11°. What DOES change is what the rim meets. Lower the wheel and the contact point slides down the ball millimetre for millimetre until the rim is below the grass at the ball — turf first, fat. Raise it and contact slides up the ball toward the equator — thin, then air. The two pearls of this chapter both live here. Pearl one: a DEEP bottom does not mean hitting far down ON the ball, because x sets how much of that depth has already been climbed away when the club reaches the ball. Engine-run: a −4 mm bottom at x +10.5 strikes at −0.2 mm (leading edge a hair under the grass), and a −6 mm bottom at x +13 strikes at the SAME −0.2 mm — half again more divot depth, identical height on the ball. Divot depth and strike height are different measurements of different things. Pearl two, the inverse: NO divot does not mean a shallow blow. Put the bottom 2 mm ABOVE the turf with the low point 15 cm ahead and the engine reports attack −5.88° — steeper than the tour 7-iron average — with zero turf contact and a Pure band. A clean picker can be the steepest hitter on the range; the grass just never got to testify. And the fat you feel when the bottom is barely ahead of the ball is the same geometry running backwards: at x +2 the divot budget is 0.1 mm — the club has essentially no lift left at the ball, so ANY depth at all digs in behind it (engine-run: z −4 at x +2 → entry 8.8 cm behind the ball). Depth chooses what you hit; x chooses where the dip lands; the angle was never up for negotiation.","hierarchy":[{"driver":"lowPoint.z","weight":"total control of contact height — 1.000 mm per mm (clubZ = z + lift, engine identity)","why":"It is an additive term. The band chip is a pure function of where the tick lands."},{"driver":"lowPoint.x (via the lift budget)","weight":"sets how much depth is survivable — budget 0.1 mm at x +2 cm up to 7.7 mm at x +15 (engine lift table)","why":"Ball-first requires clubZ ≥ 0 at the ball, i.e. z ≥ −lift(θ). Forward low point = bigger budget = deeper clean divots."},{"driver":"Attack angle","weight":"ZERO influence in either direction — depth does not move attack (−4.11° at any z) and attack does not require turf (Pure at z +5 mm)","why":"deriveImpact() and groundCrossingTheta0() share no variable except through x and plane. The divot and the angle are witnesses to different events."}],"realWorld":{"tourBenchmarks":["Tour iron divots start AFTER the ball — the model reproduces the pattern at x +10.5, z −2 mm: divot entry +2.8 cm past the ball, exit +18.2 cm (a bacon-strip ~15 cm long)","Plenty of elite players are \"pickers\" — clean, divotless iron strikes with completely normal descending attack angles; TrackMan classes them by low point ahead, not by turf taken","The engine's own Pure window tops out at a 7.7 mm model divot — real divots read deeper (1–2 cm) because a real sole passes below the ball while the FACE strikes it; the point-club model compresses that (honesty note G-1)"],"scenarios":["Range mats hiding a fat pattern: the mat pays the depth penalty the turf would — the bottom sits below \"grass\" but the club skids instead of digging. Same z, kinder surface","\"I took no divot so I must have picked it clean/shallow\" — the picker with a steep, perfectly fine strike (pearl b), and the scooper who ALSO takes no divot but with the bottom behind the ball: same missing divot, opposite geometry","Wet vs firm turf changing effective depth: soft ground effectively raises z's cost — the same swing that brushed dry turf digs on soggy ground"],"whatItMeansForYou":"Read your strikes as two separate dials. The divot (its start point and existence) reports your DEPTH and your x; the flight's steepness reports your x and plane. When contact is heavy, you don't necessarily \"swing too steep\" — your circle's bottom may simply sit too low, or not far enough ahead. And when you take no divot at all, don't assume shallow: check where the strike met the ball. Fixing the right dial is the difference between a setup adjustment and six months of rebuilding a swing that was never broken."},"misconceptions":["\"A deep divot means I hit steeply down on the ball.\" Divot depth is z; attack is x-and-plane. Engine: −4 mm and −6 mm bottoms both strike the ball at −0.2 mm when x compensates — more earth, same ball.","\"No divot = shallow attack angle.\" The engine's cleanest counterexample: bottom 2 mm above turf, low point 15 cm ahead → attack −5.88°, no turf, Pure. The divot testifies about depth, never direction.","\"Hitting down digs the club into the ground, so hitting down causes fat shots.\" Fat is depth-behind-the-ball. A steeper descending strike with the bottom well ahead takes turf AFTER the ball; the fat happens when the bottom (however shallow) sits barely ahead or behind.","\"The strike bands (Pure/Thin/Fat) are judgements about my swing.\" They are a ruler on the ball: the engine flips band exactly when the contact tick crosses a line (turf level, equator, 1.4 ball-radii). Move z one millimetre across an edge and the word changes.","\"To stop blading it, help the ball up.\" Thin contact = tick too high = bottom too high (or x too far forward). Raising the hands raises the bottom further. The fix is down and/or less far forward — the opposite instinct.","\"Divots should start at the ball.\" At the ball is the boundary case; the tour pattern starts 2–5 cm after it (engine: +2.8 cm at the ideal x, 2 mm depth). Starting AT or BEFORE the ball is the first warning of a depth/x budget problem."],"wolframChecks":["invariance: deriveImpact attack = −4.11° at lowPoint.z ∈ {−0.030, 0, +0.030} m (x +10.5 cm, plane 55°) — identical, structurally: deriveImpact() has no z term at all","contact 1:1: clubBallContact clubZ at z −10/0/+10 mm = −6.2/+3.8/+13.8 mm — slope exactly 1 mm/mm; offset vs ball equator −27.5/−17.5/−7.5 mm","band ladder at x +10.5: z −30 Duff · −25 Fat(edge) · −4 Fat (clubZ −0.2) · −2 Pure (divot +2.8..+18.2 cm) · +15 Pure (offset −2.5) · +18 Thin (offset +0.5) · +30 Whiff (clubZ 33.8 > 1.4·ball radius 29.8)","pearl (a) triple: (x+10.5, z−4) clubZ −0.2 mm & (x+13, z−6) clubZ −0.2 mm — deeper bottom, same strike height; (x+2, z−4) clubZ −3.9 mm, turf entry −8.8 cm (fat) — same depth, budget blown","pearl (b) triple: (x+15, z+2) attack −5.88°, groundCrossingTheta0 = null (no turf), band Pure 79; inverse (x+15, z−7.7) attack −5.88°, divot 0→+30 cm, 7.7 mm deep, Pure 70","lift budget table: deepest ball-first z = −0.1/−0.9/−2.2/−3.8/−5.8/−7.7 mm at x +2/+5/+8/+10.5/+13/+15 cm (clubZ(z=0) per x — engine-run)"],"quiz":[{"q":"In the engine, what happens to attack angle when you move the low point 3 cm deeper into the turf (x unchanged)?","options":["It gets ~3° steeper","Nothing — exactly 0.0° of change","It gets shallower as the club decelerates","It depends on club speed"],"answerIndex":1,"explanation":"deriveImpact() never reads lowPoint.z. Engine-run: −4.11° at z −30, 0 and +30 mm. Depth moves WHAT you hit, not the angle you arrive at."},{"q":"Player A's circle bottoms 4 mm under the turf, 10.5 cm ahead of the ball. Player B's bottoms 6 mm under, 13 cm ahead. Who strikes lower on the ball?","options":["B — deeper bottom means hitting further down on the ball","Neither — both strike at the same height (engine: −0.2 mm for both)","A — shallower divots always strike lower","Cannot be known without swing speed"],"answerIndex":1,"explanation":"clubZ = z + lift(x): B's extra 2 mm of depth is paid for by 2 mm more lift from the more-forward bottom. Divot depth and strike height are different measurements — the owner's pearl, computed."},{"q":"A golfer never takes a divot. What does that tell you about their attack angle?","options":["It must be shallow or level","It must be positive (hitting up)","Nothing — the engine shows −5.9° down with zero turf contact (bottom 2 mm above the grass, 15 cm ahead)","They must be topping the ball"],"answerIndex":2,"explanation":"The divot testifies about the arc's DEPTH, not its DIRECTION. A picked strike from a bottom just above the turf can be steeper than the tour average — Pure band, no grass harmed."},{"q":"Why does the tour divot start AFTER the ball?","options":["Because the club bounces off the ball first","Because the arc's bottom — and therefore its below-turf dip — sits ahead of the ball","Because tour players hit up on their irons","It doesn't — good divots start at or behind the ball"],"answerIndex":1,"explanation":"Engine-run: x +10.5, z −2 mm → turf entry +2.8 cm past the ball, exit +18.2 cm. Ball first at −4.1° down, then the dip."},{"q":"Same 4 mm depth, but the low point only 2 cm ahead of the ball. The engine says:","options":["Pure — depth is fine at any x","Fat — turf entry 8.8 cm BEHIND the ball, because the lift budget at x +2 is only 0.1 mm","Thin — less forward always thins it","Whiff"],"answerIndex":1,"explanation":"Ball-first needs z ≥ −lift(x). The budget grows with x: 0.1 mm at +2 cm, 3.8 mm at +10.5, 7.7 mm at +15. Depth is only survivable when the bottom is far enough ahead."}]}
+  </script>
+  <script type="application/json" id="lesson-plane-coupling">
+{"parameter":"Plane Coupling","oneLiner":"Plane, swing direction and low point are not three settings — they are one linked system. Turn any one of them and the engine moves your real, effective low point for you, whether you meant it or not.","whatItIs":"The x-axis low point you learned in lesson 1 is where the bottom sits if you swing straight down the line. Rotate the swing direction and the whole tilted circle rotates with it — and because the circle is tilted (the plane), rotating it slides the bottom along the target line. The engine does this bookkeeping in one line, effectiveLpx(): xLP(effective) = lowPoint.x − swingDirection · R·cos(plane)·π/180. The coupling constant R·cos(plane) is the part worth tattooing somewhere: it says the FLATTER your plane, the more every degree of swing direction drags your low point around — engine-run: 1.48 cm per degree at a 45° plane, 1.20 at 55°, only 0.72 at 70°. Plane also has the direct effect from lesson 1 (steeper plane = more attack per cm, ~+0.05°/° of plane) and it sets the lift budget from lesson 2. Which is why the chapter ends here: x, z and plane are not tuned separately. A change of swing direction that means nothing on a steep plane can silently move a flat-plane player's bottom from \"hand-width ahead\" to \"behind the ball\" — same ball position, same feel, completely different strike.","components":[{"name":"The coupling constant R·cos(plane)","role":"How many cm of low point one degree of swing direction is worth. Engine-run: 1.481 cm/° (plane 45), 1.201 (55), 0.716 (70). Flat planes pay the steepest exchange rate.","typicalRange":"0.7–1.5 cm per degree over the instrument's 45–70° plane range"},{"name":"Swing direction (dir)","role":"Positive = in-to-out. It shifts the effective bottom BACKWARD (a positive dir subtracts from xLP): swing out to right field and your bottom arrives earlier. Engine-run at plane 45, x +10.5: dir +8 → effective x −1.3 cm (behind the ball!), attack +0.46°, Fat. The same +8 at plane 70 keeps +4.8 cm, −2.14°, Pure.","typicalRange":"±8° on the instrument; ±4° covers most real patterns"},{"name":"Out-to-in, the other direction","role":"Negative dir ADDS effective low point and steepens everything: plane 45, dir −8 → effective x 22.3 cm, attack −7.57°, band Thin (contact riding up the ball). The classic over-the-top strike — steep, forward-bottomed, prone to thin/heel — emerges from pure geometry with no \"swing flaw\" narrative needed.","typicalRange":"each −1° of direction ≈ +0.7..1.5 cm of effective low point, by plane"},{"name":"Plane's own two dials (recap)","role":"Direct: same x reads steeper on a steeper plane (engine-run at x +10.5: −3.22° at 40°... −4.72° at 70°, ~+0.05°/°). Budget: steeper plane lifts the club more at the ball (clubZ 3.0 → 4.3 mm across 40→70°), slightly widening the clean-divot window. Plane is a multiplier on both earlier lessons.","typicalRange":"45–70° on the instrument; engine default 55°"}],"howTheyConnect":"Picture the tilted hula-hoop of your swing lying at its plane angle, its lowest point marked with chalk. Now rotate the whole hoop a few degrees to the right, as an in-to-out swinger does. The chalk mark doesn't stay put — it slides around the hoop, and because the hoop is tilted, \"around the hoop\" has a component ALONG the target line. That slide is the coupling, and its size is R·cos(plane): a flat hoop's bottom lives far from the pivot horizontally, so rotation swings it a long way (1.48 cm/°); a steep hoop's bottom sits nearly under the pivot, so the same rotation barely moves it (0.72 cm/°). Everything the chapter taught now runs through this one line. The engine's own numbers, low point held at +10.5 cm with a 2 mm turf brush: a flat-plane player (45°) who starts swinging +8° in-to-out watches the effective bottom move to 1.3 cm BEHIND the ball — attack flips to +0.5°, the divot jumps behind the ball, the band reads Fat — while nothing about their ball position or depth changed. The steep-plane player (70°) making the identical direction change keeps the bottom 4.8 cm ahead and stays Pure. Run it the other way and the over-the-top move (−8° at 45°) piles up 22.3 cm of effective low point: attack −7.6°, contact climbing the ball, Thin. This is what \"must cohere\" means: x, z, plane and direction are four inputs to ONE circle, and the strike bands only reward combinations that agree. It is also why the same swing-direction tip helps one golfer and wrecks another — the exchange rate depends on the plane they brought with them.","hierarchy":[{"driver":"Swing direction × the coupling (dir · R·cos φ)","weight":"dominant mover of the EFFECTIVE low point — up to ±12 cm across the ±8° slider on a flat plane (engine-run: effLpx 22.3 → −1.3 cm at plane 45)","why":"It is the only term in effectiveLpx() besides x itself. On flat planes it can outmuscle deliberate ball-position changes."},{"driver":"Plane angle (as the exchange-rate setter)","weight":"halves the coupling across the slider range (1.48 → 0.72 cm/° from 45° to 70°)","why":"cos(plane) — the flat plane's bottom sits far from the pivot horizontally; rotation moves it more."},{"driver":"Plane angle (direct steepness)","weight":"secondary — ~+0.05° attack per degree of plane at fixed x (−3.55° → −4.72° across 45–70°)","why":"vz = sinθ·sinφ, the lesson-1 multiplier; real but a third of the ball-position lever."}],"realWorld":{"tourBenchmarks":["TrackMan's classic pairing: out-to-in swings measure steeper attack, in-to-out swings shallower — the engine derives it (dir −8 → −7.6°, dir +8 → +0.5°, plane 45, same ball position) rather than asserting it","Flat-plane \"rotary\" players are famously sensitive to start-direction changes turning into contact changes; upright players get away with more — the cos(plane) exchange rate, named","The fitter's cross-check: a player who \"suddenly hits it fat\" after learning to draw the ball (in-to-out shift) hasn't lost their swing — their effective low point moved back ~1–1.5 cm per degree of direction change"],"scenarios":["The draw project that turned into fat shots: +4° of new in-to-out at a 45° plane = the bottom ~6 cm earlier. The fix is a ball-position/x compensation, not abandoning the draw","The over-the-top slicer's deep, ball-side divots and occasional thins: −6° direction at a flattish plane piles ~9 cm ONTO the effective low point — steep AND thin-prone at once (engine: Thin at effLpx 22.3 cm)","Why one range tip (\"swing more right\") fixes a steep friend and buries yours: different planes, different exchange rates"],"whatItMeansForYou":"When you change one of the three — plane, direction, or low point — assume the other two moved and go look. The instrument's Geometry screen shows all four numbers live; the cheapest habit in this chapter is checking the EFFECTIVE low point readout after any direction change. If you swing in-to-out on a flatter plane, your real bottom lives closer to the ball than your setup says — budget for it with ball position before you blame your contact."},"misconceptions":["\"Swing direction only changes where the ball starts, not how I strike it.\" Direction moves your effective low point 0.7–1.5 cm per degree (plane-dependent). At a flat plane, +8° in-to-out relocates the bottom behind the ball — a Fat, from a direction change alone.","\"Steep plane = steep attack = digging.\" Partly true (−0.05°/° direct effect) but the steep plane is the STABLE one under direction changes (0.72 vs 1.48 cm/°) and carries a bigger lift budget at the ball. Steepness where it matters is mostly x, not plane.","\"In-to-out is the shallow, safe pattern.\" Shallower in angle, yes (engine: +8° dir → attack +0.46°) — but it drags the bottom BACK, which is the fat direction. Safe only if ball position compensates.","\"Over-the-top means fat shots.\" Usually the opposite: out-to-in ADDS effective low point ahead (engine: 22.3 cm at −8°/plane 45) — steep contact climbing the ball: thin, not fat, is its signature miss.","\"These are three independent sliders.\" One formula binds them: xLP_eff = x − dir·R·cos(plane)·π/180. The chapter exists because they must cohere.","\"The coupling is a quirk of this app.\" It is rigid-circle trigonometry — any tilted circle's bottom slides along the line when the circle rotates. The engine just makes the constant visible."],"wolframChecks":["effectiveLpx coupling per +1° of swing direction: −1.481 cm (plane 45), −1.201 (55), −0.716 (70) — engine-run finite difference, matches R·cos(φ)·π/180 with R = 1.2 m","flat-plane flip: x +10.5, plane 45: dir +8 → effLpx −1.3 cm, attack +0.46°, band Fat; dir −8 → effLpx 22.3 cm, attack −7.57°, band Thin — full Fat↔Thin traverse from direction alone","steep-plane stability: x +10.5, plane 70: dir +8 → effLpx +4.8 cm, attack −2.14°, Pure; dir −8 → 16.2 cm, −7.30°, Thin — half the excursion","plane direct effect at fixed x +10.5, dir 0: attack −3.22/−3.55/−4.11/−4.72° at plane 40/45/55/70 (≈ +0.05°/°); lift 3.0/3.3/3.8/4.3 mm","address-compensation sanity under coupling: arcPosition(thetaAtImpact) = (0.0, 0.0) mm at dir −6/0/+5 — lpWorld()'s stance shift keeps impact at the ball, so the coupling numbers are strike-for-strike comparable"],"quiz":[{"q":"The engine computes your EFFECTIVE low point as lowPoint.x − dir·R·cos(plane)·π/180. What does swinging more in-to-out (positive dir) do?","options":["Moves the effective bottom backward, toward/behind the ball","Moves it further ahead","Nothing until dir exceeds 8°","Changes depth (z)"],"answerIndex":0,"explanation":"Positive dir subtracts. Engine-run at plane 45: +8° moves a +10.5 cm bottom to −1.3 cm — behind the ball."},{"q":"Who feels a 3° swing-direction change more in their strike?","options":["A flat-plane (45°) swinger — ~1.5 cm of low point per degree","A steep-plane (70°) swinger — ~0.7 cm per degree","Both the same — direction is direction","Neither — direction never affects strike"],"answerIndex":0,"explanation":"The exchange rate is R·cos(plane): 1.48 vs 0.72 cm/°. Flat planes pay double."},{"q":"An over-the-top (out-to-in) move at a flattish plane most characteristically produces:","options":["Fat shots — it digs behind the ball","A steeper attack AND thin-prone contact — the effective bottom piles up far ahead","A shallower attack","No strike change, only a pull"],"answerIndex":1,"explanation":"Engine-run: dir −8, plane 45 → effLpx 22.3 cm, attack −7.6°, band Thin. Steep and thin arrive together — lesson 1's neighbours, delivered by direction."},{"q":"You've been learning a draw (+4° in-to-out, plane ~45°) and suddenly hit it heavy. The chapter's diagnosis?","options":["You lost your swing — rebuild it","Your effective low point moved ~6 cm back with the new direction; compensate with ball position/x","You're now too steep","Your depth (z) changed on its own"],"answerIndex":1,"explanation":"4° × 1.48 cm/° ≈ 5.9 cm of effective low point, gone backward. Same swing, same depth — the coupling moved the bottom."},{"q":"Why does the same \"swing more right\" tip fix one golfer's strike and ruin another's?","options":["Golf tips are random","Their planes differ, so the cm-per-degree exchange rate differs — the coupling is plane-dependent","One of them has a faster swing","Direction only matters for lefties"],"answerIndex":1,"explanation":"R·cos(plane): the tip moves a 70°-plane bottom 0.72 cm/° but a 45°-plane bottom 1.48 cm/°. Same advice, double the dose."}]}
+  </script>
   <script type="module">
   import { solveFlight, trajectorySamples } from './impact-flight.js';
-  import { deg2rad, rad2deg, clamp } from './swing-parameters-and-impact.js';
+  import { deg2rad, rad2deg, clamp, RADIUS, BALL_RADIUS_M, arcPosition, thetaAtImpact, tangentAt, deriveImpact, clubBallContact, strikeQuality, effectiveLpx, lpWorld } from './swing-parameters-and-impact.js';
+  import saHaptics from './sa-haptics.js';
 
   /* ══ DATA ══ */
   const GRAPH = JSON.parse(document.getElementById('graph-data').textContent);
@@ -656,6 +722,9 @@
     altitude:          JSON.parse(document.getElementById('lesson-altitude').textContent),
     wind:              JSON.parse(document.getElementById('lesson-wind').textContent),
     temperature:       JSON.parse(document.getElementById('lesson-temperature').textContent),
+    'low-point':       JSON.parse(document.getElementById('lesson-low-point').textContent),
+    'strike-depth':    JSON.parse(document.getElementById('lesson-strike-depth').textContent),
+    'plane-coupling':  JSON.parse(document.getElementById('lesson-plane-coupling').textContent),
   };
 
   /* ── THE LESSONS REGISTRY — single source of truth ─────────────────────────
@@ -722,7 +791,7 @@
       ...CONTENT['club-speed'],
       node:'club-speed', tier:'Fundamental',
       identity:'ballSpeed = clubSpeed × smash  (smash falls as spin loft rises)',
-      next:'dynamic-loft', nextLabel:'Dynamic Loft', maxXp:190,
+      next:'spin-loft', nextLabel:'Spin Loft', maxXp:190,
       diagramArchetype:'trajectory-carry',
       diagramConfig:{
         title:'Speed → Flight', tag:'LIVE',
@@ -739,7 +808,7 @@
       ...CONTENT['dynamic-loft'],
       node:'dynamic-loft', tier:'Fundamental',
       identity:'launchAngle ≈ 0.62·dynamicLoft + 0.25·attackAngle',
-      next:'attack-angle', nextLabel:'Attack Angle', maxXp:190,
+      next:'club-speed', nextLabel:'Club Speed', maxXp:190,
       diagramArchetype:'launch-sideon',
       diagramConfig:{
         title:'The Loft Delivered', tag:'LIVE',
@@ -756,7 +825,7 @@
       ...CONTENT['attack-angle'],
       node:'attack-angle', tier:'Fundamental',
       identity:'spinLoft = dynamicLoft − attackAngle  (+ = up, − = down)',
-      next:'face-angle', nextLabel:'Face Angle', maxXp:190,
+      next:'dynamic-loft', nextLabel:'Dynamic Loft', maxXp:190,
       diagramArchetype:'launch-sideon',
       diagramConfig:{
         title:'Up or Down at Impact', tag:'LIVE',
@@ -790,7 +859,7 @@
       ...CONTENT['club-path'],
       node:'club-path', tier:'Fundamental',
       identity:'spinAxis = 1.5 · (faceAngle − clubPath)   →   curve',
-      next:'spin-loft', nextLabel:'Spin Loft', maxXp:190,
+      next:'attack-angle', nextLabel:'Attack Angle', maxXp:190,
       diagramArchetype:'dplane-topdown',
       diagramConfig:{
         title:'In-to-Out or Out-to-In', tag:'LIVE',
@@ -1056,35 +1125,98 @@
         chips:['ballSpeed','launchAngle','backspin','spinLoft','smash'],
       },
     },
+    'low-point': {
+      ...CONTENT['low-point'],
+      node:'low-point', tier:'Geometry',
+      identity:'θ = asin(−xLP / R) — where the ball sits on your circle',
+      next:'strike-depth', nextLabel:'Strike Depth', maxXp:190,
+      diagramArchetype:'arc-window',
+      diagramConfig:{
+        title:'The Bottom of the Circle', tag:'LIVE',
+        readoutLabel:'Attack angle', readoutUnit:'°',
+        engineSliders:[
+          {key:'lpx', label:'Low point', min:-0.10, max:0.30, step:0.005, value:0.105, bind:'lowPointX',
+           unit:' cm', display:v=>Math.round(v*100), unitSpoken:'centimetres, positive is ahead of the ball', signed:true},
+        ],
+        fixed:{ lowPointZ:0, planeAngle:55, swingDirection:0 },
+        chips:['clubPath','contactMM','band'],
+      },
+    },
+    'strike-depth': {
+      ...CONTENT['strike-depth'],
+      node:'strike-depth', tier:'Geometry',
+      identity:'clubZ = lowPoint.z + lift(θ) — depth moves contact, never the angle',
+      next:'plane-coupling', nextLabel:'Plane Coupling', maxXp:190,
+      diagramArchetype:'arc-window',
+      diagramConfig:{
+        title:'Depth vs. Height on the Ball', tag:'LIVE',
+        readoutLabel:'Contact on the ball', readoutUnit:'mm',
+        engineSliders:[
+          {key:'lpz', label:'Low-point depth', min:-0.030, max:0.030, step:0.001, value:0.000, bind:'lowPointZ',
+           unit:' mm', display:v=>Math.round(v*1000), unitSpoken:'millimetres, negative is below the turf', signed:true},
+          {key:'lpx', label:'Low point', min:0, max:0.15, step:0.005, value:0.105, bind:'lowPointX',
+           unit:' cm', display:v=>Math.round(v*100), unitSpoken:'centimetres ahead of the ball'},
+        ],
+        fixed:{ planeAngle:55, swingDirection:0 },
+        chips:['attack','divotStart','divotLen','band'],
+        presets:{
+          picked: {label:'Picked & steep', lpx:0.15,  lpz: 0.002},
+          tour:   {label:'Tour divot',     lpx:0.105, lpz:-0.002},
+          deep:   {label:'Deep & clean',   lpx:0.15,  lpz:-0.0077},
+          buried: {label:'Same depth, bottom behind', lpx:0.02, lpz:-0.004},
+        },
+      },
+    },
+    'plane-coupling': {
+      ...CONTENT['plane-coupling'],
+      node:'plane-coupling', tier:'Geometry',
+      identity:'xLP(effective) = lowPoint.x − dir·R·cos(plane)·π/180',
+      next:null, nextLabel:null, maxXp:190,
+      diagramArchetype:'arc-window',
+      diagramConfig:{
+        title:'One Linked System', tag:'LIVE',
+        readoutLabel:'Effective low point', readoutUnit:'cm',
+        engineSliders:[
+          {key:'plane', label:'Plane', min:45, max:70, step:1, value:55, bind:'planeAngle', unit:'°', unitSpoken:'degrees'},
+          {key:'dir', label:'Swing direction', min:-8, max:8, step:0.5, value:0, bind:'swingDirection', unit:'°', unitSpoken:'degrees, positive in-to-out', signed:true},
+          {key:'lpx', label:'Low point', min:-0.05, max:0.20, step:0.005, value:0.105, bind:'lowPointX',
+           unit:' cm', display:v=>Math.round(v*100), unitSpoken:'centimetres ahead of the ball'},
+        ],
+        fixed:{ lowPointZ:-0.002 },
+        chips:['attack','clubPath','divotStart','band'],
+      },
+    },
   };
-  const AUTHORED = { 'club-speed':true, 'dynamic-loft':true, 'attack-angle':true, 'face-angle':true, 'club-path':true, backspin:true, carry:true,
+  const AUTHORED = { 'club-speed':true, 'dynamic-loft':true, 'attack-angle':true, 'face-angle':true, 'club-path':true, 'low-point':true, 'strike-depth':true, 'plane-coupling':true, backspin:true, carry:true,
     'spin-loft':true, smash:true, 'ball-speed':true, 'launch-angle':true, 'start-direction':true, 'spin-axis':true, apex:true, 'landing-angle':true, total:true, curve:true, offline:true,
     altitude:true, wind:true, temperature:true };
   const SLICE_MODE = true;
 
   const TIER_COLS = [
-    { tier:'fundamental', label:'Fundamentals', ids:['club-speed','dynamic-loft','attack-angle','face-angle','club-path'] },
+    { tier:'fundamental', label:'Fundamentals', ids:['face-angle','club-path','attack-angle','dynamic-loft','club-speed'] },
+    { tier:'geometry',    label:'Swing geometry', ids:['low-point','strike-depth','plane-coupling'] },
     { tier:'derived',     label:'Derived',      ids:['spin-loft','smash','ball-speed','launch-angle','start-direction','spin-axis','backspin'] },
     { tier:'outcome',     label:'Outcomes',     ids:['carry','apex','landing-angle','total','curve','offline'] },
     { tier:'environment', label:'Environment',  ids:['altitude','wind','temperature'] },
   ];
 
+  // Named 5-rank ladder (path-07 / v2 §S5) on the existing XP system. 24 lessons ×
+  // 190 XP = 4,560 XP ceiling, so thresholds land the top rank near a full curriculum.
   const LEVELS = [
-    { lvl:1, xp:0,    title:'Apprentice' },
-    { lvl:2, xp:150,  title:'Student' },
-    { lvl:3, xp:350,  title:'Analyst' },
-    { lvl:4, xp:650,  title:'Technician' },
-    { lvl:5, xp:1000, title:'Engineer' },
-    { lvl:6, xp:1500, title:'Master' },
+    { lvl:1, xp:0,    title:'Rookie' },
+    { lvl:2, xp:400,  title:'Apprentice' },
+    { lvl:3, xp:1200, title:'Technician' },
+    { lvl:4, xp:2400, title:'Flight Engineer' },
+    { lvl:5, xp:3800, title:'Strike Scientist' },
   ];
   function levelInfo(xp){
     let idx = 0;
     for (let i=0;i<LEVELS.length;i++) if (xp >= LEVELS[i].xp) idx = i;
     let lvl = LEVELS[idx].lvl, title = LEVELS[idx].title, curXp = LEVELS[idx].xp, nextXp;
     if (idx < LEVELS.length-1) nextXp = LEVELS[idx+1].xp;
-    else { const extra = Math.floor((xp-1500)/600); lvl = 6+extra; curXp = 1500+extra*600; nextXp = curXp+600; title = 'Master'; }
+    else nextXp = curXp;                       // top rank: bar reads full, no invented tiers
     const span = nextXp - curXp, into = xp - curXp;
-    return { lvl, title, curXp, nextXp, pct: clamp(into/span,0,1) };
+    return { lvl, title, curXp, nextXp, pct: span>0 ? clamp(into/span,0,1) : 1, isTop: idx === LEVELS.length-1 };
   }
 
   const BADGES = [
@@ -1236,7 +1368,8 @@
   const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   const app = $('#app');
   const liveEl = $('#live');
-  function announce(msg){ liveEl.textContent = ''; setTimeout(() => { liveEl.textContent = msg; }, 30); }
+  let liveT; // 260 ms settle: rapid sequences coalesce, last message wins (aca a11y contract)
+  function announce(msg){ clearTimeout(liveT); liveT = setTimeout(() => { liveEl.textContent = ''; requestAnimationFrame(() => { liveEl.textContent = msg; }); }, 260); }
 
   /* ══ ORIENTATION NUDGE (non-blocking): Academy is orientation-FLEXIBLE. Portrait is the
      optimized reading layout; landscape stays usable (centred column). We never inert the app —
@@ -1253,14 +1386,18 @@
     });
   })();
 
-  const H = (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Haptics) || null;
+  // All haptics route through sa-haptics.js (path-06 / module-anatomy §9): the shared
+  // singleton handles the native Capacitor bridge AND the non-native no-op log, so
+  // geometry.html / impact.html / academy stay on one contract. Kinds → table:
+  //   select = slider detent / relation-select (tick) · light = card tap / verdict ·
+  //   medium = tier complete · success = unlock / mastery notify · error = warning.
   function haptic(k){
     try{
-      if(!H) return;
-      if(k==='select') H.selectionChanged && H.selectionChanged();
-      else if(k==='light') H.impact && H.impact({style:'LIGHT'});
-      else if(k==='success') H.notification && H.notification({type:'SUCCESS'});
-      else if(k==='error') H.notification && H.notification({type:'WARNING'});
+      if(k==='select') saHaptics.selectionChanged();
+      else if(k==='light') saHaptics.impact('light');
+      else if(k==='medium') saHaptics.impact('medium');
+      else if(k==='success') saHaptics.notify('success');
+      else if(k==='error') saHaptics.notify('warning');
     }catch(e){}
   }
 
@@ -1343,12 +1480,11 @@
   /* ══ HEADER (aca-02 collapse · aca-07 gold XP · aca-19 SVG badge rail) ══ */
   function headerHTML(){
     const li = levelInfo(store.xp);
-    const badges = BADGES.map(b => {
-      const earned = store.badges.includes(b.id);
-      return `<button class="badge${earned?' earned':''}" data-badge="${b.id}" aria-label="${esc(b.label)}: ${earned?'earned':'locked'}. ${esc(b.desc)}">
-        <span aria-hidden="true">${badgeIcon(b.id)}</span>
-        <span class="pop-info"><span class="bn">${esc(b.label)}</span><span class="bd">${esc(b.desc)}</span></span></button>`;
-    }).join('');
+    // path-01: the old six-icon badge rail read as mystery chrome. It becomes TWO
+    // labelled, real-function actions: målskive = Mastery progress (opens the progress
+    // + badges sheet), kompass = Where next (routes to the recommended next lesson).
+    // Badges still earn silently and live inside the Progress sheet; the star survives
+    // only as the Mastered marker on completed cards.
     return `<header class="hdr" id="hdr">
       <div class="hdr-top">
         <a class="sa-strip__home" href="./home-mock.html" aria-label="Home">
@@ -1361,8 +1497,13 @@
         <div class="hdr-lv"><span class="lvn" id="hdr-lvline">Level ${li.lvl} · ${esc(li.title)}</span><span aria-hidden="true">·</span><span class="xp"><span id="hdr-xp" data-v="${store.xp}">${store.xp}</span> XP</span></div>
       </div>
       <div class="hdr-expand">
-        <div class="xpbar" id="hdr-xpbar" role="progressbar" aria-valuemin="${li.curXp}" aria-valuemax="${li.nextXp}" aria-valuenow="${store.xp}" aria-label="Experience to next level"><div class="fill" id="hdr-xpfill" style="width:${(li.pct*100).toFixed(1)}%"></div></div>
-        <div class="badgerail" role="group" aria-label="Badges">${badges}</div>
+        <div class="xpbar" id="hdr-xpbar" role="progressbar" aria-valuemin="${li.curXp}" aria-valuemax="${li.nextXp}" aria-valuenow="${store.xp}" aria-label="Experience to next rank"><div class="fill" id="hdr-xpfill" style="width:${(li.pct*100).toFixed(1)}%"></div></div>
+        <div class="pathacts" role="group" aria-label="Path actions">
+          <button class="pathact" id="act-progress" type="button" aria-label="Mastery progress and badges">
+            <span aria-hidden="true">${badgeIcon('range-finder')}</span><span class="pa-lbl">Progress</span></button>
+          <button class="pathact" id="act-next" type="button" aria-label="Go to the recommended next lesson">
+            <span aria-hidden="true">${badgeIcon('curious')}</span><span class="pa-lbl">Where next</span></button>
+        </div>
       </div>
     </header>`;
   }
@@ -1389,6 +1530,7 @@
   }
   let hasRoutedOnce = false;
   function route(){
+    closeSheet(false, true);   // a sheet must never survive a route change (browser back etc.)
     const h = location.hash || '#/path';
     const m = h.match(/^#\/lesson\/([\w-]+)$/);
     if (h.indexOf('#/proto') === 0) renderProto();   // hidden dev gallery of the archetypes (not linked in the path)
@@ -1408,6 +1550,7 @@
      the mastery path. The live carry/backspin lessons reuse their real configs. */
   const PROTO_CONFIGS = {
     'trajectory-carry': LESSONS.carry.diagramConfig,
+    'arc-window':       LESSONS['strike-depth'].diagramConfig,
     'spin-machine':     LESSONS.backspin.diagramConfig,
     'dplane-topdown':{
       title:'D-Plane (top-down)', tag:'LIVE',
@@ -1471,76 +1614,134 @@
      y is a pixel offset. Edges + mini-map both consume these coordinates. */
   const NODE_H = 58;
   const LANE = [27, 73];        // lane centres, percent
-  function computeLayout(){
-    const headH = 38, rowH = 78, tierGap = 30, topPad = 10;
-    const pos = {}, tierBands = [];
+
+  /* ─ path-03 upcoming/collapse helpers + path-04 param-hue law ─ */
+  let expandedTiers = new Set();           // tiers the user manually expanded (in-memory)
+  function completedOf(id){ return !!(store.lessons[id] && store.lessons[id].completed); }
+  // "1 lesson away": locked, with exactly one incomplete prerequisite that is itself available.
+  function isUpcoming(id){
+    if (nodeState(id) !== 'locked') return false;
+    const inc = prereqIds(id).filter(p => !completedOf(p));
+    return inc.length === 1 && nodeState(inc[0]) === 'available';
+  }
+  // shown = completed/available/upcoming (or all, if the tier is expanded); the rest collapse.
+  function tierShownHidden(col){
+    const expanded = expandedTiers.has(col.tier);
+    const shown = [], hidden = [];
+    col.ids.forEach(id => { const st = nodeState(id);
+      (expanded || st !== 'locked' || isUpcoming(id) ? shown : hidden).push(id); });
+    return { shown, hidden };
+  }
+  // param-hue per node, drawn ONLY from sa-p3 law tokens, grouped by physical family
+  // (direction=face · lateral=path · vertical/strike=attack · loft/height=loft ·
+  //  spin/depth=depth · plane/speed/distance=plane · environment=violet chrome).
+  const NODE_HUE = {
+    'face-angle':'#FF5C6B','start-direction':'#FF5C6B','offline':'#FF5C6B',
+    'club-path':'#6FC6FF','spin-axis':'#6FC6FF','curve':'#6FC6FF',
+    'attack-angle':'#4DE8D2','low-point':'#4DE8D2','landing-angle':'#4DE8D2',
+    'dynamic-loft':'#B9A0FF','launch-angle':'#B9A0FF','spin-loft':'#B9A0FF','apex':'#B9A0FF',
+    'strike-depth':'#C98AE6','backspin':'#C98AE6',
+    'plane-coupling':'#93A4F2','club-speed':'#93A4F2','ball-speed':'#93A4F2','smash':'#93A4F2','carry':'#93A4F2','total':'#93A4F2',
+    'altitude':'#9D8BFF','wind':'#9D8BFF','temperature':'#9D8BFF',
+  };
+  const nodeHue = id => NODE_HUE[id] || '#9D8BFF';
+  const STAR_SVG = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 3.3l2.6 5.4 5.9.8-4.3 4.2 1 5.9L12 17.7 6.8 20.4l1-5.9-4.3-4.2 5.9-.8z"/></svg>';
+
+  function computeLayout(opts){
+    opts = opts || {};
+    const headH = 38, rowH = 78, tierGap = 30, topPad = 10, summaryH = 54;
+    const pos = {}, tierBands = [], summaries = [];
     let y = topPad;
     TIER_COLS.forEach(col => {
       const y0 = y;
       const rowStart = y + headH;
-      const rows = Math.ceil(col.ids.length / 2);
-      const n = col.ids.length;
-      col.ids.forEach((id, ri) => {
+      const { shown, hidden } = opts.full ? { shown: col.ids, hidden: [] } : tierShownHidden(col);
+      const n = shown.length;
+      shown.forEach((id, ri) => {
         const loneLast = (ri === n - 1) && (n % 2 === 1);
         const lane = ri % 2, row = Math.floor(ri / 2);
         pos[id] = { x: loneLast ? 50 : LANE[lane], y: rowStart + row * rowH, lane, row };
       });
-      y = rowStart + rows * rowH;
+      let yEnd = rowStart + Math.ceil(n / 2) * rowH;
+      if (!opts.full && hidden.length){
+        summaries.push({ tier: col.tier, label: col.label, y: yEnd, hidden: hidden.slice(), shownCount: n });
+        yEnd += summaryH;
+      }
+      y = yEnd;
       tierBands.push({ label: col.label, y0, y1: y });
       y += tierGap;
     });
-    return { pos, tierBands, width: 100, height: y };
+    return { pos, tierBands, summaries, width: 100, height: y };
   }
 
   function renderPath(){
     const L = computeLayout();
     const nMastered = masteredCount();
     const nextId = nextNodeId();
-    // edges svg — vertical S-curves flowing down between lanes (percent-x / pixel-y space).
-    // Resting edge layer ≤.30 opacity so the graph reads as structure, not decoration (aca-13).
+    // edges — every thread carries data-from/data-to so relation-light can address it;
+    // at rest all sit at ≤.08 alpha (CSS), lit violet only on select/focus (path-02).
     let edges = '';
     for (const e of GRAPH.edges){
-      const A = L.pos[e.from], B = L.pos[e.to]; if (!A || !B) continue;
+      const A = L.pos[e.from], B = L.pos[e.to]; if (!A || !B) continue;   // skip collapsed endpoints
       const x1 = A.x, x2 = B.x;
       let y1, y2;
       if (A.y <= B.y){ y1 = A.y + NODE_H; y2 = B.y; }   // downward: source bottom → target top
       else { y1 = A.y; y2 = B.y + NODE_H; }             // upward (e.g. Environment → Outcomes)
       const dy = (y2 - y1) * 0.5;
-      const hot = ['available','completed'].includes(nodeState(e.from)) || ['available','completed'].includes(nodeState(e.to));
-      edges += `<path d="M${x1},${y1.toFixed(1)} C${x1},${(y1+dy).toFixed(1)} ${x2},${(y2-dy).toFixed(1)} ${x2},${y2.toFixed(1)}" fill="none" stroke="${hot?'rgba(157,139,255,.30)':'rgba(245,242,255,.10)'}" stroke-width="1" vector-effect="non-scaling-stroke"/>`;
+      edges += `<path data-from="${e.from}" data-to="${e.to}" d="M${x1},${y1.toFixed(1)} C${x1},${(y1+dy).toFixed(1)} ${x2},${(y2-dy).toFixed(1)} ${x2},${y2.toFixed(1)}" fill="none" stroke-width="1" vector-effect="non-scaling-stroke"/>`;
     }
     // tier heads — full-width bands stacked down the climb
     let heads = '';
     L.tierBands.forEach(t => { heads += `<div class="col-head" style="top:${t.y0}px">${esc(t.label)}</div>`; });
-    // nodes
+    // nodes (shown only; deep locks collapse into the summary rows below)
     let nodes = '';
-    TIER_COLS.forEach((col, ci) => {
+    TIER_COLS.forEach(col => {
+      const tierTag = col.label.replace(/s$/,'');
       col.ids.forEach(id => {
-        const n = NODE[id], st = nodeState(id), p = L.pos[id];
-        const l = store.lessons[id];
+        const p = L.pos[id]; if (!p) return;                          // hidden → summary row
+        const n = NODE[id], st = nodeState(id), l = store.lessons[id], meta = LESSONS[id];
+        const upcoming = st === 'locked' && isUpcoming(id);
         const isNext = st === 'available' && id === nextId;
         const mastered = st === 'completed' && isMastered(id);
-        const cls = ['node', isNext ? 'node--next' : 'node--'+st];
+        const cls = ['node'];
+        if (isNext) cls.push('node--next'); else if (upcoming) cls.push('node--upcoming'); else cls.push('node--'+st);
         if (mastered) cls.push('is-mastered');
         if (store.lastOpened === id) cls.push('node--current');
-        let glyph = '';
-        if (st === 'completed') glyph = `<span class="nglyph" aria-hidden="true">${ICON.check}</span>`;
-        else if (st === 'available') glyph = '<span class="ring" aria-hidden="true"></span>';
-        else glyph = `<span class="nglyph" aria-hidden="true">${ICON.lock}</span>`;
-        const xpStamp = st === 'completed' ? `<span class="nxp">+${l.quizBest + (l.read?40:0)} XP</span>` : '';
+        // path-04: right glyph (star for mastered) + XP stamp
+        let rightGlyph, xpStamp = '', away = '';
+        if (mastered){ rightGlyph = `<span class="nstar" aria-hidden="true">${STAR_SVG}</span>`; xpStamp = `<span class="nxp">+${l.quizBest + (l.read?40:0)} XP</span>`; }
+        else if (st === 'completed'){ rightGlyph = `<span class="nglyph" aria-hidden="true">${ICON.check}</span>`; xpStamp = `<span class="nxp">+${l.quizBest + (l.read?40:0)} XP</span>`; }
+        else if (st === 'available'){ rightGlyph = '<span class="ring" aria-hidden="true"></span>'; xpStamp = meta ? `<span class="nxp nxp--avail">${meta.maxXp} XP</span>` : ''; }
+        else if (upcoming){ rightGlyph = ''; away = '<span class="naway">1 lesson away</span>'; }
+        else { rightGlyph = `<span class="nglyph" aria-hidden="true">${ICON.lock}</span>`; }
         const startHere = isNext ? '<span class="starthere" aria-hidden="true">Start here</span>' : '';
-        const tierTag = col.label.replace(/s$/,'');
-        const stateWord = st === 'completed' ? (mastered ? 'mastered' : 'completed') : st;
-        const aria = st === 'locked'
+        const stateWord = mastered ? 'mastered' : st === 'completed' ? 'completed' : upcoming ? 'upcoming' : st;
+        const aria = (st === 'locked' && !upcoming)
           ? (AUTHORED[id] ? `${n.label}, locked — complete ${prereqLabels(id)} to unlock.` : `${n.label}, locked, coming soon`)
+          : upcoming ? `${n.label}, upcoming, one lesson away — complete ${prereqLabels(id)} to unlock. ${n.blurb}`
           : `${n.label}, ${stateWord}${isNext?', recommended next':''}${st==='available'?', press Enter to preview':''}. ${n.blurb}`;
-        nodes += `<button class="${cls.join(' ')}" data-node="${id}" aria-disabled="${st==='locked'}"
+        nodes += `<button class="${cls.join(' ')}" data-node="${id}" aria-disabled="${st==='locked' && !upcoming}"
           style="left:${(p.x-21).toFixed(2)}%;top:${p.y}px;height:${NODE_H}px" aria-label="${esc(aria)}">
-          ${startHere}<span class="r1"><span class="ntier">${tierTag}</span>${glyph}</span>
-          <span class="nlabel">${esc(n.label)}</span>${xpStamp}
+          ${startHere}<span class="r1"><span class="r1l"><span class="nhue" aria-hidden="true" style="background:${nodeHue(id)};color:${nodeHue(id)}"></span><span class="ntier">${tierTag}</span></span>${rightGlyph}</span>
+          <span class="nlabel">${esc(n.label)}</span>${away}${xpStamp}
         </button>`;
       });
     });
+    // collapsed tier summary rows (path-03 — destinations, not barriers)
+    let summaries = '';
+    L.summaries.forEach(s => {
+      const label = s.shownCount ? `+${s.hidden.length} more in ${s.label}` : s.label;
+      const word = s.hidden.length === 1 ? 'lesson' : 'lessons';
+      summaries += `<button class="tsummary" data-expand="${s.tier}" type="button" style="top:${s.y}px" aria-expanded="false" aria-label="${esc(s.label)}: ${s.hidden.length} more ${word} ahead. Expand to preview.">
+        <span class="ts-l">${esc(label)}</span>
+        <span class="ts-r">${s.hidden.length} ${word}<span class="ts-chev" aria-hidden="true">${ICON.arrow}</span></span>
+      </button>`;
+    });
+    // path-05 fold economy: mission line + real progress bar with tier ticks
+    const totalLessons = LESSON_IDS.length;
+    const pctBar = totalLessons ? (nMastered/totalLessons*100) : 0;
+    let ticks = '', cum = 0;
+    TIER_COLS.forEach((col,i) => { if (i < TIER_COLS.length-1){ cum += col.ids.length; ticks += `<span class="pp-tick" style="left:${(cum/totalLessons*100).toFixed(1)}%"></span>`; } });
 
     document.title = 'StrikeArc Academy';
     app.innerHTML = `<div class="view">
@@ -1548,49 +1749,98 @@
       <div class="path-intro">
         <div class="kicker">Mastery path</div>
         <h1>Learn the instrument</h1>
-        <p class="intro"><span class="mastered">${nMastered}</span> of 21 mastered. Start with the <b>Fundamentals</b> — each tier unlocks the next. The <b>Environment</b> set (altitude, wind, temperature) opens once you master <b>Carry</b>.</p>
+        <p class="mission">The <b>${totalLessons} numbers</b> behind every shot — learned one instrument at a time.</p>
+        <div class="pathprog">
+          <div class="pp-top"><span class="pp-count"><span class="mastered">${nMastered}</span> of ${totalLessons} mastered</span>
+            <button class="pp-info" id="path-how" type="button">How the path works</button></div>
+          <div class="pp-bar" role="progressbar" aria-valuemin="0" aria-valuemax="${totalLessons}" aria-valuenow="${nMastered}" aria-label="Lessons mastered">
+            <div class="pp-fill" style="width:${pctBar.toFixed(1)}%"></div>${ticks}
+          </div>
+        </div>
       </div>
       <div class="map-scroll">
         <div class="map-canvas" role="group" aria-label="Parameter mastery path" style="height:${L.height}px">
           <svg class="map-edges" viewBox="0 0 100 ${L.height}" preserveAspectRatio="none" width="100%" height="${L.height}" aria-hidden="true">${edges}</svg>
           ${heads}
           ${nodes}
+          ${summaries}
         </div>
       </div>
     </div>`;
 
-    wireBadges(app);
     wireMap();
+  }
+
+  // Mastery-progress sheet (path-01 målskive): tier breakdown + the badge rail's
+  // achievements, now labelled and purposeful rather than mystery chrome.
+  function openMasterySheet(){
+    const nMastered = masteredCount(), total = LESSON_IDS.length;
+    const tiers = TIER_COLS.map(col => { const done = col.ids.filter(isMastered).length;
+      return `<div class="msheet-tier"><span class="mt-l">${esc(col.label)}</span><span class="mt-r">${done} / ${col.ids.length} mastered</span></div>`; }).join('');
+    const badges = BADGES.map(b => { const on = store.badges.includes(b.id);
+      return `<div class="msheet-badge${on?' on':''}"><span aria-hidden="true">${badgeIcon(b.id)}</span><span><span class="mb-n">${esc(b.label)}</span><span class="mb-d">${on?'Earned — ':''}${esc(b.desc)}</span></span></div>`; }).join('');
+    const html = `
+      <div class="sa-sheet__grip" aria-hidden="true"></div>
+      <span class="sa-sheet__tier">Your progress</span>
+      <h2 class="sa-sheet__title" id="sheet-title">Mastery progress</h2>
+      <p class="sa-sheet__blurb"><b>${nMastered}</b> of ${total} parameters mastered · <b>${store.badges.length}</b> of ${BADGES.length} badges earned.</p>
+      ${tiers}
+      <p class="sa-sheet__rel" style="margin-top:12px"><b>Badges</b></p>
+      <div class="msheet-badges">${badges}</div>
+      <div class="sa-sheet__foot"><button class="sa-sheet__close" data-sheet-close type="button" data-autofocus>Close</button></div>`;
+    openSheet(html, { labelId:'sheet-title' });
+    const cb = sheetEl.querySelector('[data-sheet-close]'); if (cb) cb.addEventListener('click', () => closeSheet());
+  }
+  // "How the path works" sheet (path-05): the long intro copy, moved off the first fold.
+  function openHowSheet(){
+    const html = `
+      <div class="sa-sheet__grip" aria-hidden="true"></div>
+      <span class="sa-sheet__tier">The path</span>
+      <h2 class="sa-sheet__title" id="sheet-title">How the path works</h2>
+      <p class="sa-sheet__blurb">Start with the <b>Fundamentals</b> — the five deliveries your hands actually control. Each parameter you master unlocks the ones built on top of it: swing geometry, then the derived numbers, then shot outcomes.</p>
+      <p class="sa-sheet__blurb">The <b>Environment</b> set — altitude, wind, temperature — opens once you master <b>Carry</b>. Far-off tiers collapse into a single row you can expand any time; the next lesson within reach is always marked <b>Start here</b>.</p>
+      <div class="sa-sheet__foot"><button class="sa-sheet__close" data-sheet-close type="button" data-autofocus>Close</button></div>`;
+    openSheet(html, { labelId:'sheet-title' });
+    const cb = sheetEl.querySelector('[data-sheet-close]'); if (cb) cb.addEventListener('click', () => closeSheet());
   }
 
   function wireMap(){
     const canvas = $('.map-canvas');
     const btns = Array.from(canvas.querySelectorAll('[data-node]'));
     const byId = Object.fromEntries(btns.map(b => [b.dataset.node, b]));
+    const edgePaths = Array.from(canvas.querySelectorAll('.map-edges path'));
     btns.forEach(b => { b.dataset.baseLabel = b.getAttribute('aria-label'); });
     const inEdges  = id => GRAPH.edges.filter(e => e.to === id).map(e => e.from);
     const outEdges = id => GRAPH.edges.filter(e => e.from === id).map(e => e.to);
     let selected = null;
 
-    function clearSelection(){
-      selected = null;
-      canvas.classList.remove('has-selection');
-      btns.forEach(b => { b.classList.remove('node--selected','node--related','node--dimmed'); if (b.dataset.baseLabel) b.setAttribute('aria-label', b.dataset.baseLabel); });
-    }
-    function selectNode(id){                       // first tap / Enter → SELECT (relation light + preview)
-      selected = id;
+    // path-02 relation-light: light ONLY this node's prereq/unlock threads (violet), dim the rest.
+    function lightRelations(id){
       const nb = new Set([id, ...inEdges(id), ...outEdges(id)]);
       canvas.classList.add('has-selection');
       btns.forEach(b => { const nid = b.dataset.node;
         b.classList.toggle('node--selected', nid === id);
         b.classList.toggle('node--related', nid !== id && nb.has(nid));
         b.classList.toggle('node--dimmed', !nb.has(nid));
-        b.setAttribute('aria-label', b.dataset.baseLabel + (nid === id ? ', selected' : ''));
       });
-      haptic('select');
+      edgePaths.forEach(p => p.classList.toggle('edge--lit', p.dataset.from === id || p.dataset.to === id));
+    }
+    function clearRelations(){
+      canvas.classList.remove('has-selection');
+      btns.forEach(b => b.classList.remove('node--selected','node--related','node--dimmed'));
+      edgePaths.forEach(p => p.classList.remove('edge--lit'));
+    }
+    function clearSelection(){                      // sheet onClose
+      selected = null; clearRelations();
+      btns.forEach(b => { if (b.dataset.baseLabel) b.setAttribute('aria-label', b.dataset.baseLabel); });
+    }
+    function selectNode(id){                         // tap / Enter → relation-light + preview
+      selected = id; lightRelations(id);
+      btns.forEach(b => { const nid = b.dataset.node; b.setAttribute('aria-label', b.dataset.baseLabel + (nid === id ? ', selected' : '')); });
+      haptic('light');                               // path-06: card tap = light
       openPreview(id);
     }
-    function enterNode(id){                         // second tap / Open / Enter-on-Open → ENTER lesson
+    function enterNode(id){                          // second tap / Open / Enter-on-Open → ENTER lesson
       if (nodeState(id) === 'locked'){ haptic('light'); announce(AUTHORED[id] ? `${NODE[id].label}, locked. Complete ${prereqLabels(id)} to unlock.` : NODE[id].label + ', locked. Coming soon — this module is not built yet.'); return; }
       haptic('light'); store.lastOpened = id; save(); closeSheet(false, true); go('#/lesson/' + id);
     }
@@ -1627,9 +1877,38 @@
     btns.forEach(b => {
       const id = b.dataset.node;
       b.addEventListener('click', () => { if (selected === id && nodeState(id) !== 'locked') enterNode(id); else selectNode(id); });
+      // path-02 keyboard parity: focus lights this node's relations (no sheet); blur clears
+      // once focus leaves the map and nothing is selected.
+      b.addEventListener('focus', () => { if (!selected) lightRelations(id); });
+      b.addEventListener('blur', () => { setTimeout(() => { if (!selected && !canvas.contains(document.activeElement)) clearRelations(); }, 0); });
     });
     // tap empty map background → deselect
     canvas.addEventListener('click', e => { if (e.target === canvas && selected) closeSheet(); });
+
+    // path-03: collapsed tier rows expand on tap (or Enter/Space — real buttons)
+    canvas.querySelectorAll('[data-expand]').forEach(btn => btn.addEventListener('click', () => {
+      const tier = btn.dataset.expand; expandedTiers.add(tier); haptic('light');
+      const col = TIER_COLS.find(c => c.tier === tier);
+      renderPath();
+      // land focus on the first revealed card of that tier for keyboard users
+      const first = col && document.querySelector('[data-node="'+col.ids.find(id => nodeState(id)==='locked' && !isUpcoming(id))+'"]');
+      if (first) first.focus({ preventScroll:false });
+    }));
+
+    // path-01 header actions: Progress (målskive) + Where next (kompass)
+    const actProg = $('#act-progress');
+    if (actProg) actProg.addEventListener('click', () => { haptic('light'); openMasterySheet(); });
+    const actNext = $('#act-next');
+    if (actNext) actNext.addEventListener('click', () => {
+      const id = nextNodeId();
+      if (!id){ announce('Nothing new to recommend — everything within reach is open.'); return; }
+      haptic('light');
+      if (byId[id]) byId[id].scrollIntoView({ block:'center', behavior: reduced()?'auto':'smooth' });
+      selectNode(id);
+    });
+    // path-05 "how the path works"
+    const pathHow = $('#path-how');
+    if (pathHow) pathHow.addEventListener('click', () => { haptic('light'); openHowSheet(); });
 
     // pulse the just-completed / last-opened node
     if (store.lastOpened && byId[store.lastOpened] && nodeState(store.lastOpened) === 'completed'){
@@ -1671,7 +1950,7 @@
   }
 
   function miniMapSVG(currentId){
-    const L = computeLayout();
+    const L = computeLayout({ full: true });   // lesson "you are here" map shows the whole graph, uncollapsed
     const VW = 110, VH = 106;                       // portrait mini-map, mirrors the vertical climb (aca-24: compact)
     const sx = VW / L.width, sy = VH / L.height;
     let dots = '';
@@ -2029,7 +2308,7 @@
       const num=s.commas?Number(Math.abs(raw)).toLocaleString('en-US'):Math.abs(raw);
       const disp=signStr(raw, s.signed)+num+(s.unit||'');
       if(lbl) lbl.textContent=disp;
-      const core=s.speak?s.speak(raw):(num+(s.unitSpoken?' '+s.unitSpoken:''));
+      const core=s.speak?s.speak(raw):((s.signed&&raw<0?'minus ':'')+num+(s.unitSpoken?' '+s.unitSpoken:''));
       input.setAttribute('aria-valuetext', core+(s.est?', estimated':''));
     });
   }
@@ -2048,6 +2327,7 @@
     'dplane-topdown':   mountDplaneTopdown,
     'launch-sideon':    mountLaunchSideon,
     'bar-drivers':      mountBarDrivers,
+    'arc-window':       mountArcWindow,
   };
   function mountDiagram(lessonId){
     const L = LESSONS[lessonId];
@@ -2549,6 +2829,190 @@
     render();
   }
 
+  /* ── ARCHETYPE 6: arc-window — face-on swing-arc window over the geometry engine ──
+     Live engine is swing-parameters-and-impact.js (NOT solveFlight). Orthographic,
+     isotropic face-on window (x = target line →, z = up) so the drawn attack tangent's
+     angle IS the attack angle — the drawing never lies (chapter spec §2). One archetype,
+     three configs (low-point / strike-depth / plane-coupling). groundCrossingTheta0 is
+     reimplemented inline (identical closed form to geo3d/groundcontact.js) because that
+     module hard-imports THREE at load — a non-starter for this single-file SPA. */
+  const ARC_PX = 5;                 // px per cm (isotropic)
+  const ARC_XMIN = -25, ARC_ZMAX = 12, ARC_ZMIN = -4, ARC_XMAX = 40;
+  const AWX = xm => ((xm*100) - ARC_XMIN) * ARC_PX;         // metres → svg x
+  const AWY = zm => (ARC_ZMAX - (zm*100)) * ARC_PX;         // metres → svg y (z up)
+  // identical closed form to geo3d/groundcontact.js#groundCrossingTheta0 (no THREE dep)
+  function arcGroundTheta0(gs){
+    const lp = lpWorld(gs);
+    if (lp.z >= 0) return null;
+    const phi = deg2rad(gs.planeAngle), r = gs.radius, s = Math.sin(phi);
+    if (Math.abs(s) < 1e-9) return null;
+    const c = 1 + lp.z / (r * s);
+    if (c < -1 || c > 1) return null;
+    return Math.acos(c);
+  }
+  const ARC_CHIPS = {
+    attack:     { label:'Attack',      unit:'°',  dp:1, signed:true,  get:o=>o.im.attackAngle },
+    clubPath:   { label:'Club path',   unit:'°',  dp:1, signed:true,  get:o=>o.im.clubPath },
+    contactMM:  { label:'Contact',     unit:'mm', dp:0, signed:true,  get:o=>o.ct.offset*1000 },
+    divotStart: { label:'Divot start', unit:'cm', dp:1, signed:true,  get:o=>o.divot?o.divot.startCm:null },
+    divotLen:   { label:'Divot length',unit:'cm', dp:1, signed:false, get:o=>o.divot?o.divot.lenCm:null },
+    band:       { label:'Strike',      special:'band' },
+  };
+  function mountArcWindow(mount, ctx){
+    const cfg = ctx.config, eng = cfg.engineSliders || [], fixed = cfg.fixed || {};
+    const presets = cfg.presets || null;
+    const state = {}; eng.forEach(s => state[s.key] = s.value);
+    // scoped styles (once)
+    if (!document.getElementById('aw-style')){
+      const st = document.createElement('style'); st.id = 'aw-style';
+      st.textContent = '.aw-fig{position:relative}.aw-svg{width:100%;height:auto;display:block;border-radius:12px;background:linear-gradient(180deg,#0B0818,#0E0A18)}.aw-readrow{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;margin:6px 0 8px}.aw-band{font-family:var(--f-mono);font-size:12px;font-weight:600;padding:3px 9px;border-radius:999px;border:1px solid var(--rule);white-space:nowrap}.aw-cap{font-family:var(--f-mono);font-size:11px;color:var(--muted);text-align:center;margin-top:5px;min-height:14px}.aw-controls{margin-top:12px}';
+      document.head.appendChild(st);
+    }
+    // GeometryState from fixed overrides + slider binds
+    function geomState(){
+      const gs = { view:'face', radius:RADIUS, planeAngle:55, swingDirection:0, lowPoint:{ x:0, y:0, z:0 } };
+      if ('planeAngle'    in fixed) gs.planeAngle = fixed.planeAngle;
+      if ('swingDirection'in fixed) gs.swingDirection = fixed.swingDirection;
+      if ('lowPointX'     in fixed) gs.lowPoint.x = fixed.lowPointX;
+      if ('lowPointZ'     in fixed) gs.lowPoint.z = fixed.lowPointZ;
+      eng.forEach(s => { const v = state[s.key];
+        if (s.bind==='planeAngle') gs.planeAngle = v;
+        else if (s.bind==='swingDirection') gs.swingDirection = v;
+        else if (s.bind==='lowPointX') gs.lowPoint.x = v;
+        else if (s.bind==='lowPointZ') gs.lowPoint.z = v;
+      });
+      return gs;
+    }
+    const awSlider = s => {
+      const d = v => (s.display ? s.display(v) : v);
+      const tick = v => signStr(d(v), s.signed) + Math.abs(d(v)) + (s.unit||'');
+      return `<div class="sl">
+        <label for="sl-${s.key}"><span class="slk">${esc(s.label)}</span><span class="slv mono" id="v-${s.key}"></span></label>
+        <input type="range" class="sa-range" id="sl-${s.key}" min="${s.min}" max="${s.max}" step="${s.step}" value="${s.value}" aria-label="${esc(s.label)}">
+        <div class="ticks"><span>${tick(s.min)}</span><span>${tick(s.max)}</span></div>
+      </div>`;
+    };
+    const chipFields = cfg.chips || [];
+    const chipHTML = chipFields.map(k => { const c = ARC_CHIPS[k] || {label:k,unit:''};
+      return `<div class="chip"><div class="ck">${esc(c.label)}</div><div class="cv"><span class="mono" id="aw-c-${k}">—</span>${c.unit?`<span class="cu">${esc(c.unit)}</span>`:''}</div></div>`; }).join('');
+    const presetBtns = presets ? Object.keys(presets).map(k=>`<button data-aw-preset="${k}" aria-pressed="false" type="button">${esc(presets[k].label||k)}</button>`).join('') : '';
+
+    mount.innerHTML = `
+      <div class="vig-head"><h2 class="vig-title">${esc(cfg.title)}</h2><div class="vig-tag mono">${esc(cfg.tag||'LIVE')}</div></div>
+      <div class="aw-readrow">
+        <div><div class="fk">${esc(cfg.readoutLabel||'Attack angle')}</div>
+          <div class="rpmbig"><span class="mono" id="aw-read" data-v="0">0</span><span class="u">${esc(cfg.readoutUnit||'°')}</span></div></div>
+        <span class="aw-band mono" id="aw-band">—</span>
+      </div>
+      <div class="aw-fig" role="img" id="aw-fig" aria-label="">
+        <svg class="aw-svg" viewBox="0 0 325 88" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+          <defs><marker id="aw-arrow" markerWidth="7" markerHeight="7" refX="5.5" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 Z" fill="#4DE8D2"/></marker></defs>
+          <rect x="0" y="60" width="325" height="28" fill="rgba(138,90,43,.14)"/>
+          <line x1="0" y1="60" x2="325" y2="60" stroke="var(--rule)" stroke-width="1"/>
+          <path id="aw-divot" d="" fill="rgba(201,138,230,.25)" stroke="none"/>
+          <path id="aw-arc" d="" fill="none" stroke="#9D8BFF" stroke-width="2" stroke-linecap="round"/>
+          <line id="aw-drop" x1="125" y1="60" x2="125" y2="60" stroke="#4DE8D2" stroke-width="1" stroke-dasharray="2 2"/>
+          <circle id="aw-ball" cx="125" cy="49.35" r="10.65" fill="#160F28" stroke="rgba(245,242,255,.45)" stroke-width="1"/>
+          <line id="aw-eq" x1="114.35" y1="49.35" x2="135.65" y2="49.35" stroke="rgba(245,242,255,.18)" stroke-width="0.6" stroke-dasharray="1.5 1.5"/>
+          <line id="aw-tan" x1="107" y1="49" x2="143" y2="49" stroke="#4DE8D2" stroke-width="2" marker-end="url(#aw-arrow)"/>
+          <line id="aw-tick" x1="118" y1="49" x2="132" y2="49" stroke="#FF8A4D" stroke-width="2.4" stroke-linecap="round"/>
+          <circle id="aw-lp" cx="125" cy="60" r="3" fill="#4DE8D2"/>
+          <text id="aw-lplabel" x="125" y="85" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="#4DE8D2"></text>
+          <text id="aw-depthlabel" x="125" y="75" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="#C98AE6"></text>
+        </svg>
+        <div class="aw-cap" id="aw-cap"></div>
+      </div>
+      <div class="chips">${chipHTML}</div>
+      <div class="aw-controls">
+        ${eng.map(awSlider).join('')}
+        ${presets?`<div class="segmented" role="group" aria-label="Strike presets">${presetBtns}</div>`:''}
+        <div class="footnote">Face-on window, drawn true to scale — the mint tangent's angle IS the attack angle. Model divot depths are millimetre-scale (the engine models the club as a point on the arc); the relationships are exact.</div>
+      </div>`;
+
+    const el = s => mount.querySelector(s);
+    function readout(o){
+      const u = cfg.readoutUnit;
+      if (u==='mm'){ const v=o.ct.offset*1000; return { v, dp:0, signed:true, spoken:(Math.abs(Math.round(v))+' millimetres '+(v<0?'below':v>0?'above':'at')+' the equator') }; }
+      if (u==='cm'){ const v=o.effLp*100; return { v, dp:1, signed:true, spoken:(Math.abs(v).toFixed(1)+' centimetres '+(v>=0?'ahead':'behind')) }; }
+      const v=o.im.attackAngle; return { v, dp:1, signed:true, spoken:(Math.abs(v).toFixed(1)+' degrees '+(v<0?'down':v>0?'up':'level')) };
+    }
+    function render(){
+      const gs = geomState();
+      const im = deriveImpact(gs), ct = clubBallContact(gs), sq = strikeQuality(gs), effLp = effectiveLpx(gs);
+      const lp0 = arcPosition(0, gs);                 // low point (arc bottom), metres
+      const t0 = arcGroundTheta0(gs);
+      let divot = null;
+      if (t0 != null){ const en = arcPosition(-t0, gs), ex = arcPosition(t0, gs);
+        divot = { startCm: en.x*100, lenCm: (ex.x - en.x)*100, en, ex, t0 }; }
+      const o = { im, ct, sq, effLp, lp0, divot };
+      // arc path (θ −28..+28)
+      let dArc='';
+      for (let i=0;i<=56;i++){ const th=deg2rad(-28 + 56*(i/56)); const p=arcPosition(th, gs); dArc+=(i?'L':'M')+AWX(p.x).toFixed(1)+','+AWY(p.z).toFixed(1); }
+      el('#aw-arc').setAttribute('d', dArc);
+      // low-point marker + drop line + depth
+      const mx = AWX(lp0.x), my = AWY(lp0.z);
+      el('#aw-lp').setAttribute('cx', mx.toFixed(1)); el('#aw-lp').setAttribute('cy', my.toFixed(1));
+      el('#aw-drop').setAttribute('x1', mx.toFixed(1)); el('#aw-drop').setAttribute('x2', mx.toFixed(1));
+      el('#aw-drop').setAttribute('y1', my.toFixed(1)); el('#aw-drop').setAttribute('y2', AWY(0).toFixed(1));
+      const lpCm = effLp*100;
+      el('#aw-lplabel').setAttribute('x', mx.toFixed(1));
+      el('#aw-lplabel').textContent = Math.abs(lpCm).toFixed(1)+' cm '+(lpCm>=0?'ahead':'behind');
+      const depMm = lp0.z*1000;
+      const dl = el('#aw-depthlabel');
+      if (Math.abs(depMm) >= 0.5){ dl.setAttribute('x', mx.toFixed(1)); dl.textContent = Math.abs(depMm).toFixed(0)+' mm '+(depMm<0?'below':'above'); }
+      else dl.textContent = '';
+      // model divot
+      const dv = el('#aw-divot');
+      if (divot){ let dd=''; const N=24; for (let i=0;i<=N;i++){ const th=-t0 + 2*t0*(i/N); const p=arcPosition(th, gs); dd+=(i?'L':'M')+AWX(p.x).toFixed(1)+','+AWY(p.z).toFixed(1); }
+        dd += 'L'+AWX(divot.ex.x).toFixed(1)+','+AWY(0).toFixed(1)+'L'+AWX(divot.en.x).toFixed(1)+','+AWY(0).toFixed(1)+'Z';
+        dv.setAttribute('d', dd); dv.style.display='';
+        const sc = divot.startCm; el('#aw-cap').textContent = 'divot starts '+Math.abs(sc).toFixed(1)+' cm '+(sc<0?'before':'after')+' the ball · '+divot.lenCm.toFixed(1)+' cm long';
+      } else { dv.setAttribute('d',''); dv.style.display='none'; el('#aw-cap').textContent = 'no turf contact'; }
+      // attack tangent at impact point (x=0, z=clubZ)
+      const tang = tangentAt(thetaAtImpact(gs), gs);
+      const mag = Math.hypot(tang.x, tang.z) || 1;
+      const ux = tang.x/mag, uz = tang.z/mag, len = 3.6;   // cm each way
+      const ix = AWX(0), iy = AWY(ct.clubZ);
+      el('#aw-tan').setAttribute('x1', (ix - ux*len*ARC_PX).toFixed(1)); el('#aw-tan').setAttribute('y1', (iy + uz*len*ARC_PX).toFixed(1));
+      el('#aw-tan').setAttribute('x2', (ix + ux*len*ARC_PX).toFixed(1)); el('#aw-tan').setAttribute('y2', (iy - uz*len*ARC_PX).toFixed(1));
+      // contact tick
+      el('#aw-tick').setAttribute('x1', (ix-7).toFixed(1)); el('#aw-tick').setAttribute('x2', (ix+7).toFixed(1));
+      el('#aw-tick').setAttribute('y1', iy.toFixed(1)); el('#aw-tick').setAttribute('y2', iy.toFixed(1));
+      // readout + band
+      const rd = readout(o);
+      setNum(el('#aw-read'), rd.v, { dp:rd.dp, signed:rd.signed });
+      const band = el('#aw-band'); band.textContent = sq.band + ' · ' + sq.pct; band.style.color = sq.textColor; band.style.borderColor = sq.textColor;
+      // chips
+      chipFields.forEach(k => { const c = ARC_CHIPS[k]; const cel = el('#aw-c-'+k); if (!cel) return;
+        if (c.special === 'band'){ cel.textContent = sq.band; cel.style.color = sq.textColor; return; }
+        const val = c.get(o);
+        if (val == null){ cel.dataset.v = 0; cel.textContent = '—'; }
+        else setNum(cel, val, { dp:c.dp, signed:c.signed });
+      });
+      // slider value text + aria-valuetext (spoken units)
+      eng.forEach(s => { const input=el('#sl-'+s.key), lbl=el('#v-'+s.key); if(!input) return;
+        const raw = state[s.key]; const d = s.display ? s.display(raw) : raw;
+        if (lbl) lbl.textContent = signStr(d, s.signed) + Math.abs(d) + (s.unit||'');
+        const num = Math.abs(s.display ? s.display(raw) : raw);
+        input.setAttribute('aria-valuetext', (s.signed&&d<0?'minus ':'') + num + (s.unitSpoken ? ' '+s.unitSpoken : ''));
+      });
+      // live aria sentence (every drawn value spoken; §2.3)
+      const turfSent = divot ? ('Turf contact '+Math.abs(divot.startCm).toFixed(1)+' cm '+(divot.startCm<0?'before':'after')+' the ball.') : 'No turf contact.';
+      el('#aw-fig').setAttribute('aria-label',
+        `${cfg.title}: low point ${Math.abs(lpCm).toFixed(1)} cm ${lpCm>=0?'ahead of':'behind'} the ball, ${Math.abs(depMm).toFixed(0)} mm ${depMm<0?'below':'above'} the turf. Attack ${Math.abs(im.attackAngle).toFixed(1)} degrees ${im.attackAngle<0?'down':im.attackAngle>0?'up':'level'}. ${turfSent} ${sq.band}.`);
+    }
+    // wire sliders (haptic detent + touch + re-render)
+    eng.forEach(s => { const input=el('#sl-'+s.key); if(!input) return;
+      input.addEventListener('input', ()=>{ state[s.key]=+input.value; if(presets) setAwPressed(null); ctx.onTouch(); haptic('select'); render(); }); });
+    function setAwPressed(which){ mount.querySelectorAll('[data-aw-preset]').forEach(b=>b.setAttribute('aria-pressed', b.dataset.awPreset===which?'true':'false')); }
+    if (presets){ mount.querySelectorAll('[data-aw-preset]').forEach(b=>b.addEventListener('click', ()=>{
+      const p = presets[b.dataset.awPreset];
+      ['lpx','lpz','plane','dir'].forEach(k=>{ if (k in p){ state[k]=p[k]; const i=el('#sl-'+k); if(i) i.value=p[k]; } });
+      setAwPressed(b.dataset.awPreset); haptic('light'); ctx.onTouch(); render();
+    })); }
+    render();
+  }
+
 
   /* ══ QUIZ ══ */
   function mountQuiz(lessonId, d){
@@ -2563,7 +3027,7 @@
         <div class="qq" id="q-${qi}">${esc(q.q)}</div>
         <div class="opts" role="radiogroup" aria-labelledby="q-${qi}">${opts}</div>
         <div class="qfoot"><button class="retrybtn" data-retry="${qi}">Retry</button><span class="qscore mono" data-qscore="${qi}"></span></div>
-        <div class="expl" id="expl-${qi}" role="status"><div class="el"></div><div class="et"></div></div>
+        <div class="expl" id="expl-${qi}"><div class="el"></div><div class="et"></div></div>
       </div>`;
     }).join('') + `<button class="finishbtn" id="finishBtn" aria-disabled="true">Finish lesson</button>`;
 
@@ -2597,6 +3061,8 @@
       const expl = $('#expl-'+qi);
       expl.querySelector('.et').textContent = q.explanation;
       expl.classList.add('show');
+      // verdict goes through the single live region (a11y contract: one polite region)
+      announce((correct ? (st.firstTry && !st.resolved ? 'Correct — first try. ' : 'Correct. ') : 'Not quite. ') + q.explanation);
       if (correct){
         st.resolved = true;
         let correctEl = null;
@@ -2679,10 +3145,18 @@
     if (perfect) l.perfect = true;
     l.completed = true; l.completedAt = Date.now();
     store.lastOpened = lessonId;
+    const unlockedBefore = store.unlocked.length;
     recomputeUnlocks();
+    const didUnlock = store.unlocked.length > unlockedBefore;
     const earned = [];
-    awardBadges(earned);
+    awardBadges(earned);   // fires success itself if a badge is newly earned
     save();
+    // path-06 haptics: finishing a whole tier = medium (the gold moment); otherwise a
+    // freshly-opened node = success once (skipped if a badge already buzzed success).
+    const _tierCol = TIER_COLS.find(c => c.ids.includes(lessonId));
+    const _tierComplete = _tierCol && _tierCol.ids.every(id => store.lessons[id] && store.lessons[id].completed);
+    if (_tierComplete) haptic('medium');
+    else if (didUnlock && !earned.length) haptic('success');
     const afterLevel = levelInfo(store.xp).lvl;
     const leveledUp = afterLevel > beforeLevel;
     refreshHeaderLive();

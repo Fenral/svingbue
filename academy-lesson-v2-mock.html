@@ -1,0 +1,1602 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Academy · Backspin — Native v2 (S0–S5)</title>
+<link rel="icon" href="data:," />
+<!-- Fonts vendored + declared in sa-p3.css (@font-face → vendor/fonts/*.woff2). No CDN. -->
+<link rel="stylesheet" href="./sa-p3.css" />
+<style>
+  /* ══ ACADEMY NATIVE v2 — Backspin, first page (S0 Mission → S1 Spin Lab) ══
+     Colour + type consumed from sa-p3.css. Ember (--accent) is spent ONLY on
+     the live flight trace + the live RPM value (census 2 at rest). Numbers are
+     real solveFlight() outputs; meters + mph; mono tabular + U+2212. */
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{
+    background:var(--scene-bg);
+    color:var(--ink);
+    font-family:var(--font-ui);
+    -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+    overflow:hidden;                 /* the pager owns scroll */
+  }
+  .mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1}
+
+  /* ── TOP CHROME (sa-strip contract: home far-left) ──────────────────────── */
+  .top{
+    position:fixed;z-index:40;top:0;left:0;right:0;
+    box-sizing:content-box;height:44px;
+    padding-top:env(safe-area-inset-top);
+    padding-left:max(12px,env(safe-area-inset-left));
+    padding-right:max(12px,env(safe-area-inset-right));
+    display:flex;align-items:center;gap:8px;
+    border-bottom:1px solid var(--line);
+    background:linear-gradient(180deg,rgba(17,13,28,.82),rgba(7,6,12,.42));
+    -webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);
+  }
+  .home{position:relative;flex:0 0 auto;width:30px;height:30px;display:inline-flex;
+    align-items:center;justify-content:center;color:var(--secondary);text-decoration:none;
+    -webkit-tap-highlight-color:transparent}
+  .home::after{content:"";position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:44px;height:44px}
+  .home svg{width:30px;height:30px;display:block}
+  .home .sa-arc{stroke:var(--secondary)}
+  .home .sa-ball{fill:var(--accent)}
+  .back{appearance:none;border:0;background:transparent;color:var(--secondary);
+    width:44px;height:44px;margin-left:-6px;display:none;align-items:center;justify-content:center;
+    border-radius:12px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+  .back svg{width:20px;height:20px}
+  body[data-surface="1"] .back,body[data-surface="2"] .back,body[data-surface="3"] .back,
+  body[data-surface="4"] .back,body[data-surface="5"] .back{display:inline-flex}
+  .top__title{font-family:var(--font-ui);font-weight:700;font-size:11px;letter-spacing:.16em;
+    text-transform:uppercase;color:var(--muted)}
+  .top__spacer{flex:1 1 auto}
+  .rankchip{display:inline-flex;align-items:center;gap:7px;height:30px;padding:0 11px;
+    border:1px solid var(--secondary-line);border-radius:999px;background:var(--secondary-soft);
+    font-size:11px;letter-spacing:.02em;color:var(--muted);white-space:nowrap}
+  .rankchip .xp{color:var(--reward-gold);font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-weight:600}
+  .rankchip .rank{color:var(--secondary);font-weight:600;letter-spacing:.08em;text-transform:uppercase;font-size:10px}
+  .rankchip.flash{animation:xppop .5s var(--ease)}
+  @keyframes xppop{0%{transform:scale(1)}40%{transform:scale(1.08)}100%{transform:scale(1)}}
+
+  /* ── PAGER / SURFACES — true paging: a horizontal track, one full-viewport pane
+       shown at a time (body never scrolls; panes swap). §7.1(b). ─────────────── */
+  .pager{
+    display:flex;width:100%;height:100dvh;overflow:visible;   /* body owns the clip; a transformed
+       overflow:hidden here would clip its own moved viewport and eat the active pane */
+    transform:translateX(calc(var(--pane,0) * -100%));
+    transition:transform .24s cubic-bezier(.23,1,.32,1);
+    will-change:transform;
+  }
+  .surface{
+    flex:0 0 100%;width:100%;height:100dvh;
+    overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;
+    scrollbar-width:none;
+    display:flex;flex-direction:column;
+    padding:calc(env(safe-area-inset-top) + 60px) 16px calc(env(safe-area-inset-bottom) + 118px);
+  }
+  .surface::-webkit-scrollbar{display:none}
+  @media (prefers-reduced-motion:reduce){ .pager{transition:none} }   /* instant pane swap */
+
+  /* ── S0 MISSION ─────────────────────────────────────────────────────────── */
+  #s0{justify-content:center;gap:20px;position:relative;overflow:hidden}
+  /* §7.1(c) atmosphere backdrop — photo as mood, never data. Dark bottom-heavy scrim
+     (≥.62 everywhere text sits) so ink/muted hold ≥4.5:1; P3 world still owns palette. */
+  .s0-bg{position:absolute;inset:0;z-index:0;pointer-events:none}
+  .s0-bg img{width:100%;height:100%;object-fit:cover;object-position:center 28%;
+    filter:saturate(.86) brightness(.9);display:block}
+  .s0-bg::after{content:"";position:absolute;inset:0;background:
+    linear-gradient(180deg, rgba(7,6,12,.66) 0%, rgba(9,7,17,.82) 45%, rgba(7,6,12,.95) 100%),
+    radial-gradient(120% 80% at 50% 8%, rgba(20,14,36,.28), transparent 60%)}
+  #s0 > :not(.s0-bg){position:relative;z-index:1}
+  .eyebrow{font-size:11px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--secondary)}
+  .title{font-family:var(--font-display);font-weight:700;font-size:52px;line-height:.98;letter-spacing:-.015em;margin:0}
+  .lede{font-size:16.5px;line-height:1.5;color:var(--muted);max-width:30ch}
+  .lede .sa-em--ink{color:var(--ink)}
+  .mission{
+    display:flex;flex-direction:column;gap:12px;
+    border:1px solid var(--line);border-left:2px solid var(--secondary-line);
+    border-radius:var(--radius-card);background:var(--plate-solid);padding:16px 16px 15px;
+  }
+  .mission__eyebrow{display:flex;align-items:center;gap:8px;font-size:10.5px;font-weight:700;
+    letter-spacing:.18em;text-transform:uppercase;color:var(--muted-2)}
+  .mission__line{font-family:var(--font-display);font-weight:600;font-size:21px;line-height:1.15;color:var(--ink)}
+  .mission__line .k{color:var(--secondary)}       /* the rpm target — violet, NOT ember (static goal, not live data) */
+  .stagerow{display:flex;gap:8px;flex-wrap:wrap}
+  .stage{display:inline-flex;align-items:center;gap:7px;font-size:12px;color:var(--muted);
+    border:1px solid var(--line);border-radius:999px;padding:6px 11px}
+  .stage .dot{width:8px;height:8px;border-radius:50%;border:1.5px solid var(--muted-2);flex:0 0 auto}
+  .stage.done{color:var(--good);border-color:rgba(88,230,168,.35)}
+  .stage.done .dot{background:var(--good);border-color:var(--good)}
+
+  /* ── S1 SPIN LAB ────────────────────────────────────────────────────────── */
+  #s1{gap:12px}
+  .lab-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+  .lab-title{font-family:var(--font-display);font-weight:600;font-size:22px;letter-spacing:-.01em;margin:0}
+  .lab-sub{font-size:11px;color:var(--muted-2);letter-spacing:.02em}
+
+  /* mission ribbon (compact live check) */
+  .ribbon{display:flex;align-items:center;gap:10px;border:1px solid var(--line);
+    border-radius:12px;background:var(--plate-solid);padding:9px 12px}
+  .ribbon.win{border-color:rgba(255,208,86,.5);box-shadow:0 0 0 1px rgba(255,208,86,.25),0 0 26px rgba(255,208,86,.14)}
+  .ribbon.win.flash{animation:goldflash .6s var(--ease)}
+  @keyframes goldflash{0%{box-shadow:0 0 0 1px rgba(255,208,86,.25),0 0 0 rgba(255,208,86,0)}
+    45%{box-shadow:0 0 0 1px rgba(255,208,86,.7),0 0 40px rgba(255,208,86,.4)}
+    100%{box-shadow:0 0 0 1px rgba(255,208,86,.25),0 0 26px rgba(255,208,86,.14)}}
+  .ribbon__txt{flex:1 1 auto;font-size:12px;line-height:1.35;color:var(--muted)}
+  .ribbon__txt b{color:var(--ink);font-weight:600}
+  .ribbon__stages{display:flex;gap:6px;flex:0 0 auto}
+  .rstage{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;
+    border:1.5px solid var(--muted-2);color:var(--muted-2)}
+  .rstage svg{width:12px;height:12px}
+  .rstage.done{border-color:var(--good);color:var(--good);background:rgba(88,230,168,.12)}
+
+  /* flight strip */
+  .strip{position:relative;border:1px solid var(--line);border-radius:var(--radius-lens);
+    background:radial-gradient(120% 140% at 50% 0%,#100b1e,#08060f);overflow:hidden}
+  .strip canvas{display:block;width:100%;height:150px}
+  .strip__tag{position:absolute;top:9px;left:12px;font-size:10px;font-weight:700;letter-spacing:.16em;
+    text-transform:uppercase;color:var(--muted-2)}
+  .strip__legend{position:absolute;top:9px;right:12px;display:flex;gap:12px;font-size:10px;color:var(--muted-2)}
+  .strip__legend i{display:inline-block;width:12px;height:2px;border-radius:2px;vertical-align:middle;margin-right:5px}
+  .lg-now i{background:var(--accent)}
+  .lg-prev i{background:var(--ghost)}
+  .strip__marks{position:absolute;left:0;right:0;bottom:8px;display:flex;justify-content:space-between;
+    padding:0 12px;font-size:10px;color:var(--muted-2)}
+
+  /* RPM hero */
+  .hero{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;
+    border:1px solid var(--line);border-radius:var(--radius-card);background:var(--plate-solid);padding:13px 15px}
+  .hero__l{display:flex;flex-direction:column;gap:3px;min-width:0}
+  .hero__lab{font-size:10.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--muted-2)}
+  .hero__val{display:flex;align-items:baseline;gap:6px}
+  .hero__rpm{font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-weight:600;
+    font-size:44px;line-height:1;color:var(--accent);letter-spacing:-.02em}
+  .hero__unit{font-family:var(--font-mono);font-size:13px;color:var(--muted)}
+  .hero__r{display:flex;flex-direction:column;gap:6px;align-items:flex-end;flex:0 0 auto}
+  .band{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;
+    border-radius:999px;padding:6px 11px;border:1px solid;white-space:nowrap}
+  .band .bdot{width:7px;height:7px;border-radius:50%;flex:0 0 auto}
+  .band.good{color:var(--good);border-color:rgba(88,230,168,.4);background:rgba(88,230,168,.1)}
+  .band.good .bdot{background:var(--good)}
+  .band.warn{color:var(--warn);border-color:rgba(255,208,86,.4);background:rgba(255,208,86,.1)}
+  .band.warn .bdot{background:var(--warn)}
+  .band.low{color:var(--secondary);border-color:var(--secondary-line);background:var(--secondary-soft)}
+  .band.low .bdot{background:var(--secondary)}
+  .sloft{appearance:none;border:1px solid var(--line);background:transparent;cursor:pointer;
+    font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-size:12px;color:var(--muted);
+    border-radius:999px;padding:6px 10px;min-height:32px;display:inline-flex;align-items:center;gap:6px}
+  .sloft .i{color:var(--secondary);font-family:var(--font-ui);font-weight:700;font-size:11px}
+
+  /* readout row */
+  .readouts{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+  .ro{border:1px solid var(--line);border-radius:12px;background:var(--plate);padding:10px 11px;
+    display:flex;flex-direction:column;gap:4px;align-items:flex-start;text-align:left}
+  button.ro{appearance:none;font-family:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
+  .ro__lab{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted-2)}
+  .ro__lab .i{color:var(--secondary);font-family:var(--font-ui);font-weight:700;font-style:italic;text-transform:none;margin-left:1px}
+  .ro__val{font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-weight:500;font-size:19px;color:var(--ink)}
+  .ro__val small{font-size:11px;color:var(--muted);font-weight:400;margin-left:2px}
+  .ro__hold{font-size:10.5px;color:var(--secondary)}
+
+  /* why-it-changed */
+  .why{min-height:34px;display:flex;align-items:center;gap:9px;padding:8px 12px;
+    border-radius:12px;background:var(--secondary-soft);border:1px solid var(--secondary-line)}
+  .why svg{width:15px;height:15px;color:var(--secondary);flex:0 0 auto}
+  .why span{font-size:12.5px;line-height:1.35;color:var(--muted)}
+  .why span b{color:var(--ink);font-weight:600}
+
+  /* sliders */
+  .sliders{display:flex;flex-direction:column;gap:6px}
+  .sl{display:grid;grid-template-columns:1fr auto;grid-template-rows:auto auto;
+    column-gap:10px;align-items:center;padding:4px 2px}
+  .sl__name{grid-column:1;grid-row:1;display:inline-flex;align-items:center;gap:6px;
+    appearance:none;border:0;background:transparent;cursor:pointer;padding:4px 0;
+    font-size:13px;font-weight:600;color:var(--ink);text-align:left;-webkit-tap-highlight-color:transparent}
+  .sl__name .swatch{width:9px;height:9px;border-radius:3px;flex:0 0 auto}
+  .sl__name .i{width:15px;height:15px;color:var(--muted-2)}
+  .sl__val{grid-column:2;grid-row:1;font-family:var(--font-mono);font-variant-numeric:tabular-nums;
+    font-size:15px;color:var(--ink);min-width:64px;text-align:right}
+  .sl__val small{font-size:11px;color:var(--muted)}
+  .sl input[type=range]{grid-column:1 / -1;grid-row:2;-webkit-appearance:none;appearance:none;
+    width:100%;height:44px;min-height:44px;background:transparent;outline:none;cursor:pointer;margin:0}
+  .sl input[type=range]::-webkit-slider-runnable-track{height:6px;border-radius:999px;
+    background:var(--track,rgba(255,255,255,.12))}
+  .sl input[type=range]::-moz-range-track{height:6px;border-radius:999px;background:rgba(255,255,255,.12)}
+  .sl input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;
+    width:26px;height:26px;margin-top:-10px;border-radius:50%;
+    background:var(--hue,#9D8BFF);border:4px solid var(--bg);
+    box-shadow:0 0 0 1px var(--hue,#9D8BFF),0 2px 8px rgba(0,0,0,.5);cursor:pointer;
+    transition:transform .1s var(--ease)}
+  .sl input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;
+    background:var(--hue,#9D8BFF);border:4px solid var(--bg);box-shadow:0 0 0 1px var(--hue,#9D8BFF);cursor:pointer}
+  .sl input[type=range]:active::-webkit-slider-thumb{transform:scale(1.12)}
+
+  /* ── BOTTOM BAR (progress dots + Next / Influence stub) ─────────────────── */
+  .bottom{position:fixed;z-index:40;left:0;right:0;bottom:0;
+    padding:8px max(16px,env(safe-area-inset-left)) calc(9px + env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-right));
+    display:flex;flex-direction:column;align-items:stretch;gap:8px;
+    background:var(--plate-solid);border-top:1px solid var(--line)}
+  /* module stepper — tap-to-jump (§7.1(b)). Full-width row: current = named pill that
+     grows; other steps = 44px dot buttons whose hit areas TILE without overlap. */
+  .stepper{display:flex;align-items:center;gap:2px;width:100%}
+  .step{flex:0 0 44px;height:44px;appearance:none;border:0;background:transparent;padding:0;margin:0;cursor:pointer;
+    -webkit-tap-highlight-color:transparent;display:inline-flex;align-items:center;justify-content:center;
+    border-radius:12px;min-width:44px}
+  .step .dotv{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.14);transition:background .2s var(--ease)}
+  .step .namev{display:none;font-family:var(--font-ui);font-weight:700;font-size:12px;letter-spacing:.03em;
+    color:var(--secondary);white-space:nowrap}
+  .step.done .dotv{background:var(--secondary)}
+  .step.cur{flex:1 1 auto;height:44px;border-radius:999px;background:var(--secondary-soft);
+    box-shadow:inset 0 0 0 1px var(--secondary-line)}
+  .step.cur .dotv{display:none}
+  .step.cur .namev{display:inline}
+  .step.locked{cursor:default}
+  .step.locked .dotv{background:rgba(255,255,255,.06)}
+  .step:active:not(.locked):not(.cur){transform:scale(.86)}
+  .next{width:100%;min-height:46px;border-radius:14px;border:1px solid var(--secondary);
+    background:var(--secondary);color:#140E24;font-family:var(--font-ui);font-weight:700;font-size:15px;
+    letter-spacing:.01em;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    -webkit-tap-highlight-color:transparent}
+  .next svg{width:17px;height:17px}
+  /* gated state (S3 myth / S4 quiz before an answer is given): quiet, inert */
+  .next[disabled]{background:transparent;color:var(--muted);border-color:var(--line);cursor:default}
+  .next[disabled] .arrow{color:var(--muted-2)}
+
+  /* ── BOTTOM SHEET ───────────────────────────────────────────────────────── */
+  .scrim{position:fixed;inset:0;z-index:60;background:rgba(4,3,8,.6);opacity:0;pointer-events:none;
+    transition:opacity .2s var(--ease)}
+  .scrim.open{opacity:1;pointer-events:auto}
+  .sheet{position:fixed;z-index:61;left:0;right:0;bottom:0;max-height:82dvh;overflow-y:auto;
+    background:var(--surface);border-top:1px solid var(--line);
+    border-radius:20px 20px 0 0;transform:translateY(102%);transition:transform .26s var(--ease);
+    padding:8px 20px calc(22px + env(safe-area-inset-bottom));scrollbar-width:none}
+  .sheet::-webkit-scrollbar{display:none}
+  .sheet.open{transform:translateY(0)}
+  .sheet__grab{width:38px;height:4px;border-radius:999px;background:var(--line-strong);margin:8px auto 14px}
+  .sheet__eyebrow{font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--secondary);margin-bottom:6px}
+  .sheet__title{font-family:var(--font-display);font-weight:600;font-size:23px;margin:0 0 12px;letter-spacing:-.01em}
+  .sheet__body{font-size:14.5px;line-height:1.6;color:var(--muted)}
+  .sheet__body p{margin:0 0 14px}
+  .sheet__body .sa-em--ink{color:var(--ink);font-weight:600}
+  .sheet__formula{font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-size:14px;color:var(--ink);
+    background:var(--plate-solid);border:1px solid var(--line);border-radius:12px;padding:13px 14px;margin:0 0 16px;line-height:1.5}
+  .sheet__row{display:flex;gap:10px;padding:11px 0;border-top:1px solid var(--line)}
+  .sheet__row .rk{flex:0 0 92px;font-size:13px;color:var(--secondary);font-weight:600}
+  .sheet__row .rv{flex:1 1 auto;font-size:13.5px;line-height:1.5;color:var(--muted)}
+  .sheet__close{margin-top:8px;width:100%;min-height:46px;border-radius:12px;border:1px solid var(--line);
+    background:transparent;color:var(--ink);font-family:var(--font-ui);font-weight:600;font-size:14px;cursor:pointer}
+
+  /* visually-hidden (live region) */
+  .vh{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+
+  @media (max-width:380px){
+    .title{font-size:46px}
+    .hero__rpm{font-size:40px}
+    .ro__val{font-size:17px}
+  }
+  /* ── shared: section heading + one-stamp slot ───────────────────────────── */
+  .s-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+  .s-title{font-family:var(--font-display);font-weight:600;font-size:22px;letter-spacing:-.01em;margin:0}
+  .s-sub{font-size:11px;color:var(--muted-2);letter-spacing:.02em}
+  /* the ONE typed-on stamp per surface (§7.7). Display voice, single elevation. */
+  .stamp{align-self:flex-start;display:inline-flex;align-items:center;gap:7px;
+    font-family:var(--font-display);font-weight:600;font-size:12px;letter-spacing:.02em;
+    border-radius:999px;padding:7px 13px;border:1px solid var(--line);background:var(--plate-solid);
+    color:var(--muted);white-space:nowrap;box-shadow:0 16px 44px -18px rgba(0,0,0,.9);overflow:hidden}
+  .stamp .sd{width:7px;height:7px;border-radius:50%;background:var(--secondary);flex:0 0 auto}
+  .stamp.sim{color:var(--muted)}.stamp.sim .sd{background:var(--muted-2)}
+  .stamp.rw{color:var(--secondary);border-color:var(--secondary-line);background:var(--secondary-soft)}
+  .stamp.type .txt{display:inline-block;overflow:hidden;white-space:nowrap;
+    animation:typeon .24s steps(24,end) both}
+  @keyframes typeon{from{max-width:0}to{max-width:26ch}}
+
+  /* ══ S2 · INFLUENCE ═══════════════════════════════════════════════════════ */
+  #s2{gap:13px}
+  .lede-s{font-size:12.5px;line-height:1.4;color:var(--muted);max-width:40ch}
+  /* lie segmented control (Clean / Wet / Flyer) */
+  .lieseg{display:flex;gap:4px;padding:4px;border:1px solid var(--line);border-radius:14px;background:var(--plate)}
+  .lieseg button{flex:1 1 0;min-height:44px;appearance:none;border:0;border-radius:10px;background:transparent;
+    color:var(--muted);font-family:var(--font-ui);font-weight:600;font-size:13px;cursor:pointer;
+    display:inline-flex;align-items:center;justify-content:center;gap:6px;-webkit-tap-highlight-color:transparent}
+  .lieseg button .ld{width:8px;height:8px;border-radius:50%;background:currentColor;opacity:.5}
+  .lieseg button[aria-pressed="true"]{background:var(--secondary-soft);color:var(--secondary);
+    box-shadow:inset 0 0 0 1px var(--secondary-line)}
+  .lieseg button[aria-pressed="true"] .ld{opacity:1}
+  .lieseg button[data-lie="clean"][aria-pressed="true"]{background:rgba(88,230,168,.12);color:var(--good);box-shadow:inset 0 0 0 1px rgba(88,230,168,.35)}
+
+  /* sensitivity bars (param-hued, engine truth) */
+  .bars{display:flex;flex-direction:column;gap:9px;border:1px solid var(--line);border-radius:var(--radius-card);
+    background:var(--plate-solid);padding:14px 15px}
+  .bar{display:grid;grid-template-columns:1fr auto;grid-template-rows:auto auto;column-gap:10px;row-gap:6px;
+    transition:transform .32s var(--ease)}
+  .bar__lab{grid-column:1;grid-row:1;display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:600;color:var(--ink)}
+  .bar__lab .swatch{width:9px;height:9px;border-radius:3px;flex:0 0 auto}
+  .bar__val{grid-column:2;grid-row:1;font-family:var(--font-mono);font-variant-numeric:tabular-nums;
+    font-size:13px;color:var(--ink);white-space:nowrap}
+  .bar__val small{color:var(--muted);font-size:11px}
+  .bar__track{grid-column:1 / -1;grid-row:2;height:8px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden}
+  .bar__fill{height:100%;border-radius:999px;background:var(--h,var(--secondary));width:0;
+    transition:width .34s var(--ease)}
+  .bar.rank1 .bar__lab::after{content:"#1";margin-left:4px;font-family:var(--font-mono);font-size:10px;color:var(--muted-2)}
+
+  /* REAL-WORLD LAYER card (violet register, never ember) */
+  .rw{display:flex;flex-direction:column;gap:11px;border:1px solid var(--secondary-line);border-left:2px solid var(--secondary);
+    border-radius:var(--radius-card);background:var(--secondary-soft);padding:14px 15px}
+  .rw[hidden]{display:none}
+  .rw__top{display:flex;align-items:center;gap:8px}
+  .rw__eyebrow{font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--secondary)}
+  .rw__spacer{flex:1 1 auto}
+  .srcchip{appearance:none;display:inline-flex;align-items:center;gap:5px;border:1px solid var(--secondary-line);
+    background:transparent;color:var(--secondary);border-radius:999px;padding:5px 10px;min-height:30px;
+    font-family:var(--font-ui);font-weight:600;font-size:11px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+  .srcchip svg{width:12px;height:12px}
+  .rw__frbar{display:grid;grid-template-columns:1fr auto;grid-template-rows:auto auto;column-gap:10px;row-gap:6px}
+  .rw__frbar .bar__lab{color:var(--secondary)}
+  .rw__frbar .bar__val{color:var(--secondary)}
+  .rw__frbar .bar__fill{background:repeating-linear-gradient(90deg,var(--secondary),var(--secondary) 7px,transparent 7px,transparent 11px)}
+  .rw__band{display:flex;align-items:baseline;gap:8px;padding:10px 12px;border-radius:12px;
+    background:rgba(157,139,255,.10);border:1px solid var(--secondary-line)}
+  .rw__band .rpm{font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-weight:600;font-size:22px;color:var(--secondary)}
+  .rw__band .u{font-family:var(--font-mono);font-size:12px;color:var(--muted)}
+  .rw__band .cx{font-size:11px;color:var(--muted);margin-left:auto}
+  .rw__line{font-size:12.5px;line-height:1.45;color:var(--muted)}
+  .rw__line b{color:var(--ink);font-weight:600}
+  .rw__img{width:100%;height:120px;object-fit:cover;border-radius:12px;border:1px solid var(--secondary-line);display:block}
+  .rw__cap{font-size:11px;line-height:1.4;color:var(--muted-2)}
+  .rw__notsim{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:var(--secondary)}
+  .rw__notsim::before{content:"≈";font-family:var(--font-mono)}
+  /* When the Real-world card is open the surface is at its densest — compress so it renders
+     complete at 430×932 too (FIT LAW). Clean state keeps its full breathing room. */
+  #s2.rw-open{gap:11px}
+  #s2.rw-open .lede-s{display:none}
+  #s2.rw-open .rw__img{height:84px}
+
+  /* ══ S3 · MYTHS ═══════════════════════════════════════════════════════════ */
+  #s3{gap:13px}
+  .myth-plate{border:1px solid var(--line);border-radius:var(--radius-card);background:var(--plate-solid);padding:15px 16px;
+    display:flex;flex-direction:column;gap:6px}
+  .myth-plate .q{font-family:var(--font-display);font-weight:600;font-size:17.5px;line-height:1.25;color:var(--ink)}
+  .myth-plate .quote{font-size:12px;color:var(--muted-2);font-style:italic}
+  .tf{display:flex;gap:9px}
+  .tf__opt{flex:1 1 0;min-height:48px;appearance:none;border:1px solid var(--line);border-radius:12px;background:var(--plate);
+    color:var(--ink);font-family:var(--font-ui);font-weight:600;font-size:15px;cursor:pointer;
+    display:inline-flex;align-items:center;justify-content:center;gap:7px;-webkit-tap-highlight-color:transparent;
+    transition:border-color .15s var(--ease),background .15s var(--ease)}
+  .tf__opt[aria-checked="true"]{border-color:var(--secondary);background:var(--secondary-soft);color:var(--secondary)}
+  .tf__opt.correct{border-color:rgba(88,230,168,.6);background:rgba(88,230,168,.12);color:var(--good)}
+  .tf__opt.wrong{border-color:rgba(255,123,138,.6);background:rgba(255,123,138,.12);color:var(--bad)}
+  .tf[data-locked] .tf__opt{cursor:default}
+  /* engine chain-beat */
+  .chain{display:flex;flex-direction:column;gap:8px;border:1px solid var(--line);border-radius:var(--radius-card);
+    background:var(--plate-solid);padding:14px 15px}
+  .chain__cap{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted-2)}
+  .beat{display:flex;flex-direction:column;gap:8px}
+  .chip{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:10px;padding:9px 11px;border-radius:12px;
+    border:1px solid var(--line);background:var(--plate);opacity:.32;transform:translateY(3px);
+    transition:opacity .28s var(--ease),transform .28s var(--ease),border-color .28s var(--ease)}
+  .chip.lit{opacity:1;transform:none;border-color:var(--secondary-line)}
+  .chip .k{font-size:12px;font-weight:600;color:var(--muted);display:inline-flex;align-items:center;gap:6px}
+  .chip .k .step{width:18px;height:18px;border-radius:50%;display:grid;place-items:center;font-size:10px;
+    font-family:var(--font-mono);color:var(--muted-2);border:1px solid var(--line-strong)}
+  .chip.lit .k .step{color:var(--secondary);border-color:var(--secondary-line)}
+  .chip .v{font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-size:13.5px;color:var(--ink);text-align:right;white-space:nowrap}
+  .chip .v .ar{color:var(--muted-2);margin:0 5px}
+  .chip .v .to{color:var(--ink)}
+  .chip.effect.lit .v .to{color:var(--accent)}       /* ember = the engine's after-value (primary truth) */
+  .chip .v small{color:var(--muted);font-size:10.5px;margin-left:3px}
+  .teach{font-size:12.5px;line-height:1.45;color:var(--muted)}
+  .teach b{color:var(--ink);font-weight:600}
+
+  /* ══ S4 · QUIZ ════════════════════════════════════════════════════════════ */
+  #s4{gap:13px}
+  .qmeta{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .qmeta .qn{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted-2)}
+  .qmeta .qscore{font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-size:12px;color:var(--muted)}
+  .qmeta .qscore b{color:var(--good)}
+  .qbar{height:5px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden}
+  .qbar i{display:block;height:100%;background:var(--secondary);border-radius:999px;transition:width .3s var(--ease)}
+  .qstem{font-family:var(--font-display);font-weight:600;font-size:18px;line-height:1.28;color:var(--ink)}
+  .opts{display:flex;flex-direction:column;gap:8px}
+  .opt{display:flex;align-items:flex-start;gap:11px;min-height:48px;appearance:none;text-align:left;
+    border:1px solid var(--line);border-radius:12px;background:var(--plate);color:var(--ink);
+    font-family:var(--font-ui);font-size:14px;line-height:1.35;padding:12px 13px;cursor:pointer;-webkit-tap-highlight-color:transparent;
+    transition:border-color .15s var(--ease),background .15s var(--ease)}
+  .opt .mk{flex:0 0 auto;width:19px;height:19px;border-radius:50%;border:1.5px solid var(--line-strong);margin-top:1px;
+    display:grid;place-items:center}
+  .opt .mk svg{width:12px;height:12px;opacity:0}
+  .opt[aria-checked="true"]{border-color:var(--secondary);background:var(--secondary-soft)}
+  .opt[aria-checked="true"] .mk{border-color:var(--secondary);background:var(--secondary);color:#140E24}
+  .opt[aria-checked="true"] .mk svg{opacity:1}
+  .opts[data-locked] .opt{cursor:default}
+  .opts[data-locked] .opt.correct{border-color:rgba(88,230,168,.6);background:rgba(88,230,168,.12)}
+  .opts[data-locked] .opt.correct .mk{border-color:var(--good);background:var(--good);color:#0A2417}
+  .opts[data-locked] .opt.wrong{border-color:rgba(255,123,138,.55);background:rgba(255,123,138,.1)}
+  .opts[data-locked] .opt.wrong .mk{border-color:var(--bad);background:var(--bad);color:#2A0C10}
+  .qexpl{font-size:12.5px;line-height:1.5;color:var(--muted);border-left:2px solid var(--secondary-line);
+    padding:2px 0 2px 12px}
+  .qexpl b{color:var(--ink);font-weight:600}
+  .qexpl.ok{border-left-color:rgba(88,230,168,.6)}
+  .qexpl[hidden]{display:none}
+
+  /* ══ S5 · MASTERY ═════════════════════════════════════════════════════════ */
+  #s5{justify-content:center;gap:18px;text-align:center;align-items:center}
+  .m-eyebrow{font-size:11px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--secondary)}
+  .m-title{font-family:var(--font-display);font-weight:700;font-size:40px;line-height:1;letter-spacing:-.015em;margin:0}
+  .m-xp{font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-weight:600;font-size:52px;line-height:1;
+    color:var(--reward-gold);letter-spacing:-.02em}
+  .m-xp small{font-size:16px;color:var(--muted);margin-left:6px}
+  .m-sub{font-size:14px;line-height:1.5;color:var(--muted);max-width:34ch}
+  .ladder{display:flex;flex-direction:column;gap:2px;width:100%;max-width:320px;
+    border:1px solid var(--line);border-radius:var(--radius-card);background:var(--plate-solid);padding:8px}
+  .rung{display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:10px;color:var(--muted-2);font-size:13px}
+  .rung .rd{width:9px;height:9px;border-radius:50%;background:var(--line-strong);flex:0 0 auto}
+  .rung.passed{color:var(--muted)}.rung.passed .rd{background:var(--secondary)}
+  .rung.here{background:var(--secondary-soft);color:var(--secondary);font-weight:700;box-shadow:inset 0 0 0 1px var(--secondary-line)}
+  .rung.here .rd{background:var(--secondary);box-shadow:0 0 0 4px rgba(157,139,255,.2)}
+  .rung .rnum{margin-left:auto;font-family:var(--font-mono);font-size:10px;color:var(--muted-2)}
+  /* below-gate retry surface */
+  .retry-card{display:flex;flex-direction:column;gap:12px;border:1px solid var(--line);border-radius:var(--radius-card);
+    background:var(--plate-solid);padding:18px;max-width:340px;align-items:center}
+  .retry-card .rscore{font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-size:34px;color:var(--ink)}
+  .retry-btn{min-height:46px;padding:0 20px;border-radius:12px;border:1px solid var(--secondary);background:var(--secondary);
+    color:#140E24;font-family:var(--font-ui);font-weight:700;font-size:14px;cursor:pointer}
+  #s5 .celebrate[hidden],#s5 .retry-wrap[hidden]{display:none}
+
+  /* short viewports (e.g. 375×812): THE FIT LAW — S1's strip + hero + readouts +
+     why + 3 sliders must co-exist in one pane. Compress paddings/gaps, shrink the
+     strip + hero, clamp the why-line, and keep slider rows in ~56–60px (44px thumb
+     is invariant). §7.1(a). */
+  @media (max-height:860px){
+    .surface{padding-top:calc(env(safe-area-inset-top) + 52px);
+      padding-bottom:calc(env(safe-area-inset-bottom) + 118px)}
+    #s1{gap:7px}
+    .lab-head{align-items:center}
+    .ribbon{padding:7px 12px}
+    .ribbon__txt{font-size:11.5px;line-height:1.3}
+    .strip canvas{height:118px}
+    .hero{padding:9px 14px}
+    .hero__rpm{font-size:36px}          /* still ember + bloom */
+    .readouts .ro{padding:8px 10px}
+    .ro__val{font-size:17px}
+    .ro__hold{font-size:10px}
+    .why{min-height:0;padding:6px 11px}
+    .why span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}   /* single clamped line */
+    .sliders{gap:2px}
+    .sl{padding:0 2px}
+    .sl__name{padding:1px 0;font-size:12.5px}
+    .sl__val{font-size:14px}
+    /* S2 Real-world card: on short heights the photo collapses to a thumbnail row so the
+       open card still fits one pane (declared deviation, §7.1(a)). */
+    #s2{gap:9px}
+    .bars{padding:12px 14px;gap:8px}
+    .rw{gap:8px;padding:12px 14px}
+    #s2.rw-open .rw__img{height:44px}
+    .rw__band{padding:8px 12px}
+    .rw__line,.rw__cap{line-height:1.35}
+  }
+  /* very short (e.g. small landscape-ish or 375 with browser chrome): last-resort trims */
+  @media (max-height:720px){
+    .strip canvas{height:104px}
+    .hero__rpm{font-size:33px}
+    #s2.rw-open .rw__img{height:38px}
+  }
+
+/* ══ DEPTH & LIGHT v1 (mock-before-lock, 2026-07-11) — dark ≠ flat.
+   Owner critique: "veldig mørk og flatt". Moves: top-lit plate gradients with a baked-in
+   1px edge-light (light hits every card's top edge), ambient violet skylight + faint
+   teal floor-glow on the scene bg, ember bloom on the live hero value, film grain.
+   All at the token level — if approved, this codifies into sa-p3.css for every surface.
+   Contrast: lightest plate body #120E20 keeps muted #A79FC7 ≥ 7:1 (AA holds). ══ */
+:root{
+  --plate: linear-gradient(180deg, rgba(245,242,255,.065) 0, rgba(245,242,255,.065) 1px,
+           rgba(16,12,28,.90) 1px, rgba(8,5,14,.86) 100%);
+  --plate-solid: linear-gradient(180deg, rgba(245,242,255,.07) 0, rgba(245,242,255,.07) 1px,
+           #120E20 1px, #0C0916 100%);
+}
+body{
+  background:
+    radial-gradient(130% 75% at 50% -14%, rgba(157,139,255,.085), transparent 60%),
+    radial-gradient(90% 55% at 50% 110%, rgba(77,232,210,.04), transparent 55%),
+    #07060C;
+}
+/* ember bloom: the one heat in the cold world now also radiates */
+.hero__rpm{ text-shadow:0 0 26px rgba(255,138,77,.30), 0 0 64px rgba(255,138,77,.12); }
+.m-xp{ text-shadow:0 0 26px rgba(255,208,86,.28); }
+/* ── NATIVE FEEL v1 (Emil-lens, 2026-07-11) ──
+   (a) iOS large-title grammar: when the live hero scrolls off-screen in the lab, the nav
+   title morphs into the live RPM + band — you NEVER adjust blind (owner's core requirement).
+   (b) press feedback on every pressable. Strong ease-out per the framework. */
+:root{ --ease-snap: cubic-bezier(.23,1,.32,1); }
+.top__title{ transition:opacity 180ms var(--ease-snap), transform 180ms var(--ease-snap); }
+.top__live{
+  position:absolute; left:50%; transform:translate(-50%,6px); opacity:0; pointer-events:none;
+  display:flex; align-items:baseline; gap:6px; white-space:nowrap;
+  transition:opacity 180ms var(--ease-snap), transform 180ms var(--ease-snap);
+}
+.top__live .lv{ font-family:var(--font-mono); font-weight:700; font-size:17px; color:var(--accent);
+  font-variant-numeric:tabular-nums; text-shadow:0 0 18px rgba(255,138,77,.35); }
+.top__live .lu{ font-size:10.5px; color:var(--muted); }
+.top__live .lb{ font-size:10.5px; font-weight:600; color:var(--muted); margin-left:2px; }
+.top__live .lb.good{ color:var(--good); } .top__live .lb.warn{ color:var(--warn); } .top__live .lb.bad{ color:var(--bad); }
+@media (max-width:410px){ .top__live .lb{ display:none; } }  /* band collides with the XP chip on narrow */
+.top.live .top__title{ opacity:0; transform:translateY(-6px); }
+.top.live .top__live{ opacity:1; transform:translate(-50%,0); }
+.next:active,.tf__opt:active,.opt:active,.lieseg button:active,.retry-btn:active,.sheet__close:active{ transform:scale(.97); }
+.back:active,.home:active{ transform:scale(.92); }
+.next{ transition:transform 160ms var(--ease-snap), background 160ms ease, opacity 160ms ease; }
+/* film grain: kills gradient banding, adds material. Static — RM-safe. */
+body::after{
+  content:""; position:fixed; inset:0; pointer-events:none; z-index:2147483647; opacity:.028;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+</style>
+</head>
+<body data-surface="0">
+
+  <!-- ── TOP CHROME ─────────────────────────────────────────────────────── -->
+  <header class="top">
+    <a class="home sa-focus" href="./academy.html" aria-label="Back to lesson tree">
+      <svg viewBox="0 0 52 52" fill="none" aria-hidden="true">
+        <path class="sa-arc" d="M11 45 C 16 26, 24 18, 35 15 M21 39 L 30 24 L 43 45"
+              stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle class="sa-ball" cx="37" cy="15" r="5.2"/>
+      </svg>
+    </a>
+    <button class="back sa-focus" id="backBtn" aria-label="Back to mission">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
+    <span class="top__title">Backspin</span>
+    <span class="top__live" id="topLive" aria-hidden="true">
+      <span class="lv" id="hudRpm">7,128</span><span class="lu">rpm</span><span class="lb good" id="hudBand">Optimal iron spin</span>
+    </span>
+    <span class="top__spacer"></span>
+    <span class="rankchip" id="rankChip">
+      <span class="xp"><span id="xpVal">240</span> XP</span>
+      <span class="rank" id="rankVal">Rookie</span>
+    </span>
+  </header>
+
+  <!-- ── PAGER ──────────────────────────────────────────────────────────── -->
+  <main class="pager" id="pager">
+
+    <!-- S0 · MISSION -->
+    <section class="surface" id="s0" aria-labelledby="s0title">
+      <div class="s0-bg" aria-hidden="true">
+        <img src="assets/mission-backspin.jpg" alt=""
+             onerror="var p=this.parentNode;if(p)p.style.display='none';">
+      </div>
+      <div class="eyebrow">Academy · Flight</div>
+      <h1 class="title" id="s0title">Backspin</h1>
+      <p class="lede">Backspin is the ball's backward rotation — the top spinning back toward you — that generates <span class="sa-em--ink">aerodynamic lift</span> and holds the shot in the air.</p>
+
+      <div class="mission" role="group" aria-label="Your mission">
+        <div class="mission__eyebrow">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l2.5 2.5"/></svg>
+          Your mission
+        </div>
+        <div class="mission__line">Build <span class="k">7,000+ rpm</span> — then kill the spin.</div>
+        <div class="stagerow">
+          <span class="stage"><span class="dot"></span>Build the spin</span>
+          <span class="stage"><span class="dot"></span>Then kill it (driver move)</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- S1 · SPIN LAB -->
+    <section class="surface" id="s1" aria-labelledby="s1title">
+      <div class="lab-head">
+        <h2 class="lab-title" id="s1title">Spin Lab</h2>
+        <div class="lab-sub">7-iron · live engine</div>
+      </div>
+
+      <div class="ribbon" id="ribbon">
+        <div class="ribbon__txt"><b>Build 7,000+ rpm,</b> then kill it below 3,500.</div>
+        <div class="ribbon__stages" aria-hidden="true">
+          <span class="rstage" id="rs1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>
+          <span class="rstage" id="rs2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>
+        </div>
+      </div>
+
+      <!-- LIVE FLIGHT STRIP (canvas aria-hidden; values mirrored in DOM below) -->
+      <div class="strip">
+        <canvas id="flight" width="796" height="300" aria-hidden="true"></canvas>
+        <div class="strip__tag">Flight</div>
+        <div class="strip__legend">
+          <span class="lg-prev"><i></i>Previous</span>
+        </div>
+        <div class="strip__marks"><span>Launch</span><span id="apexMark">apex 30 m</span><span id="landMark">land 54.4°</span></div>
+      </div>
+
+      <!-- RPM HERO -->
+      <div class="hero">
+        <div class="hero__l">
+          <div class="hero__lab">Backspin</div>
+          <div class="hero__val">
+            <span class="hero__rpm mono" id="rpm">7128</span>
+            <span class="hero__unit">rpm</span>
+          </div>
+        </div>
+        <div class="hero__r">
+          <span class="band good" id="band"><span class="bdot"></span><span id="bandLabel">Optimal iron spin</span></span>
+          <button class="sloft sa-focus" id="sloftChip" aria-label="Spin loft, 33 degrees. What is spin loft?">
+            <span class="i" aria-hidden="true">i</span><span id="sloft">33°</span> spin loft
+          </button>
+        </div>
+      </div>
+
+      <!-- REAL-WORLD echo (violet; only when a lie is active on S2) -->
+      <div class="rw__band" id="rwEcho" hidden style="margin-top:-4px">
+        <span class="rpm" id="rwEchoRpm">—</span><span class="u">rpm</span>
+        <span class="cx"><span id="rwEchoLie">Flyer lie</span> · Real-world estimate — not the simulator</span>
+      </div>
+
+      <!-- READOUT ROW (meters · degrees, mono) -->
+      <div class="readouts">
+        <div class="ro"><div class="ro__lab">Carry</div><div class="ro__val"><span id="carry">158</span><small>m</small></div></div>
+        <div class="ro"><div class="ro__lab">Height</div><div class="ro__val"><span id="apex">30</span><small>m</small></div></div>
+        <button class="ro sa-focus" data-sheet="compute" aria-label="Land angle and hold tendency. How we compute this.">
+          <div class="ro__lab">Land angle <span class="i" aria-hidden="true">i</span></div>
+          <div class="ro__val" id="land">54.4°</div>
+          <div class="ro__hold" id="hold">Holds fast</div>
+        </button>
+      </div>
+
+      <!-- WHY IT CHANGED -->
+      <div class="why">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 16v-5M12 8h.01"/></svg>
+        <span id="why">A 7-iron makes optimal iron spin — <b>spin loft 33°</b> at a clean 120 mph strike.</span>
+      </div>
+
+      <!-- SLIDERS -->
+      <div class="sliders">
+        <div class="sl" style="--hue:var(--loft);--track:rgba(185,160,255,.18)">
+          <button class="sl__name sa-focus" data-sheet="dynamicLoft" aria-label="Dynamic loft. What is it?">
+            <span class="swatch" style="background:var(--loft)"></span>Dynamic loft<span class="i" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><circle cx="12" cy="12" r="9"/><path d="M12 16v-5M12 8h.01"/></svg></span>
+          </button>
+          <div class="sl__val"><span id="vDL">30</span><small>°</small></div>
+          <input type="range" id="rDL" min="10" max="48" step="1" value="30"
+                 aria-label="Dynamic loft, degrees" aria-valuetext="30 degrees">
+        </div>
+
+        <div class="sl" style="--hue:var(--attack);--track:rgba(77,232,210,.18)">
+          <button class="sl__name sa-focus" data-sheet="attackAngle" aria-label="Attack angle. What is it?">
+            <span class="swatch" style="background:var(--attack)"></span>Attack angle<span class="i" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><circle cx="12" cy="12" r="9"/><path d="M12 16v-5M12 8h.01"/></svg></span>
+          </button>
+          <div class="sl__val"><span id="vAA">&#8722;3</span><small>°</small></div>
+          <input type="range" id="rAA" min="-8" max="6" step="1" value="-3"
+                 aria-label="Attack angle, degrees" aria-valuetext="minus 3 degrees">
+        </div>
+
+        <div class="sl" style="--hue:var(--path);--track:rgba(111,198,255,.18)">
+          <button class="sl__name sa-focus" data-sheet="ballSpeed" aria-label="Ball speed. What is it?">
+            <span class="swatch" style="background:var(--path)"></span>Ball speed<span class="i" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><circle cx="12" cy="12" r="9"/><path d="M12 16v-5M12 8h.01"/></svg></span>
+          </button>
+          <div class="sl__val"><span id="vBS">120</span><small>mph</small></div>
+          <input type="range" id="rBS" min="90" max="175" step="1" value="120"
+                 aria-label="Ball speed, miles per hour" aria-valuetext="120 miles per hour">
+        </div>
+      </div>
+    </section>
+
+    <!-- S2 · INFLUENCE -->
+    <section class="surface" id="s2" aria-labelledby="s2title">
+      <div class="s-head">
+        <h2 class="s-title" id="s2title">Influence</h2>
+        <div class="s-sub">±1 unit · live engine</div>
+      </div>
+      <span class="stamp sim" id="infStamp"><span class="sd"></span><span class="txt">Simulator ranking</span></span>
+      <p class="lede-s">How much each lever moves backspin, at your current Spin&nbsp;Lab settings.</p>
+
+      <div class="bars" id="bars" role="list" aria-label="Backspin sensitivity, ranked">
+        <div class="bar" role="listitem" data-p="dl" style="--h:var(--loft)">
+          <div class="bar__lab"><span class="swatch" style="background:var(--loft)"></span>Dynamic loft</div>
+          <div class="bar__val" id="sDL">—</div>
+          <div class="bar__track"><div class="bar__fill" id="fDL"></div></div>
+        </div>
+        <div class="bar" role="listitem" data-p="aa" style="--h:var(--attack)">
+          <div class="bar__lab"><span class="swatch" style="background:var(--attack)"></span>Attack angle</div>
+          <div class="bar__val" id="sAA">—</div>
+          <div class="bar__track"><div class="bar__fill" id="fAA"></div></div>
+        </div>
+        <div class="bar" role="listitem" data-p="bs" style="--h:var(--path)">
+          <div class="bar__lab"><span class="swatch" style="background:var(--path)"></span>Ball speed</div>
+          <div class="bar__val" id="sBS">—</div>
+          <div class="bar__track"><div class="bar__fill" id="fBS"></div></div>
+        </div>
+      </div>
+
+      <div class="lieseg" role="group" aria-label="Lie condition">
+        <button data-lie="clean" aria-pressed="true"><span class="ld"></span>Clean</button>
+        <button data-lie="wet" aria-pressed="false"><span class="ld"></span>Wet</button>
+        <button data-lie="flyer" aria-pressed="false"><span class="ld"></span>Flyer</button>
+      </div>
+
+      <!-- REAL-WORLD LAYER (violet register; sourced estimates only) -->
+      <div class="rw" id="rwCard" hidden>
+        <div class="rw__top">
+          <span class="rw__eyebrow">Real-world layer</span>
+          <span class="rw__spacer"></span>
+          <button class="srcchip" id="srcChip" aria-label="Show the source for this estimate">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 5h16M4 12h16M4 19h10"/></svg>
+            <span id="srcChipName">Source</span>
+          </button>
+        </div>
+        <div class="rw__frbar" role="group" aria-label="Friction, dominant real-world factor">
+          <div class="bar__lab"><span class="swatch" style="background:var(--secondary)"></span>Friction / lie <span style="margin-left:4px;font-family:var(--font-mono);font-size:10px;color:var(--secondary)">#1</span></div>
+          <div class="bar__val" id="frVal">≈ —</div>
+          <div class="bar__track" style="grid-column:1 / -1"><div class="bar__fill" id="frFill" style="width:100%"></div></div>
+        </div>
+        <div class="rw__band">
+          <span class="rpm" id="rwRpm">≈ —</span><span class="u">rpm</span>
+          <span class="cx" id="rwLieName">in this lie</span>
+        </div>
+        <p class="rw__line" id="rwLine">—</p>
+        <img class="rw__img" id="rwImg" src="assets/rw-backspin-green-bite.jpg"
+             alt="A golf ball biting and checking up on a green"
+             onerror="this.style.display='none';var c=document.getElementById('rwCap');if(c)c.style.display='none';">
+        <p class="rw__cap" id="rwCap">Reality: the ball bites. Spin loft is <em>why</em> — a bad lie is why it sometimes won't.</p>
+        <span class="rw__notsim">Real-world estimate — not the simulator</span>
+      </div>
+    </section>
+
+    <!-- S3 · MYTHS -->
+    <section class="surface" id="s3" aria-labelledby="s3title">
+      <div class="s-head">
+        <h2 class="s-title" id="s3title">Myth-bust</h2>
+        <div class="s-sub" id="mythCount">Myth 1 of 3</div>
+      </div>
+      <span class="stamp type" id="mythStamp" hidden><span class="sd"></span><span class="txt"></span></span>
+
+      <div class="myth-plate">
+        <div class="q" id="mythQ">—</div>
+        <div class="quote" id="mythQuote">—</div>
+      </div>
+
+      <div class="tf" id="mythTF" role="radiogroup" aria-label="Is this true or false?">
+        <button class="tf__opt" role="radio" aria-checked="false" data-tf="true" tabindex="0">True</button>
+        <button class="tf__opt" role="radio" aria-checked="false" data-tf="false" tabindex="-1">False</button>
+      </div>
+
+      <div class="chain" id="mythChain" hidden>
+        <div class="chain__cap">Two real engine runs</div>
+        <div class="beat" id="mythBeat"></div>
+        <p class="teach" id="mythTeach"></p>
+      </div>
+    </section>
+
+    <!-- S4 · QUIZ -->
+    <section class="surface" id="s4" aria-labelledby="s4title">
+      <h2 class="vh" id="s4title">Mastery quiz</h2>
+      <div class="qmeta">
+        <span class="qn" id="quizN">Question 1 of 5</span>
+        <span class="qscore">Score <b id="quizScore">0</b> / 5</span>
+      </div>
+      <div class="qbar"><i id="quizBar" style="width:20%"></i></div>
+      <h2 class="qstem" id="quizStem" aria-live="off">—</h2>
+      <div class="opts" id="quizOpts" role="radiogroup" aria-labelledby="quizStem"></div>
+      <p class="qexpl" id="quizExpl" hidden></p>
+    </section>
+
+    <!-- S5 · MASTERY -->
+    <section class="surface" id="s5" aria-labelledby="s5title">
+      <h2 class="vh" id="s5title">Mastery result</h2>
+      <div class="celebrate" id="celebrate" hidden>
+        <div class="m-eyebrow">Lesson mastered</div>
+        <h3 class="m-title">Backspin</h3>
+        <div><span class="m-xp" id="mXp">0</span><small>XP</small></div>
+        <p class="m-sub" id="mSub">You read spin loft, ball speed and friction the way an engineer does.</p>
+        <div class="ladder" id="ladder" aria-label="Rank ladder"></div>
+      </div>
+      <div class="retry-wrap" id="retryWrap" hidden>
+        <div class="retry-card">
+          <div class="m-eyebrow" style="color:var(--muted-2)">Not quite mastered</div>
+          <div class="rscore"><span id="rScore">0</span> / 5</div>
+          <p class="m-sub">You need 4 of 5 to master this lesson. The physics is all here — take another run at the quiz.</p>
+          <button class="retry-btn" id="retryBtn">Retry the quiz</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ── BOTTOM BAR ─────────────────────────────────────────────────────── -->
+  <nav class="bottom" aria-label="Lesson progress">
+    <div class="stepper" role="group" aria-label="Lesson steps" id="stepper">
+      <button class="step cur" id="step0" data-n="0" aria-current="step" aria-label="Step 1 of 6: Mission"><span class="dotv" aria-hidden="true"></span><span class="namev">Mission</span></button>
+      <button class="step" id="step1" data-n="1" aria-label="Step 2 of 6: Lab"><span class="dotv" aria-hidden="true"></span><span class="namev">Lab</span></button>
+      <button class="step" id="step2" data-n="2" aria-label="Step 3 of 6: Influence"><span class="dotv" aria-hidden="true"></span><span class="namev">Influence</span></button>
+      <button class="step" id="step3" data-n="3" aria-label="Step 4 of 6: Myths"><span class="dotv" aria-hidden="true"></span><span class="namev">Myths</span></button>
+      <button class="step" id="step4" data-n="4" aria-label="Step 5 of 6: Quiz"><span class="dotv" aria-hidden="true"></span><span class="namev">Quiz</span></button>
+      <button class="step" id="step5" data-n="5" aria-label="Step 6 of 6: Mastery"><span class="dotv" aria-hidden="true"></span><span class="namev">Mastery</span></button>
+    </div>
+    <button class="next sa-focus" id="nextBtn">
+      <span id="nextLabel">Enter the Spin Lab</span>
+      <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+    </button>
+  </nav>
+
+  <!-- ── SHEET (reused; content swapped) ────────────────────────────────── -->
+  <div class="scrim" id="scrim"></div>
+  <aside class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle" hidden>
+    <div class="sheet__grab" aria-hidden="true"></div>
+    <div class="sheet__eyebrow" id="sheetEyebrow">Term</div>
+    <h2 class="sheet__title" id="sheetTitle">Spin loft</h2>
+    <div class="sheet__body" id="sheetBody"></div>
+    <button class="sheet__close" id="sheetClose">Close</button>
+  </aside>
+
+  <!-- polite live region (one, throttled) -->
+  <div class="vh" id="live" aria-live="polite" aria-atomic="true"></div>
+
+<script type="module">
+  import { solveFlight, trajectorySamples } from './impact-flight.js';
+  import sa from './sa-haptics.js';
+
+  const $ = id => document.getElementById(id);
+  const RM = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const MINUS = '−';
+  const YD2M = 0.9144;
+  const fmtSigned = n => (n < 0 ? MINUS + Math.abs(n) : '' + n);
+
+  // ── engine input from the three sliders ────────────────────────────────
+  // The "Ball speed" slider is inverted onto the engine's clubSpeed via the SAME
+  // smash formula the engine uses, so solveFlight().ballSpeed byte-equals the
+  // slider value. Every displayed number below is a real solveFlight() output.
+  function engineInput(dl, aa, ballTarget){
+    const spinLoft = dl - aa;
+    const smashEff = Math.max(1.15, Math.min(1.33 + 0.09, 1.46 - 0.004 * spinLoft));
+    return { clubPath:0, faceAngle:0, attackAngle:aa, dynamicLoft:dl, clubSpeed: ballTarget / smashEff };
+  }
+  // rounding contract — must match the verification harness exactly
+  const round = {
+    rpm:   f => Math.round(f.backspin),
+    ball:  f => Math.round(f.ballSpeed),
+    sloft: f => Math.round(f.spinLoft),
+    carry: f => Math.round(f.carry * YD2M),
+    apex:  f => Math.round(f.apex  * YD2M),
+    land:  f => f.landingAngle.toFixed(1),
+  };
+
+  // ── spin band + hold-tendency (documented thresholds; see "How we compute this") ─
+  function band(rpm){
+    if (rpm >= 8000) return { cls:'warn', label:'High spin · wedge zone' };
+    if (rpm >= 5500) return { cls:'good', label:'Optimal iron spin' };
+    return { cls:'low', label:'Low spin · driver zone' };
+  }
+  function hold(landAngle, rpm){
+    if (landAngle >= 50 && rpm >= 6500) return 'Holds fast';
+    if (landAngle >= 43) return 'Holds';
+    return 'Releases';
+  }
+
+  // ── canvas: REAL solveFlight trace (ember) + ghost + engine-driven lift-field ──
+  const cv = $('flight'), ctx = cv.getContext('2d');
+  const DPR = Math.min(2, window.devicePixelRatio || 1);
+  function sizeCanvas(){
+    const r = cv.getBoundingClientRect();
+    cv.width = Math.round(r.width * DPR);
+    cv.height = Math.round(r.height * DPR);
+  }
+  const MAXCARRY_YD = 235, MAXAPEX_YD = 46;   // fixed world refs → extent tracks the engine
+  function project(pt, flight, W, H){
+    const padL = 26*DPR, padR = 26*DPR, padT = 26*DPR, ground = H - 24*DPR;
+    const plotW = W - padL - padR, plotH = ground - padT;
+    const x = padL + (pt.d * flight.carry / MAXCARRY_YD) * plotW;
+    const y = ground - (pt.h * flight.apex / MAXAPEX_YD) * plotH;
+    return { x, y, ground, padL };
+  }
+  function strokeTrace(flight, color, width, alpha){
+    const pts = trajectorySamples(flight, 48);
+    ctx.save(); ctx.globalAlpha = alpha; ctx.strokeStyle = color;
+    ctx.lineWidth = width*DPR; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+    ctx.beginPath();
+    pts.forEach((p,i)=>{ const q = project(p, flight, cv.width, cv.height);
+      i ? ctx.lineTo(q.x,q.y) : ctx.moveTo(q.x,q.y); });
+    ctx.stroke(); ctx.restore();
+    return pts;
+  }
+  // 3 lift streamlines whose curvature = engine backspin, spread = engine land angle.
+  // Deterministic from the flight → static at rest, only re-drawn on re-solve. (§5.3)
+  function drawLiftField(flight){
+    const spinN = (flight.backspin - 1500) / (9000 - 1500);       // 0..1 from engine
+    const landN = (flight.landingAngle - 32) / (60 - 32);          // 0..1 from engine
+    const apexPt = project({ d:0.52, h:1 }, flight, cv.width, cv.height);
+    const end = project({ d:1, h:0 }, flight, cv.width, cv.height);
+    ctx.save();
+    ctx.lineWidth = 1.25*DPR; ctx.lineCap='round';
+    for (let k=0;k<3;k++){
+      const t = k/2;                                   // 0,0.5,1 vertical fan
+      const lift = (14 + spinN*46) * DPR;              // more spin → more bend
+      const spread = (10 + landN*30) * DPR * (t-0.5)*2;// steeper land → wider fan
+      ctx.globalAlpha = 0.16 - k*0.03;
+      ctx.strokeStyle = k===1 ? getVar('--path') : getVar('--secondary');
+      ctx.beginPath();
+      ctx.moveTo(apexPt.padL, apexPt.ground - spread - 6*DPR);
+      ctx.quadraticCurveTo(apexPt.x, apexPt.y - lift + spread, end.x - 8*DPR, end.ground - 4*DPR + spread*0.4);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+  const _vars = {};
+  function getVar(name){ return _vars[name] || (_vars[name] = getComputedStyle(document.documentElement).getPropertyValue(name).trim()); }
+
+  function drawStrip(flight, prev){
+    ctx.clearRect(0,0,cv.width,cv.height);
+    // ground hairline
+    const g = project({d:0,h:0}, flight, cv.width, cv.height);
+    ctx.save(); ctx.globalAlpha=.5; ctx.strokeStyle=getVar('--line-strong'); ctx.lineWidth=1*DPR;
+    ctx.beginPath(); ctx.moveTo(g.padL, g.ground); ctx.lineTo(cv.width-26*DPR, g.ground); ctx.stroke(); ctx.restore();
+    drawLiftField(flight);
+    if (prev) strokeTrace(prev, getVar('--ghost'), 1.6, .55);   // one ghost, violet-grey
+    const pts = strokeTrace(flight, getVar('--accent'), 2.6, 1);// live ember trace
+    // apex dot (ink — not ember; keeps ember census = trace + rpm)
+    const ap = project({d:0.52,h:1}, flight, cv.width, cv.height);
+    ctx.save(); ctx.fillStyle=getVar('--ink'); ctx.globalAlpha=.9;
+    ctx.beginPath(); ctx.arc(ap.x, ap.y, 3*DPR, 0, 7); ctx.fill();
+    ctx.globalAlpha=.35; ctx.strokeStyle=getVar('--ink'); ctx.setLineDash([2*DPR,3*DPR]);
+    ctx.beginPath(); ctx.moveTo(ap.x, ap.y+4*DPR); ctx.lineTo(ap.x, ap.ground); ctx.stroke(); ctx.restore();
+    // landing tick + true descent-angle hair (engine landingAngle)
+    const land = project({d:1,h:0}, flight, cv.width, cv.height);
+    ctx.save(); ctx.strokeStyle=getVar('--muted'); ctx.lineWidth=1.5*DPR;
+    ctx.beginPath(); ctx.moveTo(land.x, land.ground-6*DPR); ctx.lineTo(land.x, land.ground+6*DPR); ctx.stroke();
+    const a = flight.landingAngle * Math.PI/180, L = 20*DPR;
+    ctx.globalAlpha=.6; ctx.beginPath();
+    ctx.moveTo(land.x, land.ground); ctx.lineTo(land.x - Math.cos(a)*L, land.ground - Math.sin(a)*L); ctx.stroke();
+    ctx.restore();
+  }
+
+  // ── state ───────────────────────────────────────────────────────────────
+  let prevFlight = null;
+  let stage1 = false, stage2 = false, missionDone = false;
+  let lastBandCls = 'good';
+  const live = $('live');
+  let announceTimer = 0;
+  function announce(msg){
+    clearTimeout(announceTimer);
+    announceTimer = setTimeout(()=>{ live.textContent = msg; }, 260);   // throttle politely
+  }
+
+  function whyText(param, dir){
+    const up = dir > 0;
+    switch(param){
+      case 'dl': return up
+        ? ['More loft widens spin loft', '— a more glancing strike, so backspin climbs.']
+        : ['Less loft narrows spin loft', '— a cleaner strike, so backspin drops.'];
+      case 'aa': return up
+        ? ['Hitting up shrinks spin loft', '— the driver move — so backspin drops.']
+        : ['Hitting down widens spin loft', '— a steeper blow, so backspin climbs.'];
+      case 'bs': return up
+        ? ['A faster ball grips the face harder', '— so backspin climbs in near-lockstep.']
+        : ['A slower ball grips less', '— so backspin eases off.'];
+    }
+    return ['',''];
+  }
+
+  const rDL=$('rDL'), rAA=$('rAA'), rBS=$('rBS');
+  let lastMoved = null;
+
+  function render(){
+    const dl=+rDL.value, aa=+rAA.value, bs=+rBS.value;
+    const f = solveFlight(engineInput(dl, aa, bs));
+    const rpm = round.rpm(f);
+
+    // hero + chips
+    $('rpm').textContent = rpm.toLocaleString('en-US');
+    $('sloft').textContent = round.sloft(f) + '°';
+    const b = band(rpm);
+    const bandEl = $('band');
+    bandEl.className = 'band ' + b.cls;
+    $('bandLabel').textContent = b.label;
+    if (b.cls !== lastBandCls){ sa.band('spinband'); lastBandCls = b.cls; }
+    // nav live-HUD mirrors the hero (visible only while .top has .live)
+    $('hudRpm').textContent = rpm.toLocaleString('en-US');
+    const hb = $('hudBand'); hb.textContent = b.label; hb.className = 'lb ' + b.cls;
+
+    // readouts
+    $('carry').textContent = round.carry(f);
+    $('apex').textContent  = round.apex(f);
+    $('land').textContent  = round.land(f) + '°';
+    $('hold').textContent  = hold(f.landingAngle, rpm);
+
+    // slider value labels + aria
+    $('vDL').textContent = dl;
+    $('vAA').innerHTML   = fmtSigned(aa);
+    $('vBS').textContent = bs;
+    rDL.setAttribute('aria-valuetext', dl + ' degrees');
+    rAA.setAttribute('aria-valuetext', (aa<0?'minus ':'') + Math.abs(aa) + ' degrees');
+    rBS.setAttribute('aria-valuetext', bs + ' miles per hour');
+
+    // canvas strip (aria-hidden) + mirrored strip labels in DOM
+    drawStrip(f, prevFlight);
+    $('apexMark').textContent = 'apex ' + round.apex(f) + ' m';
+    $('landMark').textContent = 'land ' + round.land(f) + '°';
+
+    // mission stages (both latched → complete, once)
+    if (rpm >= 7000) markStage(1);
+    if (rpm <= 3500) markStage(2);
+
+    // S2 depends on the live S1 state — re-rank sensitivity + refresh the lie layer
+    updateInfluence(dl, aa, bs, rpm);
+
+    return { f, rpm };
+  }
+
+  function markStage(n){
+    // stage announce delayed past the slider-settle announcement so it isn't coalesced away
+    const stageMsg = m => setTimeout(()=>{ if(!missionDone) announce(m); }, 700);
+    if (n===1 && !stage1){ stage1 = true; $('rs1').classList.add('done'); if(!stage2) stageMsg('Stage 1 done — spin built. Now kill it below 3,500 rpm.'); }
+    if (n===2 && !stage2){ stage2 = true; $('rs2').classList.add('done'); if(!stage1) stageMsg('Stage 2 done — spin killed. Now build it past 7,000 rpm.'); }
+    if (stage1 && stage2 && !missionDone){ completeMission(); }
+  }
+  function completeMission(){
+    missionDone = true;
+    const ribbon = $('ribbon');
+    ribbon.classList.add('win');
+    ribbon.querySelector('.ribbon__txt').innerHTML = '<b>Mission complete.</b> You built the spin, then killed it — the driver recipe.';
+    // XP + rank
+    const xpEl = $('xpVal'); xpEl.textContent = (parseInt(xpEl.textContent,10) + 60);
+    $('rankVal').textContent = 'Apprentice';
+    $('rankChip').classList.add('flash');
+    if (!RM()) ribbon.classList.add('flash');
+    sa.notify('success');
+    announce('Mission complete. You built over 7,000 rpm, then killed it below 3,500 — the driver recipe. Plus 60 XP, rank Apprentice.');
+  }
+
+  // ── slider wiring: live visuals every input; live-region + why on settle ──
+  let settleTimer = 0;
+  function onInput(param, dir){
+    lastMoved = { param, dir };
+    sa.tick(param);
+    render();
+    // update the why-line immediately (silent), announce on settle
+    const [lead, tail] = whyText(param, dir);
+    $('why').innerHTML = '<b>' + lead + '</b> ' + tail;
+    clearTimeout(settleTimer);
+    settleTimer = setTimeout(()=>{
+      const { f, rpm } = render();
+      prevFlight = f;                                   // ghost = the settled state
+      drawStrip(f, prevFlight);
+      announce(lead + ' ' + tail + ' Now ' + rpm.toLocaleString('en-US') + ' rpm, spin loft ' +
+               round.sloft(f) + ' degrees, land angle ' + round.land(f) + ' degrees.');
+    }, 300);
+  }
+  function bindSlider(el, param){
+    let last = +el.value;
+    el.addEventListener('input', ()=>{ const v=+el.value; onInput(param, v-last>=0?1:-1); last=v; });
+    // keyboard: arrow keys fire native input; announce on keyup settle handled above
+    el.addEventListener('focus', ()=> sa.selectionStart());
+    el.addEventListener('blur',  ()=> sa.selectionEnd());
+  }
+  bindSlider(rDL,'dl'); bindSlider(rAA,'aa'); bindSlider(rBS,'bs');
+
+  // ══ S2 · INFLUENCE — live engine sensitivity + Real-world layer ═══════════
+  // Sensitivity = forward difference: round.rpm(state with param +1) − round.rpm(state).
+  // Byte-honest: recomputed here exactly as the verification harness does.
+  let lie = 'clean';   // 'clean' | 'wet' | 'flyer'
+  let lastRankKey = '';
+  const LIE = {
+    // keep-fraction range applied to the LIVE engine rpm; numbers/copy from docs/lie-effects-sources.md ONLY
+    wet:   { name:'Wet face / ball', keep:[0.80,0.85], src:'Andrew Rice, 2013',
+      frac:'≈ 15–20% less spin',
+      line:'Water cuts friction — <b>15–20% less spin</b>, higher launch.' },
+    flyer: { name:'Flyer lie', keep:[0.35,0.70], src:'USGA / Pate, 2020',
+      frac:'≈ 30–65% less spin',
+      line:'Grass cuts friction — <b>spin drops a third to over half</b>.' },
+  };
+  function sens(dl, aa, bs){
+    const base = round.rpm(solveFlight(engineInput(dl, aa, bs)));
+    return {
+      dl: round.rpm(solveFlight(engineInput(dl+1, aa, bs))) - base,
+      aa: round.rpm(solveFlight(engineInput(dl, aa+1, bs))) - base,
+      bs: round.rpm(solveFlight(engineInput(dl, aa, bs+1))) - base,
+    };
+  }
+  const barEls = { dl:$('sDL'), aa:$('sAA'), bs:$('sBS') };
+  const fillEls = { dl:$('fDL'), aa:$('fAA'), bs:$('fBS') };
+  const barRow  = { dl:document.querySelector('.bar[data-p="dl"]'),
+                    aa:document.querySelector('.bar[data-p="aa"]'),
+                    bs:document.querySelector('.bar[data-p="bs"]') };
+  const UNIT = { dl:'°', aa:'°', bs:'mph' };
+  function updateInfluence(dl, aa, bs, rpm){
+    const s = sens(dl, aa, bs);
+    const maxAbs = Math.max(1, Math.abs(s.dl), Math.abs(s.aa), Math.abs(s.bs));
+    const order = ['dl','aa','bs'].sort((a,b)=> Math.abs(s[b]) - Math.abs(s[a]));
+    // FLIP reorder (instant under reduced motion)
+    const parent = $('bars');
+    const firstRects = RM() ? null : {};
+    if (!RM()) ['dl','aa','bs'].forEach(k=> firstRects[k] = barRow[k].getBoundingClientRect());
+    order.forEach(k=> parent.appendChild(barRow[k]));
+    order.forEach((k,i)=>{ const row = barRow[k]; row.classList.toggle('rank1', i===0);
+      let note = row.querySelector('.vh.rank-note');
+      if (i===0 && !note){ note = document.createElement('span'); note.className='vh rank-note'; note.textContent=' — ranked first'; row.querySelector('.bar__lab').appendChild(note); }
+      else if (i!==0 && note) note.remove();
+    });
+    ['dl','aa','bs'].forEach(k=>{
+      const d = s[k];
+      barEls[k].innerHTML = (d>=0?'+':MINUS) + Math.abs(d) + ' <small>rpm/' + UNIT[k] + '</small>';
+      fillEls[k].style.width = (Math.max(0.06, Math.abs(d)/maxAbs)*100).toFixed(1) + '%';
+    });
+    if (!RM()){
+      ['dl','aa','bs'].forEach(k=>{
+        const last = barRow[k].getBoundingClientRect();
+        const dy = firstRects[k].top - last.top;
+        if (dy){ barRow[k].style.transform = `translateY(${dy}px)`; barRow[k].style.transition='none';
+          requestAnimationFrame(()=>{ barRow[k].style.transition=''; barRow[k].style.transform=''; }); }
+      });
+    }
+    const rankKey = order.join('');
+    if (rankKey !== lastRankKey && lastRankKey){ /* order flipped — re-rank is the lesson */ }
+    lastRankKey = rankKey;
+    updateRealWorld(rpm);
+  }
+  function fmtRange(rpm, keep){
+    const lo = Math.round(rpm*keep[0]), hi = Math.round(rpm*keep[1]);
+    return '≈ ' + lo.toLocaleString('en-US') + '–' + hi.toLocaleString('en-US');
+  }
+  function updateRealWorld(rpm){
+    const stamp = $('infStamp'), card = $('rwCard'), echo = $('rwEcho');
+    $('s2').classList.toggle('rw-open', lie !== 'clean');   // densest state → compress to fit (FIT LAW)
+    if (lie === 'clean'){
+      stamp.className = 'stamp sim type';
+      stamp.querySelector('.txt').textContent = 'Simulator ranking';
+      card.hidden = true; echo.hidden = true;
+      return;
+    }
+    const L = LIE[lie];
+    stamp.className = 'stamp rw type';
+    stamp.querySelector('.txt').textContent = 'Real-world estimate active';
+    card.hidden = false;
+    $('srcChipName').textContent = L.src;
+    $('frVal').textContent = L.frac;
+    $('rwRpm').textContent = fmtRange(rpm, L.keep);
+    $('rwLieName').textContent = L.name;
+    $('rwLine').innerHTML = L.line;
+    // S1 echo (range band near the RPM hero)
+    echo.hidden = false;
+    $('rwEchoRpm').textContent = fmtRange(rpm, L.keep);
+    $('rwEchoLie').textContent = L.name;
+  }
+  document.querySelectorAll('.lieseg button').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      lie = btn.dataset.lie;
+      document.querySelectorAll('.lieseg button').forEach(b=> b.setAttribute('aria-pressed', String(b===btn)));
+      sa.selectionChanged();
+      const dl=+rDL.value, aa=+rAA.value, bs=+rBS.value;
+      updateRealWorld(round.rpm(solveFlight(engineInput(dl,aa,bs))));
+      announce(lie==='clean'
+        ? 'Real-world layer off. Simulator ranking.'
+        : LIE[lie].name + '. Real-world estimate active — ' + LIE[lie].frac + ', not the simulator.');
+    });
+  });
+  $('srcChip').addEventListener('click', ()=>{ if (lie!=='clean') openSheet('src_'+lie); });
+
+  // ══ S3 · MYTHS — statement → true/false → verdict stamp + engine chain-beat ═
+  // Each myth's chain uses TWO real solveFlight runs (before → after). Statements
+  // are all misconceptions, so the honest answer is always FALSE.
+  const MYTHS = [
+    { q:'You create backspin by hitting down and "pinching" or scooping the ball into the turf.',
+      quote:'— the divot makes the spin',
+      before:{dl:30,aa:-3,bs:120}, after:{dl:30,aa:-6,bs:120},
+      chain:[
+        { k:'Attack angle', key:'aa', unit:'°' },
+        { k:'Spin loft', key:'sloft', unit:'°' },
+        { k:'Backspin', key:'rpm', unit:' rpm', effect:true },
+      ],
+      teach:'The ground adds no spin. Hitting down helps only because it <b>keeps spin loft up</b> and finds clean ball-first contact — the spin is born on the face, not in the divot.' },
+    { q:'More loft always means more backspin.',
+      quote:'— loft alone controls spin',
+      before:{dl:30,aa:-3,bs:120}, after:{dl:34,aa:1,bs:120},
+      chain:[
+        { k:'Dynamic loft', key:'dl', unit:'°' },
+        { k:'Attack angle', key:'aa', unit:'°' },
+        { k:'Backspin', key:'rpm', unit:' rpm', effect:true },
+      ],
+      teach:'Add 4° of loft but swing 4° more up and <b>spin loft is unchanged — so spin is identical</b>. It is spin loft (loft minus attack), never loft on its own.' },
+    { q:'More backspin always means more carry and distance — so more is always better.',
+      quote:'— more spin is always better',
+      before:{dl:30,aa:-3,bs:120}, after:{dl:44,aa:-4,bs:120},
+      chain:[
+        { k:'Spin loft', key:'sloft', unit:'°' },
+        { k:'Backspin', key:'rpm', unit:' rpm', effect:true },
+        { k:'Carry', key:'carry', unit:' m' },
+      ],
+      teach:'Piling on spin loft spikes the rpm and balloons the apex, but <b>carry does not improve</b> — past the optimum the ball just climbs and drops short.' },
+  ];
+  const MFMT = {
+    aa:(f)=> fmtSigned(f.attackAngle) , dl:(f)=> Math.round(f.dynamicLoft),
+    sloft:(f)=> round.sloft(f), rpm:(f)=> round.rpm(f).toLocaleString('en-US'),
+    carry:(f)=> round.carry(f),
+  };
+  let mythIdx = 0, mythAnswered = false, mythChainTimers = [];
+  function renderMyth(){
+    mythAnswered = false;
+    mythChainTimers.forEach(clearTimeout); mythChainTimers = [];
+    const m = MYTHS[mythIdx];
+    $('mythCount').textContent = 'Myth ' + (mythIdx+1) + ' of ' + MYTHS.length;
+    $('mythQ').textContent = m.q;
+    $('mythQuote').textContent = m.quote;
+    const stamp = $('mythStamp'); stamp.hidden = true;
+    $('mythChain').hidden = true;
+    $('mythBeat').innerHTML = '';
+    $('mythTeach').innerHTML = '';
+    const tf = $('mythTF'); tf.removeAttribute('data-locked');
+    tf.querySelectorAll('.tf__opt').forEach((b,i)=>{
+      b.className = 'tf__opt'; b.setAttribute('aria-checked','false'); b.tabIndex = i===0?0:-1;
+    });
+    updateNav();
+  }
+  function answerMyth(val){        // val: 'true' | 'false'
+    if (mythAnswered) return;
+    mythAnswered = true;
+    const m = MYTHS[mythIdx];
+    const correct = (val === 'false');            // every statement is a myth → FALSE is right
+    const tf = $('mythTF'); tf.setAttribute('data-locked','');
+    tf.querySelectorAll('.tf__opt').forEach(b=>{
+      const isFalse = b.dataset.tf==='false';
+      b.setAttribute('aria-checked', String(b.dataset.tf===val));
+      if (isFalse) b.classList.add('correct');
+      if (b.dataset.tf===val && !correct) b.classList.add('wrong');
+    });
+    sa.impact('light');                            // verdict = light (haptics table)
+    // verdict stamp — the ONE stamp on this surface (display voice, typed-on)
+    const stamp = $('mythStamp');
+    stamp.className = 'stamp type ' + (correct?'rw':'sim');
+    stamp.querySelector('.sd').style.background = correct? 'var(--good)' : 'var(--bad)';
+    stamp.querySelector('.txt').textContent = correct ? 'Myth busted' : 'Not quite';
+    stamp.hidden = false;
+    // engine chain-beat
+    const bf = solveFlight(engineInput(m.before.dl, m.before.aa, m.before.bs));
+    const af = solveFlight(engineInput(m.after.dl,  m.after.aa,  m.after.bs));
+    const beat = $('mythBeat'); beat.innerHTML = '';
+    m.chain.forEach((c,i)=>{
+      const bv = MFMT[c.key](bf), av = MFMT[c.key](af);
+      const div = document.createElement('div');
+      div.className = 'chip' + (c.effect?' effect':'');
+      div.innerHTML = '<div class="k"><span class="step">'+(i+1)+'</span>'+c.k+'</div>'+
+        '<div class="v">'+bv+'<span class="ar">→</span><span class="to">'+av+'</span><small>'+c.unit+'</small></div>';
+      beat.appendChild(div);
+    });
+    $('mythChain').hidden = false;
+    $('mythTeach').innerHTML = m.teach;
+    const chips = [...beat.querySelectorAll('.chip')];
+    if (RM()){ chips.forEach(c=>c.classList.add('lit')); }
+    else chips.forEach((c,i)=> mythChainTimers.push(setTimeout(()=> c.classList.add('lit'), 220*i+120)));
+    announce((correct?'Correct — myth busted. ':'Not quite. ') + m.q.replace(/"/g,'') +
+             ' The engine: ' + m.chain.map(c=> c.k+' '+MFMT[c.key](bf)+' to '+MFMT[c.key](af)).join(', ') + '.');
+    updateNav();
+  }
+  bindRadiogroup($('mythTF'), '.tf__opt', el=> answerMyth(el.dataset.tf));
+
+  // ══ S4 · QUIZ — 5 items from lesson-backspin.json, gate 4/5 ════════════════
+  const QUIZ = [
+    { q:'Spin loft is defined as:',
+      options:['Dynamic loft plus attack angle','Dynamic loft minus attack angle','Club speed times face angle','The loft number stamped on the club'],
+      answerIndex:1,
+      explanation:'Spin loft = dynamic loft minus attack angle — the angle between where the face points and where the club is travelling. A 30° dynamic loft with a −3° attack gives 33° of spin loft, ~7,000 rpm for a 7-iron.' },
+    { q:'A driver is ballooning and losing distance from too much spin. Which change lowers spin the most?',
+      options:['Swing faster with the same delivery','Hit up on the ball (more positive attack) with the same low loft','Add loft and hit down','Switch to an older, more worn ball'],
+      answerIndex:1,
+      explanation:'Hitting up (more positive attack) shrinks spin loft and cuts spin — the classic low-spin driver recipe. Swinging faster adds ball speed and spin; adding loft and hitting down both raise spin loft.' },
+    { q:'Two 7-irons at an identical 33° spin loft, but one ball leaves at 110 mph and the other at 125 mph. What happens to backspin?',
+      options:['It is the same — spin loft is identical','The faster ball spins meaningfully more','The faster ball spins less','Spin depends only on the grooves'],
+      answerIndex:1,
+      explanation:'For a fixed spin loft, spin is roughly linear in ball speed. In the engine (rpm = spin loft × ball speed × 1.8) the 110-mph strike makes ~6,530 rpm and the 125-mph one ~7,425 rpm — about 59 rpm per extra mph.' },
+    { q:'From a wet, grassy "flyer" lie a wedge often comes out lower-spinning than from a clean fairway. Why?',
+      options:['The extra grass increases friction','Water and grass get between ball and face, cutting friction so the ball can’t grip','Spin loft becomes negative','The ball speed drops to zero'],
+      answerIndex:1,
+      explanation:'Backspin needs friction to turn the glancing blow into spin. Grass and moisture form a slick film, so the ball slides instead of gripping — spin can fall 20–50%. Grooves exist mainly to channel that debris away, not to create spin.' },
+    { q:'Once the ball is in the air, what does backspin mainly do?',
+      options:['Curves the ball sideways','Creates upward Magnus lift that keeps the ball airborne','Speeds the ball up','Nothing until it lands'],
+      answerIndex:1,
+      explanation:'Backspin drags air faster over the top of the ball, producing an upward Magnus force — at driver ball speeds it can exceed twice the ball’s own weight. Sideways curve is a separate effect from a tilted spin axis.' },
+  ];
+  const quizSel = new Array(QUIZ.length).fill(-1);   // selected option per question
+  let quizIdx = 0, quizFrozen = new Array(QUIZ.length).fill(false);
+  function renderQuiz(){
+    const item = QUIZ[quizIdx];
+    $('quizN').textContent = 'Question ' + (quizIdx+1) + ' of ' + QUIZ.length;
+    $('quizBar').style.width = ((quizIdx+1)/QUIZ.length*100) + '%';
+    $('quizStem').textContent = item.q;
+    const wrap = $('quizOpts'); wrap.innerHTML = ''; wrap.removeAttribute('data-locked');
+    item.options.forEach((opt,i)=>{
+      const b = document.createElement('button');
+      b.className = 'opt'; b.type='button'; b.setAttribute('role','radio');
+      b.setAttribute('aria-checked', String(quizSel[quizIdx]===i));
+      b.tabIndex = (quizSel[quizIdx]===i || (quizSel[quizIdx]===-1 && i===0)) ? 0 : -1;
+      b.dataset.i = i;
+      b.innerHTML = '<span class="mk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span><span>'+opt+'</span>';
+      wrap.appendChild(b);
+    });
+    const expl = $('quizExpl'); expl.hidden = true;
+    if (quizFrozen[quizIdx]) lockQuiz();      // returning to an already-answered question
+    updateQuizScore();
+    updateNav();
+  }
+  function pickQuiz(i){
+    if (quizFrozen[quizIdx]) return;          // frozen once advanced past
+    quizSel[quizIdx] = i;
+    $('quizOpts').querySelectorAll('.opt').forEach(o=>{
+      o.setAttribute('aria-checked', String(+o.dataset.i===i)); o.tabIndex = (+o.dataset.i===i)?0:-1;
+    });
+    sa.tick('quiz');
+    lockQuiz();
+    updateQuizScore();
+    updateNav();
+  }
+  function lockQuiz(){
+    const item = QUIZ[quizIdx], wrap = $('quizOpts'); wrap.setAttribute('data-locked','');
+    wrap.querySelectorAll('.opt').forEach(o=>{
+      const i=+o.dataset.i; o.classList.remove('correct','wrong');
+      if (i===item.answerIndex) o.classList.add('correct');
+      else if (i===quizSel[quizIdx]) o.classList.add('wrong');
+    });
+    const correct = quizSel[quizIdx]===item.answerIndex;
+    const expl = $('quizExpl'); expl.hidden=false; expl.className='qexpl'+(correct?' ok':'');
+    expl.innerHTML = (correct?'<b>Correct.</b> ':'<b>Not this one.</b> ') + item.explanation;
+    announce((correct?'Correct. ':'Not this one. ') + item.explanation);
+  }
+  function updateQuizScore(){
+    const sc = quizSel.reduce((n,s,i)=> n + (s===QUIZ[i].answerIndex?1:0), 0);
+    $('quizScore').textContent = sc;
+    return sc;
+  }
+  bindRadiogroup($('quizOpts'), '.opt', el=> pickQuiz(+el.dataset.i));
+
+  // ══ S5 · MASTERY ═══════════════════════════════════════════════════════════
+  const RANKS = ['Rookie','Apprentice','Technician','Flight Engineer','Strike Scientist'];
+  let masteryShown = false;
+  function showMastery(){
+    const score = updateQuizScore();
+    const passed = score >= 4;
+    $('celebrate').hidden = passed ? false : true;
+    $('retryWrap').hidden = passed ? true : false;
+    if (!passed){
+      $('rScore').textContent = score;
+      updateNav();
+      announce('You scored ' + score + ' of 5. You need 4 to master. Retry the quiz when ready.');
+      return;
+    }
+    if (masteryShown){ updateNav(); return; }
+    masteryShown = true;
+    // rank ladder — land on Technician (mission + quiz cleared)
+    const hereIdx = 2;
+    const ladder = $('ladder'); ladder.innerHTML = ''; ladder.setAttribute('role','list');
+    RANKS.forEach((r,i)=>{
+      const row = document.createElement('div');
+      row.className = 'rung ' + (i<hereIdx?'passed':i===hereIdx?'here':'');
+      row.setAttribute('role','listitem');
+      if (i===hereIdx) row.setAttribute('aria-current','true');
+      row.innerHTML = '<span class="rd"></span>'+r+(i===hereIdx?'<span class="vh"> — your rank</span>':'')+'<span class="rnum">'+String(i+1).padStart(2,'0')+'</span>';
+      ladder.appendChild(row);
+    });
+    $('rankVal').textContent = RANKS[hereIdx];
+    // XP count-up (gold); RM = instant
+    const startXp = parseInt($('xpVal').textContent,10) || 0;
+    const gain = 100, target = startXp + gain;
+    const big = $('mXp'); big.textContent = startXp;
+    if (RM()){ big.textContent = target; $('xpVal').textContent = target; }
+    else {
+      const t0 = performance.now(), dur=900;
+      const tick = (t)=>{ const k=Math.min(1,(t-t0)/dur); const v=Math.round(startXp+gain*(k<1?1-Math.pow(1-k,3):1));
+        big.textContent = v; $('xpVal').textContent = v; if(k<1) requestAnimationFrame(tick); };
+      requestAnimationFrame(tick);
+    }
+    $('rankChip').classList.add('flash');
+    sa.notify('success');                          // mastery = success notify (haptics table)
+    announce('Lesson mastered. You scored ' + score + ' of 5. Plus 100 XP, rank Technician.');
+    updateNav();
+  }
+  $('retryBtn').addEventListener('click', ()=>{
+    quizSel.fill(-1); quizFrozen.fill(false); quizIdx = 0;
+    renderQuiz();
+    paginate(4);                                // return to the quiz (backward — free)
+  });
+
+  // ── roving-tabindex radiogroup (shared: myths TF + quiz options) ───────────
+  function bindRadiogroup(group, sel, onPick){
+    group.addEventListener('click', e=>{ const el = e.target.closest(sel); if (el && group.contains(el)) onPick(el); });
+    group.addEventListener('keydown', e=>{
+      const items = [...group.querySelectorAll(sel)];
+      let i = items.indexOf(document.activeElement);
+      if (i<0) return;
+      if (e.key==='ArrowRight'||e.key==='ArrowDown'){ e.preventDefault(); i=(i+1)%items.length; }
+      else if (e.key==='ArrowLeft'||e.key==='ArrowUp'){ e.preventDefault(); i=(i-1+items.length)%items.length; }
+      else if (e.key===' '||e.key==='Enter'){ e.preventDefault(); onPick(items[i]); return; }
+      else return;
+      items.forEach((it,j)=> it.tabIndex = j===i?0:-1);
+      items[i].focus();
+    });
+  }
+
+  // ══ PAGER / SURFACES — six full-viewport panes; setSurface drives paging ═════
+  const SURF = ['s0','s1','s2','s3','s4','s5'];
+  const STEPS = ['Mission','Lab','Influence','Myths','Quiz','Mastery'];
+  const pager = $('pager');
+  function curSurface(){ return +document.body.dataset.surface; }
+
+  // forward-jump gate: the SAME gates as Next. Backward is always free.
+  function exitGate(s){                       // may we leave surface s going forward?
+    if (s===3) return mythIdx===MYTHS.length-1 && mythAnswered;      // all myths done
+    if (s===4) return quizIdx===QUIZ.length-1 && quizSel[QUIZ.length-1]!==-1; // quiz complete
+    return true;
+  }
+  function canEnter(t){
+    const cur = curSurface();
+    if (t<=cur) return true;                   // backward / same — free
+    for (let s=cur; s<t; s++) if (!exitGate(s)) return false;
+    return true;
+  }
+  function paginate(n){
+    pager.style.setProperty('--pane', n);
+    setSurface(n);
+  }
+  function goTo(n){                            // stepper / back entry point (gated)
+    if (n<0||n>5) return;
+    if (!canEnter(n)) return;                  // forward blocked by gate — no-op
+    sa.impact('light');                        // deliberate nav action — light is allowed here
+    paginate(n);
+  }
+  let hasNavigated = false;
+  function setSurface(n){
+    document.body.dataset.surface = n;
+    // off-screen panes leave the tab order + AT tree entirely (a11y: no focus in invisible panes)
+    SURF.forEach((id,i)=>{ $(id).inert = i!==n; });
+    if (n!==1) document.querySelector('.top').classList.remove('live');
+    if (n===3 && !mythStarted){ mythStarted = true; renderMyth(); }
+    if (n===4 && !quizStarted){ quizStarted = true; renderQuiz(); }
+    if (n===5){ showMastery(); }
+    updateStepper();
+    updateNav();
+    // orientation parity with the myth/quiz sub-step pattern: focus the new pane's heading
+    if (hasNavigated){ const h = $(SURF[n]+'title'); if (h){ h.setAttribute('tabindex','-1'); h.focus({ preventScroll:true }); } }
+    hasNavigated = true;
+  }
+  function updateStepper(){
+    const n = curSurface();
+    for (let i=0;i<6;i++){
+      const b = $('step'+i);
+      const cur = i===n;
+      const locked = !cur && !canEnter(i);
+      b.classList.toggle('cur', cur);
+      b.classList.toggle('done', i<n);
+      b.classList.toggle('locked', locked);
+      if (cur) b.setAttribute('aria-current','step'); else b.removeAttribute('aria-current');
+      if (locked) b.setAttribute('aria-disabled','true'); else b.removeAttribute('aria-disabled');
+    }
+  }
+  $('stepper').addEventListener('click', e=>{
+    const b = e.target.closest('.step'); if (!b) return;
+    goTo(+b.dataset.n);
+  });
+  let mythStarted=false, quizStarted=false;
+  // sticky Next label + gate for the current surface / sub-step
+  function updateNav(){
+    const n = curSurface(); const btn = $('nextBtn'), lab = $('nextLabel');
+    let text='Continue', disabled=false;
+    if (n===0) text='Enter the Spin Lab';
+    else if (n===1) text='Influence';
+    else if (n===2) text='Bust some myths';
+    else if (n===3){ disabled = !mythAnswered; text = (mythIdx < MYTHS.length-1) ? 'Next myth' : 'Take the quiz'; }
+    else if (n===4){ disabled = quizSel[quizIdx]===-1; text = (quizIdx < QUIZ.length-1) ? 'Next question' : 'See your result'; }
+    else if (n===5){ text = ($('retryWrap').hidden ? 'Back to lessons' : 'Retry the quiz'); }
+    lab.textContent = text;
+    btn.disabled = disabled; if (disabled) btn.setAttribute('aria-disabled','true'); else btn.removeAttribute('aria-disabled');
+  }
+  $('nextBtn').addEventListener('click', ()=>{
+    const n = curSurface();
+    if (n===0){ goTo(1); return; }
+    if (n===1){ goTo(2); return; }
+    if (n===2){ goTo(3); return; }
+    if (n===3){
+      if (!mythAnswered) return;
+      if (mythIdx < MYTHS.length-1){ mythIdx++; renderMyth(); $('mythQ').setAttribute('tabindex','-1'); $('mythQ').focus(); }
+      else { goTo(4); }
+      return;
+    }
+    if (n===4){
+      if (quizSel[quizIdx]===-1) return;
+      quizFrozen[quizIdx] = true;
+      if (quizIdx < QUIZ.length-1){ quizIdx++; renderQuiz(); $('quizStem').setAttribute('tabindex','-1'); $('quizStem').focus(); }
+      else { goTo(5); }
+      return;
+    }
+    if (n===5){
+      if ($('retryWrap').hidden){ location.href='./academy.html'; }
+      else { $('retryBtn').click(); }
+    }
+  });
+  $('backBtn').addEventListener('click', ()=>{
+    const n = curSurface(); if (n<=0) return;
+    goTo(n-1);                                  // backward is always free
+  });
+
+  // blind-adjust safety net: if S1 somehow overflows and the hero scrolls off, the nav
+  // morphs into the live readout. Kept per §7.1(b) for undersized viewports.
+  const topEl = document.querySelector('.top');
+  new IntersectionObserver(es=>{
+    topEl.classList.toggle('live', !es[0].isIntersecting && document.body.dataset.surface==='1');
+  }, { rootMargin:'-52px 0px 0px 0px' }).observe(document.querySelector('.hero'));
+
+  // ── bottom sheet (focus-trap + Esc + swipe-down) ──────────────────────────
+  const SHEETS = {
+    dynamicLoft: { eyebrow:'Term · slider', title:'Dynamic loft',
+      body:`<p>The effective loft actually delivered at impact (not the number stamped on the club). It is the larger half of spin loft and also sets launch height.</p>
+            <p class="sheet__formula">typical · 7-iron ~28${MINUS}32°, driver ~12${MINUS}15°</p>` },
+    attackAngle: { eyebrow:'Term · slider', title:'Attack angle',
+      body:`<p>The up/down direction the club is moving through impact. It subtracts from dynamic loft to set spin loft, so hitting down (negative) raises spin, hitting up (positive) lowers it.</p>
+            <p class="sheet__formula">typical · iron ${MINUS}4 to ${MINUS}2° (down), driver 0 to +5° (up)</p>` },
+    ballSpeed: { eyebrow:'Term · slider', title:'Ball speed',
+      body:`<p>The near-linear multiplier on spin. For a fixed spin loft, a faster ball skids up the face harder and grips more, so spin scales roughly in proportion to ball speed.</p>
+            <p class="sheet__formula">typical · 7-iron ball ~115${MINUS}125 mph, driver ~160${MINUS}175 mph</p>` },
+    spinLoft: { eyebrow:'Term · the master lever', title:'Spin loft',
+      body:`<p>The angle between where the club is travelling and where the face points at impact — <span class="sa-em--ink">dynamic loft minus attack angle</span>. The bigger this gap, the more glancing the blow and the more backspin. It alone decides whether you make 2,700 (driver) or 9,000 (wedge) rpm.</p>
+            <p class="sheet__formula">spin loft = dynamic loft ${MINUS} attack angle</p>
+            <p>Strictly, spin loft is a 3-D angle: when face and path point different ways, the gap grows a touch and the <span class="sa-em--ink">spin axis tilts</span> — that tilt is what curves the ball. This lesson uses the vertical part, which dominates backspin.</p>` },
+    compute: { eyebrow:'How we compute this', title:'From the engine',
+      body:`<p>Every number on this screen is a live output of the app's flight engine — nothing is stored or faked.</p>
+            <p class="sheet__formula">backspin ≈ spin loft × ball speed × 1.8<br>spin loft = dynamic loft ${MINUS} attack angle</p>
+            <div class="sheet__row"><div class="rk">Land angle</div><div class="rv">The engine's real descent angle at landing — an honest measured output, not a made-up 0&#8722;100 index.</div></div>
+            <div class="sheet__row"><div class="rk">Hold tendency</div><div class="rv">A plain reading of the descent, not a stored stat: land ≥ 50° with ≥ 6,500 rpm reads <span class="sa-em--ink">Holds fast</span>; ≥ 43° <span class="sa-em--ink">Holds</span>; below that <span class="sa-em--ink">Releases</span>.</div></div>
+            <div class="sheet__row"><div class="rk">Ball speed</div><div class="rv">The slider feeds the engine through the same smash-factor it uses, so the ball-speed you set is the ball-speed it solves.</div></div>
+            <div class="sheet__row"><div class="rk">Not modeled</div><div class="rv">Strike location on the face (<span class="sa-em--ink">gear effect</span>): a high-face strike gears the ball to spin less, a low-face strike more, and toe/heel strikes tilt the spin axis. Real physics — this engine assumes a centred strike.</div></div>` },
+    src_wet: { eyebrow:'Real-world source', title:'Wet face / ball',
+      body:`<p><span class="sa-em--ink">≈ 15–20% less spin</span>, higher launch on wedge shots. These are external estimates for the Real-world layer — <span class="sa-em--ink">not the simulator</span>, which has no lie model.</p>
+            <div class="sheet__row"><div class="rk">Test</div><div class="rv">TrackMan, 54° wedge, 50-yd shots: dry 6,603 rpm @ 25.4° → wet ball 5,291 rpm @ 30.1° (−20%). Urethane covers retain more wet spin than ionomer.</div></div>
+            <div class="sheet__row"><div class="rk">Source</div><div class="rv">Andrew Rice, "Wedges and Water", 2013 · corroborated by MyGolfSpy Wet Wedge Test, 2022.</div></div>` },
+    src_flyer: { eyebrow:'Real-world source', title:'Flyer lie',
+      body:`<p><span class="sa-em--ink">≈ 30–65% less spin</span>, launch up ~2°, longer carry and rollout. External estimates for the Real-world layer — <span class="sa-em--ink">not the simulator</span>.</p>
+            <div class="sheet__row"><div class="rk">Test</div><div class="rv">8-iron from light rough spun ~2,469 rpm vs a ~7,000–8,000 rpm baseline (≈65% drop), yet carried farther. Grass between face and ball kills friction.</div></div>
+            <div class="sheet__row"><div class="rk">Source</div><div class="rv">USGA Spin Generation groove research 2006–07 (via Dave Pelz / Into The Grain); Bryan Pate Golf TrackMan test, 2020; Andrew Rice via Golf.com.</div></div>` },
+  };
+  const scrim=$('scrim'), sheet=$('sheet'), sheetClose=$('sheetClose');
+  let lastFocus=null;
+  function openSheet(key){
+    const s = SHEETS[key]; if(!s) return;
+    $('sheetEyebrow').textContent=s.eyebrow; $('sheetTitle').textContent=s.title; $('sheetBody').innerHTML=s.body;
+    sheet.hidden=false; requestAnimationFrame(()=>{ scrim.classList.add('open'); sheet.classList.add('open'); });
+    lastFocus=document.activeElement; sheetClose.focus();
+    document.addEventListener('keydown', onSheetKey);
+  }
+  function closeSheet(){
+    scrim.classList.remove('open'); sheet.classList.remove('open');
+    document.removeEventListener('keydown', onSheetKey);
+    const done=()=>{ sheet.hidden=true; sheet.removeEventListener('transitionend',done); if(lastFocus) lastFocus.focus(); };
+    if (RM()) done(); else sheet.addEventListener('transitionend',done);
+  }
+  function onSheetKey(e){
+    if (e.key==='Escape'){ closeSheet(); return; }
+    if (e.key==='Tab'){                              // simple focus trap
+      const f=sheet.querySelectorAll('button,[href],input,[tabindex]:not([tabindex="-1"])');
+      if(!f.length) return; const first=f[0], last=f[f.length-1];
+      if(e.shiftKey && document.activeElement===first){ e.preventDefault(); last.focus(); }
+      else if(!e.shiftKey && document.activeElement===last){ e.preventDefault(); first.focus(); }
+    }
+  }
+  scrim.addEventListener('click', closeSheet);
+  sheetClose.addEventListener('click', closeSheet);
+  document.querySelectorAll('[data-sheet]').forEach(b=> b.addEventListener('click', ()=> openSheet(b.dataset.sheet)));
+  $('sloftChip').addEventListener('click', ()=> openSheet('spinLoft'));
+  // swipe-down to dismiss
+  let touchY=null;
+  sheet.addEventListener('touchstart', e=>{ touchY=e.touches[0].clientY; }, {passive:true});
+  sheet.addEventListener('touchmove', e=>{ if(touchY!=null && e.touches[0].clientY-touchY>70){ touchY=null; closeSheet(); } }, {passive:true});
+
+  // ── init ──────────────────────────────────────────────────────────────────
+  function init(){
+    sizeCanvas();
+    const first = render();
+    prevFlight = null;             // no ghost until the first change
+    drawStrip(first.f, null);
+    pager.style.setProperty('--pane', 0);
+    setSurface(0);
+  }
+  window.addEventListener('resize', ()=>{ sizeCanvas(); const s=render(); drawStrip(s.f, prevFlight); });
+  if (document.fonts && document.fonts.ready){ document.fonts.ready.then(init); } else init();
+  init();
+</script>
+</body>
+</html>

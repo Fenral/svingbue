@@ -117,9 +117,10 @@ export function createScene(canvas) {
 
   // ONE warm ember rim/point light locked near the ball — the club's leading
   // edge catches fire-light at the impact zone (the only heat in the cold room).
-  // Pass-1 (Fable): 1.5 clipped the leading edge to white at the 3/4 freeze
-  // angle (worse at DPR2); 1.1 keeps the fire, keeps the metal's texture.
-  const emberRim = new THREE.PointLight(0xFF8A4D, 1.1, 0.9, 2.0);
+  // RE-HERO (2026-07-11): the delivery arrow now owns the scene's ember slot,
+  // so this rim is dimmed (1.1 → 0.42) to stay within the ≤3 ember budget — it
+  // keeps a faint fire-catch on the clubhead without competing with the hero arrow.
+  const emberRim = new THREE.PointLight(0xFF8A4D, 0.42, 0.9, 2.0);
   emberRim.position.set(0.05, -0.13, 0.2);
   emberRim.castShadow = false;
   scene.add(emberRim);

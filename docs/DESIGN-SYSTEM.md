@@ -113,3 +113,12 @@ One polite live region per context (throttled ≥800ms) · canvas/3D always `ari
 
 ---
 *Compiled by Fable 5, 2026-07-10 — from sa-p3.css (tokens + SYS-01..15 law blocks), sa-haptics.js, docs/showcase-spec.md, and the craft-critique rubrics.*
+
+## Depth & Light (adopted 2026-07-11)
+Dark ≠ flat. Opt-in per page via `<body class="sa-depth">` (sa-p3.css owns the truth):
+- **Plates**: top-lit gradients (`#120E20 → #0C0916` solid / translucent pair) with a baked-in 1px edge-light — light hits every card's top edge. Raw `--plate`/`--plate-solid` color tokens are UNCHANGED for consumers that need a plain color (SVG fill, box-shadow).
+- **Ambient**: violet skylight from above + faint teal floor-glow over `--bg`.
+- **Bloom**: `.sa-bloom-ember` / `.sa-bloom-gold` text-shadows on live hero values only.
+- **Grain**: static 2.8% film grain overlay (RM-safe).
+- Contrast law: lightest plate body `#120E20` keeps `--muted` ≥7:1 — AA verified.
+Adopted by: academy.html, academy-lesson-v2-mock.html (local equivalent), diagnose-mock.html. Pending: geometry pair, home, impact, paywall.

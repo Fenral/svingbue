@@ -18,27 +18,28 @@
 import * as THREE from '../vendor/three/build/three.module.js';
 import { tangentAt, thetaAtImpact, BALL_RADIUS_M } from '../swing-parameters-and-impact.js';
 
-// FIX P3 (owner: "the delivery arrow was never implemented" — it was, just too
-// subtle to read against the arc/target-line/lowpoint clutter around the ball).
-// Length + radii bumped so the arrow reads as an obvious, deliberate mark
-// rather than a thin sliver that blends into the target line at typical
-// camera angles (yaw is usually close to the +X target line by construction —
-// club path is normally single-digit degrees — so a THIN arrow visually
-// merges with the cyan target line it's supposed to stand apart from).
-const LEN = 0.55;            // arrow total length, metres (was 0.45)
-const SHAFT_FRAC = 0.72;     // shaft occupies this much of the length; head gets the rest
-const SHAFT_R = 0.0096;      // ×1.6 (was 0.006)
-const HEAD_R = 0.0256;       // ×1.6 (was 0.016)
+// RE-HERO (owner interview 2026-07-11): the delivery arrow becomes the scene's
+// HERO and its single ember element. It grows to pass visibly THROUGH the ball
+// (~1.1 m total — extending BACK behind the ball and well ahead), thicker
+// shaft + cone, ember-emissive (#FF8A4D). Direction is still 1:1 with the true
+// club-delivery tangent — legibility comes from length/thickness/colour, never
+// angle exaggeration. The ball (opaque, ~2cm) occludes the mid-section, so the
+// arrow reads as literally passing through it.
+const LEN = 1.1;             // arrow total length, metres (hero — spec 1.0–1.2)
+const BACK = 0.28;           // how far the tail sits BEHIND the ball anchor along -dir
+const SHAFT_FRAC = 0.78;     // shaft occupies this much of the length; head gets the rest
+const SHAFT_R = 0.016;       // thicker hero shaft (was 0.0096)
+const HEAD_R = 0.044;        // thicker hero cone (was 0.0256)
 const GROUND_Z = 0.002;
 
-const INK = 0xF5F2FF;        // §1 — arrow body stays ink-neutral (P3 ink)
+const EMBER = 0xFF8A4D;      // RE-HERO — arrow body is the scene's single ember (--accent, live engine truth)
 const PATH_CYAN = 0x6FC6FF;  // §1 — ground projection cyan → --q-path blue (club-path direction, SYS-11)
 
-const BASE_OPACITY_ARROW = 0.85;  // was 0.5 — the "obvious at rest" ask
-const BASE_OPACITY_SHADOW = 0.4;  // was 0.25
-const DRAG_OPACITY_ARROW = 1.0;   // was 0.9
-const DRAG_OPACITY_SHADOW = 0.55; // scaled up proportionally with the arrow while dragging (was 0.45)
-const DRAG_SCALE = 1.15;          // thickness (radial) scale while dragging
+const BASE_OPACITY_ARROW = 0.95;  // hero — bright at rest
+const BASE_OPACITY_SHADOW = 0.4;  // ground path projection stays low-alpha
+const DRAG_OPACITY_ARROW = 1.0;   // brightens during drag (existing causal pulse)
+const DRAG_OPACITY_SHADOW = 0.55; // scaled up proportionally with the arrow while dragging
+const DRAG_SCALE = 1.12;          // thickness (radial) scale while dragging
 
 /** Build one arrow mesh group: shaft cylinder + cone head, tip at local +X,
  * base (tail) at the local origin. Local +X is the "points along" axis so
@@ -53,17 +54,19 @@ function buildArrowMesh(color, opacity) {
   const headLen = LEN * (1 - SHAFT_FRAC);
 
   // Cylinder/cone geometry is built along local +Y by three.js; rotate -90°
-  // about Z so the mesh's own "length" axis becomes local +X (tail at x=0,
-  // tip at x=LEN), matching the group-level convention above.
-  const shaftGeo = new THREE.CylinderGeometry(SHAFT_R, SHAFT_R, shaftLen, 10, 1);
+  // about Z so the mesh's own "length" axis becomes local +X. The whole arrow
+  // is shifted back by BACK so the tail sits behind the ball anchor (local
+  // x = -BACK) and the tip lands well ahead (x = LEN - BACK) — passing THROUGH
+  // the ball at the origin.
+  const shaftGeo = new THREE.CylinderGeometry(SHAFT_R, SHAFT_R, shaftLen, 12, 1);
   const shaft = new THREE.Mesh(shaftGeo, mat);
   shaft.rotation.z = -Math.PI / 2;
-  shaft.position.x = shaftLen / 2;
+  shaft.position.x = -BACK + shaftLen / 2;
 
-  const headGeo = new THREE.ConeGeometry(HEAD_R, headLen, 12, 1);
+  const headGeo = new THREE.ConeGeometry(HEAD_R, headLen, 14, 1);
   const head = new THREE.Mesh(headGeo, mat);
   head.rotation.z = -Math.PI / 2;
-  head.position.x = shaftLen + headLen / 2;
+  head.position.x = -BACK + shaftLen + headLen / 2;
 
   group.add(shaft, head);
   return { group, mat, shaft, head };
@@ -72,7 +75,7 @@ function buildArrowMesh(color, opacity) {
 export function createDelivery(state) {
   const group = new THREE.Group(); // top-level container, added to the scene once
 
-  const arrow = buildArrowMesh(INK, BASE_OPACITY_ARROW);
+  const arrow = buildArrowMesh(EMBER, BASE_OPACITY_ARROW);
   arrow.group.renderOrder = 8;
   arrow.group.position.set(0, 0, BALL_RADIUS_M); // anchored at the ball, ball-centre height
 
@@ -172,6 +175,17 @@ export function createDelivery(state) {
     setVisible,
     isVisible: () => visible,
     dir: () => ({ ...curDir }),
+    // verify hook — world tail/tip of the hero arrow (tail sits BACK behind the
+    // ball anchor, tip LEN-BACK ahead) so a headless rig can project + measure
+    // the on-screen length that visibly crosses the ball.
+    endpoints: () => {
+      const anchor = new THREE.Vector3(0, 0, BALL_RADIUS_M);
+      const d = new THREE.Vector3(curDir.x, curDir.y, curDir.z);
+      return {
+        tail: anchor.clone().addScaledVector(d, -BACK).toArray(),
+        tip: anchor.clone().addScaledVector(d, LEN - BACK).toArray(),
+      };
+    },
     // debug/verification only — opacity + scale of both arrow materials
     debug: () => ({
       arrowOpacity: arrow.mat.opacity, shadowOpacity: shadow.mat.opacity,
