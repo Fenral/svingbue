@@ -54,4 +54,22 @@ ONE Opus builder → `academy-lesson-v2-mock.html` (self-contained at repo root;
 ## 6. Remaining input
 **`docs/lie-effects-sources.md`** (research in progress): supplies the ONLY lie numbers + in-app copy lines for the Real-world layer.
 
+## 7. MODULE ANATOMY CONTRACT — frozen by Fable×Copilot consensus (2026-07-11)
+**Owner's doctrine:** this is a FRAME, not a straitjacket. The template is the default for all 24 lessons so boxes/haptics/shadows/pacing read as ONE professional app — but a lesson MAY deviate when the point being taught demands a different form. Deviation rules: (a) the deep laws are never breakable (tokens, type trio, haptics table, a11y contracts, honesty doctrine, ember law); (b) a deviation must be motivated by the learning point (congruence principle), never by variety; (c) each deviation is declared in one line in that lesson's content spec.
+
+The ten components (all consensus-accepted):
+1. **Surface sequence:** S0 Mission → S1 Lab → S2 Influence → S3 Myths → S4 Quiz → S5 Mastery; snap-paging, sticky progress dots + Next, ≤50 visible words per surface.
+2. **Box spec:** ONE card spec — radius 16, plate-solid `#0D0A18`, hairline `--line`; ONE elevation shadow (`0 16px 44px -18px rgba(0,0,0,.9)`) reserved for floating elements (stamps/sheets); everything else flat.
+3. **Hero value:** mono 44px ember + band chip; ≤3 ember per surface. **Law sharpened (Copilot):** ember always means *primary engine truth* — never merely "important".
+4. **Live-viz slot:** one canvas strip, ALWAYS engine-driven, DOM-mirrored values — the component that forces every lesson to SHOW physics, not describe it.
+5. **Readout row:** exactly three cells (four = dashboard, two = no cause→effect), mono ink values, 10px muted caps labels.
+6. **Slider spec:** 44px thumb, param-hue fill, haptic detent per whole unit — the product's most important haptic contract.
+7. **Stamp spec:** verdict/callout = display voice, typed-on 240ms, MAX ONE stamp per surface (two stamps compete; one teaches).
+8. **Sheet spec:** bottom sheets for all depth; focus trap + Esc + swipe; never more than one level deep.
+9. **Haptics table (fixed):** slider detent = tick · band change = light · verdict = light · mastery = success notify · navigation = NEVER.
+10. **Image slot (Nano Banana Pro):** generated imagery lives in the **Real-world layer only — never the hero (the hero belongs to the engine), never physics diagrams**. Doctrine = the PeakVisor model: *the image is reality; the data explains why reality looks that way* (e.g. Backspin: a close-up of a ball biting the green beside the engine's land-angle/spin values). One shared style-kit prompt so all 24 lessons' imagery matches, P3-graded. Reference models for the build (pull via Mobbin at build time): PeakVisor (primary), Apple Weather, Sky Guide.
+
+**Killed in consensus:** star=favorites (a 24-lesson curriculum needs progression, not a library) — the star shape may only survive as a *Mastered* marker.
+**Next phase:** content per module in groups, evaluated AGAINST this contract.
+
 — Fable 5, design director

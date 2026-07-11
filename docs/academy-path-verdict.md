@@ -25,4 +25,11 @@
 
 **Sequencing:** path-01..07 = one Opus pass after the v2 lesson mock is approved (they're independent of the template); §2's reorder ships with the lowpoint chapter's graph edit. path-08 = own decision later.
 
+## 4 · Copilot-consensus amendments (2026-07-11, round 1 of the loop)
+- **§2 reorder ACCEPTED** verbatim: "Face → Path → Spin Axis → Curve er den korteste veien fra brukerens smertepunkt; Club Speed forklarer ikke ballens oppførsel — Face Angle gjør det."
+- **[path-02] relation-light: strong accept**, spec as written.
+- **[path-03] sharpened:** default state reads **"upcoming"**, never "locked"; collapsed tier rows are phrased as destinations ("Derived Physics · 8 lessons") — *a journey marker, not a barrier*. Adopted.
+- **[path-08] settled:** star-chart grammar YES at path level, NEVER inside lessons — "inne i en leksjon skal alt kollapse til ett instrument og én tanke om gangen". The world map is the observatory; the lesson is the instrument.
+- **[path-01] icon verdict:** keep **målskive = Mastery progress** and **kompass = "where next" (Diagnose-router)**; kill sunrise, refresh, sikte. Star only survives repurposed as the *Mastered* marker (favorites is dead). Every kept icon must be understood at first glance or it dies.
+
 — Fable 5
