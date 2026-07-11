@@ -38,7 +38,7 @@
 import * as THREE from '../vendor/three/build/three.module.js';
 import { lpWorld, arcPosition, deg2rad } from '../swing-parameters-and-impact.js';
 
-const SOIL = 0x8a5a2b; // clearly distinct from the mint (0x4DE8D2) lpx bracket
+const SOIL = 0x8a5a2b; // clearly distinct from the pink (0xF472B6) lpx bracket
 const STRIP_OPACITY = 0.35;
 const STRIP_HALF_W = 0.022; // ~4.4cm total width (per spec: ~4-5cm)
 const STRIP_Z = 0.003;

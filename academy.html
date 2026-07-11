@@ -22,7 +22,7 @@
            pills use --muted, NOT gold (SYS-15 reward law).
          • --bad (#FF7B8A) : quiz-wrong + myth ✗.  --good (#58E6A8) : truth ✓ / gains.
          • diagram param vectors carry their SYS-11 param tokens: face #FF5C6B · path #6FC6FF
-           · attack (mint) #4DE8D2 · loft #B9A0FF (kept — engine-honest param colours). */
+           · attack (pink) #F472B6 · loft #B9A0FF (kept — engine-honest param colours). */
     /* surfaces — violet-black ramp (bg → surface-high), stepped for violet-on-violet depth */
     --bg:#07060C; --bg-2:#0E0A18; --bg-3:#160F28; --bg-4:#20183A;
     /* rules / glow — violet-shifted hairlines (honest names; near sa-p3 --line/--secondary-line) */
@@ -44,10 +44,7 @@
   *{box-sizing:border-box}
   html,body{margin:0;padding:0}
   body{
-    background:
-      radial-gradient(1200px 600px at 82% -12%, rgba(157,139,255,.11), transparent 60%),
-      radial-gradient(900px 500px at -6% 112%, rgba(20,14,36,.55), transparent 55%),
-      var(--bg);
+    background:var(--bg);   /* the dusk sky itself lives on the fixed .bench layer below */
     color:var(--ink); font-family:var(--f-body); font-size:15px; line-height:1.55;
     -webkit-font-smoothing:antialiased; letter-spacing:.005em; min-height:100vh;
     overflow-x:hidden;
@@ -68,12 +65,20 @@
     font-size:12px;letter-spacing:.14em;text-transform:uppercase;text-decoration:none;transition:top .15s var(--ease)}
   .skip-link:focus{top:8px}
 
-  /* grid-dot instrument backdrop */
+  /* ── ACADEMY IS THE NIGHT SKY (Økt-1 §1.3) — the fixed backdrop is the home
+     screen's dusk: deep indigo top → warmer violet low band (home-hero-mock
+     gradient stops) + a seeded static star-dust tile. Nodes are the stars.
+     (Replaces the grid-dot instrument bench.) */
   .bench{position:fixed;inset:0;z-index:0;pointer-events:none;
     background-image:
-      linear-gradient(var(--rule-2) 1px,transparent 1px),
-      linear-gradient(90deg,var(--rule-2) 1px,transparent 1px);
-    background-size:28px 28px; opacity:.6}
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260'%3E%3Cg fill='%23FFFFFF'%3E%3Ccircle cx='23' cy='31' r='.9' opacity='.32'/%3E%3Ccircle cx='81' cy='9' r='.7' opacity='.2'/%3E%3Ccircle cx='140' cy='47' r='1.1' opacity='.26'/%3E%3Ccircle cx='201' cy='22' r='.7' opacity='.18'/%3E%3Ccircle cx='245' cy='76' r='.9' opacity='.3'/%3E%3Ccircle cx='36' cy='104' r='.7' opacity='.2'/%3E%3Ccircle cx='108' cy='131' r='.9' opacity='.24'/%3E%3Ccircle cx='176' cy='96' r='.7' opacity='.18'/%3E%3Ccircle cx='222' cy='150' r='1.1' opacity='.28'/%3E%3Ccircle cx='58' cy='176' r='.9' opacity='.26'/%3E%3Ccircle cx='9' cy='224' r='.7' opacity='.18'/%3E%3Ccircle cx='128' cy='205' r='.7' opacity='.22'/%3E%3Ccircle cx='187' cy='238' r='.9' opacity='.28'/%3E%3Ccircle cx='250' cy='210' r='.7' opacity='.16'/%3E%3Ccircle cx='90' cy='250' r='1.1' opacity='.24'/%3E%3C/g%3E%3C/svg%3E"),
+      linear-gradient(180deg,#080614 0%,#150F38 38%,#241A56 64%,#2E2064 82%,#141232 100%);
+    background-size:260px 260px, 100% 100%}
+  /* ORDRE 2 P3 §13a — the dusk STRENGTHENED (the old #241B44-peak ramp read
+     flat on device): deeper near-black top, violet band pulled up to #2E2064
+     at 82%. AA re-validated over the brightest stop: --ink 12.6 · --muted 5.6
+     · --gold 7.0 · --secondary 5.0. --muted-2 drops to 4.03 there, so the two
+     classes that sit DIRECTLY on the sky (.kicker/.col-head) now use --muted. */
 
   /* ── gentle orientation nudge (portrait is the optimized reading layout; NEVER blocks) ── */
   .nudge{position:fixed;left:50%;bottom:calc(14px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:60;display:none;align-items:center;gap:11px;
@@ -114,7 +119,7 @@
   .hdr-expand{overflow:hidden;max-height:110px;opacity:1;transition:max-height .28s var(--ease),opacity .18s var(--ease),margin .28s var(--ease)}
   .hdr.collapsed .hdr-expand{max-height:0;opacity:0;margin-top:-2px;pointer-events:none}
   .xpbar{height:4px;border-radius:999px;background:var(--rule);margin:9px 0 0;overflow:hidden}
-  .xpbar .fill{height:100%;background:var(--secondary);border-radius:999px;transition:width .5s var(--ease)}   /* aca-07: fill = --secondary only, no arcade glow */
+  .xpbar .fill{height:100%;background:var(--gold);border-radius:999px;transition:width .5s var(--ease)}   /* §1.3: progression fill = gold */
   .badgerail{display:flex;gap:8px;margin-top:10px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none;-webkit-overflow-scrolling:touch;scroll-snap-type:x proximity;
     -webkit-mask:linear-gradient(90deg,transparent 0,#000 22px,#000 calc(100% - 22px),transparent 100%);mask:linear-gradient(90deg,transparent 0,#000 22px,#000 calc(100% - 22px),transparent 100%)}
   .badgerail::-webkit-scrollbar{display:none}
@@ -134,7 +139,7 @@
 
   /* ═══ PATH / MAP ═══ */
   .path-intro{padding:16px 22px 6px}
-  .kicker{font-family:var(--f-body);font-weight:600;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted-2)}
+  .kicker{font-family:var(--f-body);font-weight:600;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}   /* §13a: sits on the sky — --muted keeps ≥4.5 on the strengthened dusk */
   .path-intro h1{font-family:var(--f-display);font-weight:700;font-size:clamp(26px,3.6vw,34px);letter-spacing:-.03em;margin:6px 0 8px;line-height:1.02}
   .path-intro .intro{font-family:var(--f-body);font-size:15px;line-height:1.55;color:var(--muted);max-width:60ch}
   .path-intro .intro b{color:var(--ink);font-weight:600}
@@ -144,7 +149,7 @@
   .map-scroll{padding:10px 20px 40px}
   .map-canvas{position:relative;width:100%}
   .map-edges{position:absolute;inset:0;pointer-events:none;width:100%;height:100%}
-  .col-head{position:absolute;left:0;right:0;font-family:var(--f-body);font-weight:600;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted-2)}
+  .col-head{position:absolute;left:0;right:0;font-family:var(--f-body);font-weight:600;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}   /* §13a: sits on the sky — --muted keeps ≥4.5 on the strengthened dusk */
   .col-head::after{content:"";display:block;height:1px;margin-top:6px;background:var(--rule)}
 
   .node{position:absolute;width:42%;display:flex;flex-direction:column;justify-content:center;gap:3px;text-align:left;
@@ -157,22 +162,44 @@
   .node .nlabel{font-family:var(--f-display);font-weight:600;font-size:15px;color:var(--muted);letter-spacing:-.01em}
   .node .nxp{font-family:var(--f-mono);font-variant-numeric:tabular-nums;font-size:10px;color:var(--reward-gold)}   /* completed XP stamp = gold (aca-07) */
   /* dimmed/locked chrome via opacity, but label text keeps AA-clear colour (aca-18/§3.3) */
-  .node--available{background:linear-gradient(180deg,var(--bg-3),var(--bg-2));border-color:var(--secondary-line);color:var(--ink);cursor:pointer}
+  /* §1.3 card elevation (§13c STRENGTHENED — the old bg-4 ramp read flush with
+     the brightened sky): unlocked cards sit TWO CLEAR light-steps above the
+     canvas (lifted plate body #2B2153→#221A44 + baked 1px top edge-light .14)
+     with a deeper soft drop shadow; locked cards stay flat and dim — active
+     vs locked reads instantly. */
+  .node--available{
+    background:linear-gradient(180deg, rgba(245,242,255,.14) 0, rgba(245,242,255,.14) 1px, #2B2153 1px, #221A44 100%);
+    border-color:var(--secondary-line);color:var(--ink);cursor:pointer;
+    box-shadow:0 10px 26px rgba(0,0,0,.60)}
   .node--available .nlabel{color:var(--ink)}
   .node--available .nglyph{color:var(--secondary)}
-  .node--available:hover,.node--available:focus-visible{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.35)}
+  .node--available:hover,.node--available:focus-visible{transform:translateY(-2px);box-shadow:0 14px 32px rgba(0,0,0,.66)}
   .node--available .ring{width:11px;height:11px;border-radius:50%;border:2px solid var(--secondary);animation:ringpulse 2s var(--ease) infinite}
   @keyframes ringpulse{0%,100%{box-shadow:0 0 0 0 var(--glow-sec)}50%{box-shadow:0 0 0 5px rgba(157,139,255,0)}}
-  /* next-recommended: elevated, brighter violet, "Start here" (§3.3) */
-  .node--next{background:linear-gradient(180deg,var(--bg-3),var(--bg-2));border-color:var(--secondary);color:var(--ink);cursor:pointer;
-    transform:translateY(-2px);box-shadow:0 8px 22px rgba(0,0,0,.4),0 0 0 1px var(--secondary-line)}
+  /* next-recommended: THE warm element (§1.3) — ember edge-glow + a gentle
+     pulse. Reduced motion (sa-p3 kill) leaves the static resting glow. */
+  .node--next{
+    background:linear-gradient(180deg, rgba(255,225,204,.14) 0, rgba(255,225,204,.14) 1px, #2B2153 1px, #221A44 100%);
+    border-color:var(--accent-line);color:var(--ink);cursor:pointer;
+    transform:translateY(-2px);
+    box-shadow:0 12px 28px rgba(0,0,0,.60), 0 0 18px rgba(255,138,77,.20);
+    animation:emberbreathe 3.4s var(--ease) infinite}
+  @keyframes emberbreathe{
+    0%,100%{box-shadow:0 12px 28px rgba(0,0,0,.60), 0 0 14px rgba(255,138,77,.16)}
+    50%{box-shadow:0 12px 28px rgba(0,0,0,.60), 0 0 26px rgba(255,138,77,.32)}}
   .node--next .nlabel{color:var(--ink)}
   .node--next .nglyph{color:var(--secondary)}
-  .node--next .starthere{position:absolute;top:-10px;left:12px;font-family:var(--f-body);font-weight:600;font-size:10px;letter-spacing:.08em;text-transform:uppercase;
-    color:var(--sec-ink);background:var(--secondary);border-radius:999px;padding:2px 8px;line-height:1.4}
-  .node--completed{background:var(--bg-2);border-color:var(--rule);color:var(--muted);cursor:pointer}
+  /* badge floats fully ABOVE the card edge (was top:-10px, where it covered the
+     card's own tier word — §1.1 overlap fix; computeLayout's headH grew to match) */
+  .node--next .starthere{position:absolute;top:-17px;left:12px;font-family:var(--f-body);font-weight:600;font-size:10px;letter-spacing:.08em;text-transform:uppercase;
+    color:#2A1206;background:var(--accent);border-radius:999px;padding:2px 8px;line-height:1.4;
+    box-shadow:0 0 12px rgba(255,138,77,.35)}
+  .node--completed{
+    background:linear-gradient(180deg, rgba(245,242,255,.09) 0, rgba(245,242,255,.09) 1px, var(--bg-4) 1px, var(--bg-3) 100%);
+    border-color:var(--rule);color:var(--muted);cursor:pointer;
+    box-shadow:0 6px 18px rgba(0,0,0,.46)}   /* §13c: one step below available, still clearly off the sky */
   .node--completed .nlabel{color:var(--muted)}
-  .node--completed .nglyph{color:var(--secondary)}
+  .node--completed .nglyph{color:var(--gold)}   /* §1.3: completed = small gold check */
   .node--completed.is-mastered{background:linear-gradient(180deg,var(--secondary-soft),var(--bg-2));border-color:var(--secondary-line)}
   .node--completed.is-mastered .nlabel{color:var(--ink)}
   .node--completed:hover,.node--completed:focus-visible{transform:translateY(-2px)}
@@ -190,8 +217,13 @@
   /* keyboard focus keeps the backdrop-proof double ring even on the elevated node states (SYS-03) */
   .node:focus-visible{box-shadow:0 6px 20px rgba(0,0,0,.45), inset 0 0 0 1px rgba(0,0,0,.85), inset 0 0 0 3px var(--ink)}
 
-  /* ─── path-02 relation-light: edges rest ≤.08 alpha; select/focus lights only the node's own threads violet ─── */
-  .map-edges path{stroke:rgba(157,139,255,.07);transition:stroke .2s var(--ease)}
+  /* ─── path-02 relation-light + §1.3 constellation grammar: at rest the threads
+     read as faint GLOWING constellation lines (starlight hairline + soft violet
+     halo via drop-shadow on the svg — static, cheap); select/focus still lights
+     only the node's own threads full violet. ─── */
+  /* §13b: strengthened — the .14 hairline was imperceptible on device */
+  .map-edges{filter:drop-shadow(0 0 4px rgba(157,139,255,.55))}
+  .map-edges path{stroke:rgba(203,206,255,.30);transition:stroke .2s var(--ease)}
   .map-canvas.has-selection .map-edges{opacity:1}
   .map-canvas.has-selection .map-edges path{stroke:rgba(157,139,255,.03)}
   .map-edges path.edge--lit{stroke:rgba(157,139,255,.62)}
@@ -232,8 +264,11 @@
   .pp-count .mastered{font-family:var(--f-mono);font-variant-numeric:tabular-nums;color:var(--reward-gold)}
   .pp-info{font-family:var(--f-body);font-size:12px;color:var(--secondary);background:none;border:0;cursor:pointer;padding:2px;text-decoration:underline;text-underline-offset:2px}
   .pp-bar{position:relative;height:9px;border-radius:999px;background:var(--bg-4);overflow:hidden}
-  .pp-fill{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(90deg,var(--secondary),var(--celebrate));border-radius:999px;transition:width .45s var(--ease)}
+  .pp-fill{position:absolute;left:0;top:0;bottom:0;background:var(--gold);border-radius:999px;transition:width .45s var(--ease)}   /* §1.3: progression fill = gold */
   .pp-tick{position:absolute;top:0;bottom:0;width:1.5px;background:var(--bg);opacity:.65}
+  /* §13d endowed progress: the credit label under the bar (count = gold mono) */
+  .pp-sub{margin-top:7px;font-family:var(--f-body);font-size:12px;color:var(--muted)}
+  .pp-sub .mastered{font-family:var(--f-mono);font-variant-numeric:tabular-nums;color:var(--reward-gold)}
   /* mastery-progress sheet: tier rows + badge list */
   .msheet-tier{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--rule-2)}
   .msheet-tier .mt-l{font-family:var(--f-body);font-size:14px;color:var(--ink)}
@@ -277,7 +312,7 @@
   .lesson-body{max-width:680px;margin:0 auto;padding:0 20px}
   .sect{padding:30px 0;border-bottom:1px solid var(--rule-2);opacity:0;transform:translateY(8px)}
   .sect.in{opacity:1;transform:none;transition:opacity .4s var(--ease),transform .4s var(--ease)}
-  .sect-k{font-family:var(--f-body);font-weight:600;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted-2);margin-bottom:12px}
+  .sect-k{font-family:var(--f-body);font-weight:600;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:12px}
   .sect h2{font-family:var(--f-display);font-weight:600;font-size:clamp(22px,2.8vw,30px);letter-spacing:-.02em;margin:0 0 14px}
   /* key-idea box (spec §2.1) — one-sentence lead, display, on plate, violet edge */
   .keyidea{font-family:var(--f-display);font-weight:500;font-size:17px;line-height:1.4;color:var(--ink);
@@ -315,7 +350,7 @@
   .hrow{border-top:1px solid var(--rule-2);padding:12px 0}
   .hrow:first-child{border-top:0}
   .hrow .htop{display:flex;align-items:center;gap:12px}
-  .hrow .hrank{font-family:var(--f-mono);font-weight:700;font-size:15px;color:var(--muted-2);width:22px;flex:none;text-align:right}
+  .hrow .hrank{font-family:var(--f-mono);font-weight:700;font-size:15px;color:var(--muted);width:22px;flex:none;text-align:right}
   .hrow .hlabel{font-family:var(--f-display);font-weight:600;font-size:15px;letter-spacing:-.01em;color:var(--ink);flex:1;min-width:120px}
   .hrow .hest{font-family:var(--f-mono);font-size:10px;letter-spacing:.06em;color:var(--muted-2);border:1px solid var(--line);background:var(--bg);border-radius:12px;padding:2px 5px}
   .hrow .hexpand{background:transparent;border:1px solid var(--rule);color:var(--muted);border-radius:12px;width:30px;height:30px;cursor:pointer;font-size:14px;flex:none}
@@ -324,7 +359,7 @@
   .hrow .hweight{display:inline-block;font-family:var(--f-body);font-size:12.5px;line-height:1.45;color:var(--muted);margin-top:8px}
   .hrow .hwhy{max-height:0;overflow:hidden;transition:max-height .3s var(--ease);color:var(--muted);font-family:var(--f-body);font-size:14px;line-height:1.55}
   .hrow.open .hwhy{max-height:240px;margin-top:10px}
-  .hlegend{font-family:var(--f-body);font-size:13px;color:var(--muted-2);line-height:1.5;margin-bottom:14px}
+  .hlegend{font-family:var(--f-body);font-size:13px;color:var(--muted);line-height:1.5;margin-bottom:14px}
 
   /* misconceptions — container-responsive */
   .mgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
@@ -1638,7 +1673,7 @@
   const NODE_HUE = {
     'face-angle':'#FF5C6B','start-direction':'#FF5C6B','offline':'#FF5C6B',
     'club-path':'#6FC6FF','spin-axis':'#6FC6FF','curve':'#6FC6FF',
-    'attack-angle':'#4DE8D2','low-point':'#4DE8D2','landing-angle':'#4DE8D2',
+    'attack-angle':'#F472B6','low-point':'#F472B6','landing-angle':'#F472B6',
     'dynamic-loft':'#B9A0FF','launch-angle':'#B9A0FF','spin-loft':'#B9A0FF','apex':'#B9A0FF',
     'strike-depth':'#C98AE6','backspin':'#C98AE6',
     'plane-coupling':'#93A4F2','club-speed':'#93A4F2','ball-speed':'#93A4F2','smash':'#93A4F2','carry':'#93A4F2','total':'#93A4F2',
@@ -1649,7 +1684,7 @@
 
   function computeLayout(opts){
     opts = opts || {};
-    const headH = 38, rowH = 78, tierGap = 30, topPad = 10, summaryH = 54;
+    const headH = 48, rowH = 78, tierGap = 30, topPad = 10, summaryH = 54;   // headH 38→48: clears the floating "Start here" badge (§1.1)
     const pos = {}, tierBands = [], summaries = [];
     let y = topPad;
     TIER_COLS.forEach(col => {
@@ -1688,7 +1723,7 @@
       if (A.y <= B.y){ y1 = A.y + NODE_H; y2 = B.y; }   // downward: source bottom → target top
       else { y1 = A.y; y2 = B.y + NODE_H; }             // upward (e.g. Environment → Outcomes)
       const dy = (y2 - y1) * 0.5;
-      edges += `<path data-from="${e.from}" data-to="${e.to}" d="M${x1},${y1.toFixed(1)} C${x1},${(y1+dy).toFixed(1)} ${x2},${(y2-dy).toFixed(1)} ${x2},${y2.toFixed(1)}" fill="none" stroke-width="1" vector-effect="non-scaling-stroke"/>`;
+      edges += `<path data-from="${e.from}" data-to="${e.to}" d="M${x1},${y1.toFixed(1)} C${x1},${(y1+dy).toFixed(1)} ${x2},${(y2-dy).toFixed(1)} ${x2},${y2.toFixed(1)}" fill="none" stroke-width="1.5" vector-effect="non-scaling-stroke"/>`;
     }
     // tier heads — full-width bands stacked down the climb
     let heads = '';
@@ -1739,8 +1774,26 @@
     });
     // path-05 fold economy: mission line + real progress bar with tier ticks
     const totalLessons = LESSON_IDS.length;
-    const pctBar = totalLessons ? (nMastered/totalLessons*100) : 0;
-    let ticks = '', cum = 0;
+    // §13d ENDOWED PROGRESS — the bar never shows 0%: the first tick is
+    // CREDITED. With prior app activity in localStorage (a played shot /
+    // home-visit stat keys) the credit names it; with zero evidence the
+    // journey itself is credited. Real mastery counts add on top; the aria
+    // valuetext stays honest about what the credit is.
+    const credit = (() => {
+      try {
+        const seen = ['sa.stat.shot','sa.stat.flight','sa.stat.outcome','sa_flight_data']
+          .some(k => localStorage.getItem(k) != null);
+        return seen ? 'Ball Flight seen in action' : 'The instrument tour';
+      } catch(e){ return 'The instrument tour'; }
+    })();
+    const shown = Math.min(totalLessons, nMastered + 1);           // endowed tick + real mastery
+    const pctBar = totalLessons ? (shown/totalLessons*100) : 0;
+    const creditLine = nMastered >= totalLessons ? 'Every instrument mastered' : credit;
+    const ppText = nMastered >= totalLessons
+      ? `All ${totalLessons} instruments mastered.`
+      : `${nMastered} mastered plus 1 credited — ${credit}. ${shown} of ${totalLessons}.`;
+    let ticks = `<span class="pp-tick" style="left:${(1/totalLessons*100).toFixed(1)}%"></span>`;   // §13d: the endowed-tick boundary
+    let cum = 0;
     TIER_COLS.forEach((col,i) => { if (i < TIER_COLS.length-1){ cum += col.ids.length; ticks += `<span class="pp-tick" style="left:${(cum/totalLessons*100).toFixed(1)}%"></span>`; } });
 
     document.title = 'StrikeArc Academy';
@@ -1751,11 +1804,12 @@
         <h1>Learn the instrument</h1>
         <p class="mission">The <b>${totalLessons} numbers</b> behind every shot — learned one instrument at a time.</p>
         <div class="pathprog">
-          <div class="pp-top"><span class="pp-count"><span class="mastered">${nMastered}</span> of ${totalLessons} mastered</span>
+          <div class="pp-top"><span class="pp-count">Mastery path progress</span>
             <button class="pp-info" id="path-how" type="button">How the path works</button></div>
-          <div class="pp-bar" role="progressbar" aria-valuemin="0" aria-valuemax="${totalLessons}" aria-valuenow="${nMastered}" aria-label="Lessons mastered">
+          <div class="pp-bar" role="progressbar" aria-valuemin="0" aria-valuemax="${totalLessons}" aria-valuenow="${shown}" aria-valuetext="${esc(ppText)}" aria-label="Path progress">
             <div class="pp-fill" style="width:${pctBar.toFixed(1)}%"></div>${ticks}
           </div>
+          <div class="pp-sub"><span class="mastered">${shown} of ${totalLessons}</span> · ${esc(creditLine)}</div>
         </div>
       </div>
       <div class="map-scroll">
@@ -2737,14 +2791,14 @@
         <div role="img" id="ls-fig" aria-label="">
           <svg class="arch-svg" viewBox="0 0 300 250" aria-hidden="true">
             <defs>
-              <marker id="ls-ahp" markerWidth="9" markerHeight="9" refX="6" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 Z" fill="#4DE8D2"/></marker>
+              <marker id="ls-ahp" markerWidth="9" markerHeight="9" refX="6" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 Z" fill="#F472B6"/></marker>
               <marker id="ls-ahf" markerWidth="9" markerHeight="9" refX="6" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 Z" fill="#B9A0FF"/></marker>
               <marker id="ls-ahl" markerWidth="9" markerHeight="9" refX="6" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 Z" fill="#FF8A4D"/></marker>
             </defs>
             <line x1="30" y1="200" x2="288" y2="200" stroke="rgba(245,242,255,.18)" stroke-width="1.5"/>
             <text x="246" y="214" font-family="IBM Plex Mono" font-size="10" fill="#8E85A8">→ TARGET</text>
             <polygon id="ls-wedge" points="60,200" fill="rgba(255,138,77,.10)" stroke="none"/>
-            <line id="ls-attack" x1="60" y1="200" x2="240" y2="200" stroke="#4DE8D2" stroke-width="2.4" marker-end="url(#ls-ahp)"/>
+            <line id="ls-attack" x1="60" y1="200" x2="240" y2="200" stroke="#F472B6" stroke-width="2.4" marker-end="url(#ls-ahp)"/>
             <line id="ls-loft" x1="60" y1="200" x2="230" y2="110" stroke="#B9A0FF" stroke-width="2.4" marker-end="url(#ls-ahf)"/>
             <line id="ls-launch" x1="60" y1="200" x2="235" y2="100" stroke="#FF8A4D" stroke-width="2.2" stroke-dasharray="2 3" marker-end="url(#ls-ahl)"/>
             <circle cx="60" cy="200" r="7" fill="#160F28" stroke="rgba(245,242,255,.5)" stroke-width="1"/>
@@ -2754,7 +2808,7 @@
         ${chipsHTML(chipList, 'ls-c')}
         <div class="arch-controls">
           <div class="ctl-grid">${slidersHTML(eng)}</div>
-          <div class="footnote">Side-on. Mint = attack (club path up/down), lavender = dynamic loft (face), ember = launch (engine ≈ 0.62·loft + 0.25·attack). Shaded wedge = spin loft = loft − attack.</div>
+          <div class="footnote">Side-on. Pink = attack (club path up/down), lavender = dynamic loft (face), ember = launch (engine ≈ 0.62·loft + 0.25·attack). Shaded wedge = spin loft = loft − attack.</div>
           <button class="datatoggle" id="ls-datatoggle" aria-expanded="false">Show data table</button>
           <div class="datatable" id="ls-datatable"><table><caption class="sr-only">${esc(cfg.title)} values</caption><tbody id="ls-datarows"></tbody></table></div>
         </div>
@@ -2774,7 +2828,7 @@
       const Fl=sidePt(dl,196), Al=sidePt(aa,150);
       el('#ls-lbls').innerHTML=
         `<rect x="${(Fl.x-16).toFixed(0)}" y="${(Fl.y-8).toFixed(0)}" width="34" height="14" rx="2" fill="rgba(8,5,14,.8)"/><text x="${Fl.x.toFixed(0)}" y="${(Fl.y+2).toFixed(0)}" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="#B9A0FF">LOFT</text>`+
-        `<rect x="${(Al.x-21).toFixed(0)}" y="${(Al.y-8).toFixed(0)}" width="44" height="14" rx="2" fill="rgba(8,5,14,.8)"/><text x="${(Al.x+1).toFixed(0)}" y="${(Al.y+2).toFixed(0)}" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="#4DE8D2">ATTACK</text>`;
+        `<rect x="${(Al.x-21).toFixed(0)}" y="${(Al.y-8).toFixed(0)}" width="44" height="14" rx="2" fill="rgba(8,5,14,.8)"/><text x="${(Al.x+1).toFixed(0)}" y="${(Al.y+2).toFixed(0)}" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="#F472B6">ATTACK</text>`;
       setNum(el('#ls-read'), f[readout], {dp:rDef.dp, commas:rDef.commas});
       el('#ls-sl').textContent=f.spinLoft.toFixed(0)+'° spin loft';
       updateChips(mount, chipList, f, 'ls-c');
@@ -2906,18 +2960,18 @@
       </div>
       <div class="aw-fig" role="img" id="aw-fig" aria-label="">
         <svg class="aw-svg" viewBox="0 0 325 88" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
-          <defs><marker id="aw-arrow" markerWidth="7" markerHeight="7" refX="5.5" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 Z" fill="#4DE8D2"/></marker></defs>
+          <defs><marker id="aw-arrow" markerWidth="7" markerHeight="7" refX="5.5" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 Z" fill="#F472B6"/></marker></defs>
           <rect x="0" y="60" width="325" height="28" fill="rgba(138,90,43,.14)"/>
           <line x1="0" y1="60" x2="325" y2="60" stroke="var(--rule)" stroke-width="1"/>
           <path id="aw-divot" d="" fill="rgba(201,138,230,.25)" stroke="none"/>
           <path id="aw-arc" d="" fill="none" stroke="#9D8BFF" stroke-width="2" stroke-linecap="round"/>
-          <line id="aw-drop" x1="125" y1="60" x2="125" y2="60" stroke="#4DE8D2" stroke-width="1" stroke-dasharray="2 2"/>
+          <line id="aw-drop" x1="125" y1="60" x2="125" y2="60" stroke="#F472B6" stroke-width="1" stroke-dasharray="2 2"/>
           <circle id="aw-ball" cx="125" cy="49.35" r="10.65" fill="#160F28" stroke="rgba(245,242,255,.45)" stroke-width="1"/>
           <line id="aw-eq" x1="114.35" y1="49.35" x2="135.65" y2="49.35" stroke="rgba(245,242,255,.18)" stroke-width="0.6" stroke-dasharray="1.5 1.5"/>
-          <line id="aw-tan" x1="107" y1="49" x2="143" y2="49" stroke="#4DE8D2" stroke-width="2" marker-end="url(#aw-arrow)"/>
+          <line id="aw-tan" x1="107" y1="49" x2="143" y2="49" stroke="#F472B6" stroke-width="2" marker-end="url(#aw-arrow)"/>
           <line id="aw-tick" x1="118" y1="49" x2="132" y2="49" stroke="#FF8A4D" stroke-width="2.4" stroke-linecap="round"/>
-          <circle id="aw-lp" cx="125" cy="60" r="3" fill="#4DE8D2"/>
-          <text id="aw-lplabel" x="125" y="85" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="#4DE8D2"></text>
+          <circle id="aw-lp" cx="125" cy="60" r="3" fill="#F472B6"/>
+          <text id="aw-lplabel" x="125" y="85" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="#F472B6"></text>
           <text id="aw-depthlabel" x="125" y="75" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="#C98AE6"></text>
         </svg>
         <div class="aw-cap" id="aw-cap"></div>
@@ -2926,7 +2980,7 @@
       <div class="aw-controls">
         ${eng.map(awSlider).join('')}
         ${presets?`<div class="segmented" role="group" aria-label="Strike presets">${presetBtns}</div>`:''}
-        <div class="footnote">Face-on window, drawn true to scale — the mint tangent's angle IS the attack angle. Model divot depths are millimetre-scale (the engine models the club as a point on the arc); the relationships are exact.</div>
+        <div class="footnote">Face-on window, drawn true to scale — the pink tangent's angle IS the attack angle. Model divot depths are millimetre-scale (the engine models the club as a point on the arc); the relationships are exact.</div>
       </div>`;
 
     const el = s => mount.querySelector(s);

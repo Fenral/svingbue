@@ -98,7 +98,15 @@ export function createInsetView({ hideNodes } = {}) {
     // header); basis.Z is the world dir of local +Z, so the face normal is
     // its negation.
     const faceN = new THREE.Vector3(-basis.Z.x, -basis.Z.y, -basis.Z.z).normalize();
-    const offset = faceN.clone().applyAxisAngle(_worldUp, deg2rad(AZIMUTH_DEG)).multiplyScalar(DIST_M);
+    // ORDRE 2 P2 §8 — adaptive stand-off: the low point can sit up to ~±20 cm
+    // from the ball (plus the swing-direction coupling), and the permanent
+    // panel's viewport is TALLER (narrower horizontal fov) than the old card.
+    // Dolly back proportionally to the ball↔low-point ground span so the whole
+    // cluster stays in frame at the range extremes; at the default swing the
+    // span is small and the framing matches the original DIST_M.
+    const lpSpanPre = Math.hypot(lpWorld(state).x, lpWorld(state).y);
+    const dist = DIST_M + Math.max(0, lpSpanPre - 0.10) * 1.35;
+    const offset = faceN.clone().applyAxisAngle(_worldUp, deg2rad(AZIMUTH_DEG)).multiplyScalar(dist);
 
     // Aim at the centroid of ball + low point + the club's address-pose head
     // position (NOT just ball/low-point) — the club sits a real ~10cm BEHIND

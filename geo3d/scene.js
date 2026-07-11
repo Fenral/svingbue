@@ -46,9 +46,15 @@ export function createScene(canvas) {
   // purely enlarges the framing without re-aiming. Re-verified against the
   // FIX M rail-clearance matrix (900×470/740×416, FACE+DTL) and arc-top
   // clipping at 740×416 — both still pass at the new distance.
+  // ORDRE 2 P2 §4 — poses re-composed for the two-pane REGION (65% width,
+  // taller aspect → wider vfov via updateCameraViewport): dist pulled in so
+  // the arc/ball/dial fill the region instead of floating small in extra sky,
+  // and DTL's look-at brought back toward the ball so the scene centres in
+  // the region rather than composing at the right edge (verified by headless
+  // screenshots at 900×470 + 844×390, FACE + DTL, rail open/closed).
   const POSES = {
-    face: { az: -70.375, el: 13, dist: 2.72, tx: 0.06, ty: 0, tz: 0.5 },   // #4c: aim LOWER (tz 0.865→0.5) to hero the impact zone (ball/club/low-point) instead of the plane centre
-    dtl: { az: -144.75, el: 11, dist: 3.05, tx: 0, ty: 1.2, tz: 0.42 },     // #4c: same — drop look-at toward the ground/impact
+    face: { az: -70.375, el: 13, dist: 2.45, tx: 0.06, ty: 0, tz: 0.42 },
+    dtl: { az: -144.75, el: 11, dist: 2.75, tx: 0, ty: 0.4, tz: 0.4 },
   };
   const rig = { ...POSES.face };
   // FIX M — target offset: shifts ONLY the look-at point (not the camera
@@ -89,6 +95,13 @@ export function createScene(canvas) {
       rig.tz + rig.dist * Math.sin(e)
     );
     camera.lookAt(rig.tx + targetOffset.x, rig.ty + targetOffset.y, rig.tz + targetOffset.z);
+    // Compose matrixWorld/matrixWorldInverse NOW (not lazily at the next
+    // renderer.render()): DOM-label projections (lowpoint.js placeLabel) run
+    // synchronously right after pose writes — before the first render they
+    // otherwise read a stale/identity inverse and land the label off-screen
+    // (bug surfaced when the idle drift, which used to re-place labels every
+    // frame, was retired with the RE-HERO loop).
+    camera.updateMatrixWorld(true);
   }
   applyRig();
 
@@ -115,17 +128,21 @@ export function createScene(canvas) {
   hemi.position.set(0, 0, 1);
   scene.add(hemi);
 
-  // ONE warm ember rim/point light locked near the ball — the club's leading
-  // edge catches fire-light at the impact zone (the only heat in the cold room).
-  // RE-HERO (2026-07-11): the delivery arrow now owns the scene's ember slot,
-  // so this rim is dimmed (1.1 → 0.42) to stay within the ≤3 ember budget — it
-  // keeps a faint fire-catch on the clubhead without competing with the hero arrow.
-  const emberRim = new THREE.PointLight(0xFF8A4D, 0.42, 0.9, 2.0);
-  emberRim.position.set(0.05, -0.13, 0.2);
-  emberRim.castShadow = false;
-  scene.add(emberRim);
+  // (ORDRE 2 P2 §6 — the warm EMBER rim/point light was removed: with the
+  // delivery arrow unwired, ember in the scene is ~zero at rest. The transient
+  // impact FX carry their own light-reads.) In its place: a COOL violet-white
+  // fill at the impact zone so the clubhead — content, not decoration — stays
+  // legible against the near-black ground. Neutral light, never warm.
+  const impactFill = new THREE.PointLight(0xC9CCFF, 0.5, 1.1, 2.0);
+  impactFill.position.set(0.05, -0.13, 0.2);
+  impactFill.castShadow = false;
+  scene.add(impactFill);
 
-  // ── instrument-stage floor (ported from geo-canvas-mock.html) ────────────
+  // ── quiet stage floor (ORDRE 2 P2 §6 — star chart retired) ───────────────
+  // The floor survives ONLY as a shadow/divot catcher + a soft ground read:
+  // a near-black radial grade that fades into the page background at the rim.
+  // No graticule, no constellations, no brass ticks — the model (club/ball/
+  // arc/dial) still reads without them, so they had to go (minimalism test).
   const floor = new THREE.Mesh(
     new THREE.CircleGeometry(6, 96),
     new THREE.MeshStandardMaterial({ map: makeFloorTexture(), roughness: 0.95, metalness: 0.0 })
@@ -133,21 +150,17 @@ export function createScene(canvas) {
   floor.receiveShadow = true;
   scene.add(floor);
 
-  // target line = one clean meridian. §1 — cyan → neutral white-alpha
-  // (--line-strong grade, additive) so it reads as an engraved sightline, not a laser.
+  // ORDRE 2 P2 §6 — the target sightline demoted to THE one 1px horizon line:
+  // a single hairline along +X at very low opacity (glow plane removed). In the
+  // FACE pose it reads as the ground/horizon line through the ball.
   const tlCore = new THREE.Mesh(
-    new THREE.PlaneGeometry(6.5, 0.012),
-    new THREE.MeshBasicMaterial({ color: 0xF5F2FF, transparent: true, opacity: 0.72, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false, fog: false })
+    new THREE.PlaneGeometry(6.5, 0.008),
+    new THREE.MeshBasicMaterial({ color: 0xC7CBF0, transparent: true, opacity: 0.16, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false, fog: false })
   );
   tlCore.position.set(2.0, 0, 0.002);
-  const tlGlow = new THREE.Mesh(
-    new THREE.PlaneGeometry(6.5, 0.07),
-    new THREE.MeshBasicMaterial({ color: 0xC7CBF0, transparent: true, opacity: 0.10, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false, fog: false })
-  );
-  tlGlow.position.set(2.0, 0, 0.0018);
   // grouped so FACE-ZOOM (FIX K) can hide/show the target line with one toggle
   const targetLine = new THREE.Group();
-  targetLine.add(tlCore, tlGlow);
+  targetLine.add(tlCore);
   scene.add(targetLine);
 
   // ── ball with procedural dimple normal map ────────────────────────────────
@@ -172,6 +185,39 @@ export function createScene(canvas) {
   // of renderIfDirty(), never on its own timer, so idle stays idle.
   let insetPass = null;
   function setInsetPass(fn) { insetPass = fn; }
+  // ORDRE 2 P2 §4 — TWO-PANE: the main camera renders into the region RIGHT of
+  // the permanent strike panel (a scissored sub-viewport of the full-bleed
+  // canvas; the canvas itself must stay full-bleed so the panel's microscope
+  // viewport — the scissored inset pass — can still paint on the left side).
+  // regionLeft is CSS px from the canvas's left edge; geometry.html sets it
+  // from the panel's measured width on init/resize. Also mirrored onto
+  // canvas.__mainRegionLeft so DOM-label projections (lowpoint.js) map NDC to
+  // the REGION, not the full canvas.
+  let regionLeft = 0;
+  function setMainRegionLeft(px) {
+    regionLeft = Math.max(0, Math.round(px || 0));
+    canvas.__mainRegionLeft = regionLeft;
+    updateCameraViewport();
+    invalidate();
+  }
+  // §4 — camera re-fit: aspect follows the REGION, and below the reference
+  // aspect the vertical fov opens so the HORIZONTAL field stays constant —
+  // the scene keeps its composed horizontal framing (nothing clips at the
+  // sides), centered in the 65% region, instead of being cropped/squeezed.
+  const BASE_FOV = 35, REF_ASPECT = 1.8, MAX_FOV = 60;
+  function updateCameraViewport() {
+    const w = Math.max(1, (canvas.clientWidth || 1) - regionLeft), h = canvas.clientHeight || 1;
+    const aspect = w / h;
+    camera.aspect = aspect;
+    camera.fov = aspect >= REF_ASPECT ? BASE_FOV : Math.min(MAX_FOV,
+      THREE.MathUtils.radToDeg(2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(BASE_FOV / 2)) * (REF_ASPECT / aspect))));
+    camera.updateProjectionMatrix();
+  }
+  // §6 — nodes hidden for the MAIN pass only (e.g. the ball's contact ring,
+  // which is the microscope panel's contact marker but sub-legible noise at
+  // main-scene scale). Same lazy-snapshot/restore contract as the inset pass.
+  let mainPassHide = null;
+  function setMainPassHide(fn) { mainPassHide = fn; }
   function invalidate() { dirty = true; scheduleFrame(); }
   function scheduleFrame() {
     if (raf) return;
@@ -181,13 +227,27 @@ export function createScene(canvas) {
     if (!dirty) return;
     dirty = false;
     resizeIfNeeded();
-    // Defense in depth (2026-07-08): never trust the viewport left behind by a
-    // previous frame's extra passes (the strike-detail inset scissors its own
-    // viewport and restores after — a bug there once corrupted every
-    // subsequent main render on DPR>1 phones). CSS px; three.js applies the
-    // pixel ratio internally.
-    renderer.setViewport(0, 0, canvas.clientWidth || 1, canvas.clientHeight || 1);
+    const cw = canvas.clientWidth || 1, ch = canvas.clientHeight || 1;
+    // Full-canvas wipe first (CSS px; three.js applies pixel ratio internally):
+    // with preserveDrawingBuffer:false and the main pass now scissored to the
+    // right region, any part of the buffer neither pass paints this frame
+    // would otherwise show stale/undefined pixels.
+    renderer.setScissorTest(false);
+    renderer.setViewport(0, 0, cw, ch);
+    renderer.clear(true, true, true);
+    // main pass — scissored to the region right of the panel (§4: zero overlap)
+    const rw = Math.max(1, cw - regionLeft);
+    renderer.setViewport(regionLeft, 0, rw, ch);
+    renderer.setScissor(regionLeft, 0, rw, ch);
+    renderer.setScissorTest(true);
+    const hideList = mainPassHide ? (typeof mainPassHide === 'function' ? mainPassHide() : mainPassHide) : [];
+    const nodes = Array.isArray(hideList) ? hideList.filter(Boolean) : [];
+    const prevVisible = nodes.map((n) => n.visible);
+    nodes.forEach((n) => { n.visible = false; });
     renderer.render(scene, camera);
+    nodes.forEach((n, i) => { n.visible = prevVisible[i]; });
+    renderer.setScissorTest(false);
+    renderer.setViewport(0, 0, cw, ch);
     window.__sa3d.renderCount++;
     if (insetPass) insetPass(renderer, scene, canvas);
   }
@@ -198,8 +258,7 @@ export function createScene(canvas) {
       canvas.height !== Math.round(h * renderer.getPixelRatio());
     if (needResize) {
       renderer.setSize(w, h, false);
-      camera.aspect = w / h;
-      camera.updateProjectionMatrix();
+      updateCameraViewport();
     }
   }
 
@@ -238,6 +297,7 @@ export function createScene(canvas) {
     invalidate, startTicking, stopTicking,
     targetLine, floor, ball,
     setInsetPass,
+    setMainRegionLeft, setMainPassHide,
     get renderer() { return renderer; },
   };
 }
@@ -261,104 +321,24 @@ function buildEnvironment(renderer, scene) {
   return tex;
 }
 
-// ── §2.2 STAR-CHART GROUND ─────────────────────────────────────────────────
-// The instrument floor restyled as a star chart: a violet-black ground, a fine
-// white-alpha polar graticule (concentric circles + radial spokes) with brass
-// major ticks, one clean +X meridian, procedural constellation-style point
-// clusters (seeded — NO photo asset), and the kept vignette.
-function mulberryLocal(seed) {
-  let a = seed >>> 0;
-  return function () {
-    a |= 0; a = (a + 0x6D2B79F5) | 0;
-    let t = Math.imul(a ^ (a >>> 15), 1 | a);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
+// ── ORDRE 2 P2 §6 — QUIET GROUND (star chart retired) ──────────────────────
+// A plain violet-black radial grade that fades to the page background at the
+// rim, so the finite floor disc has no visible edge. Nothing drawn on it:
+// the floor exists to catch shadows/divots and give the club a ground, not to
+// decorate. (The old star-chart graticule/constellations/brass ticks failed
+// the minimalism test — the model reads without them.)
 function makeFloorTexture() {
-  const S = 1024, half = S / 2, pxm = half / 6; // 6 m radius
+  const S = 256, half = S / 2;
   const cv = document.createElement('canvas');
   cv.width = cv.height = S;
   const g = cv.getContext('2d');
-
-  // violet-black ground gradient (harmonised with the fog / scene grade)
   const grad = g.createRadialGradient(half, half, 0, half, half, half);
-  grad.addColorStop(0, '#15101F');
-  grad.addColorStop(0.55, '#100B1A');
-  grad.addColorStop(0.85, '#0A0714');
+  grad.addColorStop(0, '#110C1C');
+  grad.addColorStop(0.5, '#0D0917');
+  grad.addColorStop(0.85, '#090711');
   grad.addColorStop(1, '#07060C');
   g.fillStyle = grad;
   g.fillRect(0, 0, S, S);
-
-  // constellation-style point clusters (drawn UNDER the graticule so the grid
-  // reads on top). Seeded → identical every load. Kept to the outer band so the
-  // impact zone (ball/club/low-point) at the centre stays clean.
-  const rng = mulberryLocal(0x5A17C0DE);
-  const starDot = (x, y, r, a) => { g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2); g.fillStyle = `rgba(233,238,255,${a})`; g.fill(); };
-  for (let c = 0; c < 6; c++) {
-    const cAng = rng() * Math.PI * 2;
-    const cRad = (2.6 + rng() * 2.6) * pxm;             // 2.6–5.2 m out
-    const cx = half + Math.cos(cAng) * cRad, cy = half + Math.sin(cAng) * cRad;
-    const n = 3 + Math.floor(rng() * 3);                // 3–5 stars per cluster
-    const pts = [];
-    for (let i = 0; i < n; i++) {
-      const sx = cx + (rng() - 0.5) * 0.9 * pxm;
-      const sy = cy + (rng() - 0.5) * 0.9 * pxm;
-      pts.push([sx, sy]);
-    }
-    // faint connecting lines (constellation) — never brass, cool white
-    g.strokeStyle = 'rgba(199,203,240,0.13)';
-    g.lineWidth = 1.1;
-    g.beginPath();
-    for (let i = 0; i < pts.length; i++) { const [x, y] = pts[i]; i ? g.lineTo(x, y) : g.moveTo(x, y); }
-    g.stroke();
-    for (let i = 0; i < pts.length; i++) {
-      const bright = rng();
-      const r = bright > 0.75 ? 3.4 : 1.7 + rng() * 1.2;
-      starDot(pts[i][0], pts[i][1], r, 0.35 + bright * 0.5);
-    }
-  }
-  // a light dusting of lone faint stars across the field
-  for (let i = 0; i < 90; i++) {
-    const a = rng() * Math.PI * 2, rr = (0.8 + rng() * 5.0) * pxm;
-    starDot(half + Math.cos(a) * rr, half + Math.sin(a) * rr, 0.7 + rng() * 0.9, 0.08 + rng() * 0.16);
-  }
-
-  // fine white-alpha polar graticule — concentric circles …
-  g.strokeStyle = 'rgba(228,236,255,0.05)';
-  g.lineWidth = 1.2;
-  for (let r = 1; r <= 5.5; r += 1) {
-    g.beginPath(); g.arc(half, half, r * pxm, 0, Math.PI * 2); g.stroke();
-  }
-  // … and radial spokes every 30°
-  g.strokeStyle = 'rgba(228,236,255,0.035)';
-  for (let a = 0; a < 360; a += 30) {
-    const rad = a * Math.PI / 180;
-    g.beginPath();
-    g.moveTo(half + Math.cos(rad) * 0.5 * pxm, half + Math.sin(rad) * 0.5 * pxm);
-    g.lineTo(half + Math.cos(rad) * 5.5 * pxm, half + Math.sin(rad) * 5.5 * pxm);
-    g.stroke();
-  }
-
-  // brass major ticks where each whole-metre circle meets the +X meridian
-  // (the etched-instrument role — graduation, never data).
-  g.fillStyle = 'rgba(227,196,104,0.55)';
-  for (let x = 0.5; x <= 5.5; x += 0.5) {
-    const isMajor = Math.abs(x - Math.round(x)) < 1e-6;
-    const len = (isMajor ? 0.16 : 0.07) * pxm;
-    const w = Math.max(1.5, 0.010 * pxm);
-    g.globalAlpha = isMajor ? 0.6 : 0.32;
-    g.fillRect(half + x * pxm - w / 2, half - len / 2, w, len);
-  }
-  g.globalAlpha = 1;
-
-  // kept vignette
-  const vin = g.createRadialGradient(half, half, half * 0.5, half, half, half);
-  vin.addColorStop(0, 'rgba(0,0,0,0)');
-  vin.addColorStop(1, 'rgba(0,0,0,0.55)');
-  g.fillStyle = vin;
-  g.fillRect(0, 0, S, S);
-
   const tex = new THREE.CanvasTexture(cv);
   tex.colorSpace = THREE.SRGBColorSpace;
   tex.anisotropy = 8;

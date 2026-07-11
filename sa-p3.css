@@ -13,7 +13,8 @@
 
    THE THREE COLOUR LAWS (spatial form of the palette laws — enforce in markup):
      • --accent ember #FF8A4D  = the live ball + live data ONLY (tracer, resume stat).
-     • --celebrate #FF5CE1 + --warn gold #FFD056 = XP / badges ONLY (Academy).
+     • --celebrate #FF5CE1 + --gold #D9B36A = XP / badges / progression ONLY;
+       --warn #FFD056 = status verdicts ONLY (order §1.2 split, 2026-07-11).
      • everything else is the cold ultraviolet world (--secondary violet chrome,
        --ink, --muted, plates).
    Two codified ember exceptions beyond live-ball / live-data (SYS-08 budget):
@@ -79,7 +80,7 @@
   /* ── data params (labelled chips/traces only; never bare status dots) ─── */
   --face:#FF5C6B;
   --path:#6FC6FF;
-  --attack:#4DE8D2;   /* demoted mint */
+  --attack:#F472B6;   /* pink — owner override 2026-07-11 (supersedes the mint mapping) */
   --loft:#B9A0FF;
 
   /* ── lines / geometry / motion ───────────────────────────────────────── */
@@ -132,12 +133,17 @@
   --q-depth:var(--depth);     /* strike depth                                  */
   --q-ball:var(--ink);        /* ball marker — neutral, NOT a param hue        */
 
-  /* ── REWARD GOLD alias (SYS-15) — same hex as --warn, different intent. ──
-       Reward usage (XP / badges / mastery) references --reward-gold; --warn's
-       *status* usage (instrument band verdicts) keeps referencing --warn. One
-       hex, two named intents, so a scorer never miscounts a status band as a
-       reward leak. */
-  --reward-gold:var(--warn);
+  /* ── WARM-LIGHT GOLD (order §1.2, 2026-07-11) — annotations, targets, XP,
+       progression. A duller, warmer gold than --warn so "reward/progression"
+       and "caution status" never share a hex again. --warn #FFD056 is now
+       STATUS-ONLY (instrument band verdicts). */
+  --gold:#D9B36A;
+
+  /* ── REWARD GOLD alias (SYS-15) — remapped to --gold (order §1.2). ──────
+       Reward usage (XP / badges / mastery) references --reward-gold and now
+       resolves to the warm-light gold; --warn's *status* usage (instrument
+       band verdicts) keeps referencing --warn. Two named intents, two hexes. */
+  --reward-gold:var(--gold);
 }
 
 /* ── PLATE PATTERN ──────────────────────────────────────────────────────────
@@ -160,6 +166,12 @@
   outline:none;
   box-shadow:inset 0 0 0 1px rgba(0,0,0,.85), inset 0 0 0 3px var(--ink);
 }
+/* No web focus ring on touch/pointer focus (order §1.1): only :focus-visible
+   may draw a ring. Programmatically-focused [tabindex="-1"] landings (route
+   headings etc.) never show a ring at all. */
+:focus:not(:focus-visible){outline:none}
+[tabindex="-1"]:focus,
+[tabindex="-1"]:focus-visible{outline:none;box-shadow:none}
 
 /* ══ SHARED APP-SHELL STRIP ═════════════════════════════════════════════════
    Applied to every destination. 40px top strip; left cluster = home button +
@@ -233,7 +245,7 @@
      ────────────────────────────────────────────────────────────────────────
      --face   #FF5C6B coral    Face angle
      --path   #6FC6FF blue     Club-path direction  (geometry "swing dir" = same quantity ✓ documented reuse)
-     --attack #4DE8D2 mint     Attack angle         (geometry "low point"  = the attack locus  ✓ documented reuse)
+     --attack #F472B6 pink     Attack angle         (geometry "low point"  = the attack locus  ✓ documented reuse)
      --loft   #B9A0FF lav.     Dynamic loft
      --launch #E3C468 gold     Launch angle
      --plane  #93A4F2 peri.    Swing plane          (NEW — was illegally sharing --loft)
@@ -355,3 +367,94 @@ body.sa-depth::after{           /* film grain: kills banding, adds material. Sta
 }
 .sa-bloom-ember{ text-shadow:0 0 26px rgba(255,138,77,.30), 0 0 64px rgba(255,138,77,.12); }
 .sa-bloom-gold{  text-shadow:0 0 26px rgba(255,208,86,.28); }
+
+/* ══ STRIKE-WINDOW PATTERN PRIMITIVES (økt 2a — FABLE-ORDRE §2.1) ═══════════
+   PinnedCanvas + OutcomeChips + ControlSheet, extracted from the Strike Window
+   relayout for reuse by the Academy lesson template (del B, order §2.5).
+   Grammar (order §1.2): inputs = solid border + filled colour dot; outcomes =
+   dashed border. Eyebrows: INPUT · CONTROL (violet) / OUTCOME · READ (gold). */
+:root{
+  /* spring-feel pop — ONE small overshoot beat on the app ease family (not the
+     mock's cubic). Used by detail cards / promoted chips. RM-killed above. */
+  --ease-spring:cubic-bezier(.34,1.3,.44,1);
+}
+
+.sa-eyebrow{font-family:var(--font-ui);font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;line-height:1}
+.sa-eyebrow--in{color:var(--secondary)}
+.sa-eyebrow--out{color:var(--gold)}
+
+/* pinned canvas — the model owns the screen (~55–60% height; never scrolls,
+   never clips). The host gives it flex:1/height; children position over it. */
+.sa-pinned-canvas{
+  position:relative;overflow:hidden;min-height:0;
+  background:var(--plate-solid);
+  border:1px solid var(--line);border-radius:var(--radius-lens);
+}
+
+/* chip base — mono value voice, ≥44px touch target */
+.sa-chip{
+  appearance:none;cursor:pointer;flex:0 0 auto;position:relative;
+  display:flex;align-items:center;gap:8px;padding:0 12px;min-height:44px;
+  border-radius:var(--radius-control);border:1px solid var(--line-strong);
+  background:var(--plate);color:var(--ink);text-align:left;white-space:nowrap;
+  font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-size:13px;font-weight:600;
+  -webkit-tap-highlight-color:transparent;
+  transition:border-color .15s var(--ease),background .15s var(--ease),transform .08s var(--ease);
+}
+.sa-chip:active{transform:scale(.97)}
+.sa-chip__dot{width:8px;height:8px;border-radius:50%;background:var(--pc,var(--secondary));flex:0 0 auto}
+.sa-chip__k{font-family:var(--font-ui);font-size:10px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.sa-chip--outcome{border-style:dashed}
+.sa-chip--input.is-active,
+.sa-chip--input[aria-pressed="true"]{border-color:var(--pc,var(--secondary));background:rgba(255,255,255,.06)}
+
+/* outcome row anchored in the canvas bottom (eyebrow + scrollable chip rail) */
+.sa-outrow{
+  position:absolute;left:0;right:0;bottom:0;z-index:2;
+  display:flex;flex-direction:column;gap:6px;padding:18px 10px 10px;
+  background:linear-gradient(180deg,transparent,rgba(7,6,12,.72) 58%);
+}
+.sa-outrow__rail{display:flex;align-items:stretch;gap:8px;overflow-x:auto;scrollbar-width:none;padding-bottom:1px}
+.sa-outrow__rail::-webkit-scrollbar{display:none}
+
+/* detail card over the canvas — backdrop-blur scrim, spring pop, tap-outside closes */
+.sa-scrim{
+  position:absolute;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;
+  background:rgba(7,6,12,.48);
+  -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+  animation:sa-fade .16s var(--ease) both;
+}
+.sa-scrim[hidden]{display:none}
+.sa-detailcard{
+  width:min(320px,86%);max-height:92%;overflow-y:auto;outline:none;
+  border-radius:var(--radius-card);padding:16px 16px 14px;
+  background:var(--plate-solid);border:1px solid var(--line-strong);
+  box-shadow:0 24px 60px rgba(0,0,0,.55);
+  animation:sa-pop .32s var(--ease-spring) both;
+}
+@keyframes sa-fade{from{opacity:0}}
+@keyframes sa-pop{from{transform:scale(.92) translateY(8px);opacity:0}}
+
+/* control sheet — input chips + ONE active slider (tap a chip to switch) */
+.sa-controlsheet{flex:0 0 auto;display:flex;flex-direction:column;gap:6px;min-width:0}
+.sa-controlsheet__rail{display:flex;gap:8px;align-items:stretch;overflow-x:auto;scrollbar-width:none;padding-bottom:1px}
+.sa-controlsheet__rail::-webkit-scrollbar{display:none}
+.sa-controlsheet input[type=range]{
+  -webkit-appearance:none;appearance:none;width:100%;min-width:0;height:44px;cursor:pointer;background:transparent;
+}
+.sa-controlsheet input[type=range]::-webkit-slider-runnable-track{
+  height:4px;border-radius:999px;
+  background:linear-gradient(90deg,var(--pc,var(--secondary)) var(--fill,50%),rgba(255,255,255,.20) var(--fill,50%));
+}
+.sa-controlsheet input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;appearance:none;width:18px;height:18px;border-radius:50%;margin-top:-7px;
+  background:var(--ink);border:2px solid var(--pc,var(--secondary));box-shadow:0 1px 3px rgba(0,0,0,.5);
+}
+.sa-controlsheet input[type=range]::-moz-range-track{height:4px;border-radius:999px;background:rgba(255,255,255,.20)}
+.sa-controlsheet input[type=range]::-moz-range-progress{height:4px;border-radius:999px;background:var(--pc,var(--secondary))}
+.sa-controlsheet input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:var(--ink);border:2px solid var(--pc,var(--secondary))}
+.sa-controlsheet__minmax{
+  display:flex;justify-content:space-between;gap:8px;
+  font-family:var(--font-mono);font-variant-numeric:tabular-nums;
+  font-size:10px;font-weight:500;color:var(--muted);
+}

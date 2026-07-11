@@ -47,10 +47,11 @@ import * as saIap from './sa-iap.js';
 const FOCUSABLE_SEL =
   'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
+/* Økt-1 §1.4 (2026-07-11): Monthly kr 99 · Annual kr 590, framed «2 months
+   free» (never a percent). Lifetime REMOVED. */
 const TIERS = [
-  { id: 'monthly', cls: 'sa-pw-tier sa-pw-decoy', name: 'Monthly', sub: 'Billed every month', period: '/ month', fallback: 'kr 59' },
-  { id: 'annual', cls: 'sa-pw-tier sa-pw-hero', name: 'Annual', period: '/ year', fallback: 'kr 149', badge: 'BEST VALUE', checked: true },
-  { id: 'lifetime', cls: 'sa-pw-tier', name: 'Lifetime', sub: 'Pay once — yours forever', period: 'one-time', fallback: 'kr 349' },
+  { id: 'monthly', cls: 'sa-pw-tier sa-pw-decoy', name: 'Monthly', sub: 'Billed every month', period: '/ month', fallback: 'kr 99' },
+  { id: 'annual', cls: 'sa-pw-tier sa-pw-hero', name: 'Annual', period: '/ year', fallback: 'kr 590', badge: 'KR 49 / MO', checked: true },
 ];
 
 // ── tiny DOM builder helpers (same shape as sa-firstrun.js's el()) ─────────
@@ -102,7 +103,7 @@ function buildHook() {
   h1.append(accent, document.createTextNode('.'));
 
   const sub = el('p', 'sa-pw-sub');
-  sub.textContent = 'Keep exploring exactly how every swing shapes the shot.';
+  sub.textContent = 'Know why every miss happens.';
 
   const features = el('ul', 'sa-pw-features');
   [
@@ -161,8 +162,8 @@ function buildLadder() {
     const subEl = el('span', 'sa-pw-tsub');
     if (t.id === 'annual') {
       const save = el('span', 'sa-pw-save');
-      save.textContent = 'Save 79%';
-      subEl.append(save, document.createTextNode(' vs monthly'));
+      save.textContent = 'kr 49/mo';
+      subEl.append(save, document.createTextNode(' billed yearly'));
     } else {
       subEl.textContent = t.sub;
     }
@@ -188,10 +189,13 @@ function buildLadder() {
   form.appendChild(fieldset);
 
   const cta = el('button', 'sa-pw-cta', { type: 'button' });
-  cta.textContent = 'Unlock Pro';
+  cta.textContent = 'Unlock Pro →';
+
+  const noCommit = el('p', 'sa-pw-fineprint');
+  noCommit.textContent = 'No commitment · cancel anytime';
 
   const fineprint = el('p', 'sa-pw-fineprint');
-  fineprint.textContent = 'Annual & Monthly auto-renew until cancelled in Settings. Lifetime is a one-time purchase.';
+  fineprint.textContent = 'Annual & Monthly auto-renew until cancelled in Settings.';
 
   const status = el('p', 'sa-pw-status', { 'aria-live': 'polite', role: 'status' });
 
@@ -204,7 +208,7 @@ function buildLadder() {
   privacyLink.textContent = 'Privacy Policy';
   legal.append(restoreBtn, termsLink, privacyLink);
 
-  form.append(cta, fineprint, status, legal);
+  form.append(cta, noCommit, fineprint, status, legal);
   ladder.appendChild(form);
 
   return { ladder, tierInputs, priceEls, cta, status, restoreBtn, termsLink, privacyLink };
@@ -254,8 +258,7 @@ let openGen = 0;      // invalidates a stale getOfferings() response after close
 function ctaLabelFor(tier) {
   const price = (priceEls[tier] && priceEls[tier].mainNode.textContent) || '';
   if (tier === 'monthly') return `Continue — ${price}/mo`;
-  if (tier === 'lifetime') return `Unlock Pro — ${price} once`;
-  return `Unlock Pro — ${price}/yr`; // annual
+  return `Unlock Pro — ${price}/yr →`; // annual
 }
 
 function refreshCtaLabel() {

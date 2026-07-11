@@ -294,6 +294,13 @@ export function trajectorySamples(flight, n = 48) {
   const pts = [];
   // apex fraction along carry: a descending iron peaks past the midpoint.
   const apexAt = 0.52; // ESTIMATE
+  // start fraction of the lateral: the linear (launch-direction) share of offline.
+  // Exact via the engine's own identity offline = start + curve → sf = 1 − curve/offline.
+  // null → degenerate |offline|≈0 (start and curve cancel; see below).
+  let sf = null;
+  if (flight && isFinite(flight.offline) && Math.abs(flight.offline) > 1e-6 && isFinite(flight.curve)) {
+    sf = 1 - flight.curve / flight.offline;
+  }
   for (let i = 0; i <= n; i++) {
     const d = i / n;
     // piecewise parabola peaking at apexAt, normalized to 1 at the peak.
@@ -305,8 +312,12 @@ export function trajectorySamples(flight, n = 48) {
       const u = (d - apexAt) / (1 - apexAt);
       h = 1 - u * u; // steeper fall-off
     }
-    // lateral curve grows with the square of downrange (curve accelerates).
-    const x = d * d;
+    // lateral profile honors the TRUE start/curve split (physics hunt 2026-07-12):
+    // the ball leaves the tee along startDirection (linear term) and the spin-axis
+    // curve accelerates on top (quadratic term). Normalized so x(1) = 1 = full offline.
+    // Degenerate |offline|≈0 (start and curve cancel): fall back to the old d² shape —
+    // consumers scale x by offline≈0, so the straight render is the honest limit.
+    const x = sf === null ? d * d : sf * d + (1 - sf) * d * d;
     pts.push({ d, h: clamp(h, 0, 1), x });
   }
   return pts;

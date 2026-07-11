@@ -100,6 +100,27 @@
   transform: rotate(45deg);
 }
 
+/* dock mode (never-cover law) — when the described element is so large that no
+   free zone holds the natural card, the card compacts into a horizontal bar
+   (text left, 44px actions right) and docks in a dimmed zone beside/below the
+   spotlight. Toggled by sa-firstrun.js. */
+.sa-coach.sa-coach--dock{
+  width: min(680px, calc(100vw - 20px));
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: 14px; row-gap: 2px;
+  align-items: center;
+  padding: 10px 14px;
+}
+.sa-coach.sa-coach--dock h3{ grid-column: 1; font-size: 13.5px; }
+.sa-coach.sa-coach--dock p{ grid-column: 1; font-size: 12px; line-height: 1.35; }
+.sa-coach.sa-coach--dock .sa-step{ grid-column: 1; font-size: 10px; }
+.sa-coach.sa-coach--dock .sa-actions{
+  grid-column: 2; grid-row: 1 / span 3;
+  flex-wrap: nowrap; gap: 8px;
+}
+.sa-coach.sa-coach--dock .sa-btn{ padding: 0 14px; }
+
 /* spotlight cutout highlight — a ring + huge box-shadow dims everything else */
 .sa-spotlight{
   position: fixed; z-index: 1001; pointer-events: none;
@@ -110,6 +131,11 @@
               width .3s cubic-bezier(.2,.7,.2,1), height .3s cubic-bezier(.2,.7,.2,1);
 }
 .sa-spotlight[hidden]{ display: none; }
+/* deep dim — dock mode darkens everything EXCEPT the described element further,
+   so the spotlight stays the one bright thing while the card sits in shadow */
+.sa-spotlight.sa-spotlight--deep{
+  box-shadow: 0 0 0 9999px rgba(5, 8, 11, .88), 0 0 22px rgba(34, 227, 214, .5);
+}
 @media (prefers-reduced-motion: reduce){ .sa-spotlight{ transition: none; } }
 
 /* progress dots */

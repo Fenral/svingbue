@@ -276,14 +276,13 @@
   .mcard .mv small{font-size:.55em;color:var(--muted);font-weight:600;margin-left:2px}
 
   /* coach line — main cause + coach cue, one compact line under the hero
-     cards. Never allowed to wrap to a second line's worth of height budget:
-     kept single-line height via line-height/padding trim only (content still
-     wraps if truly needed, same as before, but the common case is one row). */
+     cards (wraps when narrow; the lens svg absorbs the extra row). */
   .coachWrap{flex:0 0 auto;padding:1px 12px 1px}   /* out-13: 12px plate inset grid */
   .coachLine{
     font-size:11.5px;line-height:1.25;color:var(--ink);
     display:flex;flex-wrap:wrap;align-items:baseline;gap:5px 7px;
-    overflow:hidden;max-height:1.3em;
+    /* §1.1 (mirrors impact.html): no height clamp — the old 1.3em cap silently
+       swallowed the wrapped coach cue; the lens svg (flex:1) absorbs the wrap. */
   }
   .coachLine .cause{font-weight:700;color:var(--ink)}
   .coachLine .cue{color:var(--muted)}
@@ -750,16 +749,21 @@
     scroll-padding:0 26px}
   .chipScroll::-webkit-scrollbar{display:none}
   .chipRow{display:flex;gap:8px;width:max-content;align-items:stretch}
-  /* dynamic edge fades — scroll affordance (decorative, pointer-events none).
-     JS toggles .can-left/.can-right from the live scroll position, so the
-     RIGHT fade shows whenever more chips exist off-screen and the LEFT fade
-     appears once scrolled — "swipe sideways for more" at a glance. */
-  .rowWrap::before,.rowWrap::after{content:"";position:absolute;top:0;bottom:0;width:24px;
-    z-index:2;pointer-events:none;opacity:0;transition:opacity .25s ease}
-  .rowWrap::before{left:0;background:linear-gradient(90deg, rgba(7,11,16,.94), rgba(7,11,16,0))}
-  .rowWrap::after{right:0;background:linear-gradient(270deg, rgba(7,11,16,.94), rgba(7,11,16,0))}
-  .rowWrap.can-left::before{opacity:1}
-  .rowWrap.can-right::after{opacity:1}
+  /* dynamic edge fade-out — scroll affordance at the LAYOUT ROOT (Ordre-2 P1).
+     The old 24px paint-over gradient still left the peek chip hard-sliced
+     mid-glyph at the viewport edge («BAC 7…»). Instead the scroll container
+     itself now MASKS its content to transparent over the last 44px on any
+     side with more chips (JS toggles .can-left/.can-right from the live
+     scroll position) — the cut chip fades out, it never slices. */
+  .rowWrap.can-right .chipScroll{
+    -webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 44px),transparent);
+            mask-image:linear-gradient(90deg,#000 calc(100% - 44px),transparent)}
+  .rowWrap.can-left .chipScroll{
+    -webkit-mask-image:linear-gradient(90deg,transparent,#000 44px);
+            mask-image:linear-gradient(90deg,transparent,#000 44px)}
+  .rowWrap.can-left.can-right .chipScroll{
+    -webkit-mask-image:linear-gradient(90deg,transparent,#000 44px,#000 calc(100% - 44px),transparent);
+            mask-image:linear-gradient(90deg,transparent,#000 44px,#000 calc(100% - 44px),transparent)}
   /* edge chevrons ride ON the fades (same .can-* gate) — a literal "more this
      way" pointer for anyone who doesn't read the fade or the cut chip. */
   .edgeChev{position:absolute;top:50%;transform:translateY(-50%);z-index:3;pointer-events:none;
@@ -768,7 +772,7 @@
   .edgeChev.left{left:7px} .edgeChev.right{right:7px}
   .rowWrap.can-left .edgeChev.left{opacity:.9}
   .rowWrap.can-right .edgeChev.right{opacity:.9}
-  @media (prefers-reduced-motion:reduce){ .rowWrap::before,.rowWrap::after,.edgeChev{transition:none} }
+  @media (prefers-reduced-motion:reduce){ .edgeChev{transition:none} }
   /* INPUT chips (ported verbatim from the viz mock's .chip.input): coloured
      dot + coloured baseline + tune glyph — visibly a control, 44px target. */
   .chip{appearance:none;font-family:inherit;cursor:pointer;position:relative;flex:0 0 auto;scroll-snap-align:start;
@@ -5140,7 +5144,10 @@ $('fGhostLegend').addEventListener('click', (e)=>{
 
   const COACH_KEY = 'sa_coach_impact';
   const STEPS = [
-    { selector: '#stage',
+    // NEVER-COVER (Ordre-2 P2): the described elements are the two lens VIEWS
+    // (the svgs), not the whole #stage wrapper — spotlighting the pair leaves
+    // the I/O rows below as a dim free zone for the coach card.
+    { selector: '#svgDir, #svgHt',
       title: 'Both lenses at once',
       body: 'Direction (left) shows face & path from above; Launch (right) shows attack & loft from the side.' },
     { selector: '#icell_face',

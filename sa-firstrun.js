@@ -222,52 +222,114 @@
     bubble.appendChild(p);
     bubble.appendChild(actions);
 
-    function positionFor(target) {
-      var pad = 8;
-      var r = target.getBoundingClientRect();
+    function positionFor(targets) {
+      var pad = 8, gap = 14, m = 10;
+      // union rect of ALL described elements (a step selector may be a comma
+      // list — "both lenses" spotlights the pair, not a full-screen wrapper)
+      var r = null;
+      targets.forEach(function (t) {
+        var b = t.getBoundingClientRect();
+        if (!b.width && !b.height) return;
+        r = r ? {
+          top: Math.min(r.top, b.top), left: Math.min(r.left, b.left),
+          bottom: Math.max(r.bottom, b.bottom), right: Math.max(r.right, b.right)
+        } : { top: b.top, left: b.left, bottom: b.bottom, right: b.right };
+      });
+      if (!r) return;
+      r.width = r.right - r.left; r.height = r.bottom - r.top;
       // spotlight box
       spotlight.style.top = (r.top - pad) + "px";
       spotlight.style.left = (r.left - pad) + "px";
       spotlight.style.width = (r.width + pad * 2) + "px";
       spotlight.style.height = (r.height + pad * 2) + "px";
 
-      // bubble placement: below the target if room, else above
-      var bw = bubble.offsetWidth || 300, bh = bubble.offsetHeight || 140;
+      // ── NEVER-COVER LAW (Økt-1 §1.1 / Ordre-2 P2): the bubble must not
+      // intersect the described rect. Place it in a free zone around the
+      // target — below, above, right, left — at natural size first; if none
+      // holds it, switch to the DOCK alternative: compact bubble + deeper dim
+      // outside the spotlight (the described element stays the bright thing,
+      // the card sits in a dimmed zone). Only if the target leaves no zone at
+      // all (true full-viewport target) fall back to the old bottom clamp.
       var vw = global.innerWidth, vh = global.innerHeight;
-      var below = (r.bottom + 14 + bh) <= vh;
-      var top = below ? (r.bottom + 14) : (r.top - 14 - bh);
-      // CLAMP into the viewport: a full-viewport target (e.g. impact.html's
-      // "#stage" dual-lens step) has no room above OR below, which used to
-      // push the whole card off-screen (measured top=-193 at 844x390 — title,
-      // body and the Next/Skip buttons all unreachable). When clamped, the
-      // card overlaps the spotlighted region (unavoidable) and the arrow is
-      // hidden because it would point at nothing meaningful.
-      var maxTop = vh - bh - 10;
-      var clamped = false;
-      if (top > maxTop) { top = maxTop; clamped = true; }
-      if (top < 10) { top = 10; clamped = true; }
-      var left = r.left + r.width / 2 - bw / 2;
-      left = Math.max(10, Math.min(left, vw - bw - 10));
-      bubble.style.top = top + "px";
-      bubble.style.left = left + "px";
+      var zones = function () {
+        return [
+          { name: "below", x: m, y: r.bottom + gap, w: vw - 2 * m, h: vh - r.bottom - gap - m },
+          { name: "above", x: m, y: m, w: vw - 2 * m, h: r.top - gap - m },
+          { name: "right", x: r.right + gap, y: m, w: vw - r.right - gap - m, h: vh - 2 * m },
+          { name: "left",  x: m, y: m, w: r.left - gap - m, h: vh - 2 * m }
+        ];
+      };
+      var place = function (z, bw, bh) {
+        var top, left;
+        if (z.name === "below") top = z.y;
+        else if (z.name === "above") top = z.y + z.h - bh;
+        else top = Math.max(z.y, Math.min(r.top + r.height / 2 - bh / 2, z.y + z.h - bh));
+        if (z.name === "left") left = z.x + z.w - bw;
+        else if (z.name === "right") left = z.x;
+        else left = Math.max(z.x, Math.min(r.left + r.width / 2 - bw / 2, z.x + z.w - bw));
+        bubble.style.top = top + "px";
+        bubble.style.left = left + "px";
+        return { top: top, left: left };
+      };
+      var tryFit = function () {
+        var bw = bubble.offsetWidth || 300, bh = bubble.offsetHeight || 140;
+        var zs = zones();
+        for (var i = 0; i < zs.length; i++) {
+          if (zs[i].w >= bw && zs[i].h >= bh) return { zone: zs[i], bw: bw, bh: bh };
+        }
+        return null;
+      };
 
-      // arrow (hidden when the card had to be clamped into the viewport)
-      if (clamped) {
-        arrow.style.display = "none";
-      } else {
-        arrow.style.display = "";
-        var ax = r.left + r.width / 2 - left - 7;
-        ax = Math.max(12, Math.min(ax, bw - 26));
-        arrow.style.left = ax + "px";
-        if (below) { arrow.style.top = "-7px"; arrow.style.bottom = ""; arrow.style.transform = "rotate(45deg)"; }
-        else { arrow.style.bottom = "-7px"; arrow.style.top = ""; arrow.style.transform = "rotate(225deg)"; }
+      bubble.classList.remove("sa-coach--dock");
+      spotlight.classList.remove("sa-spotlight--deep");
+      bubble.style.maxHeight = ""; bubble.style.overflowY = "";
+      var fit = tryFit();
+      var docked = false;
+      if (!fit) {
+        // dock mode: compact type/padding (44px actions kept), deep dim
+        docked = true;
+        bubble.classList.add("sa-coach--dock");
+        spotlight.classList.add("sa-spotlight--deep");
+        fit = tryFit();
       }
+      if (fit) {
+        var pos = place(fit.zone, fit.bw, fit.bh);
+        // arrow only for natural (non-docked) below/above placements
+        if (!docked && (fit.zone.name === "below" || fit.zone.name === "above")) {
+          arrow.style.display = "";
+          var ax = r.left + r.width / 2 - pos.left - 7;
+          ax = Math.max(12, Math.min(ax, fit.bw - 26));
+          arrow.style.left = ax + "px";
+          if (fit.zone.name === "below") { arrow.style.top = "-7px"; arrow.style.bottom = ""; arrow.style.transform = "rotate(45deg)"; }
+          else { arrow.style.bottom = "-7px"; arrow.style.top = ""; arrow.style.transform = "rotate(225deg)"; }
+        } else {
+          arrow.style.display = "none";
+        }
+        return;
+      }
+      // still nothing at natural/compact size: take the tallest horizontal
+      // band and shrink the bubble into it (scrolls internally) — zero overlap
+      // beats full text at rest. The described rect is never covered.
+      var zs2 = zones();
+      var band = zs2[0].h >= zs2[1].h ? zs2[0] : zs2[1];
+      arrow.style.display = "none";
+      if (band.h >= 90) {
+        bubble.style.maxHeight = (band.h) + "px";
+        bubble.style.overflowY = "auto";
+        var bw2 = bubble.offsetWidth || 300, bh2 = Math.min(bubble.offsetHeight || 140, band.h);
+        place(band, bw2, bh2);
+        return;
+      }
+      // absolute last resort (target covers ~the whole viewport): bottom clamp
+      var bw3 = bubble.offsetWidth || 300, bh3 = bubble.offsetHeight || 140;
+      bubble.style.top = Math.max(m, vh - bh3 - m) + "px";
+      bubble.style.left = Math.max(m, Math.min(r.left + r.width / 2 - bw3 / 2, vw - bw3 - m)) + "px";
     }
 
     function render() {
       var s = steps[idx];
-      var target = null;
-      try { target = doc.querySelector(s.selector); } catch (e) { target = null; }
+      var targets = [];
+      try { targets = Array.prototype.slice.call(doc.querySelectorAll(s.selector)); } catch (e) { targets = []; }
       step.textContent = "Step " + (idx + 1) + " of " + steps.length;
       h.textContent = s.title || "";
       p.textContent = s.body || "";
@@ -275,13 +337,14 @@
       next.textContent = idx === steps.length - 1 ? "Done" : "Next";
       if (opts.onStep) opts.onStep(idx);
 
-      if (target) {
+      if (targets.length) {
         spotlight.hidden = false;
-        try { target.scrollIntoView({ block: "nearest", behavior: reduced ? "auto" : "smooth" }); } catch (e) {}
-        positionFor(target);
+        try { targets[0].scrollIntoView({ block: "nearest", behavior: reduced ? "auto" : "smooth" }); } catch (e) {}
+        positionFor(targets);
       } else {
         // no target on this page → center the bubble, hide the spotlight
         spotlight.hidden = true;
+        bubble.classList.remove("sa-coach--dock");
         bubble.style.top = "50%"; bubble.style.left = "50%";
         bubble.style.transform = "translate(-50%,-50%)";
         arrow.style.display = "none";

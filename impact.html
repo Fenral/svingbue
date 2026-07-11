@@ -3,33 +3,46 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<meta name="theme-color" content="#0A0E12" />
+<meta name="theme-color" content="#07060C" />
 <meta name="robots" content="noindex" />
 <title>See the Shot — Live D-plane Instrument</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2052%2052'%20fill='none'%3E%3Cpath%20d='M11%2045%20C%2016%2026,%2024%2018,%2035%2015%20M21%2039%20L%2030%2024%20L%2043%2045'%20stroke='%2322E3D6'%20stroke-width='4.2'%20stroke-linecap='round'%20stroke-linejoin='round'/%3E%3Ccircle%20cx='37'%20cy='15'%20r='5.2'%20fill='%2322E3D6'/%3E%3C/svg%3E" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2052%2052'%20fill='none'%3E%3Cpath%20d='M11%2045%20C%2016%2026,%2024%2018,%2035%2015%20M21%2039%20L%2030%2024%20L%2043%2045'%20stroke='%239D8BFF'%20stroke-width='4.2'%20stroke-linecap='round'%20stroke-linejoin='round'/%3E%3Ccircle%20cx='37'%20cy='15'%20r='5.2'%20fill='%23FF8A4D'/%3E%3C/svg%3E" />
+<link rel="stylesheet" href="./sa-p3.css" />
 <link rel="stylesheet" href="./sa.css" />
 <link rel="stylesheet" href="./sa-paywall.css" />
 <style>
+  /* ══ ØKT 2 §2.4 — P3 "Ultraviolet Ember" migration ═══════════════
+     Identity tokens (--accent/--ink/--muted/--bg/--good/--warn/--bad/--ghost,
+     param --q-*) are CONSUMED from sa-p3.css. This block only keeps the
+     page-local aliases + values sa-p3 doesn't ship. Ember = the live ball +
+     its trace + live engine truth; violet = chrome; gold = annotations;
+     reference geometry stays white-alpha neutral. */
   :root{
-    --accent:#22E3D6; --accent-soft:rgba(34,227,214,.16); --accent-line:rgba(34,227,214,.55);
-    --ink:#e8f0fb; --muted:#9aabc6;                     /* unified ink + AAA-ish muted */
-    --bg:#0A0E12; --bg-top:#0b1220;
-    --panel:rgba(12,20,33,.72); --line:rgba(255,255,255,.30);  /* line raised to ≥3:1 */
-    --radius-pill:999px; --radius-card:16px; --radius-control:12px;
+    --bg-top:#140E24;
+    --panel:rgba(17,13,28,.72);
     --blur-surface:10px; --blur-overlay:18px;
-    --plate:#0E141C;
-    /* anatomy colours (ported hexApprox from direction-height-arrows-layout.ts) */
-    --c-face:#E83B47; --c-path:#8FB4D4; --c-loft:#A66BFF; --c-attack:#FF7AA8; --c-launch:#F4D000;
-    /* outcome/ghost tokens (stage 3+; stage 5 uses them more) */
-    --good:#4ADE80; --warn:#FBBF24; --bad:#F87171; --ghost:#9FB2C8;
+    /* anatomy colours — bound to the ONE HUE · ONE MEANING dictionary (SYS-11) */
+    --c-face:var(--q-face); --c-path:var(--q-path); --c-loft:var(--q-loft);
+    --c-attack:var(--q-attack); --c-launch:var(--q-launch);
     --dim:0.55;
   }
+  /* coach-mark chrome (sa.css ships teal-era hardcoded navy + teal spotlight
+     glow as literals, not tokens — override into the dusk world here). */
+  .sa-card{background-color:rgba(17,13,28,.94)}
+  .sa-coach{background-color:rgba(17,13,28,.97)}
+  .sa-coach .sa-coach-arrow{background:rgba(17,13,28,.97)}
+  .sa-spotlight{box-shadow:0 0 0 9999px rgba(5,4,9,.72), 0 0 22px rgba(255,138,77,.45)}
+  .sa-spotlight.sa-spotlight--deep{box-shadow:0 0 0 9999px rgba(5,4,9,.88), 0 0 22px rgba(255,138,77,.45)}
+  /* "?" help = chrome, not action — violet (keeps the resting ember budget at
+     Play flight + the live predictor only). sa.css paints it ember by default. */
+  .sa-help{color:var(--secondary);border-color:var(--secondary-line)}
+  .sa-help:hover{background:var(--secondary-soft);border-color:var(--secondary)}
   *{box-sizing:border-box;margin:0;padding:0}
   html,body{height:100%;overflow:hidden}
   body{
     background:radial-gradient(130% 120% at 50% -10%, var(--bg-top), var(--bg));
     color:var(--ink);
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    font-family:var(--font-ui);
     -webkit-tap-highlight-color:transparent;
   }
   .app{position:fixed;inset:0;display:flex;flex-direction:column;overflow:hidden}
@@ -39,7 +52,7 @@
     flex:0 0 auto;display:flex;align-items:center;gap:10px;
     height:40px;padding:0 max(12px,env(safe-area-inset-right)) 0 max(12px,env(safe-area-inset-left));
     border-bottom:1px solid rgba(255,255,255,.06);
-    background:linear-gradient(180deg, rgba(12,20,33,.55), rgba(10,14,18,.2));
+    background:linear-gradient(180deg, rgba(17,13,28,.66), rgba(7,6,12,.20));
   }
   .ts-left{display:flex;align-items:center;gap:8px;flex:0 0 auto;min-width:0}
   .ts-title{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink);white-space:nowrap}
@@ -60,8 +73,10 @@
      already wide enough that only vertical expansion is needed). */
   .modnav a.home::after{left:50%;right:auto;top:50%;width:44px;height:44px;transform:translate(-50%,-50%)}
   .modnav a:hover{background:rgba(255,255,255,.08);color:var(--ink)}
-  .modnav a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-  .modnav a[aria-current="page"]{color:var(--accent);border-color:var(--accent-line);background:var(--accent-soft)}
+  .modnav a:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+  /* nav-current demoted from accent → violet chrome (ember budget: the live
+     ball/tracer + Play flight own the heat; navigation is structure). */
+  .modnav a[aria-current="page"]{color:var(--secondary);border-color:var(--secondary-line);background:var(--secondary-soft)}
 
   .ts-center{flex:1 1 auto;display:flex;align-items:center;justify-content:center;gap:9px;min-width:0}
   .ts-center label{font-size:10px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);font-weight:600;white-space:nowrap}
@@ -69,7 +84,7 @@
   .ts-center input[type=range]{flex:1 1 auto;min-width:60px}
   /* once wrapped in .rwrap, the wrapper becomes the flex item */
   .ts-center .speedwrap .rwrap{flex:1 1 auto;min-width:60px}
-  .ts-center .speedval{font-size:12px;font-weight:700;color:var(--accent);font-variant-numeric:tabular-nums;width:60px;text-align:right;white-space:nowrap}
+  .ts-center .speedval{font-size:12px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums;width:60px;text-align:right;white-space:nowrap}
 
 
   .ts-right{flex:0 0 auto;display:flex;align-items:center;gap:8px}
@@ -80,7 +95,7 @@
   .ts-right .sa-help::after{content:"";position:absolute;inset:-7px;border-radius:999px}
   .playpill{
     height:30px;padding:0 13px;border-radius:999px;position:relative;
-    background:rgba(10,18,30,.6);color:var(--accent);
+    background:rgba(13,10,24,.6);color:var(--accent);
     border:1px solid var(--accent-line);
     font-size:11px;font-weight:700;cursor:pointer;line-height:1;
     display:inline-flex;align-items:center;gap:6px;font-family:inherit;letter-spacing:.02em;
@@ -90,8 +105,9 @@
   .playpill::after{content:"";position:absolute;left:0;right:0;top:50%;height:44px;transform:translateY(-50%)}
   .playpill:hover{background:var(--accent-soft);border-color:var(--accent)}
   .playpill:active{transform:translateY(1px)}
-  .playpill:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-  .playpill .pico{font-size:10px}
+  .playpill:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+  .playpill .pico{display:inline-flex}
+  .playpill .pico svg{width:9px;height:10px;display:block}
 
   /* ══ MAIN — FOCUS-MODE STAGE (Direction | Launch | Flight) ═══════
      Replaces the old fixed two-lens layout. Each focus is a full-stage
@@ -119,8 +135,8 @@
   .heroLens{
     flex:1 1 auto;min-width:0;border-radius:20px;position:relative;
     background:
-      radial-gradient(120% 90% at 50% 18%, rgba(34,227,214,.07), rgba(10,14,18,0) 62%),
-      #0A0E12;
+      radial-gradient(120% 90% at 50% 18%, rgba(157,139,255,.07), rgba(7,6,12,0) 62%),
+      #0D0A18;
     border:1px solid rgba(255,255,255,.07);
     box-shadow:inset 0 1px 0 rgba(255,255,255,.04), 0 14px 40px -22px rgba(0,0,0,.8);
     display:flex;flex-direction:column;overflow:hidden;
@@ -137,7 +153,7 @@
   .minidock{
     flex:0 0 auto;display:flex;gap:8px;padding:0 10px 0;
     border-top:1px solid rgba(255,255,255,.06);
-    background:linear-gradient(180deg, rgba(10,14,18,0), rgba(8,12,16,.5));
+    background:linear-gradient(180deg, rgba(7,6,12,0), rgba(8,5,14,.5));
   }
   .mini{flex:1 1 0;min-width:0}
   .mini .mtop{display:flex;justify-content:space-between;align-items:baseline;gap:6px;margin-bottom:0}
@@ -147,11 +163,13 @@
   .mini .mval{font-size:12.5px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--ink)}
 
   input[type=range]{width:100%;height:18px;cursor:pointer;accent-color:var(--accent);background:transparent}
-  input[type=range]:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:6px}
-  .mini.k-face input{accent-color:var(--c-face)} .mini.k-face .mname{color:#ffb0b6}
-  .mini.k-path input{accent-color:var(--c-path)} .mini.k-path .mname{color:#bcd6ea}
-  .mini.k-loft input{accent-color:var(--c-loft)} .mini.k-loft .mname{color:#cdb0ff}
-  .mini.k-attack input{accent-color:var(--c-attack)} .mini.k-attack .mname{color:#ffc0d4}
+  input[type=range]:focus-visible{outline:2px solid var(--ink);outline-offset:3px;border-radius:6px}
+  /* label tints = the param hue lifted toward ink (same recipe as the old
+     hand-picked pastels) so every name clears 4.5:1 on the lens plate. */
+  .mini.k-face input{accent-color:var(--c-face)} .mini.k-face .mname{color:color-mix(in srgb, var(--c-face) 55%, #fff)}
+  .mini.k-path input{accent-color:var(--c-path)} .mini.k-path .mname{color:color-mix(in srgb, var(--c-path) 65%, #fff)}
+  .mini.k-loft input{accent-color:var(--c-loft)} .mini.k-loft .mname{color:color-mix(in srgb, var(--c-loft) 65%, #fff)}
+  .mini.k-attack input{accent-color:var(--c-attack)} .mini.k-attack .mname{color:color-mix(in srgb, var(--c-attack) 65%, #fff)}
 
   /* hero results row — max 4 metric cards under the hero lens (per-focus).
      REBALANCE: these read as SECONDARY/supporting chips now (the lens is the
@@ -160,10 +178,22 @@
      (same convention as .seg button / .playpill elsewhere in this file)
      rather than by inflating the visual box. */
   .heroResults{flex:0 0 auto;display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:0 10px 0}
+  /* [§1.2 input/outcome grammar] group eyebrows: controls = violet INPUT · CONTROL,
+     readouts = gold OUTCOME · READ. Hues are the P3 dusk constants (this page's
+     full dusk migration is Økt 2 §2.4; the grammar lands now). */
+  .grp-eb{flex:0 0 auto;padding:3px 10px 0;font-size:10px;font-weight:800;
+    letter-spacing:.13em;text-transform:uppercase;line-height:1;pointer-events:none}
+  .grp-eb--in{color:var(--secondary)}
+  .grp-eb--out{color:var(--gold)}
+  /* §2.4 — the honest declaration on the attack control group: Impact
+     SIMULATES attack as a free input (Geometry derives it). Mono voice. */
+  .sim-eb{font-family:var(--font-mono);font-size:10px;font-weight:600;letter-spacing:.08em;
+    text-transform:uppercase;color:var(--muted);line-height:1;padding-bottom:3px;white-space:nowrap}
+  .minidock{align-items:flex-end}   /* the attack mini carries an extra eyebrow row; keep both sliders base-aligned */
   .mcard{
     height:48px;padding:5px 9px;border-radius:10px;position:relative;
-    background:linear-gradient(180deg, rgba(22,34,50,.7), rgba(12,19,29,.7));
-    border:1px solid rgba(255,255,255,.09);
+    background:linear-gradient(180deg, rgba(30,23,50,.7), rgba(14,10,25,.7));
+    border:1px dashed rgba(255,255,255,.22);   /* readout = dashed edge (§1.2) */
     display:flex;flex-direction:column;justify-content:center;gap:1px;min-width:0;
     appearance:none;font-family:inherit;color:inherit;text-align:left;cursor:pointer;
     transition:border-color .15s ease, background .15s ease, transform .12s ease;
@@ -172,11 +202,17 @@
      height without growing the visual chip (mcard is 50px tall already, so
      the pad only needs to cover the vertical gaps either side). */
   .mcard::after{content:"";position:absolute;left:0;right:0;top:50%;height:44px;transform:translateY(-50%)}
-  .mcard:hover{border-color:rgba(255,255,255,.18);background:linear-gradient(180deg, rgba(26,40,58,.78), rgba(14,22,33,.78))}
+  .mcard:hover{border-color:rgba(255,255,255,.18);background:linear-gradient(180deg, rgba(36,28,60,.78), rgba(16,12,28,.78))}
   .mcard:active,.mcard[aria-expanded="true"]{transform:scale(.97);border-color:rgba(255,255,255,.2)}
-  .mcard:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-  .mcard .mk{font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .mcard .mv{font-size:19px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--accent);letter-spacing:-.01em;white-space:nowrap}
+  .mcard:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+  /* flex:none + pinned line-height: the card is a column flexbox, and when the
+     value row ran tall the label row was flex-SHRUNK below its own line box —
+     with overflow:hidden that sheared the glyph tops off («LAUNCH DIR» clipped,
+     §1.1). Labels and values are now rigid rows; the card grows instead. */
+  .mcard .mk{flex:0 0 auto;font-size:10.5px;line-height:1.25;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  /* readout values are calm ink (mono voice) — ember belongs to the live ball,
+     not to eight resting numbers (SYS-08 budget). */
+  .mcard .mv{flex:0 0 auto;font-size:19px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--ink);letter-spacing:-.01em;white-space:nowrap;line-height:1.15}
   .mcard .mv small{font-size:.55em;color:var(--muted);font-weight:600;margin-left:2px}
 
   /* coach line — main cause + coach cue, one compact line under the hero
@@ -187,11 +223,12 @@
   .coachLine{
     font-size:11.5px;line-height:1.25;color:var(--ink);
     display:flex;flex-wrap:wrap;align-items:baseline;gap:5px 7px;
-    overflow:hidden;max-height:1.3em;
+    /* §1.1: no height clamp — the old 1.3em cap cut a long coach cue
+       mid-sentence; the lens svg (flex:1, min-height:0) absorbs the wrap. */
   }
   .coachLine .cause{font-weight:700;color:var(--ink)}
   .coachLine .cue{color:var(--muted)}
-  .coachDot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent);flex:0 0 auto;margin-right:2px}
+  .coachDot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--secondary);flex:0 0 auto;margin-right:2px}
 
   /* DENSITY-DIET: the Launch panel's 6 cells (3 hero + 3 secondary) form two
      clean rows of 3 — same 3-up grid as Direction, bigger type (step 3/4). */
@@ -261,10 +298,10 @@
   }
   .rwrap input[type=range].premium-range:focus-visible{outline:none}
   .rwrap input[type=range].premium-range:focus-visible::-webkit-slider-thumb{
-    box-shadow:0 2px 7px rgba(0,0,0,.5), 0 0 0 3px #0A0E12, 0 0 0 6px var(--rc);
+    box-shadow:0 2px 7px rgba(0,0,0,.5), 0 0 0 3px #07060C, 0 0 0 6px var(--rc);
   }
   .rwrap input[type=range].premium-range:focus-visible::-moz-range-thumb{
-    box-shadow:0 2px 7px rgba(0,0,0,.5), 0 0 0 3px #0A0E12, 0 0 0 6px var(--rc);
+    box-shadow:0 2px 7px rgba(0,0,0,.5), 0 0 0 3px #07060C, 0 0 0 6px var(--rc);
   }
   /* CENTRE TICK at 0 — only for ± (signed) sliders. A 2px notch on the track. */
   .rwrap.signed::before{
@@ -277,7 +314,7 @@
     position:absolute;top:-2px;left:0;transform:translate(-50%,-100%) scale(.9);
     padding:2px 7px;border-radius:7px;white-space:nowrap;
     font-size:11px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.25;
-    color:#fff;background:color-mix(in srgb, var(--rc) 66%, #0A0E12);
+    color:#fff;background:color-mix(in srgb, var(--rc) 66%, #07060C);
     border:1px solid rgba(255,255,255,.28);
     box-shadow:0 4px 12px rgba(0,0,0,.45);
     opacity:0;pointer-events:none;z-index:3;
@@ -334,7 +371,7 @@
   /* value chip near arrow (chip-fade ALWAYS ON) */
   .vchip{
     pointer-events:none;
-    fill:rgba(14,20,28,.92);stroke:rgba(255,255,255,.18);
+    fill:rgba(13,10,24,.92);stroke:rgba(255,255,255,.18);
   }
   .vchipText{font-size:20px;font-weight:800;font-variant-numeric:tabular-nums;font-family:inherit}
   .vchipWrap{opacity:0;transition:opacity .26s ease}
@@ -342,7 +379,7 @@
   @media (prefers-reduced-motion:reduce){ .vchipWrap{transition:none} }
 
   /* ══ STAGE 6 — LANDING PREDICTOR (direction lens) ═══════════════
-     Neutral reference geometry (#predRef) + a SMALL cyan dot (#predGroup)
+     Neutral reference geometry (#predRef) + a SMALL ember dot (#predGroup)
      showing the predicted lateral finish, LIVE. Sits BEHIND the face/path/
      launch arrows in DOM/z-order (declared earlier in the SVG). The gentle
      ~2s breathing pulse is applied to #predDot/#predHalo via GSAP
@@ -386,7 +423,7 @@
        render over the overlay, and below the portrait rotate hint (60). */
     position:fixed;z-index:55;width:min(324px,88vw);
     border-radius:16px;
-    background:rgba(20,28,38,.55);
+    background:rgba(22,16,38,.55);
     -webkit-backdrop-filter:blur(20px) saturate(140%);backdrop-filter:blur(20px) saturate(140%);
     border:1px solid rgba(255,255,255,.18);
     box-shadow:0 18px 50px -12px rgba(0,0,0,.7), inset 0 1px 0 rgba(255,255,255,.12);
@@ -396,7 +433,7 @@
     transition:opacity .18s ease, transform .18s ease, visibility .18s;
     pointer-events:none;
   }
-  @supports not ((-webkit-backdrop-filter:blur(1px)) or (backdrop-filter:blur(1px))){ .pop{background:#0C1421} }
+  @supports not ((-webkit-backdrop-filter:blur(1px)) or (backdrop-filter:blur(1px))){ .pop{background:#110D1C} }
   .pop.open{opacity:1;visibility:visible;transform:translateY(0) scale(1);pointer-events:auto}
   .pop .plate{background:var(--plate);border-radius:12px;padding:11px 13px;position:relative;z-index:1;
     max-height:var(--pop-max,none);overflow-y:auto;overscroll-behavior:contain}
@@ -412,10 +449,10 @@
   .pop .pophead .pn{font-size:12.5px;font-weight:700;color:var(--ink);letter-spacing:-.01em}
   .pop .pophead .pt{font-size:8.5px;font-weight:800;letter-spacing:.08em;color:var(--muted);
     border:1px solid rgba(255,255,255,.16);border-radius:5px;padding:1px 5px;text-transform:uppercase}
-  .pop .pophead .pv{font-size:15px;font-weight:800;color:var(--accent);font-variant-numeric:tabular-nums;margin-left:auto}
+  .pop .pophead .pv{font-size:15px;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums;margin-left:auto}
   .pop .seclab{font-size:8.5px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;color:var(--muted);margin-bottom:3px}
   /* SECTION 1 — WHAT IT IS */
-  .pop .pdesc{font-size:11.5px;line-height:1.32;color:#cdd9ec;margin-bottom:7px}
+  .pop .pdesc{font-size:11.5px;line-height:1.32;color:#CEC6EA;margin-bottom:7px}
   /* SECTION 2 — HOW IT'S CREATED (mini SVG diagram) */
   .pop .popdiagram{margin-bottom:6px;max-width:150px;margin-left:auto;margin-right:auto}
   .pop .popdiagram svg{display:block;width:100%;height:auto;overflow:visible}
@@ -426,15 +463,15 @@
   .pop .driver .dRank{flex:0 0 auto;width:14px;height:14px;border-radius:50%;
     display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;
     background:rgba(255,255,255,.08);color:var(--muted)}
-  .pop .driver:first-child .dRank{background:var(--accent-soft);color:var(--accent)}
-  .pop .driver .dName{color:#e8f0fb;font-weight:600;flex:1 1 auto;min-width:0}
+  .pop .driver:first-child .dRank{background:var(--secondary-soft);color:var(--secondary)}
+  .pop .driver .dName{color:var(--ink);font-weight:600;flex:1 1 auto;min-width:0}
   .pop .driver .dTrend{flex:0 0 auto;font-weight:800;font-size:11.5px;font-variant-numeric:tabular-nums}
   .pop .driver .dTrend.up{color:var(--good)}
-  .pop .driver .dTrend.down{color:#ffb0a0}
+  .pop .driver .dTrend.down{color:var(--bad)}
   @media (prefers-reduced-motion:reduce){ .pop{transition:none} }
 
   /* ══ PLAY-FLIGHT OVERLAY (oblique 3D driving-range, scene C) ════ */
-  .flightScrim{position:fixed;inset:0;z-index:50;background:rgba(4,7,10,.78);
+  .flightScrim{position:fixed;inset:0;z-index:50;background:rgba(5,4,9,.78);
     opacity:0;visibility:hidden;transition:opacity .25s,visibility .25s;
     display:flex;align-items:center;justify-content:center;padding:0}
   .flightScrim.open{opacity:1;visibility:visible}
@@ -457,18 +494,18 @@
      they clear the safe area instead of hugging the physical edge. Purely
      additive — visual position on a normal browser (inset=0) is unchanged. */
   .flightClose{position:absolute;top:max(10px,env(safe-area-inset-top));right:max(10px,env(safe-area-inset-right));z-index:6;width:36px;height:36px;border-radius:999px;
-    border:1px solid var(--line);background:rgba(10,18,30,.7);color:var(--ink);font-size:18px;line-height:1;cursor:pointer;
+    border:1px solid var(--line-strong);background:rgba(13,10,24,.7);color:var(--ink);font-size:18px;line-height:1;cursor:pointer;
     display:flex;align-items:center;justify-content:center}
   .flightClose::after{content:"";position:absolute;inset:-5px;border-radius:999px} /* ≥44px hit target */
   .flightClose:hover{background:rgba(255,255,255,.12)}
-  .flightClose:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .flightClose:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
   .flightReplay{position:absolute;top:max(10px,env(safe-area-inset-top));right:calc(max(10px,env(safe-area-inset-right)) + 44px);z-index:6;height:36px;padding:0 15px;border-radius:999px;
-    border:1px solid var(--accent-line);background:rgba(10,18,30,.7);color:var(--accent);
+    border:1px solid var(--accent-line);background:rgba(13,10,24,.7);color:var(--accent);
     font-size:12px;font-weight:700;line-height:1;cursor:pointer;font-family:inherit;letter-spacing:.04em;
     display:inline-flex;align-items:center;gap:6px}
   .flightReplay::after{content:"";position:absolute;left:0;right:0;top:50%;height:46px;transform:translateY(-50%)} /* ≥44px hit target */
   .flightReplay:hover{background:var(--accent-soft);border-color:var(--accent)}
-  .flightReplay:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .flightReplay:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
   /* ── MONETIZATION: discreet "N free shots left" nudge — top-center, clear
        of the top-left carry hero and the top-right pill stack. Toggled via
        the [hidden] attribute (not display, so the base rule never fights the
@@ -477,45 +514,51 @@
        on every play. */
   .saNudge{position:absolute;top:max(10px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);
     z-index:6;height:28px;padding:0 14px;border-radius:999px;
-    border:1px solid var(--accent-line);background:rgba(10,18,30,.7);color:var(--accent);
+    border:1px solid var(--accent-line);background:rgba(13,10,24,.7);color:var(--accent);
     font-size:11px;font-weight:700;line-height:1;letter-spacing:.04em;font-family:inherit;
     white-space:nowrap;pointer-events:none}
   .saNudge:not([hidden]){display:flex;align-items:center;justify-content:center}
   /* ── STAGE 3: ghost toggle pill + clear control (same pill family as Replay) ── */
   .ghostPill{position:absolute;top:max(10px,env(safe-area-inset-top));right:calc(max(10px,env(safe-area-inset-right)) + 142px);z-index:6;height:36px;padding:0 15px;border-radius:999px;
-    border:1px solid rgba(159,178,200,.5);background:rgba(10,18,30,.7);color:var(--ghost);
+    border:1px solid rgba(167,160,196,.5);background:rgba(13,10,24,.7);color:var(--ghost);
     font-size:12px;font-weight:700;line-height:1;cursor:pointer;font-family:inherit;letter-spacing:.04em;
     display:inline-flex;align-items:center;gap:6px}
   .ghostPill::after{content:"";position:absolute;inset:-5px;border-radius:999px} /* ≥44px hit target */
   .ghostPill .gdot{width:8px;height:8px;border-radius:50%;background:var(--ghost);flex:0 0 auto;box-sizing:border-box}
-  .ghostPill:hover{background:rgba(159,178,200,.14)}
-  .ghostPill:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .ghostPill:hover{background:rgba(167,160,196,.14)}
+  .ghostPill:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
   /* off-state is NOT colour-only: hollow dot + aria-pressed carry the state */
-  .ghostPill[aria-pressed="false"]{color:var(--muted);border-color:var(--line)}
+  .ghostPill[aria-pressed="false"]{color:var(--muted);border-color:var(--line-strong)}
   .ghostPill[aria-pressed="false"] .gdot{background:transparent;border:1.5px solid var(--muted)}
+  /* «Data» pill — hides the post-landing reveal (fBottom chips + delta label). Gold = annotations. */
+  .dataPill{right:calc(max(10px,env(safe-area-inset-right)) + 274px);color:var(--gold)}
+  .dataPill .gdot{background:var(--gold)}
+  .dataPill[aria-pressed="false"]{color:var(--muted)}
+  .dataPill[aria-pressed="false"] .gdot{background:transparent;border:1.5px solid var(--muted)}
+  .flightCard.data-off .fBottom,.flightCard.data-off .fDelta{display:none}
   .ghostClear{position:absolute;top:max(10px,env(safe-area-inset-top));right:calc(max(10px,env(safe-area-inset-right)) + 228px);z-index:6;width:36px;height:36px;border-radius:999px;
-    border:1px solid var(--line);background:rgba(10,18,30,.7);color:var(--muted);font-size:16px;line-height:1;cursor:pointer;
+    border:1px solid var(--line-strong);background:rgba(13,10,24,.7);color:var(--muted);font-size:16px;line-height:1;cursor:pointer;
     display:flex;align-items:center;justify-content:center;font-family:inherit}
   .ghostClear::after{content:"";position:absolute;inset:-5px;border-radius:999px} /* ≥44px hit target */
   .ghostClear:hover{background:rgba(255,255,255,.12);color:var(--ink)}
-  .ghostClear:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .ghostClear:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
   /* ── GHOST LAB: legend column (pin + per-ghost chips), below the top pill row ── */
   .fLegend{position:absolute;top:calc(max(10px,env(safe-area-inset-top)) + 46px);right:max(10px,env(safe-area-inset-right));
     z-index:6;display:flex;flex-direction:column;gap:8px;align-items:flex-end}
   .fChip{position:relative;height:36px;padding:0 12px;border-radius:999px;
-    border:1px solid rgba(159,178,200,.5);background:rgba(10,18,30,.7);color:var(--ghost);
+    border:1px solid rgba(167,160,196,.5);background:rgba(13,10,24,.7);color:var(--ghost);
     font-size:12px;font-weight:700;line-height:1;cursor:pointer;font-family:inherit;letter-spacing:.03em;
     display:inline-flex;align-items:center;gap:7px;font-variant-numeric:tabular-nums}
   .fChip::after{content:"";position:absolute;left:0;right:0;top:-4px;bottom:-4px;border-radius:999px} /* 44px hit target; 8px gap keeps neighbours clear */
-  .fChip:hover{background:rgba(159,178,200,.14)}
-  .fChip:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .fChip:hover{background:rgba(167,160,196,.14)}
+  .fChip:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
   .fChip .dashSwatch{flex:0 0 auto;display:block}
   /* hidden-ghost state is NOT colour-only: strikethrough + dimmed swatch + aria-pressed */
-  .fChip-ghost[aria-pressed="false"]{color:var(--muted);border-color:var(--line)}
+  .fChip-ghost[aria-pressed="false"]{color:var(--muted);border-color:var(--line-strong)}
   .fChip-ghost[aria-pressed="false"] .cl,.fChip-ghost[aria-pressed="false"] .cd{text-decoration:line-through}
   .fChip-ghost[aria-pressed="false"] .dashSwatch{opacity:.35}
   /* pinned state is NOT colour-only: label text changes Pin → <carry>m */
-  .fChip-pin[aria-pressed="true"]{color:#E8F0FB;border-color:rgba(232,240,251,.6)}
+  .fChip-pin[aria-pressed="true"]{color:var(--ink);border-color:rgba(245,242,255,.6)}
   .fChip-pin .pinGlyph{font-size:14px;line-height:1}
   /* ── STAGE 3: "what changed" micro-label under the left hero stack ── */
   .fDelta{position:absolute;left:max(3.4%,env(safe-area-inset-left));top:calc(15% + clamp(84px,19vh,118px));z-index:5;pointer-events:none;
@@ -542,11 +585,11 @@
   .flightCarry{position:absolute;top:15%;left:max(3.4%,env(safe-area-inset-left));z-index:5;pointer-events:none;line-height:1;text-align:left;
     text-shadow:0 0 22px rgba(0,0,0,.65)}
   .flightCarry .num{font-size:clamp(30px,8vh,60px);font-weight:800;letter-spacing:-.03em;color:#fff;line-height:.9;
-    font-variant-numeric:tabular-nums;text-shadow:0 0 28px rgba(34,227,214,.6)}
+    font-variant-numeric:tabular-nums;text-shadow:0 0 28px rgba(255,138,77,.55)}
   .flightCarry .num .u{font-size:.4em;font-weight:700;color:var(--accent);margin-left:3px;vertical-align:.2em}
   .flightCarry .lab{font-size:clamp(8px,1.6vh,11px);letter-spacing:.24em;text-transform:uppercase;color:var(--muted);margin-top:4px}
   .flightCarry .offline{margin-top:10px;font-variant-numeric:tabular-nums;font-weight:800;
-    font-size:clamp(15px,3.4vh,24px);color:var(--accent);line-height:1;text-shadow:0 0 18px rgba(34,227,214,.4)}
+    font-size:clamp(15px,3.4vh,24px);color:var(--accent);line-height:1;text-shadow:0 0 18px rgba(255,138,77,.38)}
   .flightCarry .offline .side{font-size:.6em;font-weight:700;letter-spacing:.06em;margin-left:3px;color:#fff}
 
   /* ── LAYOUT B (BOTTOM ONLY): one aligned rectangle along the bottom ──
@@ -571,12 +614,12 @@
   /* each cell is a real button (raised pressable pill) that opens the glass explainer popover.
      A2 CLEAN — label ABOVE (small uppercase muted), big value below (tabular-nums)
      + tiny muted unit, soft-depth surface, "›" chevron, plus a thin 2px range
-     UNDERLINE along the bottom edge filled with cyan to show the value's position. */
+     UNDERLINE along the bottom edge filled with gold to show the value's position. */
   .fData .cell{appearance:none;font-family:inherit;cursor:pointer;
     display:flex;flex-direction:column;align-items:stretch;justify-content:center;gap:4px;min-width:0;
     min-height:44px;padding:8px 10px 15px;text-align:left;color:var(--ink);overflow:hidden;
-    background:linear-gradient(180deg, rgba(22,34,50,.88), rgba(12,19,29,.88));
-    border:1px solid rgba(255,255,255,.10);border-radius:12px;position:relative;
+    background:linear-gradient(180deg, rgba(30,23,50,.88), rgba(14,10,25,.88));
+    border:1px dashed rgba(255,255,255,.22);border-radius:12px;position:relative;  /* readout = dashed (§1.2) */
     box-shadow:0 6px 16px rgba(0,0,0,.32), inset 0 1px 0 rgba(255,255,255,.06);
     backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
     transition:transform .12s ease, box-shadow .12s ease, border-color .15s ease, background .15s ease}
@@ -597,15 +640,17 @@
   .fData .cell .valrow{display:flex;align-items:center;min-width:0}
   .fData .cell .v{font-weight:800;font-variant-numeric:tabular-nums;font-size:clamp(12.5px,1.7vw,22px);color:var(--ink);white-space:nowrap;line-height:1;min-width:0;padding-right:11px;letter-spacing:-.012em}
   .fData .cell .v small{font-size:.52em;color:var(--muted);font-weight:600;margin-left:2px}
-  /* hero chips (Carry/Ball Speed/Smash): cyan accent value */
-  .fData .cell.hero .v{color:var(--accent);text-shadow:0 0 14px rgba(34,227,214,.35)}
-  /* A2 range underline — thin 2px bar along the bottom edge, cyan fill shows
-     the value's position in its range (signed metrics fill from CENTRE). */
+  /* hero chips (Carry/Ball Speed): calm ink like every other readout — the
+     hero emphasis stays in size; ember is reserved for the live ball/tracer. */
+  .fData .cell.hero .v{color:var(--ink)}
+  /* A2 range underline — thin 2px bar along the bottom edge, GOLD fill (the
+     outcome-annotation voice) shows the value's position in its range
+     (signed metrics fill from CENTRE). */
   .fData .cell .rng{position:absolute;left:11px;right:11px;bottom:7px;height:2px;border-radius:2px;
     background:rgba(255,255,255,.10);display:block}
-  .fData .cell .rng .fill{position:absolute;top:0;bottom:0;border-radius:2px;background:var(--accent);width:0;
+  .fData .cell .rng .fill{position:absolute;top:0;bottom:0;border-radius:2px;background:var(--gold);width:0;
     transition:width .6s cubic-bezier(.2,.7,.2,1)}
-  .fData .cell[data-signed] .rng .fill{background:rgba(34,227,214,.7)}
+  .fData .cell[data-signed] .rng .fill{background:rgba(217,179,106,.7)}
   /* Shape — text-only, no underline. Its value can be a two-word string
      ("Pull Hook"), so allow it to scale a touch smaller than the numeric chips
      and lose the chevron padding so it always fits on one line. */
@@ -618,7 +663,7 @@
      Changing it re-solves + replays the flight. */
   .fSpeed{flex:0 0 auto;width:clamp(150px,16vw,200px);
     display:flex;flex-direction:column;justify-content:center;gap:12px;
-    background:linear-gradient(180deg, rgba(20,32,48,.85), rgba(11,17,26,.85));
+    background:linear-gradient(180deg, rgba(28,21,48,.85), rgba(13,10,24,.85));
     border:1px solid rgba(255,255,255,.10);border-radius:var(--radius-card);
     padding:12px 14px;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
     box-shadow:0 8px 22px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,255,255,.06)}
@@ -631,24 +676,25 @@
     font-weight:700;font-size:18px;line-height:1;display:flex;align-items:center;justify-content:center;font-family:inherit}
   .fSpeed .step:hover{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.26)}
   .fSpeed .step:active{transform:scale(.94)}
-  .fSpeed .step:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .fSpeed .step:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
   .fSpeed input[type=range]{flex:1 1 auto;width:100%;height:44px;min-width:0;accent-color:var(--accent);background:transparent;cursor:pointer}
-  .fSpeed input[type=range]:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:8px}
+  .fSpeed input[type=range]:focus-visible{outline:2px solid var(--ink);outline-offset:2px;border-radius:8px}
   /* once wrapped in .rwrap, the wrapper becomes the flex item in the −/slider/+ ctrl */
   .fSpeed .ctrl .rwrap{flex:1 1 auto;min-width:0}
 
   /* CHANGE 2: lateral side references (STAGE 5 — demoted to white-alpha neutral:
      reference geometry, not live-ball data; labels keep a touch more alpha for AA)
-     + offline badge (STAGE 5 keeps the offline badge cyan — it IS live-ball data) */
-  #fLatRef line{stroke:rgba(230,240,250,.20)}
-  #fLatRef text{fill:rgba(230,240,250,.55);font-family:inherit;font-weight:600}
-  #fOfflineBox{fill:rgba(8,16,20,.72);stroke:rgba(34,227,214,.28)}
-  #fOfflineTxt{fill:#22E3D6;font-family:inherit;font-weight:700}
+     + offline badge (STAGE 5 keeps the offline badge ember — it IS live-ball data) */
+  #fLatRef line{stroke:rgba(245,242,255,.20)}
+  #fLatRef text{fill:rgba(245,242,255,.55);font-family:inherit;font-weight:600}
+  #fOfflineBox{fill:rgba(13,10,24,.72);stroke:rgba(255,138,77,.30)}
+  #fOfflineTxt{fill:#FF8A4D;font-family:inherit;font-weight:700}
 
   /* ── rotate hint (portrait) ── */
   .rotate{position:fixed;inset:0;z-index:60;display:none;flex-direction:column;align-items:center;justify-content:center;
     gap:14px;background:var(--bg);text-align:center;padding:24px}
-  .rotate .ico{font-size:46px;animation:tilt 1.8s ease-in-out infinite}
+  .rotate .ico{width:52px;height:52px;color:var(--secondary);animation:tilt 1.8s ease-in-out infinite}
+  .rotate .ico svg{width:100%;height:100%;display:block}
   .rotate p{font-size:15px;max-width:240px;color:var(--ink)}
   @keyframes tilt{0%,100%{transform:rotate(-12deg)}50%{transform:rotate(78deg)}}
   @media (orientation:portrait){.rotate{display:flex}}
@@ -683,7 +729,7 @@
   @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
-<body>
+<body class="sa-depth">
   <div class="app">
 
     <!-- ══ TOP STRIP ══ -->
@@ -710,7 +756,7 @@
       </div>
       <div class="ts-right">
         <button class="playpill" id="playFlight" aria-haspopup="dialog" aria-controls="flightScrim">
-          <span class="pico" aria-hidden="true">▶</span> Play flight
+          <span class="pico" aria-hidden="true"><svg viewBox="0 0 9 10" fill="currentColor" aria-hidden="true"><path d="M0.5 0.8 L8.5 5 L0.5 9.2 Z"/></svg></span> Play flight
         </button>
         <button id="helpBtn" class="sa-help" type="button" aria-label="Replay the walkthrough" title="Help">?</button>
       </div>
@@ -730,31 +776,31 @@
              lens's static aria-label so screen readers get a calm, single update. -->
         <div class="sr-only" id="predLive" aria-live="polite" aria-atomic="true"></div>
         <svg id="svgDir" viewBox="0 0 400 360" preserveAspectRatio="xMidYMid meet" role="img"
-             aria-label="Top-down view from the ball. A vertical target line runs straight ahead. A red face arrow and a blue path arrow rotate from the ball to show clubface aim and swing direction. A yellow launch arrow shows the start line, bending toward the spin side. A cyan marker shows the predicted landing position.">
+             aria-label="Top-down view from the ball. A vertical target line runs straight ahead. A red face arrow and a blue path arrow rotate from the ball to show clubface aim and swing direction. A gold launch arrow shows the start line, bending toward the spin side. An orange marker shows the predicted landing position.">
           <defs>
             <!-- userSpaceOnUse so the glow stays anchored to the ball/target axis even
                  though fitLenses() widens the background rect to the live viewBox -->
             <radialGradient id="dirGlow" gradientUnits="userSpaceOnUse" cx="200" cy="281" r="240">
-              <stop offset="0" stop-color="rgba(34,227,214,.10)"/><stop offset="1" stop-color="rgba(34,227,214,0)"/>
+              <stop offset="0" stop-color="rgba(157,139,255,.10)"/><stop offset="1" stop-color="rgba(157,139,255,0)"/>
             </radialGradient>
           </defs>
           <rect x="-600" y="0" width="1600" height="360" fill="url(#dirGlow)"/>
-          <!-- target line up from the ball -->
-          <line x1="200" y1="330" x2="200" y2="40" stroke="var(--accent-line)" stroke-width="1.5" stroke-dasharray="5 8"/>
-          <circle cx="200" cy="40" r="4" fill="none" stroke="var(--accent)" stroke-width="1.5" opacity=".8"/>
+          <!-- target line up from the ball — reference geometry, white-alpha neutral -->
+          <line x1="200" y1="330" x2="200" y2="40" stroke="rgba(245,242,255,.30)" stroke-width="1.5" stroke-dasharray="5 8"/>
+          <circle cx="200" cy="40" r="4" fill="none" stroke="rgba(245,242,255,.55)" stroke-width="1.5" opacity=".8"/>
           <text x="200" y="30" text-anchor="middle" font-size="20" fill="var(--muted)" style="font-family:inherit;letter-spacing:.1em">TARGET</text>
           <!-- face↔path gap field (subtle, curved outer arc) -->
-          <path id="dirCone" fill="rgba(34,227,214,.04)" stroke="none"/>
+          <path id="dirCone" fill="rgba(157,139,255,.05)" stroke="none"/>
           <!-- STAGE 6 — LANDING PREDICTOR: neutral reference geometry (centre tick +
                lateral scale hints) in the far zone, BEHIND the arrows in z-order.
                Purely decorative reference lines — neutral white-alpha per the app's
                "reference geometry is neutral" colour rule. -->
           <g id="predRef" aria-hidden="true" opacity=".85">
-            <line x1="180" y1="52" x2="220" y2="52" stroke="rgba(230,240,250,.20)" stroke-width="1.5"/>
-            <line id="predTickL" x1="140" y1="56" x2="140" y2="48" stroke="rgba(230,240,250,.20)" stroke-width="1"/>
-            <line id="predTickR" x1="260" y1="56" x2="260" y2="48" stroke="rgba(230,240,250,.20)" stroke-width="1"/>
-            <text id="predLabL" x="140" y="46" text-anchor="middle" font-size="20" fill="rgba(230,240,250,.35)" style="font-family:inherit;letter-spacing:.05em">L</text>
-            <text id="predLabR" x="260" y="46" text-anchor="middle" font-size="20" fill="rgba(230,240,250,.35)" style="font-family:inherit;letter-spacing:.05em">R</text>
+            <line x1="180" y1="52" x2="220" y2="52" stroke="rgba(245,242,255,.20)" stroke-width="1.5"/>
+            <line id="predTickL" x1="140" y1="56" x2="140" y2="48" stroke="rgba(245,242,255,.20)" stroke-width="1"/>
+            <line id="predTickR" x1="260" y1="56" x2="260" y2="48" stroke="rgba(245,242,255,.20)" stroke-width="1"/>
+            <text id="predLabL" x="140" y="46" text-anchor="middle" font-size="20" fill="rgba(245,242,255,.35)" style="font-family:inherit;letter-spacing:.05em">L</text>
+            <text id="predLabR" x="260" y="46" text-anchor="middle" font-size="20" fill="rgba(245,242,255,.35)" style="font-family:inherit;letter-spacing:.05em">R</text>
           </g>
           <!-- ── curve hint (PRED_CURVE) — thin top-down shot-shape line from the
                ball (200,330) to the predicted finish, following startDirection +
@@ -764,7 +810,7 @@
             <path id="predCurve" fill="none" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
           </g>
           <!-- ── /curve hint (PRED_CURVE) ── -->
-          <!-- STAGE 6 — predictor dot: SMALL cyan dot at the predicted lateral
+          <!-- STAGE 6 — predictor dot: SMALL ember dot at the predicted lateral
                finish (mapped from solveFlight().offline), slim halo, subtle GSAP
                breathing pulse, bare unboxed label below the dot.
                BEHIND the face/path/launch arrows (declared before them). -->
@@ -777,7 +823,7 @@
             <text id="predLabel" x="200" y="72" text-anchor="middle" font-size="20" font-weight="600" fill="var(--accent)" style="font-family:inherit">On line</text>
           </g>
           <!-- ball -->
-          <circle cx="200" cy="330" r="5" fill="#fff" opacity=".9"/>
+          <circle cx="200" cy="330" r="5" fill="var(--ink)" opacity=".9"/>
           <!-- PATH arrow (pointer enhancement; the docked slider is the accessible control) -->
           <g class="arrowG" id="g_path" data-key="path" aria-hidden="true">
             <line class="aline" id="line_path" x1="200" y1="330" x2="200" y2="111" stroke="var(--c-path)" stroke-width="9"/>
@@ -807,6 +853,7 @@
           <g class="vchipWrap" id="vchip_launchDir" data-launch="launchDir" aria-hidden="true"><rect class="vchip" x="0" y="0" width="58" height="22" rx="6"/><text class="vchipText" x="0" y="0" text-anchor="middle" fill="var(--c-launch)"></text></g>
           <g class="vchipWrap" id="vchip_face" aria-hidden="true"><rect class="vchip" x="0" y="0" width="58" height="22" rx="6"/><text class="vchipText" x="0" y="0" text-anchor="middle" fill="var(--c-face)"></text></g>
         </svg>
+        <div class="grp-eb grp-eb--in" aria-hidden="true">Input · Control</div>
         <div class="minidock">
           <div class="mini k-face">
             <div class="mtop"><span class="mname"><span class="mdot" style="background:var(--c-face)" aria-hidden="true"></span><label for="s_face">Face</label></span><span class="mval" id="v_face" aria-hidden="true">−2.0°</span></div>
@@ -818,6 +865,7 @@
           </div>
         </div>
         <!-- HERO CARDS — Direction (max 4): re-homed rail cells, same popover wiring -->
+        <div class="grp-eb grp-eb--out" aria-hidden="true">Outcome · Read</div>
         <div class="heroResults" id="heroResultsDir" role="group" aria-label="Direction results — tap any value for an explanation"></div>
         <div class="coachWrap">
           <div class="coachLine"><span class="coachDot" aria-hidden="true"></span><span class="cause" id="causeDir">Main cause: —</span><span class="cue" id="cueDir"></span></div>
@@ -837,12 +885,12 @@
       <section class="heroLens" id="lensHt" aria-label="Launch lens, side-on view">
         <div class="lenshead"><div class="lh1">Launch</div></div>
         <svg id="svgHt" viewBox="0 0 400 360" preserveAspectRatio="xMidYMid meet" role="img"
-             aria-label="Side-on view. A ground line runs along the bottom. From the impact point, a pink attack arrow and a violet dynamic-loft arrow rotate to show the club's descent and delivered loft.">
+             aria-label="Side-on view. A ground line runs along the bottom. From the impact point, a pink attack arrow and a lavender dynamic-loft arrow rotate to show the club's descent and delivered loft.">
           <defs>
             <!-- userSpaceOnUse so the glow stays anchored to the impact zone even
                  though fitLenses() widens the background rect to the live viewBox -->
             <radialGradient id="htGlow" gradientUnits="userSpaceOnUse" cx="88" cy="223" r="280">
-              <stop offset="0" stop-color="rgba(34,227,214,.10)"/><stop offset="1" stop-color="rgba(34,227,214,0)"/>
+              <stop offset="0" stop-color="rgba(157,139,255,.10)"/><stop offset="1" stop-color="rgba(157,139,255,0)"/>
             </radialGradient>
           </defs>
           <rect x="-700" y="0" width="2800" height="360" fill="url(#htGlow)"/>
@@ -850,9 +898,9 @@
           <line x1="-700" y1="250" x2="2100" y2="250" stroke="rgba(255,255,255,.18)" stroke-width="1.5"/>
           <text id="htGroundLab" x="372" y="272" text-anchor="end" font-size="14" fill="var(--muted)" style="font-family:inherit;letter-spacing:.1em">GROUND</text>
           <!-- impact point + ball -->
-          <circle cx="80" cy="250" r="5" fill="#fff" opacity=".9"/>
+          <circle cx="80" cy="250" r="5" fill="var(--ink)" opacity=".9"/>
           <!-- attack↔loft gap field (subtle, curved outer arc) — behind the arrows -->
-          <path id="htCone" fill="rgba(34,227,214,.04)" stroke="none"/>
+          <path id="htCone" fill="rgba(157,139,255,.05)" stroke="none"/>
           <!-- ATTACK arrow (shorter, lower of the pair) -->
           <g class="arrowG" id="g_attack" data-key="attack" aria-hidden="true">
             <line class="aline" id="line_attack" x1="80" y1="250" x2="284" y2="250" stroke="var(--c-attack)" stroke-width="7"/>
@@ -875,8 +923,11 @@
           <g class="vchipWrap" id="vchip_launchAng" data-launch="launchAng" aria-hidden="true"><rect class="vchip" x="0" y="0" width="58" height="22" rx="6"/><text class="vchipText" x="0" y="0" text-anchor="middle" fill="var(--c-launch)"></text></g>
           <g class="vchipWrap" id="vchip_loft" aria-hidden="true"><rect class="vchip" x="0" y="0" width="58" height="22" rx="6"/><text class="vchipText" x="0" y="0" text-anchor="middle" fill="var(--c-loft)"></text></g>
         </svg>
+        <div class="grp-eb grp-eb--in" aria-hidden="true">Input · Control</div>
         <div class="minidock">
           <div class="mini k-attack">
+            <!-- §2.4 — Impact keeps attack as a free SIMULATED input (Geometry derives it) -->
+            <div class="sim-eb" aria-hidden="true">Simulated input</div>
             <div class="mtop"><span class="mname"><span class="mdot" style="background:var(--c-attack)" aria-hidden="true"></span><label for="s_attack">Attack</label></span><span class="mval" id="v_attack" aria-hidden="true">−3.0°</span></div>
             <input type="range" id="s_attack" min="-15" max="15" step="0.1" value="-3">
           </div>
@@ -886,6 +937,7 @@
           </div>
         </div>
         <!-- HERO CARDS — Launch (max 4): re-homed rail cells, same popover wiring -->
+        <div class="grp-eb grp-eb--out" aria-hidden="true">Outcome · Read</div>
         <div class="heroResults" id="heroResultsLaunch" role="group" aria-label="Launch results — tap any value for an explanation"></div>
       </section>
     </div>
@@ -921,6 +973,8 @@
            not a live region — aria-hidden so it never spams a screen reader. -->
       <div class="saNudge" id="saNudge" hidden aria-hidden="true"></div>
       <!-- STAGE 3: ghost toggle (aria-pressed, default ON) + clear-history control -->
+      <!-- «Data» pill: hides the post-landing reveal (chips + delta) for a clean flight view; persisted -->
+      <button class="ghostPill dataPill" id="fDataPill" type="button" aria-pressed="true"><span class="gdot" aria-hidden="true"></span> Data</button>
       <button class="ghostPill" id="fGhostPill" type="button" aria-pressed="true"><span class="gdot" aria-hidden="true"></span> Ghosts</button>
       <button class="ghostClear" id="fGhostClear" type="button" aria-label="Clear ghosts">×</button>
       <!-- GHOST LAB: pin-baseline + per-ghost legend chips (built by buildGhostLegend) -->
@@ -950,33 +1004,35 @@
       <svg id="fScene" viewBox="0 0 960 540" preserveAspectRatio="xMidYMid slice" role="img"
            aria-label="Driving-range ball flight: the ball launches from the tee, rises to apex and lands downrange on the fairway.">
         <defs>
-          <!-- cyan/teal duotone grade overlay -->
+          <!-- ultraviolet dusk grade overlay (was the teal duotone) -->
           <linearGradient id="ftealGrade" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stop-color="#0a3a3a" stop-opacity=".06"/>
-            <stop offset=".55" stop-color="#147878" stop-opacity=".20"/>
-            <stop offset="1" stop-color="#22E3D6" stop-opacity=".15"/>
+            <stop offset="0" stop-color="#1A1233" stop-opacity=".06"/>
+            <stop offset=".55" stop-color="#3D2E66" stop-opacity=".20"/>
+            <stop offset="1" stop-color="#9D8BFF" stop-opacity=".14"/>
           </linearGradient>
           <linearGradient id="fground" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0" stop-color="#0c2a1c"/><stop offset=".5" stop-color="#0a3320"/><stop offset="1" stop-color="#06351f"/>
           </linearGradient>
+          <!-- apex/landing annotations = gold (order §2.4 canvas mapping) -->
           <radialGradient id="fapexGlow" cx="50%" cy="50%" r="50%">
-            <stop offset="0" stop-color="#22E3D6" stop-opacity=".9"/><stop offset="1" stop-color="#22E3D6" stop-opacity="0"/>
+            <stop offset="0" stop-color="#D9B36A" stop-opacity=".9"/><stop offset="1" stop-color="#D9B36A" stop-opacity="0"/>
           </radialGradient>
           <radialGradient id="flandGlow" cx="50%" cy="50%" r="50%">
-            <stop offset="0" stop-color="#22E3D6" stop-opacity=".75"/><stop offset="1" stop-color="#22E3D6" stop-opacity="0"/>
+            <stop offset="0" stop-color="#D9B36A" stop-opacity=".75"/><stop offset="1" stop-color="#D9B36A" stop-opacity="0"/>
           </radialGradient>
           <!-- haze softness lives in the gradient shape; the BAND's element
                opacity (.22 base) carries the level so ambient breathing only
-               ever animates element opacity, never the gradient. -->
+               ever animates element opacity, never the gradient. Violet dusk haze. -->
           <linearGradient id="fhaze" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stop-color="#9fd8d2" stop-opacity="0"/>
-            <stop offset=".5" stop-color="#bfeae4" stop-opacity="1"/>
-            <stop offset="1" stop-color="#bfeae4" stop-opacity="0"/>
+            <stop offset="0" stop-color="#A99BD8" stop-opacity="0"/>
+            <stop offset=".5" stop-color="#C7BBF0" stop-opacity="1"/>
+            <stop offset="1" stop-color="#C7BBF0" stop-opacity="0"/>
           </linearGradient>
+          <!-- the living ball's trace: ember body → white-hot tip -->
           <linearGradient id="ftracerGrad" x1="0" y1="1" x2="0" y2="0">
-            <stop offset="0" stop-color="#22E3D6" stop-opacity=".15"/>
-            <stop offset=".5" stop-color="#22E3D6" stop-opacity=".95"/>
-            <stop offset="1" stop-color="#eafffb"/>
+            <stop offset="0" stop-color="#FF8A4D" stop-opacity=".15"/>
+            <stop offset=".5" stop-color="#FF8A4D" stop-opacity=".95"/>
+            <stop offset="1" stop-color="#FFF3E8"/>
           </linearGradient>
           <clipPath id="fclip"><rect x="0" y="0" width="960" height="540"/></clipPath>
         </defs>
@@ -985,50 +1041,50 @@
           <!-- dusk range photo, darkened (scene C base) -->
           <image id="fBgImg" href="./assets/range-day.png" x="-40" y="-40" width="1040" height="620"
                  preserveAspectRatio="xMidYMid slice" opacity="0.46"/>
-          <rect x="0" y="0" width="960" height="540" fill="#06121a" opacity="0.42"/>
+          <rect x="0" y="0" width="960" height="540" fill="#0A0714" opacity="0.42"/>
           <!-- ground tint — starts at the photo tree-line (yH≈265) so it greens
                only the grass, not the sky -->
           <rect id="fGroundRect" x="-200" y="263" width="1360" height="420" fill="url(#fground)" opacity="0.55"/>
           <!-- horizon haze (Atmosphere) — sits on the tree-line band -->
           <rect id="fHazeBand" x="-200" y="240" width="1360" height="56" fill="url(#fhaze)" opacity=".22"/>
           <!-- converging fairway rails -->
-          <path id="fRailL" fill="none" stroke="rgba(230,240,250,.14)" stroke-width="1.2"/>
-          <path id="fRailR" fill="none" stroke="rgba(230,240,250,.14)" stroke-width="1.2"/>
-          <!-- lateral distance grid (cyan) -->
+          <path id="fRailL" fill="none" stroke="rgba(245,242,255,.14)" stroke-width="1.2"/>
+          <path id="fRailR" fill="none" stroke="rgba(245,242,255,.14)" stroke-width="1.2"/>
+          <!-- lateral distance grid (neutral reference) -->
           <g id="fGrid"></g>
           <!-- lateral L/R distance references + labels (built by buildLateralRefs) -->
           <g id="fLatRef"></g>
           <!-- fairway centre / target line (clearer dashed) -->
-          <path id="fCentre" fill="none" stroke="rgba(230,240,250,.28)" stroke-width="1.4" stroke-dasharray="6 8"/>
+          <path id="fCentre" fill="none" stroke="rgba(245,242,255,.28)" stroke-width="1.4" stroke-dasharray="6 8"/>
           <!-- tee marker (re-centred + re-based to TEE_X / yBottom in fBuild) -->
           <g id="fTee">
             <ellipse id="fTeeShadow" cx="480" cy="356" rx="34" ry="7" fill="#000" opacity=".35"/>
-            <ellipse id="fTeeRing" cx="480" cy="356" rx="30" ry="6" fill="none" stroke="rgba(34,227,214,.45)" stroke-width="1.4"/>
+            <ellipse id="fTeeRing" cx="480" cy="356" rx="30" ry="6" fill="none" stroke="rgba(255,138,77,.45)" stroke-width="1.4"/>
           </g>
           <!-- soft under-glow arc (pre-baked softness: wide low-opacity stroke
                UNDER the gradient tracer — no blur filters on animated strokes) -->
-          <path id="fTrail" fill="none" stroke="#22E3D6" stroke-width="14" stroke-linecap="round" opacity="0"/>
+          <path id="fTrail" fill="none" stroke="#FF8A4D" stroke-width="14" stroke-linecap="round" opacity="0"/>
           <!-- flight tracer -->
           <path id="fTracer" fill="none" stroke="url(#ftracerGrad)" stroke-width="3.8" stroke-linecap="round" opacity=".96"/>
-          <path id="fTracerCore" fill="none" stroke="#eafffb" stroke-width="1.5" stroke-linecap="round" opacity=".95"/>
+          <path id="fTracerCore" fill="none" stroke="#FFF3E8" stroke-width="1.5" stroke-linecap="round" opacity=".95"/>
           <!-- ground roll -->
-          <path id="fRoll" fill="none" stroke="#22E3D6" stroke-width="2.2" stroke-linecap="round" stroke-dasharray="3 5" opacity=".7"/>
+          <path id="fRoll" fill="none" stroke="#FF8A4D" stroke-width="2.2" stroke-linecap="round" stroke-dasharray="3 5" opacity=".7"/>
           <!-- apex marker -->
           <g id="fApexMark" opacity="0">
             <circle id="fApexHalo" r="16" fill="url(#fapexGlow)"/>
-            <circle r="4.5" fill="none" stroke="#22E3D6" stroke-width="2"/>
-            <line x1="0" y1="-9" x2="0" y2="-26" stroke="#22E3D6" stroke-width="1.2" opacity=".7"/>
+            <circle r="4.5" fill="none" stroke="#D9B36A" stroke-width="2"/>
+            <line x1="0" y1="-9" x2="0" y2="-26" stroke="#D9B36A" stroke-width="1.2" opacity=".7"/>
             <g transform="translate(0,-30)">
-              <rect x="-40" y="-15" width="80" height="18" rx="5" fill="rgba(8,16,20,.72)" stroke="rgba(34,227,214,.22)"/>
-              <text id="fApexTxt" x="0" y="-2" text-anchor="middle" fill="#22E3D6" font-size="11" font-weight="700" font-family="inherit">Apex</text>
+              <rect x="-40" y="-15" width="80" height="18" rx="5" fill="rgba(13,10,24,.72)" stroke="rgba(217,179,106,.25)"/>
+              <text id="fApexTxt" x="0" y="-2" text-anchor="middle" fill="#D9B36A" font-size="11" font-weight="700" font-family="inherit">Apex</text>
             </g>
           </g>
           <!-- landing marker -->
           <g id="fLandMark" opacity="0">
             <!-- subtle, PERSISTENT ground splash ring at the landing point (no pulse) -->
-            <ellipse id="fSplash" cx="0" cy="0" rx="13" ry="4.5" fill="none" stroke="#22E3D6" stroke-width="1.4" opacity=".42"/>
-            <circle r="3.6" fill="#22E3D6"/>
-            <rect id="fLandBox" x="6" y="-22" width="62" height="17" rx="5" fill="rgba(8,16,20,.72)" stroke="rgba(34,227,214,.22)"/>
+            <ellipse id="fSplash" cx="0" cy="0" rx="13" ry="4.5" fill="none" stroke="#D9B36A" stroke-width="1.4" opacity=".42"/>
+            <circle r="3.6" fill="#D9B36A"/>
+            <rect id="fLandBox" x="6" y="-22" width="62" height="17" rx="5" fill="rgba(13,10,24,.72)" stroke="rgba(217,179,106,.25)"/>
             <text id="fLandTxt" x="37" y="-10" text-anchor="middle" fill="#fff" font-size="10" font-weight="700" font-family="inherit">Carry</text>
             <!-- offline side badge: "NN m R" / "NN m L" (right = positive) -->
             <g id="fOffline" opacity="0">
@@ -1038,11 +1094,11 @@
             <!-- land-angle plate: "↘ 55°" — reveals WITH the data beat, offset
                  below/right of the carry plate + offline badge so it never collides -->
             <g id="fLandAngMark" opacity="0">
-              <rect id="fLandAngBox" x="6" y="16" width="52" height="17" rx="5" fill="rgba(8,16,20,.72)" stroke="rgba(34,227,214,.22)"/>
-              <text id="fLandAngTxt" x="32" y="28" text-anchor="middle" fill="#9FE6DF" font-size="10" font-weight="700" font-family="inherit">↘ 0°</text>
+              <rect id="fLandAngBox" x="6" y="16" width="52" height="17" rx="5" fill="rgba(13,10,24,.72)" stroke="rgba(217,179,106,.25)"/>
+              <text id="fLandAngTxt" x="32" y="28" text-anchor="middle" fill="#D9B36A" font-size="10" font-weight="700" font-family="inherit">↘ 0°</text>
             </g>
           </g>
-          <!-- teal colour grade overlay (above scene, below HUD) -->
+          <!-- ultraviolet colour grade overlay (above scene, below HUD; id kept — JS anchors to it) -->
           <rect id="fTealOverlay" x="0" y="0" width="960" height="540" fill="url(#ftealGrade)" pointer-events="none"/>
         </g>
       </svg>
@@ -1080,7 +1136,15 @@
   </div>
 
   <div class="rotate" role="status">
-    <div class="ico" aria-hidden="true">📱</div>
+    <!-- drawn phone-rotate glyph (SYS-12: no emoji) — violet chrome, tilt animation on the wrapper -->
+    <div class="ico" aria-hidden="true">
+      <svg viewBox="0 0 52 52" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <rect x="13" y="10" width="17" height="30" rx="4"/>
+        <line x1="19.5" y1="35" x2="23.5" y2="35"/>
+        <path d="M36.5 13.5 a13.5 13.5 0 0 1 6 17"/>
+        <path d="M46.4 26.6 L42.4 31 L37.9 27.9"/>
+      </svg>
+    </div>
     <p>Rotate your phone to landscape</p>
   </div>
 
@@ -1497,7 +1561,7 @@ const LAUNCH_CELLS = LAUNCH_ORDER.map(k => CELLS.find(c=>c.key===k));
 const SEC_CELLS = CELLS.filter(c=>c.home==='sec');        // ballSpeed, backspin, carry — secondary chips
 
 // ── Range-underline geometry + fill helpers (shared by rail + flight grid) ──
-// VISUAL change only: a value's position in its range is drawn as a thin cyan
+// VISUAL change only: a value's position in its range is drawn as a thin gold
 // underline fill. The per-metric ranges + frac logic are reused unchanged.
 // fraction 0..1 of where a value sits within [lo,hi]
 function rangeFrac(val, lo, hi){
@@ -1695,13 +1759,13 @@ const fmtM  = ydVal => Math.round(ydVal*YD2M); // yd → m (rounded)
 
 // ════════════════════════════════════════════════════════════════
 //  STAGE 7 — MINI SVG DIAGRAMS  ("How it's created")
-//   Small (~200×80) inline diagrams built with the app's palette: cyan accent,
+//   Small (~200×80) inline diagrams built with the app's palette: ember accent,
 //   anatomy colours (--c-face/--c-path/--c-loft/--c-attack) where relevant,
 //   neutral white-alpha for reference lines. Each builder returns a full
 //   <svg role="img" aria-label="…"> string — kept deliberately simple/legible.
 // ════════════════════════════════════════════════════════════════
 const DVB = 'viewBox="0 0 200 80"';
-const REF = 'rgba(230,240,250,.35)';
+const REF = 'rgba(245,242,255,.35)';
 function svgWrap(label, inner){
   return `<svg ${DVB} preserveAspectRatio="xMidYMid meet" role="img" aria-label="${label}">${inner}</svg>`;
 }
@@ -2192,9 +2256,9 @@ function recomputeAngles(){ Object.keys(ARROWS).forEach(computeTarget); Object.k
 // keep each lens SVG's aria-label in sync with the live data it depicts
 function updateLensAria(){
   $('svgDir').setAttribute('aria-label',
-    `Top-down direction view. Clubface aim ${fmtDeg(state.faceAngle)} and swing path ${fmtDeg(state.clubPath)} relative to the target line (negative is left, positive is right). A yellow launch arrow shows the start line, bending toward the spin side. A cyan marker shows the predicted landing position.`);
+    `Top-down direction view. Clubface aim ${fmtDeg(state.faceAngle)} and swing path ${fmtDeg(state.clubPath)} relative to the target line (negative is left, positive is right). A gold launch arrow shows the start line, bending toward the spin side. An orange marker shows the predicted landing position.`);
   $('svgHt').setAttribute('aria-label',
-    `Side-on height view. Angle of attack ${fmtDeg(state.attackAngle)} and dynamic loft ${fmtLoftStr(state.dynamicLoft)} at impact (negative attack is descending). A yellow arrow shows the launch angle.`);
+    `Side-on height view. Angle of attack ${fmtDeg(state.attackAngle)} and dynamic loft ${fmtLoftStr(state.dynamicLoft)} at impact (negative attack is descending). A gold arrow shows the launch angle.`);
 }
 
 // ════════════════════════════════════════════════════════════════
@@ -2264,7 +2328,7 @@ function updateCoachLines(f){
 
 // ════════════════════════════════════════════════════════════════
 //  STAGE 6 — LANDING PREDICTOR (direction lens, live)
-//   A pulsing cyan orb shows WHERE the ball will finish (solveFlight().offline,
+//   A pulsing ember orb shows WHERE the ball will finish (solveFlight().offline,
 //   metres, + = right / − = left), mapped onto the direction lens's far zone.
 //   Reuses the SAME solveFlight() output already computed for the rail/arrows
 //   — no second solve. Updates every recompute(); the aria announcement is
@@ -2286,7 +2350,7 @@ let predRestTimer = null;        // debounce handle for the attention fade-down 
 // NOTE: predictorX() is no longer used by the dot/curve (see xOf()/rawLatPx()
 // below) — the predictor is now drawn in the SAME exaggerated-angle (GAIN_DIR)
 // space as the g_face/g_path/g_launchDir arrows, so the ball-flight schematic
-// stays internally consistent with the yellow start-direction arrow. Kept
+// stays internally consistent with the gold start-direction arrow. Kept
 // here unused (no other callers found) in case a future caller needs the old
 // true-metre linear mapping.
 function predictorX(offlineM){
@@ -2429,7 +2493,7 @@ function renderPredictor(flight){
 // geometry as the predictor dot: the tip offset is chosen so the shaft's end
 // tangent aims at the finish heading (finishVis). This makes the bend
 // carry-aware (FIX G: curve grows with carry², not just face-to-path) and
-// keeps the yellow arrow + cyan dot telling one consistent story. For the
+// keeps the gold arrow + ember dot telling one consistent story. For the
 // quadratic M P0 Q C T with C straight above the pivot at half-length, the
 // end tangent is (T−C), so tan(delta) = b / (LB_L/2)  →  b = (LB_L/2)·tan(delta).
 const LB_L    = 198;   // shaft length pivot→tip (matches LAUNCH.launchDir.tipLen)
@@ -2527,11 +2591,11 @@ const syncs = [
 // proper aria-valuetext with label names (the slider is THE accessible control)
 function decorateAria(){
   const map = { s_speed:['Club speed',fmtSpeed], s_face:['Face angle',fmtDeg],
-    s_path:['Club path',fmtDeg], s_attack:['Attack angle',fmtDeg],
+    s_path:['Club path',fmtDeg], s_attack:['Attack angle',fmtDeg,', simulated input'],
     s_loft:['Dynamic loft',fmtLoftStr] };
-  Object.entries(map).forEach(([id,[nm,fmt]])=>{
+  Object.entries(map).forEach(([id,[nm,fmt,suffix]])=>{
     const el=$(id);
-    const set=()=> el.setAttribute('aria-valuetext', nm+' '+fmt(+el.value));
+    const set=()=> el.setAttribute('aria-valuetext', nm+' '+fmt(+el.value)+(suffix||''));
     set(); el.addEventListener('input', set);
   });
 }
@@ -2757,7 +2821,7 @@ let fModel=null, trajLen=0, rollLen=0, apexScreen=null, landScreen=null, restScr
 const fSceneEl = $('fScene');
 const fClipRect = document.querySelector('#fclip rect');
 const fBgImgEl  = $('fBgImg');
-const fDarkRect = fSceneEl.querySelector('rect[fill="#06121a"]');
+const fDarkRect = fSceneEl.querySelector('rect[fill="#0A0714"]');
 let lastVBW = 960;
 function resizeScene(){
   const card = $('flightCard');
@@ -2856,7 +2920,14 @@ function heightAt(dM, shot = fModel){
 }
 function lateralAt(dM, shot = fModel){
   const dd = clamp(dM/shot.carryM, 0, 1);
-  return shot.offlineM * (0.55 * dd + 0.45 * dd * dd);
+  // physics hunt 2026-07-12: honor the TRUE start/curve split so the tracer leaves
+  // the tee along startDirection. sf = 1 − curve/offline (engine identity, exact).
+  // Degenerate |offline|≈0 → old profile (consumers scale by ≈0 anyway).
+  const f = shot.f;
+  const sf = (f && isFinite(f.offline) && Math.abs(f.offline) > 1e-6 && isFinite(f.curve))
+    ? 1 - f.curve / f.offline : 0.55;
+  const quad = sf === 0.55 ? 0.45 : 1 - sf;
+  return shot.offlineM * (sf * dd + quad * dd * dd);
 }
 // pure air-trajectory path builder: tee -> carry for ANY solved shot,
 // projected through the current scene camera. Returns the SVG `d` string.
@@ -3012,7 +3083,7 @@ function buildGhostLayer(){
     const rect = document.createElementNS(ns,'rect');
     rect.setAttribute('x',(land.x+6).toFixed(1)); rect.setAttribute('y',(land.y+4).toFixed(1));
     rect.setAttribute('width', w.toFixed(0)); rect.setAttribute('height','14'); rect.setAttribute('rx','4');
-    rect.setAttribute('fill','rgba(8,16,20,.78)'); rect.setAttribute('stroke', fill==='#E8F0FB' ? 'rgba(232,240,251,.35)' : 'rgba(159,178,200,.30)');
+    rect.setAttribute('fill','rgba(13,10,24,.78)'); rect.setAttribute('stroke', fill==='#F5F2FF' ? 'rgba(245,242,255,.35)' : 'rgba(167,160,196,.30)');
     grp.appendChild(rect);
     const t = document.createElementNS(ns,'text');
     t.setAttribute('x',(land.x+6+w/2).toFixed(1)); t.setAttribute('y',(land.y+14.5).toFixed(1));
@@ -3032,16 +3103,16 @@ function buildGhostLayer(){
     grp.setAttribute('opacity','.55'); grp.dataset.op = .55;
     const p = document.createElementNS(ns,'path');
     p.setAttribute('d', buildAirPath(bs));
-    p.setAttribute('fill','none'); p.setAttribute('stroke','#E8F0FB');
+    p.setAttribute('fill','none'); p.setAttribute('stroke','#F5F2FF');
     p.setAttribute('stroke-width','2.2'); p.setAttribute('stroke-linecap','round');
     p.setAttribute('stroke-dasharray','10 6');
     grp.appendChild(p);
     const land = project(bs.carryM, 0, lateralAt(bs.carryM, bs));
     const dot = document.createElementNS(ns,'circle');
     dot.setAttribute('cx', land.x.toFixed(1)); dot.setAttribute('cy', land.y.toFixed(1));
-    dot.setAttribute('r','2.6'); dot.setAttribute('fill','#E8F0FB');
+    dot.setAttribute('r','2.6'); dot.setAttribute('fill','#F5F2FF');
     grp.appendChild(dot);
-    addBadge(grp, land, '⊙ ' + Math.round(bs.carryM) + ' m', '#E8F0FB');
+    addBadge(grp, land, '⊙ ' + Math.round(bs.carryM) + ' m', '#F5F2FF');
     host.appendChild(grp);
   }
 
@@ -3055,20 +3126,20 @@ function buildGhostLayer(){
     if (ghosts[i].hidden) grp.style.display = 'none';
     const p = document.createElementNS(ns,'path');
     p.setAttribute('d', buildAirPath(gs));
-    p.setAttribute('fill','none'); p.setAttribute('stroke','#9FB2C8');
+    p.setAttribute('fill','none'); p.setAttribute('stroke','#A7A0C4');
     p.setAttribute('stroke-width','2'); p.setAttribute('stroke-linecap','round');
     if (GHOST_DASH[i] !== 'none') p.setAttribute('stroke-dasharray', GHOST_DASH[i]);
     grp.appendChild(p);
     const land = project(gs.carryM, 0, lateralAt(gs.carryM, gs));
     const dot = document.createElementNS(ns,'circle');
     dot.setAttribute('cx', land.x.toFixed(1)); dot.setAttribute('cy', land.y.toFixed(1));
-    dot.setAttribute('r','2.6'); dot.setAttribute('fill','#9FB2C8');
+    dot.setAttribute('r','2.6'); dot.setAttribute('fill','#A7A0C4');
     grp.appendChild(dot);
     // identity badge: slot letter + the FIRST changed param vs the live shot + carry
     const changed = lastFlown ? PARAM_KEYS.filter(k => ghosts[i].params[k] !== lastFlown.params[k]) : [];
     const pTxt = changed.length ? PARAM_META[changed[0]].label + ' ' + PARAM_META[changed[0]].fmt(ghosts[i].params[changed[0]]) : '';
     const lbl = GHOST_LETTER[i] + (pTxt ? ' · ' + pTxt : '') + ' · ' + Math.round(gs.carryM) + ' m';
-    addBadge(grp, land, lbl, '#9FB2C8');
+    addBadge(grp, land, lbl, '#A7A0C4');
     host.appendChild(grp);
   }
   buildGhostLegend();
@@ -3105,7 +3176,7 @@ function buildGhostLegend(){
     b.setAttribute('aria-label', 'Ghost ' + GHOST_LETTER[i] + (pTxt ? ', ' + pTxt : '') + ', ' + Math.round(gs.carryM) + ' metres. Show or hide');
     const dash = GHOST_DASH[i] === 'none' ? '' : ' stroke-dasharray="' + GHOST_DASH[i] + '"';
     b.innerHTML = '<svg class="dashSwatch" width="18" height="6" aria-hidden="true">'
-      + '<line x1="1" y1="3" x2="17" y2="3" stroke="#9FB2C8" stroke-width="2" stroke-linecap="round"' + dash + '/></svg>'
+      + '<line x1="1" y1="3" x2="17" y2="3" stroke="#A7A0C4" stroke-width="2" stroke-linecap="round"' + dash + '/></svg>'
       + '<span class="cl">' + GHOST_LETTER[i] + '</span><span class="cd">' + Math.round(gs.carryM) + 'm</span>';
     host.appendChild(b);
   });
@@ -3172,13 +3243,13 @@ function buildGrid(){
     const line=document.createElementNS(ns,'line');
     line.setAttribute('x1',(TEE_X-halfW).toFixed(1)); line.setAttribute('y1',gy.toFixed(1));
     line.setAttribute('x2',(TEE_X+halfW).toFixed(1)); line.setAttribute('y2',gy.toFixed(1));
-    line.setAttribute('stroke','rgba(230,240,250,1)');
+    line.setAttribute('stroke','rgba(245,242,255,1)');
     line.setAttribute('stroke-width',(0.6+ls*0.9).toFixed(2));
     line.setAttribute('opacity',(0.10+ls*0.22).toFixed(2));
     fGrid.appendChild(line);
     const t=document.createElementNS(ns,'text');
     t.setAttribute('x',(TEE_X+halfW+6).toFixed(1)); t.setAttribute('y',(gy-2).toFixed(1));
-    t.setAttribute('fill','rgba(230,240,250,1)'); t.setAttribute('font-size',(7+ls*5).toFixed(1));
+    t.setAttribute('fill','rgba(245,242,255,1)'); t.setAttribute('font-size',(7+ls*5).toFixed(1));
     t.setAttribute('font-weight','600'); t.setAttribute('opacity',(0.25+ls*0.4).toFixed(2));
     t.setAttribute('font-family','inherit'); t.textContent=m;
     fGrid.appendChild(t);
@@ -3617,40 +3688,40 @@ function ensureFX(){
   fSceneEl.querySelector('defs').insertAdjacentHTML('beforeend',
     '<radialGradient id="fflashGrad" cx="50%" cy="50%" r="50%">'
     + '<stop offset="0" stop-color="#ffffff" stop-opacity=".95"/>'
-    + '<stop offset=".35" stop-color="#7FF0E6" stop-opacity=".55"/>'
-    + '<stop offset="1" stop-color="#22E3D6" stop-opacity="0"/>'
+    + '<stop offset=".35" stop-color="#FFB88C" stop-opacity=".55"/>'
+    + '<stop offset="1" stop-color="#FF8A4D" stop-opacity="0"/>'
     + '</radialGradient>'
     + '<radialGradient id="fheadGrad" cx="50%" cy="50%" r="50%">'
-    + '<stop offset="0" stop-color="#eafffb" stop-opacity=".9"/>'
-    + '<stop offset="1" stop-color="#22E3D6" stop-opacity="0"/>'
+    + '<stop offset="0" stop-color="#FFF3E8" stop-opacity=".9"/>'
+    + '<stop offset="1" stop-color="#FF8A4D" stop-opacity="0"/>'
     + '</radialGradient>');
   // ghost-flight group BELOW the tracer layers
   fTrail.insertAdjacentHTML('beforebegin', '<g id="fGhosts"></g>');
   // ── COMET — 3 dash-segment strokes riding the tracer path + hot head ──
   fTracerCore.insertAdjacentHTML('afterend',
-    '<path id="fCometGlow" fill="none" stroke="#22E3D6" stroke-width="10" stroke-linecap="round" opacity="0"/>'
-    + '<path id="fCometMid" fill="none" stroke="#7FF0E6" stroke-width="5" stroke-linecap="round" opacity="0"/>'
-    + '<path id="fCometHot" fill="none" stroke="#FFFFFF" stroke-width="2.6" stroke-linecap="round" opacity="0"/>'
+    '<path id="fCometGlow" fill="none" stroke="#FF8A4D" stroke-width="10" stroke-linecap="round" opacity="0"/>'
+    + '<path id="fCometMid" fill="none" stroke="#FFB88C" stroke-width="5" stroke-linecap="round" opacity="0"/>'
+    + '<path id="fCometHot" fill="none" stroke="#FFF3E8" stroke-width="2.6" stroke-linecap="round" opacity="0"/>'
     + '<g id="fCometHead" opacity="0"><circle r="9" fill="url(#fheadGrad)"/><circle r="2.4" fill="#fff"/></g>');
   // ── AMBIENT — 6 slow-drifting 1px dust motes in the lower scene ──
   let motes = '<g id="fMotes" opacity="0">';
   for (let i = 0; i < 6; i++){
     const mx = (0.10 + i * 0.16) * VB.w;
     const my = 300 + ((i * 37) % 110);
-    motes += `<circle cx="${mx.toFixed(0)}" cy="${my}" r=".5" fill="#bfeae4" opacity="${(0.12 + (i % 3) * 0.04).toFixed(2)}"/>`;
+    motes += `<circle cx="${mx.toFixed(0)}" cy="${my}" r=".5" fill="#C7BBF0" opacity="${(0.12 + (i % 3) * 0.04).toFixed(2)}"/>`;
   }
   motes += '</g>';
   $('fTee').insertAdjacentHTML('beforebegin', motes);
-  // flash + particle pools ABOVE the scene, below the teal grade overlay
+  // flash + particle pools ABOVE the scene, below the dusk grade overlay
   // (fixed particle geometries; per-shot MOTION is seeded, not the pool)
   const grassCols = ['#2e4a33','#35543a','#24402b','#3d5c40'];
   let fx = '<g id="fFlash" opacity="0">'
     + '<circle id="fFlashDisc" r="26" fill="url(#fflashGrad)"/>'
-    + '<ellipse id="fFlashRing" rx="4" ry="1.6" fill="none" stroke="#7FF0E6" stroke-width="1.6"/>'
+    + '<ellipse id="fFlashRing" rx="4" ry="1.6" fill="none" stroke="#FFB88C" stroke-width="1.6"/>'
     + '<g id="fFlashKick">'
-    + '<line x1="0" y1="-9" x2="0" y2="-22" stroke="#eafffb" stroke-width="1.7" stroke-linecap="round"/>'
-    + '<line x1="-7" y1="-7" x2="-15" y2="-17" stroke="#22E3D6" stroke-width="1.4" stroke-linecap="round"/>'
-    + '<line x1="7" y1="-7" x2="15" y2="-17" stroke="#22E3D6" stroke-width="1.4" stroke-linecap="round"/>'
+    + '<line x1="0" y1="-9" x2="0" y2="-22" stroke="#FFF3E8" stroke-width="1.7" stroke-linecap="round"/>'
+    + '<line x1="-7" y1="-7" x2="-15" y2="-17" stroke="#FF8A4D" stroke-width="1.4" stroke-linecap="round"/>'
+    + '<line x1="7" y1="-7" x2="15" y2="-17" stroke="#FF8A4D" stroke-width="1.4" stroke-linecap="round"/>'
     + '</g></g>';
   fx += '<g id="fFX" opacity="0">';
   for (let i = 0; i < 8; i++){                       // grass flecks: 2–5px lines
@@ -3660,11 +3731,11 @@ function ensureFX(){
         + ` stroke="${grassCols[i % 4]}" stroke-width="1.3" stroke-linecap="round" opacity="0"/>`;
   }
   for (let i = 0; i < 6; i++){                       // dust dots: 1.5–2.5px
-    fx += `<circle class="fxDust" r="${(0.75 + (i % 3) * 0.25).toFixed(2)}" fill="#bfeae4" opacity="0"/>`;
+    fx += `<circle class="fxDust" r="${(0.75 + (i % 3) * 0.25).toFixed(2)}" fill="#C9B79A" opacity="0"/>`;
   }
-  fx += '<ellipse id="fDustPuff" rx="4" ry="1.6" fill="#bfeae4" opacity="0"/></g>';
+  fx += '<ellipse id="fDustPuff" rx="4" ry="1.6" fill="#C9B79A" opacity="0"/></g>';
   fx += '<g id="fSparks" opacity="0">';
-  const sparkCols = ['#eafffb','#22E3D6','#eafffb','#22E3D6','#eafffb'];
+  const sparkCols = ['#FFF3E8','#FF8A4D','#FFF3E8','#FF8A4D','#FFF3E8'];
   for (let i = 0; i < 5; i++){                       // fan −150°..−30° around the crest
     const a = (-150 + i * 30) * Math.PI / 180;
     fx += `<line class="fxSpark" x1="${(Math.cos(a)*6).toFixed(2)}" y1="${(Math.sin(a)*6).toFixed(2)}"`
@@ -3833,6 +3904,21 @@ fGhostPillEl.addEventListener('click', ()=>{
   if (FX.ghosts) FX.ghosts.style.display = ghostsVisible ? '' : 'none';
   saHaptics.selectionChanged();   // STAGE 4 — ghost pill toggle
 });
+// «Data» pill — clean-flight mode: the post-landing reveal (chips + delta) stays hidden.
+// Persisted so range purists keep their view. SR summary announcements are unaffected.
+const fDataPillEl = $('fDataPill');
+let flightDataVisible = (function(){ try { return localStorage.getItem('sa_flight_data') !== 'hide'; } catch(e){ return true; } })();
+function applyFlightDataVis(){
+  fDataPillEl.setAttribute('aria-pressed', String(flightDataVisible));
+  $('flightCard').classList.toggle('data-off', !flightDataVisible);
+}
+fDataPillEl.addEventListener('click', ()=>{
+  flightDataVisible = !flightDataVisible;
+  try { localStorage.setItem('sa_flight_data', flightDataVisible ? 'show' : 'hide'); } catch(e){}
+  saHaptics.selectionChanged();
+  applyFlightDataVis();
+});
+applyFlightDataVis();
 fGhostClearEl.addEventListener('click', ()=>{
   ghosts.length = 0;
   fBaseline = null; buildGhostLegend();   // GHOST LAB: clear also drops the pin + its chips (buildGhostLegend → setPinUI)
@@ -3948,7 +4034,10 @@ $('fSpeedUp').addEventListener('click', ()=> saHaptics.selectionChanged());
 
   const COACH_KEY = 'sa_coach_impact';
   const STEPS = [
-    { selector: '#stage',
+    // NEVER-COVER (Ordre-2 P2): the described elements are the two lens VIEWS
+    // (the svgs), not the whole #stage wrapper — spotlighting the pair leaves
+    // the dock/results band below as a dim free zone for the coach card.
+    { selector: '#svgDir, #svgHt',
       title: 'Both lenses at once',
       body: 'Direction (left) shows face & path from above; Launch (right) shows attack & loft from the side.' },
     { selector: '#lensDir .minidock',

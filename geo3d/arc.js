@@ -1,22 +1,23 @@
 /**
  * geo3d/arc.js — swing-arc tube, wired live to the math engine.
  * ArcCurve samples arcPosition() directly (same source of truth as the SVG).
- * TubeGeometry (140 segments × 8 radial, r=6mm) + additive glow tube.
+ * TubeGeometry (140 segments × 8 radial) + additive glow tube.
  * Ink-draw uProgress uniform (default 1 = fully drawn) via onBeforeCompile.
- * Colour (THE OBSERVATORY BROADCAST §1 — kills the teal era): ember gradient
- * --accent #FF8A4D → a cooler, dimmer ember tail along vUv.x; the low-point
- * valley runs white-hot (#FFF3E8), so at the strike the arc reads as a wire
- * heated to incandescence at the point of contact.
+ * Colour (ORDRE 2 P2 §6 — quiet-until-touched): the ember-wire era is retired.
+ * The arc at rest is a THIN ink/violet-neutral line (the geometry, not a heat
+ * effect); the ONE focal it keeps is the warm-white hotspot at the true low
+ * point (informational — it IS the low-point mark now that the marker sphere
+ * is gone). Ember stays reserved for transient FX + action chrome.
  * Buffers are preallocated once; slider input rewrites positions in place.
  */
 import * as THREE from '../vendor/three/build/three.module.js';
 import { arcPosition, SWEEP_RAD } from '../swing-parameters-and-impact.js';
 
 const TUBE_SEG = 140, TUBE_RADIAL = 8;
-const CORE_R = 0.006, GLOW_R = 0.016;
-const C_A = new THREE.Color('#FF8A4D');   // ember head = --accent
-const C_B = new THREE.Color('#9E4A28');   // cooler/dimmer ember tail (rgba(255,138,77,.35) grade)
-const C_WARM = new THREE.Color('#FFF3E8'); // white-hot valley-glow hotspot near the true low point
+const CORE_R = 0.0045, GLOW_R = 0.012;     // §6 — «tynn svingbue»
+const C_A = new THREE.Color('#B9B3DA');    // violet-neutral head (ink-adjacent)
+const C_B = new THREE.Color('#59527A');    // dimmer violet tail
+const C_WARM = new THREE.Color('#FFF3E8'); // warm-white low-point hotspot (the one focal — max focal law)
 
 class ArcCurve extends THREE.Curve {
   constructor(state) { super(); this.state = state; }
@@ -87,7 +88,7 @@ export function createArc(state) {
   core.castShadow = false;
 
   const glowGeo = new THREE.TubeGeometry(curve, TUBE_SEG, GLOW_R, TUBE_RADIAL, false);
-  const glowMat = makeInkMaterial({ transparent: true, opacity: 0.22, additive: true, depthWrite: false });
+  const glowMat = makeInkMaterial({ transparent: true, opacity: 0.10, additive: true, depthWrite: false }); // §6 — quieter halo (legibility, not glow-decor)
   const glow = new THREE.Mesh(glowGeo, glowMat);
   glow.renderOrder = 1;
 

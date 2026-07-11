@@ -24,7 +24,9 @@
   --pw-muted-2: #7e8b96;          /* AA on near-black even at small sizes */
   --pw-line: rgba(255,255,255,.09);
   --pw-card: rgba(255,255,255,.035);
-  --pw-card-hi: rgba(34,227,214,.07);
+  /* accent-derived (Økt-1 §1.4): every tint follows the host page's --accent,
+     so the paywall repaints itself when a host migrates teal → ember dusk. */
+  --pw-card-hi: color-mix(in srgb, var(--pw-cyan) 8%, transparent);
 
   position: fixed; inset: 0; z-index: 3000;
   background: rgba(4,7,10,.82);
@@ -48,8 +50,8 @@
   max-height: min(92dvh, 560px);
   border-radius: 22px;
   background:
-    radial-gradient(120% 140% at 82% 18%, rgba(34,227,214,.10), transparent 46%),
-    radial-gradient(130% 130% at 12% 92%, rgba(34,227,214,.05), transparent 50%),
+    radial-gradient(120% 140% at 82% 18%, color-mix(in srgb, var(--pw-cyan) 10%, transparent), transparent 46%),
+    radial-gradient(130% 130% at 12% 92%, color-mix(in srgb, var(--pw-cyan) 5%, transparent), transparent 50%),
     var(--pw-bg);
   border: 1px solid var(--pw-line);
   box-shadow: 0 30px 80px -30px rgba(0,0,0,.9), inset 0 0 0 1px rgba(255,255,255,.02);
@@ -116,7 +118,7 @@
 .sa-pw-tier.sa-pw-decoy .sa-pw-tsub,
 .sa-pw-tier.sa-pw-decoy .sa-pw-price small{ color: #9aabc6; } /* 5.30:1 on --pw-bg */
 /* hero (annual) */
-.sa-pw-tier.sa-pw-hero .sa-pw-box{ border-color: rgba(34,227,214,.45); background: var(--pw-card-hi); }
+.sa-pw-tier.sa-pw-hero .sa-pw-box{ border-color: color-mix(in srgb, var(--pw-cyan) 45%, transparent); background: var(--pw-card-hi); }
 .sa-pw-badge{
   position: absolute; top: -9px; left: 14px; z-index: 3;
   font-size: 9.5px; font-weight: 800; letter-spacing: .1em; color: var(--pw-bg);
@@ -126,7 +128,7 @@
 /* selected state */
 .sa-pw-tier input:checked + .sa-pw-box{
   border-color: var(--pw-cyan);
-  box-shadow: 0 0 0 1px var(--pw-cyan), 0 8px 30px -12px rgba(34,227,214,.4);
+  box-shadow: 0 0 0 1px var(--pw-cyan), 0 8px 30px -12px color-mix(in srgb, var(--pw-cyan) 40%, transparent);
   background: var(--pw-card-hi);
 }
 .sa-pw-tier input:focus-visible + .sa-pw-box{ outline: 2px solid var(--pw-cyan); outline-offset: 2px; }
@@ -142,9 +144,12 @@
 
 .sa-pw-cta{
   margin-top: 4px; width: 100%; min-height: 50px; border: 0; border-radius: 14px; cursor: pointer;
-  background: linear-gradient(180deg,#2ff0e2,#18c8bc); color: #04211f;
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--pw-cyan) 86%, #fff),
+    color-mix(in srgb, var(--pw-cyan) 84%, #000));
+  color: #0A0E12;
   font-size: 15px; font-weight: 700; letter-spacing: .01em; font-family: inherit;
-  box-shadow: 0 10px 30px -10px rgba(34,227,214,.55);
+  box-shadow: 0 10px 30px -10px color-mix(in srgb, var(--pw-cyan) 55%, transparent);
   transition: transform .1s, box-shadow .15s, opacity .15s;
 }
 .sa-pw-cta:active{ transform: translateY(1px); }
