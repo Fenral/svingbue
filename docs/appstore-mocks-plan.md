@@ -43,3 +43,22 @@ Icon-note (samme leveranse): app-ikonet må matche skudd 1 (arc-merket + ember-b
 Diagnose (ute av v1) · priser/paywall · stjerner/anmeldelser · «#1»-claims · foto av mennesker. Higgsfield-filmene (App Preview-video) er egen leveranse etter dette settet — skudd 1-komposisjonen gjenbrukes som filmens åpningsbilde.
 
 — Fable 5, siste tjeneste før utløp. Blikkfanget er natten; det nye er at galleriet selv er ett golfslag.
+
+---
+
+## REVISJON v2 (2026-07-12 — syntese av to kritikker: intern Mobbin-loop + claude.ai). Samlet score v1 ≈ 74/88. Mål ≥88.
+**Begge kritikker konvergerte (høy tillit → produser):**
+1. **DØD SONE i skudd 2, 7, 8 = verste feil.** Telefonen for liten i tomt nattfelt. Forstørr device til **70–85 % av canvas-bredden**, hev vertikalt senter, komprimér topp-dødrom, glød bak device så den forankrer (ikke flyter). Løfter tre skudd fra ~57 til ~80 alene.
+2. **PANORAMA = GO (2-slot, ikke 3).** Split 3D-todelingen (v1 skudd 4, landskap) over TO portrett-slots på appens EGEN panel-deler: venstre slot = mikroskopet («treffet»), høyre slot = buescenen over natt-rangen («flukten»). Sømmen usynlig (ligger på todelingens skillelinje). Master-canvas 2580×2796, sliced til to 1290×2796. Løser BÅDE symmetri-monotonien OG claude.ai's «ingen landskap i portrett». Ember-tråden buer kontinuerlig over sømmen. Settet vokser 8→9 skudd. **Bruk den nye subtile glass-platen** (owner 07-12) — den gir 3D-dybden panoramaet skal vise.
+3. **SPIN LAB (7 128 rpm) tidlig.** Begge: glødende tall = Opal/Outsiders-standarden (mørke data-apper fyller rammen med tall, aldri tomrom). Flytt Spin Lab til **#2**.
+4. **OVERSKRIFTER → utfallsspråk.** Fiks den lange: «Se hvorfor ballen gjør som den gjør.» → **«Se hvorfor. Ikke gjett.»** Legg til minst én substans-linje: «Ekte D-Plane-fysikk» / «24 leksjoner».
+5. **FRAUNCES BEHOLDES** (det ER «ikke enda en golf-app»-signaturen) — men **tyngre optisk grad + lavere kontrast** (hairlines aliaser ved 150px thumbnail), **+10–15 % større**, maks 3–4 ord på thumbnail-skudd, mørk halo under tekst på lysere violett (skudd 2/5/6).
+6. **EMBER-TRÅDEN for tynn/mis-alignet.** Tykkere ×1,5–2, varm glød, lås inn/ut-Y EKSAKT på hver canvas-kant (én monoton Y-kurve over hele settet) — ellers er den støy.
+7. **0 XP → progresjon** (skudd 5). Seed profil med XP + noen mestrede leksjoner («du har ingenting» selger ikke).
+8. **Skudd 1 komet DOMINERER** — 2–3× større/lysere ember-ball, løftet opp; fyll void. Skudd 7 «compare»: zoom UI så de to divergerende buene (ember vs ghost-violett) er hero, dropp halve data-pillene. Skudd 8: stram vertikalt, forstørr landings-glød.
+
+**FØRSTEBILDE-BESLUTNING (Fable full frihet på «resten», blikkfang = Siverts eksplisitte krav):** behold **konstellasjonen som #1** (blikkfang + «ikke enda en golf-app» = eierens uttrykte ønske) MEN kraftig styrket per punkt 8, og løft **Spin Lab til #2** så det glødende tallet lander i de to første (begge kritikkers verdi-tidlig-krav). Balanserer blikkfang + konvertering.
+
+**IKKE gjort (senere, ærlig flagget):** app-preview-video (Higgsfield film 2, kø) for «modellen svarer live» = 92-95-territoriet; sosialt bevis (egen lov: ingen stjerner før 50+); før/etter-skudd. **Fysikk: IKKE en blokker** — jakten (60 690 tilstander) beviste motoren korrekt; +21,4° var sluttpeiling, tracer-presentasjonen alt fikset. claude.ai manglet den konteksten.
+
+Ny rekkefølge (9 skudd): 1 konstellasjon (styrket) · 2 Spin Lab · 3 impact-flukt (forstørret) · 4 Strike Window 2D · 5–6 3D-panorama (mikroskop|scene) · 7 Academy (m/progresjon) · 8 ghost-compare (zoomet) · 9 drill-closer (tråden lander).

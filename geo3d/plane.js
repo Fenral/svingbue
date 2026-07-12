@@ -44,14 +44,15 @@ function dimAt(deg) {
   return t <= 0 ? 1 : t >= 1 ? DIM_FACTOR : 1 + (DIM_FACTOR - 1) * t;
 }
 
-// ORDRE 2 P2 §6 — the glass fill + grid are REMOVED from view (minimalism
-// test: the quiet dial + arc carry the plane reading; the translucent sheet
-// and its rungs were decoration). Geometry/materials are still built (cheap,
-// once) and the meshes stay in the group with .visible=false, so the
-// clampLowerEdge ground-clearance math and every existing reference
-// (hide-lists, hooks) keep working unchanged.
-const PLANE_OPACITY = 0.045;
-const GRID_OPACITY = 0.13;
+// OWNER ORDER 2026-07-12 — the subtle glass sheet + grid are RESTORED (whispered):
+// P2 §6 removed them for minimalism, but the owner wants a faint glass plane
+// BEHIND the swing arc so the camera reads perspective/depth and the scene
+// reads as 3D (esp. for the App Store shots). Kept deliberately quiet: a low-
+// opacity periwinkle fill + faint grid rungs that give the plane a form in
+// space without becoming a technical hologram. «Stille til du rører den» holds
+// — it's atmosphere, never chrome.
+const PLANE_OPACITY = 0.03;
+const GRID_OPACITY = 0.042;
 const RUNG_FRACS = [0.22, 0.46, 0.70, 0.94];
 // §1 colour mapping: glass-plane grid (legacy teal) → --plane #93A4F2 periwinkle (SYS-11 swing-plane hue)
 const PLANE_PERIWINKLE = 0x93A4F2;
@@ -81,12 +82,12 @@ export function createPlane(state) {
   });
   const planeMesh = new THREE.Mesh(new THREE.BufferGeometry(), planeMat);
   planeMesh.renderOrder = 5; // after opaque geometry, avoids z-fighting with floor/arc
-  planeMesh.visible = false; // ORDRE 2 P2 §6 — glass sheet removed from view
+  planeMesh.visible = true; // OWNER ORDER 2026-07-12 — subtle glass restored (depth cue)
 
   const gridMat = new THREE.LineBasicMaterial({ color: PLANE_PERIWINKLE, transparent: true, opacity: GRID_OPACITY, depthWrite: false, toneMapped: false, fog: false });
   const gridLines = new THREE.LineSegments(new THREE.BufferGeometry(), gridMat);
   gridLines.renderOrder = 6;
-  gridLines.visible = false; // ORDRE 2 P2 §6 — grid rungs removed from view
+  gridLines.visible = true; // OWNER ORDER 2026-07-12 — faint rungs give the glass a form in space
 
   // ── the dial stack: quiet ring + fade-in numerals + live aim marker, all
   // children of ONE sub-group kept concentric with the arc in update(). ──────

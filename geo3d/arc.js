@@ -18,6 +18,15 @@ const CORE_R = 0.0045, GLOW_R = 0.012;     // §6 — «tynn svingbue»
 const C_A = new THREE.Color('#B9B3DA');    // violet-neutral head (ink-adjacent)
 const C_B = new THREE.Color('#59527A');    // dimmer violet tail
 const C_WARM = new THREE.Color('#FFF3E8'); // warm-white low-point hotspot (the one focal — max focal law)
+// UNDERGROUND CUTAWAY (owner 2026-07-12 «se under bakken») — the part of the
+// tube that digs below the ground plane (world z < 0) is redrawn as a dimmed
+// --warn amber ghost with depthTest OFF, so it shows THROUGH the opaque floor
+// instead of vanishing («du graver for dypt»). Amber = warning/too-low, NEVER
+// ember (ember stays action/truth). Quiet until it actually digs: the per-
+// fragment z<0 discard means nothing paints while the arc sits above ground,
+// so the default (y +1.6) is byte-identical.
+const C_WARN = new THREE.Color('#FFD056'); // --warn amber (below-ground = too low)
+const UNDER_OPACITY = 0.46;
 
 class ArcCurve extends THREE.Curve {
   constructor(state) { super(); this.state = state; }
@@ -50,6 +59,31 @@ function makeInkMaterial(opts) {
         `float inkAlpha = smoothstep(uProgress - 0.02, uProgress, vArcU) > 0.5 ? 0.0 : smoothstep(uProgress, uProgress - 0.02, vArcU);\n` +
         `gl_FragColor.a *= inkAlpha;`
       );
+  };
+  return mat;
+}
+
+// Flat --warn amber material for the below-ground cutaway. depthTest OFF so it
+// draws through the floor; a per-fragment `world z >= 0 → discard` keeps it to
+// the dug portion only (nothing above ground, nothing at all when not digging).
+function makeUnderMaterial() {
+  const mat = new THREE.MeshBasicMaterial({
+    color: C_WARN, toneMapped: false, fog: false,
+    transparent: true, opacity: UNDER_OPACITY,
+    depthTest: false, depthWrite: false,
+    blending: THREE.NormalBlending, // amber ghost, not additive glow (glow would read as energy/action)
+  });
+  mat.onBeforeCompile = (shader) => {
+    shader.vertexShader = shader.vertexShader
+      .replace('#include <common>', '#include <common>\nvarying float vWorldZ;')
+      .replace('#include <begin_vertex>', '#include <begin_vertex>\nvWorldZ = ( modelMatrix * vec4( transformed, 1.0 ) ).z;');
+    // Discard at −CORE_R (tube radius) rather than 0, so the amber appears only
+    // once the tube CENTRELINE is below ground (genuine dig, yv<0) — not from
+    // the underside of a tube whose centreline merely grazes z=0 at yv=0. Keeps
+    // the y=0 boundary (and everything above it) clean/unchanged.
+    shader.fragmentShader = shader.fragmentShader
+      .replace('#include <common>', '#include <common>\nvarying float vWorldZ;')
+      .replace('#include <dithering_fragment>', '#include <dithering_fragment>\nif ( vWorldZ >= -0.0048 ) discard;');
   };
   return mat;
 }
@@ -92,10 +126,19 @@ export function createArc(state) {
   const glow = new THREE.Mesh(glowGeo, glowMat);
   glow.renderOrder = 1;
 
+  // below-ground cutaway ghost — shares coreGeo (rewrite() rebuilds that buffer
+  // in place, so this follows for free) but renders flat amber, depthTest off,
+  // clipped to world z < 0 by makeUnderMaterial's fragment discard. renderOrder
+  // above the arc so the ghost reads on top of the floor it's cutting through.
+  const underMat = makeUnderMaterial();
+  const under = new THREE.Mesh(coreGeo, underMat);
+  under.castShadow = false;
+  under.renderOrder = 8;
+
   paintTube(coreGeo, null);
   paintTube(glowGeo, null);
 
-  group.add(glow, core);
+  group.add(glow, core, under);
 
   // frozen "ghost" arc: a dimmed, thin fat-line clone frozen at pointerdown time,
   // shown while dragging, faded 400ms after pointerup.
@@ -137,7 +180,7 @@ export function createArc(state) {
     });
   }
 
-  return { group, curve, coreMat, glowMat, rewrite, setLowestSegmentGlow, snapshotGhost, fadeGhost, ghost };
+  return { group, curve, coreMat, glowMat, underMat, under, rewrite, setLowestSegmentGlow, snapshotGhost, fadeGhost, ghost };
 }
 
 // Rebuild a TubeGeometry's position/normal/uv buffers in place from a curve,

@@ -21,8 +21,10 @@
  */
 import * as THREE from '../vendor/three/build/three.module.js';
 import { lpWorld, arcPosition, effectiveLpx, SWEEP_RAD } from '../swing-parameters-and-impact.js';
+import { groundCrossingTheta0 } from './groundcontact.js';
 
 const GOLD = 0xD9B36A; // --gold — the measure/annotation role (never a verdict)
+const WARN = 0xFFD056; // --warn amber — below-ground = digging = too-low (never ember)
 
 export function createLowpoint(state, labelEl, labelYEl) {
   const group = new THREE.Group();
@@ -31,20 +33,37 @@ export function createLowpoint(state, labelEl, labelYEl) {
   const bracketLine = new THREE.Line(new THREE.BufferGeometry(), bracketMat);
   const bracketTicks = new THREE.LineSegments(new THREE.BufferGeometry(), bracketMat);
 
-  // OWNER ORDER 2026-07-12 (#4) — vertical y-measure bracket (shares the gold
-  // measure material; ticks run along X so they read perpendicular on screen).
-  const bracketYLine = new THREE.Line(new THREE.BufferGeometry(), bracketMat);
-  const bracketYTicks = new THREE.LineSegments(new THREE.BufferGeometry(), bracketMat);
+  // OWNER ORDER 2026-07-12 (#4) — vertical y-measure bracket. Its OWN material
+  // (not shared with the x bracket) so it can flip to the amber cutaway look
+  // when it digs below the floor (owner «se under bakken»); at rest it is
+  // byte-identical to the gold x measure.
+  const bracketYMat = new THREE.LineBasicMaterial({ color: GOLD, transparent: true, opacity: 0.7, toneMapped: false });
+  const bracketYLine = new THREE.Line(new THREE.BufferGeometry(), bracketYMat);
+  const bracketYTicks = new THREE.LineSegments(new THREE.BufferGeometry(), bracketYMat);
 
-  group.add(bracketLine, bracketTicks, bracketYLine, bracketYTicks);
+  // Ground reference hairline — quiet neutral white-alpha, laid along the arc's
+  // z=0 crossing (entry→exit) so «over vs under bakken» reads instantly. Shows
+  // ONLY while the arc digs; hidden (and thus default-safe) otherwise.
+  const groundLineMat = new THREE.LineBasicMaterial({ color: 0xFFFFFF, transparent: true, opacity: 0.5, toneMapped: false, depthWrite: false });
+  const groundLine = new THREE.Line(new THREE.BufferGeometry(), groundLineMat);
+  groundLine.renderOrder = 7;
+  groundLine.visible = false;
+
+  group.add(bracketLine, bracketTicks, bracketYLine, bracketYTicks, groundLine);
 
   const anchor = new THREE.Vector3(); // world position the DOM label is pinned to
   const anchorY = new THREE.Vector3(); // y-measure label anchor
   let brkSign = 1;
+  // DOM-label transforms, chosen per dig-state in update(): at rest = the
+  // unchanged plate placement; digging = split to the clear foreground.
+  let xTransform = 'translate(-18%,-50%)';
+  let yTransform = 'translate(-50%,-50%)';
 
   function update(stateRef, camera, canvas) {
     const lp = lpWorld(stateRef);
     const lpG = new THREE.Vector3(lp.x, lp.y, 0);
+    const yv = stateRef.lowPoint.z;
+    const dug = yv < 0; // low point below the ground plane → «se under bakken» grammar
 
     // measured ground bracket: ball (0,off,z) -> lowpoint ground-projection (lpG.x, lpG.y+off, z)
     const off = -0.18, z = 0.004, tick = 0.05;
@@ -59,13 +78,11 @@ export function createLowpoint(state, labelEl, labelYEl) {
     ]);
 
     brkSign = Math.sign(stateRef.lowPoint.x) || 1;
-    anchor.set(lpG.x + brkSign * 0.10, (lpG.y + off) - 0.12, 0.01);
 
     // OWNER ORDER 2026-07-12 (#4) — the y measure: a vertical bracket rising
     // (or digging) from the ground at the valley end of the x bracket, up/down
     // to the low point's height. The two share the corner point so they read
     // as one dimension chain. Label floats just past the free end.
-    const yv = stateRef.lowPoint.z;
     const yTick = 0.03;
     const C = new THREE.Vector3(lpG.x, lpG.y + off, 0.004);
     const D = new THREE.Vector3(lpG.x, lpG.y + off, yv);
@@ -76,7 +93,56 @@ export function createLowpoint(state, labelEl, labelYEl) {
       new THREE.Vector3(C.x - yTick, C.y, C.z), new THREE.Vector3(C.x + yTick, C.y, C.z),
       new THREE.Vector3(D.x - yTick, D.y, D.z), new THREE.Vector3(D.x + yTick, D.y, D.z),
     ]);
-    anchorY.set(lpG.x, lpG.y + off, yv + (yv >= 0 ? 0.055 : -0.055));
+
+    // «se under bakken» — while the y bracket digs below the floor, redraw it as
+    // the amber cutaway (depthTest off → shows THROUGH the opaque floor, reduced
+    // opacity, --warn amber). These are per-draw renderer states (no shader
+    // recompile), so flipping them every frame is free. Above ground it stays
+    // the byte-identical gold measure → the default (y +1.6) is untouched.
+    if (dug) {
+      bracketYMat.color.setHex(WARN); bracketYMat.opacity = 0.5; bracketYMat.depthTest = false;
+      bracketYLine.renderOrder = 9; bracketYTicks.renderOrder = 9;
+    } else {
+      bracketYMat.color.setHex(GOLD); bracketYMat.opacity = 0.7; bracketYMat.depthTest = true;
+      bracketYLine.renderOrder = 0; bracketYTicks.renderOrder = 0;
+    }
+
+    // ground reference hairline along the arc's exact z=0 crossing (entry→exit).
+    // groundCrossingTheta0 is null unless the arc really dips below ground.
+    const theta0 = groundCrossingTheta0(stateRef);
+    if (theta0 != null) {
+      const e = arcPosition(-theta0, stateRef), x2 = arcPosition(theta0, stateRef);
+      const GLZ = 0.0015; // hair above the floor so it reads, never z-fights
+      groundLine.geometry.dispose();
+      groundLine.geometry = new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(e.x, e.y, GLZ), new THREE.Vector3(x2.x, x2.y, GLZ),
+      ]);
+      groundLine.visible = true;
+    } else {
+      groundLine.visible = false;
+    }
+
+    // chip anchors. At rest the two plates sit at the valley (UNCHANGED — App
+    // Store default). While digging, the valley + amber cutaway descend into
+    // exactly that spot, so both plates move to the clear FOREGROUND (pushed
+    // toward the camera → lower-front) and split left/right, clearing ball /
+    // arc / marker / each other at every dig depth (verified to y −10).
+    if (dug) {
+      // plates ride just BELOW the amber valley (z follows the dig depth) and
+      // split wide left/right, so they clear ball / arc / marker / each other at
+      // every depth the slider reaches (down to −20 cm), pulled a touch toward
+      // the camera to stay legible over the floor.
+      const digY = lpG.y + off - 0.06, digZ = yv - 0.035;
+      anchor.set(lpG.x + 0.22, digY, digZ);   // x-chip → below-right of the dig
+      anchorY.set(lpG.x - 0.22, digY, digZ);  // y-chip → below-left of the dig
+      xTransform = 'translate(-12%,-50%)';    // plate extends right of its anchor
+      yTransform = 'translate(-88%,-50%)';    // plate extends left of its anchor
+    } else {
+      anchor.set(lpG.x + brkSign * 0.10, (lpG.y + off) - 0.12, 0.01);
+      anchorY.set(lpG.x, lpG.y + off, yv + 0.055);
+      xTransform = brkSign >= 0 ? 'translate(-18%,-50%)' : 'translate(-82%,-50%)';
+      yTransform = 'translate(-50%,-50%)';
+    }
 
     updateLabelText(stateRef);
     placeLabel(camera, canvas);
@@ -129,11 +195,11 @@ export function createLowpoint(state, labelEl, labelYEl) {
     el.style.transform = transform;
   }
   function placeLabel(camera, canvas) {
-    placeOne(labelEl, anchor, camera, canvas, brkSign >= 0 ? 'translate(-18%,-50%)' : 'translate(-82%,-50%)');
-    placeOne(labelYEl, anchorY, camera, canvas, 'translate(-50%,-50%)');
+    placeOne(labelEl, anchor, camera, canvas, xTransform);
+    placeOne(labelYEl, anchorY, camera, canvas, yTransform);
   }
 
-  return { group, bracketLine, bracketTicks, bracketYLine, bracketYTicks, update, placeLabel, anchor, anchorY };
+  return { group, bracketLine, bracketTicks, bracketYLine, bracketYTicks, groundLine, update, placeLabel, anchor, anchorY };
 }
 
 // Sample the arc (same SWEEP_RAD domain as ArcCurve) to find theta at the

@@ -871,6 +871,19 @@ function sdAnchorFor(x, rectW, preferred = 'middle') {
   return preferred;
 }
 
+// Long labels (the turf sentence) can still overrun the frame in the middle
+// band where sdAnchorFor keeps 'middle'/'start' — this clamps the anchor x by
+// the string's measured pixel width so the WHOLE label stays inside the inset
+// [pad, rectW-pad], centred as near the target point as it fits. charW ≈ the
+// mono advance at the .sd-lb size (11.5px). Only the Fat/Duff turf label is
+// long enough to need it today (owner 2026-07-12: "tekst innenfor bildet").
+function sdFitLabelX(x, text, rectW, pad = 6) {
+  const w = text.length * 7.0;
+  if (w >= rectW - 2 * pad) return { x: pad, anchor: 'start' };
+  const half = w / 2;
+  return { x: Math.max(pad + half, Math.min(rectW - pad - half, x)), anchor: 'middle' };
+}
+
 const _sdBall = new THREE.Vector3();
 const _sdLp = new THREE.Vector3();
 const _sdContact = new THREE.Vector3();
@@ -977,9 +990,10 @@ function updateStrikeDetail(stateRef) {
     _sdEntry.set(entry.x, entry.y, 0);
     const pEntry = inset3d.projectToInset(_sdEntry);
     if (!pEntry.behind) {
+      const tf = sdFitLabelX(pEntry.x, turfText, rect.w);
       parts.push(
         `<circle cx="${pEntry.x.toFixed(1)}" cy="${pEntry.y.toFixed(1)}" r="3" fill="#9a7b52"/>`,
-        `<text x="${pEntry.x.toFixed(1)}" y="${(pEntry.y - 8).toFixed(1)}" text-anchor="${sdAnchorFor(pEntry.x, rect.w)}" class="sd-lb sd-lb-soil">${turfText}</text>`
+        `<text x="${tf.x.toFixed(1)}" y="${(pEntry.y - 8).toFixed(1)}" text-anchor="${tf.anchor}" class="sd-lb sd-lb-soil">${turfText}</text>`
       );
     }
   }
@@ -1629,6 +1643,30 @@ window.__sa = Object.assign(window.__sa || {}, {
       const rect = $('scene3d').getBoundingClientRect();
       const rl = $('scene3d').__mainRegionLeft || 0;
       return { x: rect.left + rl + (v.x * 0.5 + 0.5) * (rect.width - rl), y: rect.top + (-v.y * 0.5 + 0.5) * rect.height };
+    },
+    // UNDERGROUND CUTAWAY (2026-07-12) — screen-px rects for the ball, the
+    // visible arc bbox, the low-point marker (arc valley), and the two measure
+    // chips, all in the MAIN-camera region. Lets the headless rig assert the
+    // chips never cover ball/arc/marker at any dig state. Pure read — never
+    // invoked during a normal render, so it cannot shift default pixels.
+    geoRects: () => {
+      if (!sa3d) return null;
+      const el = $('scene3d'), rect = el.getBoundingClientRect(), rl = el.__mainRegionLeft || 0;
+      const P = (x, y, z) => { const v = new THREE.Vector3(x, y, z).project(sa3d.camera);
+        return { x: rect.left + rl + (v.x * 0.5 + 0.5) * (rect.width - rl), y: rect.top + (-v.y * 0.5 + 0.5) * rect.height }; };
+      const bbox = (pts) => { let a = Infinity, b = Infinity, c = -Infinity, d = -Infinity;
+        for (const p of pts) { a = Math.min(a, p.x); b = Math.min(b, p.y); c = Math.max(c, p.x); d = Math.max(d, p.y); }
+        return { left: a, top: b, right: c, bottom: d }; };
+      const r = BALL_RADIUS_M;
+      const ball = bbox([P(-r, 0, r), P(r, 0, r), P(0, 0, 0), P(0, 0, 2 * r), P(0, -r, r), P(0, r, r)]);
+      const sweep = deg2rad(48), arcPts = [];
+      for (let i = 0; i <= 48; i++) { const th = -sweep + 2 * sweep * (i / 48); const p = arcPosition(th, state); arcPts.push(P(p.x, p.y, p.z)); }
+      const arc = bbox(arcPts);
+      const low = arcPosition(0, state), lowPx = P(low.x, low.y, low.z);
+      const marker = { left: lowPx.x - 16, top: lowPx.y - 16, right: lowPx.x + 16, bottom: lowPx.y + 16 };
+      const chip = (id) => { const e = $(id); if (!e || e.hidden) return null; const b = e.getBoundingClientRect(); return { left: b.left, top: b.top, right: b.right, bottom: b.bottom }; };
+      return { ball, arc, marker, chipX: chip('lp3dLabel'), chipY: chip('lpy3dLabel'),
+        region: { left: rect.left + rl, top: rect.top, right: rect.right, bottom: rect.bottom } };
     },
     view: () => (sa3d ? sa3d.rig : null),
     invalidate: () => sa3d && sa3d.invalidate(),

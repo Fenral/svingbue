@@ -1,0 +1,162 @@
+/* canvas.css — shared dusk poster system for all 9 App Store canvases (v2).
+   Every 0N.html / pano.html is a thin shell that sets data-* on <body>; this file
+   + canvas.js render the world. Canvas is a FIXED-SIZE poster (no responsive). */
+
+@font-face {
+  font-family: 'Fraunces';
+  src: url('/vendor/fonts/Fraunces-Variable.woff2') format('woff2');
+  font-weight: 300 900;
+  font-display: block;
+}
+@font-face { font-family:'Inter'; src:url('/vendor/fonts/Inter-Regular.woff2') format('woff2'); font-weight:400; font-display:block; }
+@font-face { font-family:'Inter'; src:url('/vendor/fonts/Inter-Medium.woff2') format('woff2'); font-weight:500; font-display:block; }
+@font-face { font-family:'Inter'; src:url('/vendor/fonts/Inter-SemiBold.woff2') format('woff2'); font-weight:600; font-display:block; }
+
+:root {
+  --ink:#EDEAF7; --muted:#A79FC7; --ember:#FF8A4D; --ember-hot:#FFF3E8;
+  --violet:#9D8BFF; --gold:#E3C468;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+html,body { background:#0A0818; }
+
+/* The poster stage — exact store pixels, set by canvas.js from thread.mjs. */
+.stage {
+  position:relative; overflow:hidden;
+  background:
+    radial-gradient(140% 90% at 50% -12%, #2A2050 0%, #140E28 46%, #0A0818 78%),
+    linear-gradient(180deg, #0A0818 0%, #14102A 55%, #241B44 100%);
+}
+
+/* seeded star-dust */
+#stars { position:absolute; inset:0; z-index:1; }
+
+/* low horizon glow — the range at night: violet skylight low + a faint ember seam */
+.horizon {
+  position:absolute; left:0; right:0; bottom:0; height:46%; z-index:2; pointer-events:none;
+  background:
+    radial-gradient(120% 70% at 50% 118%, rgba(157,139,255,.22) 0%, rgba(157,139,255,.05) 42%, transparent 66%),
+    radial-gradient(60% 26% at 50% 108%, rgba(255,138,77,.16) 0%, transparent 70%);
+}
+
+/* ── the ember flight-thread (SVG injected by canvas.js) ─────────────────────
+   REVISJON v2 §6: thicker ×~1.7, warm glow, one monotonic curve across the set. */
+.thread { position:absolute; inset:0; z-index:3; pointer-events:none; }
+.thread path.trail { fill:none; stroke:rgba(255,150,92,.46); stroke-width:5.6; stroke-dasharray:3 15; stroke-linecap:round;
+  filter:drop-shadow(0 0 7px rgba(255,138,77,.55)); }
+.thread path.glow  { fill:none; stroke:rgba(255,138,77,.16); stroke-width:22; stroke-linecap:round; filter:blur(9px); }
+
+/* travelling ember ball (shots without a UI hero ember) */
+.flyball { position:absolute; z-index:6; width:36px; height:36px; border-radius:50%;
+  background:radial-gradient(circle at 42% 38%, #FFF3E8 0%, #FFB27A 34%, #FF8A4D 62%, rgba(255,138,77,0) 78%);
+  box-shadow:0 0 48px 15px rgba(255,138,77,.55), 0 0 15px 3px rgba(255,243,232,.8);
+  transform:translate(-50%,-50%); }
+
+/* ── SHOT 1 COMET (REVISJON v2 §7) — 2–3× bigger/brighter than the flyball,
+   lifted into upper-mid, with a warm tail down the flight line so nothing reads
+   as empty. It is the blikkfang. */
+.comet { position:absolute; z-index:6; transform:translate(-50%,-50%); pointer-events:none; }
+.comet .tail {
+  position:absolute; left:50%; top:50%; width:520px; height:120px;
+  transform:translate(-6%,-50%) rotate(34deg); transform-origin:0% 50%;
+  background:linear-gradient(90deg, rgba(255,138,77,0) 0%, rgba(255,138,77,.10) 40%, rgba(255,160,100,.34) 82%, rgba(255,243,232,.55) 100%);
+  filter:blur(10px); border-radius:60px; }
+.comet .head {
+  position:relative; width:120px; height:120px; border-radius:50%;
+  background:radial-gradient(circle at 40% 36%, #FFF7EF 0%, #FFD9B8 22%, #FFA968 46%, #FF8A4D 64%, rgba(255,138,77,0) 80%);
+  box-shadow:0 0 130px 46px rgba(255,138,77,.55), 0 0 46px 14px rgba(255,176,120,.7), 0 0 16px 4px rgba(255,243,232,.95); }
+
+/* ── device ──────────────────────────────────────────────────────────────── */
+.device {
+  position:absolute; z-index:4; left:50%; transform-origin:center;
+  border-radius:74px; padding:16px; background:#05040A;
+  box-shadow:
+    0 60px 150px rgba(6,4,14,.72),
+    0 0 220px rgba(157,139,255,.20),
+    inset 0 2px 0 rgba(237,234,247,.16),
+    inset 0 0 0 1px rgba(157,139,255,.10);
+}
+.device .screen { position:relative; overflow:hidden; border-radius:60px; display:block; background:#07060C; }
+.device .screen img { display:block; width:100%; height:100%; object-fit:cover; }
+
+/* portrait floating device (shots 2,4,7) — enlarged, ~78% width */
+.device--port { }
+.device--land { border-radius:62px; padding:15px; }
+.device--land .screen { border-radius:50px; }
+
+/* full-bleed (shot 1 + panorama) — no frame; the app IS the poster */
+.fullbleed { position:absolute; inset:0; z-index:0; }
+.fullbleed img { width:100%; height:100%; object-fit:cover; display:block; }
+/* sky-darkening scrim so headlines read over the app's own night scene */
+.fullbleed::after { content:''; position:absolute; inset:0;
+  background:linear-gradient(180deg, rgba(8,6,16,.70) 0%, rgba(8,6,16,.22) 28%, transparent 46%); }
+/* panorama UI band — the landscape two-pane geometry, full width, faded top/bottom
+   into the dusk so it reads as one widescreen scene across the two portrait slots. */
+.pano-ui { position:absolute; left:0; width:100%; z-index:4; overflow:hidden;
+  -webkit-mask-image:linear-gradient(180deg, transparent 0, #000 7%, #000 93%, transparent 100%);
+  mask-image:linear-gradient(180deg, transparent 0, #000 7%, #000 93%, transparent 100%); }
+.pano-ui img { width:100%; height:100%; object-fit:cover; display:block; }
+
+/* ── typography ──────────────────────────────────────────────────────────── */
+/* REVISJON v2 §5: Fraunces STAYS but heavier optical grade (higher wght + SOFT so
+   hairlines survive a 150px thumbnail) and +~12% size; dark halo under headlines. */
+.headline {
+  position:absolute; z-index:7; left:0; right:0;
+  font-family:'Fraunces', Georgia, serif; color:var(--ink);
+  font-weight:600; font-optical-sizing:auto;
+  font-variation-settings:'opsz' 144, 'wght' 600, 'SOFT' 60, 'WONK' 0;
+  letter-spacing:-.014em; line-height:1.0; text-wrap:balance;
+  /* dark halo: legible over lighter-violet UI (spin lab / panorama) */
+  text-shadow:0 2px 26px rgba(6,4,14,.92), 0 0 80px rgba(6,4,14,.68), 0 1px 3px rgba(6,4,14,.85);
+}
+.subline {
+  position:absolute; z-index:7; left:0; right:0;
+  font-family:'Inter', system-ui, sans-serif; color:var(--muted);
+  font-weight:600; letter-spacing:.004em;
+  text-shadow:0 1px 18px rgba(6,4,14,.9), 0 0 40px rgba(6,4,14,.6);
+}
+
+/* portrait headline block (default) — bigger + tighter to compress top dead-space */
+.stage[data-orient="port"] .headline { top:132px; padding:0 92px; font-size:126px; }
+.stage[data-orient="port"] .subline  { top:132px; padding:0 94px; font-size:46px; }
+
+/* small wordmark chip, bottom — series signature */
+.wordmark { position:absolute; z-index:7; left:50%; transform:translateX(-50%);
+  bottom:104px; display:flex; align-items:center; gap:16px;
+  font-family:'Fraunces',serif; font-weight:600; font-size:40px; color:var(--ink);
+  font-variation-settings:'WONK' 1; letter-spacing:.01em; opacity:.92; }
+.wordmark .arc { width:40px; height:40px; }
+.wordmark .arc path { fill:none; stroke:var(--violet); stroke-width:2.4; }
+.wordmark .arc circle { fill:var(--ember); }
+
+/* film grain 2-3% — static SVG turbulence, RM-safe */
+.grain { position:absolute; inset:0; z-index:8; pointer-events:none; opacity:.05;
+  mix-blend-mode:soft-light;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='200' height='200' filter='url(%23n)'/></svg>");
+  background-size:600px 600px; }
+
+/* ── PANORAMA (shots 5+6, 2580-wide master, sliced at 1290) ──────────────────
+   Two headlines, one centred in each 1290 half; the app's own pane divider is
+   the (invisible) seam. */
+.stage[data-orient="pano"] .headline.pano-l,
+.stage[data-orient="pano"] .headline.pano-r {
+  top:150px; font-size:118px; text-align:center;
+  left:auto; right:auto; width:1140px; padding:0 60px;
+}
+.stage[data-orient="pano"] .headline.pano-l { left:75px; }     /* centred in [0,1290] */
+.stage[data-orient="pano"] .headline.pano-r { left:1365px; }   /* centred in [1290,2580] */
+
+/* the «Tonight at the range» invite card — composed on shot 9 (from home's lower-third) */
+.invite {
+  position:absolute; z-index:7; left:50%; transform:translateX(-50%); bottom:250px;
+  width:1020px; padding:40px 46px; border-radius:28px;
+  background:linear-gradient(180deg, rgba(20,14,32,.86), rgba(12,9,22,.9));
+  box-shadow:0 30px 90px rgba(6,4,14,.6), inset 0 1px 0 rgba(237,234,247,.14), inset 0 0 0 1px rgba(157,139,255,.16);
+  backdrop-filter:blur(8px);
+}
+.invite .eyebrow { font-family:'Inter',sans-serif; font-weight:600; font-size:30px; letter-spacing:.16em;
+  text-transform:uppercase; color:var(--muted); margin-bottom:14px; }
+.invite .line { font-family:'Fraunces',serif; font-weight:560; font-size:58px; color:var(--ink); line-height:1.06;
+  font-variation-settings:'opsz' 72; }
+.invite .cta { font-family:'Inter',sans-serif; font-weight:600; font-size:38px; color:var(--gold); margin-top:20px; display:inline-flex; align-items:center; gap:12px; }

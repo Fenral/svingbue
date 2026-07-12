@@ -1,0 +1,32 @@
+<!doctype html><html lang="no"><head><meta charset="utf-8">
+<title>StrikeArc App Store — contact sheet (9)</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{background:#0A0818}
+  .sheet{display:inline-flex;align-items:center;background:linear-gradient(180deg,#0A0818,#181232);padding:40px 40px}
+  .sheet .cell{height:620px;display:block}
+  .sheet .cell img{height:620px;display:block;box-shadow:0 0 0 1px rgba(157,139,255,.14)}
+  /* the panorama pair sits flush so the seam + arc read as one continuous scene */
+  .sheet .cell.pano-l img{box-shadow:inset 1px 0 0 rgba(157,139,255,.14)}
+  .sheet .cell.pano-r img{box-shadow:0 0 0 1px rgba(157,139,255,.14)}
+  .sheet .cell.pano-l{margin-right:0}
+</style></head>
+<body>
+<div class="sheet" id="sheet">
+  <span class="cell"><img src="/tools/appstore-shots/_out/01.png"></span>
+  <span class="cell"><img src="/tools/appstore-shots/_out/02.png"></span>
+  <span class="cell"><img src="/tools/appstore-shots/_out/03.png"></span>
+  <span class="cell"><img src="/tools/appstore-shots/_out/04.png"></span>
+  <span class="cell pano-l"><img src="/tools/appstore-shots/_out/05.png"></span>
+  <span class="cell pano-r"><img src="/tools/appstore-shots/_out/06.png"></span>
+  <span class="cell"><img src="/tools/appstore-shots/_out/07.png"></span>
+  <span class="cell"><img src="/tools/appstore-shots/_out/08.png"></span>
+  <span class="cell"><img src="/tools/appstore-shots/_out/09.png"></span>
+</div>
+<script>
+  (async()=>{ const imgs=[...document.images];
+    await Promise.all(imgs.map(im=>im.complete&&im.naturalWidth?0:new Promise(r=>{im.onload=r;im.onerror=r;})));
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{window.__contactReady=true;}));
+  })();
+</script>
+</body></html>
