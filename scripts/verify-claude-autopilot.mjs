@@ -27,12 +27,16 @@ for (const file of requiredFiles) {
 
 const packageJson = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8'));
 const requiredScripts = {
-  'test:ux': 'node --test scripts/flightglass-ux.test.mjs',
   'ux:manifest': 'node scripts/flightglass-ux-audit.mjs --manifest-only',
   'ux:baseline': 'node scripts/flightglass-ux-audit.mjs --mode baseline --motion both',
   'ux:verify': 'node scripts/flightglass-ux-audit.mjs --mode verify --motion both',
   'claude:ready': 'npm run brand:verify && npm run test:ux && node scripts/verify-claude-autopilot.mjs'
 };
+const uxTestCommand = packageJson.scripts?.['test:ux'] || '';
+if (!uxTestCommand.startsWith('node --test ') ||
+    !uxTestCommand.includes('scripts/flightglass-ux.test.mjs')) {
+  failures.push('package script test:ux must run scripts/flightglass-ux.test.mjs with node --test');
+}
 for (const [name, command] of Object.entries(requiredScripts)) {
   if (packageJson.scripts?.[name] !== command) failures.push(`package script ${name} must equal: ${command}`);
 }

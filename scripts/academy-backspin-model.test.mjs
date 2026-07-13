@@ -1,0 +1,103 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {
+  INITIAL_BACKSPIN_STATE,
+  BACKSPIN_PARAMS,
+  solveBackspinState,
+  advanceMission,
+  backspinSensitivity,
+  buildCauseChain,
+  realWorldRange,
+  passesStoppingFlightTarget
+} from '../academy-backspin-model.js';
+
+test('initial state requires the learner to perform both mission stages', () => {
+  const solved = solveBackspinState(INITIAL_BACKSPIN_STATE);
+  assert.equal(solved.rpm, 6048);
+  assert.equal(solved.spinLoft, 28);
+  assert.deepEqual(advanceMission({ built:false, cut:false }, solved.rpm), {
+    built:false, cut:false, complete:false, event:null
+  });
+});
+
+test('cut is credited only after build', () => {
+  const lowFirst = advanceMission({ built:false, cut:false }, 2808);
+  assert.equal(lowFirst.cut, false);
+  const built = advanceMission(lowFirst, 7128);
+  assert.equal(built.built, true);
+  assert.equal(built.event, 'built');
+  const cut = advanceMission(built, 2808);
+  assert.deepEqual(cut, { built:true, cut:true, complete:true, event:'cut' });
+});
+
+test('display clamp never erases underlying sensitivity', () => {
+  const state = { dynamicLoft:48, attackAngle:-8, ballSpeed:160 };
+  const solved = solveBackspinState(state);
+  const sensitivity = backspinSensitivity(state);
+  assert.equal(solved.rpm, 9000);
+  assert.equal(solved.displayCapped, true);
+  assert.equal(solved.displayLimit, 'ceiling');
+  assert.ok(solved.rawRpm > 9000);
+  assert.ok(sensitivity.dynamicLoft.rawDelta > 0);
+  assert.ok(sensitivity.attackAngle.rawDelta < 0);
+  assert.ok(sensitivity.ballSpeed.rawDelta > 0);
+});
+
+test('the lower model floor is distinct from the upper display cap', () => {
+  const state = { dynamicLoft:10, attackAngle:6, ballSpeed:90 };
+  const solved = solveBackspinState(state);
+  const sensitivity = backspinSensitivity(state);
+  assert.equal(solved.rpm, 1500);
+  assert.equal(solved.rawRpm, 648);
+  assert.equal(solved.displayCapped, false);
+  assert.equal(solved.displayFloored, true);
+  assert.equal(solved.displayLimit, 'floor');
+  assert.notEqual(sensitivity.dynamicLoft.rawDelta, 0);
+});
+
+test('exact display bounds remain labelled as limits', () => {
+  const ceiling = solveBackspinState({ dynamicLoft:40, attackAngle:0, ballSpeed:125 });
+  const floor = solveBackspinState({ dynamicLoft:15.25925925925926, attackAngle:6, ballSpeed:90 });
+  assert.equal(ceiling.rawRpm, 9000);
+  assert.equal(ceiling.displayLimit, 'ceiling');
+  assert.equal(floor.rawRpm, 1500);
+  assert.equal(floor.displayLimit, 'floor');
+});
+
+test('cause chain reports actual engine deltas', () => {
+  const before = { dynamicLoft:30, attackAngle:-3, ballSpeed:120 };
+  const after = { ...before, dynamicLoft:31 };
+  const chain = buildCauseChain(before, after, 'dynamicLoft');
+  assert.equal(chain.inputDelta, 1);
+  assert.equal(chain.spinLoftDelta, 1);
+  assert.equal(chain.rpmDelta, 216);
+  assert.equal(chain.rawRpmDelta, 216);
+  assert.match(chain.speech, /backspin plus 216 rpm/i);
+});
+
+test('cause chain separates a clamped display from the underlying model delta', () => {
+  const before = { dynamicLoft:40, attackAngle:0, ballSpeed:125 };
+  const after = { ...before, dynamicLoft:41 };
+  const chain = buildCauseChain(before, after, 'dynamicLoft');
+  assert.equal(chain.rpmDelta, 0);
+  assert.equal(chain.rawRpmDelta, 225);
+  assert.equal(chain.displayLimit, 'ceiling');
+  assert.match(chain.speech, /displayed backspin unchanged at 9000 rpm/i);
+  assert.match(chain.speech, /underlying model plus 225 rpm/i);
+});
+
+test('the current engine holds carry steady at fixed ball speed', () => {
+  const low = solveBackspinState({ dynamicLoft:10, attackAngle:-3, ballSpeed:120 });
+  const high = solveBackspinState({ dynamicLoft:48, attackAngle:-3, ballSpeed:120 });
+  assert.equal(low.carryM, high.carryM);
+});
+
+test('real-world range remains separate from simulator truth', () => {
+  assert.deepEqual(realWorldRange(7128, [0.80, 0.85]), { low:5702, high:6059 });
+});
+
+test('mastery target is evaluated from the live engine state', () => {
+  assert.equal(passesStoppingFlightTarget({ dynamicLoft:30, attackAngle:-3, ballSpeed:120 }), true);
+  assert.equal(passesStoppingFlightTarget({ dynamicLoft:10, attackAngle:-3, ballSpeed:120 }), false);
+  assert.equal(passesStoppingFlightTarget({ dynamicLoft:NaN, attackAngle:-3, ballSpeed:120 }), false);
+});
