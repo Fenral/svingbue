@@ -184,12 +184,13 @@ function observeRuntimeErrors(page) {
   return errors;
 }
 
-async function openFreshBackspinPage(viewport) {
+async function openFreshBackspinPage(viewport, { beforeGoto } = {}) {
   const context = await browser.newContext({ viewport, reducedMotion:'reduce' });
   contexts.add(context);
   const page = await context.newPage();
   pages.add(page);
   const runtimeErrors = observeRuntimeErrors(page);
+  if (typeof beforeGoto === 'function') await beforeGoto(page);
   await page.goto(`${baseUrl}/academy.html#/lesson/backspin`, { waitUntil:'networkidle' });
   const root = page.locator('#nativeLesson');
   await root.waitFor({ timeout:5_000 });
@@ -288,6 +289,66 @@ async function waitForBackspinJourney(page, expected) {
 }
 
 
+async function completeMissionAndEnterInfluence(page, root) {
+  await enterSpinLab(page, root);
+  await setBackspinParameter(page, root, 'dynamicLoft', 30);
+  await waitForBackspinJourney(page, { surface:1, built:true, cut:false });
+  await setBackspinParameter(page, root, 'dynamicLoft', 10);
+  await waitForBackspinJourney(page, { surface:1, built:true, cut:true });
+
+  await setBackspinParameter(page, root, 'dynamicLoft', 25);
+  await setBackspinParameter(page, root, 'attackAngle', -3);
+  await setBackspinParameter(page, root, 'ballSpeed', 120);
+  await page.waitForFunction(() =>
+    document.querySelector('#backspinTruth')?.textContent.replaceAll(',', '').trim() === '6048'
+  );
+
+  const next = root.locator('.native-lesson__navigation [data-action="next"]');
+  assert.equal(await next.isDisabled(), false);
+  assert.notEqual(await next.getAttribute('aria-disabled'), 'true');
+  await next.click();
+  await assertEventuallyRootSurface(page, root, '2');
+}
+
+async function showInfluenceForState(page, root, state, expectedRpm) {
+  await root.locator('[data-step="lab"]').click();
+  await assertEventuallyRootSurface(page, root, '1');
+  for (const key of Object.keys(EXPECTED_BACKSPIN_PARAMS)) {
+    await setBackspinParameter(page, root, key, state[key]);
+  }
+  await page.waitForFunction(
+    value => document.querySelector('#backspinTruth')
+      ?.textContent.replaceAll(',', '').trim() === String(value),
+    expectedRpm
+  );
+  await root.locator('.native-lesson__navigation [data-action="next"]').click();
+  await assertEventuallyRootSurface(page, root, '2');
+  await page.waitForTimeout(350);
+}
+
+async function influenceContract(root) {
+  return root.locator('#influenceBars [data-influence]').evaluateAll(rows => rows.map(row => ({
+    key:row.getAttribute('data-influence'),
+    text:row.querySelector('small')?.textContent.replace(/\s+/g, ' ').trim() || ''
+  })));
+}
+
+async function hapticCount(page, kind) {
+  return page.evaluate(async target => {
+    const module = await import('/sa-haptics.js');
+    return module.default._log.filter(entry => entry.kind === target).length;
+  }, kind);
+}
+
+async function assertAboveNavigation(locator, navigation, label) {
+  const [box, navBox] = await Promise.all([locator.boundingBox(), navigation.boundingBox()]);
+  assert.ok(box, `${label} must be rendered`);
+  assert.ok(navBox, 'sticky navigation must be rendered');
+  assert.ok(
+    box.y + box.height <= navBox.y + 1,
+    `${label} must remain above sticky navigation: ${JSON.stringify({ box, navBox })}`
+  );
+}
 test.before(async () => {
   server = await startStaticServer();
   const address = server.address();
@@ -603,6 +664,319 @@ test('Backspin clamps inconsistent legacy Influence progress back to the Lab gat
   assert.equal(await root.locator('.native-lesson__surface[data-surface="2"]').getAttribute('aria-hidden'), 'true');
   assert.equal(await root.locator('#missionStageBuild').getAttribute('data-complete'), 'false');
   assert.equal(await root.locator('#missionStageCut').getAttribute('data-complete'), 'false');
+  assert.deepEqual(runtimeErrors, []);
+});
+
+test('Backspin Influence preserves exact sensitivity through near-clamp, ceiling and floor states', { timeout:60_000 }, async () => {
+  const { page, root, runtimeErrors } = await openFreshBackspinPage({ width:375, height:812 });
+  await completeMissionAndEnterInfluence(page, root);
+
+  assert.deepEqual(await influenceContract(root), [
+    { key:'dynamicLoft', text:'+216 rpm / degree' },
+    { key:'attackAngle', text:'\u2212216 rpm / degree' },
+    { key:'ballSpeed', text:'+50 rpm / mph' }
+  ]);
+  const influenceSurface = root.locator('.native-lesson__surface[data-surface="2"]');
+  assert.equal(await influenceSurface.locator('input[type="range"]').count(), 0,
+    'Influence must not introduce a second free slider');
+
+  await showInfluenceForState(page, root, {
+    dynamicLoft:38,
+    attackAngle:-3,
+    ballSpeed:120
+  }, 8856);
+  const nearClamp = await influenceContract(root);
+  assert.equal(
+    nearClamp.find(row => row.key === 'dynamicLoft')?.text,
+    '+216 rpm / degree',
+    'Near the ceiling, sensitivity must use normalized raw +216 rather than clipped +144'
+  );
+  const nearBars = root.locator('#influenceBars');
+  const nearNote = root.locator('#influenceLimitNote');
+  assert.match(await nearBars.getAttribute('aria-description'), /Underlying model sensitivity.*one-unit sample.*display limit/i);
+  assert.equal(await nearBars.getAttribute('aria-describedby'), 'influenceLimitNote');
+  assert.equal(await nearNote.isVisible(), true);
+  assert.match(await nearNote.textContent(), /one-unit sample reaches a display limit/i);
+  assert.match(
+    await root.locator('[data-influence="dynamicLoft"]').getAttribute('aria-label'),
+    /underlying model sensitivity.*sample reaches a display limit/i
+  );
+
+  await showInfluenceForState(page, root, {
+    dynamicLoft:48,
+    attackAngle:-8,
+    ballSpeed:160
+  }, 9000);
+  const truth = root.locator('#backspinTruth');
+  const limit = root.locator('#backspinLimit');
+  assert.equal((await truth.textContent()).trim(), '9,000');
+  assert.equal(await limit.getAttribute('hidden'), null);
+  assert.equal((await limit.textContent()).trim(), 'Display limit');
+  assert.match(await limit.getAttribute('aria-label'), /9,000 rpm ceiling/i);
+
+  const bars = root.locator('#influenceBars');
+  assert.match(
+    await bars.getAttribute('aria-description'),
+    /Underlying model sensitivity.*display capped at 9,000 rpm/i
+  );
+  const ceilingContract = await influenceContract(root);
+  assert.deepEqual(ceilingContract.map(row => row.key), [
+    'dynamicLoft',
+    'attackAngle',
+    'ballSpeed'
+  ]);
+  for (const row of ceilingContract) {
+    const magnitude = Number(row.text.match(/[\d,]+/)?.[0].replaceAll(',', ''));
+    assert.ok(magnitude > 0, `${row.key} must retain non-zero raw sensitivity at the ceiling`);
+  }
+
+  await root.locator('#influenceBars [data-influence="dynamicLoft"]').click();
+  const comparison = root.locator('[data-influence-comparison="dynamicLoft"]');
+  assert.equal(await comparison.isVisible(), true);
+  assert.equal(await comparison.getAttribute('data-base-value'), '48');
+  assert.equal(await comparison.getAttribute('data-sample-value'), '47',
+    'The maximum endpoint must sample the in-range -1 state');
+  assert.equal(await comparison.getAttribute('data-sample-direction'), '-1');
+  assert.equal(await comparison.getAttribute('data-normalized-delta'), '288',
+    'The in-range -1 sample must be normalized to the equivalent +1 direction');
+  assert.match(await comparison.textContent(), /Equivalent \+1\u00b0 sensitivity:\s*\+288 rpm/i);
+  assert.equal(await influenceSurface.locator('input[type="range"]').count(), 0);
+  await root.locator('[data-lie="wet"]').click();
+  const navigation = root.locator('.native-lesson__navigation');
+  const fitNodes = [
+    { locator:comparison, label:'expanded A/B comparison' },
+    { locator:root.locator('#influenceLimitNote'), label:'display-limit explanation' },
+    { locator:root.locator('#realWorldRegister'), label:'real-world register' }
+  ];
+  for (const item of fitNodes) {
+    await assertAboveNavigation(item.locator, navigation, item.label);
+  }
+  const dimensions = await influenceSurface.evaluate(element => ({ scrollHeight:element.scrollHeight, clientHeight:element.clientHeight }));
+  assert.ok(
+    dimensions.scrollHeight <= dimensions.clientHeight + 1,
+    `Influence must fit 375x812 without hidden overflow: ${JSON.stringify(dimensions)}`
+  );
+
+  await showInfluenceForState(page, root, {
+    dynamicLoft:10,
+    attackAngle:6,
+    ballSpeed:90
+  }, 1500);
+  assert.equal((await truth.textContent()).trim(), '1,500');
+  assert.equal(await limit.getAttribute('hidden'), null);
+  assert.equal((await limit.textContent()).trim(), 'Model floor');
+  assert.match(await limit.getAttribute('aria-label'), /1,500 rpm/i);
+  assert.doesNotMatch(await limit.getAttribute('aria-label'), /9,000 rpm/i);
+  const floorDescription = await bars.getAttribute('aria-description');
+  assert.match(floorDescription, /Underlying model sensitivity.*display floored at 1,500 rpm/i);
+  assert.doesNotMatch(floorDescription, /9,000 rpm/i);
+  for (const row of await influenceContract(root)) {
+    const magnitude = Number(row.text.match(/[\d,]+/)?.[0].replaceAll(',', ''));
+    assert.ok(magnitude > 0, `${row.key} must retain non-zero raw sensitivity at the floor`);
+  }
+
+  await page.waitForTimeout(350);
+  assert.deepEqual(runtimeErrors, []);
+});
+
+test('Backspin real-world register stays separate, sourced and keyboard accessible', { timeout:60_000 }, async () => {
+  const { page, root, runtimeErrors } = await openFreshBackspinPage({ width:375, height:812 });
+  await completeMissionAndEnterInfluence(page, root);
+
+  const clean = root.locator('[data-lie="clean"]');
+  const wet = root.locator('[data-lie="wet"]');
+  const flyer = root.locator('[data-lie="flyer"]');
+  const register = root.locator('#realWorldRegister');
+  const band = root.locator('#realWorldBand[data-real-world-band]');
+  const truthBefore = (await root.locator('#backspinTruth').textContent()).trim();
+  const inputBefore = await root.locator('#labRange').inputValue();
+  const hapticsBeforeWet = await hapticCount(page, 'selectionChanged');
+
+  assert.equal(await clean.getAttribute('aria-checked'), 'true');
+  assert.equal(await clean.getAttribute('tabindex'), '0');
+  assert.equal(await register.isHidden(), true);
+  assert.equal(await band.isHidden(), true);
+  assert.equal(await band.getAttribute('data-layer'), 'real-world-estimate');
+
+  await clean.focus();
+  await clean.press('ArrowRight');
+  assert.equal(await wet.getAttribute('aria-checked'), 'true');
+  assert.equal(await wet.getAttribute('tabindex'), '0');
+  assert.equal(await clean.getAttribute('aria-checked'), 'false');
+  assert.equal(await wet.evaluate(element => document.activeElement === element), true);
+  assert.equal(await hapticCount(page, 'selectionChanged'), hapticsBeforeWet + 1);
+  await wet.click();
+  assert.equal(await hapticCount(page, 'selectionChanged'), hapticsBeforeWet + 1,
+    'Selecting the active lie again must not duplicate haptics');
+
+  assert.equal(await register.isVisible(), true);
+  const wetRegister = (await register.textContent()).replace(/\s+/g, ' ').trim();
+  assert.match(wetRegister, /\u2248 4,838\u20135,141 rpm/);
+  assert.equal(await band.getAttribute('data-low'), '4838');
+  assert.equal(await band.getAttribute('data-high'), '5141');
+  assert.match(wetRegister, /Wet face \/ ball/);
+  assert.match(wetRegister, /Real-world estimate/);
+  assert.match(wetRegister, /Andrew Rice, 2013/);
+  assert.match(wetRegister, /not the simulator/i);
+  assert.equal((await root.locator('#backspinTruth').textContent()).trim(), truthBefore);
+  assert.equal(await root.locator('#labRange').inputValue(), inputBefore);
+
+  assert.equal(await band.isVisible(), true);
+  assert.equal(await band.getAttribute('data-layer'), 'real-world-estimate');
+  assert.equal(await band.getAttribute('aria-hidden'), 'true');
+  const registerLabel = await register.getAttribute('aria-label');
+  assert.match(registerLabel, /Approximate real-world estimate/i);
+  assert.match(registerLabel, /Andrew Rice, 2013/);
+  assert.match(registerLabel, /not the simulator/i);
+  const bandStyle = await register.evaluate(element => {
+    const style = getComputedStyle(element);
+    const probe = document.createElement('span');
+    probe.style.color = 'var(--secondary-line)';
+    element.append(probe);
+    const semanticColor = getComputedStyle(probe).color;
+    probe.remove();
+    return { borderStyle:style.borderTopStyle, borderColor:style.borderTopColor, semanticColor };
+  });
+  assert.equal(bandStyle.borderStyle, 'dashed');
+  assert.equal(bandStyle.borderColor, bandStyle.semanticColor);
+  await root.locator('[data-step="lab"]').click();
+  await assertEventuallyRootSurface(page, root, '1');
+  const echo = root.locator('#realWorldEcho[data-real-world-echo]');
+  assert.equal(await echo.isVisible(), true);
+  const echoBefore = (await echo.textContent()).replace(/\s+/g, ' ').trim();
+  assert.match(echoBefore, /\u2248 4,838\u20135,141 rpm/);
+  assert.match(echoBefore, /Andrew Rice, 2013.*not the simulator/i);
+  assert.equal((await root.locator('#backspinTruth').textContent()).trim(), truthBefore);
+  await setBackspinParameter(page, root, 'dynamicLoft', 26);
+  await page.waitForFunction(() => document.querySelector('#backspinTruth')?.textContent.replaceAll(',', '').trim() === '6264');
+  assert.match((await echo.textContent()).replace(/\s+/g, ' ').trim(), /\u2248 5,011\u20135,324 rpm/);
+  await setBackspinParameter(page, root, 'dynamicLoft', 25);
+  await page.waitForFunction(() => document.querySelector('#backspinTruth')?.textContent.replaceAll(',', '').trim() === '6048');
+  await selectBackspinParameter(root, 'ballSpeed');
+  assert.equal(await root.locator('#labRange').inputValue(), inputBefore);
+  await root.locator('[data-step="influence"]').click();
+  await assertEventuallyRootSurface(page, root, '2');
+
+  await register.click();
+  const sheet = root.locator('#lessonSheet');
+  await sheet.waitFor({ state:'visible' });
+  assert.equal(await sheet.getAttribute('aria-modal'), 'true');
+  await page.waitForFunction(() => document.activeElement?.id === 'lessonSheet');
+  assert.equal(await sheet.evaluate(element => element.scrollTop), 0);
+  assert.equal((await sheet.locator('#lessonSheetTitle').textContent()).trim(), 'Wet face / ball');
+  const sheetCopy = (await sheet.locator('[data-sheet-body]').textContent()).replace(/\s+/g, ' ').trim();
+  assert.match(sheetCopy, /\u2248 4,838\u20135,141 rpm/);
+  assert.match(sheetCopy, /Andrew Rice, "Wedges and Water", 2013/);
+  assert.match(sheetCopy, /corroborated by MyGolfSpy Wet Wedge Test, 2022/);
+  assert.match(sheetCopy, /not the simulator/i);
+  const [sheetBox, titleBox] = await Promise.all([sheet.boundingBox(), sheet.locator('#lessonSheetTitle').boundingBox()]);
+  assert.ok(sheetBox && titleBox);
+  assert.ok(titleBox.y >= sheetBox.y && titleBox.y + titleBox.height <= sheetBox.y + sheetBox.height);
+  await page.waitForFunction(() => {
+    const image = document.querySelector('#lessonSheet [data-real-world-image]');
+    return image instanceof HTMLImageElement && image.complete && image.naturalWidth > 0;
+  });
+  const sourceImage = await sheet.locator('[data-real-world-image]').evaluate(image => ({
+    naturalWidth:image.naturalWidth,
+    pathname:new URL(image.currentSrc || image.src).pathname
+  }));
+  assert.ok(sourceImage.naturalWidth > 0);
+  assert.equal(sourceImage.pathname, '/assets/rw-backspin-green-bite.jpg');
+
+  const sheetFocusable = sheet.locator(
+    'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), ' +
+    'textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+  );
+  const focusableCount = await sheetFocusable.count();
+  assert.ok(focusableCount >= 1);
+  const firstFocusable = sheetFocusable.first();
+  const lastFocusable = sheetFocusable.nth(focusableCount - 1);
+  await page.keyboard.press('Tab');
+  assert.equal(await firstFocusable.evaluate(element => document.activeElement === element), true);
+  await sheet.focus();
+  await page.keyboard.press('Shift+Tab');
+  assert.equal(await lastFocusable.evaluate(element => document.activeElement === element), true);
+  await lastFocusable.focus();
+  await page.keyboard.press('Tab');
+  assert.equal(await firstFocusable.evaluate(element => document.activeElement === element), true);
+  await firstFocusable.focus();
+  await page.keyboard.press('Shift+Tab');
+  assert.equal(await lastFocusable.evaluate(element => document.activeElement === element), true);
+
+  await page.keyboard.press('Escape');
+  await sheet.waitFor({ state:'hidden' });
+  assert.equal(await register.evaluate(element => document.activeElement === element), true,
+    'Escape must return focus to the segment that opened the source sheet');
+
+  const hapticsBeforeFlyer = await hapticCount(page, 'selectionChanged');
+  await wet.press('ArrowRight');
+  assert.equal(await flyer.getAttribute('aria-checked'), 'true');
+  assert.equal(await flyer.getAttribute('tabindex'), '0');
+  assert.equal(await flyer.evaluate(element => document.activeElement === element), true);
+  assert.equal(await hapticCount(page, 'selectionChanged'), hapticsBeforeFlyer + 1);
+  const flyerRegister = (await register.textContent()).replace(/\s+/g, ' ').trim();
+  assert.match(flyerRegister, /\u2248 2,117\u20134,234 rpm/);
+  assert.equal(await band.getAttribute('data-low'), '2117');
+  assert.equal(await band.getAttribute('data-high'), '4234');
+  assert.match(flyerRegister, /Flyer lie/);
+  assert.match(flyerRegister, /Real-world estimate/);
+  assert.match(flyerRegister, /USGA \/ Pate, 2020/);
+  assert.match(flyerRegister, /not the simulator/i);
+  assert.equal((await root.locator('#backspinTruth').textContent()).trim(), truthBefore);
+  assert.equal(await root.locator('#labRange').inputValue(), inputBefore);
+
+  const hapticsBeforeClean = await hapticCount(page, 'selectionChanged');
+  await flyer.press('Home');
+  assert.equal(await clean.getAttribute('aria-checked'), 'true');
+  assert.equal(await clean.getAttribute('tabindex'), '0');
+  assert.equal(await clean.evaluate(element => document.activeElement === element), true);
+  assert.equal(await hapticCount(page, 'selectionChanged'), hapticsBeforeClean + 1);
+  assert.equal(await register.isHidden(), true);
+  assert.equal(await band.isHidden(), true);
+  assert.equal((await root.locator('#backspinTruth').textContent()).trim(), truthBefore);
+  assert.equal(await root.locator('#labRange').inputValue(), inputBefore);
+
+  await root.locator('[data-step="lab"]').click();
+  await assertEventuallyRootSurface(page, root, '1');
+  assert.equal(await echo.isHidden(), true);
+
+
+  await page.waitForTimeout(150);
+  assert.deepEqual(runtimeErrors, []);
+});
+
+
+test('Backspin source sheet degrades cleanly when its optional image cannot decode', { timeout:60_000 }, async () => {
+  const { page, root, runtimeErrors } = await openFreshBackspinPage(
+    { width:375, height:812 },
+    {
+      beforeGoto: page => page.route('**/assets/rw-backspin-green-bite.jpg', route => route.fulfill({
+        status:200,
+        contentType:'image/jpeg',
+        body:'not-an-image'
+      }))
+    }
+  );
+  await completeMissionAndEnterInfluence(page, root);
+  await root.locator('[data-lie="wet"]').click();
+  await root.locator('#realWorldRegister').click();
+
+  const sheet = root.locator('#lessonSheet');
+  await sheet.waitFor({ state:'visible' });
+  await page.waitForFunction(() => !document.querySelector('#lessonSheet [data-real-world-media]'));
+  assert.equal(await sheet.locator('[data-real-world-media]').count(), 0);
+  assert.equal(await sheet.locator('[data-real-world-image]').count(), 0);
+  assert.equal(await sheet.locator('figcaption').count(), 0);
+  assert.equal((await sheet.locator('#lessonSheetTitle').textContent()).trim(), 'Wet face / ball');
+  const sheetCopy = (await sheet.locator('[data-sheet-body]').textContent()).replace(/\s+/g, ' ').trim();
+  assert.match(sheetCopy, /\u2248 4,838\u20135,141 rpm/);
+  assert.match(sheetCopy, /Andrew Rice, "Wedges and Water", 2013/);
+  assert.match(sheetCopy, /not the simulator/i);
+  assert.equal(await sheet.locator('[data-sheet-close]').isVisible(), true);
+
+  await page.keyboard.press('Escape');
+  await sheet.waitFor({ state:'hidden' });
+  await page.waitForTimeout(100);
   assert.deepEqual(runtimeErrors, []);
 });
 

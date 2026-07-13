@@ -71,8 +71,22 @@ const SHEETS = Object.freeze({
 });
 
 const LIE_ESTIMATES = Object.freeze({
-  wet: { label:'Wet face / ball', keep:[0.80, 0.85], source:'Andrew Rice, 2013' },
-  flyer: { label:'Flyer lie', keep:[0.35, 0.70], source:'USGA / Pate, 2020' }
+  wet: Object.freeze({
+    label:'Wet face / ball', keep:[0.80, 0.85], source:'Andrew Rice, 2013',
+    frac:'\u2248 15\u201320% less spin',
+    line:'Water cuts friction \u2014 <b>15\u201320% less spin</b>, higher launch.',
+    intro:'<span class="sa-em--ink">\u2248 15\u201320% less spin</span>, higher launch on wedge shots. These are external estimates for the Real-world layer \u2014 <span class="sa-em--ink">not the simulator</span>, which has no lie model.',
+    test:'TrackMan, 54\u00B0 wedge, 50-yd shots: dry 6,603 rpm @ 25.4\u00B0 \u2192 wet ball 5,291 rpm @ 30.1\u00B0 (\u221220%). Urethane covers retain more wet spin than ionomer.',
+    sourceFull:'Andrew Rice, "Wedges and Water", 2013 \u00B7 corroborated by MyGolfSpy Wet Wedge Test, 2022.'
+  }),
+  flyer: Object.freeze({
+    label:'Flyer lie', keep:[0.35, 0.70], source:'USGA / Pate, 2020',
+    frac:'\u2248 30\u201365% less spin',
+    line:'Grass cuts friction \u2014 <b>spin drops a third to over half</b>.',
+    intro:'<span class="sa-em--ink">\u2248 30\u201365% less spin</span>, launch up ~2\u00B0, longer carry and rollout. External estimates for the Real-world layer \u2014 <span class="sa-em--ink">not the simulator</span>.',
+    test:'8-iron from light rough spun ~2,469 rpm vs a ~7,000\u20138,000 rpm baseline (\u224865% drop), yet carried farther. Grass between face and ball kills friction.',
+    sourceFull:'USGA Spin Generation groove research 2006\u201307 (via Dave Pelz / Into The Grain); Bryan Pate Golf TrackMan test, 2020; Andrew Rice via Golf.com.'
+  })
 });
 
 const escapeHtml = value => String(value)
@@ -85,6 +99,18 @@ const escapeHtml = value => String(value)
 const clampSurface = value => Math.max(0, Math.min(SURFACES.length - 1,
   Number.isFinite(Number(value)) ? Math.floor(Number(value)) : 0));
 
+
+function sensitivityValue(delta) {
+  return delta.displayDelta !== delta.rawDelta ? delta.rawDelta : delta.displayDelta;
+}
+
+function signedNumber(value) {
+  return `${value >= 0 ? '+' : '\u2212'}${NUMBER.format(Math.abs(Math.round(value)))}`;
+}
+
+function influenceUnit(key) {
+  return key === 'ballSpeed' ? 'rpm / mph' : 'rpm / degree';
+}
 const callback = value => typeof value === 'function' ? value : () => undefined;
 
 function spinBand(rpm) {
@@ -176,6 +202,12 @@ function lessonTemplate({ xp, level, state }) {
               <button type="button" class="native-lesson__truth-chip" data-sheet="spinLoft"><span id="labSpinLoft" data-spin-loft>—</span> spin loft</button>
             </div>
             <button type="button" id="backspinLimit" class="native-lesson__limit-chip" data-engine-limit hidden></button>
+            <div id="realWorldEcho" class="native-lesson__real-world-echo" data-real-world-echo
+              data-layer="real-world-estimate" hidden role="img">
+              <strong data-real-world-echo-value></strong>
+              <small data-real-world-echo-condition></small>
+              <small data-real-world-echo-source></small>
+            </div>
           </div>
           <div class="native-lesson__outcomes" aria-label="Engine outcomes">
             <button type="button" data-sheet="carry"><span>Carry</span><strong id="labCarry" data-carry>—</strong></button>
@@ -193,16 +225,24 @@ function lessonTemplate({ xp, level, state }) {
         <section class="native-lesson__surface" data-surface="2" tabindex="-1" aria-labelledby="nativeInfluenceTitle">
           <div class="native-lesson__surface-heading">
             <div><p class="native-lesson__eyebrow">Current lab state</p><h2 id="nativeInfluenceTitle">Influence</h2></div>
-            <span class="native-lesson__stamp">Simulator ranking</span>
+            <span class="native-lesson__stamp" data-influence-stamp>Simulator ranking</span>
           </div>
           <p class="native-lesson__support">How much each input moves backspin by one unit here.</p>
           <div id="influenceBars" class="native-lesson__influence" role="group" aria-label="Backspin sensitivity ranked"></div>
+          <p id="influenceLimitNote" class="native-lesson__influence-limit" hidden></p>
           <div class="native-lesson__lie-control" role="radiogroup" aria-label="Surface condition">
             <button type="button" role="radio" data-lie="clean" aria-checked="true" tabindex="0">Clean</button>
             <button type="button" role="radio" data-lie="wet" aria-checked="false" tabindex="-1">Wet</button>
             <button type="button" role="radio" data-lie="flyer" aria-checked="false" tabindex="-1">Flyer</button>
           </div>
-          <button type="button" id="realWorldRegister" class="native-lesson__real-world" data-sheet="realWorld" hidden></button>
+          <button type="button" id="realWorldRegister" class="native-lesson__real-world" data-sheet="realWorld" hidden>
+            <span id="realWorldBand" class="native-lesson__real-world-band" data-real-world-band
+              data-layer="real-world-estimate" aria-hidden="true">
+              <span>Real-world estimate</span><strong data-real-world-band-value></strong>
+              <small data-real-world-band-condition></small>
+              <small data-real-world-band-source></small>
+            </span>
+          </button>
         </section>
 
         <section class="native-lesson__surface" data-surface="3" tabindex="-1" aria-labelledby="nativeMythsTitle">
@@ -252,7 +292,7 @@ function lessonTemplate({ xp, level, state }) {
     </div>
 
     <div class="native-sheet__scrim" data-sheet-scrim hidden></div>
-    <aside id="lessonSheet" class="native-sheet" role="dialog" aria-modal="true" aria-labelledby="lessonSheetTitle" hidden>
+    <aside id="lessonSheet" class="native-sheet" role="dialog" aria-modal="true" aria-labelledby="lessonSheetTitle" tabindex="-1" hidden>
       <div class="native-sheet__grab" aria-hidden="true"></div>
       <p class="native-sheet__eyebrow" data-sheet-eyebrow>Learn more</p>
       <h2 id="lessonSheetTitle" class="native-sheet__title">Learn more</h2>
@@ -322,7 +362,8 @@ export function mountNativeBackspinLesson(options = {}) {
     masteryAttemptId:journey?.masteryAttemptId || null,
     lastSubmission:journey?.lastSubmission || null,
     activeParam:'dynamicLoft',
-    lie:'clean'
+    lie:'clean',
+    influenceParam:null
   };
   const normalizedLegacySurface = !(state.mission.built && state.mission.cut) && requestedSurface > 1;
   if (normalizedLegacySurface) state.surface = 1;
@@ -509,6 +550,7 @@ export function mountNativeBackspinLesson(options = {}) {
       button.tabIndex = active ? 0 : -1;
     });
     drawTrajectory(solved);
+    renderRealWorld(solved.rpm);
   }
 
   function renderInfluence() {
@@ -516,14 +558,16 @@ export function mountNativeBackspinLesson(options = {}) {
     const solved = safeSolve(state.input, { announceFailure:false });
     try { sensitivity = backspinSensitivity(state.input); } catch { sensitivity = null; }
     const container = lesson.querySelector('#influenceBars');
+    const limitNote = lesson.querySelector('#influenceLimitNote');
     if (!sensitivity || !solved) {
       container.textContent = 'Sensitivity unavailable.';
+      limitNote.hidden = true;
       return;
     }
     const ranked = PARAMETER_KEYS.map(key => {
       const delta = sensitivity[key];
-      const value = solved.displayLimit ? delta.rawDelta : delta.displayDelta;
-      return { key, value };
+      const value = sensitivityValue(delta);
+      return { key, value, delta, usesRaw:delta.displayDelta !== delta.rawDelta };
     }).sort((a, b) => Math.abs(b.value) - Math.abs(a.value));
     const peak = Math.max(1, ...ranked.map(item => Math.abs(item.value)));
     container.innerHTML = ranked.map((item, index) => {
@@ -537,30 +581,123 @@ export function mountNativeBackspinLesson(options = {}) {
       </button>`;
     }).join('');
     container.dataset.limit = solved.displayLimit || 'none';
-    container.setAttribute('aria-description', solved.displayLimit === 'ceiling'
-      ? 'Underlying model sensitivity; display capped at 9,000 rpm.'
+    container.querySelectorAll('[data-influence]').forEach(button => {
+      const key = button.dataset.influence;
+      const item = ranked.find(candidate => candidate.key === key);
+      const contract = BACKSPIN_PARAMS[key];
+      if (!item || !contract) return;
+      const detailId = `influenceDetail-${key}`;
+      const expanded = state.influenceParam === key;
+      const direction = item.value >= 0 ? 'Increases' : 'Decreases';
+      const rawExplanation = item.usesRaw
+        ? ' Uses underlying model sensitivity because the one-unit sample reaches a display limit.'
+        : '';
+      button.dataset.influenceParam = key;
+      button.setAttribute('aria-expanded', String(expanded));
+      if (expanded) button.setAttribute('aria-controls', detailId);
+      else button.removeAttribute('aria-controls');
+      button.setAttribute('aria-label', `${contract.label}. ${direction} backspin by ${NUMBER.format(Math.round(Math.abs(item.value)))} ${influenceUnit(key)}.${rawExplanation} ${expanded ? 'Hide' : 'Show'} A/B comparison.`);
+      const valueNode = button.querySelector('.native-lesson__influence-label small');
+      if (valueNode) valueNode.textContent = `${signedNumber(item.value)} ${influenceUnit(key)}`;
+
+      const baseInput = { ...state.lastValidInput };
+      const sampleDirection = baseInput[key] >= contract.max ? -1 : 1;
+      const sampleInput = { ...baseInput, [key]:baseInput[key] + sampleDirection * contract.step };
+      const base = solved;
+      const normalizedDisplay = item.delta.displayDelta;
+      const normalizedRaw = item.delta.rawDelta;
+      const normalized = normalizedDisplay !== normalizedRaw ? normalizedRaw : normalizedDisplay;
+      const sample = {
+        rpm:base.rpm + normalizedDisplay * sampleDirection,
+        rawRpm:base.rawRpm + normalizedRaw * sampleDirection
+      };
+      const inputSuffix = key === 'ballSpeed' ? ' mph' : contract.unit;
+      const rawBase = base.rawRpm !== base.rpm
+        ? `<small>Raw ${NUMBER.format(base.rawRpm)} rpm</small>` : '';
+      const rawSample = sample.rawRpm !== sample.rpm
+        ? `<small>Raw ${NUMBER.format(sample.rawRpm)} rpm</small>` : '';
+      const rawCopy = normalizedDisplay !== normalizedRaw
+        ? ' (underlying raw model; displayed value is limited)'
+        : '';
+      if (expanded) button.insertAdjacentHTML('afterend', `<div id="${detailId}" class="native-lesson__influence-detail"
+        data-influence-detail="${key}" data-influence-comparison="${key}"
+        data-base-value="${baseInput[key]}" data-sample-value="${sampleInput[key]}"
+        data-normalized-delta="${normalized}" data-display-delta="${normalizedDisplay}"
+        data-raw-delta="${normalizedRaw}" data-sample-direction="${sampleDirection}"
+        role="region" aria-label="${escapeHtml(contract.label)} A/B engine comparison">
+        <div class="native-lesson__influence-states">
+          <div data-influence-a><span>A &middot; ${escapeHtml(contract.label)} ${baseInput[key]}${escapeHtml(inputSuffix)}</span><strong>${NUMBER.format(base.rpm)} rpm</strong>${rawBase}</div>
+          <div data-influence-b><span>B &middot; ${escapeHtml(contract.label)} ${sampleInput[key]}${escapeHtml(inputSuffix)}</span><strong>${NUMBER.format(sample.rpm)} rpm</strong>${rawSample}</div>
+        </div>
+        <p data-influence-effect>Equivalent +1${escapeHtml(inputSuffix)} sensitivity: ${signedNumber(normalized)} rpm${rawCopy}.</p>
+      </div>`);
+    });
+    const usesRaw = ranked.some(item => item.usesRaw);
+    container.dataset.rawSensitivity = String(usesRaw);
+    const limitCopy = solved.displayLimit === 'ceiling'
+      ? 'Underlying model sensitivity \u00B7 display capped at 9,000 rpm'
       : solved.displayLimit === 'floor'
-        ? 'Underlying model sensitivity; display floored at 1,500 rpm.'
-        : 'Simulator sensitivity at the current state.');
+        ? 'Underlying model sensitivity \u00B7 display floored at 1,500 rpm'
+        : usesRaw
+          ? 'Underlying model sensitivity \u00B7 a one-unit sample reaches a display limit'
+          : '';
+    limitNote.hidden = !limitCopy;
+    limitNote.textContent = limitCopy;
+    container.setAttribute('aria-description', limitCopy || 'Simulator sensitivity at the current state.');
+    if (limitCopy) container.setAttribute('aria-describedby', 'influenceLimitNote');
+    else container.removeAttribute('aria-describedby');
     renderRealWorld(solved.rpm);
   }
 
   function renderRealWorld(rpm) {
     const register = lesson.querySelector('#realWorldRegister');
+    const band = lesson.querySelector('#realWorldBand');
+    const echo = lesson.querySelector('#realWorldEcho');
+    const stamp = lesson.querySelector('[data-influence-stamp]');
     lesson.querySelectorAll('[data-lie]').forEach(button => {
       const active = button.dataset.lie === state.lie;
       button.setAttribute('aria-checked', String(active));
       button.tabIndex = active ? 0 : -1;
     });
     if (state.lie === 'clean') {
+      stamp.textContent = 'Simulator ranking';
       register.hidden = true;
-      register.textContent = '';
+      register.removeAttribute('aria-label');
+      band.removeAttribute('data-low');
+      band.removeAttribute('data-high');
+      band.removeAttribute('data-source');
+      band.removeAttribute('data-condition');
+      band.querySelector('[data-real-world-band-value]').textContent = '';
+      band.querySelector('[data-real-world-band-condition]').textContent = '';
+      band.querySelector('[data-real-world-band-source]').textContent = '';
+      echo.hidden = true;
+      echo.removeAttribute('aria-label');
+      echo.removeAttribute('data-condition');
+      echo.querySelector('[data-real-world-echo-value]').textContent = '';
+      echo.querySelector('[data-real-world-echo-condition]').textContent = '';
+      echo.querySelector('[data-real-world-echo-source]').textContent = '';
       return;
     }
+    stamp.textContent = 'Real-world estimate active';
     const estimate = LIE_ESTIMATES[state.lie];
     const rangeEstimate = realWorldRange(rpm, estimate.keep);
     register.hidden = false;
-    register.innerHTML = `<span>Real-world layer</span><strong>≈ ${NUMBER.format(rangeEstimate.low)}–${NUMBER.format(rangeEstimate.high)} rpm</strong><small>${estimate.label} · Real-world estimate · ${estimate.source} · not the simulator</small>`;
+    const rangeCopy = `\u2248 ${NUMBER.format(rangeEstimate.low)}\u2013${NUMBER.format(rangeEstimate.high)} rpm`;
+    const semanticCopy = `Approximate real-world estimate for ${estimate.label}: ${NUMBER.format(rangeEstimate.low)} to ${NUMBER.format(rangeEstimate.high)} rpm. Source: ${estimate.source}; not the simulator.`;
+    register.setAttribute('aria-label', `${semanticCopy} Open source sheet.`);
+    band.dataset.low = String(rangeEstimate.low);
+    band.dataset.high = String(rangeEstimate.high);
+    band.dataset.source = estimate.source;
+    band.dataset.condition = state.lie;
+    band.querySelector('[data-real-world-band-value]').textContent = rangeCopy;
+    band.querySelector('[data-real-world-band-condition]').textContent = estimate.label;
+    band.querySelector('[data-real-world-band-source]').textContent = `Real-world estimate \u00B7 ${estimate.source} \u00B7 not the simulator`;
+    echo.hidden = false;
+    echo.dataset.condition = state.lie;
+    echo.setAttribute('aria-label', semanticCopy);
+    echo.querySelector('[data-real-world-echo-value]').textContent = rangeCopy;
+    echo.querySelector('[data-real-world-echo-condition]').textContent = estimate.label;
+    echo.querySelector('[data-real-world-echo-source]').textContent = `${estimate.source} \u00B7 not the simulator`;
   }
 
   function renderMyth() {
@@ -649,6 +786,7 @@ export function mountNativeBackspinLesson(options = {}) {
     if (persist) persistJourney({ surface:target }, { immediate });
     if (focus) nextFrame(() => lesson.querySelector(`.native-lesson__surface[data-surface="${target}"]`)?.focus());
     if (target === 1) nextFrame(() => drawTrajectory(state.lastValidSolved));
+    if (target === 2) renderInfluence();
     return true;
   }
 
@@ -673,20 +811,53 @@ export function mountNativeBackspinLesson(options = {}) {
       .filter(element => !element.hidden && element.getClientRects().length > 0);
   }
 
+  function realWorldSheetContent() {
+    const estimate = LIE_ESTIMATES[state.lie];
+    const solved = state.lastValidSolved;
+    if (!estimate || !solved) return SHEETS.realWorld;
+    const rangeEstimate = realWorldRange(solved.rpm, estimate.keep);
+    const rangeCopy = `\u2248 ${NUMBER.format(rangeEstimate.low)}\u2013${NUMBER.format(rangeEstimate.high)} rpm`;
+    return {
+      eyebrow:'Real-world estimate',
+      title:estimate.label,
+      body:`<p>${estimate.intro}</p>
+        <div class="native-sheet__estimate" data-real-world-sheet-estimate>
+          <span>Real-world estimate &middot; ${escapeHtml(estimate.source)}</span>
+          <strong>${rangeCopy}</strong><small>${escapeHtml(estimate.label)} &middot; not the simulator</small>
+        </div>
+        <p class="native-sheet__estimate-line">${estimate.line}</p>
+        <figure class="native-sheet__media" data-real-world-media>
+          <img src="assets/rw-backspin-green-bite.jpg" data-real-world-image alt="A golf ball biting and checking up on a green">
+          <figcaption>Reality: the ball bites. Spin loft is <em>why</em> \u2014 a bad lie is why it sometimes will not.</figcaption>
+        </figure>
+        <p class="native-sheet__not-simulator">Real-world estimate \u2014 not the simulator</p>
+        <div class="native-sheet__evidence"><strong>Test</strong><p>${escapeHtml(estimate.test)}</p></div>
+        <div class="native-sheet__evidence"><strong>Source</strong><p>${escapeHtml(estimate.sourceFull)}</p></div>`
+    };
+  }
+
   function openSheet(key, opener=document.activeElement) {
-    const content = SHEETS[key];
+    const content = key === 'realWorld' ? realWorldSheetContent() : SHEETS[key];
     if (!content || !sheet.hidden) return;
     lastFocus = opener instanceof HTMLElement ? opener : null;
     sheet.querySelector('[data-sheet-eyebrow]').textContent = content.eyebrow;
     sheet.querySelector('[data-sheet-body]').innerHTML = content.body;
     sheet.querySelector('#lessonSheetTitle').textContent = content.title;
+    sheet.scrollTop = 0;
     frame.inert = true;
     sheetScrim.hidden = false;
+    const realWorldImage = sheet.querySelector('[data-real-world-image]');
+    if (realWorldImage) {
+      const removeMedia = () => realWorldImage.closest('[data-real-world-media]')?.remove();
+      realWorldImage.addEventListener('error', removeMedia, { once:true });
+      if (realWorldImage.complete && realWorldImage.naturalWidth === 0) removeMedia();
+    }
     sheet.hidden = false;
     nextFrame(() => {
       sheetScrim.classList.add('is-open');
       sheet.classList.add('is-open');
-      sheet.querySelector('[data-sheet-close]')?.focus();
+      sheet.scrollTop = 0;
+      sheet.focus({ preventScroll:true });
     });
   }
 
@@ -740,6 +911,7 @@ export function mountNativeBackspinLesson(options = {}) {
     state.previousSettled = solved;
     beforeSettled = { ...state.input };
     renderLab();
+    renderInfluence();
   }
 
   function handleRangeInput() {
@@ -764,7 +936,6 @@ export function mountNativeBackspinLesson(options = {}) {
       sa.tick(activeParamAtInput);
     }
     renderLab();
-    renderInfluence();
     cancelLater(settleTimer);
     pendingSettleParam = activeParamAtInput;
     settleTimer = later(() => { settleTimer = null; settleInput(activeParamAtInput); }, 300);
@@ -772,9 +943,14 @@ export function mountNativeBackspinLesson(options = {}) {
 
   function selectLie(key) {
     if (key !== 'clean' && !LIE_ESTIMATES[key]) return;
+    if (state.lie === key) return;
     state.lie = key;
-    const solved = safeSolve(state.input, { announceFailure:false });
+    sa.selectionChanged();
+    const solved = state.lastValidSolved;
     if (solved) renderRealWorld(solved.rpm);
+    announce(key === 'clean'
+      ? 'Real-world layer off. Simulator ranking.'
+      : `${LIE_ESTIMATES[key].label}. Real-world estimate active, ${LIE_ESTIMATES[key].frac}, not the simulator.`);
   }
 
   function moveRovingFocus(buttons, current, key) {
@@ -800,6 +976,15 @@ export function mountNativeBackspinLesson(options = {}) {
       }
       if (target.dataset.param) {
         selectParameter(target.dataset.param, { openIfActive:true });
+        return;
+      }
+      if (target.dataset.influenceParam) {
+        const key = target.dataset.influenceParam;
+        const willExpand = state.influenceParam !== key;
+        state.influenceParam = willExpand ? key : null;
+        renderInfluence();
+        lesson.querySelector(`[data-influence-param="${key}"]`)?.focus();
+        announce(`${BACKSPIN_PARAMS[key].label} A/B comparison ${willExpand ? 'shown' : 'hidden'}.`);
         return;
       }
       if (target.dataset.lie) {
@@ -832,7 +1017,10 @@ export function mountNativeBackspinLesson(options = {}) {
           }
           const first = focusable[0];
           const last = focusable.at(-1);
-          if (event.shiftKey && document.activeElement === first) {
+          if (document.activeElement === sheet) {
+            event.preventDefault();
+            (event.shiftKey ? last : first).focus();
+          } else if (event.shiftKey && document.activeElement === first) {
             event.preventDefault();
             last.focus();
           } else if (!event.shiftKey && document.activeElement === last) {
@@ -882,10 +1070,16 @@ export function mountNativeBackspinLesson(options = {}) {
 
     listen(sheetScrim, 'click', () => closeSheet());
     listen(sheet, 'touchstart', event => {
-      touchStartY = event.touches?.[0]?.clientY ?? null;
+      const target = event.target instanceof Element ? event.target : null;
+      const canDismiss = sheet.scrollTop <= 0 && target?.closest('.native-sheet__grab, .native-sheet__eyebrow, .native-sheet__title');
+      touchStartY = canDismiss ? event.touches?.[0]?.clientY ?? null : null;
     }, { passive:true });
     listen(sheet, 'touchmove', event => {
       const y = event.touches?.[0]?.clientY;
+      if (sheet.scrollTop > 0) {
+        touchStartY = null;
+        return;
+      }
       if (touchStartY !== null && Number.isFinite(y) && y - touchStartY > 70) {
         touchStartY = null;
         closeSheet();
