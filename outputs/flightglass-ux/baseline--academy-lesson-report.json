@@ -1,0 +1,362 @@
+{
+  "generatedAt": "2026-07-13T17:06:53.297Z",
+  "mode": "baseline",
+  "results": [
+    {
+      "surfaceId": "academy-lesson",
+      "label": "Academy lesson",
+      "viewportId": "portrait-wide",
+      "motion": "normal",
+      "baselineScore": 73,
+      "targetScore": 90,
+      "screenshot": "baseline/academy-lesson--portrait-wide--normal.png",
+      "critical": [],
+      "improvements": [
+        "13 interactive target(s) below 44 px"
+      ],
+      "snapshot": {
+        "httpStatus": 200,
+        "consoleErrors": [],
+        "pageErrors": [],
+        "resourceErrors": [],
+        "horizontalOverflowPx": 0,
+        "missingSelectors": [],
+        "smallTargets": [
+          {
+            "selector": "a.skip-link",
+            "width": 169,
+            "height": 41
+          },
+          {
+            "selector": "a.sa-strip__home",
+            "width": 30,
+            "height": 30
+          },
+          {
+            "selector": "#backBtn",
+            "width": 86,
+            "height": 40
+          },
+          {
+            "selector": "button.hexpand",
+            "width": 30,
+            "height": 30
+          },
+          {
+            "selector": "button.hexpand",
+            "width": 30,
+            "height": 30
+          },
+          {
+            "selector": "button.hexpand",
+            "width": 30,
+            "height": 30
+          },
+          {
+            "selector": "button.hexpand",
+            "width": 30,
+            "height": 30
+          },
+          {
+            "selector": "button.hexpand",
+            "width": 30,
+            "height": 30
+          },
+          {
+            "selector": "button.hexpand",
+            "width": 30,
+            "height": 30
+          },
+          {
+            "selector": "button",
+            "width": 84,
+            "height": 40
+          },
+          {
+            "selector": "button",
+            "width": 61,
+            "height": 40
+          },
+          {
+            "selector": "button",
+            "width": 67,
+            "height": 40
+          },
+          {
+            "selector": "#sm-friction",
+            "width": 228,
+            "height": 40
+          }
+        ],
+        "clippedText": []
+      }
+    },
+    {
+      "surfaceId": "academy-lesson",
+      "label": "Academy lesson",
+      "viewportId": "portrait-wide",
+      "motion": "reduced",
+      "baselineScore": 73,
+      "targetScore": 90,
+      "screenshot": "baseline/academy-lesson--portrait-wide--reduced.png",
+      "critical": [],
+      "improvements": [
+        "13 interactive target(s) below 44 px"
+      ],
+      "snapshot": {
+        "httpStatus": 200,
+        "consoleErrors": [],
+        "pageErrors": [],
+        "resourceErrors": [],
+        "horizontalOverflowPx": 0,
+        "missingSelectors": [],
+        "smallTargets": [
+          {
+            "selector": "a.skip-link",
+            "width": 169,
+            "height": 41
+          },
+          {
+            "selector": "a.sa-strip__home",
+            "width": 30,
+            "height": 30
+          },
+          {
+            "selector": "#backBtn",
+            "width": 86,
+            "height": 40
+          },
+          {
+            "selector": "button.hexpand",
+            "width": 30,
+            "height": 30
+          },
+          {
+            "selector": "button.hexpand",
+            "width": 30,
+            "height": 30
+          },
+          {
+            "selector": "button.hexpand",
+            "width": 30,
+            "height": 30
+          },
+          {
+            "selector": "button.hexpand",
+            "width": 30,
+            "height": 30
+          },
+          {
+            "selector": "button.hexpand",
+            "width": 30,
+            "height": 30
+          },
+          {
+            "selector": "button.hexpand",
+            "width": 30,
+            "height": 30
+          },
+          {
+            "selector": "button",
+            "width": 84,
+            "height": 40
+          },
+          {
+            "selector": "button",
+            "width": 61,
+            "height": 40
+          },
+          {
+            "selector": "button",
+            "width": 67,
+            "height": 40
+          },
+          {
+            "selector": "#sm-friction",
+            "width": 228,
+            "height": 40
+          }
+        ],
+        "clippedText": []
+      }
+    },
+    {
+      "surfaceId": "academy-lesson",
+      "label": "Academy lesson",
+      "viewportId": "portrait-compact",
+      "motion": "normal",
+      "baselineScore": 73,
+      "targetScore": 90,
+      "screenshot": "baseline/academy-lesson--portrait-compact--normal.png",
+      "critical": [],
+      "improvements": [
+        "13 interactive target(s) below 44 px"
+      ],
+      "snapshot": {
+        "httpStatus": 200,
+        "consoleErrors": [],
+        "pageErrors": [],
+        "resourceErrors": [],
+        "horizontalOverflowPx": 0,
+        "missingSelectors": [],
+        "smallTargets": [
+          {
+            "selector": "a.skip-link",
+            "width": 169,
+            "height": 41
+          },
+          {
+            "selector": "a.sa-strip__home",
+            "width": 30,
+            "height": 30
+          },
+          {
+            "selector": "#backBtn",
+            "width": 86,
+            "height": 40
+          },
+          {
+            "selector": "button.hexpand",
+            "width": 30,
+            "height": 30
+          },
+          {
+            "selector": "button.hexpand",
+            "width": 30,
+            "height": 30
+          },
+          {
+            "selector": "button.hexpand",
+            "width": 30,
+            "height": 30
+          },
+          {
+            "selector": "button.hexpand",
+            "width": 30,
+            "height": 30
+          },
+          {
+            "selector": "button.hexpand",
+            "width": 30,
+            "height": 30
+          },
+          {
+            "selector": "button.hexpand",
+            "width": 30,
+            "height": 30
+          },
+          {
+            "selector": "button",
+            "width": 84,
+            "height": 40
+          },
+          {
+            "selector": "button",
+            "width": 61,
+            "height": 40
+          },
+          {
+            "selector": "button",
+            "width": 67,
+            "height": 40
+          },
+          {
+            "selector": "#sm-friction",
+            "width": 228,
+            "height": 40
+          }
+        ],
+        "clippedText": []
+      }
+    },
+    {
+      "surfaceId": "academy-lesson",
+      "label": "Academy lesson",
+      "viewportId": "portrait-compact",
+      "motion": "reduced",
+      "baselineScore": 73,
+      "targetScore": 90,
+      "screenshot": "baseline/academy-lesson--portrait-compact--reduced.png",
+      "critical": [],
+      "improvements": [
+        "13 interactive target(s) below 44 px"
+      ],
+      "snapshot": {
+        "httpStatus": 200,
+        "consoleErrors": [],
+        "pageErrors": [],
+        "resourceErrors": [],
+        "horizontalOverflowPx": 0,
+        "missingSelectors": [],
+        "smallTargets": [
+          {
+            "selector": "a.skip-link",
+            "width": 169,
+            "height": 41
+          },
+          {
+            "selector": "a.sa-strip__home",
+            "width": 30,
+            "height": 30
+          },
+          {
+            "selector": "#backBtn",
+            "width": 86,
+            "height": 40
+          },
+          {
+            "selector": "button.hexpand",
+            "width": 30,
+            "height": 30
+          },
+          {
+            "selector": "button.hexpand",
+            "width": 30,
+            "height": 30
+          },
+          {
+            "selector": "button.hexpand",
+            "width": 30,
+            "height": 30
+          },
+          {
+            "selector": "button.hexpand",
+            "width": 30,
+            "height": 30
+          },
+          {
+            "selector": "button.hexpand",
+            "width": 30,
+            "height": 30
+          },
+          {
+            "selector": "button.hexpand",
+            "width": 30,
+            "height": 30
+          },
+          {
+            "selector": "button",
+            "width": 84,
+            "height": 40
+          },
+          {
+            "selector": "button",
+            "width": 61,
+            "height": 40
+          },
+          {
+            "selector": "button",
+            "width": 67,
+            "height": 40
+          },
+          {
+            "selector": "#sm-friction",
+            "width": 228,
+            "height": 40
+          }
+        ],
+        "clippedText": []
+      }
+    }
+  ]
+}
