@@ -8,8 +8,11 @@ Updated: 2026-07-13
 - Working branch: `agent/travel-sync`
 - Purpose: recoverable travel copy of design, analysis, source and verification
   evidence. This branch is not a release branch.
-- Repository visibility at this checkpoint: public. The owner intends to make
-  it private later on 2026-07-13.
+- Repository visibility: private, verified on 2026-07-13.
+
+Durable chat
+decisions are now recorded in `docs/CHAT-DECISIONS.md`, and the original
+identity concept pages are preserved in `docs/concepts/flightglass/`.
 
 ## Execution state
 

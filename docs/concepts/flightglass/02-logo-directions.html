@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Flightglass â€” Logo directions</title>
+  <style>
+    :root { --bg:#07060c; --panel:#111018; --panel2:#17151f; --line:#2c2935; --text:#f5f2ed; --muted:#9e99a8; --ember:#ff8a4d; --violet:#9d8bff; }
+    * { box-sizing:border-box; }
+    body { margin:0; min-height:100vh; background:radial-gradient(circle at 50% -20%,#20182a 0,#0b0911 34%,var(--bg) 70%); color:var(--text); font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif; }
+    main { max-width:1440px; margin:0 auto; padding:42px 42px 56px; }
+    .eyebrow { color:var(--ember); font-size:11px; font-weight:750; letter-spacing:.18em; text-transform:uppercase; }
+    h1 { margin:10px 0 7px; font-size:clamp(30px,4vw,54px); line-height:1; letter-spacing:-.045em; font-weight:620; }
+    .lead { margin:0; max-width:760px; color:var(--muted); font-size:15px; line-height:1.55; }
+    .grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:18px; margin-top:32px; }
+    .card { position:relative; overflow:hidden; min-height:620px; border:1px solid var(--line); border-radius:22px; background:linear-gradient(145deg,rgba(26,23,34,.96),rgba(13,12,18,.98)); cursor:pointer; transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease; }
+    .card:hover { transform:translateY(-3px); border-color:#575160; }
+    .card.selected { border-color:var(--ember); box-shadow:0 0 0 1px var(--ember),0 24px 80px rgba(255,138,77,.12); }
+    .choice { position:absolute; z-index:3; top:16px; left:16px; width:32px; height:32px; display:grid; place-items:center; border:1px solid #393541; border-radius:999px; background:#0d0c12; color:#d8d3dd; font-size:12px; font-weight:750; }
+    .recommended { position:absolute; z-index:3; top:18px; right:18px; color:var(--ember); font-size:10px; font-weight:750; letter-spacing:.13em; text-transform:uppercase; }
+    .stage { height:370px; display:flex; flex-direction:column; align-items:center; justify-content:center; position:relative; border-bottom:1px solid var(--line); background:linear-gradient(180deg,rgba(255,255,255,.015),transparent); }
+    .stage:before { content:""; position:absolute; inset:0; opacity:.25; background-image:linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px); background-size:32px 32px; mask-image:linear-gradient(to bottom,black,transparent 86%); }
+    svg { position:relative; z-index:1; width:185px; height:185px; overflow:visible; }
+    .wordmark { position:relative; z-index:1; margin-top:14px; font-size:26px; font-weight:580; letter-spacing:-.045em; }
+    .wordmark span { color:#aaa4b2; font-weight:450; }
+    .mono { position:absolute; z-index:2; right:18px; bottom:18px; width:42px; height:42px; border:1px solid #36323e; border-radius:11px; display:grid; place-items:center; background:#f3f0eb; }
+    .mono svg { width:27px; height:27px; }
+    .body { padding:23px 24px 26px; }
+    .kicker { color:#7f7989; font-size:10px; font-weight:750; letter-spacing:.14em; text-transform:uppercase; }
+    h2 { margin:8px 0 9px; font-size:21px; letter-spacing:-.025em; }
+    .desc { min-height:69px; margin:0; color:#aaa5b0; font-size:13px; line-height:1.55; }
+    .traits { display:flex; flex-wrap:wrap; gap:7px; margin-top:18px; }
+    .trait { padding:7px 10px; border:1px solid #312e39; border-radius:999px; color:#aaa5b0; font-size:10px; letter-spacing:.03em; }
+    .risk { margin-top:18px; padding-top:15px; border-top:1px solid #292631; color:#76717e; font-size:11px; line-height:1.45; }
+    .footer { display:flex; justify-content:space-between; gap:20px; align-items:center; margin-top:22px; padding:15px 18px; border:1px solid #26232d; border-radius:14px; background:#0c0b10; }
+    .footer strong { font-size:12px; }
+    .footer span { color:#85808d; font-size:11px; }
+    @media(max-width:980px){ .grid{grid-template-columns:1fr;} .card{min-height:0;} .stage{height:340px;} }
+  </style>
+</head>
+<body>
+<main>
+  <div class="eyebrow">Flightglass / Precision identity study 01</div>
+  <h1>Which instrument should Flightglass become?</h1>
+  <p class="lead">All three avoid literal golf equipment. Judge the mark at icon size, the idea behind it, and whether it can own Range, Academy and Lab for years.</p>
+
+  <section class="grid">
+    <article class="card" data-choice="a-trajectory-aperture" onclick="toggleSelect(this)">
+      <div class="choice">A</div><div class="recommended">Recommended</div>
+      <div class="stage">
+        <svg viewBox="0 0 180 180" role="img" aria-label="Trajectory Aperture symbol">
+          <defs><filter id="glowA"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+          <circle cx="90" cy="90" r="54" fill="none" stroke="#f5f2ed" stroke-width="8" stroke-linecap="round" stroke-dasharray="277 63" transform="rotate(-24 90 90)"/>
+          <path d="M34 116 C55 113 67 103 78 86 C91 66 108 57 146 55" fill="none" stroke="#ff8a4d" stroke-width="6" stroke-linecap="round" filter="url(#glowA)"/>
+          <circle cx="83" cy="79" r="4.2" fill="#07060c" stroke="#f5f2ed" stroke-width="3"/>
+          <path d="M90 24v10M90 146v10M24 90h10M146 90h10" stroke="#6c6575" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        <div class="wordmark">flight<span>glass</span></div>
+        <div class="mono"><svg viewBox="0 0 180 180"><circle cx="90" cy="90" r="54" fill="none" stroke="#111018" stroke-width="10" stroke-linecap="round" stroke-dasharray="277 63" transform="rotate(-24 90 90)"/><path d="M34 116 C55 113 67 103 78 86 C91 66 108 57 146 55" fill="none" stroke="#111018" stroke-width="7" stroke-linecap="round"/></svg></div>
+      </div>
+      <div class="body">
+        <div class="kicker">Optical instrument</div>
+        <h2>Trajectory Aperture</h2>
+        <p class="desc">A calibrated lens interrupted by the flight it reveals. The measured contact point makes the mark about understanding, not merely motion.</p>
+        <div class="traits"><span class="trait">Most ownable</span><span class="trait">Strong app icon</span><span class="trait">Scales in mono</span></div>
+        <div class="risk">Watch-out: the trajectory must remain restrained so the mark never becomes a generic analytics chart.</div>
+      </div>
+    </article>
+
+    <article class="card" data-choice="b-calibration-gate" onclick="toggleSelect(this)">
+      <div class="choice">B</div>
+      <div class="stage">
+        <svg viewBox="0 0 180 180" role="img" aria-label="Calibration Gate symbol">
+          <defs><filter id="glowB"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+          <path d="M54 35v110M126 35v110" stroke="#f5f2ed" stroke-width="8" stroke-linecap="round"/>
+          <path d="M43 55h22M43 90h22M43 125h22M115 55h22M115 90h22M115 125h22" stroke="#696371" stroke-width="3" stroke-linecap="round"/>
+          <path d="M25 123 L77 91 L103 82 L155 49" fill="none" stroke="#ff8a4d" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" filter="url(#glowB)"/>
+          <path d="M90 75v30" stroke="#f5f2ed" stroke-width="3" stroke-linecap="round"/>
+          <circle cx="90" cy="86" r="5" fill="#07060c" stroke="#f5f2ed" stroke-width="3"/>
+        </svg>
+        <div class="wordmark">flight<span>glass</span></div>
+        <div class="mono"><svg viewBox="0 0 180 180"><path d="M58 35v110M122 35v110" stroke="#111018" stroke-width="11" stroke-linecap="round"/><path d="M29 122 L78 92 L102 81 L151 50" fill="none" stroke="#111018" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      </div>
+      <div class="body">
+        <div class="kicker">Calibration system</div>
+        <h2>Calibration Gate</h2>
+        <p class="desc">A flight passes through a measured threshold and becomes legible. More technical and architectural, with a strong sense of input becoming outcome.</p>
+        <div class="traits"><span class="trait">Most precise</span><span class="trait">Systematic</span><span class="trait">Technical authority</span></div>
+        <div class="risk">Watch-out: slightly colder, and the vertical rails can drift toward engineering or infrastructure.</div>
+      </div>
+    </article>
+
+    <article class="card" data-choice="c-refraction-frame" onclick="toggleSelect(this)">
+      <div class="choice">C</div>
+      <div class="stage">
+        <svg viewBox="0 0 180 180" role="img" aria-label="Refraction Frame symbol">
+          <defs><filter id="glowC"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+          <rect x="36" y="36" width="108" height="108" rx="22" fill="none" stroke="#f5f2ed" stroke-width="8"/>
+          <path d="M63 49v82M117 49v82" stroke="#5f5968" stroke-width="3" stroke-linecap="round"/>
+          <path d="M19 124 L67 96 L113 78 L161 49" fill="none" stroke="#ff8a4d" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" filter="url(#glowC)"/>
+          <path d="M67 86v20M113 68v20" stroke="#f5f2ed" stroke-width="3" stroke-linecap="round"/>
+        </svg>
+        <div class="wordmark">flight<span>glass</span></div>
+        <div class="mono"><svg viewBox="0 0 180 180"><rect x="36" y="36" width="108" height="108" rx="22" fill="none" stroke="#111018" stroke-width="10"/><path d="M19 124 L67 96 L113 78 L161 49" fill="none" stroke="#111018" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      </div>
+      <div class="body">
+        <div class="kicker">Measured viewport</div>
+        <h2>Refraction Frame</h2>
+        <p class="desc">A controlled viewport that makes changes in path visible. It feels more like a professional product surface and less like a traditional sports identity.</p>
+        <div class="traits"><span class="trait">Most digital</span><span class="trait">UI-native</span><span class="trait">Strong framing device</span></div>
+        <div class="risk">Watch-out: the outer rounded square risks feeling like an app container rather than an independent symbol.</div>
+      </div>
+    </article>
+  </section>
+
+  <div class="footer"><strong>Click one direction to select it.</strong><span>Recommendation: A â€” it balances precision, discovery and movement with the least category baggage.</span></div>
+</main>
+</body>
+</html>
