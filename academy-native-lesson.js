@@ -89,6 +89,36 @@ const LIE_ESTIMATES = Object.freeze({
   })
 });
 
+const MYTH_EXPERIMENTS = Object.freeze([
+  Object.freeze({
+    id:'ground',
+    prompt:'Where is backspin actually created?',
+    choices:Object.freeze(['Ground interaction', 'Face friction and spin loft']),
+    answerIndex:1,
+    before:Object.freeze({ dynamicLoft:30, attackAngle:-3, ballSpeed:120 }),
+    after:Object.freeze({ dynamicLoft:30, attackAngle:-6, ballSpeed:120 }),
+    explanation:'The ground adds no spin. A downward strike can widen spin loft and improve ball-first contact, but spin is created while the ball is on the face.'
+  }),
+  Object.freeze({
+    id:'loft-alone',
+    prompt:'Dynamic loft rises 4\u00B0, but attack angle also rises 4\u00B0. What happens to backspin?',
+    choices:Object.freeze(['More', 'Same', 'Less']),
+    answerIndex:1,
+    before:Object.freeze({ dynamicLoft:30, attackAngle:-3, ballSpeed:120 }),
+    after:Object.freeze({ dynamicLoft:34, attackAngle:1, ballSpeed:120 }),
+    explanation:'Spin loft remains 33\u00B0, so this engine returns the same backspin.'
+  }),
+  Object.freeze({
+    id:'more-is-better',
+    prompt:'At fixed ball speed, what does this model show when spin rises past the iron window?',
+    choices:Object.freeze(['Carry grows', 'Carry falls', 'Carry stays while apex and landing change']),
+    answerIndex:2,
+    before:Object.freeze({ dynamicLoft:30, attackAngle:-3, ballSpeed:120 }),
+    after:Object.freeze({ dynamicLoft:44, attackAngle:-4, ballSpeed:120 }),
+    explanation:'This Flightglass model holds carry steady at fixed ball speed while height and landing change. Real excess-spin shots can balloon; that effect is not modeled here.'
+  })
+]);
+
 const escapeHtml = value => String(value)
   .replaceAll('&', '&amp;')
   .replaceAll('<', '&lt;')
@@ -250,14 +280,8 @@ function lessonTemplate({ xp, level, state }) {
             <div><p class="native-lesson__eyebrow">Predict · run · explain</p><h2 id="nativeMythsTitle">Myth experiments</h2></div>
             <span class="native-lesson__stamp" data-myth-count>0 / 3</span>
           </div>
-          <div id="mythExperiment" class="native-lesson__experiment">
-            <p class="native-lesson__experiment-number">Experiment 1 of 3</p>
-            <h3>Where is backspin actually created?</h3>
-            <p>Make a prediction, then compare two engine runs.</p>
-            <div class="native-lesson__prediction-placeholder" aria-label="Prediction controls prepared for the experiment">
-              <span>Ground interaction</span><span>Face friction and spin loft</span>
-            </div>
-          </div>
+          <div id="mythExperiment" class="native-lesson__experiment"
+            data-experiment-index="0" data-answered="false"></div>
         </section>
 
         <section class="native-lesson__surface" data-surface="4" tabindex="-1" aria-labelledby="nativeMasteryTitle">
@@ -358,6 +382,8 @@ export function mountNativeBackspinLesson(options = {}) {
     lastValidSolved:initialSolved,
     mission:{ built:Boolean(journey?.mission?.built), cut:Boolean(journey?.mission?.built && journey?.mission?.cut) },
     myths:[false, false, false].map((value, index) => Boolean(journey?.myths?.[index] ?? value)),
+    mythIndex:0,
+    mythAnswers:Array(MYTH_EXPERIMENTS.length).fill(null),
     mastery:[],
     masteryAttemptId:journey?.masteryAttemptId || null,
     lastSubmission:journey?.lastSubmission || null,
@@ -366,7 +392,12 @@ export function mountNativeBackspinLesson(options = {}) {
     influenceParam:null
   };
   const normalizedLegacySurface = !(state.mission.built && state.mission.cut) && requestedSurface > 1;
+  const firstUnfinishedMyth = state.myths.findIndex(value => !value);
+  state.mythIndex = firstUnfinishedMyth >= 0 ? firstUnfinishedMyth : MYTH_EXPERIMENTS.length - 1;
+  const normalizedIncompleteMythSurface = !normalizedLegacySurface &&
+    requestedSurface > 3 && firstUnfinishedMyth >= 0;
   if (normalizedLegacySurface) state.surface = 1;
+  else if (normalizedIncompleteMythSurface) state.surface = 3;
   state.unlockedSurface = initialUnlockedSurface(state, state.surface);
 
   root.innerHTML = lessonTemplate({ xp, level, state });
@@ -700,9 +731,169 @@ export function mountNativeBackspinLesson(options = {}) {
     echo.querySelector('[data-real-world-echo-source]').textContent = `${estimate.source} \u00B7 not the simulator`;
   }
 
-  function renderMyth() {
+  function mythRunAttributes(solved) {
+    return `data-rpm="${solved.rpm}" data-raw-rpm="${solved.rawRpm}" ` +
+      `data-spin-loft="${solved.spinLoft}" data-carry="${solved.carryM}" ` +
+      `data-apex="${solved.apexM}" data-landing="${solved.landingAngle}" ` +
+      `data-display-limit="${solved.displayLimit || 'none'}"`;
+  }
+
+  function mythBackspinMetric(solved) {
+    const limit = solved.displayLimit === 'ceiling'
+      ? `<small>Raw ${NUMBER.format(solved.rawRpm)} rpm \u00B7 display ceiling</small>`
+      : '<small>Engine output</small>';
+    return `<span class="native-lesson__myth-metric-value" data-myth-metric="backspin"
+      data-rpm="${solved.rpm}" data-raw-rpm="${solved.rawRpm}"
+      data-display-limit="${solved.displayLimit || 'none'}">
+      <strong>${NUMBER.format(solved.rpm)} rpm</strong>${limit}</span>`;
+  }
+
+  function mythMetricRows(experiment, input, solved) {
+    if (experiment.id !== 'more-is-better') {
+      return `
+        <li style="--myth-beat:0"><span><b>01</b> Delivery</span>
+          <strong data-myth-metric="delivery" data-dynamic-loft="${input.dynamicLoft}"
+            data-attack-angle="${input.attackAngle}" data-ball-speed="${input.ballSpeed}">
+            ${input.dynamicLoft}\u00B0 / ${input.attackAngle >= 0 ? '+' : '\u2212'}${Math.abs(input.attackAngle)}\u00B0</strong></li>
+        <li style="--myth-beat:1"><span><b>02</b> Spin loft</span>
+          <strong data-myth-metric="spin-loft">${solved.spinLoft}\u00B0</strong></li>
+        <li style="--myth-beat:2"><span><b>03</b> Backspin</span>${mythBackspinMetric(solved)}</li>`;
+    }
+    return `
+      <li style="--myth-beat:0"><span><b>01</b> Backspin</span>${mythBackspinMetric(solved)}</li>
+      <li style="--myth-beat:1"><span><b>02</b> Carry</span>
+        <strong data-myth-metric="carry">${solved.carryM} m</strong></li>
+      <li class="native-lesson__myth-shape" style="--myth-beat:2"><span><b>03</b> Flight shape</span>
+        <span class="native-lesson__myth-shape-values">
+          <strong data-myth-metric="apex">${solved.apexM} m apex</strong>
+          <strong data-myth-metric="landing">${solved.landingAngle}\u00B0 landing</strong>
+        </span></li>`;
+  }
+
+  function renderMythRun(kind, experiment, input, solved) {
+    const label = kind === 'before' ? 'Run A' : 'Run B';
+    const signedAttack = `${input.attackAngle >= 0 ? '+' : '\u2212'}${Math.abs(input.attackAngle)}\u00B0`;
+    return `<article class="native-lesson__myth-run" data-myth-run="${kind}" ${mythRunAttributes(solved)}>
+      <header><span>${label}</span><small>${input.dynamicLoft}\u00B0 loft \u00B7 ${signedAttack} attack \u00B7 ${input.ballSpeed} mph</small></header>
+      <ol>${mythMetricRows(experiment, input, solved)}</ol>
+    </article>`;
+  }
+
+  function solveMythRuns(experiment) {
+    try {
+      return {
+        before:solveBackspinState(experiment.before),
+        after:solveBackspinState(experiment.after)
+      };
+    } catch {
+      return null;
+    }
+  }
+
+  function mythEvidence(experiment, { animate=false, runs=null } = {}) {
+    const solvedRuns = runs || solveMythRuns(experiment);
+    if (!solvedRuns) {
+      return `<div class="native-lesson__myth-evidence" data-myth-evidence role="region" aria-label="Engine evidence unavailable">
+        <p class="native-lesson__myth-explanation">Engine evidence is temporarily unavailable.</p>
+      </div>`;
+    }
+    const { before, after } = solvedRuns;
+    return `<div class="native-lesson__myth-evidence" data-myth-evidence
+      data-reveal="${animate ? 'sequence' : 'instant'}" role="region" aria-label="Two real engine runs">
+      <p class="native-lesson__myth-evidence-label">Two real engine runs</p>
+      <div class="native-lesson__myth-runs">
+        ${renderMythRun('before', experiment, experiment.before, before)}
+        ${renderMythRun('after', experiment, experiment.after, after)}
+      </div>
+      <p class="native-lesson__myth-explanation" data-myth-explanation>${escapeHtml(experiment.explanation)}</p>
+    </div>`;
+  }
+
+  function renderMyth({ animate=false, runs=null } = {}) {
     const complete = state.myths.filter(Boolean).length;
-    lesson.querySelector('[data-myth-count]').textContent = `${complete} / 3`;
+    const index = Math.max(0, Math.min(MYTH_EXPERIMENTS.length - 1, state.mythIndex));
+    const experiment = MYTH_EXPERIMENTS[index];
+    const selected = state.mythAnswers[index];
+    const answered = state.myths[index];
+    const correct = selected === experiment.answerIndex;
+    const experimentNode = lesson.querySelector('#mythExperiment');
+    lesson.querySelector('[data-myth-count]').textContent = `${complete} / ${MYTH_EXPERIMENTS.length}`;
+    experimentNode.dataset.experimentIndex = String(index);
+    experimentNode.dataset.experimentId = experiment.id;
+    experimentNode.dataset.answered = String(answered);
+    if (selected === null) experimentNode.removeAttribute('data-correct');
+    else experimentNode.dataset.correct = String(correct);
+
+    const choices = experiment.choices.map((choice, choiceIndex) => {
+      const isSelected = selected === choiceIndex;
+      const isAnswer = answered && choiceIndex === experiment.answerIndex;
+      const outcome = isSelected ? (correct ? 'correct' : 'incorrect') : (isAnswer ? 'answer' : 'idle');
+      const answerLabel = isAnswer ? ' Engine-supported answer.' : '';
+      const selectedLabel = isSelected && !correct ? ' Your prediction; not supported by the runs.' : '';
+      return `<button type="button" role="radio" data-myth-choice="${choiceIndex}"
+        data-outcome="${outcome}" aria-checked="${isSelected}" aria-disabled="${answered}"
+        aria-label="${escapeHtml(choice + answerLabel + selectedLabel)}"
+        tabindex="${answered ? (isSelected ? '0' : '-1') : (choiceIndex === 0 ? '0' : '-1')}">
+        ${escapeHtml(choice)}</button>`;
+    }).join('');
+
+    const verdict = answered
+      ? `<p class="native-lesson__myth-verdict" data-myth-verdict data-correct="${selected === null ? 'unknown' : correct}">
+          ${selected === null ? 'Evidence revealed' : (correct ? 'Prediction confirmed' : 'Not quite \u2014 run the evidence')}</p>`
+      : '';
+    experimentNode.innerHTML = `
+      <p class="native-lesson__experiment-number">Experiment ${index + 1} of ${MYTH_EXPERIMENTS.length}</p>
+      <h3 tabindex="-1" data-myth-prompt>${escapeHtml(experiment.prompt)}</h3>
+      <div class="native-lesson__myth-choices" data-choice-count="${experiment.choices.length}"
+        role="radiogroup" aria-label="Prediction choices">${choices}</div>
+      ${verdict}
+      ${answered ? mythEvidence(experiment, { animate, runs }) : '<div data-myth-evidence hidden></div>'}`;
+  }
+
+  function mythAnnouncement(experiment, correct, { before, after }) {
+    const verdict = correct ? 'Prediction confirmed.' : 'Not quite. Follow the engine evidence.';
+    if (experiment.id === 'ground') {
+      return `${verdict} Spin loft changes from ${before.spinLoft} to ${after.spinLoft} degrees and backspin changes from ${NUMBER.format(before.rpm)} to ${NUMBER.format(after.rpm)} rpm.`;
+    }
+    if (experiment.id === 'loft-alone') {
+      const spinLoft = before.spinLoft === after.spinLoft
+        ? `stays at ${after.spinLoft} degrees` : `changes from ${before.spinLoft} to ${after.spinLoft} degrees`;
+      const backspin = before.rpm === after.rpm
+        ? `stays at ${NUMBER.format(after.rpm)} rpm` : `changes from ${NUMBER.format(before.rpm)} to ${NUMBER.format(after.rpm)} rpm`;
+      return `${verdict} Spin loft ${spinLoft} and backspin ${backspin}.`;
+    }
+    const raw = after.displayLimit && after.rawRpm !== after.rpm
+      ? ` Raw model spin is ${NUMBER.format(after.rawRpm)} rpm at the ${after.displayLimit}.` : '';
+    const carry = before.carryM === after.carryM
+      ? `stays at ${after.carryM} metres` : `changes from ${before.carryM} to ${after.carryM} metres`;
+    const apex = before.apexM === after.apexM
+      ? `stays at ${after.apexM} metres` : `changes from ${before.apexM} to ${after.apexM} metres`;
+    const landing = before.landingAngle === after.landingAngle
+      ? `stays at ${after.landingAngle} degrees` : `changes from ${before.landingAngle} to ${after.landingAngle} degrees`;
+    return `${verdict} Displayed backspin changes from ${NUMBER.format(before.rpm)} to ${NUMBER.format(after.rpm)} rpm.${raw} Carry ${carry}, apex ${apex}, and landing ${landing}.`;
+  }
+
+  function answerMyth(choiceIndex) {
+    const index = state.mythIndex;
+    const experiment = MYTH_EXPERIMENTS[index];
+    if (!experiment || state.myths[index] || !Number.isInteger(choiceIndex) ||
+        choiceIndex < 0 || choiceIndex >= experiment.choices.length) return;
+    const runs = solveMythRuns(experiment);
+    if (!runs) {
+      announce('Model could not update');
+      return;
+    }
+    const correct = choiceIndex === experiment.answerIndex;
+    state.mythAnswers[index] = choiceIndex;
+    state.myths[index] = true;
+    persistJourney({ myths:[...state.myths] }, { immediate:true });
+    sa.impact('light');
+    if (state.myths.every(Boolean)) state.unlockedSurface = Math.max(state.unlockedSurface, 4);
+    renderMyth({ animate:true, runs });
+    updateStepper();
+    updateSurfaceNavigation();
+    announce(mythAnnouncement(experiment, correct, runs));
+    nextFrame(() => lesson.querySelector(`[data-myth-choice="${choiceIndex}"]`)?.focus());
   }
 
   function renderMastery() {
@@ -755,12 +946,24 @@ export function mountNativeBackspinLesson(options = {}) {
     const next = lesson.querySelector('.native-lesson__navigation [data-action="next"]');
     const atStart = state.surface === 0;
     const missionBlocked = state.surface === 1 && !(state.mission.built && state.mission.cut);
+    const mythBlocked = state.surface === 3 && !state.myths[state.mythIndex];
+    const blocked = missionBlocked || mythBlocked;
     previous.setAttribute('aria-disabled', String(atStart));
     previous.disabled = atStart;
-    next.setAttribute('aria-disabled', String(missionBlocked));
-    next.disabled = missionBlocked;
-    next.title = missionBlocked ? 'Complete both mission stages to continue' : '';
-    next.querySelector('[data-next-label]').textContent = missionBlocked ? 'Complete the mission' : SURFACES[state.surface].next;
+    next.setAttribute('aria-disabled', String(blocked));
+    next.disabled = blocked;
+    next.toggleAttribute('data-myth-next', state.surface === 3);
+    if (missionBlocked) {
+      next.title = 'Complete both mission stages to continue';
+      next.querySelector('[data-next-label]').textContent = 'Complete the mission';
+    } else if (mythBlocked) {
+      next.title = 'Make a prediction to reveal the engine runs';
+      next.querySelector('[data-next-label]').textContent = 'Make a prediction';
+    } else {
+      next.title = '';
+      next.querySelector('[data-next-label]').textContent = state.surface === 3 && state.mythIndex < MYTH_EXPERIMENTS.length - 1
+        ? 'Next Experiment' : SURFACES[state.surface].next;
+    }
   }
 
   function setSurface(index, {
@@ -771,8 +974,14 @@ export function mountNativeBackspinLesson(options = {}) {
   } = {}) {
     const target = clampSurface(index);
     if (target > 1 && !(state.mission.built && state.mission.cut)) return false;
+    if (target > 3 && !state.myths.every(Boolean)) return false;
     if (unlock) state.unlockedSurface = Math.max(state.unlockedSurface, target);
     if (target > state.unlockedSurface) return false;
+    if (target === 3 && state.surface !== 3) {
+      const unfinished = state.myths.findIndex(value => !value);
+      state.mythIndex = unfinished >= 0 ? unfinished : MYTH_EXPERIMENTS.length - 1;
+      renderMyth();
+    }
     state.surface = target;
     lesson.dataset.surface = String(target);
     pager.style.setProperty('--surface-x', `${target * -16.6666667}%`);
@@ -795,6 +1004,23 @@ export function mountNativeBackspinLesson(options = {}) {
       announce('Complete both mission stages to continue.');
       return;
     }
+    if (state.surface === 3) {
+      if (!state.myths[state.mythIndex]) {
+        announce('Make a prediction to reveal the engine runs.');
+        return;
+      }
+      if (state.mythIndex < MYTH_EXPERIMENTS.length - 1) {
+        state.mythIndex += 1;
+        renderMyth();
+        updateSurfaceNavigation();
+        nextFrame(() => lesson.querySelector('[data-myth-prompt]')?.focus());
+        return;
+      }
+      if (!state.myths.every(Boolean)) {
+        announce('Complete every myth experiment to continue.');
+        return;
+      }
+    }
     if (state.surface === SURFACES.length - 1) {
       callbacks.onNextLesson();
       return;
@@ -803,6 +1029,13 @@ export function mountNativeBackspinLesson(options = {}) {
   }
 
   function goPrevious() {
+    if (state.surface === 3 && state.mythIndex > 0) {
+      state.mythIndex -= 1;
+      renderMyth();
+      updateSurfaceNavigation();
+      nextFrame(() => lesson.querySelector('[data-myth-prompt]')?.focus());
+      return;
+    }
     if (state.surface > 0) setSurface(state.surface - 1, { immediate:true });
   }
 
@@ -970,6 +1203,10 @@ export function mountNativeBackspinLesson(options = {}) {
     listen(lesson, 'click', event => {
       const target = event.target.closest('button');
       if (!target || target.inert || target.getAttribute('aria-disabled') === 'true') return;
+      if (target.dataset.mythChoice !== undefined) {
+        answerMyth(Number(target.dataset.mythChoice));
+        return;
+      }
       if (target.dataset.sheet) {
         openSheet(target.dataset.sheet, target);
         return;
@@ -1034,6 +1271,7 @@ export function mountNativeBackspinLesson(options = {}) {
       const step = event.target.closest('[data-surface-target]');
       const param = event.target.closest('[data-param]');
       const lie = event.target.closest('[data-lie]');
+      const mythChoice = event.target.closest('[data-myth-choice]');
       if (step) {
         const keys = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'];
         if (keys.includes(event.key)) {
@@ -1057,6 +1295,15 @@ export function mountNativeBackspinLesson(options = {}) {
           moveRovingFocus(buttons, lie, event.key);
           const focused = document.activeElement;
           if (focused?.dataset.lie) selectLie(focused.dataset.lie);
+        }
+      } else if (mythChoice) {
+        const keys = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'];
+        if (keys.includes(event.key)) {
+          event.preventDefault();
+          const buttons = [...lesson.querySelectorAll('[data-myth-choice]')];
+          moveRovingFocus(buttons, mythChoice, event.key);
+          const focused = document.activeElement;
+          buttons.forEach(button => { button.tabIndex = button === focused ? 0 : -1; });
         }
       }
     });
@@ -1099,6 +1346,7 @@ export function mountNativeBackspinLesson(options = {}) {
   renderAll();
   setSurface(state.surface, { focus:false, persist:false });
   if (normalizedLegacySurface) persistJourney({ surface:1 }, { immediate:true });
+  else if (normalizedIncompleteMythSurface) persistJourney({ surface:3 }, { immediate:true });
 
   return () => {
     if (destroyed) return;

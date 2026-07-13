@@ -43,6 +43,24 @@ const EXPECTED_BACKSPIN_PARAMS = {
   ballSpeed: { label:'Ball speed', min:90, max:175, step:1, unit:' mph' }
 };
 
+const EXPECTED_MYTH_EXPERIMENTS = [
+  {
+    prompt:'Where is backspin actually created?',
+    choices:['Ground interaction', 'Face friction and spin loft'],
+    answerIndex:1
+  },
+  {
+    prompt:'Dynamic loft rises 4\u00B0, but attack angle also rises 4\u00B0. What happens to backspin?',
+    choices:['More', 'Same', 'Less'],
+    answerIndex:1
+  },
+  {
+    prompt:'At fixed ball speed, what does this model show when spin rises past the iron window?',
+    choices:['Carry grows', 'Carry falls', 'Carry stays while apex and landing change'],
+    answerIndex:2
+  }
+];
+
 const LEGACY_STORE = {
   version: 1,
   xp: 0,
@@ -277,6 +295,8 @@ async function waitForBackspinJourney(page, expected) {
       if (target.surface !== undefined && journey.surface !== target.surface) return false;
       if (target.built !== undefined && journey.mission?.built !== target.built) return false;
       if (target.cut !== undefined && journey.mission?.cut !== target.cut) return false;
+      if (target.myths !== undefined
+        && JSON.stringify(journey.myths) !== JSON.stringify(target.myths)) return false;
       if (target.diagramTouched !== undefined && lesson.diagramTouched !== target.diagramTouched) {
         return false;
       }
@@ -309,6 +329,86 @@ async function completeMissionAndEnterInfluence(page, root) {
   await next.click();
   await assertEventuallyRootSurface(page, root, '2');
 }
+
+async function completeMissionAndEnterMyths(page, root) {
+  await completeMissionAndEnterInfluence(page, root);
+  const next = root.locator('.native-lesson__navigation [data-action="next"]');
+  assert.equal(await next.isDisabled(), false);
+  await next.click();
+  await assertEventuallyRootSurface(page, root, '3');
+}
+
+async function assertMythExperiment(root, {
+  index,
+  prompt,
+  choices,
+  answered=false,
+  correct
+}) {
+  const experiment = root.locator('#mythExperiment');
+  assert.equal(await experiment.getAttribute('data-experiment-index'), String(index));
+  assert.equal(await experiment.getAttribute('data-answered'), String(answered));
+  if (correct === undefined) {
+    assert.equal(await experiment.getAttribute('data-correct'), null);
+  } else {
+    assert.equal(await experiment.getAttribute('data-correct'), String(correct));
+  }
+  assert.equal((await experiment.locator('h3').textContent()).trim(), prompt);
+  assert.deepEqual(
+    await experiment.locator('[data-myth-choice]').evaluateAll(buttons => buttons.map(button => ({
+      index:Number(button.getAttribute('data-myth-choice')),
+      text:button.textContent.replace(/\s+/g, ' ').trim(),
+      role:button.getAttribute('role')
+    }))),
+    choices.map((text, choiceIndex) => ({ index:choiceIndex, text, role:'radio' }))
+  );
+  return experiment;
+}
+
+async function mythRunContract(experiment, run) {
+  return experiment.locator(`[data-myth-run="${run}"]`).evaluate(element => ({
+    rpm:Number(element.dataset.rpm),
+    rawRpm:Number(element.dataset.rawRpm),
+    spinLoft:Number(element.dataset.spinLoft),
+    carry:Number(element.dataset.carry),
+    apex:Number(element.dataset.apex),
+    landing:Number(element.dataset.landing),
+    displayLimit:element.dataset.displayLimit || null
+  }));
+}
+
+async function assertMythNavigationGate(root, blocked) {
+  const next = root.locator('.native-lesson__navigation [data-action="next"][data-myth-next]');
+  assert.equal(await next.isDisabled(), blocked);
+  assert.equal(await next.getAttribute('aria-disabled'), String(blocked));
+}
+
+async function assertMasteryStepGate(root, locked) {
+  const step = root.locator('[data-step="mastery"]');
+  assert.equal(await step.getAttribute('aria-disabled'), String(locked));
+  assert.equal(await step.evaluate(element => element.inert), locked);
+}
+
+async function assertMinimumTarget(locator, label) {
+  const box = await locator.boundingBox();
+  assert.ok(box, `${label} must have a rendered bounding box`);
+  assert.ok(box.width >= 44, `${label} is narrower than 44px: ${JSON.stringify(box)}`);
+  assert.ok(box.height >= 44, `${label} is shorter than 44px: ${JSON.stringify(box)}`);
+}
+async function assertTypeFloor(locator, minimum, label) {
+  const violations = await locator.locator('*').evaluateAll((elements, floor) => elements.filter(element => {
+    const rect = element.getBoundingClientRect();
+    if (rect.width <= 0 || rect.height <= 0 || !element.textContent?.trim()) return false;
+    return Number.parseFloat(getComputedStyle(element).fontSize) < floor;
+  }).map(element => ({
+    tag:element.tagName.toLowerCase(),
+    className:typeof element.className === 'string' ? element.className : '',
+    text:element.textContent.replace(/\s+/g, ' ').trim().slice(0, 80),
+    fontSize:getComputedStyle(element).fontSize
+  })), minimum);
+  assert.deepEqual(violations, [], `${label} must keep every visible text element at or above ${minimum}px`);
+}
+
 
 async function showInfluenceForState(page, root, state, expectedRpm) {
   await root.locator('[data-step="lab"]').click();
@@ -976,6 +1076,375 @@ test('Backspin source sheet degrades cleanly when its optional image cannot deco
 
   await page.keyboard.press('Escape');
   await sheet.waitFor({ state:'hidden' });
+  await page.waitForTimeout(100);
+  assert.deepEqual(runtimeErrors, []);
+});
+
+
+test('Backspin myth predictions reveal exact engine runs and varied supported answers', { timeout:90_000 }, async () => {
+  const { page, root, runtimeErrors } = await openFreshBackspinPage({ width:375, height:812 });
+  await completeMissionAndEnterMyths(page, root);
+
+  const answerPositions = EXPECTED_MYTH_EXPERIMENTS.map(experiment => experiment.answerIndex);
+  assert.deepEqual(answerPositions, [1, 1, 2]);
+  assert.ok(new Set(answerPositions).size > 1,
+    'The supported response must not occupy one detectable position in every experiment');
+
+  const completed = [false, false, false];
+  for (let index = 0; index < EXPECTED_MYTH_EXPERIMENTS.length; index += 1) {
+    const expected = EXPECTED_MYTH_EXPERIMENTS[index];
+    const experiment = await assertMythExperiment(root, { index, ...expected });
+    assert.equal(await experiment.locator('[data-myth-evidence]').isHidden(), true);
+    await assertMythNavigationGate(root, true);
+
+    await assertMasteryStepGate(root, true);
+    await experiment.locator(`[data-myth-choice="${expected.answerIndex}"]`).click();
+    completed[index] = true;
+    await waitForBackspinJourney(page, { surface:3, myths:[...completed] });
+    await assertMythExperiment(root, { index, ...expected, answered:true, correct:true });
+    assert.equal(await experiment.locator('[data-myth-evidence]').isVisible(), true);
+    assert.equal(await experiment.locator('[data-myth-verdict]').isVisible(), true);
+    assert.equal(await experiment.locator('[data-myth-verdict]').getAttribute('data-correct'), 'true');
+    assert.equal(await experiment.locator('[data-myth-explanation]').isVisible(), true);
+    await assertMythNavigationGate(root, false);
+
+    const before = await mythRunContract(experiment, 'before');
+    await assertMasteryStepGate(root, index < EXPECTED_MYTH_EXPERIMENTS.length - 1);
+    const after = await mythRunContract(experiment, 'after');
+    assert.equal(await experiment.locator('[data-myth-run="before"] li').count(), 3);
+    assert.equal(await experiment.locator('[data-myth-run="after"] li').count(), 3);
+
+    if (index === 0) {
+      assert.deepEqual(
+        { rpm:before.rpm, spinLoft:before.spinLoft },
+        { rpm:7128, spinLoft:33 }
+      );
+      assert.deepEqual(
+        { rpm:after.rpm, spinLoft:after.spinLoft },
+        { rpm:7776, spinLoft:36 }
+      );
+      assert.match(await experiment.locator('[data-myth-explanation]').textContent(),
+        /ground adds no spin.*spin is created while the ball is on the face/i);
+    } else if (index === 1) {
+      assert.deepEqual(
+        { rpm:before.rpm, rawRpm:before.rawRpm, spinLoft:before.spinLoft },
+        { rpm:7128, rawRpm:7128, spinLoft:33 }
+      );
+      assert.deepEqual(
+        { rpm:after.rpm, rawRpm:after.rawRpm, spinLoft:after.spinLoft },
+        { rpm:7128, rawRpm:7128, spinLoft:33 }
+      );
+      assert.match(await experiment.locator('[data-myth-explanation]').textContent(),
+        /Spin loft remains 33\u00B0.*same backspin/i);
+    } else {
+      assert.deepEqual(
+        {
+          rpm:before.rpm,
+          rawRpm:before.rawRpm,
+          carry:before.carry,
+          apex:before.apex,
+          landing:before.landing,
+          displayLimit:before.displayLimit
+        },
+        { rpm:7128, rawRpm:7128, carry:158, apex:30, landing:54.4, displayLimit:'none' }
+      );
+      assert.deepEqual(
+        {
+          rpm:after.rpm,
+          rawRpm:after.rawRpm,
+          carry:after.carry,
+          apex:after.apex,
+          landing:after.landing,
+          displayLimit:after.displayLimit
+        },
+        { rpm:9000, rawRpm:10368, carry:158, apex:40, landing:60, displayLimit:'ceiling' }
+      );
+      const cappedBackspin = experiment.locator(
+        '[data-myth-run="after"] [data-myth-metric="backspin"]'
+      );
+      assert.equal(await cappedBackspin.getAttribute('data-rpm'), '9000');
+      assert.equal(await cappedBackspin.getAttribute('data-raw-rpm'), '10368');
+      assert.equal(await cappedBackspin.getAttribute('data-display-limit'), 'ceiling');
+      assert.match(await cappedBackspin.textContent(), /9,000 rpm/i);
+      assert.match(await cappedBackspin.textContent(), /Raw 10,368 rpm/i);
+      assert.match(await cappedBackspin.textContent(), /display ceiling/i);
+      assert.match(await experiment.locator('[data-myth-explanation]').textContent(),
+        /holds carry steady.*Real excess-spin shots can balloon.*not modeled here/i);
+    }
+
+    const localNext = root.locator('[data-myth-next]');
+    if (index < EXPECTED_MYTH_EXPERIMENTS.length - 1) {
+      assert.match((await localNext.textContent()).trim(), /Next Experiment/i);
+      await localNext.click();
+      await page.waitForFunction(
+        next => document.querySelector('#mythExperiment')?.dataset.experimentIndex === String(next),
+        index + 1
+      );
+    } else {
+      assert.match((await localNext.textContent()).trim(), /Start Mastery Check/i);
+    }
+  }
+
+  assert.equal(await root.locator('[data-step="mastery"]').getAttribute('aria-disabled'), 'false');
+  await root.locator('[data-myth-next]').click();
+  await assertEventuallyRootSurface(page, root, '4');
+  await page.waitForTimeout(100);
+  assert.deepEqual(runtimeErrors, []);
+});
+
+test('wrong myth predictions still complete, persist, reload and remain inspectable', { timeout:90_000 }, async () => {
+  const { page, root, runtimeErrors } = await openFreshBackspinPage({ width:375, height:812 });
+  await completeMissionAndEnterMyths(page, root);
+
+  let experiment = await assertMythExperiment(root, {
+    index:0,
+    ...EXPECTED_MYTH_EXPERIMENTS[0]
+  });
+  await experiment.locator('[data-myth-choice="0"]').click();
+  await waitForBackspinJourney(page, { surface:3, myths:[true, false, false] });
+  await assertMythExperiment(root, {
+    index:0,
+    ...EXPECTED_MYTH_EXPERIMENTS[0],
+    answered:true,
+    correct:false
+  });
+  assert.equal(await experiment.locator('[data-myth-evidence]').isVisible(), true);
+  assert.match(await experiment.locator('[data-myth-verdict]').textContent(), /Not quite/i);
+  assert.equal(await experiment.locator('[data-myth-verdict]').getAttribute('data-correct'), 'false');
+  assert.deepEqual(
+    { rpm:(await mythRunContract(experiment, 'before')).rpm, rpmAfter:(await mythRunContract(experiment, 'after')).rpm },
+    { rpm:7128, rpmAfter:7776 }
+  );
+
+  await root.locator('[data-myth-next]').click();
+  await page.waitForFunction(() => document.querySelector('#mythExperiment')?.dataset.experimentIndex === '1');
+  await page.reload({ waitUntil:'networkidle' });
+  await root.waitFor({ timeout:5_000 });
+  await assertEventuallyRootSurface(page, root, '3');
+  await assertMythExperiment(root, {
+    index:1,
+    ...EXPECTED_MYTH_EXPERIMENTS[1]
+  });
+
+  const globalBack = root.locator('.native-lesson__navigation [data-action="previous"]');
+  const globalNext = root.locator('.native-lesson__navigation [data-action="next"]');
+  await globalBack.click();
+  experiment = root.locator('#mythExperiment');
+  await page.waitForFunction(() => document.querySelector('#mythExperiment')?.dataset.experimentIndex === '0');
+  assert.equal(await experiment.getAttribute('data-answered'), 'true');
+  assert.equal(await experiment.locator('[data-myth-evidence]').isVisible(), true);
+  assert.equal(await experiment.locator('[data-myth-verdict]').getAttribute('data-correct'), 'unknown');
+
+  await globalNext.click();
+  await page.waitForFunction(() => document.querySelector('#mythExperiment')?.dataset.experimentIndex === '1');
+  experiment = root.locator('#mythExperiment');
+  await experiment.locator('[data-myth-choice="0"]').click();
+  await waitForBackspinJourney(page, { surface:3, myths:[true, true, false] });
+  assert.equal(await experiment.getAttribute('data-correct'), 'false');
+  assert.equal(await experiment.locator('[data-myth-evidence]').isVisible(), true);
+
+  await root.locator('[data-myth-next]').click();
+  await page.waitForFunction(() => document.querySelector('#mythExperiment')?.dataset.experimentIndex === '2');
+  experiment = root.locator('#mythExperiment');
+  await experiment.locator('[data-myth-choice="0"]').click();
+  await waitForBackspinJourney(page, { surface:3, myths:[true, true, true] });
+  assert.equal(await experiment.getAttribute('data-correct'), 'false');
+  assert.equal(await experiment.locator('[data-myth-evidence]').isVisible(), true);
+  assert.equal(await root.locator('[data-step="mastery"]').getAttribute('aria-disabled'), 'false');
+
+  await page.reload({ waitUntil:'networkidle' });
+  await root.waitFor({ timeout:5_000 });
+  await assertEventuallyRootSurface(page, root, '3');
+  experiment = root.locator('#mythExperiment');
+  assert.equal(await experiment.getAttribute('data-experiment-index'), '2');
+  assert.equal(await experiment.getAttribute('data-answered'), 'true');
+  assert.equal(await experiment.locator('[data-myth-evidence]').isVisible(), true);
+  assert.match((await root.locator('[data-myth-next]').textContent()).trim(), /Start Mastery Check/i);
+  await assertMythNavigationGate(root, false);
+
+  await globalBack.click();
+  await page.waitForFunction(() => document.querySelector('#mythExperiment')?.dataset.experimentIndex === '1');
+  assert.equal(await experiment.getAttribute('data-answered'), 'true');
+  assert.equal(await experiment.locator('[data-myth-evidence]').isVisible(), true);
+  await globalBack.click();
+  await page.waitForFunction(() => document.querySelector('#mythExperiment')?.dataset.experimentIndex === '0');
+  assert.equal(await experiment.getAttribute('data-answered'), 'true');
+  assert.equal(await experiment.locator('[data-myth-evidence]').isVisible(), true);
+
+  await globalNext.click();
+  await page.waitForFunction(() => document.querySelector('#mythExperiment')?.dataset.experimentIndex === '1');
+  await globalNext.click();
+  await page.waitForFunction(() => document.querySelector('#mythExperiment')?.dataset.experimentIndex === '2');
+  await globalNext.click();
+  await assertEventuallyRootSurface(page, root, '4');
+  await waitForBackspinJourney(page, { surface:4, myths:[true, true, true] });
+  await page.waitForTimeout(100);
+  assert.deepEqual(runtimeErrors, []);
+});
+
+test('myth prediction radios support keyboard roving, one haptic and 375px target fit', { timeout:90_000 }, async () => {
+  const viewport = { width:375, height:812 };
+  const { page, root, runtimeErrors } = await openFreshBackspinPage(viewport);
+  await completeMissionAndEnterMyths(page, root);
+
+  const surface = root.locator('.native-lesson__surface[data-surface="3"]');
+  const navigation = root.locator('.native-lesson__navigation');
+  const completed = [false, false, false];
+
+  for (let index = 0; index < EXPECTED_MYTH_EXPERIMENTS.length; index += 1) {
+    const expected = EXPECTED_MYTH_EXPERIMENTS[index];
+    const experiment = await assertMythExperiment(root, { index, ...expected });
+    const group = experiment.getByRole('radiogroup', { name:'Prediction choices' });
+    assert.equal(await group.count(), 1);
+    const choices = group.locator('[data-myth-choice]');
+    assert.equal(await choices.count(), expected.choices.length);
+    assert.deepEqual(
+      await choices.evaluateAll(buttons => buttons.map(button => button.getAttribute('tabindex'))),
+      ['0', ...Array(expected.choices.length - 1).fill('-1')]
+    );
+    assert.deepEqual(
+      await choices.evaluateAll(buttons => buttons.map(button => button.getAttribute('aria-checked'))),
+      Array(expected.choices.length).fill('false')
+    );
+    for (let choiceIndex = 0; choiceIndex < expected.choices.length; choiceIndex += 1) {
+      await assertMinimumTarget(choices.nth(choiceIndex), `Experiment ${index + 1} choice ${choiceIndex + 1}`);
+    }
+
+    if (index === 0) {
+      await choices.first().focus();
+      await choices.first().press('ArrowRight');
+      assert.equal(await choices.nth(1).evaluate(element => document.activeElement === element), true);
+      assert.deepEqual(
+        await choices.evaluateAll(buttons => buttons.map(button => button.getAttribute('tabindex'))),
+        ['-1', '0']
+      );
+      assert.equal(await experiment.getAttribute('data-answered'), 'false');
+    }
+
+    const hapticsBefore = await hapticCount(page, 'impact:light');
+    const supported = choices.nth(expected.answerIndex);
+    await supported.focus();
+    await supported.press('Space');
+    completed[index] = true;
+    await waitForBackspinJourney(page, { surface:3, myths:[...completed] });
+    await page.waitForFunction(
+      choiceIndex => document.activeElement?.getAttribute('data-myth-choice') === String(choiceIndex),
+      expected.answerIndex
+    );
+    assert.equal(await supported.getAttribute('tabindex'), '0');
+    const focusState = await supported.evaluate(element => ({
+      active:document.activeElement === element,
+      focusVisible:element.matches(':focus-visible'),
+      boxShadow:getComputedStyle(element).boxShadow
+    }));
+    assert.equal(focusState.active, true);
+    assert.equal(focusState.focusVisible, true);
+    assert.notEqual(focusState.boxShadow, 'none');
+    assert.equal(await hapticCount(page, 'impact:light'), hapticsBefore + 1);
+    await supported.evaluate(button => button.click());
+    assert.equal(await hapticCount(page, 'impact:light'), hapticsBefore + 1,
+      'An answered prediction must not emit a second impact:light haptic');
+    assert.equal(await experiment.getAttribute('data-answered'), 'true');
+    assert.equal(await experiment.getAttribute('data-correct'), 'true');
+    assert.equal(await supported.getAttribute('aria-checked'), 'true');
+
+    const evidence = experiment.locator('[data-myth-evidence]');
+    assert.equal(await evidence.isVisible(), true);
+    await assertAboveNavigation(experiment, navigation, `Experiment ${index + 1}`);
+    await assertTypeFloor(experiment, 10, `Experiment ${index + 1}`);
+    await assertMinimumTarget(root.locator('[data-myth-next]'), `Experiment ${index + 1} next action`);
+    const cardDimensions = await experiment.evaluate(element => ({
+      scrollHeight:element.scrollHeight,
+      clientHeight:element.clientHeight,
+      scrollWidth:element.scrollWidth,
+      clientWidth:element.clientWidth
+    }));
+    assert.ok(cardDimensions.scrollHeight <= cardDimensions.clientHeight + 1,
+      `Experiment ${index + 1} card must not require internal vertical scrolling: ${JSON.stringify(cardDimensions)}`);
+    assert.ok(cardDimensions.scrollWidth <= cardDimensions.clientWidth + 1,
+      `Experiment ${index + 1} card must not require internal horizontal scrolling: ${JSON.stringify(cardDimensions)}`);
+    const dimensions = await surface.evaluate(element => ({
+      scrollHeight:element.scrollHeight,
+      clientHeight:element.clientHeight,
+      scrollWidth:element.scrollWidth,
+      clientWidth:element.clientWidth
+    }));
+    assert.ok(dimensions.scrollHeight <= dimensions.clientHeight + 1,
+      `Experiment ${index + 1} must fit 375x812 without hidden vertical overflow: ${JSON.stringify(dimensions)}`);
+    assert.ok(dimensions.scrollWidth <= dimensions.clientWidth + 1,
+      `Experiment ${index + 1} must fit without horizontal user-scroll: ${JSON.stringify(dimensions)}`);
+    const documentWidth = await page.evaluate(() => ({ width:innerWidth, scrollWidth:document.documentElement.scrollWidth }));
+    assert.ok(documentWidth.scrollWidth <= documentWidth.width + 1,
+      `Myth surface must not widen the document: ${JSON.stringify(documentWidth)}`);
+
+    if (index < EXPECTED_MYTH_EXPERIMENTS.length - 1) {
+      await root.locator('[data-myth-next]').click();
+      await page.waitForFunction(
+        next => document.querySelector('#mythExperiment')?.dataset.experimentIndex === String(next),
+        index + 1
+      );
+    }
+  }
+
+  await page.waitForTimeout(100);
+  assert.deepEqual(runtimeErrors, []);
+});
+
+test('myth evidence also fits the 430x932 reference viewport', { timeout:90_000 }, async () => {
+  const viewport = { width:430, height:932 };
+  const { page, root, runtimeErrors } = await openFreshBackspinPage(viewport);
+  await completeMissionAndEnterMyths(page, root);
+  const surface = root.locator('.native-lesson__surface[data-surface="3"]');
+  const navigation = root.locator('.native-lesson__navigation');
+  const completed = [false, false, false];
+
+  for (let index = 0; index < EXPECTED_MYTH_EXPERIMENTS.length; index += 1) {
+    const expected = EXPECTED_MYTH_EXPERIMENTS[index];
+    const experiment = await assertMythExperiment(root, { index, ...expected });
+    const choices = experiment.locator('[data-myth-choice]');
+    for (let choiceIndex = 0; choiceIndex < expected.choices.length; choiceIndex += 1) {
+      await assertMinimumTarget(choices.nth(choiceIndex), `430px experiment ${index + 1} choice ${choiceIndex + 1}`);
+    }
+    await choices.nth(expected.answerIndex).click();
+    completed[index] = true;
+    await waitForBackspinJourney(page, { surface:3, myths:[...completed] });
+    assert.equal(await experiment.locator('[data-myth-evidence]').isVisible(), true);
+    await assertAboveNavigation(experiment, navigation, `430px experiment ${index + 1}`);
+    await assertTypeFloor(experiment, 10, `430px experiment ${index + 1}`);
+    await assertMinimumTarget(root.locator('[data-myth-next]'), `430px experiment ${index + 1} next action`);
+    const card = await experiment.evaluate(element => ({
+      scrollHeight:element.scrollHeight, clientHeight:element.clientHeight,
+      scrollWidth:element.scrollWidth, clientWidth:element.clientWidth
+    }));
+    assert.ok(card.scrollHeight <= card.clientHeight + 1,
+      `430px experiment ${index + 1} must not require internal vertical scrolling: ${JSON.stringify(card)}`);
+    assert.ok(card.scrollWidth <= card.clientWidth + 1,
+      `430px experiment ${index + 1} must not require internal horizontal scrolling: ${JSON.stringify(card)}`);
+    const surfaceDimensions = await surface.evaluate(element => ({
+      scrollHeight:element.scrollHeight, clientHeight:element.clientHeight,
+      scrollWidth:element.scrollWidth, clientWidth:element.clientWidth
+    }));
+    assert.ok(surfaceDimensions.scrollHeight <= surfaceDimensions.clientHeight + 1);
+    assert.ok(surfaceDimensions.scrollWidth <= surfaceDimensions.clientWidth + 1);
+
+    if (index === 0) {
+      const [verdictFont, headingFont] = await Promise.all([
+        experiment.locator('[data-myth-verdict]').evaluate(element => getComputedStyle(element).fontFamily),
+        experiment.locator('h3').evaluate(element => getComputedStyle(element).fontFamily)
+      ]);
+      assert.equal(verdictFont, headingFont, 'The verdict stamp must use the display voice');
+    }
+    if (index < EXPECTED_MYTH_EXPERIMENTS.length - 1) {
+      await root.locator('[data-myth-next]').click();
+      await page.waitForFunction(
+        next => document.querySelector('#mythExperiment')?.dataset.experimentIndex === String(next),
+        index + 1
+      );
+    }
+  }
+
+  const documentWidth = await page.evaluate(() => ({ width:innerWidth, scrollWidth:document.documentElement.scrollWidth }));
+  assert.ok(documentWidth.scrollWidth <= documentWidth.width + 1);
   await page.waitForTimeout(100);
   assert.deepEqual(runtimeErrors, []);
 });
