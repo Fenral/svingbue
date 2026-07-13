@@ -23,13 +23,19 @@ Floodlights remains ready and resumes after this owner-directed sequencing
 exception. Read `docs/FLIGHTGLASS-CLAUDE-CODE-MASTER-PLAN.md` and
 `docs/flightglass-autopilot/STATUS.md` before implementation.
 
-Backspin implementation is complete through Task 4: focused baseline, pure
-model contract, journey migration, exactly-once Academy commit, legacy Carry
-browser regression, and the native six-surface production route. The latest
-source checkpoint is `dfa73ca`. `npm run test:academy` passes 18/18 with no
-skips. The first native visual pass is clean for runtime/resources/overflow;
-the focused audit still expects the old `.lesson` and `#diagramMount`
-selectors until the manifest is updated in Task 10.
+Backspin Tasks 1-8 and the Task 9 source/test checkpoint are pushed through
+`259a0b4` on `agent/travel-sync`. The latest focused Task 9 run passed 10/10:
+both portrait viewports, all six surfaces, keyboard-only flow, motion parity,
+storage failure, canvas fallback, a real image 404, route teardown and
+non-finite Spin Lab input.
+
+The checkpoint is intentionally incomplete. The isolated non-finite Mastery
+test was interrupted before completion, and fresh full `npm run test:academy`
+and `npm run test:ux` runs have not been recorded after Task 9. Task 10 (ship
+Academy through the Capacitor/native package and lock the 96 audit target) and
+Task 11 (final visual verification, score audit, status and evidence handoff)
+have not been implemented. Local untracked files under
+`outputs/flightglass-ux/verify*` were left untouched and are not on GitHub.
 
 
 Backspin has a separate 96-97 reference-lesson design and implementation plan:
@@ -54,9 +60,15 @@ approved the Academy architecture.
 
 ## Exact next actions
 
-1. Continue the approved Backspin 96-97 implementation plan at Task 5: finish
-   the engine-driven Mission and Spin Lab, then Influence and Myths. Do not
-   generalize the remaining 23 lessons.
-2. Keep the separate Academy overview architecture recommendation pending; the
-   Backspin lesson does not imply approval of that overview redesign.
-3. Update this file and push a new travel checkpoint before any pause.
+1. Run the isolated browser case named `a non-finite Mastery target input cannot
+   alter readouts or receive target credit` and record its result.
+2. Run fresh `npm run test:academy` and `npm run test:ux`; fix any regression
+   before describing Task 9 as complete.
+3. Continue the approved Backspin plan at Task 10, then complete every Task 11
+   verification and screenshot/score gate. Do not generalize the remaining 23
+   lessons.
+4. Inspect the local untracked `outputs/flightglass-ux/verify*` files before
+   deciding whether to regenerate, preserve or remove them; do not assume they
+   are remote evidence.
+5. Keep the Academy overview recommendation pending and push a new travel
+   checkpoint before the next pause.

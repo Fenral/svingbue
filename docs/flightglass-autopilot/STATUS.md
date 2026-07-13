@@ -20,17 +20,20 @@ publication after all Phase 8 gates pass. See `RELEASE-AUTHORIZATION.md`.
 ## Current checkpoint
 
 The owner explicitly resumed Academy on 2026-07-13. The active work is the
-Backspin 96-97 reference lesson in Phase 6. The focused baseline and rollback
-point, pure model, idempotent progress layer and native six-surface production
-route are complete through Task 4 of
-`docs/superpowers/plans/2026-07-13-backspin-reference-lesson.md`. The current
-implementation checkpoint is `dfa73ca`; Task 5 Mission and Spin Lab behavior is
-next. `npm run test:academy` passes 18/18 with no skips, including the native
-route smoke test and unchanged Carry reward/storage regression. A focused
-four-state visual audit has no runtime, resource, overflow or clipped-text
-failure; its temporary selector criticals come from the pre-native manifest
-contract and are intentionally resolved in Task 10. Phase 1 Home / Floodlights
-remains ready and is not cancelled.
+Backspin 96-97 reference lesson in Phase 6. Tasks 1-8 and the Task 9 source/test
+checkpoint are pushed on `agent/travel-sync` through commit `259a0b4`. The
+latest focused Task 9 run passed 10/10 cases covering both target viewports,
+keyboard navigation, reduced-motion parity, storage failure, canvas fallback,
+an actual image 404, route cleanup and non-finite Spin Lab input.
+
+This is a WIP checkpoint, not a completed Phase 6 verification. The isolated
+non-finite Mastery test was started but interrupted before a result was
+recorded. Fresh full runs of `npm run test:academy` and `npm run test:ux` have
+not been completed after the Task 9 changes. Task 10 native packaging and Task
+11 final visual verification, score audit and documentation remain undone.
+Local untracked `outputs/flightglass-ux/verify*` audit files were deliberately
+left untouched and are not part of the GitHub checkpoint. The exact resumption
+steps are recorded in `docs/SESSION-HANDOFF.md`.
 
 ## Phase 0 evidence
 
