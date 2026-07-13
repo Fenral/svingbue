@@ -434,7 +434,7 @@ export function mountNativeBackspinLesson(options = {}) {
   let destroyed = false;
   let settleTimer = null;
   let announceTimer = null;
-  let pendingAnnouncement = '';
+  const announcementQueue = [];
   let beforeSettled = { ...INITIAL_BACKSPIN_STATE };
   let pendingSettleParam = 'dynamicLoft';
   let lastFocus = null;
@@ -502,6 +502,57 @@ export function mountNativeBackspinLesson(options = {}) {
   const canvas = lesson.querySelector('#flightCanvas');
   const fallback = lesson.querySelector('#flightFallback');
 
+  function prefersReducedMotion() {
+    try {
+      return typeof window.matchMedia === 'function' &&
+        window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    } catch {
+      return false;
+    }
+  }
+
+  function focusProgrammatically(target, focusOptions = { preventScroll:true }) {
+    if (!(target instanceof HTMLElement) || destroyed || !target.isConnected) return;
+    lesson.querySelectorAll('[data-programmatic-focus="true"]').forEach(element => {
+      element.removeAttribute('data-programmatic-focus');
+    });
+    target.dataset.programmaticFocus = 'true';
+    try { target.focus(focusOptions); } catch { target.focus(); }
+  }
+
+  function safeHaptic(method, ...args) {
+    try {
+      if (typeof sa?.[method] === 'function') return sa[method](...args);
+    } catch {
+      // Haptics are progressive enhancement and must never interrupt the lesson.
+    }
+    return undefined;
+  }
+
+  function setModelStatus(status) {
+    lesson.dataset.modelStatus = status;
+  }
+
+  function rejectModelUpdate({ announceFailure=true } = {}) {
+    setModelStatus('error');
+    if (announceFailure) announce('Model could not update');
+  }
+
+  function showFlightFallback() {
+    canvas.hidden = true;
+    fallback.hidden = false;
+    lesson.dataset.canvasMode = 'fallback';
+  }
+
+  function showFlightCanvas() {
+    canvas.hidden = false;
+    fallback.hidden = true;
+    lesson.dataset.canvasMode = 'canvas';
+  }
+
+  lesson.dataset.reducedMotion = String(prefersReducedMotion());
+  setModelStatus(initialSolved ? 'ready' : 'error');
+
   function listen(target, event, handler, eventOptions) {
     target?.addEventListener(event, handler, eventOptions);
     cleanups.push(() => target?.removeEventListener(event, handler, eventOptions));
@@ -531,24 +582,46 @@ export function mountNativeBackspinLesson(options = {}) {
     return id;
   }
 
+  function flushAnnouncement() {
+    announceTimer = null;
+    const message = announcementQueue.shift();
+    if (!message) return;
+    try { callbacks.onAnnounce(message); } catch {
+      // The renderer remains usable if the host live-region callback fails.
+    }
+    if (announcementQueue.length) {
+      announceTimer = later(flushAnnouncement, 120);
+    }
+  }
+
   function announce(message) {
     const text = String(message || '').trim();
     if (!text) return;
-    pendingAnnouncement = text;
-    cancelLater(announceTimer);
-    announceTimer = later(() => {
-      callbacks.onAnnounce(pendingAnnouncement);
-    }, 120);
+    if (announcementQueue[announcementQueue.length - 1] === text) return;
+    announcementQueue.push(text);
+    if (announceTimer === null) {
+      announceTimer = later(flushAnnouncement, 120);
+    }
   }
 
   function persistJourney(patch, journeyOptions = {}) {
-    return callbacks.onJourney(patch, journeyOptions);
+    try {
+      const result = callbacks.onJourney(patch, journeyOptions);
+      if (result && typeof result.catch === 'function') {
+        result.catch(() => undefined);
+      }
+      return result;
+    } catch {
+      return null;
+    }
   }
 
   function markDiagramTouched() {
     if (diagramTouched) return;
     diagramTouched = true;
-    callbacks.onDiagramTouched();
+    try { callbacks.onDiagramTouched(); } catch {
+      // Engagement telemetry must not block model interaction.
+    }
   }
 
   function safeSolve(input, { announceFailure=true } = {}) {
@@ -558,13 +631,14 @@ export function mountNativeBackspinLesson(options = {}) {
       state.input = candidate;
       state.lastValidInput = { ...candidate };
       state.lastValidSolved = solved;
+      setModelStatus('ready');
       return solved;
     } catch {
       state.input = { ...state.lastValidInput };
       if (range && BACKSPIN_PARAMS[state.activeParam]) {
         range.value = String(state.input[state.activeParam]);
       }
-      if (announceFailure) announce('Model could not update');
+      rejectModelUpdate({ announceFailure });
       return null;
     }
   }
@@ -580,58 +654,68 @@ export function mountNativeBackspinLesson(options = {}) {
   }
 
   function drawTrajectory(solved) {
-    if (!solved) return;
-    const rect = canvas.getBoundingClientRect();
-    const width = Math.max(1, Math.round(rect.width));
-    const height = Math.max(1, Math.round(rect.height));
-    let context;
-    try { context = canvas.getContext('2d'); } catch { context = null; }
-    if (!context) {
-      canvas.hidden = true;
-      fallback.hidden = false;
-      return;
+    if (destroyed) return false;
+    if (!solved) {
+      showFlightFallback();
+      return false;
     }
-    canvas.hidden = false;
-    fallback.hidden = true;
-    const ratio = Math.min(2, window.devicePixelRatio || 1);
-    if (canvas.width !== Math.round(width * ratio) || canvas.height !== Math.round(height * ratio)) {
-      canvas.width = Math.round(width * ratio);
-      canvas.height = Math.round(height * ratio);
-    }
-    context.setTransform(ratio, 0, 0, ratio, 0, 0);
-    context.clearRect(0, 0, width, height);
-    const styles = getComputedStyle(lesson);
-    const padX = 14;
-    const baseY = height - 17;
-    const draw = (flight, stroke, lineWidth, dashed=false) => {
-      const points = trajectorySamples(flight, 48);
+    try {
+      const rect = canvas.getBoundingClientRect();
+      const width = Math.max(1, Math.round(rect.width));
+      const height = Math.max(1, Math.round(rect.height));
+      const context = canvas.getContext('2d');
+      if (!context) throw new TypeError('Canvas context unavailable');
+      const ratio = Math.min(2, Number(window.devicePixelRatio) || 1);
+      if (canvas.width !== Math.round(width * ratio) || canvas.height !== Math.round(height * ratio)) {
+        canvas.width = Math.round(width * ratio);
+        canvas.height = Math.round(height * ratio);
+      }
+      context.setTransform(ratio, 0, 0, ratio, 0, 0);
+      context.clearRect(0, 0, width, height);
+      const styles = getComputedStyle(lesson);
+      const padX = 14;
+      const baseY = height - 17;
+      const draw = (flight, stroke, lineWidth, dashed=false) => {
+        const points = trajectorySamples(flight, 48);
+        if (!Array.isArray(points) || !points.length || points.some(point =>
+          !Number.isFinite(point?.d) || !Number.isFinite(point?.h))) {
+          throw new RangeError('Trajectory returned a non-finite point');
+        }
+        context.beginPath();
+        context.setLineDash(dashed ? [5, 7] : []);
+        points.forEach((point, index) => {
+          const x = padX + point.d * (width - padX * 2);
+          const y = baseY - point.h * Math.max(42, height - 48);
+          if (index === 0) context.moveTo(x, y); else context.lineTo(x, y);
+        });
+        context.strokeStyle = stroke;
+        context.lineWidth = lineWidth;
+        context.lineCap = 'round';
+        context.lineJoin = 'round';
+        context.stroke();
+      };
+      if (state.previousSettled?.flight) draw(state.previousSettled.flight, styles.getPropertyValue('--ghost').trim() || '#A7A0C4', 1.5, true);
+      draw(solved.flight, styles.getPropertyValue('--accent').trim() || '#FF8A4D', 2.5);
+      context.setLineDash([]);
       context.beginPath();
-      context.setLineDash(dashed ? [5, 7] : []);
-      points.forEach((point, index) => {
-        const x = padX + point.d * (width - padX * 2);
-        const y = baseY - point.h * Math.max(42, height - 48);
-        if (index === 0) context.moveTo(x, y); else context.lineTo(x, y);
-      });
-      context.strokeStyle = stroke;
-      context.lineWidth = lineWidth;
-      context.lineCap = 'round';
-      context.lineJoin = 'round';
+      context.moveTo(padX, baseY + .5);
+      context.lineTo(width - padX, baseY + .5);
+      context.strokeStyle = styles.getPropertyValue('--line').trim() || 'rgba(255,255,255,.1)';
+      context.lineWidth = 1;
       context.stroke();
-    };
-    if (state.previousSettled?.flight) draw(state.previousSettled.flight, styles.getPropertyValue('--ghost').trim() || '#A7A0C4', 1.5, true);
-    draw(solved.flight, styles.getPropertyValue('--accent').trim() || '#FF8A4D', 2.5);
-    context.setLineDash([]);
-    context.beginPath();
-    context.moveTo(padX, baseY + .5);
-    context.lineTo(width - padX, baseY + .5);
-    context.strokeStyle = styles.getPropertyValue('--line').trim() || 'rgba(255,255,255,.1)';
-    context.lineWidth = 1;
-    context.stroke();
+      showFlightCanvas();
+      return true;
+    } catch {
+      showFlightFallback();
+      return false;
+    }
   }
-
   function renderLab() {
     const solved = safeSolve(state.input, { announceFailure:false }) || state.lastValidSolved;
-    if (!solved) return;
+    if (!solved) {
+      showFlightFallback();
+      return;
+    }
     lesson.querySelector('#backspinTruth').textContent = NUMBER.format(solved.rpm);
     lesson.querySelector('[data-spin-loft]').textContent = `${solved.spinLoft}°`;
     lesson.querySelector('[data-carry]').textContent = `${solved.carryM} m`;
@@ -678,8 +762,16 @@ export function mountNativeBackspinLesson(options = {}) {
 
   function renderInfluence() {
     let sensitivity;
-    const solved = safeSolve(state.input, { announceFailure:false });
-    try { sensitivity = backspinSensitivity(state.input); } catch { sensitivity = null; }
+    const solved = safeSolve(state.input);
+    try {
+      sensitivity = backspinSensitivity(state.input);
+      const finite = PARAMETER_KEYS.every(key =>
+        Number.isFinite(sensitivity?.[key]?.displayDelta) && Number.isFinite(sensitivity?.[key]?.rawDelta));
+      if (!finite) throw new RangeError('Sensitivity returned a non-finite value');
+    } catch {
+      sensitivity = null;
+      rejectModelUpdate();
+    }
     const container = lesson.querySelector('#influenceBars');
     const limitNote = lesson.querySelector('#influenceLimitNote');
     if (!sensitivity || !solved) {
@@ -873,11 +965,14 @@ export function mountNativeBackspinLesson(options = {}) {
 
   function solveMythRuns(experiment) {
     try {
-      return {
+      const runs = {
         before:solveBackspinState(experiment.before),
         after:solveBackspinState(experiment.after)
       };
+      setModelStatus('ready');
+      return runs;
     } catch {
+      setModelStatus('error');
       return null;
     }
   }
@@ -979,13 +1074,13 @@ export function mountNativeBackspinLesson(options = {}) {
     state.mythAnswers[index] = choiceIndex;
     state.myths[index] = true;
     persistJourney({ myths:[...state.myths] }, { immediate:true });
-    sa.impact('light');
+    safeHaptic('impact', 'light');
     if (state.myths.every(Boolean)) state.unlockedSurface = Math.max(state.unlockedSurface, 4);
-    renderMyth({ animate:true, runs });
+    renderMyth({ animate:!prefersReducedMotion(), runs });
     updateStepper();
     updateSurfaceNavigation();
     announce(mythAnnouncement(experiment, correct, runs));
-    nextFrame(() => lesson.querySelector(`[data-myth-choice="${choiceIndex}"]`)?.focus());
+    nextFrame(() => focusProgrammatically(lesson.querySelector(`[data-myth-choice="${choiceIndex}"]`)));
   }
 
 
@@ -1008,9 +1103,11 @@ export function mountNativeBackspinLesson(options = {}) {
 
   function solveMasteryInput(input) {
     try {
-      return solveBackspinState(input);
+      const solved = solveBackspinState(input);
+      setModelStatus('ready');
+      return solved;
     } catch {
-      announce('Model could not update');
+      rejectModelUpdate();
       return null;
     }
   }
@@ -1273,21 +1370,24 @@ export function mountNativeBackspinLesson(options = {}) {
     announce(correct
       ? `Task ${state.masteryIndex + 1} resolved.`
       : `Task ${state.masteryIndex + 1} is not resolved. Try again, or continue with this result.`);
-    nextFrame(() => lesson.querySelector(`[data-mastery-choice="${choiceIndex}"]`)?.focus());
+    nextFrame(() => focusProgrammatically(lesson.querySelector(`[data-mastery-choice="${choiceIndex}"]`)));
   }
 
   function selectMasteryTargetParameter(key) {
     if (!PARAMETER_KEYS.includes(key) || state.mastery[4]?.correct || state.submitting || hasSubmittedMastery()) return;
     state.masteryTargetParam = key;
     renderMastery();
-    lesson.querySelector(`[data-mastery-param="${key}"]`)?.focus();
+    focusProgrammatically(lesson.querySelector(`[data-mastery-param="${key}"]`));
   }
 
   function updateMasteryTargetInput(input) {
     if (!(input instanceof HTMLInputElement) || state.mastery[4]?.correct || state.submitting || hasSubmittedMastery()) return;
     const key = state.masteryTargetParam;
     const value = input.valueAsNumber;
-    if (!Number.isFinite(value)) return;
+    if (!Number.isFinite(value)) {
+      rejectModelUpdate();
+      return;
+    }
     const solved = solveMasteryInput({ ...state.masteryTargetInput, [key]:value });
     if (!solved) return;
     state.masteryTargetInput = { ...state.masteryTargetInput, [key]:value };
@@ -1306,7 +1406,7 @@ export function mountNativeBackspinLesson(options = {}) {
       landing.textContent = `${solved.landingAngle}\u00b0`;
     }
     markDiagramTouched();
-    sa.tick(`mastery-${key}`);
+    safeHaptic('tick', `mastery-${key}`);
   }
 
   function submitMasteryTarget() {
@@ -1326,7 +1426,7 @@ export function mountNativeBackspinLesson(options = {}) {
     announce(correct
       ? `Stopping-flight target met at ${NUMBER.format(solved.rpm)} rpm and ${solved.landingAngle} degrees landing.`
       : `Target not met. ${NUMBER.format(solved.rpm)} rpm and ${solved.landingAngle} degrees landing. ${masteryTargetFailure(solved)}`);
-    nextFrame(() => lesson.querySelector('[data-mastery-target-feedback]')?.focus?.());
+    nextFrame(() => focusProgrammatically(lesson.querySelector('[data-mastery-target-feedback]')));
   }
 
   function normalizedCurrentMasteryResults() {
@@ -1395,7 +1495,7 @@ export function mountNativeBackspinLesson(options = {}) {
       state.masteryIndex += 1;
       renderMastery();
       updateSurfaceNavigation();
-      nextFrame(() => lesson.querySelector('[data-mastery-prompt]')?.focus());
+      nextFrame(() => focusProgrammatically(lesson.querySelector('[data-mastery-prompt]')));
       return;
     }
     void submitMasteryAttempt();
@@ -1514,10 +1614,12 @@ export function mountNativeBackspinLesson(options = {}) {
     if (target === 5) renderResult();
     if (focus) nextFrame(() => {
       if (target === 4) {
-        lesson.querySelector('[data-mastery-prompt], [data-mastery-submitted]')?.focus();
+        focusProgrammatically(lesson.querySelector('[data-mastery-prompt], [data-mastery-submitted]'));
       } else if (target === 5) {
-        lesson.querySelector('#nativeResultTitle')?.focus();
-      } else lesson.querySelector(`.native-lesson__surface[data-surface="${target}"]`)?.focus();
+        focusProgrammatically(lesson.querySelector('#nativeResultTitle'));
+      } else {
+        focusProgrammatically(lesson.querySelector(`.native-lesson__surface[data-surface="${target}"]`));
+      }
     });
     if (target === 1) nextFrame(() => drawTrajectory(state.lastValidSolved));
     if (target === 2) renderInfluence();
@@ -1538,7 +1640,7 @@ export function mountNativeBackspinLesson(options = {}) {
         state.mythIndex += 1;
         renderMyth();
         updateSurfaceNavigation();
-        nextFrame(() => lesson.querySelector('[data-myth-prompt]')?.focus());
+        nextFrame(() => focusProgrammatically(lesson.querySelector('[data-myth-prompt]')));
         return;
       }
       if (!state.myths.every(Boolean)) {
@@ -1563,7 +1665,7 @@ export function mountNativeBackspinLesson(options = {}) {
       state.mythIndex -= 1;
       renderMyth();
       updateSurfaceNavigation();
-      nextFrame(() => lesson.querySelector('[data-myth-prompt]')?.focus());
+      nextFrame(() => focusProgrammatically(lesson.querySelector('[data-myth-prompt]')));
       return;
     }
     if (state.surface > 0) setSurface(state.surface - 1, { immediate:true });
@@ -1609,18 +1711,34 @@ export function mountNativeBackspinLesson(options = {}) {
     sheet.scrollTop = 0;
     frame.inert = true;
     sheetScrim.hidden = false;
+    sheet.removeAttribute('data-media-state');
     const realWorldImage = sheet.querySelector('[data-real-world-image]');
     if (realWorldImage) {
-      const removeMedia = () => realWorldImage.closest('[data-real-world-media]')?.remove();
-      realWorldImage.addEventListener('error', removeMedia, { once:true });
-      if (realWorldImage.complete && realWorldImage.naturalWidth === 0) removeMedia();
+      const removeMedia = () => {
+        if (!sheet.contains(realWorldImage)) return;
+        realWorldImage.closest('[data-real-world-media]')?.remove();
+        sheet.dataset.mediaState = 'unavailable';
+      };
+      sheet.dataset.mediaState = 'loading';
+      listen(realWorldImage, 'load', () => {
+        if (sheet.contains(realWorldImage)) sheet.dataset.mediaState = 'image';
+      }, { once:true });
+      listen(realWorldImage, 'error', removeMedia, { once:true });
+      try {
+        if (realWorldImage.complete) {
+          if (realWorldImage.naturalWidth === 0) removeMedia();
+          else sheet.dataset.mediaState = 'image';
+        }
+      } catch {
+        removeMedia();
+      }
     }
     sheet.hidden = false;
     nextFrame(() => {
       sheetScrim.classList.add('is-open');
       sheet.classList.add('is-open');
       sheet.scrollTop = 0;
-      sheet.focus({ preventScroll:true });
+      focusProgrammatically(sheet);
     });
   }
 
@@ -1628,7 +1746,7 @@ export function mountNativeBackspinLesson(options = {}) {
     sheet.hidden = true;
     sheetScrim.hidden = true;
     frame.inert = false;
-    if (restoreFocus && lastFocus?.isConnected) lastFocus.focus();
+    if (restoreFocus && lastFocus?.isConnected) focusProgrammatically(lastFocus);
     lastFocus = null;
   }
 
@@ -1636,7 +1754,7 @@ export function mountNativeBackspinLesson(options = {}) {
     if (sheet.hidden) return;
     sheetScrim.classList.remove('is-open');
     sheet.classList.remove('is-open');
-    if (immediate || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    if (immediate || prefersReducedMotion()) {
       finishSheetClose({ restoreFocus });
     } else {
       later(() => finishSheetClose({ restoreFocus }), 260);
@@ -1668,7 +1786,7 @@ export function mountNativeBackspinLesson(options = {}) {
       cause.innerHTML = chain.visual.map(item => `<span>${escapeHtml(item)}</span>`).join('<span aria-hidden="true">→</span>');
       announce(chain.speech);
     } catch {
-      announce('Model could not update');
+      rejectModelUpdate();
       return;
     }
     state.previousSettled = solved;
@@ -1689,26 +1807,31 @@ export function mountNativeBackspinLesson(options = {}) {
     if (mission.event) {
       state.mission = { built:mission.built, cut:mission.cut };
       persistJourney({ mission:{ ...state.mission } }, { immediate:true });
-      sa.notify('success');
+      safeHaptic('notify', 'success');
       announce(mission.event === 'built' ? 'Build stage complete. Now cut the spin below 3,500 rpm.' : 'Mission complete. You built and cut the spin.');
       if (mission.complete) state.unlockedSurface = Math.max(state.unlockedSurface, 2);
       renderMission();
       updateStepper();
       updateSurfaceNavigation();
     } else {
-      sa.tick(activeParamAtInput);
+      safeHaptic('tick', activeParamAtInput);
     }
     renderLab();
     cancelLater(settleTimer);
+    settleTimer = null;
     pendingSettleParam = activeParamAtInput;
-    settleTimer = later(() => { settleTimer = null; settleInput(activeParamAtInput); }, 300);
+    if (prefersReducedMotion()) {
+      settleInput(activeParamAtInput);
+    } else {
+      settleTimer = later(() => { settleTimer = null; settleInput(activeParamAtInput); }, 300);
+    }
   }
 
   function selectLie(key) {
     if (key !== 'clean' && !LIE_ESTIMATES[key]) return;
     if (state.lie === key) return;
     state.lie = key;
-    sa.selectionChanged();
+    safeHaptic('selectionChanged');
     const solved = state.lastValidSolved;
     if (solved) renderRealWorld(solved.rpm);
     announce(key === 'clean'
@@ -1730,6 +1853,12 @@ export function mountNativeBackspinLesson(options = {}) {
   }
 
   function wireLesson() {
+    listen(lesson, 'focusout', event => {
+      if (event.target instanceof HTMLElement) {
+        event.target.removeAttribute('data-programmatic-focus');
+      }
+    });
+
     listen(lesson, 'click', event => {
       const target = event.target.closest('button');
       if (!target || target.inert || target.getAttribute('aria-disabled') === 'true') return;
@@ -1766,7 +1895,7 @@ export function mountNativeBackspinLesson(options = {}) {
         const willExpand = state.influenceParam !== key;
         state.influenceParam = willExpand ? key : null;
         renderInfluence();
-        lesson.querySelector(`[data-influence-param="${key}"]`)?.focus();
+        focusProgrammatically(lesson.querySelector(`[data-influence-param="${key}"]`));
         announce(`${BACKSPIN_PARAMS[key].label} A/B comparison ${willExpand ? 'shown' : 'hidden'}.`);
         return;
       }
@@ -1877,16 +2006,16 @@ export function mountNativeBackspinLesson(options = {}) {
       }
     });
 
-    listen(range, 'pointerdown', () => sa.selectionStart());
+    listen(range, 'pointerdown', () => safeHaptic('selectionStart'));
     listen(range, 'input', handleRangeInput);
-    listen(range, 'change', () => sa.selectionEnd());
-    listen(range, 'pointerup', () => sa.selectionEnd());
-    listen(range, 'pointercancel', () => sa.selectionEnd());
-    listen(range, 'blur', () => sa.selectionEnd());
+    listen(range, 'change', () => safeHaptic('selectionEnd'));
+    listen(range, 'pointerup', () => safeHaptic('selectionEnd'));
+    listen(range, 'pointercancel', () => safeHaptic('selectionEnd'));
+    listen(range, 'blur', () => safeHaptic('selectionEnd'));
 
     listen(lesson, 'pointerdown', event => {
       const masteryRange = event.target.closest?.('[data-mastery-range]');
-      if (masteryRange) sa.selectionStart();
+      if (masteryRange) safeHaptic('selectionStart');
     });
     listen(lesson, 'input', event => {
       const masteryRange = event.target.closest?.('[data-mastery-range]');
@@ -1894,7 +2023,7 @@ export function mountNativeBackspinLesson(options = {}) {
     });
     ['change', 'pointerup', 'pointercancel', 'focusout'].forEach(eventName => {
       listen(lesson, eventName, event => {
-        if (event.target.closest?.('[data-mastery-range]')) sa.selectionEnd();
+        if (event.target.closest?.('[data-mastery-range]')) safeHaptic('selectionEnd');
       });
     });
 
@@ -1916,12 +2045,24 @@ export function mountNativeBackspinLesson(options = {}) {
       }
     }, { passive:true });
 
+    let resizeObserver = null;
     if ('ResizeObserver' in window) {
-      const observer = new ResizeObserver(() => drawTrajectory(state.lastValidSolved));
-      observer.observe(canvas);
-      cleanups.push(() => observer.disconnect());
+      try {
+        resizeObserver = new window.ResizeObserver(() => {
+          if (!destroyed) drawTrajectory(state.lastValidSolved);
+        });
+        resizeObserver.observe(canvas);
+      } catch {
+        try { resizeObserver?.disconnect(); } catch { /* Fall through to window resize. */ }
+        resizeObserver = null;
+      }
+    }
+    if (resizeObserver) {
+      cleanups.push(() => resizeObserver.disconnect());
     } else {
-      listen(window, 'resize', () => drawTrajectory(state.lastValidSolved));
+      listen(window, 'resize', () => {
+        if (!destroyed) drawTrajectory(state.lastValidSolved);
+      });
     }
   }
 
@@ -1939,13 +2080,21 @@ export function mountNativeBackspinLesson(options = {}) {
   return () => {
     if (destroyed) return;
     destroyed = true;
+    lesson.dataset.destroyed = 'true';
     closeSheet({ immediate:true, restoreFocus:false });
-    cleanups.splice(0).forEach(fn => fn());
+    cleanups.splice(0).forEach(fn => {
+      try { fn(); } catch { /* Continue deterministic cleanup. */ }
+    });
     timers.forEach(clearTimeout);
     timers.clear();
+    settleTimer = null;
+    announceTimer = null;
+    announcementQueue.length = 0;
     frames.forEach(cancelAnimationFrame);
     frames.clear();
-    sa.selectionEnd();
+    safeHaptic('selectionEnd');
+    lastFocus = null;
+    touchStartY = null;
     if (lesson.parentElement === root) lesson.remove();
   };
 }

@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
 import { createRequire } from 'node:module';
-import { readFile } from 'node:fs';
+import { readFile, readFileSync } from 'node:fs';
 import { dirname, extname, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -276,11 +276,16 @@ function observeRuntimeErrors(page) {
   page.on('requestfailed', request => {
     errors.push(`requestfailed: ${request.url()} (${request.failure()?.errorText || 'unknown'})`);
   });
+  page.on('response', response => {
+    if (response.status() >= 400) {
+      errors.push(`response:${response.status()}: ${response.url()}`);
+    }
+  });
   return errors;
 }
 
-async function openFreshBackspinPage(viewport, { beforeGoto } = {}) {
-  const context = await browser.newContext({ viewport, reducedMotion:'reduce' });
+async function openFreshBackspinPage(viewport, { beforeGoto, reducedMotion='reduce' } = {}) {
+  const context = await browser.newContext({ viewport, reducedMotion });
   contexts.add(context);
   const page = await context.newPage();
   pages.add(page);
@@ -904,6 +909,316 @@ function seededMasteryStore({ xp=0, attemptId='seeded-mastery-attempt' } = {}) {
   };
 }
 
+async function auditNativeSurface(page, root, viewport, surfaceIndex, label) {
+  assert.equal(await root.getAttribute('data-surface'), String(surfaceIndex));
+  const surface = root.locator(`.native-lesson__surface[data-surface="${surfaceIndex}"]`);
+  await assertFitsViewport(surface, viewport, `${label} active surface`);
+  await assertFitsViewport(root.locator('.native-lesson__header'), viewport, `${label} header`);
+  await assertFitsViewport(root.locator('.native-lesson__navigation'), viewport, `${label} navigation`);
+  await assertTypeFloor(surface, 10, `${label} type`);
+  await assertTypeFloor(root.locator('.native-lesson__header'), 10, `${label} header type`);
+  await assertTypeFloor(root.locator('.native-lesson__navigation'), 10, `${label} navigation type`);
+
+  const documentState = await page.evaluate(() => ({
+    left:document.documentElement.scrollLeft,
+    top:document.documentElement.scrollTop,
+    width:innerWidth,
+    height:innerHeight,
+    scrollWidth:document.documentElement.scrollWidth,
+    scrollHeight:document.documentElement.scrollHeight
+  }));
+  assert.equal(documentState.left, 0, `${label} document scrollLeft`);
+  assert.equal(documentState.top, 0, `${label} document scrollTop`);
+  assert.ok(documentState.scrollWidth <= documentState.width + 1,
+    `${label} widened the document: ${JSON.stringify(documentState)}`);
+  assert.ok(documentState.scrollHeight <= documentState.height + 1,
+    `${label} made the document vertically scrollable: ${JSON.stringify(documentState)}`);
+
+  const surfaceState = await surface.evaluate(element => ({
+    left:element.scrollLeft,
+    top:element.scrollTop,
+    scrollWidth:element.scrollWidth,
+    clientWidth:element.clientWidth,
+    scrollHeight:element.scrollHeight,
+    clientHeight:element.clientHeight,
+    overflowX:getComputedStyle(element).overflowX,
+    overflowY:getComputedStyle(element).overflowY
+  }));
+  assert.equal(surfaceState.left, 0, `${label} surface scrollLeft`);
+  assert.equal(surfaceState.top, 0, `${label} surface scrollTop`);
+  assert.ok(surfaceState.scrollWidth <= surfaceState.clientWidth + 1,
+    `${label} has hidden horizontal overflow: ${JSON.stringify(surfaceState)}`);
+  assert.ok(surfaceState.scrollHeight <= surfaceState.clientHeight + 1,
+    `${label} has hidden vertical overflow: ${JSON.stringify(surfaceState)}`);
+
+  const lessonScroll = await root.evaluate(element => ({
+    left:element.scrollLeft,
+    top:element.scrollTop,
+    overflowX:getComputedStyle(element).overflowX,
+    overflowY:getComputedStyle(element).overflowY
+  }));
+  assert.equal(lessonScroll.left, 0);
+  assert.equal(lessonScroll.top, 0);
+  assert.match(lessonScroll.overflowX, /hidden|clip/);
+  assert.match(lessonScroll.overflowY, /hidden|clip/);
+
+  const small = await root.locator('a, button, input, [role="button"]').evaluateAll(elements =>
+    elements.filter(element => {
+      const rect = element.getBoundingClientRect();
+      return rect.width > 0 && rect.height > 0 && (rect.width < 44 || rect.height < 44);
+    }).map(element => ({
+      text:(element.textContent || element.getAttribute('aria-label') || '').replace(/\s+/g, ' ').trim(),
+      width:element.getBoundingClientRect().width,
+      height:element.getBoundingClientRect().height
+    }))
+  );
+  assert.deepEqual(small, [], `${label} has undersized interactive targets`);
+}
+
+async function tabToSelector(page, selector, { reverse=false, limit=120 } = {}) {
+  const key = reverse ? 'Shift+Tab' : 'Tab';
+  for (let index = 0; index < limit; index += 1) {
+    const matched = await page.evaluate(target =>
+      document.activeElement instanceof Element && document.activeElement.matches(target),
+    selector);
+    if (matched) return;
+    await page.keyboard.press(key);
+  }
+  const active = await page.evaluate(() => ({
+    tag:document.activeElement?.tagName,
+    id:document.activeElement?.id,
+    className:document.activeElement?.className,
+    text:document.activeElement?.textContent?.replace(/\s+/g, ' ').trim().slice(0, 80)
+  }));
+  assert.fail(`Keyboard traversal did not reach ${selector}: ${JSON.stringify(active)}`);
+}
+
+async function assertKeyboardFocus(page, selector, label) {
+  const focus = await page.evaluate(target => {
+    const element = document.activeElement;
+    if (!(element instanceof HTMLElement) || !element.matches(target)) return { matched:false };
+    const rect = element.getBoundingClientRect();
+    const style = getComputedStyle(element);
+    return {
+      matched:true,
+      focusVisible:element.matches(':focus-visible'),
+      width:rect.width,
+      height:rect.height,
+      visibility:style.visibility,
+      display:style.display,
+      outlineStyle:style.outlineStyle,
+      outlineWidth:style.outlineWidth,
+      boxShadow:style.boxShadow
+    };
+  }, selector);
+  assert.equal(focus.matched, true, `${label} must own focus`);
+  assert.equal(focus.focusVisible, true, `${label} must expose :focus-visible`);
+  assert.ok(focus.width > 0 && focus.height > 0, `${label} must be rendered`);
+  assert.notEqual(focus.visibility, 'hidden');
+  assert.notEqual(focus.display, 'none');
+  const visiblyStyled = (focus.outlineStyle !== 'none' && focus.outlineWidth !== '0px')
+    || focus.boxShadow !== 'none';
+  assert.equal(visiblyStyled, true, `${label} needs a visible focus treatment`);
+}
+
+async function pressKey(page, key, times) {
+  for (let index = 0; index < times; index += 1) await page.keyboard.press(key);
+}
+
+async function nativeSemanticSnapshot(root) {
+  return root.evaluate(lesson => {
+    const compact = element => (element?.textContent || '').replace(/\s+/g, ' ').trim();
+    const data = element => [...(element?.attributes || [])]
+      .filter(attribute => attribute.name.startsWith('data-'))
+      .map(attribute => [attribute.name, attribute.value])
+      .sort(([left], [right]) => left.localeCompare(right));
+    const range = lesson.querySelector('#labRange');
+    const experiment = lesson.querySelector('#mythExperiment');
+    const nullableAttribute = (element, name) => element?.hasAttribute(name)
+      ? element.getAttribute(name)
+      : null;
+
+    return {
+      surface:lesson.dataset.surface,
+      modelStatus:lesson.dataset.modelStatus,
+      mission:{
+        built:lesson.querySelector('#missionStageBuild')?.dataset.complete,
+        cut:lesson.querySelector('#missionStageCut')?.dataset.complete,
+        count:compact(lesson.querySelector('[data-mission-count]'))
+      },
+      steps:[...lesson.querySelectorAll('[data-step]')].map(step => ({
+        key:step.dataset.step,
+        current:step.getAttribute('aria-current'),
+        disabled:step.getAttribute('aria-disabled'),
+        inert:step.inert,
+        tabIndex:step.tabIndex
+      })),
+      lab:{
+        activeParam:lesson.querySelector('[data-param][aria-checked="true"]')?.dataset.param || null,
+        range:range ? {
+          value:range.value,
+          min:range.min,
+          max:range.max,
+          step:range.step,
+          label:range.getAttribute('aria-label'),
+          valueText:range.getAttribute('aria-valuetext')
+        } : null,
+        truth:compact(lesson.querySelector('#backspinTruth')),
+        spinLoft:compact(lesson.querySelector('[data-spin-loft]')),
+        carry:compact(lesson.querySelector('[data-carry]')),
+        height:compact(lesson.querySelector('[data-apex]')),
+        landing:compact(lesson.querySelector('[data-landing]')),
+        cause:compact(lesson.querySelector('#causeChain'))
+      },
+      influence:[...lesson.querySelectorAll('#influenceBars [data-influence]')].map(row => ({
+        key:row.dataset.influence,
+        expanded:row.getAttribute('aria-expanded'),
+        label:compact(row),
+        detail:compact(row.nextElementSibling?.matches('[data-influence-detail]')
+          ? row.nextElementSibling
+          : null)
+      })),
+      myth:{
+        index:experiment?.dataset.experimentIndex || null,
+        id:experiment?.dataset.experimentId || null,
+        answered:experiment?.dataset.answered || null,
+        correct:nullableAttribute(experiment, 'data-correct'),
+        prompt:compact(experiment?.querySelector('[data-myth-prompt]')),
+        choices:[...(experiment?.querySelectorAll('[data-myth-choice]') || [])].map(choice => ({
+          index:choice.dataset.mythChoice,
+          checked:choice.getAttribute('aria-checked'),
+          disabled:choice.getAttribute('aria-disabled'),
+          outcome:choice.dataset.outcome,
+          text:compact(choice)
+        })),
+        evidence:compact(experiment?.querySelector('[data-myth-evidence]')),
+        runs:[...(experiment?.querySelectorAll('[data-myth-run]') || [])].map(run => ({
+          kind:run.dataset.mythRun,
+          rpm:run.dataset.rpm,
+          rawRpm:run.dataset.rawRpm,
+          spinLoft:run.dataset.spinLoft,
+          carry:run.dataset.carry,
+          apex:run.dataset.apex,
+          landing:run.dataset.landing,
+          displayLimit:run.dataset.displayLimit,
+          text:compact(run)
+        })),
+        metrics:[...(experiment?.querySelectorAll('[data-myth-metric]') || [])].map(metric => ({
+          kind:metric.dataset.mythMetric,
+          data:data(metric),
+          text:compact(metric)
+        }))
+      }
+    };
+  });
+}
+
+async function runMotionJourney(reducedMotion) {
+  const { page, root, runtimeErrors } = await openFreshBackspinPage(
+    { width:430, height:932 },
+    { reducedMotion }
+  );
+  await enterSpinLab(page, root);
+  const immediateCause = await page.evaluate(() => {
+    const range = document.querySelector('#labRange');
+    range.value = '26';
+    range.dispatchEvent(new Event('input', { bubbles:true }));
+    return document.querySelector('#causeChain')?.textContent.replace(/\s+/g, ' ').trim() || '';
+  });
+  await page.waitForFunction(() => {
+    const cause = document.querySelector('#causeChain')?.textContent || '';
+    return /Dynamic loft/i.test(cause) && !/Move one input/i.test(cause);
+  });
+  const lab = await nativeSemanticSnapshot(root);
+
+  await setBackspinParameter(page, root, 'dynamicLoft', 30);
+  await waitForBackspinJourney(page, { surface:1, built:true, cut:false });
+  await page.waitForTimeout(350);
+  await setBackspinParameter(page, root, 'dynamicLoft', 10);
+  await waitForBackspinJourney(page, { surface:1, built:true, cut:true });
+  await page.waitForTimeout(350);
+  await setBackspinParameter(page, root, 'dynamicLoft', 25);
+  await page.waitForFunction(() =>
+    document.querySelector('#backspinTruth')?.textContent.replaceAll(',', '').trim() === '6048'
+  );
+  await page.waitForTimeout(350);
+
+  const toInfluence = await root.locator('.native-lesson__navigation [data-action="next"]').evaluate(button => {
+    const lesson = document.querySelector('#nativeLesson');
+    const before = lesson?.dataset.surface;
+    button.click();
+    const pagerStyle = getComputedStyle(lesson.querySelector('[data-native-pager]'));
+    return {
+      before,
+      after:lesson?.dataset.surface,
+      transitionProperty:pagerStyle.transitionProperty,
+      transitionDuration:pagerStyle.transitionDuration
+    };
+  });
+  await assertEventuallyRootSurface(page, root, '2');
+  const influence = await nativeSemanticSnapshot(root);
+
+  const toMyths = await root.locator('.native-lesson__navigation [data-action="next"]').evaluate(button => {
+    const lesson = document.querySelector('#nativeLesson');
+    const before = lesson?.dataset.surface;
+    button.click();
+    const pagerStyle = getComputedStyle(lesson.querySelector('[data-native-pager]'));
+    return {
+      before,
+      after:lesson?.dataset.surface,
+      transitionProperty:pagerStyle.transitionProperty,
+      transitionDuration:pagerStyle.transitionDuration
+    };
+  });
+  await assertEventuallyRootSurface(page, root, '3');
+
+  const firstAnswer = EXPECTED_MYTH_EXPERIMENTS[0].answerIndex;
+  const mythReveal = await root.locator(`[data-myth-choice="${firstAnswer}"]`).evaluate(button => {
+    button.click();
+    const evidence = document.querySelector('#mythExperiment [data-myth-evidence]');
+    const rows = [...document.querySelectorAll('#mythExperiment [data-myth-run] li')];
+    return {
+      reveal:evidence?.dataset.reveal || null,
+      metricCount:rows.length,
+      metrics:rows.map(row => {
+        const style = getComputedStyle(row);
+        return {
+          text:(row.textContent || '').replace(/\s+/g, ' ').trim(),
+          animationName:style.animationName,
+          opacity:style.opacity
+        };
+      })
+    };
+  });
+  await waitForBackspinJourney(page, { surface:3, myths:[true, false, false] });
+  const myth = await nativeSemanticSnapshot(root);
+
+  return {
+    page,
+    root,
+    runtimeErrors,
+    immediateCause,
+    reduced:await root.getAttribute('data-reduced-motion'),
+    lab,
+    influence,
+    myth,
+    toInfluence,
+    toMyths,
+    mythReveal
+  };
+}
+test('browser contract has only executable and specifically named cases', () => {
+  const source = readFileSync(fileURLToPath(import.meta.url), 'utf8');
+  const skippedSyntax = new RegExp('\\btest\\s*\\.\\s*skip\\b|\\.\\s*skip\\s*\\(');
+  assert.doesNotMatch(source, skippedSyntax);
+
+  const names = [...source.matchAll(/\btest\(\s*(?:'([^']+)'|"([^"]+)"|`([^`]+)`)/g)]
+    .map(match => match[1] || match[2] || match[3]);
+  assert.ok(names.length >= 1);
+  for (const name of names) {
+    assert.doesNotMatch(name, /place(?:holder)|\btodo\b|\btbd\b|coming soon|implement me/i);
+  }
+});
 test.before(async () => {
   server = await startStaticServer();
   const address = server.address();
@@ -939,14 +1254,7 @@ test('native Backspin production route renders its stable six-surface shell', { 
 
   const page = await context.newPage();
   pages.add(page);
-  const runtimeErrors = [];
-  page.on('pageerror', error => runtimeErrors.push(`pageerror: ${error.message}`));
-  page.on('console', message => {
-    if (message.type() === 'error') runtimeErrors.push(`console: ${message.text()}`);
-  });
-  page.on('requestfailed', request => {
-    runtimeErrors.push(`requestfailed: ${request.url()} (${request.failure()?.errorText || 'unknown'})`);
-  });
+  const runtimeErrors = observeRuntimeErrors(page);
 
   await page.goto(`${baseUrl}/academy.html#/lesson/backspin`, { waitUntil: 'networkidle' });
   const root = page.locator('#nativeLesson');
@@ -2470,6 +2778,531 @@ test('invalid persisted Result repairs to a fresh active Mastery attempt without
     'Repairing corrupt progress must not emit mastery or reward haptics');
   assert.deepEqual(runtimeErrors, []);
 });
+for (const viewport of BACKSPIN_VIEWPORTS) {
+  test(`all six Backspin surfaces fit ${viewport.width}x${viewport.height} with native target sizes`,
+    { timeout:240_000 }, async () => {
+      const { page, root, runtimeErrors } = await openFreshBackspinPage(viewport);
+      await auditNativeSurface(page, root, viewport, 0, 'Mission');
+
+      await enterSpinLab(page, root);
+      await auditNativeSurface(page, root, viewport, 1, 'Spin Lab');
+
+      await setBackspinParameter(page, root, 'dynamicLoft', 30);
+      await waitForBackspinJourney(page, { surface:1, built:true, cut:false });
+      await setBackspinParameter(page, root, 'dynamicLoft', 10);
+      await waitForBackspinJourney(page, { surface:1, built:true, cut:true });
+      await root.locator('.native-lesson__navigation [data-action="next"]').click();
+      await assertEventuallyRootSurface(page, root, '2');
+      await auditNativeSurface(page, root, viewport, 2, 'Influence');
+
+      await root.locator('.native-lesson__navigation [data-action="next"]').click();
+      await assertEventuallyRootSurface(page, root, '3');
+      await auditNativeSurface(page, root, viewport, 3, 'Myths');
+
+      const completed = [false, false, false];
+      for (let index = 0; index < EXPECTED_MYTH_EXPERIMENTS.length; index += 1) {
+        const expected = EXPECTED_MYTH_EXPERIMENTS[index];
+        await root.locator(`#mythExperiment [data-myth-choice="${expected.answerIndex}"]`).click();
+        completed[index] = true;
+        await waitForBackspinJourney(page, { surface:3, myths:[...completed] });
+        await root.locator('[data-myth-next]').click();
+        if (index < EXPECTED_MYTH_EXPERIMENTS.length - 1) {
+          await page.waitForFunction(
+            next => document.querySelector('#mythExperiment')?.dataset.experimentIndex === String(next),
+            index + 1
+          );
+        }
+      }
+      await assertEventuallyRootSurface(page, root, '4');
+      await auditNativeSurface(page, root, viewport, 4, 'Mastery Check');
+
+      await finishMasteryAttempt(page, root, {
+        answers:[0, 1, 0, 2],
+        targetFixtures:[MASTERY_TARGET_FIXTURES.shallowLanding]
+      });
+      await auditNativeSurface(page, root, viewport, 5, 'Result');
+      assert.deepEqual(runtimeErrors, []);
+    });
+}
+test('Backspin completes its required learning actions with keyboard input only', { timeout:180_000 }, async () => {
+  const { page, root, runtimeErrors } = await openFreshBackspinPage({ width:375, height:812 });
+
+  const missionAction = '.native-lesson__navigation [data-action="next"]';
+  await tabToSelector(page, missionAction);
+  await assertKeyboardFocus(page, missionAction, 'Mission action');
+  await page.keyboard.press('Enter');
+  await assertEventuallyRootSurface(page, root, '1');
+  await page.waitForFunction(() => document.activeElement?.matches('.native-lesson__surface[data-surface="1"]'));
+  await assertKeyboardFocus(page, '.native-lesson__surface[data-surface="1"]', 'Spin Lab surface');
+
+
+  await tabToSelector(page, '[data-param="dynamicLoft"]');
+  await assertKeyboardFocus(page, '[data-param="dynamicLoft"]', 'Dynamic-loft parameter');
+  await page.keyboard.press('ArrowRight');
+  assert.equal(await root.locator('[data-param="attackAngle"]').getAttribute('aria-checked'), 'true');
+  await assertKeyboardFocus(page, '[data-param="attackAngle"]', 'Attack-angle parameter');
+
+  await tabToSelector(page, '#labRange');
+  await assertKeyboardFocus(page, '#labRange', 'Spin Lab range');
+  assert.equal(await root.locator('#labRange').inputValue(), '-3');
+  await page.keyboard.press('ArrowRight');
+  assert.equal(await root.locator('#labRange').inputValue(), '-2');
+  await assertKeyboardFocus(page, '#labRange', 'Changed Spin Lab range');
+
+  await tabToSelector(page, '[data-sheet="spinLoft"]', { reverse:true });
+  await assertKeyboardFocus(page, '[data-sheet="spinLoft"]', 'Spin-loft sheet opener');
+  await page.keyboard.press('Enter');
+  await root.locator('#lessonSheet').waitFor({ state:'visible' });
+  await page.waitForFunction(() => document.activeElement?.id === 'lessonSheet');
+  await assertKeyboardFocus(page, '#lessonSheet', 'Open sheet dialog');
+  await page.keyboard.press('Tab');
+  await assertKeyboardFocus(page, '#lessonSheet [data-sheet-close]', 'Sheet close action');
+  await page.keyboard.press('Tab');
+  assert.equal(await page.evaluate(() =>
+    document.querySelector('#lessonSheet')?.contains(document.activeElement)), true);
+  await page.keyboard.press('Shift+Tab');
+  assert.equal(await page.evaluate(() =>
+    document.querySelector('#lessonSheet')?.contains(document.activeElement)), true);
+  await page.keyboard.press('Escape');
+  await root.locator('#lessonSheet').waitFor({ state:'hidden' });
+  await assertKeyboardFocus(page, '[data-sheet="spinLoft"]', 'Returned sheet opener');
+
+  await tabToSelector(page, '[data-param="attackAngle"]');
+  await page.keyboard.press('ArrowLeft');
+  assert.equal(await root.locator('[data-param="dynamicLoft"]').getAttribute('aria-checked'), 'true');
+  await assertKeyboardFocus(page, '[data-param="dynamicLoft"]', 'Restored dynamic-loft parameter');
+  await tabToSelector(page, '#labRange');
+  await pressKey(page, 'ArrowRight', 7);
+  await waitForBackspinJourney(page, { surface:1, built:true, cut:false });
+  await pressKey(page, 'ArrowLeft', 19);
+  await waitForBackspinJourney(page, { surface:1, built:true, cut:true });
+  await assertKeyboardFocus(page, '#labRange', 'Mission-complete range');
+
+  const lessonNext = '.native-lesson__navigation [data-action="next"]';
+  await tabToSelector(page, lessonNext);
+  await assertKeyboardFocus(page, lessonNext, 'Influence navigation');
+  await page.keyboard.press('Enter');
+  await assertEventuallyRootSurface(page, root, '2');
+  await page.waitForFunction(() => document.activeElement?.matches('.native-lesson__surface[data-surface="2"]'));
+  await assertKeyboardFocus(page, '.native-lesson__surface[data-surface="2"]', 'Influence surface');
+
+  await tabToSelector(page, lessonNext);
+  await assertKeyboardFocus(page, lessonNext, 'Myths navigation');
+  await page.keyboard.press('Enter');
+  await assertEventuallyRootSurface(page, root, '3');
+  await page.waitForFunction(() => document.activeElement?.matches('.native-lesson__surface[data-surface="3"]'));
+  await assertKeyboardFocus(page, '.native-lesson__surface[data-surface="3"]', 'Myths surface');
+
+
+  for (let index = 0; index < EXPECTED_MYTH_EXPERIMENTS.length; index += 1) {
+    const expected = EXPECTED_MYTH_EXPERIMENTS[index];
+    await tabToSelector(page, '[data-myth-choice="0"]');
+    await assertKeyboardFocus(page, '[data-myth-choice="0"]', `Myth ${index + 1} first choice`);
+    await pressKey(page, 'ArrowRight', expected.answerIndex);
+    const supported = `[data-myth-choice="${expected.answerIndex}"]`;
+    await assertKeyboardFocus(page, supported, `Myth ${index + 1} supported choice`);
+    await page.keyboard.press('Space');
+    await root.locator('[data-myth-evidence]').waitFor({ state:'visible' });
+    await page.waitForFunction(selector => document.activeElement?.matches(selector), supported);
+    await assertKeyboardFocus(page, supported, `Myth ${index + 1} answered choice`);
+    await tabToSelector(page, '[data-myth-next]');
+    await assertKeyboardFocus(page, '[data-myth-next]', `Myth ${index + 1} next action`);
+    await page.keyboard.press('Enter');
+    if (index < EXPECTED_MYTH_EXPERIMENTS.length - 1) {
+      await page.waitForFunction(
+        next => document.querySelector('#mythExperiment')?.dataset.experimentIndex === String(next),
+        index + 1
+      );
+      await page.waitForFunction(() => document.activeElement?.matches('[data-myth-prompt]'));
+      await assertKeyboardFocus(page, '[data-myth-prompt]', `Myth ${index + 2} prompt`);
+    }
+  }
+
+  await assertEventuallyRootSurface(page, root, '4');
+  await page.waitForFunction(() => document.activeElement?.matches('[data-mastery-prompt]'));
+  await assertKeyboardFocus(page, '[data-mastery-prompt]', 'Mastery prompt');
+  await tabToSelector(page, '[data-mastery-choice="0"]');
+  await assertKeyboardFocus(page, '[data-mastery-choice="0"]', 'Mastery definition choice');
+  await page.keyboard.press('Space');
+  await root.locator('[data-mastery-feedback]').waitFor({ state:'visible' });
+  await page.waitForFunction(() => document.activeElement?.matches('[data-mastery-choice="0"]'));
+  await assertKeyboardFocus(page, '[data-mastery-choice="0"]', 'Answered mastery choice');
+  assert.equal(await root.locator('[data-mastery-choice="0"]').getAttribute('aria-checked'), 'true');
+  assert.deepEqual(runtimeErrors, []);
+});
+test('normal and reduced motion produce equivalent Backspin learning state', { timeout:180_000 }, async () => {
+  const normal = await runMotionJourney('no-preference');
+  const reduced = await runMotionJourney('reduce');
+
+  assert.equal(normal.reduced, 'false');
+  assert.equal(reduced.reduced, 'true');
+  assert.match(normal.immediateCause, /Move one input/i,
+    'Normal motion keeps the 300ms cause-chain settle');
+  assert.match(reduced.immediateCause, /Dynamic loft/i,
+    'Reduced motion settles the cause chain in the input event');
+
+  assert.deepEqual(reduced.lab, normal.lab, 'Spin Lab semantics must not depend on motion preference');
+  assert.deepEqual(reduced.influence, normal.influence,
+    'Influence ordering and values must not depend on motion preference');
+  assert.deepEqual(reduced.myth, normal.myth,
+    'Myth choices, engine runs, metrics and navigation state must remain equivalent');
+
+  for (const [label, transition, expected] of [
+    ['Influence', reduced.toInfluence, { before:'1', after:'2' }],
+    ['Myths', reduced.toMyths, { before:'2', after:'3' }]
+  ]) {
+    assert.deepEqual({ before:transition.before, after:transition.after }, expected,
+      `${label} must become current in the same reduced-motion event`);
+    assert.equal(transition.transitionProperty, 'none',
+      `${label} pager transition must be disabled for reduced motion`);
+  }
+
+  assert.equal(normal.mythReveal.reveal, 'sequence');
+  assert.equal(reduced.mythReveal.reveal, 'instant');
+  assert.equal(reduced.mythReveal.metricCount, 6);
+  assert.equal(reduced.mythReveal.metrics.length, 6);
+  for (const metric of reduced.mythReveal.metrics) {
+    assert.ok(metric.text.length > 0, 'Reduced motion must reveal populated myth metrics immediately');
+    assert.equal(metric.animationName, 'none');
+    assert.equal(metric.opacity, '1');
+  }
+  assert.deepEqual(normal.runtimeErrors, []);
+  assert.deepEqual(reduced.runtimeErrors, []);
+});
+test('Backspin keeps full in-memory progression when Academy storage throws', { timeout:120_000 }, async () => {
+  const { page, root, runtimeErrors } = await openFreshBackspinPage({ width:430, height:932 }, {
+    beforeGoto:async targetPage => {
+      await targetPage.addInitScript(key => {
+        const nativeGet = Storage.prototype.getItem;
+        const nativeSet = Storage.prototype.setItem;
+        const probe = { getCalls:0, setCalls:0 };
+        Object.defineProperty(window, '__academyStorageProbe', { value:probe });
+        Storage.prototype.getItem = function guardedGetItem(storageKey) {
+          if (storageKey === key) {
+            probe.getCalls += 1;
+            throw new DOMException('Academy storage unavailable', 'SecurityError');
+          }
+          return nativeGet.call(this, storageKey);
+        };
+        Storage.prototype.setItem = function guardedSetItem(storageKey, value) {
+          if (storageKey === key) {
+            probe.setCalls += 1;
+            throw new DOMException('Academy storage unavailable', 'SecurityError');
+          }
+          return nativeSet.call(this, storageKey, value);
+        };
+      }, STORE_KEY);
+    }
+  });
+
+  assert.ok((await page.evaluate(() => window.__academyStorageProbe.getCalls)) >= 1,
+    'Academy load must exercise the throwing getItem path');
+  await enterSpinLab(page, root);
+  await setBackspinParameter(page, root, 'dynamicLoft', 30);
+  await page.waitForFunction(() =>
+    document.querySelector('#missionStageBuild')?.dataset.complete === 'true'
+  );
+  await setBackspinParameter(page, root, 'dynamicLoft', 10);
+  await page.waitForFunction(() =>
+    document.querySelector('#missionStageBuild')?.dataset.complete === 'true'
+      && document.querySelector('#missionStageCut')?.dataset.complete === 'true'
+  );
+
+  const next = root.locator('.native-lesson__navigation [data-action="next"]');
+  assert.equal(await next.isDisabled(), false);
+  await next.click();
+  await assertEventuallyRootSurface(page, root, '2');
+  await page.waitForFunction(() => window.__academyStorageProbe.setCalls >= 1);
+
+  await page.evaluate(() => { location.hash = '#/path'; });
+  await page.waitForFunction(() => location.hash === '#/path' && !document.querySelector('#nativeLesson'));
+  await page.evaluate(() => { location.hash = '#/lesson/backspin'; });
+  await root.waitFor({ state:'visible', timeout:5_000 });
+  await assertEventuallyRootSurface(page, root, '2');
+  assert.equal(await root.locator('#missionStageBuild').getAttribute('data-complete'), 'true');
+  assert.equal(await root.locator('#missionStageCut').getAttribute('data-complete'), 'true');
+
+  const probe = await page.evaluate(() => ({ ...window.__academyStorageProbe }));
+  assert.ok(probe.getCalls >= 1);
+  assert.ok(probe.setCalls >= 1);
+  assert.deepEqual(runtimeErrors, []);
+});
+test('Backspin keeps finite model truth and mission progress when canvas context is unavailable',
+  { timeout:90_000 }, async () => {
+    const { page, root, runtimeErrors } = await openFreshBackspinPage({ width:375, height:812 }, {
+      beforeGoto:async targetPage => {
+        await targetPage.addInitScript(() => {
+          const nativeGetContext = HTMLCanvasElement.prototype.getContext;
+          const probe = { calls:0 };
+          Object.defineProperty(window, '__academyCanvasProbe', { value:probe });
+          HTMLCanvasElement.prototype.getContext = function guardedGetContext(type, ...args) {
+            if (this.id === 'flightCanvas') {
+              probe.calls += 1;
+              return null;
+            }
+            return nativeGetContext.call(this, type, ...args);
+          };
+        });
+      }
+    });
+
+    await page.waitForFunction(() => document.querySelector('#nativeLesson')?.dataset.canvasMode === 'fallback');
+    assert.equal(await root.locator('#flightCanvas').isHidden(), true);
+    assert.equal(await root.locator('#flightFallback').isVisible(), true);
+    assert.ok((await page.evaluate(() => window.__academyCanvasProbe.calls)) >= 1);
+
+    await enterSpinLab(page, root);
+    const readouts = await root.evaluate(lesson => [
+      '#backspinTruth', '[data-spin-loft]', '[data-carry]', '[data-apex]', '[data-landing]'
+    ].map(selector => Number((lesson.querySelector(selector)?.textContent || '')
+      .replaceAll(',', '').replace(/[^\d.-]/g, ''))));
+    assert.equal(readouts.length, 5);
+    assert.ok(readouts.every(Number.isFinite), `Canvas fallback exposed invalid readouts: ${readouts}`);
+
+    await setBackspinParameter(page, root, 'dynamicLoft', 30);
+    await page.waitForFunction(() =>
+      document.querySelector('#missionStageBuild')?.dataset.complete === 'true'
+    );
+    await setBackspinParameter(page, root, 'dynamicLoft', 10);
+    await page.waitForFunction(() =>
+      document.querySelector('#missionStageCut')?.dataset.complete === 'true'
+    );
+    const next = root.locator('.native-lesson__navigation [data-action="next"]');
+    assert.equal(await next.isDisabled(), false);
+    await next.click();
+    await assertEventuallyRootSurface(page, root, '2');
+    assert.equal(await root.locator('#influenceBars [data-influence]').count(), 3);
+    assert.equal(await root.getAttribute('data-canvas-mode'), 'fallback');
+    assert.deepEqual(runtimeErrors, []);
+  });
+test('a true missing Backspin JPG removes the whole media block and preserves sheet content',
+  { timeout:120_000 }, async () => {
+    const { page, root, runtimeErrors } = await openFreshBackspinPage({ width:430, height:932 });
+    const missingUrl = `${baseUrl}/assets/__missing-backspin.jpg`;
+    const imageUrl = `${baseUrl}/assets/rw-backspin-green-bite.jpg`;
+    const fetched = [];
+    await page.route('**/assets/rw-backspin-green-bite.jpg', async route => {
+      const response = await route.fetch({ url:missingUrl });
+      fetched.push({ status:response.status(), url:response.url() });
+      await route.fulfill({ response });
+    });
+
+    await completeMissionAndEnterInfluence(page, root);
+    await root.locator('[data-lie="wet"]').click();
+    await root.locator('#realWorldRegister').click();
+    const sheet = root.locator('#lessonSheet');
+    await sheet.waitFor({ state:'visible' });
+    await page.waitForFunction(() =>
+      document.querySelector('#lessonSheet')?.dataset.mediaState === 'unavailable'
+    );
+
+    assert.deepEqual(fetched, [{ status:404, url:missingUrl }]);
+    assert.equal(await sheet.locator('[data-real-world-media]').count(), 0);
+    assert.equal(await sheet.locator('[data-real-world-image]').count(), 0);
+    assert.equal(await sheet.locator('figcaption').count(), 0);
+    assert.equal((await sheet.locator('#lessonSheetTitle').textContent()).trim(), 'Wet face / ball');
+    assert.match(await sheet.locator('[data-sheet-body]').textContent(), /not the simulator/i);
+    assert.equal(await sheet.locator('[data-sheet-close]').isVisible(), true);
+
+    await page.keyboard.press('Escape');
+    await sheet.waitFor({ state:'hidden' });
+    await page.waitForTimeout(100);
+    const expectedResponse = `response:404: ${imageUrl}`;
+    const responseErrors = runtimeErrors.filter(entry => entry.startsWith('response:'));
+    assert.deepEqual(responseErrors, [expectedResponse],
+      `Only the deliberately missing image may return HTTP 404: ${JSON.stringify(runtimeErrors)}`);
+    const expectedConsole = 'console: Failed to load resource: the server responded with a status of 404 (Not Found)';
+    const remaining = runtimeErrors.filter(entry => entry !== expectedResponse);
+    assert.ok(remaining.length <= 1 && remaining.every(entry => entry === expectedConsole),
+      `The known image 404 must be the only console exception: ${JSON.stringify(runtimeErrors)}`);
+  });
+test('Backspin route changes cancel a pending settle and close an open native sheet',
+  { timeout:120_000 }, async () => {
+    const { page, root, runtimeErrors } = await openFreshBackspinPage(
+      { width:430, height:932 },
+      { reducedMotion:'no-preference' }
+    );
+    await enterSpinLab(page, root);
+
+    await page.evaluate(() => {
+      const lesson = document.querySelector('#nativeLesson');
+      const range = lesson.querySelector('#labRange');
+      window.__detachedBackspin = lesson;
+      window.__detachedCause = lesson.querySelector('#causeChain');
+      window.__detachedSheet = lesson.querySelector('#lessonSheet');
+      window.__detachedFrame = lesson.querySelector('.native-lesson__frame');
+      range.value = '26';
+      range.dispatchEvent(new Event('input', { bubbles:true }));
+      window.__detachedCauseBefore = window.__detachedCause.textContent;
+      location.hash = '#/path';
+    });
+    await page.waitForFunction(() => location.hash === '#/path' && !document.querySelector('#nativeLesson'));
+    await page.waitForTimeout(500);
+
+    const settleCleanup = await page.evaluate(() => ({
+      connected:window.__detachedBackspin.isConnected,
+      destroyed:window.__detachedBackspin.dataset.destroyed,
+      causeBefore:window.__detachedCauseBefore,
+      causeAfter:window.__detachedCause.textContent,
+      sheetHidden:window.__detachedSheet.hidden,
+      frameInert:window.__detachedFrame.inert,
+      live:(document.querySelector('#live')?.textContent || '').trim(),
+      appInert:document.querySelector('#app')?.inert,
+      activeConnected:document.activeElement?.isConnected
+    }));
+    assert.deepEqual(settleCleanup, {
+      connected:false,
+      destroyed:'true',
+      causeBefore:'Move one input to reveal the cause chain.',
+      causeAfter:'Move one input to reveal the cause chain.',
+      sheetHidden:true,
+      frameInert:false,
+      live:'',
+      appInert:false,
+      activeConnected:true
+    });
+
+    await page.evaluate(() => { location.hash = '#/lesson/backspin'; });
+    await root.waitFor({ state:'visible', timeout:5_000 });
+    await assertEventuallyRootSurface(page, root, '1');
+    const opener = root.locator('[data-sheet="spinLoft"]');
+    await opener.click();
+    await root.locator('#lessonSheet').waitFor({ state:'visible' });
+    await page.waitForFunction(() => document.activeElement?.id === 'lessonSheet');
+    await page.evaluate(() => {
+      window.__detachedSheetLesson = document.querySelector('#nativeLesson');
+      window.__detachedSheetOpener = document.querySelector('[data-sheet="spinLoft"]');
+      location.hash = '#/path';
+    });
+    await page.waitForFunction(() => location.hash === '#/path' && !document.querySelector('#nativeLesson'));
+    await page.waitForTimeout(400);
+
+    const sheetCleanup = await page.evaluate(() => {
+      const lesson = window.__detachedSheetLesson;
+      const sheet = lesson.querySelector('#lessonSheet');
+      const frame = lesson.querySelector('.native-lesson__frame');
+      return {
+        connected:lesson.isConnected,
+        destroyed:lesson.dataset.destroyed,
+        openerConnected:window.__detachedSheetOpener.isConnected,
+        openerOwnsFocus:document.activeElement === window.__detachedSheetOpener,
+        sheetHidden:sheet.hidden,
+        frameInert:frame.inert,
+        appInert:document.querySelector('#app')?.inert,
+        activeConnected:document.activeElement?.isConnected
+      };
+    });
+    assert.deepEqual(sheetCleanup, {
+      connected:false,
+      destroyed:'true',
+      openerConnected:false,
+      openerOwnsFocus:false,
+      sheetHidden:true,
+      frameInert:false,
+      appInert:false,
+      activeConnected:true
+    });
+    assert.deepEqual(runtimeErrors, []);
+  });
+test('a non-finite Spin Lab input preserves the last valid truth without mission credit',
+  { timeout:90_000 }, async () => {
+    const { page, root, runtimeErrors } = await openFreshBackspinPage({ width:375, height:812 });
+    await enterSpinLab(page, root);
+    await waitForBackspinJourney(page, { surface:1, built:false, cut:false, diagramTouched:false });
+
+    const labContract = () => root.evaluate(lesson => ({
+      truth:lesson.querySelector('#backspinTruth')?.textContent.trim(),
+      range:lesson.querySelector('#labRange')?.value,
+      rangeValueText:lesson.querySelector('#labRange')?.getAttribute('aria-valuetext'),
+      cause:lesson.querySelector('#causeChain')?.textContent.replace(/\s+/g, ' ').trim(),
+      built:lesson.querySelector('#missionStageBuild')?.dataset.complete,
+      cut:lesson.querySelector('#missionStageCut')?.dataset.complete,
+      count:lesson.querySelector('[data-mission-count]')?.textContent.trim(),
+      nextDisabled:lesson.querySelector('.native-lesson__navigation [data-action="next"]')?.disabled,
+      nextAriaDisabled:lesson.querySelector('.native-lesson__navigation [data-action="next"]')
+        ?.getAttribute('aria-disabled')
+    }));
+    const before = await labContract();
+    const storeBefore = await storedAcademy(page);
+    const hapticsBefore = await hapticLog(page);
+
+    await page.evaluate(() => {
+      const range = document.querySelector('#labRange');
+      Object.defineProperty(range, 'valueAsNumber', { configurable:true, get:() => Number.NaN });
+      range.dispatchEvent(new Event('input', { bubbles:true }));
+    });
+    await page.waitForFunction(() =>
+      document.querySelector('#nativeLesson')?.dataset.modelStatus === 'error'
+        && document.querySelector('#live')?.textContent.trim() === 'Model could not update'
+    );
+
+    assert.deepEqual(await labContract(), before);
+    assert.deepEqual(await storedAcademy(page), storeBefore);
+    assert.deepEqual(await hapticLog(page), hapticsBefore);
+    const lesson = (await storedAcademy(page)).lessons.backspin;
+    assert.deepEqual(lesson.journey.mission, { built:false, cut:false });
+    assert.equal(lesson.diagramTouched, false);
+    assert.deepEqual(runtimeErrors, []);
+  });
+test('a non-finite Mastery target input cannot alter readouts or receive target credit',
+  { timeout:120_000 }, async () => {
+    const seeded = seededMasteryStore({ attemptId:'nonfinite-target-attempt' });
+    const { page, root, runtimeErrors } = await openFreshBackspinPage({ width:430, height:932 }, {
+      beforeGoto:async targetPage => {
+        await targetPage.addInitScript(({ key, value }) => {
+          localStorage.setItem(key, value);
+        }, { key:STORE_KEY, value:JSON.stringify(seeded) });
+      }
+    });
+    await assertEventuallyRootSurface(page, root, '4');
+    await answerMasteryChoices(page, root, [0, 1, 0, 2]);
+    await page.waitForTimeout(500);
+
+    const targetContract = () => root.evaluate(lesson => {
+      const task = lesson.querySelector('#masteryTask');
+      const range = lesson.querySelector('#masteryTargetRange');
+      const feedback = lesson.querySelector('[data-mastery-target-feedback]');
+      const next = lesson.querySelector('[data-mastery-next]');
+      return {
+        taskAnswered:task?.dataset.answered,
+        range:range?.value,
+        rangeValueText:range?.getAttribute('aria-valuetext'),
+        shownValue:lesson.querySelector('[data-mastery-range-value]')?.textContent.trim(),
+        rpmData:lesson.querySelector('[data-mastery-rpm]')?.dataset.value,
+        rpmText:lesson.querySelector('[data-mastery-rpm]')?.textContent.trim(),
+        landingData:lesson.querySelector('[data-mastery-landing]')?.dataset.value,
+        landingText:lesson.querySelector('[data-mastery-landing]')?.textContent.trim(),
+        targetLocked:lesson.querySelector('[data-mastery-target]')?.dataset.locked,
+        feedbackHidden:feedback?.hidden,
+        feedbackCorrect:feedback?.dataset.correct,
+        nextDisabled:next?.disabled,
+        nextAriaDisabled:next?.getAttribute('aria-disabled'),
+        progress:[...lesson.querySelectorAll('[data-mastery-progress-item]')]
+          .map(item => item.dataset.status)
+      };
+    });
+    const before = await targetContract();
+    assert.equal(before.taskAnswered, '4');
+    assert.equal(before.feedbackHidden, true);
+    assert.equal(before.feedbackCorrect, 'unanswered');
+    const storeBefore = await storedAcademy(page);
+    const hapticsBefore = await hapticLog(page);
+
+    await page.evaluate(() => {
+      const range = document.querySelector('#masteryTargetRange');
+      Object.defineProperty(range, 'valueAsNumber', { configurable:true, get:() => Number.NaN });
+      range.dispatchEvent(new Event('input', { bubbles:true }));
+    });
+    await page.waitForFunction(() =>
+      document.querySelector('#nativeLesson')?.dataset.modelStatus === 'error'
+        && document.querySelector('#live')?.textContent.trim() === 'Model could not update'
+    );
+
+    assert.deepEqual(await targetContract(), before);
+    assert.deepEqual(await storedAcademy(page), storeBefore);
+    assert.deepEqual(await hapticLog(page), hapticsBefore);
+    assert.deepEqual(runtimeErrors, []);
+  });
 test('generic Carry preserves legacy rewards and storage across 3/5, 4/5 and reload', { timeout: 30_000 }, async () => {
   const context = await browser.newContext({
     viewport: { width: 430, height: 932 },
@@ -2482,14 +3315,7 @@ test('generic Carry preserves legacy rewards and storage across 3/5, 4/5 and rel
 
   const page = await context.newPage();
   pages.add(page);
-  const runtimeErrors = [];
-  page.on('pageerror', error => runtimeErrors.push(`pageerror: ${error.message}`));
-  page.on('console', message => {
-    if (message.type() === 'error') runtimeErrors.push(`console: ${message.text()}`);
-  });
-  page.on('requestfailed', request => {
-    runtimeErrors.push(`requestfailed: ${request.url()} (${request.failure()?.errorText || 'unknown'})`);
-  });
+  const runtimeErrors = observeRuntimeErrors(page);
 
   await page.goto(`${baseUrl}/academy.html#/lesson/carry`, { waitUntil: 'networkidle' });
   await page.locator('#quizMount .q').first().waitFor();
