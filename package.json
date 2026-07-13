@@ -5,8 +5,8 @@
   "description": "Flightglass native packaging scaffold — Capacitor wrapper around the static web app for iOS/TestFlight builds via Codemagic.",
   "scripts": {
     "test": "npm run test:ux",
-    "test:academy": "node --test --test-concurrency=1 scripts/academy-backspin-model.test.mjs scripts/academy-backspin-browser.test.mjs",
-    "test:ux": "node --test --test-concurrency=1 scripts/flightglass-ux.test.mjs scripts/academy-backspin-model.test.mjs scripts/academy-backspin-browser.test.mjs",
+    "test:academy": "node --test --test-concurrency=1 scripts/academy-backspin-model.test.mjs scripts/academy-lesson-journey.test.mjs scripts/academy-backspin-browser.test.mjs",
+    "test:ux": "node --test --test-concurrency=1 scripts/flightglass-ux.test.mjs scripts/academy-backspin-model.test.mjs scripts/academy-lesson-journey.test.mjs scripts/academy-backspin-browser.test.mjs",
     "ux:manifest": "node scripts/flightglass-ux-audit.mjs --manifest-only",
     "ux:baseline": "node scripts/flightglass-ux-audit.mjs --mode baseline --motion both",
     "ux:verify": "node scripts/flightglass-ux-audit.mjs --mode verify --motion both",

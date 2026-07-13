@@ -725,6 +725,7 @@
   import { solveFlight, trajectorySamples } from './impact-flight.js';
   import { deg2rad, rad2deg, clamp, RADIUS, BALL_RADIUS_M, arcPosition, thetaAtImpact, tangentAt, deriveImpact, clubBallContact, strikeQuality, effectiveLpx, lpWorld } from './swing-parameters-and-impact.js';
   import saHaptics from './sa-haptics.js';
+  import { freshLessonJourney, mergeLessonJourney } from './academy-lesson-journey.js';
 
   /* ══ DATA ══ */
   const GRAPH = JSON.parse(document.getElementById('graph-data').textContent);
@@ -1295,7 +1296,7 @@
   // Every AUTHORED module gets a lesson-progress record (fundamentals + the two slice demos).
   const LESSON_IDS = Object.keys(AUTHORED);
   function seed(){
-    const mk = () => ({ read:false, quizBest:0, quizAttempts:0, perfect:false, completed:false, completedAt:null, diagramTouched:false, quizBestCorrect:0, quizLen:0, mastered:false });
+    const mk = () => ({ read:false, quizBest:0, quizAttempts:0, perfect:false, completed:false, completedAt:null, diagramTouched:false, quizBestCorrect:0, quizLen:0, mastered:false, journey:freshLessonJourney() });
     const lessons = {}; LESSON_IDS.forEach(id => lessons[id] = mk());
     // Start with NOTHING pre-unlocked; recomputeUnlocks() (run at init and after every
     // completion) opens the graph ROOTS + the two demo modules, then gates the Derived
@@ -1312,7 +1313,12 @@
       const base = seed();
       // Merge any saved per-lesson progress; fill in modules added since the save (robust migration).
       const lessons = {};
-      for (const id of LESSON_IDS) lessons[id] = { ...base.lessons[id], ...(p.lessons[id] || {}) };
+      for (const id of LESSON_IDS) {
+        const savedLesson = p.lessons[id] || {};
+        lessons[id] = { ...base.lessons[id], ...savedLesson,
+          journey:mergeLessonJourney(savedLesson.journey)
+        };
+      }
       return { ...base, ...p, lessons,
         unlocked: Array.isArray(p.unlocked)?p.unlocked:base.unlocked, badges: Array.isArray(p.badges)?p.badges:[] };
     } catch(e){ return seed(); }
@@ -1320,7 +1326,39 @@
   let saveTimer = null;
   function save(){
     if (saveTimer) clearTimeout(saveTimer);
-    saveTimer = setTimeout(() => { try { localStorage.setItem(STORE_KEY, JSON.stringify(store)); } catch(e){} }, 120);
+    saveTimer = setTimeout(() => {
+      saveTimer = null;
+      try { localStorage.setItem(STORE_KEY, JSON.stringify(store)); } catch(e){}
+    }, 120);
+  }
+  function saveNow(){
+    if (saveTimer) clearTimeout(saveTimer);
+    saveTimer = null;
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(store)); } catch(e){}
+  }
+  function getJourney(id){
+    return mergeLessonJourney(store.lessons[id]?.journey);
+  }
+  function updateJourney(id, patch, { immediate=false } = {}){
+    const lesson = store.lessons[id];
+    if (!lesson) return freshLessonJourney();
+    const current = getJourney(id);
+    const nextPatch = patch && typeof patch === 'object' ? patch : {};
+    const myths = Array.isArray(nextPatch.myths)
+      ? current.myths.map((value, index) => nextPatch.myths[index] === undefined
+        ? value
+        : Boolean(nextPatch.myths[index]))
+      : current.myths;
+    lesson.journey = mergeLessonJourney({
+      ...current,
+      ...nextPatch,
+      mission:nextPatch.mission
+        ? { ...current.mission, ...nextPatch.mission }
+        : current.mission,
+      myths
+    });
+    if (immediate) saveNow(); else save();
+    return lesson.journey;
   }
 
   function recomputeUnlocks(){
@@ -3166,25 +3204,35 @@
   }
 
   /* ══ COMPLETION ══ */
-  function finishLesson(lessonId, d, qs){
+  function commitLessonAttempt(lessonId, results, { ensureRead=false } = {}){
     const l = store.lessons[lessonId];
-    const quiz = d.quiz, meta = LESSONS[lessonId];
-    const perQ = qs.map(s => s.resolved ? (s.firstTry?20:10) : 0);
-    const quizXP = perQ.reduce((a,b)=>a+b,0);
-    const correct = qs.filter(s => s.resolved).length;
-    const perfect = qs.every(s => s.resolved && s.firstTry);
-    const lessonQuizXP = quizXP + (perfect?50:0);
+    const quiz = LESSONS[lessonId]?.quiz;
+    if (!l || !Array.isArray(quiz)) throw new RangeError('Unknown Academy lesson');
+    if (!Array.isArray(results) || results.length !== quiz.length) {
+      throw new RangeError(`Expected ${quiz.length} lesson results`);
+    }
 
-    // Mastery is EARNED — ≥80% correct on the check (aca-05). Track best correct count so a
-    // retry can lift a "complete" module to "mastered". Completion still unlocks the next node.
+    const scored = results.map(result => ({
+      resolved:Boolean(result?.resolved),
+      firstTry:Boolean(result?.firstTry)
+    }));
+    const perQ = scored.map(result => result.resolved ? (result.firstTry?20:10) : 0);
+    const quizXP = perQ.reduce((a,b)=>a+b,0);
+    const correct = scored.filter(result => result.resolved).length;
+    const perfect = scored.every(result => result.resolved && result.firstTry);
+    const lessonQuizXP = quizXP + (perfect?50:0);
     const threshold = Math.ceil(quiz.length * MASTERY_FRAC);
-    const nowMastered = correct >= threshold;
+
     l.quizLen = quiz.length;
     l.quizBestCorrect = Math.max(l.quizBestCorrect || 0, correct);
-    const wasMastered = l.mastered;
     l.mastered = l.mastered || (l.quizBestCorrect >= Math.ceil((l.quizLen||quiz.length) * MASTERY_FRAC));
 
     const beforeLevel = levelInfo(store.xp).lvl;
+    const readDelta = ensureRead && !l.read ? 40 : 0;
+    if (readDelta){
+      l.read = true;
+      store.xp += readDelta;
+    }
     l.quizAttempts += 1;
     const delta = Math.max(0, lessonQuizXP - l.quizBest);
     store.xp += delta;
@@ -3196,21 +3244,64 @@
     recomputeUnlocks();
     const didUnlock = store.unlocked.length > unlockedBefore;
     const earned = [];
-    awardBadges(earned);   // fires success itself if a badge is newly earned
+    awardBadges(earned);
     save();
-    // path-06 haptics: finishing a whole tier = medium (the gold moment); otherwise a
-    // freshly-opened node = success once (skipped if a badge already buzzed success).
-    const _tierCol = TIER_COLS.find(c => c.ids.includes(lessonId));
-    const _tierComplete = _tierCol && _tierCol.ids.every(id => store.lessons[id] && store.lessons[id].completed);
-    if (_tierComplete) haptic('medium');
+
+    const tierCol = TIER_COLS.find(column => column.ids.includes(lessonId));
+    const tierComplete = tierCol && tierCol.ids.every(id => store.lessons[id] && store.lessons[id].completed);
+    if (tierComplete) haptic('medium');
     else if (didUnlock && !earned.length) haptic('success');
-    const afterLevel = levelInfo(store.xp).lvl;
-    const leveledUp = afterLevel > beforeLevel;
+
+    const li = levelInfo(store.xp);
+    const leveledUp = li.lvl > beforeLevel;
     refreshHeaderLive();
     bumpLessonXpDisplay(lessonId);
 
-    const li = levelInfo(store.xp);
-    const mastered = l.mastered;
+    return {
+      correct,
+      total:quiz.length,
+      perfect,
+      threshold,
+      mastered:l.mastered,
+      delta,
+      readDelta,
+      totalDelta:readDelta + delta,
+      storeXp:store.xp,
+      leveledUp,
+      levelInfo:{ ...li },
+      earnedBadges:[...earned],
+      didUnlock
+    };
+  }
+
+  function commitNativeLessonAttempt(lessonId, submission){
+    const attemptId = submission?.attemptId;
+    if (typeof attemptId !== 'string' || !attemptId) throw new TypeError('attemptId is required');
+    const journey = getJourney(lessonId);
+    if (!journey.masteryAttemptId) throw new RangeError('No active mastery attempt');
+    if (attemptId !== journey.masteryAttemptId) throw new RangeError('attemptId does not match the active mastery attempt');
+    if (journey.lastSubmission?.attemptId === attemptId) return journey.lastSubmission.summary;
+
+    const summary = commitLessonAttempt(lessonId, submission.results, { ensureRead:true });
+    updateJourney(lessonId, {
+      surface:5,
+      masteryBest:Math.max(journey.masteryBest, summary.correct),
+      masteryAttempts:journey.masteryAttempts + 1,
+      masteryAttemptId:attemptId,
+      lastSubmission:{ attemptId, summary }
+    }, { immediate:true });
+    return summary;
+  }
+
+  function finishLesson(lessonId, d, qs){
+    const quiz = d.quiz, meta = LESSONS[lessonId];
+    const summary = commitLessonAttempt(lessonId, qs);
+    const { correct, perfect, threshold, delta, leveledUp } = summary;
+    const earned = summary.earnedBadges;
+    const li = summary.levelInfo;
+    const afterLevel = li.lvl;
+    const mastered = summary.mastered;
+
     const nextCta = meta.next ? `<button class="cta primary" id="c-next">Next: ${esc(meta.nextLabel)} ${ICON.arrow}</button>` : '';
     const luBanner = leveledUp ? `<div class="levelup show">Level up! You reached Level ${afterLevel} — ${esc(li.title)}.</div>` : '';
     const badgeCards = earned.map(id => { const b = BADGE[id]; return `<div class="cbadge"><span class="g" aria-hidden="true">${badgeIcon(id)}</span><div><div class="n">${esc(b.label)}</div><div class="d">${esc(b.desc)}</div></div></div>`; }).join('');
