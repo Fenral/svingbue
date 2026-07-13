@@ -10,6 +10,7 @@
 <!-- Fonts are vendored + declared in sa-p3.css (@font-face → vendor/fonts/*.woff2). No CDN. -->
 <!-- P3 "Ultraviolet Ember" shared cohesion source: tokens + type roles + .sa-strip shell contract (relative import) -->
 <link rel="stylesheet" href="./sa-p3.css" />
+<link rel="stylesheet" href="./academy-native-lesson.css" />
 <style>
   :root{
     /* ══ P3 "Ultraviolet Ember" — colour + type consumed from sa-p3.css ══
@@ -61,7 +62,7 @@
 
   /* ── skip link (section label role: ui 600 uppercase) ── */
   .skip-link{position:absolute;top:-60px;left:8px;z-index:100;background:var(--bg-2);color:var(--ink);
-    border:1px solid var(--rule-hot);border-radius:12px;padding:10px 16px;font-family:var(--f-body);font-weight:600;
+    min-height:44px;display:inline-flex;align-items:center;border:1px solid var(--rule-hot);border-radius:12px;padding:10px 16px;font-family:var(--f-body);font-weight:600;
     font-size:12px;letter-spacing:.14em;text-transform:uppercase;text-decoration:none;transition:top .15s var(--ease)}
   .skip-link:focus{top:8px}
 
@@ -726,6 +727,7 @@
   import { deg2rad, rad2deg, clamp, RADIUS, BALL_RADIUS_M, arcPosition, thetaAtImpact, tangentAt, deriveImpact, clubBallContact, strikeQuality, effectiveLpx, lpWorld } from './swing-parameters-and-impact.js';
   import saHaptics from './sa-haptics.js';
   import { freshLessonJourney, mergeLessonJourney } from './academy-lesson-journey.js';
+  import { mountNativeBackspinLesson } from './academy-native-lesson.js';
 
   /* ══ DATA ══ */
   const GRAPH = JSON.parse(document.getElementById('graph-data').textContent);
@@ -1440,8 +1442,31 @@
   const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   const app = $('#app');
   const liveEl = $('#live');
-  let liveT; // 260 ms settle: rapid sequences coalesce, last message wins (aca a11y contract)
-  function announce(msg){ clearTimeout(liveT); liveT = setTimeout(() => { liveEl.textContent = ''; requestAnimationFrame(() => { liveEl.textContent = msg; }); }, 260); }
+  let activeLessonCleanup = null;
+  let liveT = null;
+  let liveFrame = null;
+  function clearLiveAnnouncement(){
+    if (liveT !== null) clearTimeout(liveT);
+    if (liveFrame !== null) cancelAnimationFrame(liveFrame);
+    liveT = null;
+    liveFrame = null;
+    liveEl.textContent = '';
+  }
+  function destroyActiveLesson(){
+    if (!activeLessonCleanup) return;
+    activeLessonCleanup();
+    activeLessonCleanup = null;
+    clearLiveAnnouncement();
+  }
+
+  // 260 ms settle: rapid sequences coalesce, last message wins (aca a11y contract).
+  function announce(msg){
+    clearLiveAnnouncement();
+    liveT = setTimeout(() => {
+      liveT = null;
+      liveFrame = requestAnimationFrame(() => { liveFrame = null; liveEl.textContent = msg; });
+    }, 260);
+  }
 
   /* ══ ORIENTATION NUDGE (non-blocking): Academy is orientation-FLEXIBLE. Portrait is the
      optimized reading layout; landscape stays usable (centred column). We never inert the app —
@@ -1592,13 +1617,18 @@
   /* ══ ROUTER ══ */
   function go(hash){ if (location.hash === hash) route(); else location.hash = hash; }
   function focusMainHeading(){
-    const h1 = app.querySelector('h1');
-    if (!h1) return;
-    if (!h1.hasAttribute('tabindex')) h1.setAttribute('tabindex', '-1');
-    h1.focus({ preventScroll:true });
+    const heading = app.querySelector('#nativeLesson .native-lesson__surface[aria-hidden="false"] h1, #nativeLesson .native-lesson__surface[aria-hidden="false"] h2')
+      || app.querySelector('h1');
+    if (!heading) return;
+    if (!heading.hasAttribute('tabindex')) heading.setAttribute('tabindex', '-1');
+    heading.focus({ preventScroll:true });
   }
+  let pendingRouteAnnouncement = null;
   let hasRoutedOnce = false;
   function route(){
+    const routeAnnouncement = pendingRouteAnnouncement;
+    pendingRouteAnnouncement = null;
+    destroyActiveLesson();
     closeSheet(false, true);   // a sheet must never survive a route change (browser back etc.)
     const h = location.hash || '#/path';
     const m = h.match(/^#\/lesson\/([\w-]+)$/);
@@ -1610,6 +1640,7 @@
     // first paint — that would rob keyboard users of the skip link as their first Tab stop.
     if (hasRoutedOnce) focusMainHeading();
     hasRoutedOnce = true;
+    if (routeAnnouncement) announce(routeAnnouncement);
   }
   window.addEventListener('hashchange', route);
 
@@ -2066,6 +2097,37 @@
   ];
 
   function renderLesson(id){
+    if (id === 'backspin') {
+      const li = levelInfo(store.xp);
+      document.title = 'Backspin \u2014 Flightglass Academy';
+      app.innerHTML = '';
+      activeLessonCleanup = mountNativeBackspinLesson({
+        root:app,
+        xp:store.xp,
+        level:{ number:li.lvl, title:li.title },
+        journey:getJourney(id),
+        onJourney:(patch, options) => updateJourney(id, patch, options),
+        onSubmit:submission => commitNativeLessonAttempt(id, submission),
+        onBack:() => go('#/path'),
+        onNextLesson:() => {
+          const nextId = 'launch-angle';
+          if (nodeState(nextId) === 'locked') {
+            store.lastOpened = id;
+            saveNow();
+            pendingRouteAnnouncement = `Launch Angle unlocks after ${prereqLabels(nextId)}. Returning to the Academy path.`;
+            go('#/path');
+            return;
+          }
+          store.lastOpened = nextId;
+          saveNow();
+          go('#/lesson/' + nextId);
+        },
+        onDiagramTouched:() => markDiagramTouched(id),
+        onAnnounce:announce
+      });
+      return;
+    }
+
     const d = LESSONS[id], meta = d;   // meta fields (tier/identity/next/…) now live on the registry entry
     const li = levelInfo(store.xp);
 

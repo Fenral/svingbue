@@ -11,6 +11,27 @@ const { chromium } = require('../tools/node_modules/playwright-core');
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const STORE_KEY = 'strikearc.academy.v1';
 
+const NATIVE_BACKSPIN_SELECTORS = [
+  '#backspinTruth',
+  '#flightCanvas',
+  '#labRange',
+  '#missionStageBuild',
+  '#missionStageCut',
+  '#causeChain',
+  '#influenceBars',
+  '#realWorldRegister',
+  '#mythExperiment',
+  '#masteryTask',
+  '#nativeLessonResult',
+  '#lessonSheet',
+  '[data-step="mission"]',
+  '[data-step="lab"]',
+  '[data-step="influence"]',
+  '[data-step="myths"]',
+  '[data-step="mastery"]',
+  '[data-step="result"]'
+];
+
 const CARRY_ANSWERS = [1, 2, 1, 1, 1];
 const LEGACY_STORE = {
   version: 1,
@@ -166,6 +187,48 @@ test.after(async () => {
   contexts.clear();
   if (browser) await browser.close().catch(() => {});
   await closeServer(server);
+});
+
+test('native Backspin production route renders its stable six-surface shell', { timeout: 30_000 }, async () => {
+  const context = await browser.newContext({
+    viewport: { width: 430, height: 932 },
+    reducedMotion: 'reduce'
+  });
+  contexts.add(context);
+
+  const page = await context.newPage();
+  pages.add(page);
+  const runtimeErrors = [];
+  page.on('pageerror', error => runtimeErrors.push(`pageerror: ${error.message}`));
+  page.on('console', message => {
+    if (message.type() === 'error') runtimeErrors.push(`console: ${message.text()}`);
+  });
+  page.on('requestfailed', request => {
+    runtimeErrors.push(`requestfailed: ${request.url()} (${request.failure()?.errorText || 'unknown'})`);
+  });
+
+  await page.goto(`${baseUrl}/academy.html#/lesson/backspin`, { waitUntil: 'networkidle' });
+  const root = page.locator('#nativeLesson');
+  await root.waitFor({ timeout: 5_000 });
+
+  assert.equal(await root.evaluate(element => element.tagName), 'SECTION');
+  assert.equal(await root.getAttribute('data-lesson'), 'backspin');
+  assert.equal(await root.getAttribute('data-surface'), '0');
+  assert.equal(
+    await root.locator('[data-step="mission"]').getAttribute('aria-current'),
+    'step'
+  );
+
+  for (const selector of NATIVE_BACKSPIN_SELECTORS) {
+    assert.equal(
+      await root.locator(selector).count(),
+      1,
+      `${selector} must exist exactly once inside #nativeLesson`
+    );
+  }
+
+  await page.waitForTimeout(100);
+  assert.deepEqual(runtimeErrors, []);
 });
 
 test('generic Carry preserves legacy rewards and storage across 3/5, 4/5 and reload', { timeout: 30_000 }, async () => {
