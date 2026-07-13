@@ -21,9 +21,16 @@ publication after all Phase 8 gates pass. See `RELEASE-AUTHORIZATION.md`.
 
 The owner explicitly resumed Academy on 2026-07-13. The active work is the
 Backspin 96-97 reference lesson in Phase 6. The focused baseline and rollback
-point are complete; implementation proceeds task-by-task from
-`docs/superpowers/plans/2026-07-13-backspin-reference-lesson.md`. Phase 1
-Home / Floodlights remains ready and is not cancelled.
+point, pure model, idempotent progress layer and native six-surface production
+route are complete through Task 4 of
+`docs/superpowers/plans/2026-07-13-backspin-reference-lesson.md`. The current
+implementation checkpoint is `dfa73ca`; Task 5 Mission and Spin Lab behavior is
+next. `npm run test:academy` passes 18/18 with no skips, including the native
+route smoke test and unchanged Carry reward/storage regression. A focused
+four-state visual audit has no runtime, resource, overflow or clipped-text
+failure; its temporary selector criticals come from the pre-native manifest
+contract and are intentionally resolved in Task 10. Phase 1 Home / Floodlights
+remains ready and is not cancelled.
 
 ## Phase 0 evidence
 

@@ -23,6 +23,15 @@ Floodlights remains ready and resumes after this owner-directed sequencing
 exception. Read `docs/FLIGHTGLASS-CLAUDE-CODE-MASTER-PLAN.md` and
 `docs/flightglass-autopilot/STATUS.md` before implementation.
 
+Backspin implementation is complete through Task 4: focused baseline, pure
+model contract, journey migration, exactly-once Academy commit, legacy Carry
+browser regression, and the native six-surface production route. The latest
+source checkpoint is `dfa73ca`. `npm run test:academy` passes 18/18 with no
+skips. The first native visual pass is clean for runtime/resources/overflow;
+the focused audit still expects the old `.lesson` and `#diagramMount`
+selectors until the manifest is updated in Task 10.
+
+
 Backspin has a separate 96-97 reference-lesson design and implementation plan:
 
 - `docs/superpowers/specs/2026-07-13-backspin-96-97-design.md`
@@ -45,8 +54,9 @@ approved the Academy architecture.
 
 ## Exact next actions
 
-1. Continue the approved Backspin 96-97 implementation plan from its first
-   incomplete task; do not generalize the remaining 23 lessons.
+1. Continue the approved Backspin 96-97 implementation plan at Task 5: finish
+   the engine-driven Mission and Spin Lab, then Influence and Myths. Do not
+   generalize the remaining 23 lessons.
 2. Keep the separate Academy overview architecture recommendation pending; the
    Backspin lesson does not imply approval of that overview redesign.
 3. Update this file and push a new travel checkpoint before any pause.
