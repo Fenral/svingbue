@@ -19,10 +19,11 @@ publication after all Phase 8 gates pass. See `RELEASE-AUTHORIZATION.md`.
 
 ## Current checkpoint
 
-The next action is Phase 1: replace the current Home split-screen with the
-locked Floodlights direction from `home-concept-1.html`, while preserving the
-current navigation and protected identifiers. Follow the phase loop in the
-master plan and run the strict UX verifier after implementation.
+The owner explicitly resumed Academy on 2026-07-13. The active work is the
+Backspin 96-97 reference lesson in Phase 6. The focused baseline and rollback
+point are complete; implementation proceeds task-by-task from
+`docs/superpowers/plans/2026-07-13-backspin-reference-lesson.md`. Phase 1
+Home / Floodlights remains ready and is not cancelled.
 
 ## Phase 0 evidence
 

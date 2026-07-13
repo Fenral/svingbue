@@ -16,9 +16,11 @@ identity concept pages are preserved in `docs/concepts/flightglass/`.
 
 ## Execution state
 
-Phase 0 of the autonomous implementation package is complete. The next coded
-phase is Phase 1, Home / Floodlights. Read
-`docs/FLIGHTGLASS-CLAUDE-CODE-MASTER-PLAN.md` and
+Phase 0 of the autonomous implementation package is complete. On 2026-07-13
+the owner explicitly resumed Academy after reviewing its latest state, so the
+active coded phase is the Phase 6 Backspin reference lesson. Phase 1 Home /
+Floodlights remains ready and resumes after this owner-directed sequencing
+exception. Read `docs/FLIGHTGLASS-CLAUDE-CODE-MASTER-PLAN.md` and
 `docs/flightglass-autopilot/STATUS.md` before implementation.
 
 Backspin has a separate 96-97 reference-lesson design and implementation plan:
@@ -43,8 +45,8 @@ approved the Academy architecture.
 
 ## Exact next actions
 
-1. Obtain the owner's Academy architecture approval when Academy planning
-   resumes.
-2. For coded execution, run `npm run claude:ready` and begin Phase 1 only when
-   the gate passes.
+1. Continue the approved Backspin 96-97 implementation plan from its first
+   incomplete task; do not generalize the remaining 23 lessons.
+2. Keep the separate Academy overview architecture recommendation pending; the
+   Backspin lesson does not imply approval of that overview redesign.
 3. Update this file and push a new travel checkpoint before any pause.

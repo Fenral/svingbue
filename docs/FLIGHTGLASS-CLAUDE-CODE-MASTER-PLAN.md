@@ -167,6 +167,13 @@ after a shot, on request, or in Academy where the relationship is being taught.
 
 ## 7. Autonomous implementation phases
 
+**Owner-directed execution override (2026-07-13):** The owner explicitly
+resumed the Academy work after reviewing its latest implementation state.
+Phase 6's Backspin reference lesson is therefore active before Phase 1. This is
+a sequencing exception only: Phase 1 remains ready, all compatibility and
+release gates remain unchanged, and the remaining 23 lessons stay outside the
+Backspin scope.
+
 ### Phase 0 — Build the repeatable QA baseline
 
 **Purpose:** Make every later visual claim reproducible.
@@ -326,6 +333,14 @@ worth opening within five seconds.
 **Normative references:** `docs/claude-design-brief/brief.md`,
 `docs/academy-native-v2-spec.md`, `academy-lesson-v2-mock.html` and real lesson
 content in `academy.html`.
+
+The approved v3 amendment is
+`docs/superpowers/specs/2026-07-13-backspin-96-97-design.md`; where it is more
+specific than the v2 inputs, it governs Backspin.
+
+**Backspin exit target:** 96-97. The target is earned only by model, mastery,
+mobile and accessibility evidence; no heuristic score overrides a critical
+defect.
 
 Default six-surface anatomy:
 
