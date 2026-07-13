@@ -1,5 +1,5 @@
 /* ══════════════════════════════════════════════════════════════════════════
-   sa-paywall.css — StrikeArc hard-paywall overlay styles.
+   sa-paywall.css — Flightglass hard-paywall overlay styles.
    Linked from geometry.html / impact.html alongside sa-paywall.js (which
    builds + mounts the .sa-pw-scrim markup on import — this file only styles
    it). Ported from the approved paywall-mock.html's .hook / .ladder / .cta /

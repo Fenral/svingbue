@@ -1,4 +1,4 @@
-// sa-shots.js — StrikeArc freemium "free shots" gate.
+// sa-shots.js — Flightglass freemium "free shots" gate.
 //
 // Design (locked): the app is free for the first 10 "shots", then a HARD
 // paywall. One shot = one PLAYED ball-flight (impact.html) OR one PLAYED

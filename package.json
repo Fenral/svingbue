@@ -2,8 +2,16 @@
   "private": true,
   "name": "svingbue-app",
   "version": "1.0.0",
-  "description": "StrikeArc (svingbue) native packaging scaffold — Capacitor wrapper around the static web app for iOS/TestFlight builds via Codemagic.",
+  "description": "Flightglass native packaging scaffold — Capacitor wrapper around the static web app for iOS/TestFlight builds via Codemagic.",
   "scripts": {
+    "test": "npm run test:ux",
+    "test:ux": "node --test scripts/flightglass-ux.test.mjs",
+    "ux:manifest": "node scripts/flightglass-ux-audit.mjs --manifest-only",
+    "ux:baseline": "node scripts/flightglass-ux-audit.mjs --mode baseline --motion both",
+    "ux:verify": "node scripts/flightglass-ux-audit.mjs --mode verify --motion both",
+    "claude:ready": "npm run brand:verify && npm run test:ux && node scripts/verify-claude-autopilot.mjs",
+    "brand:build": "node scripts/build-flightglass-assets.mjs",
+    "brand:verify": "node scripts/verify-flightglass-brand.mjs",
     "copy-web": "node scripts/copy-web.mjs",
     "shots": "node scripts/store-screenshots.mjs",
     "sync": "cap sync ios",
@@ -21,6 +29,7 @@
   "devDependencies": {
     "@capacitor/assets": "^3.0.5",
     "@capacitor/cli": "^7.0.0",
+    "fontkit": "^2.0.4",
     "sharp": "^0.34.5"
   }
 }

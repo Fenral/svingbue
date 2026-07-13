@@ -29,6 +29,17 @@ async function main() {
     .png()
     .toFile(join(RES, 'splash.png'));
   console.log('wrote resources/splash.png (2732x2732)');
+
+  const expected = [
+    ['icon.png', 1024, 1024],
+    ['splash.png', 2732, 2732]
+  ];
+  for (const [file, width, height] of expected) {
+    const meta = await sharp(join(RES, file)).metadata();
+    if (meta.width !== width || meta.height !== height) {
+      throw new Error(`${file}: expected ${width}x${height}, got ${meta.width}x${meta.height}`);
+    }
+  }
 }
 
 main().catch((err) => {

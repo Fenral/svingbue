@@ -1,13 +1,13 @@
 /* ══════════════════════════════════════════════════════════════════════════
-   sa-p3.css — StrikeArc P3 "Ultraviolet Ember" — SHARED COHESION SOURCE
+   sa-p3.css — Flightglass P3 "Ultraviolet Ember" — SHARED COHESION SOURCE
    ---------------------------------------------------------------------------
    The single stylesheet every screen imports (relative: `./sa-p3.css`).
    Ships three things the cohesion pass depends on:
      1. The P3 token set (docs/palette-proposals.md §P3 + docs/front-page-spec.md
         §1.1) as CSS custom properties — repaint a destination by importing this.
      2. The shared app-shell chrome contract: `.sa-strip` (40px top strip) +
-        `.sa-strip__home` (arc-mark home button, 30px visual / 44px hit, violet
-        strokes + ember ball, `view-transition-name:sa-logo`).
+        `.sa-strip__home` (Flightglass micro-mark home button, 30px visual /
+        44px hit, `view-transition-name:sa-logo`).
      3. Cross-cutting primitives: the backdrop-proof double focus ring, the
         `.sa-plate` pattern (photo-contrast surface), and the reduced-motion kill.
 
@@ -25,12 +25,8 @@
    HOME-BUTTON MARKUP CONTRACT (place in each destination's existing strip/header,
    far left, never inside an instrument canvas):
 
-     <a class="sa-strip__home" href="./home-mock.html" aria-label="Home">
-       <svg viewBox="0 0 52 52" fill="none" aria-hidden="true">
-         <path class="sa-arc" d="M11 45 C 16 26, 24 18, 35 15 M21 39 L 30 24 L 43 45"
-               stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
-         <circle class="sa-ball" cx="37" cy="15" r="5.2"/>
-       </svg>
+     <a class="sa-strip__home" href="./index.html" aria-label="Home">
+       <img src="./assets/flightglass-mark-micro.svg" alt="">
      </a>
    ══════════════════════════════════════════════════════════════════════════ */
 
@@ -217,10 +213,8 @@
   transform:translate(-50%,-50%);
   width:44px; height:44px;
 }
-.sa-strip__home svg{width:30px; height:30px; display:block;}
-.sa-strip__home .sa-arc{stroke:var(--secondary);}   /* cold arc */
-.sa-strip__home .sa-ball{fill:var(--accent);}        /* hot ball (logo exception) */
-.sa-strip__home:hover .sa-arc{stroke:var(--ink);}
+.sa-strip__home img{width:30px; height:30px; display:block;}
+.sa-strip__home:hover img{opacity:.88;}
 
 /* ── SCREEN TITLE in the strip (11px uppercase) ──────────────────────────── */
 .sa-strip__title{

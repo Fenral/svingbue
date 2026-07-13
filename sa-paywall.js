@@ -1,5 +1,5 @@
 /* ══════════════════════════════════════════════════════════════════════════
-   sa-paywall.js — StrikeArc hard-paywall overlay (freemium: 10 free shots).
+   sa-paywall.js — Flightglass hard-paywall overlay (freemium: 10 free shots).
    Import with `<script type="module">` from geometry.html / impact.html — the
    overlay DOM is built and appended to document.body AS A SIDE EFFECT of the
    import, so callers need no markup of their own, just:
@@ -88,7 +88,7 @@ function buildHook() {
 
   const brand = el('div', 'sa-pw-brand');
   const wordmark = el('span', 'sa-pw-wordmark');
-  wordmark.textContent = 'STRIKEARC';
+  wordmark.textContent = 'FLIGHTGLASS';
   const pill = el('span', 'sa-pw-pill');
   pill.textContent = 'PRO';
   brand.append(wordmark, pill);

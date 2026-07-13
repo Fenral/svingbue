@@ -3,14 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#0A0E12">
+<meta name="theme-color" content="#07060C">
 <meta name="robots" content="noindex">
-<title>StrikeArc</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2052%2052'%20fill='none'%3E%3Cpath%20d='M11%2045%20C%2016%2026,%2024%2018,%2035%2015%20M21%2039%20L%2030%2024%20L%2043%2045'%20stroke='%2322E3D6'%20stroke-width='4.2'%20stroke-linecap='round'%20stroke-linejoin='round'/%3E%3Ccircle%20cx='37'%20cy='15'%20r='5.2'%20fill='%2322E3D6'/%3E%3C/svg%3E">
+<title>Flightglass</title>
+<link rel="icon" href="./assets/flightglass-mark-micro.svg" type="image/svg+xml">
 <link rel="stylesheet" href="./sa.css">
 <style>
   :root{
-    --accent:#22E3D6; --accent-soft:rgba(34,227,214,.16); --accent-line:rgba(34,227,214,.55);
+    --accent:#FF8A4D; --accent-soft:rgba(255,138,77,.16); --accent-line:rgba(255,138,77,.55);
     --ink:#e8f0fb; --muted:#9aabc6;                     /* unified ink + AAA-ish muted */
     --bg:#0A0E12; --bg-top:#0b1220;
     --panel:rgba(12,20,33,.72); --line:rgba(255,255,255,.30);  /* line raised to ≥3:1 */
@@ -64,11 +64,10 @@
   .imp .enter{align-self:flex-end;flex-direction:row-reverse;}
 
 
-  .wordmark{position:absolute;z-index:8;top:max(16px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);
+  .wordmark{position:absolute;z-index:10;top:max(8px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);
     display:inline-flex;align-items:center;gap:9px;opacity:.92;pointer-events:none;
     filter:drop-shadow(0 2px 18px rgba(0,0,0,.6));view-transition-name:sa-logo;}
-  .wordmark .sa-mark{flex:0 0 auto;width:clamp(20px,2.6vw,26px);height:clamp(20px,2.6vw,26px);color:var(--accent);}
-  .wordmark .sa-word{height:clamp(13px,1.7vw,16px);width:auto;display:block;}
+  .wordmark .sa-word{width:clamp(118px,15vw,150px);height:auto;display:block;}
 
   /* hover/focus: dim the OTHER zone, lift this label */
   .shell:has(.geo:hover) .imp .veil, .shell:has(.geo:focus-visible) .imp .veil,
@@ -106,9 +105,8 @@
   .splash.is-hidden{opacity:0;pointer-events:none;}
   .splash-lockup{display:inline-flex;flex-direction:column;align-items:center;gap:clamp(14px,3vh,22px);
     filter:drop-shadow(0 4px 28px rgba(0,0,0,.6));}
-  .splash-mark{width:clamp(64px,12vw,92px);height:clamp(64px,12vw,92px);color:var(--accent);display:block;}
-  .splash-mark path{stroke-dasharray:96;stroke-dashoffset:0;}
-  .splash-word{height:clamp(20px,3.4vw,28px);width:auto;display:block;}
+  .splash-mark{width:clamp(64px,12vw,92px);height:clamp(64px,12vw,92px);display:block;}
+  .splash-word{width:clamp(150px,24vw,220px);height:auto;display:block;}
   .splash-skip{position:absolute;width:1px;height:1px;margin:-1px;padding:0;border:0;
     clip:rect(0 0 0 0);clip-path:inset(50%);overflow:hidden;white-space:nowrap;}
 
@@ -119,24 +117,15 @@
 <div class="shell">
   <div class="splash" id="saSplash" aria-hidden="true">
     <div class="splash-lockup">
-      <svg class="splash-mark" viewBox="0 0 52 52" fill="none" aria-hidden="true">
-        <path d="M11 45 C 16 26, 24 18, 35 15 M21 39 L 30 24 L 43 45" stroke="currentColor" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
-        <circle class="splash-ring" cx="37" cy="15" r="8.6" stroke="currentColor" stroke-width="1.2" opacity="0.4"/>
-        <circle class="splash-ball" cx="37" cy="15" r="5.2" fill="currentColor"/>
-      </svg>
-      <svg class="splash-word" viewBox="0 0 154 18" aria-hidden="true">
-        <text x="0" y="14" font-family="'SF Pro Display',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif"
-              font-size="15" font-weight="600" letter-spacing="2.2">
-          <tspan fill="#e8f0fb">STRIKE</tspan><tspan fill="#22E3D6">ARC</tspan>
-        </text>
-      </svg>
+      <img class="splash-mark" src="./assets/logo.svg" alt="">
+      <img class="splash-word" src="./assets/flightglass-wordmark.svg" alt="Flightglass">
     </div>
     <button type="button" class="splash-skip" id="saSplashSkip">Skip intro</button>
   </div>
 
   <div class="topstrip">
     <nav class="modnav" aria-label="Modules">
-      <a class="home" href="#" aria-current="page" aria-label="Home"><svg width="20" height="20" viewBox="0 0 52 52" fill="none" aria-hidden="true"><path d="M11 45 C 16 26, 24 18, 35 15 M21 39 L 30 24 L 43 45" stroke="currentColor" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="37" cy="15" r="5.2" fill="currentColor"/></svg></a>
+      <a class="home" href="#" aria-current="page" aria-label="Home"><img src="./assets/flightglass-mark-micro.svg" width="20" height="20" alt=""></a>
       <a class="tab" href="./geometry.html">Geometry</a>
       <a class="tab" href="./impact.html">Impact</a>
     </nav>
@@ -164,18 +153,8 @@
     </span>
   </a>
 
-  <h1 class="wordmark" aria-label="StrikeArc">
-    <svg class="sa-mark" viewBox="0 0 52 52" fill="none" aria-hidden="true">
-      <path d="M11 45 C 16 26, 24 18, 35 15 M21 39 L 30 24 L 43 45" stroke="currentColor" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
-      <circle cx="37" cy="15" r="8.6" stroke="currentColor" stroke-width="1.2" opacity="0.4"/>
-      <circle cx="37" cy="15" r="5.2" fill="currentColor"/>
-    </svg>
-    <svg class="sa-word" viewBox="0 0 154 18" aria-hidden="true">
-      <text x="0" y="14" font-family="'SF Pro Display',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif"
-            font-size="15" font-weight="600" letter-spacing="2.2">
-        <tspan fill="#e8f0fb">STRIKE</tspan><tspan fill="#22E3D6">ARC</tspan>
-      </text>
-    </svg>
+  <h1 class="wordmark" aria-label="Flightglass">
+    <img class="sa-word" src="./assets/flightglass-lockup.svg" alt="">
   </h1>
 </div>
 
@@ -226,26 +205,11 @@
     if (hasGSAP) {
       var mm = gsap.matchMedia();
       mm.add("(prefers-reduced-motion: no-preference)", function () {
-        var mark = splash.querySelector(".splash-mark");
-        var path = splash.querySelector(".splash-mark path");
-        var ball = splash.querySelector(".splash-ball");
-        var ring = splash.querySelector(".splash-ring");
-        var word = splash.querySelector(".splash-word");
+        var lockup = splash.querySelector(".splash-lockup");
         var tl = gsap.timeline({ onComplete: teardown });
-        gsap.set(splash.querySelector(".splash-lockup"), { scale: 0.92, opacity: 0, transformOrigin: "50% 50%" });
-        if (path) {
-          var len = 0;
-          try { len = path.getTotalLength(); } catch (e) { len = 60; }
-          gsap.set(path, { strokeDasharray: len, strokeDashoffset: len });
-        }
-        if (ball) gsap.set(ball, { scale: 0, transformOrigin: "37px 15px" });
-        if (ring) gsap.set(ring, { opacity: 0 });
-        tl.to(splash.querySelector(".splash-lockup"), { scale: 1, opacity: 1, duration: 0.45, ease: "power2.out" });
-        if (path) tl.to(path, { strokeDashoffset: 0, duration: 0.55, ease: "power2.inOut" }, 0.1);
-        if (ball) tl.to(ball, { scale: 1, duration: 0.3, ease: "back.out(2)" }, 0.5);
-        if (ring) tl.to(ring, { opacity: 0.4, duration: 0.3, ease: "power1.out" }, 0.55);
-        if (word) tl.fromTo(word, { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: 0.35, ease: "power2.out" }, 0.35);
-        tl.to({}, { duration: 0.35 }); // hold a beat (~1.25s total before fade-out)
+        gsap.set(lockup, { scale: 0.96, opacity: 0, transformOrigin: "50% 50%" });
+        tl.to(lockup, { scale: 1, opacity: 1, duration: 0.5, ease: "power2.out" });
+        tl.to({}, { duration: 0.45 });
         return function () { tl.kill(); };
       });
       mm.add("(prefers-reduced-motion: reduce)", function () {

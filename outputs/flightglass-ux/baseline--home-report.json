@@ -1,0 +1,90 @@
+{
+  "generatedAt": "2026-07-13T08:03:28.769Z",
+  "mode": "baseline",
+  "results": [
+    {
+      "surfaceId": "home",
+      "label": "Home",
+      "viewportId": "landscape-wide",
+      "motion": "normal",
+      "baselineScore": 67,
+      "targetScore": 90,
+      "screenshot": "baseline/home--landscape-wide--normal.png",
+      "critical": [],
+      "improvements": [],
+      "snapshot": {
+        "httpStatus": 200,
+        "consoleErrors": [],
+        "pageErrors": [],
+        "resourceErrors": [],
+        "horizontalOverflowPx": 0,
+        "missingSelectors": [],
+        "smallTargets": [],
+        "clippedText": []
+      }
+    },
+    {
+      "surfaceId": "home",
+      "label": "Home",
+      "viewportId": "landscape-wide",
+      "motion": "reduced",
+      "baselineScore": 67,
+      "targetScore": 90,
+      "screenshot": "baseline/home--landscape-wide--reduced.png",
+      "critical": [],
+      "improvements": [],
+      "snapshot": {
+        "httpStatus": 200,
+        "consoleErrors": [],
+        "pageErrors": [],
+        "resourceErrors": [],
+        "horizontalOverflowPx": 0,
+        "missingSelectors": [],
+        "smallTargets": [],
+        "clippedText": []
+      }
+    },
+    {
+      "surfaceId": "home",
+      "label": "Home",
+      "viewportId": "landscape-compact",
+      "motion": "normal",
+      "baselineScore": 67,
+      "targetScore": 90,
+      "screenshot": "baseline/home--landscape-compact--normal.png",
+      "critical": [],
+      "improvements": [],
+      "snapshot": {
+        "httpStatus": 200,
+        "consoleErrors": [],
+        "pageErrors": [],
+        "resourceErrors": [],
+        "horizontalOverflowPx": 0,
+        "missingSelectors": [],
+        "smallTargets": [],
+        "clippedText": []
+      }
+    },
+    {
+      "surfaceId": "home",
+      "label": "Home",
+      "viewportId": "landscape-compact",
+      "motion": "reduced",
+      "baselineScore": 67,
+      "targetScore": 90,
+      "screenshot": "baseline/home--landscape-compact--reduced.png",
+      "critical": [],
+      "improvements": [],
+      "snapshot": {
+        "httpStatus": 200,
+        "consoleErrors": [],
+        "pageErrors": [],
+        "resourceErrors": [],
+        "horizontalOverflowPx": 0,
+        "missingSelectors": [],
+        "smallTargets": [],
+        "clippedText": []
+      }
+    }
+  ]
+}

@@ -1,9 +1,9 @@
 /* ══════════════════════════════════════════════════════════════════════════
-   sa-iap.js — StrikeArc in-app-purchase module (RevenueCat, ESM).
+   sa-iap.js — Flightglass in-app-purchase module (RevenueCat, ESM).
    Imported with `<script type="module">` from the paywall UI.
 
    Ported from Ryddy's src/lib/iap.js (repo Fenral/ukeplan-olufsborg7), adapted
-   to StrikeArc's 3-tier freemium design (monthly / annual / lifetime, no
+   to Flightglass's 3-tier freemium design (monthly / annual / lifetime, no
    trial) and to this repo's no-bundler / vendored-import conventions.
 
    Platform:
@@ -35,7 +35,7 @@ import * as saShots from './sa-shots.js';
 
 export const ENTITLEMENT_ID = 'pro';
 
-// RevenueCat public SDK keys — PLACEHOLDERS. The RevenueCat "StrikeArc"
+// RevenueCat public SDK keys — PLACEHOLDERS. The RevenueCat "Flightglass"
 // project does not exist yet; replace these once it's created (RevenueCat
 // dashboard → Project settings → API keys → Public app-specific key).
 // NEVER put a secret/private RevenueCat key here — only the public SDK key.

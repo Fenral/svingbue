@@ -1,0 +1,142 @@
+{
+  "version": 1,
+  "brand": "Flightglass",
+  "viewports": {
+    "landscape-wide": { "width": 932, "height": 430, "orientation": "landscape" },
+    "landscape-compact": { "width": 812, "height": 375, "orientation": "landscape" },
+    "portrait-wide": { "width": 430, "height": 932, "orientation": "portrait" },
+    "portrait-compact": { "width": 375, "height": 812, "orientation": "portrait" }
+  },
+  "surfaces": [
+    {
+      "id": "home",
+      "label": "Home",
+      "phase": 1,
+      "baselineScore": 67,
+      "targetScore": 90,
+      "route": "index.html",
+      "sourceType": "shipping",
+      "viewportIds": ["landscape-wide", "landscape-compact"],
+      "requiredSelectors": ["body", ".shell", ".wordmark"],
+      "references": ["home-concept-1.html", "docs/home-creative-concepts.md"],
+      "primaryJob": "Choose the next Flightglass territory from a night driving range."
+    },
+    {
+      "id": "range",
+      "label": "Impact / Range",
+      "phase": 2,
+      "baselineScore": 63,
+      "targetScore": 90,
+      "route": "impact.html",
+      "sourceType": "shipping",
+      "viewportIds": ["landscape-wide", "landscape-compact"],
+      "requiredSelectors": ["#stage", "#panelDir", "#playFlight"],
+      "references": ["impact-focus-mock.html", "range-08-final-mock.html"],
+      "primaryJob": "Change one impact input and see the resulting ball flight immediately."
+    },
+    {
+      "id": "visualise",
+      "label": "Visualise",
+      "phase": 2,
+      "baselineScore": 81,
+      "targetScore": 90,
+      "route": "impact-viz-mock.html",
+      "sourceType": "reference",
+      "viewportIds": ["landscape-wide", "landscape-compact"],
+      "requiredSelectors": ["#stage", "#lensDir"],
+      "references": ["impact-viz-mock.html", "impact-presentation.html"],
+      "primaryJob": "Change perspective without creating a second simulator or duplicated controls."
+    },
+    {
+      "id": "outcome",
+      "label": "Outcome",
+      "phase": 3,
+      "baselineScore": 72,
+      "targetScore": 90,
+      "route": "impact-outcome-mock.html",
+      "sourceType": "reference",
+      "viewportIds": ["landscape-wide", "landscape-compact"],
+      "requiredSelectors": ["#stage", "#panelDir"],
+      "references": ["impact-outcome-mock.html"],
+      "primaryJob": "Explain the shot result and its cause before revealing supporting metrics."
+    },
+    {
+      "id": "compare",
+      "label": "Compare / Ghosts",
+      "phase": 3,
+      "baselineScore": 78,
+      "targetScore": 90,
+      "route": "range-3d-compare-mock.html",
+      "sourceType": "reference",
+      "viewportIds": ["landscape-wide", "landscape-compact"],
+      "requiredSelectors": ["#status-line", "#cardList"],
+      "references": ["range-compare-mock.html", "range-3d-compare-mock.html", "range-night-final-compare-mock.html"],
+      "primaryJob": "Understand the most important delta against one named reference shot."
+    },
+    {
+      "id": "geometry-3d",
+      "label": "Geometry 3D",
+      "phase": 4,
+      "baselineScore": 74,
+      "targetScore": 90,
+      "route": "geometry.html",
+      "sourceType": "shipping",
+      "viewportIds": ["landscape-wide", "landscape-compact"],
+      "requiredSelectors": ["#scene3d", "#chipImpact3d", "#view2d"],
+      "references": ["geometry.html", "docs/geometry-rethink.md"],
+      "primaryJob": "See how direction, plane and low point create delivery geometry and contact."
+    },
+    {
+      "id": "strike-window-2d",
+      "label": "Strike Window 2D",
+      "phase": 4,
+      "baselineScore": 82,
+      "targetScore": 90,
+      "route": "geometry-window-mock.html",
+      "sourceType": "normative-reference",
+      "viewportIds": ["portrait-wide", "portrait-compact"],
+      "requiredSelectors": ["#winCard", "#winSvg", "#inRow"],
+      "references": ["geometry-window-mock.html", "docs/strike-window-consensus.md", "docs/strike-window-polish-notes.md"],
+      "primaryJob": "Diagnose ball-first, turf-first and strike height while the active input changes live."
+    },
+    {
+      "id": "academy-overview",
+      "label": "Academy overview",
+      "phase": 5,
+      "baselineScore": 70,
+      "targetScore": 90,
+      "route": "academy.html",
+      "sourceType": "shipping-web",
+      "viewportIds": ["portrait-wide", "portrait-compact"],
+      "requiredSelectors": ["#app", ".hdr", ".path-intro"],
+      "references": ["academy.html", "docs/academy-path-verdict.md", "docs/academy-polish-spec.md"],
+      "primaryJob": "Know current progress, the recommended next lesson and why it is worth opening."
+    },
+    {
+      "id": "academy-lesson",
+      "label": "Academy lesson",
+      "phase": 6,
+      "baselineScore": 73,
+      "targetScore": 90,
+      "route": "academy.html#/lesson/backspin",
+      "sourceType": "shipping-web-state",
+      "viewportIds": ["portrait-wide", "portrait-compact"],
+      "requiredSelectors": ["#app", ".lesson", "#diagramMount"],
+      "references": ["academy-lesson-v2-mock.html", "docs/claude-design-brief/brief.md", "docs/academy-native-v2-spec.md"],
+      "primaryJob": "Learn one relationship by manipulating a model that stays visible with its live result."
+    },
+    {
+      "id": "paywall",
+      "label": "Paywall",
+      "phase": 7,
+      "baselineScore": 76,
+      "targetScore": 90,
+      "route": "paywall-mock.html",
+      "sourceType": "reference",
+      "viewportIds": ["portrait-wide", "portrait-compact"],
+      "requiredSelectors": [".paywall", "#pw-title"],
+      "references": ["paywall-mock.html", "docs/paywall-verdict.md", "docs/monetization-strategy.md"],
+      "primaryJob": "Understand Pro value before choosing monthly or annual access."
+    }
+  ]
+}

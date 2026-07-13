@@ -1,4 +1,4 @@
-# StrikeArc — Native (iOS) packaging
+# Flightglass — Native (iOS) packaging
 
 This folder is **both**:
 
@@ -10,10 +10,11 @@ This folder is **both**:
    to TestFlight entirely by Codemagic (cloud Mac) — this machine is
    Windows, so nothing native-Xcode-shaped is ever generated or run here.
 
-- **App ID:** `no.strikearc.app` (takes over the existing StrikeArc app
-  record, ASC Apple ID `6768449250`; supersedes the React/Vite
+- **App ID:** `no.strikearc.app` (retains the existing app record, ASC Apple
+  ID `6768449250`; the external store-name update is a separate release step;
+  supersedes the React/Vite
   `strikearc-3.0` build on TestFlight — decided 2026-07-03)
-- **App name:** StrikeArc
+- **App name:** Flightglass
 - **Apple Team ID:** `PL9G26C26C`
 - **ASC API key:** reuses the existing `ryddy-asc-key` (Key ID `JQVPW4D944`)
 
@@ -96,7 +97,7 @@ Codemagic setup steps remaining:
 3. ✅ **App ID `no.strikearc.app`** — already registered under team
    `PL9G26C26C` (created for strikearc-3.0).
 4. ✅ **App Store Connect app record** — already exists (Apple ID
-   `6768449250`, name "StrikeArc"). Automatic signing
+   `6768449250`; store-name metadata is updated separately). Automatic signing
    (`fetch-signing-files … --create`) refreshes the cert/profile each run.
 5. **Trigger the `ios-testflight` workflow** — push to `main` (auto-trigger)
    or start it manually from the Codemagic dashboard.

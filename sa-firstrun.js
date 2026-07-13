@@ -1,5 +1,5 @@
 /* ══════════════════════════════════════════════════════════════════════════
-   sa-firstrun.js — StrikeArc shared first-run / coaching module (FOUNDATION)
+   sa-firstrun.js — Flightglass shared first-run / coaching module (FOUNDATION)
    Loaded with `defer` from index.html, geometry.html, impact.html.
 
    Phase A defines window.SA only. It does NOT auto-run anything — later phases
@@ -86,7 +86,7 @@
     var lastFocus = doc.activeElement;
 
     var overlay = el("div", "sa-overlay", {
-      role: "dialog", "aria-modal": "true", "aria-label": opts.label || "Welcome to StrikeArc"
+      role: "dialog", "aria-modal": "true", "aria-label": opts.label || "Welcome to Flightglass"
     });
     var card = el("div", "sa-card");
     var art = el("div", "sa-card-art", { "aria-hidden": "true" });

@@ -1,4 +1,4 @@
-# Android debug APK for StrikeArc (svingbue).
+# Android debug APK for Flightglass (svingbue).
 #
 # Scope: UNSIGNED debug build only — proves the Android Capacitor platform
 # assembles and packages the web app. Keystore signing + Play Console
@@ -7,7 +7,7 @@
 # The android/ platform dir is never committed; this workflow generates it
 # fresh every run (`npx cap add android`), exactly like codemagic.yaml does
 # for ios/. iOS CI stays on Codemagic; Android CI lives here (free minutes).
-name: Android debug APK
+name: Flightglass — Android debug APK
 
 on:
   push:
@@ -63,7 +63,7 @@ jobs:
         # --assetPath resources is REQUIRED here: the repo root also has an
         # assets/ dir (web images), which is @capacitor/assets' default
         # source path — without the flag it would look in the wrong folder.
-        run: npx capacitor-assets generate --android --assetPath resources --iconBackgroundColor "#0A0E12"
+        run: npx capacitor-assets generate --android --assetPath resources --iconBackgroundColor "#07060C"
 
       - name: Build debug APK
         run: |
@@ -73,7 +73,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: strikearc-android-debug
+          name: flightglass-android-debug
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 14
