@@ -33,6 +33,16 @@ const NATIVE_BACKSPIN_SELECTORS = [
 ];
 
 const CARRY_ANSWERS = [1, 2, 1, 1, 1];
+const BACKSPIN_VIEWPORTS = [
+  { width: 430, height: 932 },
+  { width: 375, height: 812 }
+];
+const EXPECTED_BACKSPIN_PARAMS = {
+  dynamicLoft: { label:'Dynamic loft', min:10, max:48, step:1, unit:'\u00B0' },
+  attackAngle: { label:'Attack angle', min:-8, max:6, step:1, unit:'\u00B0' },
+  ballSpeed: { label:'Ball speed', min:90, max:175, step:1, unit:' mph' }
+};
+
 const LEGACY_STORE = {
   version: 1,
   xp: 0,
@@ -162,6 +172,121 @@ async function waitForStored(page, expected) {
 async function answer(page, questionIndex, optionIndex) {
   await page.locator(`.opt[data-q="${questionIndex}"][data-o="${optionIndex}"]`).click();
 }
+function observeRuntimeErrors(page) {
+  const errors = [];
+  page.on('pageerror', error => errors.push(`pageerror: ${error.message}`));
+  page.on('console', message => {
+    if (message.type() === 'error') errors.push(`console: ${message.text()}`);
+  });
+  page.on('requestfailed', request => {
+    errors.push(`requestfailed: ${request.url()} (${request.failure()?.errorText || 'unknown'})`);
+  });
+  return errors;
+}
+
+async function openFreshBackspinPage(viewport) {
+  const context = await browser.newContext({ viewport, reducedMotion:'reduce' });
+  contexts.add(context);
+  const page = await context.newPage();
+  pages.add(page);
+  const runtimeErrors = observeRuntimeErrors(page);
+  await page.goto(`${baseUrl}/academy.html#/lesson/backspin`, { waitUntil:'networkidle' });
+  const root = page.locator('#nativeLesson');
+  await root.waitFor({ timeout:5_000 });
+  return { page, root, runtimeErrors };
+}
+
+async function assertEventuallyRootSurface(page, root, expected) {
+  await page.waitForFunction(
+    value => document.querySelector('#nativeLesson')?.getAttribute('data-surface') === value,
+    expected,
+    { timeout:3_000 }
+  );
+  assert.equal(await root.getAttribute('data-surface'), expected);
+}
+
+async function enterSpinLab(page, root) {
+  await root.getByRole('button', { name:'Enter the Spin Lab' }).click();
+  await assertEventuallyRootSurface(page, root, '1');
+}
+
+async function selectBackspinParameter(root, key) {
+  const button = root.locator(`[data-param="${key}"]`);
+  if (await button.getAttribute('aria-checked') !== 'true') await button.click();
+  assert.equal(await button.getAttribute('aria-checked'), 'true');
+}
+
+async function setRange(page, selector, value) {
+  await page.locator(selector).evaluate((element, next) => {
+    element.value = String(next);
+    element.dispatchEvent(new Event('input', { bubbles:true }));
+  }, value);
+}
+
+async function setBackspinParameter(page, root, key, value) {
+  await selectBackspinParameter(root, key);
+  await setRange(page, '#labRange', value);
+}
+
+async function rangeContract(root) {
+  return root.locator('#labRange').evaluate(element => ({
+    min:Number(element.min),
+    max:Number(element.max),
+    step:Number(element.step),
+    value:Number(element.value),
+    ariaLabel:element.getAttribute('aria-label'),
+    ariaValueText:element.getAttribute('aria-valuetext')
+  }));
+}
+
+function assertRangeContract(actual, expected, value) {
+  assert.equal(actual.min, expected.min);
+  assert.equal(actual.max, expected.max);
+  assert.equal(actual.step, expected.step);
+  assert.equal(actual.value, value);
+  assert.equal(actual.ariaLabel, expected.label);
+  assert.equal(actual.ariaValueText, `${value}${expected.unit}`);
+}
+
+async function assertFitsViewport(locator, viewport, label) {
+  const box = await locator.boundingBox();
+  assert.ok(box, `${label} must have a rendered bounding box`);
+  assert.ok(box.x >= -1, `${label} starts outside the viewport: ${JSON.stringify(box)}`);
+  assert.ok(box.y >= -1, `${label} starts above the viewport: ${JSON.stringify(box)}`);
+  assert.ok(box.x + box.width <= viewport.width + 1,
+    `${label} overflows viewport width: ${JSON.stringify(box)}`);
+  assert.ok(box.y + box.height <= viewport.height + 1,
+    `${label} overflows viewport height: ${JSON.stringify(box)}`);
+}
+
+async function assertSpinBand(root, label) {
+  const band = root.getByText(label, { exact:true });
+  assert.equal(await band.count(), 1, `Spin Lab must expose the "${label}" band exactly once`);
+  assert.equal(await band.isVisible(), true, `Spin band "${label}" must be visible`);
+}
+
+async function waitForBackspinJourney(page, expected) {
+  await page.waitForFunction(
+    ({ key, expected:target }) => {
+      const raw = localStorage.getItem(key);
+      if (!raw) return false;
+      const lesson = JSON.parse(raw).lessons?.backspin;
+      const journey = lesson?.journey;
+      if (!lesson || !journey) return false;
+      if (target.surface !== undefined && journey.surface !== target.surface) return false;
+      if (target.built !== undefined && journey.mission?.built !== target.built) return false;
+      if (target.cut !== undefined && journey.mission?.cut !== target.cut) return false;
+      if (target.diagramTouched !== undefined && lesson.diagramTouched !== target.diagramTouched) {
+        return false;
+      }
+      return true;
+    },
+    { key:STORE_KEY, expected },
+    { timeout:5_000 }
+  );
+  return (await storedAcademy(page)).lessons.backspin;
+}
+
 
 test.before(async () => {
   server = await startStaticServer();
@@ -228,6 +353,256 @@ test('native Backspin production route renders its stable six-surface shell', { 
   }
 
   await page.waitForTimeout(100);
+  assert.deepEqual(runtimeErrors, []);
+});
+
+for (const viewport of BACKSPIN_VIEWPORTS) {
+  const viewportLabel = `${viewport.width}x${viewport.height}`;
+
+  test(`Backspin Spin Lab fits ${viewportLabel} and follows the model contract`, { timeout:45_000 }, async () => {
+    const { page, root, runtimeErrors } = await openFreshBackspinPage(viewport);
+
+    assert.equal(await root.getAttribute('data-surface'), '0');
+    assert.equal(await root.locator('#missionStageBuild').getAttribute('data-complete'), 'false');
+    assert.equal(await root.locator('#missionStageCut').getAttribute('data-complete'), 'false');
+    assert.match(await root.locator('#missionStageBuild').textContent(), /7,000 rpm/i);
+    assert.match(await root.locator('#missionStageCut').textContent(), /3,500 rpm/i);
+
+    await enterSpinLab(page, root);
+    const initialJourney = await waitForBackspinJourney(page, {
+      surface:1,
+      built:false,
+      cut:false
+    });
+    assert.deepEqual(initialJourney.journey.mission, { built:false, cut:false });
+
+    for (const [selector, label] of [
+      ['#backspinTruth', 'Backspin truth'],
+      ['#flightCanvas', 'Flight canvas'],
+      ['#labRange', 'Lab range'],
+      ['.native-lesson__navigation', 'Sticky lesson navigation'],
+      ['.native-lesson__next', 'Sticky next action']
+    ]) {
+      const locator = root.locator(selector);
+      assert.equal(await locator.isVisible(), true, `${label} must be visible at ${viewportLabel}`);
+      await assertFitsViewport(locator, viewport, label);
+    }
+
+    const modelParams = await page.evaluate(async () => {
+      const { BACKSPIN_PARAMS } = await import('./academy-backspin-model.js');
+      return BACKSPIN_PARAMS;
+    });
+    assert.deepEqual(modelParams, EXPECTED_BACKSPIN_PARAMS,
+      'Browser controls and tests must consume the exported BACKSPIN_PARAMS contract');
+
+    const defaults = { dynamicLoft:25, attackAngle:-3, ballSpeed:120 };
+    for (const key of Object.keys(EXPECTED_BACKSPIN_PARAMS)) {
+      await selectBackspinParameter(root, key);
+      assertRangeContract(
+        await rangeContract(root),
+        EXPECTED_BACKSPIN_PARAMS[key],
+        defaults[key]
+      );
+    }
+
+    const initialBand = root.getByText('Iron spin window', { exact:true });
+    const initialBandCount = await initialBand.count();
+    const initialBandVisible = initialBandCount === 1 && await initialBand.isVisible();
+
+    await setBackspinParameter(page, root, 'dynamicLoft', 26);
+    await page.waitForFunction(() => {
+      const text = document.querySelector('#causeChain')?.textContent || '';
+      return !text.includes('Move one input') && /Dynamic loft/i.test(text);
+    }, undefined, { timeout:2_000 });
+    const causeText = await root.locator('#causeChain').textContent();
+    assert.match(causeText, /Dynamic loft/i);
+    assert.match(causeText, /Spin loft/i);
+    assert.match(causeText, /Backspin/i);
+    assert.match(causeText, /Apex/i);
+
+    const exposedGhostCount = await root.locator(
+      '[data-flight-ghost], #flightGhost, .native-lesson__flight-ghost'
+    ).count();
+    assert.ok(exposedGhostCount <= 1, `Lab exposes ${exposedGhostCount} ghost trajectories`);
+
+    await setBackspinParameter(page, root, 'dynamicLoft', 48);
+    await setBackspinParameter(page, root, 'attackAngle', -8);
+    await setBackspinParameter(page, root, 'ballSpeed', 160);
+    await page.waitForFunction(() =>
+      document.querySelector('#backspinTruth')?.textContent.replaceAll(',', '').trim() === '9000'
+    );
+    assert.equal((await root.locator('#backspinTruth').textContent()).trim(), '9,000');
+    const limit = root.locator('[data-engine-limit]');
+    assert.equal(await limit.isVisible(), true);
+    assert.equal((await limit.textContent()).trim(), 'Display limit');
+    assert.match(await limit.getAttribute('aria-label'), /9,000 rpm ceiling/i);
+    const highBand = root.getByText('High-spin delivery', { exact:true });
+    const highBandCount = await highBand.count();
+    const highBandVisible = highBandCount === 1 && await highBand.isVisible();
+
+    await setBackspinParameter(page, root, 'dynamicLoft', 10);
+    await setBackspinParameter(page, root, 'attackAngle', 6);
+    await setBackspinParameter(page, root, 'ballSpeed', 90);
+    await page.waitForFunction(() =>
+      document.querySelector('#backspinTruth')?.textContent.replaceAll(',', '').trim() === '1500'
+    );
+    assert.equal((await root.locator('#backspinTruth').textContent()).trim(), '1,500');
+    assert.equal(await limit.isVisible(), true);
+    assert.equal((await limit.textContent()).trim(), 'Model floor');
+    const floorLabel = await limit.getAttribute('aria-label');
+    assert.match(floorLabel, /1,500 rpm/i);
+    assert.doesNotMatch(floorLabel, /9,000 rpm/i);
+    const lowBand = root.getByText('Low-spin delivery', { exact:true });
+    const lowBandCount = await lowBand.count();
+    const lowBandVisible = lowBandCount === 1 && await lowBand.isVisible();
+
+    assert.equal(initialBandCount, 1, 'Initial 6,048 rpm state needs one Iron spin window label');
+    assert.equal(initialBandVisible, true, 'Initial Iron spin window label must be visible');
+    assert.equal(highBandCount, 1, 'Ceiling state needs one High-spin delivery label');
+    assert.equal(highBandVisible, true, 'High-spin delivery label must be visible');
+    assert.equal(lowBandCount, 1, 'Floor state needs one Low-spin delivery label');
+    assert.equal(lowBandVisible, true, 'Low-spin delivery label must be visible');
+
+    await page.waitForTimeout(150);
+    assert.deepEqual(runtimeErrors, []);
+  });
+
+  test(`Backspin ordered mission gates and restores progress at ${viewportLabel}`, { timeout:45_000 }, async () => {
+    const { page, root, runtimeErrors } = await openFreshBackspinPage(viewport);
+
+    assert.equal(await root.locator('#missionStageBuild').getAttribute('data-complete'), 'false');
+    assert.equal(await root.locator('#missionStageCut').getAttribute('data-complete'), 'false');
+    await enterSpinLab(page, root);
+    await waitForBackspinJourney(page, { surface:1, built:false, cut:false });
+
+    await setBackspinParameter(page, root, 'dynamicLoft', 10);
+    await page.waitForFunction(() => {
+      const value = Number((document.querySelector('#backspinTruth')?.textContent || '').replaceAll(',', ''));
+      return value > 0 && value < 3500;
+    });
+    const lowBeforeBuild = await waitForBackspinJourney(page, {
+      surface:1,
+      built:false,
+      cut:false,
+      diagramTouched:true
+    });
+    assert.equal(lowBeforeBuild.journey.mission.built, false);
+    assert.equal(lowBeforeBuild.journey.mission.cut, false,
+      'Dropping below 3,500 rpm before building must not credit the cut stage');
+    assert.equal(lowBeforeBuild.diagramTouched, true,
+      'Native Lab interaction must preserve diagramTouched badge compatibility');
+    assert.equal(await root.locator('#missionStageBuild').getAttribute('data-complete'), 'false');
+    assert.equal(await root.locator('#missionStageCut').getAttribute('data-complete'), 'false');
+
+    const next = root.locator('.native-lesson__navigation [data-action="next"]');
+    const nextIsGated = await next.isDisabled()
+      || await next.getAttribute('aria-disabled') === 'true';
+    if (!nextIsGated) await next.click();
+    await page.waitForTimeout(100);
+    assert.equal(await root.getAttribute('data-surface'), '1',
+      'Influence must stay gated until build and cut are both complete');
+    assert.equal(await root.locator('[data-step="influence"]').getAttribute('aria-disabled'), 'true');
+
+    await setBackspinParameter(page, root, 'dynamicLoft', 30);
+    const built = await waitForBackspinJourney(page, {
+      surface:1,
+      built:true,
+      cut:false,
+      diagramTouched:true
+    });
+    assert.equal(built.journey.mission.built, true);
+    assert.equal(built.journey.mission.cut, false);
+    assert.equal(await root.locator('#missionStageBuild').getAttribute('data-complete'), 'true');
+    assert.equal(await root.locator('#missionStageCut').getAttribute('data-complete'), 'false');
+
+    await setBackspinParameter(page, root, 'dynamicLoft', 10);
+    const completed = await waitForBackspinJourney(page, {
+      surface:1,
+      built:true,
+      cut:true,
+      diagramTouched:true
+    });
+    assert.deepEqual(completed.journey.mission, { built:true, cut:true });
+    assert.equal(await root.locator('#missionStageCut').getAttribute('data-complete'), 'true');
+
+    assert.notEqual(await next.getAttribute('aria-disabled'), 'true');
+    assert.equal(await next.isDisabled(), false);
+    await next.click();
+    await assertEventuallyRootSurface(page, root, '2');
+    const influenceJourney = await waitForBackspinJourney(page, {
+      surface:2,
+      built:true,
+      cut:true,
+      diagramTouched:true
+    });
+    assert.equal(influenceJourney.journey.surface, 2);
+
+    await page.reload({ waitUntil:'networkidle' });
+    await root.waitFor({ timeout:5_000 });
+    assert.equal(await root.getAttribute('data-surface'), '2');
+    assert.equal(await root.locator('[data-step="influence"]').getAttribute('aria-current'), 'step');
+    assert.equal(await root.locator('#missionStageBuild').getAttribute('data-complete'), 'true');
+    assert.equal(await root.locator('#missionStageCut').getAttribute('data-complete'), 'true');
+    const restored = (await storedAcademy(page)).lessons.backspin;
+    assert.deepEqual(restored.journey.mission, { built:true, cut:true });
+    assert.equal(restored.journey.surface, 2);
+    assert.equal(restored.diagramTouched, true);
+
+    await page.waitForTimeout(150);
+    assert.deepEqual(runtimeErrors, []);
+  });
+}
+
+test('Backspin clamps inconsistent legacy Influence progress back to the Lab gate', { timeout:30_000 }, async () => {
+  const context = await browser.newContext({
+    viewport:{ width:430, height:932 },
+    reducedMotion:'reduce'
+  });
+  contexts.add(context);
+  const legacyJourney = {
+    version:1,
+    xp:0,
+    lessons:{
+      backspin:{
+        read:false,
+        diagramTouched:false,
+        journey:{
+          surface:2,
+          mission:{ built:false, cut:false },
+          myths:[false, false, false],
+          masteryBest:0,
+          masteryAttempts:0,
+          masteryAttemptId:null,
+          lastSubmission:null
+        }
+      }
+    },
+    unlocked:['backspin'],
+    badges:[],
+    lastOpened:'backspin'
+  };
+  await context.addInitScript(({ key, value }) => {
+    localStorage.setItem(key, value);
+  }, { key:STORE_KEY, value:JSON.stringify(legacyJourney) });
+
+  const page = await context.newPage();
+  pages.add(page);
+  const runtimeErrors = observeRuntimeErrors(page);
+  await page.goto(`${baseUrl}/academy.html#/lesson/backspin`, { waitUntil:'networkidle' });
+  const root = page.locator('#nativeLesson');
+  await root.waitFor({ timeout:5_000 });
+  const clamped = await waitForBackspinJourney(page, { surface:1, built:false, cut:false });
+  assert.equal(clamped.journey.surface, 1,
+    'The repaired Lab gate must replace the inconsistent stored surface');
+
+
+  assert.equal(await root.getAttribute('data-surface'), '1',
+    'Stored surface 2 cannot bypass an incomplete ordered mission');
+  assert.equal(await root.locator('[data-step="lab"]').getAttribute('aria-current'), 'step');
+  assert.equal(await root.locator('[data-step="influence"]').getAttribute('aria-disabled'), 'true');
+  assert.equal(await root.locator('.native-lesson__surface[data-surface="2"]').getAttribute('aria-hidden'), 'true');
+  assert.equal(await root.locator('#missionStageBuild').getAttribute('data-complete'), 'false');
+  assert.equal(await root.locator('#missionStageCut').getAttribute('data-complete'), 'false');
   assert.deepEqual(runtimeErrors, []);
 });
 

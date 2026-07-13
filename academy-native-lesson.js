@@ -51,12 +51,12 @@ const SHEETS = Object.freeze({
   displayCeiling: {
     eyebrow:'Engine limit',
     title:'9,000 rpm display ceiling',
-    body:`<p>The interface shows the engine’s clamped backspin value. Influence continues to use the engine’s raw intermediate when the display is capped, so the relationship does not falsely read as zero.</p>`
+    body:`<p><strong>9,000 rpm is the interface ceiling.</strong> The displayed engine value stays capped there.</p><p>Underlying model sensitivity; display capped at 9,000 rpm. Influence uses the engine's raw intermediate beyond the cap.</p>`
   },
   modelFloor: {
     eyebrow:'Engine limit',
     title:'1,500 rpm model floor',
-    body:`<p>The displayed backspin has reached the engine’s lower model floor. Influence uses the raw intermediate when the floor hides a visible change.</p>`
+    body:`<p><strong>1,500 rpm is the model floor.</strong> The displayed engine value stays at that floor.</p><p>Influence uses the engine's raw intermediate when the lower bound hides a visible change.</p>`
   },
   carry: {
     eyebrow:'Model output',
@@ -86,6 +86,12 @@ const clampSurface = value => Math.max(0, Math.min(SURFACES.length - 1,
   Number.isFinite(Number(value)) ? Math.floor(Number(value)) : 0));
 
 const callback = value => typeof value === 'function' ? value : () => undefined;
+
+function spinBand(rpm) {
+  if (rpm >= 8000) return { key:'high', label:'High-spin delivery' };
+  if (rpm >= 5500) return { key:'iron', label:'Iron spin window' };
+  return { key:'low', label:'Low-spin delivery' };
+}
 
 function initialUnlockedSurface(journey, surface) {
   let unlocked = surface;
@@ -134,7 +140,7 @@ function lessonTemplate({ xp, level, state }) {
           <div class="native-lesson__mission-copy">
             <p class="native-lesson__eyebrow">Academy · Flight</p>
             <h1 id="nativeMissionTitle">Backspin</h1>
-            <p class="native-lesson__lede">Backspin is the ball’s backward rotation that creates lift and helps a shot hold its flight.</p>
+            <p class="native-lesson__lede">Backspin is the ball's backward rotation that creates lift and helps a shot hold its flight.</p>
             <div class="native-lesson__mission-card" aria-labelledby="nativeMissionLabel">
               <div class="native-lesson__card-heading">
                 <p id="nativeMissionLabel">Your mission</p>
@@ -166,14 +172,15 @@ function lessonTemplate({ xp, level, state }) {
             <div class="native-lesson__truth">
               <span>Backspin</span>
               <output id="backspinTruth">—</output><small>rpm</small>
-              <button type="button" class="native-lesson__truth-chip" data-sheet="spinLoft"><span data-spin-loft>—</span> spin loft</button>
+              <div id="backspinBand" class="native-lesson__spin-band" data-band="iron">Iron spin window</div>
+              <button type="button" class="native-lesson__truth-chip" data-sheet="spinLoft"><span id="labSpinLoft" data-spin-loft>—</span> spin loft</button>
             </div>
-            <button type="button" class="native-lesson__limit-chip" data-engine-limit hidden></button>
+            <button type="button" id="backspinLimit" class="native-lesson__limit-chip" data-engine-limit hidden></button>
           </div>
           <div class="native-lesson__outcomes" aria-label="Engine outcomes">
-            <button type="button" data-sheet="carry"><span>Carry</span><strong data-carry>—</strong></button>
-            <div><span>Height</span><strong data-apex>—</strong></div>
-            <div><span>Landing</span><strong data-landing>—</strong></div>
+            <button type="button" data-sheet="carry"><span>Carry</span><strong id="labCarry" data-carry>—</strong></button>
+            <div><span>Height</span><strong id="labHeight" data-apex>—</strong></div>
+            <div><span>Landing</span><strong id="labLanding" data-landing>—</strong></div>
           </div>
           <div class="native-lesson__lab-controls">
             <div class="native-lesson__chips" id="labParamTabs" role="radiogroup" aria-label="Choose an input">${paramButtons}</div>
@@ -290,17 +297,26 @@ export function mountNativeBackspinLesson(options = {}) {
   let announceTimer = null;
   let pendingAnnouncement = '';
   let beforeSettled = { ...INITIAL_BACKSPIN_STATE };
+  let pendingSettleParam = 'dynamicLoft';
   let lastFocus = null;
   let touchStartY = null;
   let diagramTouched = false;
 
+  let initialSolved = null;
+  try {
+    initialSolved = solveBackspinState(INITIAL_BACKSPIN_STATE);
+  } catch {
+    // The renderer keeps its DOM fallback if the shared model is unavailable.
+  }
+  const requestedSurface = clampSurface(journey?.surface);
   const state = {
-    surface:clampSurface(journey?.surface),
+    surface:requestedSurface,
     unlockedSurface:0,
     input:{ ...INITIAL_BACKSPIN_STATE },
+    lastValidInput:{ ...INITIAL_BACKSPIN_STATE },
     previousSettled:null,
-    lastValidSolved:null,
-    mission:{ built:Boolean(journey?.mission?.built), cut:Boolean(journey?.mission?.cut) },
+    lastValidSolved:initialSolved,
+    mission:{ built:Boolean(journey?.mission?.built), cut:Boolean(journey?.mission?.built && journey?.mission?.cut) },
     myths:[false, false, false].map((value, index) => Boolean(journey?.myths?.[index] ?? value)),
     mastery:[],
     masteryAttemptId:journey?.masteryAttemptId || null,
@@ -308,6 +324,8 @@ export function mountNativeBackspinLesson(options = {}) {
     activeParam:'dynamicLoft',
     lie:'clean'
   };
+  const normalizedLegacySurface = !(state.mission.built && state.mission.cut) && requestedSurface > 1;
+  if (normalizedLegacySurface) state.surface = 1;
   state.unlockedSurface = initialUnlockedSurface(state, state.surface);
 
   root.innerHTML = lessonTemplate({ xp, level, state });
@@ -371,10 +389,17 @@ export function mountNativeBackspinLesson(options = {}) {
 
   function safeSolve(input, { announceFailure=true } = {}) {
     try {
-      const solved = solveBackspinState(input);
+      const candidate = Object.fromEntries(PARAMETER_KEYS.map(key => [key, Number(input?.[key])]));
+      const solved = solveBackspinState(candidate);
+      state.input = candidate;
+      state.lastValidInput = { ...candidate };
       state.lastValidSolved = solved;
       return solved;
     } catch {
+      state.input = { ...state.lastValidInput };
+      if (range && BACKSPIN_PARAMS[state.activeParam]) {
+        range.value = String(state.input[state.activeParam]);
+      }
       if (announceFailure) announce('Model could not update');
       return null;
     }
@@ -448,8 +473,12 @@ export function mountNativeBackspinLesson(options = {}) {
     lesson.querySelector('[data-carry]').textContent = `${solved.carryM} m`;
     lesson.querySelector('[data-apex]').textContent = `${solved.apexM} m`;
     lesson.querySelector('[data-landing]').textContent = `${solved.landingAngle}°`;
+    const band = spinBand(solved.rpm);
+    const bandNode = lesson.querySelector('#backspinBand');
+    bandNode.dataset.band = band.key;
+    bandNode.textContent = band.label;
 
-    const limit = lesson.querySelector('[data-engine-limit]');
+    const limit = lesson.querySelector('#backspinLimit');
     if (solved.displayLimit === 'ceiling') {
       limit.hidden = false;
       limit.dataset.sheet = 'displayCeiling';
@@ -588,9 +617,13 @@ export function mountNativeBackspinLesson(options = {}) {
     const previous = lesson.querySelector('[data-action="previous"]');
     const next = lesson.querySelector('.native-lesson__navigation [data-action="next"]');
     const atStart = state.surface === 0;
+    const missionBlocked = state.surface === 1 && !(state.mission.built && state.mission.cut);
     previous.setAttribute('aria-disabled', String(atStart));
     previous.disabled = atStart;
-    next.querySelector('[data-next-label]').textContent = SURFACES[state.surface].next;
+    next.setAttribute('aria-disabled', String(missionBlocked));
+    next.disabled = missionBlocked;
+    next.title = missionBlocked ? 'Complete both mission stages to continue' : '';
+    next.querySelector('[data-next-label]').textContent = missionBlocked ? 'Complete the mission' : SURFACES[state.surface].next;
   }
 
   function setSurface(index, {
@@ -600,6 +633,7 @@ export function mountNativeBackspinLesson(options = {}) {
     unlock=false
   } = {}) {
     const target = clampSurface(index);
+    if (target > 1 && !(state.mission.built && state.mission.cut)) return false;
     if (unlock) state.unlockedSurface = Math.max(state.unlockedSurface, target);
     if (target > state.unlockedSurface) return false;
     state.surface = target;
@@ -619,6 +653,10 @@ export function mountNativeBackspinLesson(options = {}) {
   }
 
   function goNext() {
+    if (state.surface === 1 && !(state.mission.built && state.mission.cut)) {
+      announce('Complete both mission stages to continue.');
+      return;
+    }
     if (state.surface === SURFACES.length - 1) {
       callbacks.onNextLesson();
       return;
@@ -680,18 +718,18 @@ export function mountNativeBackspinLesson(options = {}) {
     if (settleTimer !== null) {
       cancelLater(settleTimer);
       settleTimer = null;
-      settleInput();
+      settleInput(pendingSettleParam);
     }
     state.activeParam = key;
     renderLab();
     lesson.querySelector(`[data-param="${key}"]`)?.focus();
   }
 
-  function settleInput() {
+  function settleInput(parameterKey = pendingSettleParam) {
     const solved = safeSolve(state.input);
     if (!solved) return;
     try {
-      const chain = buildCauseChain(beforeSettled, state.input, state.activeParam);
+      const chain = buildCauseChain(beforeSettled, state.input, parameterKey);
       const cause = lesson.querySelector('#causeChain');
       cause.innerHTML = chain.visual.map(item => `<span>${escapeHtml(item)}</span>`).join('<span aria-hidden="true">→</span>');
       announce(chain.speech);
@@ -705,36 +743,31 @@ export function mountNativeBackspinLesson(options = {}) {
   }
 
   function handleRangeInput() {
-    const value = Number(range.value);
-    if (!Number.isFinite(value)) {
-      announce('Model could not update');
-      return;
-    }
-    const prior = state.input[state.activeParam];
-    state.input[state.activeParam] = value;
-    const solved = safeSolve(state.input);
-    if (!solved) {
-      state.input[state.activeParam] = prior;
-      range.value = String(prior);
-      return;
-    }
+    const activeParamAtInput = state.activeParam;
+    const value = range.valueAsNumber;
+    const settledGhost = state.previousSettled || state.lastValidSolved;
+    const solved = safeSolve({ ...state.input, [activeParamAtInput]:value });
+    if (!solved) return;
+    if (!state.previousSettled) state.previousSettled = settledGhost;
     markDiagramTouched();
     const mission = advanceMission(state.mission, solved.rpm);
-    if (mission.built !== state.mission.built || mission.cut !== state.mission.cut) {
+    if (mission.event) {
       state.mission = { built:mission.built, cut:mission.cut };
       persistJourney({ mission:{ ...state.mission } }, { immediate:true });
-      sa.band(state.activeParam);
+      sa.notify('success');
       announce(mission.event === 'built' ? 'Build stage complete. Now cut the spin below 3,500 rpm.' : 'Mission complete. You built and cut the spin.');
       if (mission.complete) state.unlockedSurface = Math.max(state.unlockedSurface, 2);
       renderMission();
       updateStepper();
+      updateSurfaceNavigation();
     } else {
-      sa.tick(state.activeParam);
+      sa.tick(activeParamAtInput);
     }
     renderLab();
     renderInfluence();
     cancelLater(settleTimer);
-    settleTimer = later(() => { settleTimer = null; settleInput(); }, 300);
+    pendingSettleParam = activeParamAtInput;
+    settleTimer = later(() => { settleTimer = null; settleInput(activeParamAtInput); }, 300);
   }
 
   function selectLie(key) {
@@ -871,6 +904,7 @@ export function mountNativeBackspinLesson(options = {}) {
   wireLesson();
   renderAll();
   setSurface(state.surface, { focus:false, persist:false });
+  if (normalizedLegacySurface) persistJourney({ surface:1 }, { immediate:true });
 
   return () => {
     if (destroyed) return;

@@ -451,6 +451,33 @@
   font-size: 10px;
 }
 
+.native-lesson__spin-band {
+  grid-column: 1 / -1;
+  width: max-content;
+  min-height: 20px;
+  margin-top: 3px;
+  padding: 2px 7px;
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  color: var(--muted);
+  background: var(--plate);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.native-lesson__spin-band[data-band="iron"] {
+  color: var(--good);
+}
+
+.native-lesson__spin-band[data-band="high"] {
+  color: var(--warn);
+}
+
 .native-lesson__truth-chip {
   grid-column: 1 / -1;
   width: max-content;
@@ -928,6 +955,13 @@
   color: var(--sec-ink) !important;
   background: var(--secondary);
 }
+
+.native-lesson__next:disabled {
+  border: 1px solid var(--line) !important;
+  color: var(--muted) !important;
+  background: var(--plate);
+  cursor: default;
+  opacity: .72;
 
 .native-sheet__scrim {
   position: fixed;
