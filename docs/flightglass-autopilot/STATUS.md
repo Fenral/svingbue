@@ -51,5 +51,5 @@ Home / Floodlights remains ready and is not cancelled.
 | Geometry 3D | 74 | 90+ |
 | Strike Window 2D | 82 | 90+ |
 | Academy overview | 70 | 90+ |
-| Academy lesson | 73 | 90+ |
+| Academy lesson | 73 | 96-97 |
 | Paywall | 76 | 90+ |

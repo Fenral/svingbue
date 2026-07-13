@@ -86,6 +86,17 @@ test('cause chain separates a clamped display from the underlying model delta', 
   assert.match(chain.speech, /underlying model plus 225 rpm/i);
 });
 
+test('cause chain also labels an unchanged display at the model floor', () => {
+  const before = { dynamicLoft:11, attackAngle:6, ballSpeed:90 };
+  const after = { ...before, dynamicLoft:10 };
+  const chain = buildCauseChain(before, after, 'dynamicLoft');
+  assert.equal(chain.rpmDelta, 0);
+  assert.equal(chain.rawRpmDelta, -162);
+  assert.equal(chain.displayLimit, 'floor');
+  assert.match(chain.speech, /displayed backspin unchanged at 1500 rpm/i);
+  assert.match(chain.speech, /model floor reached; underlying model minus 162 rpm/i);
+});
+
 test('the current engine holds carry steady at fixed ball speed', () => {
   const low = solveBackspinState({ dynamicLoft:10, attackAngle:-3, ballSpeed:120 });
   const high = solveBackspinState({ dynamicLoft:48, attackAngle:-3, ballSpeed:120 });

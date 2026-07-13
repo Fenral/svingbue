@@ -7,6 +7,16 @@ Start with:
 3. `STATUS.md`
 4. `../../config/flightglass-surfaces.json`
 
+From a fresh clone, install both locked dependency trees before running a gate:
+
+```powershell
+npm ci
+npm ci --prefix tools
+```
+
+Browser audits use an installed Microsoft Edge first, with Google Chrome as
+a fallback.
+
 Run `npm run claude:ready`, then invoke the Claude Code command
 `/flightglass-autopilot`. The command accepts an optional phase instruction,
 but the status file normally selects the next phase automatically.

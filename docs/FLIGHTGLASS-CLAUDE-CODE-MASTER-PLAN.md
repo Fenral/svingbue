@@ -121,7 +121,7 @@ copy a mock merely because it is visually complete.
 | Geometry 3D | 74 | 90+ |
 | Strike Window 2D | 82 | 90+ |
 | Academy overview | 70 | 90+ |
-| Academy lesson | 73 | 90+ |
+| Academy lesson | 73 | 96-97 |
 | Paywall | 76 | 90+ |
 
 Each score is calculated from:
@@ -348,8 +348,8 @@ Default six-surface anatomy:
 2. Lab;
 3. Influence;
 4. Myths;
-5. Quiz;
-6. Mastery.
+5. Mastery Check;
+6. Result.
 
 Locked laws:
 

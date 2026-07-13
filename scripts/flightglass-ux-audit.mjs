@@ -15,7 +15,6 @@ import {
 } from './lib/flightglass-ux.mjs';
 
 const require = createRequire(import.meta.url);
-const { chromium } = require('../tools/node_modules/playwright-core');
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const MANIFEST_PATH = join(ROOT, 'config', 'flightglass-surfaces.json');
 
@@ -89,6 +88,13 @@ async function startStaticServer() {
 }
 
 async function launchBrowser() {
+  let chromium;
+  try {
+    ({ chromium } = require('../tools/node_modules/playwright-core'));
+  } catch (error) {
+    throw new Error('Playwright Core is missing. Run npm ci --prefix tools.', { cause:error });
+  }
+
   try {
     return await chromium.launch({ channel: 'msedge', headless: true });
   } catch {
