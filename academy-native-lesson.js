@@ -7,7 +7,8 @@ import {
   advanceMission,
   backspinSensitivity,
   buildCauseChain,
-  realWorldRange
+  realWorldRange,
+  passesStoppingFlightTarget
 } from './academy-backspin-model.js';
 
 const SURFACES = Object.freeze([
@@ -119,6 +120,42 @@ const MYTH_EXPERIMENTS = Object.freeze([
   })
 ]);
 
+const MASTERY_TASKS = Object.freeze([
+  Object.freeze({
+    id:'definition', kind:'choice', prompt:'Spin loft equals:',
+    choices:Object.freeze(['Dynamic loft \u2212 attack angle', 'Dynamic loft + attack angle', 'Club speed \u00d7 face angle']),
+    answerIndex:0, ability:'Define spin loft'
+  }),
+  Object.freeze({
+    id:'compare', kind:'engine-compare', prompt:'Which delivery produces more backspin?',
+    left:Object.freeze({ dynamicLoft:26, attackAngle:-2, ballSpeed:120 }),
+    right:Object.freeze({ dynamicLoft:34, attackAngle:-4, ballSpeed:120 }),
+    choices:Object.freeze(['Delivery A', 'Delivery B']), answerIndex:1,
+    ability:'Compare model deliveries'
+  }),
+  Object.freeze({
+    id:'reduce', kind:'engine-compare',
+    prompt:'From 30\u00b0 loft and \u22121\u00b0 attack, which attack-angle change reduces spin loft?',
+    left:Object.freeze({ dynamicLoft:30, attackAngle:3, ballSpeed:120 }),
+    right:Object.freeze({ dynamicLoft:30, attackAngle:-5, ballSpeed:120 }),
+    choices:Object.freeze(['Change attack to +3\u00b0', 'Change attack to \u22125\u00b0']), answerIndex:0,
+    ability:'Reduce spin loft'
+  }),
+  Object.freeze({
+    id:'honesty', kind:'choice', prompt:'The Wet range is:',
+    choices:Object.freeze(['A solveFlight output', 'A measured value from this phone', 'A sourced real-world estimate']),
+    answerIndex:2, ability:'Separate estimates from simulator truth'
+  }),
+  Object.freeze({
+    id:'target', kind:'lab-target',
+    prompt:'Create 6,800\u20137,400 rpm with landing angle at or above 50\u00b0.',
+    ability:'Build a stopping flight'
+  })
+]);
+
+const MASTERY_TARGET_INITIAL = Object.freeze({ dynamicLoft:25, attackAngle:-3, ballSpeed:120 });
+let masteryAttemptFallback = 0;
+
 const escapeHtml = value => String(value)
   .replaceAll('&', '&amp;')
   .replaceAll('<', '&lt;')
@@ -129,6 +166,32 @@ const escapeHtml = value => String(value)
 const clampSurface = value => Math.max(0, Math.min(SURFACES.length - 1,
   Number.isFinite(Number(value)) ? Math.floor(Number(value)) : 0));
 
+
+function normalizeMasteryResults(summary) {
+  const results = summary?.taskResults;
+  if (!Array.isArray(results) || results.length !== MASTERY_TASKS.length) return null;
+  return results.map(result => ({
+    resolved:Boolean(result?.resolved),
+    firstTry:Boolean(result?.resolved && result?.firstTry)
+  }));
+}
+
+function isValidMasterySubmission(attemptId, submission) {
+  if (!attemptId || submission?.attemptId !== attemptId || !submission?.summary) return false;
+  const results = normalizeMasteryResults(submission.summary);
+  if (!results || Number(submission.summary.total) !== MASTERY_TASKS.length) return false;
+  const correct = results.filter(result => result.resolved).length;
+  return Number(submission.summary.correct) === correct;
+}
+
+function createMasteryAttemptId() {
+  try {
+    const id = globalThis.crypto?.randomUUID?.();
+    if (typeof id === 'string' && id) return id;
+  } catch {}
+  masteryAttemptFallback += 1;
+  return `backspin-${Date.now().toString(36)}-${masteryAttemptFallback.toString(36)}`;
+}
 
 function sensitivityValue(delta) {
   return delta.displayDelta !== delta.rawDelta ? delta.rawDelta : delta.displayDelta;
@@ -287,21 +350,33 @@ function lessonTemplate({ xp, level, state }) {
         <section class="native-lesson__surface" data-surface="4" tabindex="-1" aria-labelledby="nativeMasteryTitle">
           <div class="native-lesson__surface-heading">
             <div><p class="native-lesson__eyebrow">4 of 5 to master</p><h2 id="nativeMasteryTitle">Mastery Check</h2></div>
-            <span class="native-lesson__stamp">Task 1 / 5</span>
+            <span class="native-lesson__stamp" data-mastery-step>Task 1 / 5</span>
           </div>
-          <div id="masteryTask" class="native-lesson__mastery-task">
-            <p>Five short tasks check spin-loft reasoning, model honesty and a live stopping-flight target.</p>
-            <div class="native-lesson__mastery-preview" aria-hidden="true"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span></div>
+          <div id="masteryTask" class="native-lesson__mastery-task" data-mastery-task
+            data-mastery-index="0" data-mastery-kind="choice" data-submitted="false">
           </div>
         </section>
 
         <section class="native-lesson__surface native-lesson__surface--result" data-surface="5" tabindex="-1" aria-labelledby="nativeResultTitle">
-          <div id="nativeLessonResult" class="native-lesson__result">
+          <div id="nativeLessonResult" class="native-lesson__result" data-result-mastered="false" data-result-status="pending">
             <p class="native-lesson__eyebrow" data-result-eyebrow>Backspin result</p>
-            <h2 id="nativeResultTitle">Your stopping-flight read</h2>
+            <h2 id="nativeResultTitle" tabindex="-1">Your stopping-flight read</h2>
             <p data-result-copy>Complete the Mastery Check to see the ability you demonstrated.</p>
-            <div class="native-lesson__result-summary" data-result-summary hidden></div>
-            <button type="button" class="native-lesson__secondary-action" data-action="back-to-path">Back to path</button>
+            <div class="native-lesson__result-summary" data-result-summary hidden>
+              <strong data-result-score>0 / 5</strong>
+              <span data-result-xp>+0 XP</span>
+              <span data-result-rank hidden></span>
+            </div>
+            <div class="native-lesson__result-abilities" data-result-abilities hidden></div>
+            <div class="native-lesson__result-preview" data-result-next-preview hidden>
+              <span>Next question</span>
+              <strong>What changes when launch rises at the same ball speed?</strong>
+            </div>
+            <div class="native-lesson__result-actions">
+              <button type="button" class="native-lesson__primary-action" data-action="next-lesson" hidden>Next: Launch Angle</button>
+              <button type="button" class="native-lesson__primary-action" data-action="retry-mastery" hidden>Retry the check</button>
+              <button type="button" class="native-lesson__secondary-action" data-action="back-to-path">Back to path</button>
+            </div>
           </div>
         </section>
       </div>
@@ -384,20 +459,37 @@ export function mountNativeBackspinLesson(options = {}) {
     myths:[false, false, false].map((value, index) => Boolean(journey?.myths?.[index] ?? value)),
     mythIndex:0,
     mythAnswers:Array(MYTH_EXPERIMENTS.length).fill(null),
-    mastery:[],
+    mastery:Array(MASTERY_TASKS.length).fill(null),
+    masteryIndex:0,
     masteryAttemptId:journey?.masteryAttemptId || null,
     lastSubmission:journey?.lastSubmission || null,
+    masteryTargetInput:{ ...MASTERY_TARGET_INITIAL },
+    masteryTargetParam:'dynamicLoft',
+    masteryTargetSolved:null,
+    submitting:false,
     activeParam:'dynamicLoft',
     lie:'clean',
     influenceParam:null
   };
+  const loadedSubmissionValid = isValidMasterySubmission(state.masteryAttemptId, state.lastSubmission);
+  if (loadedSubmissionValid) {
+    state.mastery = normalizeMasteryResults(state.lastSubmission.summary).map(result => ({
+      correct:result.resolved,
+      answerCount:result.firstTry ? 1 : 2
+    }));
+  } else {
+    state.lastSubmission = null;
+  }
   const normalizedLegacySurface = !(state.mission.built && state.mission.cut) && requestedSurface > 1;
   const firstUnfinishedMyth = state.myths.findIndex(value => !value);
   state.mythIndex = firstUnfinishedMyth >= 0 ? firstUnfinishedMyth : MYTH_EXPERIMENTS.length - 1;
   const normalizedIncompleteMythSurface = !normalizedLegacySurface &&
     requestedSurface > 3 && firstUnfinishedMyth >= 0;
+  const normalizedInvalidResultSurface = !normalizedLegacySurface && !normalizedIncompleteMythSurface &&
+    requestedSurface === 5 && !loadedSubmissionValid;
   if (normalizedLegacySurface) state.surface = 1;
   else if (normalizedIncompleteMythSurface) state.surface = 3;
+  else if (normalizedInvalidResultSurface) state.surface = 4;
   state.unlockedSurface = initialUnlockedSurface(state, state.surface);
 
   root.innerHTML = lessonTemplate({ xp, level, state });
@@ -896,30 +988,436 @@ export function mountNativeBackspinLesson(options = {}) {
     nextFrame(() => lesson.querySelector(`[data-myth-choice="${choiceIndex}"]`)?.focus());
   }
 
+
+  function hasSubmittedMastery() {
+    return isValidMasterySubmission(state.masteryAttemptId, state.lastSubmission);
+  }
+
+  function ensureMasteryAttempt() {
+    if (typeof state.masteryAttemptId === 'string' && state.masteryAttemptId) return false;
+    state.masteryAttemptId = createMasteryAttemptId();
+    state.lastSubmission = null;
+    state.mastery = Array(MASTERY_TASKS.length).fill(null);
+    state.masteryIndex = 0;
+    state.masteryTargetInput = { ...MASTERY_TARGET_INITIAL };
+    state.masteryTargetParam = 'dynamicLoft';
+    state.masteryTargetSolved = null;
+    persistJourney({ surface:4, masteryAttemptId:state.masteryAttemptId, lastSubmission:null }, { immediate:true });
+    return true;
+  }
+
+  function solveMasteryInput(input) {
+    try {
+      return solveBackspinState(input);
+    } catch {
+      announce('Model could not update');
+      return null;
+    }
+  }
+
+  function masteryProgress() {
+    const completed = state.mastery.filter(Boolean).length;
+    const items = MASTERY_TASKS.map((task, index) => {
+      const record = state.mastery[index];
+      const status = record ? (record.correct ? 'correct' : 'attempted') : 'open';
+      return `<span data-mastery-progress-item="${index}" data-status="${status}"
+        aria-label="Task ${index + 1}: ${status}">${index + 1}</span>`;
+    }).join('');
+    return `<div class="native-lesson__mastery-progress" data-mastery-progress
+      aria-label="${completed} of ${MASTERY_TASKS.length} tasks answered">${items}</div>`;
+  }
+
+  function masteryComparison(task, record) {
+    if (task.kind !== 'engine-compare' || !record) return '<div data-mastery-comparison hidden></div>';
+    const runs = record.runs;
+    if (!runs?.left || !runs?.right) {
+      return '<div data-mastery-comparison data-revealed="true"><p>Engine evidence unavailable.</p></div>';
+    }
+    const delivery = (side, label, input, solved) => `
+      <article class="native-lesson__mastery-run" data-mastery-engine-output="${side}"
+        data-rpm="${solved.rpm}" data-spin-loft="${solved.spinLoft}"
+        data-landing="${solved.landingAngle}">
+        <span>${label} &middot; ${input.dynamicLoft}\u00b0 loft / ${input.attackAngle >= 0 ? '+' : '\u2212'}${Math.abs(input.attackAngle)}\u00b0 attack</span>
+        <strong>${NUMBER.format(solved.rpm)} rpm</strong>
+        <small>${solved.spinLoft}\u00b0 spin loft</small>
+      </article>`;
+    return `<div class="native-lesson__mastery-comparison" data-mastery-comparison
+      data-revealed="true" aria-label="Revealed engine outputs">
+      ${delivery('left', 'Delivery A', task.left, runs.left)}
+      ${delivery('right', 'Delivery B', task.right, runs.right)}
+    </div>`;
+  }
+
+  function masteryChoiceTask(task, record) {
+    const locked = Boolean(record?.correct);
+    const choices = task.choices.map((choice, choiceIndex) => {
+      const selected = record?.selected === choiceIndex;
+      const supported = Boolean(record) && choiceIndex === task.answerIndex;
+      const outcome = selected ? (record.correct ? 'correct' : 'incorrect') : (supported ? 'answer' : 'idle');
+      const activeTab = locked ? selected : (selected || (!record && choiceIndex === 0));
+      return `<button type="button" role="radio" data-mastery-choice="${choiceIndex}"
+        data-outcome="${outcome}" aria-checked="${selected}" aria-disabled="${locked}"
+        tabindex="${activeTab ? '0' : '-1'}">${escapeHtml(choice)}</button>`;
+    }).join('');
+    const feedback = !record ? '' : record.correct
+      ? 'Engine-supported answer. This task is resolved.'
+      : `Not yet. ${escapeHtml(task.choices[task.answerIndex])} is supported here. Try again, or continue with this result.`;
+    return `
+      <div class="native-lesson__mastery-choices" role="radiogroup"
+        aria-label="Task ${state.masteryIndex + 1} choices">${choices}</div>
+      ${masteryComparison(task, record)}
+      <p class="native-lesson__mastery-feedback" data-mastery-feedback
+        data-correct="${record ? String(record.correct) : 'unanswered'}" ${record ? '' : 'hidden'}>${feedback}</p>`;
+  }
+
+  function masteryTargetFailure(solved) {
+    const unmet = [];
+    if (solved.rpm < 6800) unmet.push({ distance:(6800 - solved.rpm) / 600, copy:'Raise backspin to at least 6,800 rpm.' });
+    if (solved.rpm > 7400) unmet.push({ distance:(solved.rpm - 7400) / 600, copy:'Lower backspin to no more than 7,400 rpm.' });
+    if (solved.landingAngle < 50) unmet.push({ distance:(50 - solved.landingAngle) / 5, copy:'Raise landing angle to at least 50\u00b0.' });
+    unmet.sort((a, b) => a.distance - b.distance);
+    return unmet[0]?.copy || 'Submit this state again.';
+  }
+
+  function masteryTargetTask(record) {
+    const solved = solveMasteryInput(state.masteryTargetInput);
+    if (solved) state.masteryTargetSolved = solved;
+    const shown = solved || state.masteryTargetSolved;
+    const locked = Boolean(record?.correct);
+    const parameter = BACKSPIN_PARAMS[state.masteryTargetParam];
+    const chips = PARAMETER_KEYS.map(key => {
+      const active = key === state.masteryTargetParam;
+      return `<button type="button" role="radio" data-mastery-param="${key}"
+        aria-checked="${active}" aria-disabled="${locked}"
+        tabindex="${active ? '0' : '-1'}">${escapeHtml(BACKSPIN_PARAMS[key].label)}</button>`;
+    }).join('');
+    const verdict = !record ? '' : record.correct
+      ? `Target met: ${NUMBER.format(record.solved.rpm)} rpm and ${record.solved.landingAngle}\u00b0 landing.`
+      : `Current submitted result: ${NUMBER.format(record.solved.rpm)} rpm and ${record.solved.landingAngle}\u00b0 landing. ${masteryTargetFailure(record.solved)}`;
+    return `
+      <div class="native-lesson__mastery-target" data-mastery-target data-locked="${locked}">
+        <div class="native-lesson__mastery-target-readout" aria-label="Live model result">
+          <div><span>Backspin</span><strong data-mastery-rpm data-value="${shown?.rpm ?? ''}">${shown ? NUMBER.format(shown.rpm) : '\u2014'} rpm</strong></div>
+          <div><span>Landing</span><strong data-mastery-landing data-value="${shown?.landingAngle ?? ''}">${shown ? shown.landingAngle : '\u2014'}\u00b0</strong></div>
+        </div>
+        <div class="native-lesson__mastery-params" role="radiogroup" aria-label="Choose target input">${chips}</div>
+        <label class="native-lesson__range-label" for="masteryTargetRange">
+          <span data-mastery-range-label>${escapeHtml(parameter.label)}</span>
+          <output data-mastery-range-value>${state.masteryTargetInput[state.masteryTargetParam]}${parameter.unit}</output>
+        </label>
+        <input id="masteryTargetRange" data-mastery-range type="range"
+          min="${parameter.min}" max="${parameter.max}" step="${parameter.step}"
+          value="${state.masteryTargetInput[state.masteryTargetParam]}"
+          aria-label="${escapeHtml(parameter.label)}"
+          aria-valuetext="${state.masteryTargetInput[state.masteryTargetParam]}${parameter.unit}"
+          ${locked ? 'disabled' : ''}>
+        <p class="native-lesson__mastery-target-feedback" data-mastery-target-feedback tabindex="-1"
+          data-correct="${record ? String(record.correct) : 'unanswered'}" ${record ? '' : 'hidden'}>${verdict}</p>
+        <button type="button" class="native-lesson__target-submit"
+          data-action="submit-mastery-target" data-mastery-target-submit
+          ${locked ? 'disabled' : ''}>${record && !record.correct ? 'Submit adjusted state' : 'Submit target state'}</button>
+      </div>`;
+  }
+
   function renderMastery() {
-    const task = lesson.querySelector('#masteryTask');
-    task.dataset.attempt = state.masteryAttemptId || '';
-    task.dataset.answered = String(state.mastery.length);
+    const taskNode = lesson.querySelector('#masteryTask');
+    const submitted = hasSubmittedMastery();
+    taskNode.dataset.attempt = state.masteryAttemptId || '';
+    taskNode.dataset.attemptId = state.masteryAttemptId || '';
+    taskNode.dataset.submitted = String(submitted);
+    taskNode.dataset.answered = String(state.mastery.filter(Boolean).length);
+    if (submitted) {
+      const summary = state.lastSubmission.summary;
+      taskNode.dataset.masteryTask = 'submitted';
+      taskNode.dataset.taskId = 'submitted';
+      taskNode.dataset.taskIndex = String(state.masteryIndex);
+      taskNode.dataset.masteryIndex = String(state.masteryIndex);
+      taskNode.dataset.masteryKind = 'submitted';
+      lesson.querySelector('[data-mastery-step]').textContent = 'Submitted';
+      taskNode.innerHTML = `
+        <p class="native-lesson__experiment-number">Attempt submitted</p>
+        <h3 data-mastery-submitted tabindex="-1">This attempt is locked.</h3>
+        <p>${Math.max(0, Number(summary.correct) || 0)} of ${MASTERY_TASKS.length} tasks were resolved. Results cannot be changed after submission.</p>
+        ${masteryProgress()}
+        <button type="button" class="native-lesson__primary-action" data-action="view-result">View result</button>`;
+      return;
+    }
+    const index = Math.max(0, Math.min(MASTERY_TASKS.length - 1, state.masteryIndex));
+    const task = MASTERY_TASKS[index];
+    const record = state.mastery[index];
+    taskNode.dataset.masteryTask = task.id;
+    taskNode.dataset.masteryIndex = String(index);
+    taskNode.dataset.taskId = task.id;
+    taskNode.dataset.taskIndex = String(index);
+    taskNode.dataset.masteryKind = task.kind;
+    lesson.querySelector('[data-mastery-step]').textContent = `Task ${index + 1} / ${MASTERY_TASKS.length}`;
+    const body = task.kind === 'lab-target' ? masteryTargetTask(record) : masteryChoiceTask(task, record);
+    const continueAction = record
+      ? `<button type="button" class="native-lesson__mastery-next" data-mastery-next
+          data-action="${record.correct ? 'next-mastery-task' : 'continue-mastery-wrong'}">${record.correct
+            ? (index === MASTERY_TASKS.length - 1 ? 'View result' : 'Next task')
+            : 'Continue with this result'}</button>`
+      : '';
+    taskNode.innerHTML = `
+      <p class="native-lesson__experiment-number">Task ${index + 1} of ${MASTERY_TASKS.length}</p>
+      <h3 data-mastery-prompt tabindex="-1">${escapeHtml(task.prompt)}</h3>
+      ${body}
+      ${masteryProgress()}
+      ${continueAction}`;
+    taskNode.dataset.submitting = String(state.submitting);
+    taskNode.querySelectorAll('button, input').forEach(control => {
+      if (state.submitting) control.disabled = true;
+    });
+  }
+
+
+  function updateHeaderFromSummary(summary) {
+    const progress = lesson.querySelector('.native-lesson__progress');
+    const summaryXp = Number.isFinite(Number(summary?.storeXp))
+      ? Math.max(0, Math.floor(Number(summary.storeXp))) : Math.max(0, Math.floor(Number(xp) || 0));
+    const displayXp = Math.max(Math.max(0, Math.floor(Number(xp) || 0)), summaryXp);
+    const summaryLevel = summary?.levelInfo || {};
+    const useSummaryLevel = summaryXp >= Number(xp || 0);
+    const levelNumber = Math.max(1, Math.floor(Number(useSummaryLevel
+      ? (summaryLevel.lvl ?? summaryLevel.number) : level?.number) || 1));
+    const levelTitle = String(useSummaryLevel
+      ? (summaryLevel.title || level?.title || 'Rookie') : (level?.title || 'Rookie'));
+    progress.setAttribute('aria-label', `${displayXp} XP, level ${levelNumber}, ${levelTitle}`);
+    progress.querySelector('strong').textContent = `${NUMBER.format(displayXp)} XP`;
+    progress.querySelector('span').textContent = `Lv ${levelNumber} \u00b7 ${levelTitle}`;
+  }
+
+  function resultMastered(summary) {
+    const correct = Math.max(0, Number(summary?.correct) || 0);
+    const threshold = Math.max(1, Number(summary?.threshold) || 4);
+    return Boolean(summary?.mastered) && correct >= threshold;
   }
 
   function renderResult() {
     const result = lesson.querySelector('#nativeLessonResult');
-    const summary = state.lastSubmission?.summary;
+    const summary = hasSubmittedMastery() ? state.lastSubmission.summary : null;
     const summaryNode = result.querySelector('[data-result-summary]');
+    const actions = result.querySelector('.native-lesson__result-actions');
+    result.dataset.attempt = state.masteryAttemptId || '';
+    result.dataset.attemptId = state.masteryAttemptId || '';
     if (!summary) {
+      result.dataset.resultMastered = 'false';
+      result.dataset.resultStatus = 'pending';
       summaryNode.hidden = true;
+      result.querySelector('[data-result-abilities]').hidden = true;
+      result.querySelector('[data-result-next-preview]').hidden = true;
+      actions.innerHTML = '<button type="button" class="native-lesson__secondary-action" data-action="back-to-path">Back to path</button>';
       return;
     }
     const correct = Math.max(0, Number(summary.correct) || 0);
-    const total = Math.max(1, Number(summary.total) || 5);
-    result.querySelector('[data-result-eyebrow]').textContent = summary.mastered ? 'Backspin mastered' : 'Backspin complete';
-    result.querySelector('[data-result-copy]').textContent = summary.mastered
-      ? 'You can separate spin loft from “hitting down” and control a shot’s stopping flight in the Flightglass model.'
+    const total = MASTERY_TASKS.length;
+    const mastered = resultMastered(summary);
+    const xpDelta = Math.max(0, Number(summary.totalDelta ?? summary.delta) || 0);
+    const taskResults = normalizeMasteryResults(summary) || [];
+    const abilities = MASTERY_TASKS
+      .filter((task, index) => taskResults[index]?.resolved)
+      .map(task => `<li data-result-ability>${escapeHtml(task.ability)}</li>`)
+      .join('');
+    const abilitiesNode = result.querySelector('[data-result-abilities]');
+    const rank = result.querySelector('[data-result-rank]');
+    result.dataset.resultMastered = String(mastered);
+    result.dataset.resultStatus = mastered ? 'mastered' : 'complete';
+    result.querySelector('[data-result-eyebrow]').textContent = mastered ? 'Backspin mastered' : 'Backspin complete';
+    result.querySelector('[data-result-copy]').textContent = mastered
+      ? "You can separate spin loft from \u201chitting down\u201d and control a shot's stopping flight in the Flightglass model."
       : `${correct} of ${total} on the mastery check. Retry for mastery (4/5).`;
     summaryNode.hidden = false;
-    summaryNode.textContent = `${correct} / ${total}${Number(summary.totalDelta || summary.delta) ? ` · +${Number(summary.totalDelta || summary.delta)} XP` : ''}`;
+    summaryNode.querySelector('[data-result-score]').textContent = `${correct} / ${total}`;
+    summaryNode.querySelector('[data-result-xp]').textContent = `+${NUMBER.format(xpDelta)} XP`;
+    rank.hidden = !summary.leveledUp;
+    rank.textContent = summary.leveledUp
+      ? `Level ${summary.levelInfo?.lvl ?? summary.levelInfo?.number ?? ''} \u00b7 ${summary.levelInfo?.title || ''}`.trim()
+      : '';
+    abilitiesNode.hidden = false;
+    abilitiesNode.innerHTML = `<strong>Abilities demonstrated</strong>${abilities
+      ? `<ul>${abilities}</ul>`
+      : '<p>No ability checks demonstrated yet.</p>'}`;
+    const preview = result.querySelector('[data-result-next-preview]');
+    preview.hidden = !mastered;
+    actions.innerHTML = mastered
+      ? `<button type="button" class="native-lesson__primary-action" data-action="next-lesson">Next: Launch Angle</button>
+         <button type="button" class="native-lesson__secondary-action" data-action="back-to-path">Back to path</button>`
+      : `<button type="button" class="native-lesson__primary-action" data-action="retry-mastery">Retry the check</button>
+         <button type="button" class="native-lesson__secondary-action" data-action="back-to-path">Back to path</button>`;
+    updateHeaderFromSummary(summary);
   }
 
+  function answerMasteryChoice(choiceIndex) {
+    if (state.submitting || hasSubmittedMastery()) return;
+    const task = MASTERY_TASKS[state.masteryIndex];
+    if (!task || task.kind === 'lab-target' || !Number.isInteger(choiceIndex) ||
+        choiceIndex < 0 || choiceIndex >= task.choices.length) return;
+    const prior = state.mastery[state.masteryIndex];
+    if (prior?.correct) return;
+    let runs = prior?.runs || null;
+    if (task.kind === 'engine-compare' && !runs) {
+      const left = solveMasteryInput(task.left);
+      const right = solveMasteryInput(task.right);
+      if (!left || !right) return;
+      runs = { left, right };
+    }
+    const correct = choiceIndex === task.answerIndex;
+    state.mastery[state.masteryIndex] = {
+      selected:choiceIndex,
+      correct,
+      answerCount:(prior?.answerCount || 0) + 1,
+      runs
+    };
+    renderMastery();
+    updateSurfaceNavigation();
+    announce(correct
+      ? `Task ${state.masteryIndex + 1} resolved.`
+      : `Task ${state.masteryIndex + 1} is not resolved. Try again, or continue with this result.`);
+    nextFrame(() => lesson.querySelector(`[data-mastery-choice="${choiceIndex}"]`)?.focus());
+  }
+
+  function selectMasteryTargetParameter(key) {
+    if (!PARAMETER_KEYS.includes(key) || state.mastery[4]?.correct || state.submitting || hasSubmittedMastery()) return;
+    state.masteryTargetParam = key;
+    renderMastery();
+    lesson.querySelector(`[data-mastery-param="${key}"]`)?.focus();
+  }
+
+  function updateMasteryTargetInput(input) {
+    if (!(input instanceof HTMLInputElement) || state.mastery[4]?.correct || state.submitting || hasSubmittedMastery()) return;
+    const key = state.masteryTargetParam;
+    const value = input.valueAsNumber;
+    if (!Number.isFinite(value)) return;
+    const solved = solveMasteryInput({ ...state.masteryTargetInput, [key]:value });
+    if (!solved) return;
+    state.masteryTargetInput = { ...state.masteryTargetInput, [key]:value };
+    state.masteryTargetSolved = solved;
+    input.setAttribute('aria-valuetext', `${value}${BACKSPIN_PARAMS[key].unit}`);
+    const valueNode = lesson.querySelector('[data-mastery-range-value]');
+    if (valueNode) valueNode.textContent = `${value}${BACKSPIN_PARAMS[key].unit}`;
+    const rpm = lesson.querySelector('[data-mastery-rpm]');
+    const landing = lesson.querySelector('[data-mastery-landing]');
+    if (rpm) {
+      rpm.dataset.value = String(solved.rpm);
+      rpm.textContent = `${NUMBER.format(solved.rpm)} rpm`;
+    }
+    if (landing) {
+      landing.dataset.value = String(solved.landingAngle);
+      landing.textContent = `${solved.landingAngle}\u00b0`;
+    }
+    markDiagramTouched();
+    sa.tick(`mastery-${key}`);
+  }
+
+  function submitMasteryTarget() {
+    if (state.submitting || hasSubmittedMastery() || state.mastery[4]?.correct) return;
+    const solved = solveMasteryInput(state.masteryTargetInput);
+    if (!solved) return;
+    const prior = state.mastery[4];
+    const correct = passesStoppingFlightTarget(state.masteryTargetInput);
+    state.mastery[4] = {
+      correct,
+      answerCount:(prior?.answerCount || 0) + 1,
+      solved,
+      input:{ ...state.masteryTargetInput }
+    };
+    renderMastery();
+    updateSurfaceNavigation();
+    announce(correct
+      ? `Stopping-flight target met at ${NUMBER.format(solved.rpm)} rpm and ${solved.landingAngle} degrees landing.`
+      : `Target not met. ${NUMBER.format(solved.rpm)} rpm and ${solved.landingAngle} degrees landing. ${masteryTargetFailure(solved)}`);
+    nextFrame(() => lesson.querySelector('[data-mastery-target-feedback]')?.focus?.());
+  }
+
+  function normalizedCurrentMasteryResults() {
+    return MASTERY_TASKS.map((task, index) => {
+      const record = state.mastery[index];
+      return {
+        resolved:Boolean(record?.correct),
+        firstTry:Boolean(record?.correct && record.answerCount === 1)
+      };
+    });
+  }
+
+  async function submitMasteryAttempt() {
+    if (state.submitting) return;
+    if (hasSubmittedMastery()) {
+      setSurface(5, { persist:true, immediate:true, unlock:true });
+      return;
+    }
+    if (!state.mastery.every(Boolean)) {
+      announce('Answer every mastery task before opening Result.');
+      return;
+    }
+    ensureMasteryAttempt();
+    const attemptId = state.masteryAttemptId;
+    const results = normalizedCurrentMasteryResults();
+    state.submitting = true;
+    renderMastery();
+    updateSurfaceNavigation();
+    try {
+      const returned = await Promise.resolve(callbacks.onSubmit({ attemptId, results }));
+      if (destroyed) return;
+      if (!returned || typeof returned !== 'object') throw new TypeError('Mastery summary is required');
+      const summary = { ...returned, taskResults:normalizeMasteryResults(returned) || results };
+      const submission = { attemptId, summary };
+      if (!isValidMasterySubmission(attemptId, submission)) throw new TypeError('Mastery summary is invalid');
+      state.lastSubmission = submission;
+      state.submitting = false;
+      state.unlockedSurface = Math.max(state.unlockedSurface, 5);
+      renderMastery();
+      renderResult();
+      updateStepper();
+      updateSurfaceNavigation();
+      const mastered = resultMastered(summary);
+      announce(`Backspin ${mastered ? 'mastered' : 'complete'}. ${summary.correct} of ${MASTERY_TASKS.length}. Plus ${Math.max(0, Number(summary.totalDelta ?? summary.delta) || 0)} XP.`);
+      setSurface(5, { persist:false, unlock:true });
+    } catch {
+      if (destroyed) return;
+      state.submitting = false;
+      renderMastery();
+      updateSurfaceNavigation();
+      announce('Result could not be saved. Try again.');
+    }
+  }
+
+  function advanceMasteryTask() {
+    if (state.submitting) return;
+    if (hasSubmittedMastery()) {
+      setSurface(5, { persist:true, immediate:true, unlock:true });
+      return;
+    }
+    if (!state.mastery[state.masteryIndex]) {
+      announce(state.masteryIndex === 4 ? 'Submit a target state first.' : 'Choose an answer first.');
+      return;
+    }
+    if (state.masteryIndex < MASTERY_TASKS.length - 1) {
+      state.masteryIndex += 1;
+      renderMastery();
+      updateSurfaceNavigation();
+      nextFrame(() => lesson.querySelector('[data-mastery-prompt]')?.focus());
+      return;
+    }
+    void submitMasteryAttempt();
+  }
+
+  function retryMastery() {
+    const summary = hasSubmittedMastery() ? state.lastSubmission.summary : null;
+    if (summary && resultMastered(summary)) return;
+    state.masteryAttemptId = createMasteryAttemptId();
+    state.lastSubmission = null;
+    state.mastery = Array(MASTERY_TASKS.length).fill(null);
+    state.masteryIndex = 0;
+    state.masteryTargetInput = { ...MASTERY_TARGET_INITIAL };
+    state.masteryTargetParam = 'dynamicLoft';
+    state.masteryTargetSolved = null;
+    state.submitting = false;
+    state.unlockedSurface = Math.min(state.unlockedSurface, 4);
+    persistJourney({ surface:4, masteryAttemptId:state.masteryAttemptId, lastSubmission:null }, { immediate:true });
+    renderMastery();
+    renderResult();
+    setSurface(4, { persist:false, unlock:true });
+  }
   function renderAll() {
     renderMission();
     renderLab();
@@ -941,27 +1439,44 @@ export function mountNativeBackspinLesson(options = {}) {
     });
   }
 
+
   function updateSurfaceNavigation() {
     const previous = lesson.querySelector('[data-action="previous"]');
     const next = lesson.querySelector('.native-lesson__navigation [data-action="next"]');
+    const label = next.querySelector('[data-next-label]');
     const atStart = state.surface === 0;
     const missionBlocked = state.surface === 1 && !(state.mission.built && state.mission.cut);
     const mythBlocked = state.surface === 3 && !state.myths[state.mythIndex];
-    const blocked = missionBlocked || mythBlocked;
-    previous.setAttribute('aria-disabled', String(atStart));
-    previous.disabled = atStart;
+    const masteryBlocked = state.surface === 4 && !hasSubmittedMastery() && !state.mastery[state.masteryIndex];
+    const blocked = missionBlocked || mythBlocked || masteryBlocked || state.submitting;
+    previous.setAttribute('aria-disabled', String(atStart || state.submitting));
+    previous.disabled = atStart || state.submitting;
     next.setAttribute('aria-disabled', String(blocked));
     next.disabled = blocked;
     next.toggleAttribute('data-myth-next', state.surface === 3);
     if (missionBlocked) {
       next.title = 'Complete both mission stages to continue';
-      next.querySelector('[data-next-label]').textContent = 'Complete the mission';
+      label.textContent = 'Complete the mission';
     } else if (mythBlocked) {
       next.title = 'Make a prediction to reveal the engine runs';
-      next.querySelector('[data-next-label]').textContent = 'Make a prediction';
+      label.textContent = 'Make a prediction';
+    } else if (state.submitting) {
+      next.title = 'Saving mastery result';
+      label.textContent = 'Saving result\u2026';
+    } else if (masteryBlocked) {
+      next.title = state.masteryIndex === 4 ? 'Submit a target state first' : 'Choose an answer first';
+      label.textContent = state.masteryIndex === 4 ? 'Submit a target state' : 'Choose an answer';
+    } else if (state.surface === 4) {
+      next.title = '';
+      label.textContent = hasSubmittedMastery()
+        ? 'View result'
+        : (state.masteryIndex < MASTERY_TASKS.length - 1 ? 'Next task' : 'View result');
+    } else if (state.surface === 5) {
+      next.title = '';
+      label.textContent = resultMastered(state.lastSubmission?.summary) ? 'Next: Launch Angle' : 'Retry the check';
     } else {
       next.title = '';
-      next.querySelector('[data-next-label]').textContent = state.surface === 3 && state.mythIndex < MYTH_EXPERIMENTS.length - 1
+      label.textContent = state.surface === 3 && state.mythIndex < MYTH_EXPERIMENTS.length - 1
         ? 'Next Experiment' : SURFACES[state.surface].next;
     }
   }
@@ -975,6 +1490,9 @@ export function mountNativeBackspinLesson(options = {}) {
     const target = clampSurface(index);
     if (target > 1 && !(state.mission.built && state.mission.cut)) return false;
     if (target > 3 && !state.myths.every(Boolean)) return false;
+    if (target === 5 && !hasSubmittedMastery()) return false;
+    if (target === 4 && !hasSubmittedMastery()) ensureMasteryAttempt();
+    if (target === 4) renderMastery();
     if (unlock) state.unlockedSurface = Math.max(state.unlockedSurface, target);
     if (target > state.unlockedSurface) return false;
     if (target === 3 && state.surface !== 3) {
@@ -993,7 +1511,14 @@ export function mountNativeBackspinLesson(options = {}) {
     updateStepper();
     updateSurfaceNavigation();
     if (persist) persistJourney({ surface:target }, { immediate });
-    if (focus) nextFrame(() => lesson.querySelector(`.native-lesson__surface[data-surface="${target}"]`)?.focus());
+    if (target === 5) renderResult();
+    if (focus) nextFrame(() => {
+      if (target === 4) {
+        lesson.querySelector('[data-mastery-prompt], [data-mastery-submitted]')?.focus();
+      } else if (target === 5) {
+        lesson.querySelector('#nativeResultTitle')?.focus();
+      } else lesson.querySelector(`.native-lesson__surface[data-surface="${target}"]`)?.focus();
+    });
     if (target === 1) nextFrame(() => drawTrajectory(state.lastValidSolved));
     if (target === 2) renderInfluence();
     return true;
@@ -1021,8 +1546,13 @@ export function mountNativeBackspinLesson(options = {}) {
         return;
       }
     }
-    if (state.surface === SURFACES.length - 1) {
-      callbacks.onNextLesson();
+    if (state.surface === 4) {
+      advanceMasteryTask();
+      return;
+    }
+    if (state.surface === 5) {
+      if (resultMastered(state.lastSubmission?.summary)) callbacks.onNextLesson();
+      else retryMastery();
       return;
     }
     setSurface(state.surface + 1, { unlock:true, immediate:true });
@@ -1203,6 +1733,22 @@ export function mountNativeBackspinLesson(options = {}) {
     listen(lesson, 'click', event => {
       const target = event.target.closest('button');
       if (!target || target.inert || target.getAttribute('aria-disabled') === 'true') return;
+      if (target.dataset.masteryChoice !== undefined) {
+        answerMasteryChoice(Number(target.dataset.masteryChoice));
+        return;
+      }
+      if (target.dataset.masteryParam) {
+        selectMasteryTargetParameter(target.dataset.masteryParam);
+        return;
+      }
+      if (target.dataset.action === 'submit-mastery-target') {
+        submitMasteryTarget();
+        return;
+      }
+      if (target.dataset.masteryNext !== undefined) {
+        advanceMasteryTask();
+        return;
+      }
       if (target.dataset.mythChoice !== undefined) {
         answerMyth(Number(target.dataset.mythChoice));
         return;
@@ -1235,6 +1781,9 @@ export function mountNativeBackspinLesson(options = {}) {
       if (target.dataset.action === 'next') goNext();
       else if (target.dataset.action === 'previous') goPrevious();
       else if (target.dataset.action === 'back-to-path') callbacks.onBack();
+      else if (target.dataset.action === 'retry-mastery') retryMastery();
+      else if (target.dataset.action === 'view-result') setSurface(5, { immediate:true, unlock:true });
+      else if (target.dataset.action === 'next-lesson' && resultMastered(state.lastSubmission?.summary)) callbacks.onNextLesson();
       else if (target.dataset.sheetClose !== undefined) closeSheet();
     });
 
@@ -1272,6 +1821,8 @@ export function mountNativeBackspinLesson(options = {}) {
       const param = event.target.closest('[data-param]');
       const lie = event.target.closest('[data-lie]');
       const mythChoice = event.target.closest('[data-myth-choice]');
+      const masteryChoice = event.target.closest('[data-mastery-choice]');
+      const masteryParam = event.target.closest('[data-mastery-param]');
       if (step) {
         const keys = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'];
         if (keys.includes(event.key)) {
@@ -1305,6 +1856,24 @@ export function mountNativeBackspinLesson(options = {}) {
           const focused = document.activeElement;
           buttons.forEach(button => { button.tabIndex = button === focused ? 0 : -1; });
         }
+      } else if (masteryChoice) {
+        const keys = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'];
+        if (keys.includes(event.key)) {
+          event.preventDefault();
+          const buttons = [...lesson.querySelectorAll('[data-mastery-choice]')];
+          moveRovingFocus(buttons, masteryChoice, event.key);
+          const focused = document.activeElement;
+          buttons.forEach(button => { button.tabIndex = button === focused ? 0 : -1; });
+        }
+      } else if (masteryParam) {
+        const keys = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'];
+        if (keys.includes(event.key)) {
+          event.preventDefault();
+          const buttons = [...lesson.querySelectorAll('[data-mastery-param]')];
+          moveRovingFocus(buttons, masteryParam, event.key);
+          const focused = document.activeElement;
+          if (focused?.dataset.masteryParam) selectMasteryTargetParameter(focused.dataset.masteryParam);
+        }
       }
     });
 
@@ -1314,6 +1883,20 @@ export function mountNativeBackspinLesson(options = {}) {
     listen(range, 'pointerup', () => sa.selectionEnd());
     listen(range, 'pointercancel', () => sa.selectionEnd());
     listen(range, 'blur', () => sa.selectionEnd());
+
+    listen(lesson, 'pointerdown', event => {
+      const masteryRange = event.target.closest?.('[data-mastery-range]');
+      if (masteryRange) sa.selectionStart();
+    });
+    listen(lesson, 'input', event => {
+      const masteryRange = event.target.closest?.('[data-mastery-range]');
+      if (masteryRange) updateMasteryTargetInput(masteryRange);
+    });
+    ['change', 'pointerup', 'pointercancel', 'focusout'].forEach(eventName => {
+      listen(lesson, eventName, event => {
+        if (event.target.closest?.('[data-mastery-range]')) sa.selectionEnd();
+      });
+    });
 
     listen(sheetScrim, 'click', () => closeSheet());
     listen(sheet, 'touchstart', event => {
@@ -1347,6 +1930,11 @@ export function mountNativeBackspinLesson(options = {}) {
   setSurface(state.surface, { focus:false, persist:false });
   if (normalizedLegacySurface) persistJourney({ surface:1 }, { immediate:true });
   else if (normalizedIncompleteMythSurface) persistJourney({ surface:3 }, { immediate:true });
+  else if (normalizedInvalidResultSurface) persistJourney({
+    surface:4,
+    masteryAttemptId:state.masteryAttemptId,
+    lastSubmission:null
+  }, { immediate:true });
 
   return () => {
     if (destroyed) return;

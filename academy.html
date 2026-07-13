@@ -3344,7 +3344,16 @@
     if (attemptId !== journey.masteryAttemptId) throw new RangeError('attemptId does not match the active mastery attempt');
     if (journey.lastSubmission?.attemptId === attemptId) return journey.lastSubmission.summary;
 
-    const summary = commitLessonAttempt(lessonId, submission.results, { ensureRead:true });
+    const taskResults = Array.isArray(submission?.results)
+      ? submission.results.map(result => {
+          const resolved = Boolean(result?.resolved);
+          return { resolved, firstTry:Boolean(resolved && result?.firstTry) };
+        })
+      : submission?.results;
+    const summary = {
+      ...commitLessonAttempt(lessonId, taskResults, { ensureRead:true }),
+      taskResults:taskResults.map(result => ({ ...result }))
+    };
     updateJourney(lessonId, {
       surface:5,
       masteryBest:Math.max(journey.masteryBest, summary.correct),

@@ -61,6 +61,83 @@ const EXPECTED_MYTH_EXPERIMENTS = [
   }
 ];
 
+const EXPECTED_MASTERY_TASKS = [
+  {
+    id:'definition',
+    kind:'choice',
+    prompt:'Spin loft equals:',
+    choices:[
+      'Dynamic loft \u2212 attack angle',
+      'Dynamic loft + attack angle',
+      'Club speed \u00d7 face angle'
+    ],
+    answerIndex:0
+  },
+  {
+    id:'compare',
+    kind:'engine-compare',
+    prompt:'Which delivery produces more backspin?',
+    choices:['Delivery A', 'Delivery B'],
+    answerIndex:1,
+    outputs:[
+      { side:'left', rpm:6048, spinLoft:28 },
+      { side:'right', rpm:8208, spinLoft:38 }
+    ]
+  },
+  {
+    id:'reduce',
+    kind:'engine-compare',
+    prompt:'From 30\u00b0 loft and \u22121\u00b0 attack, which attack-angle change reduces spin loft?',
+    choices:['Change attack to +3\u00b0', 'Change attack to \u22125\u00b0'],
+    answerIndex:0,
+    outputs:[
+      { side:'left', rpm:5832, spinLoft:27 },
+      { side:'right', rpm:7560, spinLoft:35 }
+    ]
+  },
+  {
+    id:'honesty',
+    kind:'choice',
+    prompt:'The Wet range is:',
+    choices:[
+      'A solveFlight output',
+      'A measured value from this phone',
+      'A sourced real-world estimate'
+    ],
+    answerIndex:2
+  },
+  {
+    id:'target',
+    kind:'lab-target',
+    prompt:'Create 6,800\u20137,400 rpm with landing angle at or above 50\u00b0.'
+  }
+];
+
+const EXPECTED_MASTERY_ABILITIES = [
+  'Define spin loft',
+  'Compare model deliveries',
+  'Reduce spin loft',
+  'Separate estimates from simulator truth',
+  'Build a stopping flight'
+];
+
+const MASTERY_TARGET_FIXTURES = Object.freeze({
+  highSpin:{
+    state:{ dynamicLoft:34, attackAngle:-4, ballSpeed:120 },
+    rpm:8208,
+    landing:60
+  },
+  shallowLanding:{
+    state:{ dynamicLoft:15, attackAngle:-8, ballSpeed:170 },
+    rpm:7038,
+    landing:33.3
+  },
+  pass:{
+    state:{ dynamicLoft:30, attackAngle:-3, ballSpeed:120 },
+    rpm:7128,
+    landing:54.4
+  }
+});
 const LEGACY_STORE = {
   version: 1,
   xp: 0,
@@ -338,6 +415,249 @@ async function completeMissionAndEnterMyths(page, root) {
   await assertEventuallyRootSurface(page, root, '3');
 }
 
+async function completeMythsAndEnterMastery(page, root) {
+  await completeMissionAndEnterMyths(page, root);
+  const completed = [false, false, false];
+  for (let index = 0; index < EXPECTED_MYTH_EXPERIMENTS.length; index += 1) {
+    const expected = EXPECTED_MYTH_EXPERIMENTS[index];
+    await root.locator(`#mythExperiment [data-myth-choice="${expected.answerIndex}"]`).click();
+    completed[index] = true;
+    await waitForBackspinJourney(page, { surface:3, myths:[...completed] });
+    await root.locator('[data-myth-next]').click();
+    if (index < EXPECTED_MYTH_EXPERIMENTS.length - 1) {
+      await page.waitForFunction(
+        next => document.querySelector('#mythExperiment')?.dataset.experimentIndex === String(next),
+        index + 1
+      );
+    }
+  }
+  await assertEventuallyRootSurface(page, root, '4');
+  await page.waitForFunction(key => {
+    const journey = JSON.parse(localStorage.getItem(key))?.lessons?.backspin?.journey;
+    return journey?.surface === 4
+      && typeof journey.masteryAttemptId === 'string'
+      && journey.masteryAttemptId.length > 0
+      && journey.lastSubmission === null;
+  }, STORE_KEY);
+  return root.locator('#masteryTask').getAttribute('data-attempt');
+}
+
+async function waitForMasteryTask(page, root, index) {
+  await page.waitForFunction(
+    expected => document.querySelector('#masteryTask')?.dataset.masteryIndex === String(expected),
+    index,
+    { timeout:3_000 }
+  );
+  return root.locator('#masteryTask');
+}
+
+async function assertMasteryTask(page, root, index) {
+  const expected = EXPECTED_MASTERY_TASKS[index];
+  const task = await waitForMasteryTask(page, root, index);
+  assert.equal(await task.getAttribute('data-mastery-task'), expected.id);
+  assert.equal(await task.getAttribute('data-mastery-index'), String(index));
+  assert.equal(await task.getAttribute('data-mastery-kind'), expected.kind);
+  assert.equal(await task.getAttribute('data-submitted'), 'false');
+  assert.ok((await task.getAttribute('data-attempt'))?.length > 0);
+  assert.equal(
+    (await task.locator('[data-mastery-prompt]').textContent()).replace(/\s+/g, ' ').trim(),
+    expected.prompt
+  );
+  assert.equal(
+    (await root.locator('[data-mastery-step]').textContent()).replace(/\s+/g, ' ').trim(),
+    `Task ${index + 1} / 5`
+  );
+
+  if (expected.choices) {
+    for (let choiceIndex = 0; choiceIndex < expected.choices.length; choiceIndex += 1) {
+      await assertMinimumTarget(task.locator('[data-mastery-choice]').nth(choiceIndex),
+        `Mastery task ${index + 1} choice ${choiceIndex + 1}`);
+    }
+    assert.deepEqual(
+      await task.locator('[data-mastery-choice]').evaluateAll(buttons => buttons.map(button => ({
+        index:Number(button.getAttribute('data-mastery-choice')),
+        text:button.textContent.replace(/\s+/g, ' ').trim(),
+        role:button.getAttribute('role')
+      }))),
+      expected.choices.map((text, choiceIndex) => ({ index:choiceIndex, text, role:'radio' }))
+    );
+  }
+  if (expected.outputs) {
+    assert.equal(await task.locator('[data-mastery-comparison]').isHidden(), true,
+      'Engine outputs must stay hidden until the comparison is answered');
+  }
+  return task;
+}
+
+async function answerMasteryChoice(page, task, choiceIndex, { keyboard=false } = {}) {
+  const choices = task.locator('[data-mastery-choice]');
+  const choice = choices.nth(choiceIndex);
+  if (keyboard) {
+    await choices.first().focus();
+    for (let index = 0; index < choiceIndex; index += 1) {
+      await page.keyboard.press('ArrowRight');
+    }
+    assert.equal(await choice.evaluate(element => document.activeElement === element), true);
+    await page.keyboard.press('Space');
+  } else {
+    await choice.click();
+  }
+  await task.locator('[data-mastery-feedback]').waitFor({ state:'visible' });
+  assert.equal(await choice.getAttribute('aria-checked'), 'true');
+  return choice;
+}
+
+async function assertMasteryComparison(task, expected) {
+  const comparison = task.locator('[data-mastery-comparison]');
+  assert.equal(await comparison.isVisible(), true);
+  assert.deepEqual(
+    await comparison.locator('[data-mastery-engine-output]').evaluateAll(outputs => outputs.map(output => ({
+      side:output.getAttribute('data-mastery-engine-output'),
+      rpm:Number(output.getAttribute('data-rpm')),
+      spinLoft:Number(output.getAttribute('data-spin-loft'))
+    }))),
+    expected.outputs
+  );
+}
+
+async function advanceMasteryTask(page, root, nextIndex) {
+  const next = root.locator('[data-mastery-next]');
+  assert.equal(await next.isDisabled(), false);
+  assert.notEqual(await next.getAttribute('aria-disabled'), 'true');
+  await next.click();
+  if (nextIndex < EXPECTED_MASTERY_TASKS.length) {
+    await waitForMasteryTask(page, root, nextIndex);
+    await page.waitForFunction(() => {
+      const task = document.querySelector('#masteryTask');
+      return task?.contains(document.activeElement);
+    });
+  }
+}
+
+async function answerMasteryChoices(page, root, answers, { keyboardTask=-1 } = {}) {
+  for (let index = 0; index < 4; index += 1) {
+    const task = await assertMasteryTask(page, root, index);
+    await answerMasteryChoice(page, task, answers[index], { keyboard:index === keyboardTask });
+    if (EXPECTED_MASTERY_TASKS[index].outputs) {
+      await assertMasteryComparison(task, EXPECTED_MASTERY_TASKS[index]);
+    }
+    await advanceMasteryTask(page, root, index + 1);
+  }
+  return assertMasteryTask(page, root, 4);
+}
+
+async function setMasteryTargetState(page, root, state) {
+  for (const key of Object.keys(EXPECTED_BACKSPIN_PARAMS)) {
+    const chip = root.locator(`[data-mastery-param="${key}"]`);
+    if (await chip.getAttribute('aria-checked') !== 'true') await chip.click();
+    await setRange(page, '#masteryTargetRange', state[key]);
+  }
+}
+
+async function waitForMasteryReadout(page, expected) {
+  await page.waitForFunction(target => {
+    const rpm = document.querySelector('[data-mastery-rpm]');
+    const landing = document.querySelector('[data-mastery-landing]');
+    const rpmValue = Number(rpm?.getAttribute('data-value')
+      || rpm?.textContent.replaceAll(',', '').match(/[\d.]+/)?.[0]);
+    const landingValue = Number(landing?.getAttribute('data-value')
+      || landing?.textContent.match(/[\d.]+/)?.[0]);
+    return rpmValue === target.rpm && landingValue === target.landing;
+  }, expected);
+}
+
+async function submitMasteryTarget(root) {
+  const submit = root.locator('[data-action="submit-mastery-target"][data-mastery-target-submit]');
+  assert.equal(await submit.isDisabled(), false, 'Target submission must always be available');
+  await submit.click();
+  const feedback = root.locator('[data-mastery-target-feedback]');
+  await feedback.waitFor({ state:'visible' });
+  return feedback;
+}
+
+async function installAtomicResultTracker(page) {
+  await page.evaluate(key => {
+    window.__academyResultWrites = [];
+    window.__academyResultSurfaces = [];
+    const original = Storage.prototype.setItem;
+    Storage.prototype.setItem = function patchedSetItem(storageKey, value) {
+      if (storageKey === key) {
+        const parsed = JSON.parse(value);
+        const journey = parsed.lessons?.backspin?.journey;
+        window.__academyResultWrites.push({
+          surface:journey?.surface,
+          hasSubmission:Boolean(journey?.lastSubmission),
+          attempts:journey?.masteryAttempts,
+          xp:parsed.xp
+        });
+      }
+      return original.call(this, storageKey, value);
+    };
+    const lesson = document.querySelector('#nativeLesson');
+    const observer = new MutationObserver(() => {
+      if (lesson?.dataset.surface === '5') {
+        const parsed = JSON.parse(localStorage.getItem(key));
+        const journey = parsed.lessons?.backspin?.journey;
+        window.__academyResultSurfaces.push({
+          hasSubmission:Boolean(journey?.lastSubmission),
+          attempts:journey?.masteryAttempts,
+          xp:parsed.xp
+        });
+      }
+    });
+    observer.observe(lesson, { attributes:true, attributeFilter:['data-surface'] });
+    window.__academyResultObserver = observer;
+  }, STORE_KEY);
+}
+
+async function atomicResultContract(page) {
+  await page.waitForTimeout(0);
+  return page.evaluate(() => ({
+    writes:window.__academyResultWrites || [],
+    surfaces:window.__academyResultSurfaces || []
+  }));
+}
+
+async function assertMasteryViewport(page, root, viewport, surfaceIndex, content, label) {
+  const surface = root.locator(`.native-lesson__surface[data-surface="${surfaceIndex}"]`);
+  await assertFitsViewport(surface, viewport, `${label} surface`);
+  await assertTypeFloor(content, 10, label);
+
+  const small = await surface.locator('a, button, input, [role="button"]').evaluateAll(elements =>
+    elements.filter(element => {
+      const rect = element.getBoundingClientRect();
+      return rect.width > 0 && rect.height > 0 && (rect.width < 44 || rect.height < 44);
+    }).map(element => ({
+      text:(element.textContent || element.getAttribute('aria-label') || '').trim(),
+      width:element.getBoundingClientRect().width,
+      height:element.getBoundingClientRect().height
+    }))
+  );
+  assert.deepEqual(small, [], `${label} controls must be at least 44px`);
+
+  const dimensions = await surface.evaluate(element => ({
+    scrollHeight:element.scrollHeight,
+    clientHeight:element.clientHeight,
+    scrollWidth:element.scrollWidth,
+    clientWidth:element.clientWidth
+  }));
+  assert.ok(dimensions.scrollHeight <= dimensions.clientHeight + 1,
+    `${label} must fit ${viewport.width}x${viewport.height} vertically: ${JSON.stringify(dimensions)}`);
+  assert.ok(dimensions.scrollWidth <= dimensions.clientWidth + 1,
+    `${label} must not expose horizontal user-scroll: ${JSON.stringify(dimensions)}`);
+
+  const documentScroll = await page.evaluate(() => ({
+    left:document.documentElement.scrollLeft,
+    top:document.documentElement.scrollTop,
+    width:innerWidth,
+    scrollWidth:document.documentElement.scrollWidth
+  }));
+  assert.equal(documentScroll.left, 0);
+  assert.equal(documentScroll.top, 0);
+  assert.ok(documentScroll.scrollWidth <= documentScroll.width + 1,
+    `${label} must not widen the document: ${JSON.stringify(documentScroll)}`);
+}
+
 async function assertMythExperiment(root, {
   index,
   prompt,
@@ -449,6 +769,141 @@ async function assertAboveNavigation(locator, navigation, label) {
     `${label} must remain above sticky navigation: ${JSON.stringify({ box, navBox })}`
   );
 }
+async function finishMasteryAttempt(page, root, {
+  answers,
+  targetFixtures,
+  keyboardTask=-1,
+  trackAtomic=false,
+  inspectTarget,
+  beforeTarget
+}) {
+  const targetTask = await answerMasteryChoices(page, root, answers, { keyboardTask });
+  const attemptId = await targetTask.getAttribute('data-attempt');
+  if (beforeTarget) await beforeTarget(targetTask);
+  for (let index = 0; index < targetFixtures.length; index += 1) {
+    const fixture = targetFixtures[index];
+    await setMasteryTargetState(page, root, fixture.state);
+    await waitForMasteryReadout(page, fixture);
+    const feedback = await submitMasteryTarget(root);
+    if (inspectTarget) await inspectTarget({ index, fixture, feedback, task:targetTask });
+  }
+
+  if (trackAtomic) await installAtomicResultTracker(page);
+  const hapticsBefore = await hapticLog(page);
+  await advanceMasteryTask(page, root, 5);
+  await assertEventuallyRootSurface(page, root, '5');
+  await page.waitForFunction(key => {
+    const journey = JSON.parse(localStorage.getItem(key))?.lessons?.backspin?.journey;
+    return journey?.surface === 5
+      && journey?.lastSubmission?.attemptId === journey?.masteryAttemptId;
+  }, STORE_KEY);
+  await page.waitForTimeout(50);
+  return {
+    attemptId,
+    store:await storedAcademy(page),
+    hapticsBefore,
+    hapticsAfter:await hapticLog(page),
+    atomic:trackAtomic ? await atomicResultContract(page) : null
+  };
+}
+async function hapticLog(page) {
+  return page.evaluate(async () => {
+    const module = await import('/sa-haptics.js');
+    return module.default._log.map(entry => entry.kind);
+  });
+}
+
+async function assertNativeResult(root, {
+  attemptId,
+  mastered,
+  correct,
+  xp,
+  abilities,
+  rank
+}) {
+  const result = root.locator('#nativeLessonResult');
+  assert.equal(await result.getAttribute('data-result-mastered'), String(mastered));
+  assert.equal(await result.getAttribute('data-attempt'), attemptId);
+  assert.equal(
+    (await result.locator('[data-result-score]').textContent()).replace(/\s+/g, ' ').trim(),
+    `${correct} / 5`
+  );
+  assert.equal(
+    (await result.locator('[data-result-xp]').textContent()).replace(/\s+/g, ' ').trim(),
+    `+${xp} XP`
+  );
+  assert.deepEqual(
+    await result.locator('[data-result-ability]').allTextContents()
+      .then(values => values.map(value => value.replace(/\s+/g, ' ').trim())),
+    abilities
+  );
+  const rankNode = result.locator('[data-result-rank]');
+  if (rank) {
+    assert.equal(await rankNode.isVisible(), true);
+    assert.match((await rankNode.textContent()).replace(/\s+/g, ' ').trim(), rank);
+  } else {
+    assert.equal(await rankNode.isHidden(), true,
+      'Rank must stay hidden unless persisted XP crossed a real threshold');
+  }
+
+  const eyebrow = (await result.locator('[data-result-eyebrow]').textContent()).trim().toUpperCase();
+  assert.equal(eyebrow, mastered ? 'BACKSPIN MASTERED' : 'BACKSPIN COMPLETE');
+  if (mastered) {
+    assert.equal(
+      (await result.locator('[data-result-copy]').textContent()).replace(/\s+/g, ' ').trim(),
+      'You can separate spin loft from \u201chitting down\u201d and control a shot\'s stopping flight in the Flightglass model.'
+    );
+    assert.equal(await result.locator('[data-action="next-lesson"]').isVisible(), true);
+  } else {
+    assert.match(await result.locator('[data-result-copy]').textContent(),
+      new RegExp(`${correct} of 5.*Retry for mastery \\(4/5\\)`, 'i'));
+    assert.equal(await result.locator('[data-action="retry-mastery"]').isVisible(), true);
+    assert.equal(await result.locator('[data-action="next-lesson"]').count(), 0);
+  }
+  assert.equal(await result.locator('[data-action="back-to-path"]').isVisible(), true);
+  return result;
+}
+
+function expectedTaskResults(correctIndexes) {
+  return EXPECTED_MASTERY_TASKS.map((_, index) => ({
+    resolved:correctIndexes.includes(index),
+    firstTry:correctIndexes.includes(index)
+  }));
+}
+
+function seededMasteryStore({ xp=0, attemptId='seeded-mastery-attempt' } = {}) {
+  return {
+    version:1,
+    xp,
+    lessons:{
+      backspin:{
+        read:false,
+        quizBest:0,
+        quizAttempts:0,
+        perfect:false,
+        completed:false,
+        completedAt:null,
+        diagramTouched:false,
+        quizBestCorrect:0,
+        quizLen:0,
+        mastered:false,
+        journey:{
+          surface:4,
+          mission:{ built:true, cut:true },
+          myths:[true, true, true],
+          masteryBest:0,
+          masteryAttempts:0,
+          masteryAttemptId:attemptId,
+          lastSubmission:null
+        }
+      }
+    },
+    unlocked:['backspin'],
+    badges:[],
+    lastOpened:'backspin'
+  };
+}
+
 test.before(async () => {
   server = await startStaticServer();
   const address = server.address();
@@ -1449,6 +1904,572 @@ test('myth evidence also fits the 430x932 reference viewport', { timeout:90_000 
   assert.deepEqual(runtimeErrors, []);
 });
 
+test('Backspin Mastery keeps one stable attempt, submits atomically and upgrades 3/5 to 4/5 once', { timeout:240_000 }, async () => {
+  const viewport = { width:430, height:932 };
+  const { page, root, runtimeErrors } = await openFreshBackspinPage(viewport);
+  const firstAttemptId = await completeMythsAndEnterMastery(page, root);
+  assert.ok(firstAttemptId);
+
+  let stored = await storedAcademy(page);
+  assert.equal(stored.lessons.backspin.journey.masteryAttemptId, firstAttemptId);
+  assert.equal(stored.lessons.backspin.journey.lastSubmission, null);
+
+  await root.locator('.native-lesson__navigation [data-action="previous"]').click();
+  await assertEventuallyRootSurface(page, root, '3');
+  stored = await storedAcademy(page);
+  assert.equal(stored.lessons.backspin.journey.masteryAttemptId, firstAttemptId,
+    'Backward navigation must retain the active mastery attempt');
+  await root.locator('[data-myth-next]').click();
+  await assertEventuallyRootSurface(page, root, '4');
+  assert.equal(await root.locator('#masteryTask').getAttribute('data-attempt'), firstAttemptId);
+
+  await page.reload({ waitUntil:'networkidle' });
+  await root.waitFor({ timeout:5_000 });
+  await assertEventuallyRootSurface(page, root, '4');
+  assert.equal(await root.locator('#masteryTask').getAttribute('data-attempt'), firstAttemptId,
+    'Reloading S4 must restore the same active attempt');
+  stored = await storedAcademy(page);
+  assert.equal(stored.lessons.backspin.journey.masteryAttemptId, firstAttemptId);
+  assert.equal(stored.lessons.backspin.journey.lastSubmission, null);
+
+  const initialTask = await assertMasteryTask(page, root, 0);
+  await assertMasteryViewport(page, root, viewport, 4, initialTask, '430px Mastery task 1');
+
+  const firstRun = await finishMasteryAttempt(page, root, {
+    answers:[0, 1, 0, 0],
+    targetFixtures:[
+      MASTERY_TARGET_FIXTURES.highSpin,
+      MASTERY_TARGET_FIXTURES.shallowLanding
+    ],
+    keyboardTask:1,
+    trackAtomic:true,
+    inspectTarget:async ({ index, fixture, feedback, task }) => {
+      assert.equal(await task.locator('[data-mastery-rpm]').getAttribute('data-value'), String(fixture.rpm));
+      assert.equal(await task.locator('[data-mastery-landing]').getAttribute('data-value'), String(fixture.landing));
+      const copy = (await feedback.textContent()).replace(/\s+/g, ' ').trim();
+      if (index === 0) {
+        assert.match(copy, /8,208 rpm/);
+        assert.match(copy, /60(?:\.0)?\u00b0/);
+        assert.match(copy, /6,800.*7,400|lower.*spin/i,
+          'High-spin failure must name the unmet rpm condition without a slider recipe');
+      } else {
+        assert.match(copy, /7,038 rpm/);
+        assert.match(copy, /33\.3\u00b0/);
+        assert.match(copy, /50\u00b0|landing/i,
+          'Shallow-landing failure must name the unmet landing condition');
+      }
+      assert.doesNotMatch(copy, /set dynamic loft|set attack angle|recipe/i);
+    }
+  });
+  assert.equal(firstRun.attemptId, firstAttemptId);
+
+  assert.ok(firstRun.atomic.writes.length >= 1);
+  assert.ok(firstRun.atomic.writes.every(write => write.surface !== 5 || write.hasSubmission),
+    `No persisted bare S5 is allowed: ${JSON.stringify(firstRun.atomic.writes)}`);
+  assert.ok(firstRun.atomic.surfaces.length >= 1);
+  assert.ok(firstRun.atomic.surfaces.every(snapshot => snapshot.hasSubmission),
+    `S5 must never render before its summary is persisted: ${JSON.stringify(firstRun.atomic.surfaces)}`);
+
+  const firstNavigationHaptics = firstRun.hapticsAfter.slice(firstRun.hapticsBefore.length);
+  assert.ok(firstNavigationHaptics.filter(kind => kind === 'notify:success').length <= 1,
+    `Mastery commit may emit at most one success notification: ${firstNavigationHaptics}`);
+  assert.ok(firstNavigationHaptics.every(kind => kind === 'notify:success'),
+    `S4 to S5 navigation must add no decorative haptic: ${firstNavigationHaptics}`);
+
+  stored = firstRun.store;
+  const lesson = stored.lessons.backspin;
+  const journey = lesson.journey;
+  const firstSummary = journey.lastSubmission.summary;
+  assert.equal(stored.xp, 100);
+  assert.equal(lesson.read, true);
+  assert.equal(lesson.quizAttempts, 1);
+  assert.equal(lesson.quizBest, 60);
+  assert.equal(lesson.quizBestCorrect, 3);
+  assert.equal(lesson.completed, true);
+  assert.equal(lesson.mastered, false);
+  assert.equal(lesson.perfect, false);
+  assert.equal(journey.surface, 5);
+  assert.equal(journey.masteryBest, 3);
+  assert.equal(journey.masteryAttempts, 1);
+  assert.equal(journey.masteryAttemptId, firstAttemptId);
+  assert.equal(journey.lastSubmission.attemptId, firstAttemptId);
+  assert.equal(firstSummary.correct, 3);
+  assert.equal(firstSummary.threshold, 4);
+  assert.equal(firstSummary.mastered, false);
+  assert.equal(firstSummary.delta, 60);
+  assert.equal(firstSummary.readDelta, 40);
+  assert.equal(firstSummary.totalDelta, 100);
+  assert.equal(firstSummary.storeXp, 100);
+  assert.equal(firstSummary.leveledUp, false);
+  assert.deepEqual(firstSummary.taskResults, expectedTaskResults([0, 1, 2]));
+  assert.deepEqual(stored.badges, ['first-light', 'spin-doctor']);
+
+  const firstResult = await assertNativeResult(root, {
+    attemptId:firstAttemptId,
+    mastered:false,
+    correct:3,
+    xp:100,
+    abilities:EXPECTED_MASTERY_ABILITIES.slice(0, 3)
+  });
+  await assertMasteryViewport(page, root, viewport, 5, firstResult, '430px 3-of-5 Result');
+
+  const rawBeforeReload = await page.evaluate(key => localStorage.getItem(key), STORE_KEY);
+  const beforeReloadState = JSON.parse(rawBeforeReload);
+  await page.reload({ waitUntil:'networkidle' });
+  await root.waitFor({ timeout:5_000 });
+  await assertEventuallyRootSurface(page, root, '5');
+  await page.waitForTimeout(300);
+  const rawAfterReload = await page.evaluate(key => localStorage.getItem(key), STORE_KEY);
+  assert.equal(rawAfterReload, rawBeforeReload,
+    'Reloading Result must be byte-identical and must not resubmit');
+  const afterReloadState = JSON.parse(rawAfterReload);
+  assert.equal(afterReloadState.xp, beforeReloadState.xp);
+  assert.equal(afterReloadState.lessons.backspin.quizAttempts,
+    beforeReloadState.lessons.backspin.quizAttempts);
+  assert.deepEqual(afterReloadState.badges, beforeReloadState.badges);
+  assert.deepEqual(afterReloadState.unlocked, beforeReloadState.unlocked);
+  assert.deepEqual(afterReloadState.lessons.backspin.journey.lastSubmission,
+    beforeReloadState.lessons.backspin.journey.lastSubmission);
+  await assertNativeResult(root, {
+    attemptId:firstAttemptId,
+    mastered:false,
+    correct:3,
+    xp:100,
+    abilities:EXPECTED_MASTERY_ABILITIES.slice(0, 3)
+  });
+
+  await root.locator('.native-lesson__navigation [data-action="previous"]').click();
+  await assertEventuallyRootSurface(page, root, '4');
+  const submittedTask = root.locator('#masteryTask');
+  assert.equal(await submittedTask.getAttribute('data-submitted'), 'true');
+  assert.equal(await submittedTask.getAttribute('data-attempt'), firstAttemptId);
+  assert.equal(await submittedTask.locator('[data-mastery-submitted]').isVisible(), true);
+  assert.equal(await submittedTask.locator(
+    '[data-mastery-choice], [data-mastery-param], [data-mastery-range], [data-mastery-target-submit]'
+  ).count(), 0, 'A submitted S4 must expose no mutable controls');
+  const beforeViewResult = await hapticLog(page);
+  const submittedSummary = JSON.stringify((await storedAcademy(page))
+    .lessons.backspin.journey.lastSubmission.summary);
+  await submittedTask.locator('[data-action="view-result"]').click();
+  await assertEventuallyRootSurface(page, root, '5');
+  assert.deepEqual(await hapticLog(page), beforeViewResult,
+    'Viewing an already-submitted Result is navigation and must not emit a haptic');
+  let afterView = await storedAcademy(page);
+  assert.equal(afterView.xp, 100);
+  assert.equal(afterView.lessons.backspin.quizAttempts, 1);
+  assert.equal(JSON.stringify(afterView.lessons.backspin.journey.lastSubmission.summary), submittedSummary);
+
+  await root.locator('[data-action="retry-mastery"]').click();
+  await assertEventuallyRootSurface(page, root, '4');
+  await page.waitForFunction(({ key, previous }) => {
+    const journey = JSON.parse(localStorage.getItem(key))?.lessons?.backspin?.journey;
+    return journey?.surface === 4
+      && typeof journey.masteryAttemptId === 'string'
+      && journey.masteryAttemptId !== previous
+      && journey.lastSubmission === null;
+  }, { key:STORE_KEY, previous:firstAttemptId });
+  const retryAttemptId = await root.locator('#masteryTask').getAttribute('data-attempt');
+  assert.notEqual(retryAttemptId, firstAttemptId);
+  stored = await storedAcademy(page);
+  assert.equal(stored.xp, 100);
+  assert.equal(stored.lessons.backspin.quizAttempts, 1);
+  assert.equal(stored.lessons.backspin.journey.masteryAttempts, 1);
+  assert.equal(stored.lessons.backspin.journey.masteryBest, 3);
+
+  const retryRun = await finishMasteryAttempt(page, root, {
+    answers:[0, 1, 0, 2],
+    targetFixtures:[MASTERY_TARGET_FIXTURES.shallowLanding],
+    keyboardTask:3
+  });
+  assert.equal(retryRun.attemptId, retryAttemptId);
+  assert.deepEqual(retryRun.hapticsAfter, retryRun.hapticsBefore,
+    'A retry with no newly earned badge or unlock must add no result-navigation haptic');
+
+  stored = retryRun.store;
+  const retriedLesson = stored.lessons.backspin;
+  const retrySummary = retriedLesson.journey.lastSubmission.summary;
+  assert.equal(stored.xp, 120);
+  assert.equal(retriedLesson.quizAttempts, 2);
+  assert.equal(retriedLesson.quizBest, 80);
+  assert.equal(retriedLesson.quizBestCorrect, 4);
+  assert.equal(retriedLesson.mastered, true);
+  assert.equal(retriedLesson.perfect, false);
+  assert.equal(retriedLesson.journey.masteryBest, 4);
+  assert.equal(retriedLesson.journey.masteryAttempts, 2);
+  assert.equal(retriedLesson.journey.masteryAttemptId, retryAttemptId);
+  assert.equal(retrySummary.correct, 4);
+  assert.equal(retrySummary.delta, 20);
+  assert.equal(retrySummary.readDelta, 0);
+  assert.equal(retrySummary.totalDelta, 20);
+  assert.equal(retrySummary.storeXp, 120);
+  assert.equal(retrySummary.leveledUp, false);
+  assert.deepEqual(retrySummary.taskResults, expectedTaskResults([0, 1, 2, 3]));
+  assert.deepEqual(stored.badges, ['first-light', 'spin-doctor']);
+
+  await assertNativeResult(root, {
+    attemptId:retryAttemptId,
+    mastered:true,
+    correct:4,
+    xp:20,
+    abilities:EXPECTED_MASTERY_ABILITIES.slice(0, 4)
+  });
+
+  const beforeLockedNext = await hapticLog(page);
+  await root.locator('[data-action="next-lesson"]').click();
+  await page.waitForFunction(() => location.hash === '#/path');
+  await page.waitForTimeout(350);
+  assert.deepEqual(await hapticLog(page), beforeLockedNext,
+    'Locked next-lesson fallback is navigation and must not emit a haptic');
+  assert.match(await page.locator('#live').textContent(),
+    /Launch Angle unlocks after .*Dynamic Loft.*Attack Angle.*Returning to the Academy path/i);
+  stored = await storedAcademy(page);
+  assert.equal(stored.lastOpened, 'backspin');
+
+  assert.deepEqual(runtimeErrors, []);
+});
+test('fresh 4/5 mastery earns 120 XP and keeps the 375px keyboard/range contract', { timeout:180_000 }, async () => {
+  const viewport = { width:375, height:812 };
+  const { page, root, runtimeErrors } = await openFreshBackspinPage(viewport);
+  const attemptId = await completeMythsAndEnterMastery(page, root);
+  const firstTask = await assertMasteryTask(page, root, 0);
+  await assertMasteryViewport(page, root, viewport, 4, firstTask, '375px Mastery task 1');
+
+  const run = await finishMasteryAttempt(page, root, {
+    answers:[0, 1, 0, 2],
+    targetFixtures:[MASTERY_TARGET_FIXTURES.shallowLanding],
+    keyboardTask:2,
+    beforeTarget:async targetTask => {
+      const chips = targetTask.locator('[data-mastery-param]');
+      assert.equal(await chips.count(), 3);
+      assert.equal(await targetTask.locator('#masteryTargetRange[data-mastery-range]').count(), 1);
+      assert.equal(await targetTask.locator('[data-action="submit-mastery-target"]').isDisabled(), false);
+      for (let index = 0; index < 3; index += 1) {
+        await assertMinimumTarget(chips.nth(index), `375px target parameter ${index + 1}`);
+      }
+      await assertMinimumTarget(targetTask.locator('#masteryTargetRange'), '375px mastery range');
+      await assertMinimumTarget(targetTask.locator('[data-action="submit-mastery-target"]'),
+        '375px target submit');
+
+      assertRangeContract(
+        await targetTask.locator('#masteryTargetRange').evaluate(element => ({
+          min:Number(element.min),
+          max:Number(element.max),
+          step:Number(element.step),
+          value:Number(element.value),
+          ariaLabel:element.getAttribute('aria-label'),
+          ariaValueText:element.getAttribute('aria-valuetext')
+        })),
+        EXPECTED_BACKSPIN_PARAMS.dynamicLoft,
+        25
+      );
+
+      await chips.first().focus();
+      await page.keyboard.press('ArrowRight');
+      const attack = targetTask.locator('[data-mastery-param="attackAngle"]');
+      assert.equal(await attack.getAttribute('aria-checked'), 'true');
+      assert.equal(await attack.evaluate(element => document.activeElement === element), true);
+      assertRangeContract(
+        await targetTask.locator('#masteryTargetRange').evaluate(element => ({
+          min:Number(element.min),
+          max:Number(element.max),
+          step:Number(element.step),
+          value:Number(element.value),
+          ariaLabel:element.getAttribute('aria-label'),
+          ariaValueText:element.getAttribute('aria-valuetext')
+        })),
+        EXPECTED_BACKSPIN_PARAMS.attackAngle,
+        -3
+      );
+
+      const range = targetTask.locator('#masteryTargetRange');
+      await range.focus();
+      await page.keyboard.press('ArrowRight');
+      assert.equal(await range.inputValue(), '-2');
+      assert.equal(await range.getAttribute('aria-valuetext'), '-2\u00b0');
+      const focusState = await range.evaluate(element => ({
+        active:document.activeElement === element,
+        focusVisible:element.matches(':focus-visible'),
+        boxShadow:getComputedStyle(element).boxShadow
+      }));
+      assert.equal(focusState.active, true);
+      assert.equal(focusState.focusVisible, true);
+      assert.notEqual(focusState.boxShadow, 'none');
+      await assertMasteryViewport(page, root, viewport, 4, targetTask, '375px target mini-lab');
+    }
+  });
+
+  assert.equal(run.attemptId, attemptId);
+  const resultHaptics = run.hapticsAfter.slice(run.hapticsBefore.length);
+  assert.ok(resultHaptics.filter(kind => kind === 'notify:success').length <= 1);
+  assert.ok(resultHaptics.every(kind => kind === 'notify:success'));
+
+  const stored = run.store;
+  const lesson = stored.lessons.backspin;
+  const summary = lesson.journey.lastSubmission.summary;
+  assert.equal(stored.xp, 120);
+  assert.equal(lesson.quizAttempts, 1);
+  assert.equal(lesson.quizBest, 80);
+  assert.equal(lesson.quizBestCorrect, 4);
+  assert.equal(lesson.completed, true);
+  assert.equal(lesson.mastered, true);
+  assert.equal(lesson.perfect, false);
+  assert.equal(lesson.journey.masteryBest, 4);
+  assert.equal(lesson.journey.masteryAttempts, 1);
+  assert.equal(summary.correct, 4);
+  assert.equal(summary.delta, 80);
+  assert.equal(summary.readDelta, 40);
+  assert.equal(summary.totalDelta, 120);
+  assert.equal(summary.storeXp, 120);
+  assert.equal(summary.leveledUp, false);
+  assert.deepEqual(summary.taskResults, expectedTaskResults([0, 1, 2, 3]));
+
+  const result = await assertNativeResult(root, {
+    attemptId,
+    mastered:true,
+    correct:4,
+    xp:120,
+    abilities:EXPECTED_MASTERY_ABILITIES.slice(0, 4)
+  });
+  await page.waitForFunction(() =>
+    document.querySelector('#nativeLessonResult')?.contains(document.activeElement)
+    || document.querySelector('.native-lesson__surface[data-surface="5"]') === document.activeElement
+  );
+  await assertMasteryViewport(page, root, viewport, 5, result, '375px 4-of-5 Result');
+  assert.deepEqual(runtimeErrors, []);
+});
+test('fresh 5/5 mastery earns 190 XP, persists every ability and follows unlocked prerequisites', { timeout:180_000 }, async () => {
+  const viewport = { width:430, height:932 };
+  const { page, root, runtimeErrors } = await openFreshBackspinPage(viewport);
+  const attemptId = await completeMythsAndEnterMastery(page, root);
+
+  const run = await finishMasteryAttempt(page, root, {
+    answers:[0, 1, 0, 2],
+    targetFixtures:[MASTERY_TARGET_FIXTURES.pass],
+    keyboardTask:0,
+    inspectTarget:async ({ fixture, feedback, task }) => {
+      assert.equal(await task.locator('[data-mastery-rpm]').getAttribute('data-value'), String(fixture.rpm));
+      assert.equal(await task.locator('[data-mastery-landing]').getAttribute('data-value'), String(fixture.landing));
+      const copy = (await feedback.textContent()).replace(/\s+/g, ' ').trim();
+      assert.match(copy, /7,128 rpm/);
+      assert.match(copy, /54\.4\u00b0/);
+      assert.match(copy, /target|stopping flight|complete/i);
+    }
+  });
+
+  const stored = run.store;
+  const lesson = stored.lessons.backspin;
+  const summary = lesson.journey.lastSubmission.summary;
+  assert.equal(stored.xp, 190);
+  assert.equal(lesson.quizAttempts, 1);
+  assert.equal(lesson.quizBest, 150);
+  assert.equal(lesson.quizBestCorrect, 5);
+  assert.equal(lesson.completed, true);
+  assert.equal(lesson.mastered, true);
+  assert.equal(lesson.perfect, true);
+  assert.equal(lesson.journey.masteryBest, 5);
+  assert.equal(lesson.journey.masteryAttempts, 1);
+  assert.equal(summary.correct, 5);
+  assert.equal(summary.perfect, true);
+  assert.equal(summary.delta, 150);
+  assert.equal(summary.readDelta, 40);
+  assert.equal(summary.totalDelta, 190);
+  assert.equal(summary.storeXp, 190);
+  assert.equal(summary.leveledUp, false);
+  assert.deepEqual(summary.taskResults, expectedTaskResults([0, 1, 2, 3, 4]));
+  assert.deepEqual(stored.badges, ['first-light', 'spin-doctor', 'flawless']);
+
+  const result = await assertNativeResult(root, {
+    attemptId,
+    mastered:true,
+    correct:5,
+    xp:190,
+    abilities:EXPECTED_MASTERY_ABILITIES
+  });
+  await assertMasteryViewport(page, root, viewport, 5, result, '430px perfect Result');
+
+  await page.evaluate(key => {
+    const saved = JSON.parse(localStorage.getItem(key));
+    saved.lessons['dynamic-loft'].completed = true;
+    saved.lessons['attack-angle'].completed = true;
+    localStorage.setItem(key, JSON.stringify(saved));
+  }, STORE_KEY);
+  await page.reload({ waitUntil:'networkidle' });
+  await root.waitFor({ timeout:5_000 });
+  await assertEventuallyRootSurface(page, root, '5');
+  await assertNativeResult(root, {
+    attemptId,
+    mastered:true,
+    correct:5,
+    xp:190,
+    abilities:EXPECTED_MASTERY_ABILITIES
+  });
+
+  const beforeUnlockedNext = await hapticLog(page);
+  await root.locator('[data-action="next-lesson"]').click();
+  await page.waitForFunction(() => location.hash === '#/lesson/launch-angle');
+  await page.locator('.view.lesson h1').waitFor();
+  assert.equal((await page.locator('.view.lesson h1').textContent()).trim(), 'Launch Angle');
+  assert.equal(await page.locator('#nativeLesson').count(), 0);
+  assert.deepEqual(await hapticLog(page), beforeUnlockedNext,
+    'An unlocked next-lesson navigation must not emit a haptic');
+  assert.equal((await storedAcademy(page)).lastOpened, 'launch-angle');
+  assert.deepEqual(runtimeErrors, []);
+});
+test('persisted XP crosses the real 400 threshold only on the 300-to-420 mastery commit', { timeout:120_000 }, async () => {
+  const viewport = { width:375, height:812 };
+  const attemptId = 'rank-threshold-attempt';
+  const seeded = seededMasteryStore({ xp:300, attemptId });
+  const { page, root, runtimeErrors } = await openFreshBackspinPage(viewport, {
+    beforeGoto:async targetPage => {
+      await targetPage.addInitScript(({ key, value }) => {
+        localStorage.setItem(key, value);
+      }, { key:STORE_KEY, value:JSON.stringify(seeded) });
+    }
+  });
+  await assertEventuallyRootSurface(page, root, '4');
+  assert.equal(await root.locator('#masteryTask').getAttribute('data-attempt'), attemptId);
+
+  const run = await finishMasteryAttempt(page, root, {
+    answers:[0, 1, 0, 2],
+    targetFixtures:[MASTERY_TARGET_FIXTURES.shallowLanding]
+  });
+  const stored = run.store;
+  const summary = stored.lessons.backspin.journey.lastSubmission.summary;
+  assert.equal(stored.xp, 420);
+  assert.equal(summary.correct, 4);
+  assert.equal(summary.delta, 80);
+  assert.equal(summary.readDelta, 40);
+  assert.equal(summary.totalDelta, 120);
+  assert.equal(summary.storeXp, 420);
+  assert.equal(summary.leveledUp, true);
+  assert.equal(summary.levelInfo.lvl, 2);
+  assert.equal(summary.levelInfo.title, 'Apprentice');
+  assert.deepEqual(summary.taskResults, expectedTaskResults([0, 1, 2, 3]));
+
+  const result = await assertNativeResult(root, {
+    attemptId,
+    mastered:true,
+    correct:4,
+    xp:120,
+    abilities:EXPECTED_MASTERY_ABILITIES.slice(0, 4),
+    rank:/Level 2.*Apprentice|Apprentice.*Level 2/i
+  });
+  await assertMasteryViewport(page, root, viewport, 5, result, '375px threshold-crossing Result');
+  assert.deepEqual(runtimeErrors, []);
+});
+test('a wrong mastery choice can be corrected without losing its non-first-try truth', { timeout:120_000 }, async () => {
+  const attemptId = 'choice-retry-attempt';
+  const seeded = seededMasteryStore({ attemptId });
+  const { page, root, runtimeErrors } = await openFreshBackspinPage({ width:430, height:932 }, {
+    beforeGoto:async targetPage => {
+      await targetPage.addInitScript(({ key, value }) => {
+        localStorage.setItem(key, value);
+      }, { key:STORE_KEY, value:JSON.stringify(seeded) });
+    }
+  });
+
+  let task = await assertMasteryTask(page, root, 0);
+  await answerMasteryChoice(page, task, 1);
+  assert.equal(await task.locator('[data-mastery-choice="0"]').isDisabled(), false,
+    'A wrong choice must remain retryable inside the active attempt');
+  await answerMasteryChoice(page, task, 0);
+  assert.equal(await task.locator('[data-mastery-choice="0"]').getAttribute('aria-checked'), 'true');
+  await advanceMasteryTask(page, root, 1);
+
+  const wrongAnswers = [null, 0, 1, 0];
+  for (let index = 1; index < 4; index += 1) {
+    task = await assertMasteryTask(page, root, index);
+    await answerMasteryChoice(page, task, wrongAnswers[index]);
+    await advanceMasteryTask(page, root, index + 1);
+  }
+  task = await assertMasteryTask(page, root, 4);
+  await setMasteryTargetState(page, root, MASTERY_TARGET_FIXTURES.shallowLanding.state);
+  await waitForMasteryReadout(page, MASTERY_TARGET_FIXTURES.shallowLanding);
+  await submitMasteryTarget(root);
+  await advanceMasteryTask(page, root, 5);
+  await assertEventuallyRootSurface(page, root, '5');
+  await page.waitForFunction(key =>
+    Boolean(JSON.parse(localStorage.getItem(key))?.lessons?.backspin?.journey?.lastSubmission),
+  STORE_KEY);
+
+  const stored = await storedAcademy(page);
+  const summary = stored.lessons.backspin.journey.lastSubmission.summary;
+  assert.equal(stored.xp, 50);
+  assert.equal(summary.correct, 1);
+  assert.equal(summary.delta, 10);
+  assert.equal(summary.readDelta, 40);
+  assert.equal(summary.totalDelta, 50);
+  assert.deepEqual(summary.taskResults, [
+    { resolved:true, firstTry:false },
+    { resolved:false, firstTry:false },
+    { resolved:false, firstTry:false },
+    { resolved:false, firstTry:false },
+    { resolved:false, firstTry:false }
+  ]);
+  await assertNativeResult(root, {
+    attemptId,
+    mastered:false,
+    correct:1,
+    xp:50,
+    abilities:EXPECTED_MASTERY_ABILITIES.slice(0, 1)
+  });
+  assert.deepEqual(runtimeErrors, []);
+});
+test('invalid persisted Result repairs to a fresh active Mastery attempt without rewards', { timeout:60_000 }, async () => {
+  const activeAttemptId = 'repair-active-attempt';
+  const seeded = seededMasteryStore({ xp:77, attemptId:activeAttemptId });
+  Object.assign(seeded.lessons.backspin.journey, {
+    surface:5,
+    masteryBest:3,
+    masteryAttempts:2,
+    lastSubmission:{
+      attemptId:'stale-other-attempt',
+      summary:{
+        correct:5,
+        total:5,
+        mastered:true,
+        totalDelta:190,
+        taskResults:expectedTaskResults([0, 1, 2, 3, 4])
+      }
+    }
+  });
+
+  const { page, root, runtimeErrors } = await openFreshBackspinPage({ width:430, height:932 }, {
+    beforeGoto:async targetPage => {
+      await targetPage.addInitScript(({ key, value }) => {
+        localStorage.setItem(key, value);
+      }, { key:STORE_KEY, value:JSON.stringify(seeded) });
+    }
+  });
+
+  await assertEventuallyRootSurface(page, root, '4');
+  const task = await assertMasteryTask(page, root, 0);
+  assert.equal(await task.getAttribute('data-attempt'), activeAttemptId);
+  assert.equal(await task.getAttribute('data-submitted'), 'false');
+  assert.deepEqual(
+    await task.locator('[data-mastery-choice]').evaluateAll(buttons =>
+      buttons.map(button => button.getAttribute('aria-checked'))),
+    ['false', 'false', 'false']
+  );
+  assert.equal(await task.locator('[data-mastery-feedback]').isHidden(), true);
+  assert.equal(await root.locator('[data-step="result"]').getAttribute('aria-disabled'), 'true');
+
+  const stored = await storedAcademy(page);
+  const lesson = stored.lessons.backspin;
+  assert.equal(stored.xp, 77);
+  assert.equal(lesson.read, false);
+  assert.equal(lesson.quizAttempts, 0);
+  assert.equal(lesson.completed, false);
+  assert.equal(lesson.mastered, false);
+  assert.equal(lesson.journey.surface, 4);
+  assert.equal(lesson.journey.masteryAttemptId, activeAttemptId);
+  assert.equal(lesson.journey.masteryBest, 3);
+  assert.equal(lesson.journey.masteryAttempts, 2);
+  assert.equal(lesson.journey.lastSubmission, null);
+  assert.deepEqual(await hapticLog(page), [],
+    'Repairing corrupt progress must not emit mastery or reward haptics');
+  assert.deepEqual(runtimeErrors, []);
+});
 test('generic Carry preserves legacy rewards and storage across 3/5, 4/5 and reload', { timeout: 30_000 }, async () => {
   const context = await browser.newContext({
     viewport: { width: 430, height: 932 },
