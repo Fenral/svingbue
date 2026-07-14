@@ -1260,6 +1260,64 @@ test('safe-area environment variables resolve without horizontal scroll on this 
     assert.deepEqual(runtimeErrors, []);
   });
 
+test('phosphor ghosts live on the canvas with falling opacity and never on numbers',
+  { timeout: 60_000 }, async () => {
+    const settleParam = async (page, root, value) => {
+      await setBackspinParameter(page, root, 'dynamicLoft', value);
+      await page.waitForTimeout(420); // normal-motion settle timer is 300 ms
+    };
+
+    const normal = await openFreshBackspinPage(
+      { width: 430, height: 932 }, { reducedMotion: 'no-preference' });
+    await enterSpinLab(normal.page, normal.root);
+    await settleParam(normal.page, normal.root, 30);
+    await settleParam(normal.page, normal.root, 18);
+    await settleParam(normal.page, normal.root, 25);
+    assert.equal(await normal.root.getAttribute('data-ghost-count'), '2',
+      'two settles back leave exactly two phosphor ghosts');
+    const numberMotion = await normal.root.evaluate((lesson) =>
+      [...lesson.querySelectorAll('[data-readout]')].map((element) => {
+        const style = getComputedStyle(element);
+        return `${style.animationName}/${style.transitionProperty === 'none' ? 'none' : style.transitionDuration}`;
+      }));
+    assert.ok(numberMotion.every((value) => value === 'none/none' || value === 'none/0s'),
+      `numbers must never animate or decay, got: ${[...new Set(numberMotion)].join(', ')}`);
+    assert.deepEqual(normal.runtimeErrors, []);
+
+    const reduced = await openFreshBackspinPage({ width: 430, height: 932 });
+    await enterSpinLab(reduced.page, reduced.root);
+    await setBackspinParameter(reduced.page, reduced.root, 'dynamicLoft', 30);
+    await setBackspinParameter(reduced.page, reduced.root, 'dynamicLoft', 18);
+    await setBackspinParameter(reduced.page, reduced.root, 'dynamicLoft', 25);
+    assert.equal(await reduced.root.getAttribute('data-ghost-count'), '1',
+      'reduced motion keeps one static comparison ghost, no phosphor pair');
+    assert.deepEqual(reduced.runtimeErrors, []);
+  });
+
+test('the aperture signature transition runs between surfaces with a fade equivalent',
+  { timeout: 60_000 }, async () => {
+    const normal = await openFreshBackspinPage(
+      { width: 430, height: 932 }, { reducedMotion: 'no-preference' });
+    await completeMissionAndEnterInfluence(normal.page, normal.root);
+    assert.equal(await normal.root.getAttribute('data-last-transition'), 'aperture',
+      'normal motion switches surfaces through the Aperture signature');
+    const overlay = normal.root.locator('[data-aperture]');
+    assert.equal(await overlay.getAttribute('aria-hidden'), 'true');
+    assert.equal(await overlay.evaluate((element) => getComputedStyle(element).pointerEvents),
+      'none', 'the overlay must never intercept input');
+    await normal.page.waitForFunction(() =>
+      document.querySelector('[data-aperture]')?.hidden === true, undefined, { timeout: 2000 });
+    assert.deepEqual(normal.runtimeErrors, []);
+
+    const reduced = await openFreshBackspinPage({ width: 430, height: 932 });
+    await completeMissionAndEnterInfluence(reduced.page, reduced.root);
+    assert.equal(await reduced.root.getAttribute('data-last-transition'), 'fade',
+      'reduced motion replaces the Aperture with a plain fade');
+    assert.equal(await reduced.root.locator('#influenceBars .native-lesson__influence-row').count() > 0, true,
+      'truth stays live through the reduced-motion fade');
+    assert.deepEqual(reduced.runtimeErrors, []);
+  });
+
 test('instrument typography: readouts are mono, tabular, width-stable and hyphen-free',
   { timeout: 60_000 }, async () => {
     const { page, root, runtimeErrors } = await openFreshBackspinPage({ width: 430, height: 932 });

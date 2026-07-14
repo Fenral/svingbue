@@ -113,6 +113,36 @@ test('mastery target is evaluated from the live engine state', () => {
   assert.equal(passesStoppingFlightTarget({ dynamicLoft:NaN, attackAngle:-3, ballSpeed:120 }), false);
 });
 
+test('phosphor trace state keeps at most two ghosts with falling opacity (EV-MOT-03)', async () => {
+  const { MAX_GHOSTS, GHOST_OPACITIES, pushSettledTrace, ghostRenderPlan } =
+    await import('../academy-trace-state.js');
+  assert.equal(MAX_GHOSTS, 2);
+  assert.equal(GHOST_OPACITIES.length, MAX_GHOSTS);
+  assert.ok(GHOST_OPACITIES[0] > GHOST_OPACITIES[1],
+    'ghost opacity must fall monotonically with age');
+  assert.ok(GHOST_OPACITIES[1] > 0);
+
+  const first = { flight: { id: 1 } };
+  const second = { flight: { id: 2 } };
+  const third = { flight: { id: 3 } };
+  let ghosts = pushSettledTrace([], first);
+  ghosts = pushSettledTrace(ghosts, second);
+  ghosts = pushSettledTrace(ghosts, third);
+  assert.equal(ghosts.length, MAX_GHOSTS, 'a third settle evicts the oldest ghost');
+  assert.deepEqual(ghosts.map((ghost) => ghost.flight.id), [3, 2], 'newest first');
+  assert.equal(pushSettledTrace(ghosts, null), ghosts, 'settles without flight are ignored');
+
+  const plan = ghostRenderPlan(ghosts);
+  assert.equal(plan.length, 2);
+  assert.ok(plan[0].opacity > plan[1].opacity);
+  assert.ok(plan.every((entry) => entry.dashed), 'ghosts stay dashed so they never read as live truth');
+
+  const reducedPlan = ghostRenderPlan(ghosts, { reducedMotion: true });
+  assert.equal(reducedPlan.length, 1,
+    'reduced motion keeps a single static comparison ghost, no phosphor pair');
+  assert.equal(reducedPlan[0].opacity, 1, 'the reduced-motion ghost does not decay');
+});
+
 test('readout formatter owns U+2212, grouping and unit suffixes (EV-TYPO-03)', async () => {
   const { MINUS, formatNumber, formatValue, formatSigned } =
     await import('../academy-readout-format.js');

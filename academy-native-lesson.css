@@ -18,6 +18,27 @@
   box-sizing: border-box;
 }
 
+/* Instrument law 12 (EV-MOT-04): the Aperture signature overlay. Driven by
+   the Web Animations API from the renderer; hidden and inert at rest, never
+   an input target. Violet = structure, never truth. */
+.native-lesson__aperture {
+  position: absolute;
+  z-index: 6;
+  inset: var(--native-header-h) 0 var(--native-nav-h);
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+
+.native-lesson__aperture svg {
+  width: 88px;
+  height: 88px;
+  fill: none;
+  stroke: var(--secondary);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
 /* Instrument law 11 (EV-TYPO-01/02): every live readout renders in the truth
    mono with tabular numerals so values never change width while updating.
    The animation/transition guard enforces law 12 structurally — decay and

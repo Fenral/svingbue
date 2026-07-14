@@ -11,6 +11,7 @@ import {
   passesStoppingFlightTarget
 } from './academy-backspin-model.js';
 import { formatNumber, formatValue, formatSigned } from './academy-readout-format.js';
+import { pushSettledTrace, ghostRenderPlan } from './academy-trace-state.js';
 
 const SURFACES = Object.freeze([
   { key:'mission', label:'Mission', next:'Enter the Spin Lab' },
@@ -381,6 +382,14 @@ function lessonTemplate({ xp, level, state }) {
         </section>
       </div>
 
+      <div class="native-lesson__aperture" data-aperture hidden aria-hidden="true">
+        <svg viewBox="0 0 96 96" focusable="false">
+          <circle cx="48" cy="48" r="40" />
+          <circle cx="48" cy="48" r="22" />
+          <path d="M48 8 A40 40 0 0 1 82.6 68" />
+        </svg>
+      </div>
+
       <nav class="native-lesson__navigation" aria-label="Lesson surfaces">
         <div class="native-lesson__stepper" role="toolbar" aria-label="Lesson progress">${stepper}</div>
         <div class="native-lesson__nav-actions">
@@ -454,6 +463,7 @@ export function mountNativeBackspinLesson(options = {}) {
     input:{ ...INITIAL_BACKSPIN_STATE },
     lastValidInput:{ ...INITIAL_BACKSPIN_STATE },
     previousSettled:null,
+    ghostTraces:[],
     lastValidSolved:initialSolved,
     mission:{ built:Boolean(journey?.mission?.built), cut:Boolean(journey?.mission?.built && journey?.mission?.cut) },
     myths:[false, false, false].map((value, index) => Boolean(journey?.myths?.[index] ?? value)),
@@ -694,7 +704,21 @@ export function mountNativeBackspinLesson(options = {}) {
         context.lineJoin = 'round';
         context.stroke();
       };
-      if (state.previousSettled?.flight) draw(state.previousSettled.flight, styles.getPropertyValue('--ghost').trim() || '#A7A0C4', 1.5, true);
+      // Law 12: phosphor ghosts — previous settled states decay on the trace
+      // only. Reduced motion keeps the single static comparison ghost.
+      const reducedMotion = prefersReducedMotion();
+      const ghostCandidates = reducedMotion
+        ? [state.previousSettled]
+        : [state.previousSettled, ...state.ghostTraces]
+          .filter(ghost => ghost !== solved);
+      const ghostPlan = ghostRenderPlan(ghostCandidates, { reducedMotion });
+      const ghostColor = styles.getPropertyValue('--ghost').trim() || '#A7A0C4';
+      for (const ghost of ghostPlan) {
+        context.globalAlpha = ghost.opacity;
+        draw(ghost.trace.flight, ghostColor, 1.5, ghost.dashed);
+      }
+      context.globalAlpha = 1;
+      lesson.dataset.ghostCount = String(ghostPlan.length);
       draw(solved.flight, styles.getPropertyValue('--accent').trim() || '#FF8A4D', 2.5);
       context.setLineDash([]);
       context.beginPath();
@@ -1582,6 +1606,36 @@ export function mountNativeBackspinLesson(options = {}) {
     }
   }
 
+  function runSurfaceTransition() {
+    if (destroyed) return;
+    if (prefersReducedMotion()) {
+      lesson.dataset.lastTransition = 'fade';
+      const active = lesson.querySelector(`.native-lesson__surface[data-surface="${state.surface}"]`);
+      try {
+        active?.animate?.([{ opacity: 0.55 }, { opacity: 1 }], { duration: 150, easing: 'ease-out' });
+      } catch {
+        // The fade is progressive enhancement; truth is already live.
+      }
+      return;
+    }
+    lesson.dataset.lastTransition = 'aperture';
+    const overlay = lesson.querySelector('[data-aperture]');
+    if (!overlay || typeof overlay.animate !== 'function') return;
+    overlay.hidden = false;
+    try {
+      const animation = overlay.animate([
+        { opacity: 0, transform: 'scale(.55) rotate(-40deg)' },
+        { opacity: 1, transform: 'scale(1) rotate(0deg)', offset: 0.45 },
+        { opacity: 0, transform: 'scale(1.22) rotate(18deg)' }
+      ], { duration: 340, easing: 'cubic-bezier(.22, .72, .2, 1)' });
+      const hide = () => { overlay.hidden = true; };
+      animation.addEventListener('finish', hide);
+      animation.addEventListener('cancel', hide);
+    } catch {
+      overlay.hidden = true;
+    }
+  }
+
   function setSurface(index, {
     focus=true,
     persist=true,
@@ -1601,6 +1655,7 @@ export function mountNativeBackspinLesson(options = {}) {
       state.mythIndex = unfinished >= 0 ? unfinished : MYTH_EXPERIMENTS.length - 1;
       renderMyth();
     }
+    const from = state.surface;
     state.surface = target;
     lesson.dataset.surface = String(target);
     pager.style.setProperty('--surface-x', `${target * -16.6666667}%`);
@@ -1609,6 +1664,10 @@ export function mountNativeBackspinLesson(options = {}) {
       surface.inert = !active;
       surface.setAttribute('aria-hidden', String(!active));
     });
+    // Law 12: one signature transition. It starts only after the inert/
+    // aria-hidden state has flipped synchronously, so focus and AT state
+    // never wait on decoration (a11y review M1).
+    if (from !== target) runSurfaceTransition();
     updateStepper();
     updateSurfaceNavigation();
     if (persist) persistJourney({ surface:target }, { immediate });
@@ -1789,6 +1848,9 @@ export function mountNativeBackspinLesson(options = {}) {
     } catch {
       rejectModelUpdate();
       return;
+    }
+    if (state.previousSettled && state.previousSettled !== solved) {
+      state.ghostTraces = pushSettledTrace(state.ghostTraces, state.previousSettled);
     }
     state.previousSettled = solved;
     beforeSettled = { ...state.input };
