@@ -2843,7 +2843,12 @@ test('Backspin Mastery keeps one stable attempt, submits atomically and upgrades
   const beforeLockedNext = await hapticLog(page);
   await root.locator('[data-action="next-lesson"]').click();
   await page.waitForFunction(() => location.hash === '#/path');
-  await page.waitForTimeout(350);
+  // Route announcement lands after a 260 ms settle + rAF (aca a11y contract); wait for it
+  // to populate rather than racing a fixed timeout, which is flaky on WebKit under load.
+  // A navigation haptic would fire synchronously on click, so this settle also covers the
+  // haptic assertion below. Mirrors the #live wait idiom at the model-error test.
+  await page.waitForFunction(() =>
+    /Returning to the Academy path/i.test(document.querySelector('#live')?.textContent || ''));
   assert.deepEqual(await hapticLog(page), beforeLockedNext,
     'Locked next-lesson fallback is navigation and must not emit a haptic');
   assert.match(await page.locator('#live').textContent(),

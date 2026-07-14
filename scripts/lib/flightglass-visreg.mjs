@@ -128,6 +128,28 @@ async function setParam(page, root, key, value) {
   await setRange(page, '#labRange', value);
 }
 
+// The lab trace canvas settles asynchronously (300ms settle timer + phosphor
+// ghost set), so a fixed wait can catch it mid-settle and jitter the diff
+// run-to-run. Poll the canvas bitmap until two reads match: the render is
+// deterministic once settled, so this makes the *capture* deterministic too.
+async function waitForCanvasStable(page, { pollMs = 120, stableReads = 3, timeoutMs = 6000 } = {}) {
+  const readSignature = () => page.evaluate(() => {
+    const canvas = document.querySelector('#nativeLesson canvas');
+    if (!canvas || !canvas.width) return 'none';
+    try { return canvas.toDataURL('image/png'); } catch { return 'blocked'; }
+  });
+  let previous = await readSignature();
+  let matches = 1;
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    await page.waitForTimeout(pollMs);
+    const current = await readSignature();
+    matches = current === previous ? matches + 1 : 1;
+    previous = current;
+    if (matches >= stableReads) return;
+  }
+}
+
 // Drives the deterministic six-surface walk and screenshots each surface.
 async function walkAndShoot(page, root, shot) {
   await page.evaluate(() => document.fonts.ready);
@@ -146,6 +168,7 @@ async function walkAndShoot(page, root, shot) {
   await page.waitForFunction(() =>
     document.querySelector('#backspinTruth')?.textContent.replaceAll(',', '').trim() === '6048');
   await page.waitForTimeout(SETTLE_MS);
+  await waitForCanvasStable(page);
   await shot('1-lab');
 
   const next = root.locator('.native-lesson__navigation [data-action="next"]');
