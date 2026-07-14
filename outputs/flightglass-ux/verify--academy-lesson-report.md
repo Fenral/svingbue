@@ -1,6 +1,6 @@
 # Flightglass UX audit
 
-Generated: 2026-07-14T10:48:31.983Z
+Generated: 2026-07-14T23:39:52.011Z
 
 Mode: **verify**
 

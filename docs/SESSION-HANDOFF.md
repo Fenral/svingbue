@@ -1,6 +1,6 @@
 # Flightglass session handoff
 
-Updated: 2026-07-14
+Updated: 2026-07-15
 
 ## Repository checkpoint
 
@@ -31,10 +31,14 @@ byte-identical `impact-flight.js` confirmation in
 `outputs/flightglass-ux/verify*` files were never pushed; equivalent evidence
 was regenerated fresh on this machine.
 
-The active work is now the instrument-gates work order
-(`docs/superpowers/plans/2026-07-14-instrument-gates.md`, committed `2e2f4c0`):
-laws 11-13, evidence-based gates, Tasks 12-20, ending at the §6 human
-checkpoint boundary.
+The instrument-gates work order
+(`docs/superpowers/plans/2026-07-14-instrument-gates.md`) is complete through
+Task 20. Backspin is STUDIO-GRADE under the gate-based acceptance model: zero
+critical defects, 5/5 category floors, 17/17 EV checks PASS in 3/3 independent
+judge runs (including all 10 critical checks), and the native generation won
+4/4 blind comparisons. The three derived verdicts are STUDIO-GRADE/100; the
+number is a byproduct, not the acceptance target. Fresh raw gates are under
+`outputs/flightglass-eval/final-gates/`.
 
 
 Backspin has a separate 96-97 reference-lesson design and implementation plan:
@@ -42,9 +46,10 @@ Backspin has a separate 96-97 reference-lesson design and implementation plan:
 - `docs/superpowers/specs/2026-07-13-backspin-96-97-design.md`
 - `docs/superpowers/plans/2026-07-13-backspin-reference-lesson.md`
 
-## Academy design decision in progress
+## Academy continuation state
 
-The current recommendation, still awaiting final owner approval, is:
+The current Academy-overview recommendation, still awaiting an approved
+dedicated plan/spec pair, is:
 
 - make Academy home a goal-led coach with one dominant Continue/Start action;
 - move the full physics constellation to a secondary Explore surface;
@@ -55,19 +60,25 @@ The current recommendation, still awaiting final owner approval, is:
   network of related-module links.
 
 Do not convert this recommendation into production work until the owner has
-approved the Academy architecture.
+approved the Academy architecture through the required
+`docs/superpowers/plans/*.md` + `docs/superpowers/specs/*.md` pair.
+
+The autonomous sequence is defined in
+`docs/flightglass-autopilot/academy-completion-loop.md`. Its inventory gate was
+applied on 2026-07-15: Phase 5 and all 23 non-Backspin lessons are parked because
+none has its own approved plan/spec pair. Existing path, polish, low-point and
+v2 documents remain source material, not authorization to improvise a new
+production design.
 
 ## Exact next actions
 
-1. Execute the instrument-gates work order sequentially from Task 12
-   (evaluation infrastructure — the evidence manifest must be locked and
-   committed before any implementation task starts).
-2. Follow the order's §3 routing: fg-mekaniker for pure command runs,
-   fg-dommer for all judgment; the main thread never scores its own work.
-3. Stop only under the order's §7 conditions; ordinary ambiguity is resolved,
-   documented in STATUS.md and work continues.
-4. The order ends at the §6 boundary with the human pack delivered under
-   `outputs/flightglass-eval/human-pack/`. Do not convert the remaining 23
-   Academy lessons and do not take release decisions.
-5. Keep the Academy overview recommendation pending and push a travel
-   checkpoint before the next pause.
+1. When an approved Phase 5 or per-lesson plan/spec pair is added, resume the
+   Academy completion loop from STATUS and implement that next planned item.
+2. Keep gate acceptance separate from derived scores: zero critical defects,
+   every category floor, all critical checks and pairwise-blind must each pass.
+3. Owner runs the delivered §6 package: physical-iPhone performance session,
+   manual VoiceOver, and the five-person five-second test. These are release
+   checkpoints, not permission to invent missing lesson plans.
+4. Do not generalize the remaining lessons, take a release decision or publish
+   stores until their recorded gates and the applicable release boundary pass.
+5. Push the current `agent/travel-sync` checkpoint before the next pause.

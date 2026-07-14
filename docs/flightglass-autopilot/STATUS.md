@@ -1,6 +1,6 @@
 # Flightglass autonomous execution status
 
-Updated: 2026-07-14
+Updated: 2026-07-15
 
 Release authorization: granted for GitHub, Vercel and configured Apple/Google
 publication after all Phase 8 gates pass. See `RELEASE-AUTHORIZATION.md`.
@@ -12,8 +12,8 @@ publication after all Phase 8 gates pass. See `RELEASE-AUTHORIZATION.md`.
 | 2 · Range / Visualise | Ready | Decisions and references locked in master plan |
 | 3 · Outcome / Compare | Ready | Decisions and references locked in master plan |
 | 4 · Geometry 3D / Strike Window 2D | Ready | Consensus documents named |
-| 5 · Academy overview | Ready | Path and polish documents named |
-| 6 · Academy lesson system | Backspin SHIPPBAR (Tasks 1-20) | 3/3 judge consistency, pairwise 3/4 (Mastery Check finding); see instrument-gates checkpoint |
+| 5 · Academy overview | Parked | Waiting for its own approved `docs/superpowers/plans/` + `specs/` pair |
+| 6 · Academy lesson system | Backspin STUDIO-GRADE (Tasks 1-20); 23 lessons parked | Four acceptance gates green; remaining lessons wait for per-lesson plan/spec pairs |
 | 7 · Paywall | Ready | Pricing and compatibility rules locked |
 | 8 · Convergence and release QA | Ready | Global gates locked |
 
@@ -59,54 +59,81 @@ gate on 2026-07-15. Protocol delivery format below.
 **Evidence checklist — 17/17 EV requirements PASS across three independent blind
 judges.** Decorrelated runs against the locked manifest
 `config/evidence/instrument-laws.json`, each blind (manifest + artifact paths
-only, no target or history): judge-run-1 17/17 PASS; judge-run-2 (Opus) 17/17
-PASS; judge-run-3 (Fable, this session) 17/17 PASS -> 3/3 consistency, every
-requirement confirmed. Records: `outputs/flightglass-eval/judge-run-{1,2,3}.json`.
+only, no target or history): judge-run-1 17/17 PASS; judge-run-2 17/17 PASS;
+judge-run-3 17/17 PASS -> 3/3 consistency, every requirement confirmed.
+Records: `outputs/flightglass-eval/judge-run-{1,2,3}.json`.
 
-**Gate totals (fresh from a clean process, 2026-07-15):**
-- `npm run claude:ready`: `test:ux` 83/83 PASS (Chromium + WebKit), autopilot
-  verify 41/41 PASS, EXIT 0.
-- `npm run test:perf`: p95 input-to-paint 4.1 ms Chromium / 5 ms WebKit
-  (budget 16.7 ms). `npm run test:visreg`: 2/2 PASS, every surface <=0.1% vs
-  approved baselines on both engines and both motion modes (EV-REG-01 resolved:
-  a capture-timing race was hardened in the visreg method, never the manifest).
+**Gate totals (fresh from one clean process, 2026-07-15):**
+- `npm run claude:ready`: primary suite 83/83 PASS plus WebKit 41/41 PASS
+  (124/124 total), brand and autopilot verification PASS, 11 control files and
+  7 protected identifiers verified, EXIT 0.
+- `npm run test:perf`: 2/2 PASS; p95 input-to-paint 3.2 ms Chromium / 5 ms
+  WebKit over 220 events per engine (budget 16.7 ms), EXIT 0.
+- `npm run test:visreg`: 2/2 PASS; 48/48 fresh captures within 0.1% of 48
+  approved baselines across both engines, both viewports and both motion modes,
+  EXIT 0. EV-REG-01's capture-timing race was hardened in the test method,
+  never the locked manifest.
+- `npm run copy-web`: 19 top-level JS/CSS assets plus declared HTML/directories
+  rebuilt, EXIT 0. Focused Academy verify: 4 captures, 0 critical findings,
+  EXIT 0. Raw evidence: `outputs/flightglass-eval/final-gates/`.
 
-**Critical defects:** none. axe-core reports 0 critical/serious on all six
-surfaces (EV-NAT-02); no runtime, content or clipping failure.
+**Critical defects:** none. All 10 critical manifest requirements PASS in each
+of the three judge runs. axe-core reports 0 critical/serious on all six
+surfaces (EV-NAT-02); the focused audit reports no runtime, content, target-size,
+overflow or clipping failure.
 
-**Tier: SHIPPBAR. Derived score: 100** (`node scripts/derive-score.mjs
-outputs/flightglass-eval/judge-run-3.json` -> `{tier:SHIPPBAR, score:100,
-criticalFailures:[]}`). The score is a derived byproduct, not a target; the gates
-above are the acceptance.
+**Category floors:** 5/5 PASS independently: accessibility, motion, truth,
+information architecture and mobile. No category-specific critical defect.
+Record: `outputs/flightglass-eval/category-floor-verdict.json`.
 
-**Pairwise blind vs the previous generation:** new native won 3/4 surfaces.
-STUDIO-GRADE is withheld — it requires the pairwise cleanly won.
+**Pairwise blind vs the previous generation:** new native won 4/4 comparisons.
+The provenance-blind choices were pair 1 B (new Mission), pair 2 A (new Lab),
+pair 3 B (new Mastery) and pair 4 A (new Result). Hash comparison against the
+human-pack and `pairwise-src/old/` establishes that every chosen image is the new
+native generation. Record: `outputs/flightglass-eval/pairwise/pairwise-result.json`.
 
-**Finding (medium) — Mastery Check surface lost the blind pairwise (pair-3).**
-An independent blind judge preferred the previous-generation quiz. Reproduced
-against `outputs/flightglass-eval/pairwise/pair-3/B.png`:
-1. A large empty vertical region fills the lower half of the mastery card when
-   the question is short — wasted viewport, reads as unfinished.
-2. Answer options are centered text cards without a clear radio affordance;
-   less native and harder to scan than left-aligned radios.
-3. The single paged question with a thin stem reads sparse next to the old
-   quiz's denser, number-grounded questions.
-None is a manifest violation (all 17 EV pass; no clipping at 130% scale,
-EV-NAT-01) — which is exactly why pairwise-blind runs: it catches a
-design-quality gap the binary checks cannot see.
+**Acceptance tier: STUDIO-GRADE.** All four acceptance gates are green: zero
+critical defects, 5/5 category floors, all 10 critical checks PASS (17/17 total)
+and pairwise blind won 4/4. `derive-score.mjs --pairwise-won` independently
+produces `{tier:STUDIO-GRADE, score:100, criticalFailures:[], findings:[]}` for
+judge runs 1, 2 and 3. The score is a derived byproduct and tripwire; it did not
+decide acceptance. Records: `outputs/flightglass-eval/derived-run-{1,2,3}.json`.
 
-**Action:** owner decision at §6 — accept SHIPPBAR, or authorize a Mastery Check
-layout/affordance iteration (rebalance the card's vertical fill, add radio
-affordance) then re-judge pair-3 for STUDIO-GRADE. Deliberately not auto-changed:
-the fix is a design-taste call the 23 downstream lessons inherit.
+**Non-blocking finding:** Result repeats the Launch Angle destination in its
+content card and sticky action. The independent blind judge still selected the
+new Result because the two controls share one destination and the learning
+hierarchy remains stronger. Carry this as a future refinement; it is not a
+critical defect or a competing task.
 
 **Compatibility:** `impact-flight.js` byte-identical, root and `www/` share
-SHA-256 `7e5323c3...`; no physics engine touched in the working tree; protected
-IDs unchanged.
+SHA-256 `7e5323c3b5c553a4d6cc12177687256d61e16f5429c9a17df1fb49911261cb26`;
+no physics engine has a working-tree diff; protected IDs unchanged.
 
 **Human checkpoints remaining (§6, outside autonomy):** physical-iPhone drag
 perf session, manual VoiceOver walkthrough, 5-second blind test with >=5 people,
-release authorization.
+release authorization. The handoff package is committed under
+`outputs/flightglass-eval/human-pack/`; these checks do not block later Academy
+loop iterations that already have approved plans/specs.
+
+## Academy completion loop
+
+`docs/flightglass-autopilot/academy-completion-loop.md` now governs the Academy
+sequence. The required plan/spec inventory was checked on 2026-07-15:
+
+- Backspin has an approved implementation plan and design spec; Tasks 1-20 are
+  closed by the STUDIO-GRADE acceptance above.
+- Phase 5 Academy overview is parked as `waiting for plan from owner`. Existing
+  path/polish notes are inputs, but no required dedicated
+  `docs/superpowers/plans/*.md` + `docs/superpowers/specs/*.md` pair exists.
+- All 23 remaining lessons are parked for the same reason: `club-speed`,
+  `dynamic-loft`, `attack-angle`, `face-angle`, `club-path`, `low-point`,
+  `strike-depth`, `plane-coupling`, `carry`, `spin-loft`, `smash`, `ball-speed`,
+  `launch-angle`, `start-direction`, `spin-axis`, `apex`, `landing-angle`,
+  `total`, `curve`, `offline`, `altitude`, `wind`, `temperature`.
+
+There is no further Academy implementation item with the required approved
+plan/spec pair. The next loop iteration begins when one such pair is added;
+product design is not improvised from older notes.
 
 ## Phase 0 evidence
 
@@ -122,7 +149,7 @@ release authorization.
 - Focused phase reports use separate filenames and cannot overwrite the full
   baseline report.
 
-## Score ledger
+## Derived indicator ledger
 
 Scores are derived byproducts and tripwires, never targets. Acceptance per
 surface is the four evidence gates: zero critical defects, every category floor
@@ -130,7 +157,7 @@ cleared, all critical checks pass, and pairwise-blind won against the previous
 generation. The "expected derived score" column is what typically falls out once
 the gates pass — a lower figure with all gates green still ships.
 
-| Surface | Current recorded score | Expected derived score |
+| Surface | Current derived indicator | Expected derived indicator |
 |---|---:|---:|
 | Home | 67 | 90+ |
 | Impact / Range | 63 | 90+ |
