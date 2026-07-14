@@ -10,7 +10,7 @@ import {
   realWorldRange,
   passesStoppingFlightTarget
 } from './academy-backspin-model.js';
-import { formatNumber, formatValue, formatSigned } from './academy-readout-format.js';
+import { formatNumber, formatValue, formatSigned, speakValue } from './academy-readout-format.js';
 import { pushSettledTrace, ghostRenderPlan } from './academy-trace-state.js';
 
 const SURFACES = Object.freeze([
@@ -465,6 +465,7 @@ export function mountNativeBackspinLesson(options = {}) {
   const frames = new Set();
   let destroyed = false;
   let settleTimer = null;
+  let settleAnnounceTimer = null;
   let announceTimer = null;
   const announcementQueue = [];
   let beforeSettled = { ...INITIAL_BACKSPIN_STATE };
@@ -846,7 +847,7 @@ export function mountNativeBackspinLesson(options = {}) {
     range.step = String(parameter.step);
     range.value = String(state.input[state.activeParam]);
     range.setAttribute('aria-label', parameter.label);
-    range.setAttribute('aria-valuetext', `${state.input[state.activeParam]}${parameter.unit}`);
+    range.setAttribute('aria-valuetext', speakValue(state.input[state.activeParam], parameter.unit));
     lesson.querySelector('[data-range-label]').textContent = parameter.label;
     lesson.querySelector('[data-range-value]').textContent =
       formatValue(state.input[state.activeParam], parameter.unit);
@@ -1305,7 +1306,7 @@ export function mountNativeBackspinLesson(options = {}) {
           min="${parameter.min}" max="${parameter.max}" step="${parameter.step}"
           value="${state.masteryTargetInput[state.masteryTargetParam]}"
           aria-label="${escapeHtml(parameter.label)}"
-          aria-valuetext="${state.masteryTargetInput[state.masteryTargetParam]}${parameter.unit}"
+          aria-valuetext="${escapeHtml(speakValue(state.masteryTargetInput[state.masteryTargetParam], parameter.unit))}"
           ${locked ? 'disabled' : ''}>
         <p class="native-lesson__mastery-target-feedback" data-mastery-target-feedback tabindex="-1"
           data-correct="${record ? String(record.correct) : 'unanswered'}" ${record ? '' : 'hidden'}>${verdict}</p>
@@ -1491,7 +1492,7 @@ export function mountNativeBackspinLesson(options = {}) {
     if (!solved) return;
     state.masteryTargetInput = { ...state.masteryTargetInput, [key]:value };
     state.masteryTargetSolved = solved;
-    input.setAttribute('aria-valuetext', `${value}${BACKSPIN_PARAMS[key].unit}`);
+    input.setAttribute('aria-valuetext', speakValue(value, BACKSPIN_PARAMS[key].unit));
     const valueNode = lesson.querySelector('[data-mastery-range-value]');
     if (valueNode) valueNode.textContent = formatValue(value, BACKSPIN_PARAMS[key].unit);
     const rpm = lesson.querySelector('[data-mastery-rpm]');
@@ -1911,14 +1912,15 @@ export function mountNativeBackspinLesson(options = {}) {
     lesson.querySelector(`[data-param="${key}"]`)?.focus();
   }
 
-  function settleInput(parameterKey = pendingSettleParam) {
+  function settleInput(parameterKey = pendingSettleParam, { announceChain = true } = {}) {
     const solved = safeSolve(state.input);
     if (!solved) return;
     try {
       const chain = buildCauseChain(beforeSettled, state.input, parameterKey);
       const cause = lesson.querySelector('#causeChain');
       cause.innerHTML = chain.visual.map(item => `<span>${escapeHtml(item)}</span>`).join('<span aria-hidden="true">→</span>');
-      announce(chain.speech);
+      state.lastChainSpeech = chain.speech;
+      if (announceChain) announce(chain.speech);
     } catch {
       rejectModelUpdate();
       return;
@@ -1958,7 +1960,15 @@ export function mountNativeBackspinLesson(options = {}) {
     settleTimer = null;
     pendingSettleParam = activeParamAtInput;
     if (prefersReducedMotion()) {
-      settleInput(activeParamAtInput);
+      // Reduced motion settles the visuals immediately, but announcements
+      // are debounced to the settled state in BOTH motion modes — a held
+      // arrow key must never flood the live region (EV-NAT-03).
+      settleInput(activeParamAtInput, { announceChain: false });
+      cancelLater(settleAnnounceTimer);
+      settleAnnounceTimer = later(() => {
+        settleAnnounceTimer = null;
+        if (state.lastChainSpeech) announce(state.lastChainSpeech);
+      }, 300);
     } else {
       settleTimer = later(() => { settleTimer = null; settleInput(activeParamAtInput); }, 300);
     }

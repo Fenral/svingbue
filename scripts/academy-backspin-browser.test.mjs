@@ -357,13 +357,18 @@ async function rangeContract(root) {
   }));
 }
 
+function spokenRangeValue(value, expected) {
+  const units = { '°': 'degrees', ' mph': 'miles per hour' };
+  return `${value < 0 ? 'minus ' : ''}${Math.abs(value)} ${units[expected.unit] || expected.unit.trim()}`;
+}
+
 function assertRangeContract(actual, expected, value) {
   assert.equal(actual.min, expected.min);
   assert.equal(actual.max, expected.max);
   assert.equal(actual.step, expected.step);
   assert.equal(actual.value, value);
   assert.equal(actual.ariaLabel, expected.label);
-  assert.equal(actual.ariaValueText, `${value}${expected.unit}`);
+  assert.equal(actual.ariaValueText, spokenRangeValue(value, expected));
 }
 
 async function assertFitsViewport(locator, viewport, label) {
@@ -1316,6 +1321,160 @@ test('the aperture signature transition runs between surfaces with a fade equiva
     assert.equal(await reduced.root.locator('#influenceBars .native-lesson__influence-row').count() > 0, true,
       'truth stays live through the reduced-motion fade');
     assert.deepEqual(reduced.runtimeErrors, []);
+  });
+
+async function assertSurfaceIntactAtScale(page, label) {
+  const audit = await page.evaluate(() => {
+    const doc = document.documentElement;
+    const lesson = document.querySelector('#nativeLesson');
+    const active = lesson.querySelector(
+      `.native-lesson__surface[data-surface="${lesson.dataset.surface}"]`);
+    const viewportWidth = window.innerWidth;
+    const overflowing = [...active.querySelectorAll('*')].filter((element) => {
+      const rect = element.getBoundingClientRect();
+      return rect.width > 0 && (rect.right > viewportWidth + 1 || rect.left < -1);
+    }).map((element) => `${element.tagName}.${element.className}`.slice(0, 60));
+    const surfaceOverflow = getComputedStyle(active).overflowY;
+    return {
+      scrollLeft: doc.scrollLeft,
+      docOverflowX: doc.scrollWidth - doc.clientWidth,
+      overflowing,
+      verticallyClipped: active.scrollHeight > active.clientHeight + 1
+        && !['auto', 'scroll'].includes(surfaceOverflow)
+    };
+  });
+  assert.equal(audit.scrollLeft, 0, `${label}: no horizontal scroll`);
+  assert.ok(audit.docOverflowX <= 1, `${label}: document must not overflow horizontally`);
+  assert.deepEqual(audit.overflowing, [], `${label}: no element may clip past the viewport width`);
+  assert.equal(audit.verticallyClipped, false,
+    `${label}: scaled content must scroll, never clip invisibly`);
+}
+
+async function walkAllSixSurfaces(page, root, onSurface) {
+  await onSurface('0-mission');
+  await enterSpinLab(page, root);
+  await setBackspinParameter(page, root, 'dynamicLoft', 30);
+  await waitForBackspinJourney(page, { surface:1, built:true, cut:false });
+  await setBackspinParameter(page, root, 'dynamicLoft', 10);
+  await waitForBackspinJourney(page, { surface:1, built:true, cut:true });
+  await setBackspinParameter(page, root, 'dynamicLoft', 25);
+  await setBackspinParameter(page, root, 'attackAngle', -3);
+  await setBackspinParameter(page, root, 'ballSpeed', 120);
+  await onSurface('1-lab');
+  const next = root.locator('.native-lesson__navigation [data-action="next"]');
+  await next.click();
+  await assertEventuallyRootSurface(page, root, '2');
+  await onSurface('2-influence');
+  await next.click();
+  await assertEventuallyRootSurface(page, root, '3');
+  await onSurface('3-myths');
+  for (let index = 0; index < EXPECTED_MYTH_EXPERIMENTS.length; index += 1) {
+    await root.locator(`#mythExperiment [data-myth-choice="${EXPECTED_MYTH_EXPERIMENTS[index].answerIndex}"]`).click();
+    await root.locator('[data-myth-next]').click();
+    if (index < EXPECTED_MYTH_EXPERIMENTS.length - 1) {
+      await page.waitForFunction(
+        (expected) => document.querySelector('#mythExperiment')?.dataset.experimentIndex === String(expected),
+        index + 1);
+    }
+  }
+  await assertEventuallyRootSurface(page, root, '4');
+  await onSurface('4-mastery');
+  await answerMasteryChoices(page, root, [0, 1, 0, 2]);
+  await setMasteryTargetState(page, root, MASTERY_TARGET_FIXTURES.pass.state);
+  await waitForMasteryReadout(page, MASTERY_TARGET_FIXTURES.pass);
+  await submitMasteryTarget(root);
+  await advanceMasteryTask(page, root, 5);
+  await assertEventuallyRootSurface(page, root, '5');
+  await onSurface('5-result');
+}
+
+test('all six surfaces stay intact at 130% text scale (EV-NAT-01)',
+  { timeout: 120_000 }, async () => {
+    const { page, root, runtimeErrors } = await openFreshBackspinPage({ width: 430, height: 932 }, {
+      beforeGoto: async (target) => {
+        await target.addInitScript(() => {
+          const apply = () => document.documentElement?.style.setProperty('font-size', '130%');
+          if (document.documentElement) apply();
+          else document.addEventListener('DOMContentLoaded', apply, { once: true });
+        });
+      }
+    });
+    const scaling = await root.evaluate((lesson) => {
+      const doc = document.documentElement;
+      const probes = ['.native-lesson__lede', '#backspinTruth', '.native-lesson__range-label span']
+        .map((selector) => lesson.querySelector(selector))
+        .filter(Boolean);
+      doc.style.setProperty('font-size', '100%');
+      const base = probes.map((element) => parseFloat(getComputedStyle(element).fontSize));
+      doc.style.setProperty('font-size', '130%');
+      const scaled = probes.map((element) => parseFloat(getComputedStyle(element).fontSize));
+      return base.map((size, index) => scaled[index] / size);
+    });
+    assert.equal(scaling.length, 3);
+    for (const ratio of scaling) {
+      assert.ok(ratio > 1.25,
+        `lesson text must follow the root scale (rem-based), ratio ${ratio.toFixed(3)}`);
+    }
+    await walkAllSixSurfaces(page, root, (label) => assertSurfaceIntactAtScale(page, label));
+    assert.deepEqual(runtimeErrors, []);
+  });
+
+test('axe-core finds no critical or serious violations on any surface (EV-NAT-02)',
+  { timeout: 180_000 }, async () => {
+    const axeSource = readFileSync(resolve(ROOT, 'node_modules', 'axe-core', 'axe.min.js'), 'utf8');
+    const { page, root, runtimeErrors } = await openFreshBackspinPage({ width: 430, height: 932 });
+    await page.addScriptTag({ content: axeSource });
+    const runAxe = async (label) => {
+      const violations = await page.evaluate(async () => {
+        const results = await window.axe.run(document, {
+          resultTypes: ['violations'],
+          rules: { 'color-contrast': { enabled: true } }
+        });
+        return results.violations
+          .filter((violation) => ['critical', 'serious'].includes(violation.impact))
+          .map((violation) => ({
+            id: violation.id,
+            impact: violation.impact,
+            nodes: violation.nodes.slice(0, 4).map((node) => node.target.join(' '))
+          }));
+      });
+      assert.deepEqual(violations, [], `${label}: axe critical/serious must be empty`);
+    };
+    await walkAllSixSurfaces(page, root, runAxe);
+    assert.deepEqual(runtimeErrors, []);
+  });
+
+test('sliders speak plain-language values and announcements debounce to settle (EV-NAT-03)',
+  { timeout: 60_000 }, async () => {
+    const { page, root, runtimeErrors } = await openFreshBackspinPage({ width: 430, height: 932 });
+    await enterSpinLab(page, root);
+    await selectBackspinParameter(root, 'attackAngle');
+    await setRange(page, '#labRange', -3);
+    assert.equal(await root.locator('#labRange').getAttribute('aria-valuetext'),
+      'minus 3 degrees', 'aria-valuetext speaks the sign and unit in words');
+    await selectBackspinParameter(root, 'ballSpeed');
+    await setRange(page, '#labRange', 120);
+    assert.equal(await root.locator('#labRange').getAttribute('aria-valuetext'),
+      '120 miles per hour');
+
+    await page.evaluate(() => {
+      window.__liveChanges = 0;
+      const live = document.querySelector('#live');
+      new MutationObserver(() => { window.__liveChanges += 1; })
+        .observe(live, { childList: true, characterData: true, subtree: true });
+    });
+    await page.evaluate(() => {
+      const range = document.querySelector('#labRange');
+      for (let step = 0; step < 10; step += 1) {
+        range.value = String(100 + step);
+        range.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+    });
+    await page.waitForTimeout(800);
+    const liveChanges = await page.evaluate(() => window.__liveChanges);
+    assert.ok(liveChanges <= 2,
+      `announcements must debounce to the settled state, got ${liveChanges} live-region updates`);
+    assert.deepEqual(runtimeErrors, []);
   });
 
 test('trace annotation right: one violet annotation with an engine-true value twin',
@@ -2714,7 +2873,7 @@ test('fresh 4/5 mastery earns 120 XP and keeps the 375px keyboard/range contract
       await range.focus();
       await page.keyboard.press('ArrowRight');
       assert.equal(await range.inputValue(), '-2');
-      assert.equal(await range.getAttribute('aria-valuetext'), '-2\u00b0');
+      assert.equal(await range.getAttribute('aria-valuetext'), 'minus 2 degrees');
       const focusState = await range.evaluate(element => ({
         active:document.activeElement === element,
         focusVisible:element.matches(':focus-visible'),

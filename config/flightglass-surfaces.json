@@ -121,7 +121,7 @@
       "route": "academy.html#/lesson/backspin",
       "sourceType": "shipping-web-state",
       "viewportIds": ["portrait-wide", "portrait-compact"],
-      "requiredSelectors": ["#nativeLesson", "#backspinTruth", "#labRange"],
+      "requiredSelectors": ["#nativeLesson", "#missionStageBuild", "#backspinTruth", "#labRange", "#masteryTask", "#nativeLessonResult"],
       "references": ["academy-lesson-v2-mock.html", "docs/academy-native-v2-spec.md", "docs/superpowers/specs/2026-07-13-backspin-96-97-design.md"],
       "primaryJob": "Predict, manipulate and demonstrate control of backspin in an honest live model."
     },

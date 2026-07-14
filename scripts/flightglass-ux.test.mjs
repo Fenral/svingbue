@@ -44,7 +44,15 @@ test('Backspin reference lesson targets 96 before Academy rollout', () => {
   const manifest = loadManifest(manifestPath);
   const lesson = manifest.surfaces.find((surface) => surface.id === 'academy-lesson');
   assert.equal(lesson.targetScore, 96);
-  assert.deepEqual(lesson.requiredSelectors, ['#nativeLesson', '#backspinTruth', '#labRange']);
+  // EV-NAT-04: the audit contract covers Mission, Lab, Mastery AND Result.
+  assert.deepEqual(lesson.requiredSelectors, [
+    '#nativeLesson',
+    '#missionStageBuild',
+    '#backspinTruth',
+    '#labRange',
+    '#masteryTask',
+    '#nativeLessonResult'
+  ]);
 });
 
 test('copy-web ships the Backspin lesson assets and never the mock', () => {
