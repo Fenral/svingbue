@@ -83,12 +83,23 @@ async function startServer() {
   return server;
 }
 
+// Canvas AA must rasterize identically across capture sessions, so Chromium
+// runs on deterministic software rendering (GPU raster jitters run-to-run).
+const CHROMIUM_DETERMINISTIC_ARGS = [
+  '--disable-gpu',
+  '--force-color-profile=srgb',
+  '--disable-lcd-text',
+  '--font-render-hinting=none',
+  '--force-device-scale-factor=1',
+  '--hide-scrollbars',
+];
+
 async function launchEngine(engineName) {
   if (engineName === 'webkit') return webkit.launch({ headless: true });
   const failures = [];
   for (const channel of ['msedge', 'chrome']) {
     try {
-      return await chromium.launch({ channel, headless: true });
+      return await chromium.launch({ channel, headless: true, args: CHROMIUM_DETERMINISTIC_ARGS });
     } catch (error) {
       failures.push(`${channel}: ${error.message}`);
     }
