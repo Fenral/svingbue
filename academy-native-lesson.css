@@ -11,6 +11,12 @@
   color-scheme: dark;
   --native-header-h: 60px;
   --native-nav-h: 124px;
+  /* Instrument law 13 (locked 2026-07-14): zero gradients on lesson surfaces.
+     body.sa-depth redefines these tokens as gradients — the lesson scope
+     restores the solid raw values so every var() consumer renders flat. */
+  --plate: rgba(8, 5, 14, 0.86);
+  --plate-solid: #0D0A18;
+  --scene-bg: #0D0A18;
 }
 
 .native-lesson *,
