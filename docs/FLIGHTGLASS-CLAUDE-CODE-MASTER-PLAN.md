@@ -67,6 +67,33 @@ research are inputs, not proof that the shipping screens satisfy this plan.
    viewport.
 10. **English product UI.** Norwegian may remain in internal planning only.
 
+The Instrument direction (locked by the owner 2026-07-14 in
+`docs/superpowers/plans/2026-07-14-instrument-gates.md`) adds three laws:
+
+11. **Typography (Instrument).** One grotesque for UI + one mono for every
+    engine truth. All live readouts use tabular numerals; no value changes
+    width while updating. Minus is U+2212, never a hyphen. Degrees, rpm and
+    meters are set in mono even in running text.
+12. **Motion (Instrument).** Truth answers immediately: input→model without
+    easing theater (p95 < 16.7 ms). The previous state dies like phosphor —
+    at most two ghost traces with falling opacity, only on the trace, never
+    on numbers. One signature transition in the app: the Aperture as shared
+    element between surfaces. Reduced motion: ghosts off, the Aperture is
+    replaced by a fade, truth stays live.
+13. **Render signature (Instrument).** The trace is an instrument, not an
+    illustration: ember line with phosphor decay, tick ruler on the
+    baseline, the landing point as the only marker. Violet draws structure
+    (axes, targets, estimate layers), never truth. Annotation right: the
+    model explains itself with at most one dashed violet annotation per
+    state (apex, low point). No decorative glow/gradient/shadow (law 6
+    inheritance).
+
+Laws 11-13 are verified exclusively through the locked evidence manifest
+`config/evidence/instrument-laws.json` and the evaluation protocol in the
+instrument-gates order (§2): binary falsifiable requirements, derived
+scores via `scripts/derive-score.mjs`, independent judges, and NO-GO on any
+critical defect regardless of derived score.
+
 ---
 
 ## 3. Compatibility and safety boundary

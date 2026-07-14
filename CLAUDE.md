@@ -60,6 +60,25 @@ decisions between recent mocks when a primary reference is already named.
   no second approval is required inside those boundaries.
 - Do not introduce Supabase or OpenAI merely because connectors are available.
 
+## Model and effort routing (instrument-gates order §3)
+
+- Delegate to the `fg-mekaniker` subagent for all pure command runs —
+  test suites, `npm run copy-web`, `brand:verify`, harness screenshot
+  capture, file moves, `.sa-backups` — anything with machine-readable
+  pass/fail output. Never for code changes, design judgment or debugging.
+- Delegate to the `fg-dommer` subagent for ALL quality judgment against the
+  locked evidence manifest (`config/evidence/instrument-laws.json`) and for
+  pairwise blind comparisons. The main thread never scores its own work.
+- Judge prompts must never contain: target scores, previous scores, hopes,
+  or any reference to who built the work. Only the manifest path and
+  artifact paths.
+- Everything else — architecture, implementation, debugging, synthesis —
+  runs in the main session at maximum capability. When in doubt, main
+  session.
+- Derived scoring only: judges deliver PASS/FAIL JSON to
+  `scripts/derive-score.mjs`; a number is derived, never asserted. NO-GO on
+  any critical failure overrides every score.
+
 ## Required commands
 
 ```powershell
