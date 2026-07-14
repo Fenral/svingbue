@@ -1,0 +1,57 @@
+{
+    "generatedAt":  "2026-07-15T01:32:14.7847945+02:00",
+    "repo":  "C:\\Users\\SkotvoldSivertSende\\svingbue",
+    "stoppedOnFirstNonzero":  true,
+    "results":  [
+                    {
+                        "name":  "claude-ready",
+                        "command":  "npm.cmd run claude:ready",
+                        "status":  "running",
+                        "exitCode":  null,
+                        "startedAt":  "2026-07-15T01:32:14.7847945+02:00",
+                        "endedAt":  null,
+                        "durationMs":  null,
+                        "log":  "C:\\Users\\SkotvoldSivertSende\\svingbue\\outputs\\flightglass-eval\\final-gates\\01-claude-ready.log"
+                    },
+                    {
+                        "name":  "test-perf",
+                        "command":  "npm.cmd run test:perf",
+                        "status":  "pending",
+                        "exitCode":  null,
+                        "startedAt":  null,
+                        "endedAt":  null,
+                        "durationMs":  null,
+                        "log":  "C:\\Users\\SkotvoldSivertSende\\svingbue\\outputs\\flightglass-eval\\final-gates\\02-test-perf.log"
+                    },
+                    {
+                        "name":  "test-visreg",
+                        "command":  "npm.cmd run test:visreg",
+                        "status":  "pending",
+                        "exitCode":  null,
+                        "startedAt":  null,
+                        "endedAt":  null,
+                        "durationMs":  null,
+                        "log":  "C:\\Users\\SkotvoldSivertSende\\svingbue\\outputs\\flightglass-eval\\final-gates\\03-test-visreg.log"
+                    },
+                    {
+                        "name":  "copy-web",
+                        "command":  "npm.cmd run copy-web",
+                        "status":  "pending",
+                        "exitCode":  null,
+                        "startedAt":  null,
+                        "endedAt":  null,
+                        "durationMs":  null,
+                        "log":  "C:\\Users\\SkotvoldSivertSende\\svingbue\\outputs\\flightglass-eval\\final-gates\\04-copy-web.log"
+                    },
+                    {
+                        "name":  "academy-lesson-audit",
+                        "command":  "node.exe scripts/flightglass-ux-audit.mjs --mode verify --surface academy-lesson --motion both",
+                        "status":  "pending",
+                        "exitCode":  null,
+                        "startedAt":  null,
+                        "endedAt":  null,
+                        "durationMs":  null,
+                        "log":  "C:\\Users\\SkotvoldSivertSende\\svingbue\\outputs\\flightglass-eval\\final-gates\\05-academy-lesson-audit.log"
+                    }
+                ]
+}

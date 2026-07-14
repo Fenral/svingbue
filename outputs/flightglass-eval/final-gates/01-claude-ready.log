@@ -1,0 +1,40 @@
+
+> svingbue-app@1.0.0 claude:ready
+> npm run brand:verify && npm run test:ux && node scripts/verify-claude-autopilot.mjs
+
+
+> svingbue-app@1.0.0 brand:verify
+> node scripts/verify-flightglass-brand.mjs
+
+Flightglass brand verification passed.
+
+> svingbue-app@1.0.0 test:ux
+> node --test --test-concurrency=1 scripts/evidence-lock.test.mjs scripts/flightglass-ux.test.mjs scripts/academy-backspin-model.test.mjs scripts/academy-lesson-journey.test.mjs scripts/academy-backspin-browser.test.mjs && npm run test:webkit
+
+✔ browser contract has only executable and specifically named cases (395.856ms)
+✔ the harness launches the engine selected by the webkit project flag (0.4509ms)
+✔ safe-area environment variables resolve without horizontal scroll on this engine (3023.4551ms)
+✔ phosphor ghosts live on the canvas with falling opacity and never on numbers (7160.1661ms)
+✔ the aperture signature transition runs between surfaces with a fade equivalent (6944.1678ms)
+✔ all six surfaces stay intact at 130% text scale (EV-NAT-01) (4439.1438ms)
+✔ axe-core finds no critical or serious violations on any surface (EV-NAT-02) (5004.5078ms)
+✔ rendered lesson surfaces carry zero gradient, glow, shadow or filter (EV-REN-01) (4393.3643ms)
+✔ sliders speak plain-language values and announcements debounce to settle (EV-NAT-03) (4679.067ms)
+✔ trace annotation right: one violet annotation with an engine-true value twin (3985.9889ms)
+✔ instrument typography: readouts are mono, tabular, width-stable and hyphen-free (3023.0097ms)
+✔ native Backspin production route renders its stable six-surface shell (3025.5029ms)
+✔ Backspin Spin Lab fits 430x932 and follows the model contract (3693.7616ms)
+✔ Backspin ordered mission gates and restores progress at 430x932 (4164.5135ms)
+✔ Backspin Spin Lab fits 375x812 and follows the model contract (3615.471ms)
+✔ Backspin ordered mission gates and restores progress at 375x812 (4259.294ms)
+✔ Backspin clamps inconsistent legacy Influence progress back to the Lab gate (2858.1053ms)
+✔ Backspin Influence preserves exact sensitivity through near-clamp, ceiling and floor states (5720.8661ms)
+✔ Backspin real-world register stays separate, sourced and keyboard accessible (4002.137ms)
+✔ Backspin source sheet degrades cleanly when its optional image cannot decode (3450.1658ms)
+✔ Backspin myth predictions reveal exact engine runs and varied supported answers (3906.8565ms)
+✔ wrong myth predictions still complete, persist, reload and remain inspectable (5383.7646ms)
+✔ myth prediction radios support keyboard roving, one haptic and 375px target fit (3843.9723ms)
+✔ myth evidence also fits the 430x932 reference viewport (3765.7004ms)
+✔ Backspin Mastery keeps one stable attempt, submits atomically and upgrades 3/5 to 4/5 once (9497.1773ms)
+✔ fresh 4/5 mastery earns 120 XP and keeps the 375px keyboard/range contract (5284.4318ms)
+✔ fresh 5/5 mastery earns 190 XP, persists every ability and follows unlocked prerequisites (5348.7696ms)

@@ -1,0 +1,24 @@
+{
+  "pairs": [
+    {
+      "pair": 1,
+      "choice": "B",
+      "reason": "B makes the lesson's single job immediately legible: the 7,000+ rpm then below-3,500 mission is the dominant object, its two ordered stages are visible together, and the primary action names the Spin Lab destination. Its restrained instrument styling and persistent six-surface navigation read as native lesson grammar, while A presents a long article sequence with decorative progress graphics and asks the learner to continue reading before any model interaction."
+    },
+    {
+      "pair": 2,
+      "choice": "A",
+      "reason": "A keeps the live truth, trajectory, consequences, and active Ball speed control visible in one viewport, with explicit units and a numeric cause chain that makes the model inspectable. The selected parameter chip, 44px-scale control, mission status, and next-surface action establish clear native interaction grammar; B is primarily a prose card stack whose star-field decoration and abstract progress motif do not explain or manipulate the golf model."
+    },
+    {
+      "pair": 3,
+      "choice": "B",
+      "reason": "B isolates one mastery task at a time, states the 4-of-5 gate and Task 1/5 status clearly, and presents three large answer targets with a disabled action that accurately reflects the current state. Its numbered task rail and persistent surface navigation make progress understandable without scrolling, whereas A exposes several dense quiz cards at once, clips the surrounding content, and even frames a driver scenario inside a Backspin lesson whose visible model provenance is unclear."
+    },
+    {
+      "pair": 4,
+      "choice": "A",
+      "reason": "A leads with the demonstrated stopping-flight ability rather than rewards, then supports that claim with a clear 5/5 result and a concise list of abilities demonstrated. The next unsolved question creates a meaningful bridge to Launch Angle and the paired onward/back actions read as native completion grammar; B makes XP and badge cards visually dominant, reports a failed 0/5 check amid a celebratory completion panel, and continues the long-page pattern. A does visibly duplicate the Launch Angle action in the card and sticky footer, but its learning hierarchy remains substantially stronger."
+    }
+  ]
+}

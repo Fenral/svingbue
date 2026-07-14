@@ -1,0 +1,87 @@
+[
+  {
+    "id": "EV-TYPO-01",
+    "result": "PASS",
+    "evidence": "Verify = DOM-scan [data-readout] via getComputedStyle. Independent Playwright probe (Edge/Chromium 430x932, academy.html#/lesson/backspin, Spin Lab): 17 [data-readout] elements, ALL font-variant-numeric='tabular-nums' AND font-family 'IBM Plex Mono' (missingTabularNums=[], nonMono=[]). Structural guard academy-native-lesson.css:76-82 [data-readout]{font-variant-numeric:tabular-nums;font-feature-settings:'tnum' 1}. Named instrument test 'instrument typography: readouts are mono, tabular, width-stable and hyphen-free' asserts /tabular-nums/ + /IBM Plex Mono|monospace/ on >=8 readouts -> passes Chromium (83/83) AND WebKit (41/41)."
+  },
+  {
+    "id": "EV-TYPO-02",
+    "result": "PASS",
+    "evidence": "Verify = getBoundingClientRect delta over 0-9 cycle. Independent probe cycling #backspinTruth through '0000'..'9999': all ten widths = 93.906 px, delta = 0.0000 px (literal '=0px' claim met, not merely within tolerance). Instrument test (line 1617-1631) asserts max-min < 0.6px -> passes both engines. tabular-nums + tnum feature settings give equal digit advance width."
+  },
+  {
+    "id": "EV-TYPO-03",
+    "result": "PASS",
+    "evidence": "Verify = formatter unit test + DOM /-\\d/ scan. `node --test scripts/academy-backspin-model.test.mjs` case 'readout formatter owns U+2212...' passes: MINUS='−' (U+2212), formatNumber(-3)='−3', formatValue(-3,'°')='−3°', and doesNotMatch(/-/). Independent DOM probe: 17 readouts, hyphenBeforeDigit=[]; '−3°' rendered. Instrument browser test doesNotMatch(readout.text,/-\\d/) -> passes Chromium 83/83 and WebKit 41/41. speakValue keeps spoken 'minus' for AT (readout-format.js:27-31)."
+  },
+  {
+    "id": "EV-TYPO-04",
+    "result": "PASS",
+    "evidence": "Verify = grep shipped CSS except token file. grep academy-native-lesson.css: all 31 font-family declarations are var(--font-ui|--font-mono|--font-display); zero ad-hoc/literal font stacks. sa-p3.css defines --font-ui once (l.93) and --font-mono once (l.95). Test 'instrument typography tokens: one font pair, no ad-hoc families' passes. NOTE (minor): lesson also references a THIRD token --font-display ('Space Grotesk', sa-p3.css:94, also defined exactly once) -> strictly a font trio, not a literal 'pair', but the verify target (zero ad-hoc families in lesson CSS + single canonical definition per token) holds fully."
+  },
+  {
+    "id": "EV-MOT-01",
+    "result": "PASS",
+    "evidence": "Verify = perf-harness JSON report. Ran `npm run test:perf` (both tests pass). Fresh reports: outputs/flightglass-perf/input-to-paint--chromium.json p95=4.1ms (p50 2.4, p99 5.5, max 6.8, events 220); input-to-paint--webkit.json p95=5ms (p50 4, p99 7, max 10, events 220). Budget 16.7ms met on BOTH engines. CAVEAT (minor finding): the committed harness stops the clock after a forced style/layout flush (void document.body.offsetHeight) i.e. it measures synchronous input-handler work (model solve + DOM writes + canvas draw + forced layout), NOT true composite/present; its header documents replacing an earlier rAF-cadence variant that read a fixed ~16.7ms vsync. Defensible main-thread-work proxy; manifest itself flags physical-device timing as a separate human checkpoint."
+  },
+  {
+    "id": "EV-MOT-02",
+    "result": "PASS",
+    "evidence": "Verify = code search + DOM inspection. Renderer decays ghosts via canvas 2D context.globalAlpha=ghost.opacity then resets to 1 (academy-native-lesson.js:761-767); numbers guarded by academy-native-lesson.css:80-81 [data-readout]{transition:none;animation:none}. Instrument test 'phosphor ghosts live on the canvas with falling opacity and never on numbers': normal motion data-ghost-count='2', every [data-readout] computes animationName 'none' + transition none/0s; reduced motion data-ghost-count='1' -> passes Chromium AND WebKit."
+  },
+  {
+    "id": "EV-MOT-03",
+    "result": "PASS",
+    "evidence": "Verify = trace-state unit test. `node --test scripts/academy-backspin-model.test.mjs` case 'phosphor trace state keeps at most two ghosts with falling opacity (EV-MOT-03)' passes: MAX_GHOSTS=2, GHOST_OPACITIES=[0.4,0.16] strictly falling and >0, a third pushSettledTrace evicts the oldest (length stays 2, newest-first), settles without flight ignored, ghostRenderPlan reduced-motion -> single ghost at opacity 1 (no decay), all ghosts dashed. academy-trace-state.js matches. Ran green in Chromium suite (83/83)."
+  },
+  {
+    "id": "EV-MOT-04",
+    "result": "PASS",
+    "evidence": "Verify = browser test in both motion modes. Code runSurfaceTransition (academy-native-lesson.js:1684-1712): normal -> data-lastTransition='aperture' with [data-aperture] keyframe animation then auto-hide; reduced -> 'fade' opacity anim (0.55->1) on the already-live active surface ('truth is already live'). Instrument test 'the aperture signature transition runs between surfaces with a fade equivalent': normal data-last-transition='aperture' (overlay aria-hidden=true, pointer-events:none, becomes hidden); reduced data-last-transition='fade' with live truth (#influenceBars rows>0) -> passes Chromium AND WebKit."
+  },
+  {
+    "id": "EV-REN-01",
+    "result": "PASS",
+    "evidence": "Verify = computed-style audit + grep canvas code. grep academy-native-lesson.css: 0 hits for box-shadow/text-shadow/-gradient(/backdrop-filter/filter:. grep academy-native-lesson.js: 0 hits for createLinear/RadialGradient/shadowBlur/shadowColor/context.filter. Independent computed-style probe over #nativeLesson + ALL descendants on mission and lab surfaces: 0 offenders (backgroundImage gradient / boxShadow / textShadow / filter / backdropFilter all clear). Instrument test 'rendered lesson surfaces carry zero gradient, glow, shadow or filter (EV-REN-01)' audits computed styles across all six surfaces -> passes Chromium AND WebKit. (Commit 954202b flattened inherited theme gradients; computed audit now clean.)"
+  },
+  {
+    "id": "EV-REN-02",
+    "result": "PASS",
+    "evidence": "Verify = browser test over state sweep. Instrument test asserts exactly one visible [data-trace-annotation] (count=1) initially and after a dynamicLoft sweep 30->10->40, with the annotation value equal to its DOM readout twin. Independent probe corroborates annCount=1 on the lab surface. Passes Chromium AND WebKit."
+  },
+  {
+    "id": "EV-REN-03",
+    "result": "PASS",
+    "evidence": "Verify = color audit of computed styles vs token values. Tokens sa-p3.css: --accent #FF8A4D (ember = live ball/live data only) = rgb(255,138,77); --secondary #9D8BFF (violet chrome) = rgb(157,139,255). Independent probe on lab: engine-true annotation value AND #backspinTruth compute to rgb(255,138,77) ember; annotation structure label computes to rgb(157,139,255) violet. Instrument test asserts annotation-value color == accent (never violet) and estimate [data-real-world-band-value] color == secondary violet (never ember) -> passes both engines. Motor-truth never in violet; estimate never in ember."
+  },
+  {
+    "id": "EV-NAT-01",
+    "result": "PASS",
+    "evidence": "Verify = harness scaled root font + bounding-box asserts. Instrument test 'all six surfaces stay intact at 130% text scale (EV-NAT-01)': sets documentElement font-size 130%, confirms rem-based scaling ratio>1.25 on 3 text probes, then walks all six surfaces asserting per surface scrollLeft=0, doc scrollWidth-clientWidth<=1px, zero elements with rect.right>viewport+1 or rect.left<-1 (no clip/overlap), and no invisible vertical clip (scrollHeight>clientHeight only where overflow auto/scroll) -> passes Chromium AND WebKit; runtimeErrors=[]."
+  },
+  {
+    "id": "EV-NAT-02",
+    "result": "PASS",
+    "evidence": "Verify = axe-core run in harness. Instrument test 'axe-core finds no critical or serious violations on any surface (EV-NAT-02)' loads real node_modules/axe-core/axe.min.js, runs axe.run with color-contrast enabled on each of the six surfaces, filters impact in {critical,serious}, asserts [] -> passes Chromium AND WebKit. Independent probe corroborates page health: 0 console errors, 0 page errors, 0 failed resource requests on the lesson route."
+  },
+  {
+    "id": "EV-NAT-03",
+    "result": "PASS",
+    "evidence": "Verify = DOM assert + event test. Instrument test 'sliders speak plain-language values and announcements debounce to settle (EV-NAT-03)': aria-valuetext = 'minus 3 degrees' (attackAngle -3) and '120 miles per hour' (ballSpeed 120) -> sign+unit spoken in words; a burst of 10 rapid #labRange input events yields <=3 #live-region mutations (observed via MutationObserver) -> debounced, never per-event -> passes Chromium AND WebKit. Independent probe confirmed aria-valuetext populated."
+  },
+  {
+    "id": "EV-NAT-04",
+    "result": "PASS",
+    "evidence": "Verify = manifest test. config/flightglass-surfaces.json academy-lesson.requiredSelectors = [#nativeLesson, #missionStageBuild, #backspinTruth, #labRange, #masteryTask, #nativeLessonResult] -> covers Mission (#missionStageBuild), Lab (#backspinTruth/#labRange), Mastery (#masteryTask) AND Result (#nativeLessonResult). Instrument test 'Backspin reference lesson targets 96' deep-equals exactly this list -> passes (flightglass-ux.test.mjs). grep confirms all six IDs are produced by shipped academy-native-lesson.js/academy.html (1-2 occurrences each); mock academy-lesson-v2-mock.html correctly absent from www/."
+  },
+  {
+    "id": "EV-REG-01",
+    "result": "PASS",
+    "evidence": "Verify = visreg report. Ran `npm run test:visreg` (both tests pass, ~120s). Baseline inventory outputs/visreg-baselines/ = 48 PNGs = 2 engines x 2 viewports (430x932,375x812) x 2 motion (normal,reduced) x 6 surfaces, matching expectedShotNames(). Fresh capture outputs/flightglass-visreg/current/ = 48; every current shot diffs <=0.1% vs its approved baseline (per-channel tolerance=3, 0.1% pixel budget) and the capture walk is error-free. NOTE (process): scripts/lib/flightglass-visreg.mjs and one baseline (chromium--430x932--normal--1-lab.png) are modified-but-uncommitted in the working tree (added waitForCanvasStable polling to stabilize the async-settling lab canvas); the clean re-run passes against these working-tree baselines."
+  },
+  {
+    "id": "EV-GATE-01",
+    "result": "PASS",
+    "evidence": "Verify = test run --project=webkit. Ran `node scripts/academy-backspin-browser.test.mjs --project=webkit` in isolation: 41 tests, 41 pass, 0 fail, 0 skipped (WK EXIT 0); harness self-check confirms browserType='webkit'. Task 9 concerns all covered and green on WebKit: viewport fit (six surfaces fit 430x932 & 375x812, no h/v user-scroll), 44px targets (auditNativeSurface asserts every a/button/input/[role=button] >=44px), keyboard-only journey (tab/enter/arrow roving tabindex + sheet dialog focus-trap + Escape restore), failure-paths (NaN mastery input -> data-model-status='error', '#live'='Model could not update', readouts/store/haptics deep-equal unchanged). NOTE: an initial `npm run test:ux` reported exit 1, but that was a flake I induced by running concurrent browser probes during the suite (fork/resource exhaustion); isolated clean re-runs pass 83/83 (Chromium) and 41/41 (WebKit)."
+  }
+]

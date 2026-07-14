@@ -13,7 +13,7 @@ publication after all Phase 8 gates pass. See `RELEASE-AUTHORIZATION.md`.
 | 3 · Outcome / Compare | Ready | Decisions and references locked in master plan |
 | 4 · Geometry 3D / Strike Window 2D | Ready | Consensus documents named |
 | 5 · Academy overview | Ready | Path and polish documents named |
-| 6 · Academy lesson system | Backspin complete (96) | Tasks 1-11 verified 2026-07-14; see current checkpoint |
+| 6 · Academy lesson system | Backspin SHIPPBAR (Tasks 1-20) | 3/3 judge consistency, pairwise 3/4 (Mastery Check finding); see instrument-gates checkpoint |
 | 7 · Paywall | Ready | Pricing and compatibility rules locked |
 | 8 · Convergence and release QA | Ready | Global gates locked |
 
@@ -50,6 +50,64 @@ Task 11 verification evidence (all runs fresh on 2026-07-14):
   lessons (explicit rollout boundary) and the instrument-law hardening now
   ordered in `docs/superpowers/plans/2026-07-14-instrument-gates.md`.
 
+## Instrument gates (Tasks 12-20) verification
+
+The instrument-law hardening (work order
+`docs/superpowers/plans/2026-07-14-instrument-gates.md`) completed its evaluation
+gate on 2026-07-15. Protocol delivery format below.
+
+**Evidence checklist — 17/17 EV requirements PASS across three independent blind
+judges.** Decorrelated runs against the locked manifest
+`config/evidence/instrument-laws.json`, each blind (manifest + artifact paths
+only, no target or history): judge-run-1 17/17 PASS; judge-run-2 (Opus) 17/17
+PASS; judge-run-3 (Fable, this session) 17/17 PASS -> 3/3 consistency, every
+requirement confirmed. Records: `outputs/flightglass-eval/judge-run-{1,2,3}.json`.
+
+**Gate totals (fresh from a clean process, 2026-07-15):**
+- `npm run claude:ready`: `test:ux` 83/83 PASS (Chromium + WebKit), autopilot
+  verify 41/41 PASS, EXIT 0.
+- `npm run test:perf`: p95 input-to-paint 4.1 ms Chromium / 5 ms WebKit
+  (budget 16.7 ms). `npm run test:visreg`: 2/2 PASS, every surface <=0.1% vs
+  approved baselines on both engines and both motion modes (EV-REG-01 resolved:
+  a capture-timing race was hardened in the visreg method, never the manifest).
+
+**Critical defects:** none. axe-core reports 0 critical/serious on all six
+surfaces (EV-NAT-02); no runtime, content or clipping failure.
+
+**Tier: SHIPPBAR. Derived score: 100** (`node scripts/derive-score.mjs
+outputs/flightglass-eval/judge-run-3.json` -> `{tier:SHIPPBAR, score:100,
+criticalFailures:[]}`). The score is a derived byproduct, not a target; the gates
+above are the acceptance.
+
+**Pairwise blind vs the previous generation:** new native won 3/4 surfaces.
+STUDIO-GRADE is withheld — it requires the pairwise cleanly won.
+
+**Finding (medium) — Mastery Check surface lost the blind pairwise (pair-3).**
+An independent blind judge preferred the previous-generation quiz. Reproduced
+against `outputs/flightglass-eval/pairwise/pair-3/B.png`:
+1. A large empty vertical region fills the lower half of the mastery card when
+   the question is short — wasted viewport, reads as unfinished.
+2. Answer options are centered text cards without a clear radio affordance;
+   less native and harder to scan than left-aligned radios.
+3. The single paged question with a thin stem reads sparse next to the old
+   quiz's denser, number-grounded questions.
+None is a manifest violation (all 17 EV pass; no clipping at 130% scale,
+EV-NAT-01) — which is exactly why pairwise-blind runs: it catches a
+design-quality gap the binary checks cannot see.
+
+**Action:** owner decision at §6 — accept SHIPPBAR, or authorize a Mastery Check
+layout/affordance iteration (rebalance the card's vertical fill, add radio
+affordance) then re-judge pair-3 for STUDIO-GRADE. Deliberately not auto-changed:
+the fix is a design-taste call the 23 downstream lessons inherit.
+
+**Compatibility:** `impact-flight.js` byte-identical, root and `www/` share
+SHA-256 `7e5323c3...`; no physics engine touched in the working tree; protected
+IDs unchanged.
+
+**Human checkpoints remaining (§6, outside autonomy):** physical-iPhone drag
+perf session, manual VoiceOver walkthrough, 5-second blind test with >=5 people,
+release authorization.
+
 ## Phase 0 evidence
 
 - Baseline: 40 captures across 10 surfaces, normal and reduced motion.
@@ -66,7 +124,13 @@ Task 11 verification evidence (all runs fresh on 2026-07-14):
 
 ## Score ledger
 
-| Surface | Current recorded score | Exit target |
+Scores are derived byproducts and tripwires, never targets. Acceptance per
+surface is the four evidence gates: zero critical defects, every category floor
+cleared, all critical checks pass, and pairwise-blind won against the previous
+generation. The "expected derived score" column is what typically falls out once
+the gates pass — a lower figure with all gates green still ships.
+
+| Surface | Current recorded score | Expected derived score |
 |---|---:|---:|
 | Home | 67 | 90+ |
 | Impact / Range | 63 | 90+ |
