@@ -7,8 +7,15 @@ import { dirname, extname, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const require = createRequire(import.meta.url);
-const { chromium } = require('../tools/node_modules/playwright-core');
+const { chromium, webkit } = require('../tools/node_modules/playwright-core');
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+
+// Engine project selection (instrument-gates Task 13): the shipped app runs
+// in WKWebView, so the full gate must also run on the WebKit engine.
+// Select it with `--project=webkit` (direct file run) or FG_ENGINE=webkit
+// (node --test wrapper), e.g. `npm run test:webkit`.
+const WEBKIT_PROJECT = process.argv.includes('--project=webkit')
+  || process.env.FG_ENGINE === 'webkit';
 const STORE_KEY = 'strikearc.academy.v1';
 
 const NATIVE_BACKSPIN_SELECTORS = [
@@ -226,6 +233,16 @@ async function startStaticServer() {
 }
 
 async function launchLocalBrowser() {
+  if (WEBKIT_PROJECT) {
+    try {
+      return await webkit.launch({ headless: true });
+    } catch (error) {
+      throw new Error(
+        'Could not launch the WebKit engine. Install it with '
+        + `"node tools/node_modules/playwright-core/cli.js install webkit".\n${error.message}`
+      );
+    }
+  }
   const failures = [];
   for (const channel of ['msedge', 'chrome']) {
     try {
@@ -1219,6 +1236,29 @@ test('browser contract has only executable and specifically named cases', () => 
     assert.doesNotMatch(name, /place(?:holder)|\btodo\b|\btbd\b|coming soon|implement me/i);
   }
 });
+test('the harness launches the engine selected by the webkit project flag', () => {
+  assert.equal(browser.browserType().name(), WEBKIT_PROJECT ? 'webkit' : 'chromium');
+});
+
+test('safe-area environment variables resolve without horizontal scroll on this engine',
+  { timeout: 30_000 }, async () => {
+    const { page, root, runtimeErrors } = await openFreshBackspinPage({ width: 430, height: 932 });
+    assert.equal(
+      await page.evaluate(() => CSS.supports('padding-bottom: env(safe-area-inset-bottom)')),
+      true,
+      'safe-area env() must be supported by the shipping engine'
+    );
+    const navigation = root.locator('.native-lesson__navigation');
+    await navigation.waitFor();
+    assert.match(
+      await navigation.evaluate(element => getComputedStyle(element).paddingBottom),
+      /^\d+(?:\.\d+)?px$/,
+      'safe-area padding must compute to a concrete pixel value'
+    );
+    assert.equal(await page.evaluate(() => document.documentElement.scrollLeft), 0);
+    assert.equal(await page.evaluate(() => document.documentElement.scrollTop), 0);
+    assert.deepEqual(runtimeErrors, []);
+  });
 test.before(async () => {
   server = await startStaticServer();
   const address = server.address();
