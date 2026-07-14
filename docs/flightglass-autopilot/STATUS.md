@@ -135,6 +135,24 @@ There is no further Academy implementation item with the required approved
 plan/spec pair. The next loop iteration begins when one such pair is added;
 product design is not improvised from older notes.
 
+## Parked refinements (non-blocking, reference-shell polish)
+
+Optional polish on the Backspin reference shell. None affects the STUDIO-GRADE
+tier or blocks the rollout; carry them into a future refinement round because the
+23 downstream lessons inherit this shell. Owner-authorized 2026-07-15 to park.
+
+- **Mastery Check surface density and affordance.** A second blind judge (this
+  session's pairwise) preferred the previous-generation quiz on pair-3, citing a
+  large empty lower half of the card when the question is short and answer
+  options that read as centered text rather than radio controls. The
+  consolidated 4/4 pairwise still net the surface as a win, so it is a polish
+  item, not a defect: fill the card's lower region and give answers a clear radio
+  affordance, then re-judge pair-3. Evidence:
+  `outputs/flightglass-eval/pairwise/pair-3/B.png`.
+- **Result surface destination repetition** (already noted above): the content
+  card and sticky action name the same Launch Angle destination. Consolidate to a
+  single destination in a future pass.
+
 ## Phase 0 evidence
 
 - Baseline: 40 captures across 10 surfaces, normal and reduced motion.
