@@ -4,9 +4,12 @@
 handoff source of truth for autonomous implementation. New image generation is
 paused until the code and existing assets prove that a new image is necessary.
 
-**Primary objective:** Raise every named product surface to a defensible 90+
-UX/UI score without changing the golf physics, purchase continuity or existing
-user progress.
+**Primary objective:** Raise every named product surface to defensible
+instrument-grade quality without changing the golf physics, purchase continuity
+or existing user progress. Acceptance is measured by evidence gates — zero
+critical defects, every category floor cleared, all critical checks pass, and
+pairwise-blind won against the previous generation — not by reaching a score.
+The derived UX scores below are byproducts and tripwires, never the target.
 
 **Execution model:** Claude Code works through the phases below in order,
 implements and verifies one independently testable surface at a time, and does
@@ -138,7 +141,7 @@ copy a mock merely because it is visually complete.
 
 ## 5. Target scorecard
 
-| Surface | Baseline | Required exit score |
+| Surface | Baseline | Expected derived score* |
 |---|---:|---:|
 | Home | 67 | 90+ |
 | Impact / Range | 63 | 90+ |
@@ -150,6 +153,12 @@ copy a mock merely because it is visually complete.
 | Academy overview | 70 | 90+ |
 | Academy lesson | 73 | 96-97 |
 | Paywall | 76 | 90+ |
+
+*Not a target to aim for. Acceptance is the four evidence gates — zero critical
+defects, every category floor cleared, all critical checks pass, and
+pairwise-blind won against the previous generation. These figures are the score
+that typically falls out once the gates pass: a lower figure with all gates
+green still ships; a higher figure never overrides a critical defect.
 
 Each score is calculated from:
 
@@ -365,9 +374,10 @@ The approved v3 amendment is
 `docs/superpowers/specs/2026-07-13-backspin-96-97-design.md`; where it is more
 specific than the v2 inputs, it governs Backspin.
 
-**Backspin exit target:** 96-97. The target is earned only by model, mastery,
-mobile and accessibility evidence; no heuristic score overrides a critical
-defect.
+**Backspin expected derived score:** ~96-97 when all gates pass. This is not a
+target to aim for — acceptance is the evidence gates (model, mastery, mobile and
+accessibility evidence; zero critical defects; every category floor cleared;
+pairwise-blind won). No heuristic score overrides a critical defect.
 
 Default six-surface anatomy:
 

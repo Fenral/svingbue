@@ -94,6 +94,16 @@ npm run copy-web
 improvements listed. `ux:verify` is the strict gate and fails on runtime,
 overflow or missing-essential-selector criticals.
 
+## Acceptance model
+
+A score is never a target to aim for — it is a derived byproduct and a tripwire.
+Acceptance of any surface or lesson is the four evidence gates: zero critical
+defects, every category floor cleared, all critical checks pass, and
+pairwise-blind won against the previous generation. A lower derived score with
+all four gates green still ships; a higher score never overrides a critical
+defect. Where any plan or ledger states a figure like "90+" or "96-97", read it
+as the score expected to fall out once the gates pass, not as the goal.
+
 ## Completion language
 
 Only say a phase is complete after fresh verification output and screenshot
