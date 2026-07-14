@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
@@ -37,6 +38,30 @@ test('manifest maps every surface to existing files and target viewports', () =>
   assert.equal(result.errors.length, 0);
   assert.ok(manifest.surfaces.every((surface) => surface.viewportIds.length >= 1));
   assert.ok(manifest.surfaces.every((surface) => surface.references.length >= 1));
+});
+
+test('Backspin reference lesson targets 96 before Academy rollout', () => {
+  const manifest = loadManifest(manifestPath);
+  const lesson = manifest.surfaces.find((surface) => surface.id === 'academy-lesson');
+  assert.equal(lesson.targetScore, 96);
+  assert.deepEqual(lesson.requiredSelectors, ['#nativeLesson', '#backspinTruth', '#labRange']);
+});
+
+test('copy-web ships the Backspin lesson assets and never the mock', () => {
+  const copyResult = spawnSync(process.execPath, [join(ROOT, 'scripts', 'copy-web.mjs')], {
+    encoding: 'utf8'
+  });
+  assert.equal(copyResult.status, 0, copyResult.stderr || copyResult.stdout);
+  for (const file of [
+    'academy.html',
+    'academy-backspin-model.js',
+    'academy-lesson-journey.js',
+    'academy-native-lesson.js',
+    'academy-native-lesson.css'
+  ]) {
+    assert.equal(existsSync(join(ROOT, 'www', file)), true, `${file} must ship`);
+  }
+  assert.equal(existsSync(join(ROOT, 'www', 'academy-lesson-v2-mock.html')), false);
 });
 
 test('snapshot evaluation separates critical failures from improvement findings', () => {

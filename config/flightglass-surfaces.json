@@ -117,13 +117,13 @@
       "label": "Academy lesson",
       "phase": 6,
       "baselineScore": 73,
-      "targetScore": 90,
+      "targetScore": 96,
       "route": "academy.html#/lesson/backspin",
       "sourceType": "shipping-web-state",
       "viewportIds": ["portrait-wide", "portrait-compact"],
-      "requiredSelectors": ["#app", ".lesson", "#diagramMount"],
-      "references": ["academy-lesson-v2-mock.html", "docs/claude-design-brief/brief.md", "docs/academy-native-v2-spec.md"],
-      "primaryJob": "Learn one relationship by manipulating a model that stays visible with its live result."
+      "requiredSelectors": ["#nativeLesson", "#backspinTruth", "#labRange"],
+      "references": ["academy-lesson-v2-mock.html", "docs/academy-native-v2-spec.md", "docs/superpowers/specs/2026-07-13-backspin-96-97-design.md"],
+      "primaryJob": "Predict, manipulate and demonstrate control of backspin in an honest live model."
     },
     {
       "id": "paywall",

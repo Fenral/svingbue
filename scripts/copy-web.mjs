@@ -30,7 +30,14 @@ const WWW = join(ROOT, 'www');
 // terms.html + privacy.html: linked from the paywall's legal row
 // (sa-paywall.js → ./terms.html / ./privacy.html) — Apple requires these to
 // resolve inside the native app, so they ship alongside the three app pages.
-const ALLOWED_HTML_FILES = ['index.html', 'geometry.html', 'impact.html', 'terms.html', 'privacy.html'];
+const ALLOWED_HTML_FILES = [
+  'index.html',
+  'geometry.html',
+  'impact.html',
+  'academy.html',
+  'terms.html',
+  'privacy.html'
+];
 
 // --- 2. Explicit allowlist: asset/module directories copied wholesale.
 const ALLOWED_DIRS = ['vendor', 'assets', 'geo3d'];
