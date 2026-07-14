@@ -24,6 +24,28 @@ const SURFACES = Object.freeze([
 
 const PARAMETER_KEYS = Object.freeze(['dynamicLoft', 'attackAngle', 'ballSpeed']);
 
+// Law 13: the trace is an instrument. Carry and apex scale against fixed
+// engine-derived references (the maxima over the parameter corners), so
+// different states draw honestly different arcs and ghosts become readable.
+const TRACE_REFERENCE = (() => {
+  let carry = 1;
+  let apex = 1;
+  for (const dynamicLoft of [BACKSPIN_PARAMS.dynamicLoft.min, BACKSPIN_PARAMS.dynamicLoft.max]) {
+    for (const attackAngle of [BACKSPIN_PARAMS.attackAngle.min, BACKSPIN_PARAMS.attackAngle.max]) {
+      for (const ballSpeed of [BACKSPIN_PARAMS.ballSpeed.min, BACKSPIN_PARAMS.ballSpeed.max]) {
+        try {
+          const solved = solveBackspinState({ dynamicLoft, attackAngle, ballSpeed });
+          carry = Math.max(carry, solved.carryM);
+          apex = Math.max(apex, solved.apexM);
+        } catch {
+          // Non-finite corners are simply excluded from the reference.
+        }
+      }
+    }
+  }
+  return Object.freeze({ carry, apex });
+})();
+
 const SHEETS = Object.freeze({
   mission: {
     eyebrow:'Mission',
@@ -302,6 +324,7 @@ function lessonTemplate({ xp, level, state }) {
               <small data-real-world-echo-condition></small>
               <small data-real-world-echo-source></small>
             </div>
+            <span class="native-lesson__trace-annotation" data-trace-annotation hidden aria-hidden="true">Apex <b data-annotation-value data-readout></b></span>
           </div>
           <div class="native-lesson__outcomes" aria-label="Engine outcomes">
             <button type="button" data-sheet="carry"><span>Carry</span><strong id="labCarry" data-carry data-readout>—</strong></button>
@@ -685,17 +708,29 @@ export function mountNativeBackspinLesson(options = {}) {
       const styles = getComputedStyle(lesson);
       const padX = 14;
       const baseY = height - 17;
-      const draw = (flight, stroke, lineWidth, dashed=false) => {
-        const points = trajectorySamples(flight, 48);
+      const plotWidth = width - padX * 2;
+      const plotHeight = Math.max(42, height - 48);
+      const accentColor = styles.getPropertyValue('--accent').trim() || '#FF8A4D';
+      const secondaryColor = styles.getPropertyValue('--secondary').trim() || '#9D8BFF';
+      const lineColor = styles.getPropertyValue('--line').trim() || 'rgba(255,255,255,.1)';
+      // Law 13 scale: each trace spans carry/apex relative to the fixed
+      // engine reference, so states and ghosts compare honestly.
+      const carrySpan = (trace) => plotWidth * (trace.carryM / TRACE_REFERENCE.carry);
+      const apexSpan = (trace) => plotHeight * (trace.apexM / TRACE_REFERENCE.apex);
+      const draw = (trace, stroke, lineWidth, dashed=false) => {
+        const points = trajectorySamples(trace.flight, 48);
         if (!Array.isArray(points) || !points.length || points.some(point =>
           !Number.isFinite(point?.d) || !Number.isFinite(point?.h))) {
           throw new RangeError('Trajectory returned a non-finite point');
         }
+        if (!Number.isFinite(trace.carryM) || !Number.isFinite(trace.apexM)) {
+          throw new RangeError('Trace scale requires finite carry and apex');
+        }
         context.beginPath();
         context.setLineDash(dashed ? [5, 7] : []);
         points.forEach((point, index) => {
-          const x = padX + point.d * (width - padX * 2);
-          const y = baseY - point.h * Math.max(42, height - 48);
+          const x = padX + point.d * carrySpan(trace);
+          const y = baseY - point.h * apexSpan(trace);
           if (index === 0) context.moveTo(x, y); else context.lineTo(x, y);
         });
         context.strokeStyle = stroke;
@@ -704,6 +739,17 @@ export function mountNativeBackspinLesson(options = {}) {
         context.lineJoin = 'round';
         context.stroke();
       };
+      // Tick ruler on the baseline: one tick per 25 m of the reference span.
+      context.setLineDash([]);
+      context.strokeStyle = lineColor;
+      context.lineWidth = 1;
+      for (let meters = 0; meters <= TRACE_REFERENCE.carry; meters += 25) {
+        const x = padX + (meters / TRACE_REFERENCE.carry) * plotWidth;
+        context.beginPath();
+        context.moveTo(x, baseY + 0.5);
+        context.lineTo(x, baseY - 3.5);
+        context.stroke();
+      }
       // Law 12: phosphor ghosts — previous settled states decay on the trace
       // only. Reduced motion keeps the single static comparison ghost.
       const reducedMotion = prefersReducedMotion();
@@ -715,18 +761,46 @@ export function mountNativeBackspinLesson(options = {}) {
       const ghostColor = styles.getPropertyValue('--ghost').trim() || '#A7A0C4';
       for (const ghost of ghostPlan) {
         context.globalAlpha = ghost.opacity;
-        draw(ghost.trace.flight, ghostColor, 1.5, ghost.dashed);
+        draw(ghost.trace, ghostColor, 1.5, ghost.dashed);
       }
       context.globalAlpha = 1;
       lesson.dataset.ghostCount = String(ghostPlan.length);
-      draw(solved.flight, styles.getPropertyValue('--accent').trim() || '#FF8A4D', 2.5);
+      draw(solved, accentColor, 2.5);
       context.setLineDash([]);
       context.beginPath();
       context.moveTo(padX, baseY + .5);
       context.lineTo(width - padX, baseY + .5);
-      context.strokeStyle = styles.getPropertyValue('--line').trim() || 'rgba(255,255,255,.1)';
+      context.strokeStyle = lineColor;
       context.lineWidth = 1;
       context.stroke();
+      // The landing point is the only marker on the trace.
+      const landingX = padX + carrySpan(solved);
+      context.beginPath();
+      context.arc(landingX, baseY, 3.5, 0, Math.PI * 2);
+      context.fillStyle = accentColor;
+      context.fill();
+      // Annotation right: one dashed violet leader at the apex; its value is
+      // engine truth and therefore renders in ember (never violet), with the
+      // Height readout as its always-announced DOM twin.
+      const apexX = padX + 0.52 * carrySpan(solved);
+      const apexY = baseY - apexSpan(solved);
+      context.setLineDash([3, 5]);
+      context.strokeStyle = secondaryColor;
+      context.lineWidth = 2;
+      context.beginPath();
+      context.moveTo(apexX, apexY - 5);
+      context.lineTo(apexX, apexY - 20);
+      context.stroke();
+      context.setLineDash([]);
+      const annotation = lesson.querySelector('[data-trace-annotation]');
+      if (annotation) {
+        annotation.hidden = false;
+        annotation.style.left = `${Math.round(apexX)}px`;
+        annotation.style.top = `${Math.round(Math.max(6, apexY - 42))}px`;
+        annotation.querySelector('[data-annotation-value]').textContent =
+          formatValue(solved.apexM, ' m');
+      }
+      lesson.dataset.traceSignature = 'ruler,landing,annotation';
       showFlightCanvas();
       return true;
     } catch {

@@ -39,6 +39,30 @@
   stroke-linecap: round;
 }
 
+/* Law 13 annotation right: the model explains itself with at most one
+   dashed violet annotation per state. Structure is violet; the engine-true
+   value inside stays ember. Never an input target, never announced twice —
+   the Height readout is its DOM twin. */
+.native-lesson__trace-annotation {
+  position: absolute;
+  z-index: 2;
+  transform: translateX(-50%);
+  padding: 2px 8px;
+  border: 1px dashed var(--secondary-line);
+  border-radius: 8px;
+  color: var(--secondary);
+  background: var(--plate-solid);
+  font-size: 11px;
+  letter-spacing: .02em;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.native-lesson__trace-annotation [data-annotation-value] {
+  color: var(--accent);
+  font-weight: 600;
+}
+
 /* Instrument law 11 (EV-TYPO-01/02): every live readout renders in the truth
    mono with tabular numerals so values never change width while updating.
    The animation/transition guard enforces law 12 structurally — decay and
@@ -65,8 +89,8 @@
 .native-lesson button:focus-visible,
 .native-sheet button:focus-visible,
 .native-lesson input:focus-visible {
-  outline: none;
-  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .88), inset 0 0 0 3px var(--ink);
+  outline: 3px solid var(--ink);
+  outline-offset: -3px;
 }
 
 .native-lesson__surface:focus-visible,
@@ -98,9 +122,7 @@
   position: absolute;
   inset: 0;
   overflow: hidden;
-  background:
-    radial-gradient(110% 70% at 50% 18%, var(--secondary-soft), transparent 68%),
-    var(--scene-bg);
+  background: var(--scene-bg);
 }
 
 .native-lesson__header {
@@ -115,8 +137,7 @@
   align-items: center;
   gap: 10px;
   border-bottom: 1px solid var(--line);
-  background: color-mix(in srgb, var(--plate-solid) 92%, transparent);
-  backdrop-filter: blur(18px);
+  background: var(--plate-solid);
 }
 
 .native-lesson__icon-button {
@@ -294,7 +315,7 @@
   gap: 12px;
   border: 1px solid var(--secondary-line);
   border-radius: var(--radius-card);
-  background: linear-gradient(145deg, var(--secondary-soft), var(--plate));
+  background: var(--plate);
 }
 
 .native-lesson__card-heading {
@@ -359,7 +380,6 @@
 .native-lesson__mission-stage[data-complete="true"] > span {
   border-color: var(--good);
   background: var(--good);
-  box-shadow: 0 0 12px color-mix(in srgb, var(--good) 45%, transparent);
 }
 
 .native-lesson__mission-stage p {
@@ -430,9 +450,7 @@
   overflow: hidden;
   border: 1px solid var(--line);
   border-radius: var(--radius-lens);
-  background:
-    linear-gradient(180deg, transparent 72%, var(--accent-soft)),
-    var(--plate-solid);
+  background: var(--plate-solid);
 }
 
 .native-lesson__lab-visual::after {
@@ -494,7 +512,6 @@
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   line-height: 1;
-  text-shadow: 0 0 22px var(--accent-soft);
 }
 
 .native-lesson__truth small {
@@ -699,9 +716,9 @@
 .native-lesson #labRange::-webkit-slider-runnable-track,
 .native-lesson #masteryTargetRange::-webkit-slider-runnable-track {
   height: 6px;
+  border: 1px solid var(--secondary-line);
   border-radius: var(--radius-pill);
   background: var(--secondary-soft);
-  box-shadow: inset 0 0 0 1px var(--secondary-line);
 }
 
 .native-lesson #labRange::-webkit-slider-thumb,
@@ -713,7 +730,6 @@
   border: 12px solid var(--plate-solid);
   border-radius: 50%;
   background: var(--secondary);
-  box-shadow: 0 0 0 1px var(--secondary-line), 0 3px 12px rgba(0, 0, 0, .42);
 }
 
 .native-lesson #labRange::-moz-range-track,
@@ -731,7 +747,6 @@
   border: 12px solid var(--plate-solid);
   border-radius: 50%;
   background: var(--secondary);
-  box-shadow: 0 0 0 1px var(--secondary-line), 0 3px 12px rgba(0, 0, 0, .42);
 }
 
 .native-lesson__cause {
@@ -901,10 +916,14 @@
   font-weight: 600;
 }
 
+.native-lesson__lie-control button {
+  border: 1px solid transparent;
+}
+
 .native-lesson__lie-control button[aria-checked="true"] {
   color: var(--ink);
+  border-color: var(--secondary-line);
   background: var(--secondary-soft);
-  box-shadow: inset 0 0 0 1px var(--secondary-line);
 }
 
 .native-lesson__real-world {
@@ -982,7 +1001,7 @@
   gap: 13px;
   border: 1px solid var(--line);
   border-radius: var(--radius-lens);
-  background: linear-gradient(155deg, var(--secondary-soft), var(--plate));
+  background: var(--plate);
 }
 
 .native-lesson__experiment p,
@@ -1671,8 +1690,7 @@
   min-height: var(--native-nav-h);
   padding: 5px 12px max(8px, env(safe-area-inset-bottom));
   border-top: 1px solid var(--line);
-  background: color-mix(in srgb, var(--plate-solid) 94%, transparent);
-  backdrop-filter: blur(18px);
+  background: var(--plate-solid);
 }
 
 .native-lesson__stepper {
@@ -1720,7 +1738,6 @@
 .native-lesson__step[aria-current="step"] .native-lesson__step-dot {
   border-color: var(--secondary);
   background: var(--secondary);
-  box-shadow: 0 0 12px var(--secondary-line);
 }
 
 .native-lesson__step-label {
@@ -1779,8 +1796,7 @@
   z-index: 70;
   inset: 0;
   opacity: 0;
-  background: rgba(3, 2, 8, .72);
-  backdrop-filter: blur(2px);
+  background: rgba(3, 2, 8, .78);
   transition: opacity 220ms ease;
 }
 
@@ -1802,7 +1818,6 @@
   border-radius: 22px 22px 0 0;
   color: var(--ink);
   background: var(--plate-solid);
-  box-shadow: 0 -22px 70px rgba(0, 0, 0, .55);
   transform: translate3d(0, 102%, 0);
   transition: transform 260ms cubic-bezier(.22, .72, .2, 1);
 }

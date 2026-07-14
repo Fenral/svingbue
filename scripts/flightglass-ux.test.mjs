@@ -81,6 +81,20 @@ test('instrument typography tokens: one font pair, no ad-hoc families in lesson 
     'exactly one truth mono definition in the token file');
 });
 
+test('instrument render signature: no glow, gradient, shadow or filter in the lesson', () => {
+  // EV-REN-01: the trace is an instrument, not an illustration. Elevation
+  // and rings are drawn with borders/outlines, bands with solid plates.
+  const lessonCss = readFileSync(join(ROOT, 'academy-native-lesson.css'), 'utf8');
+  for (const forbidden of ['box-shadow', 'text-shadow', '-gradient(', 'backdrop-filter', 'filter:']) {
+    assert.equal(lessonCss.includes(forbidden), false,
+      `"${forbidden}" must not appear in lesson CSS`);
+  }
+  const rendererSource = readFileSync(join(ROOT, 'academy-native-lesson.js'), 'utf8');
+  assert.doesNotMatch(rendererSource,
+    /createLinearGradient|createRadialGradient|shadowBlur|shadowColor|context\.filter/,
+    'canvas code must not paint gradients, glows or filters');
+});
+
 test('snapshot evaluation separates critical failures from improvement findings', () => {
   const result = evaluateSnapshot({
     httpStatus: 200,

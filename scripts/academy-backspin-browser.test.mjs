@@ -1318,6 +1318,79 @@ test('the aperture signature transition runs between surfaces with a fade equiva
     assert.deepEqual(reduced.runtimeErrors, []);
   });
 
+test('trace annotation right: one violet annotation with an engine-true value twin',
+  { timeout: 60_000 }, async () => {
+    const { page, root, runtimeErrors } = await openFreshBackspinPage(
+      { width: 430, height: 932 }, { reducedMotion: 'no-preference' });
+    await enterSpinLab(page, root);
+    await page.waitForTimeout(100);
+
+    const readAnnotation = () => root.evaluate((lesson) => {
+      const annotations = [...lesson.querySelectorAll('[data-trace-annotation]')]
+        .filter((element) => !element.hidden);
+      const apex = lesson.querySelector('[data-apex]');
+      const truth = lesson.querySelector('#backspinTruth');
+      const styles = getComputedStyle(lesson);
+      return {
+        count: annotations.length,
+        text: annotations[0]?.textContent.replace(/\s+/g, ' ').trim(),
+        labelColor: annotations[0] ? getComputedStyle(annotations[0]).color : null,
+        valueColor: annotations[0]?.querySelector('[data-annotation-value]')
+          ? getComputedStyle(annotations[0].querySelector('[data-annotation-value]')).color
+          : null,
+        apexText: apex?.textContent.trim(),
+        truthColor: getComputedStyle(truth).color,
+        signature: lesson.dataset.traceSignature,
+        secondary: styles.getPropertyValue('--secondary').trim(),
+        accent: styles.getPropertyValue('--accent').trim()
+      };
+    });
+
+    const toRgb = (value) => {
+      const hex = value.replace('#', '');
+      return `rgb(${parseInt(hex.slice(0, 2), 16)}, ${parseInt(hex.slice(2, 4), 16)}, ${parseInt(hex.slice(4, 6), 16)})`;
+    };
+
+    let annotation = await readAnnotation();
+    assert.equal(annotation.count, 1, 'exactly one annotation per model state');
+    assert.match(annotation.text, /^Apex [\d,.]+ m$/);
+    assert.equal(annotation.text.replace('Apex ', ''), annotation.apexText,
+      'the annotation value must equal its DOM readout twin');
+    assert.equal(annotation.signature, 'ruler,landing,annotation');
+    assert.equal(annotation.labelColor, toRgb(annotation.secondary),
+      'annotation structure renders in the violet token');
+    assert.equal(annotation.valueColor, toRgb(annotation.accent),
+      'the engine-true value never renders in violet (EV-REN-03)');
+    assert.equal(annotation.truthColor, toRgb(annotation.accent),
+      'primary truth stays in the ember token');
+
+    // EV-REN-02: still exactly one annotation across a state sweep (the
+    // sweep also completes the mission so navigation unlocks).
+    await setBackspinParameter(page, root, 'dynamicLoft', 30);
+    await waitForBackspinJourney(page, { surface:1, built:true, cut:false });
+    annotation = await readAnnotation();
+    assert.equal(annotation.count, 1);
+    await setBackspinParameter(page, root, 'dynamicLoft', 10);
+    await waitForBackspinJourney(page, { surface:1, built:true, cut:true });
+    await setBackspinParameter(page, root, 'dynamicLoft', 40);
+    await page.waitForTimeout(420);
+    annotation = await readAnnotation();
+    assert.equal(annotation.count, 1);
+    assert.equal(annotation.text.replace('Apex ', ''), annotation.apexText);
+
+    // EV-REN-03: the estimate register renders violet, never ember.
+    await root.locator('.native-lesson__navigation [data-action="next"]').click();
+    await assertEventuallyRootSurface(page, root, '2');
+    await root.locator('.native-lesson__lie-control button', { hasText: 'Wet' }).click();
+    const estimate = await root.evaluate((lesson) => {
+      const value = lesson.querySelector('[data-real-world-band-value]');
+      return value ? getComputedStyle(value).color : null;
+    });
+    assert.equal(estimate, toRgb(annotation.secondary),
+      'estimate values render in the violet token, never ember');
+    assert.deepEqual(runtimeErrors, []);
+  });
+
 test('instrument typography: readouts are mono, tabular, width-stable and hyphen-free',
   { timeout: 60_000 }, async () => {
     const { page, root, runtimeErrors } = await openFreshBackspinPage({ width: 430, height: 932 });
