@@ -1259,6 +1259,56 @@ test('safe-area environment variables resolve without horizontal scroll on this 
     assert.equal(await page.evaluate(() => document.documentElement.scrollTop), 0);
     assert.deepEqual(runtimeErrors, []);
   });
+
+test('instrument typography: readouts are mono, tabular, width-stable and hyphen-free',
+  { timeout: 60_000 }, async () => {
+    const { page, root, runtimeErrors } = await openFreshBackspinPage({ width: 430, height: 932 });
+    await enterSpinLab(page, root);
+    await setBackspinParameter(page, root, 'attackAngle', -3);
+    await page.waitForTimeout(50);
+
+    const audit = await root.evaluate((lesson) =>
+      [...lesson.querySelectorAll('[data-readout]')].map((element) => {
+        const style = getComputedStyle(element);
+        return {
+          text: element.textContent.trim(),
+          fontFamily: style.fontFamily,
+          variant: style.fontVariantNumeric
+        };
+      }));
+    assert.ok(audit.length >= 8, `expected at least 8 marked readouts, found ${audit.length}`);
+    for (const readout of audit) {
+      assert.match(readout.fontFamily, /IBM Plex Mono|ui-monospace|monospace/i,
+        `"${readout.text}" must render in the truth mono`);
+      assert.match(readout.variant, /tabular-nums/,
+        `"${readout.text}" must use tabular numerals`);
+      assert.doesNotMatch(readout.text, /-\d/,
+        `"${readout.text}" must set minus as U+2212, never a hyphen`);
+    }
+
+    // EV-TYPO-02: cycling every digit through the truth readout must not
+    // change its rendered width.
+    const widths = await root.evaluate((lesson) => {
+      const truth = lesson.querySelector('#backspinTruth');
+      const original = truth.textContent;
+      const measured = [];
+      for (let digit = 0; digit <= 9; digit += 1) {
+        truth.textContent = String(digit).repeat(4);
+        measured.push(truth.getBoundingClientRect().width);
+      }
+      truth.textContent = original;
+      return measured;
+    });
+    assert.ok(Math.max(...widths) - Math.min(...widths) < 0.6,
+      `digit cycle must be width-stable, widths: ${widths.map((w) => w.toFixed(2)).join(', ')}`);
+
+    // Visible minus is U+2212 while accessible names keep plain language —
+    // AT punctuation settings may drop U+2212 entirely (a11y review C1).
+    const rangeAria = await root.locator('#labRange').getAttribute('aria-valuetext');
+    assert.doesNotMatch(rangeAria, /−/,
+      'aria-valuetext must never contain U+2212');
+    assert.deepEqual(runtimeErrors, []);
+  });
 test.before(async () => {
   server = await startStaticServer();
   const address = server.address();

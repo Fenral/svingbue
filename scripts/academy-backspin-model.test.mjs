@@ -112,3 +112,22 @@ test('mastery target is evaluated from the live engine state', () => {
   assert.equal(passesStoppingFlightTarget({ dynamicLoft:10, attackAngle:-3, ballSpeed:120 }), false);
   assert.equal(passesStoppingFlightTarget({ dynamicLoft:NaN, attackAngle:-3, ballSpeed:120 }), false);
 });
+
+test('readout formatter owns U+2212, grouping and unit suffixes (EV-TYPO-03)', async () => {
+  const { MINUS, formatNumber, formatValue, formatSigned } =
+    await import('../academy-readout-format.js');
+  assert.equal(MINUS, '−');
+  assert.equal(formatNumber(6048), '6,048');
+  assert.equal(formatNumber(-3), '−3');
+  assert.equal(formatNumber(46.3), '46.3');
+  assert.equal(formatNumber(-1234.5), '−1,234.5');
+  assert.equal(formatValue(-3, '°'), '−3°');
+  assert.equal(formatValue(120, ' mph'), '120 mph');
+  assert.equal(formatValue(6048, ' rpm'), '6,048 rpm');
+  assert.equal(formatSigned(216, ' rpm'), '+216 rpm');
+  assert.equal(formatSigned(-216, ' rpm'), '−216 rpm');
+  assert.equal(formatSigned(0, ''), '+0');
+  for (const value of [formatNumber(-7), formatValue(-8, '°'), formatSigned(-50, ' rpm')]) {
+    assert.doesNotMatch(value, /-/, 'visible values never use the ASCII hyphen');
+  }
+});

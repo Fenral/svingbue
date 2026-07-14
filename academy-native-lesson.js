@@ -10,6 +10,7 @@ import {
   realWorldRange,
   passesStoppingFlightTarget
 } from './academy-backspin-model.js';
+import { formatNumber, formatValue, formatSigned } from './academy-readout-format.js';
 
 const SURFACES = Object.freeze([
   { key:'mission', label:'Mission', next:'Enter the Spin Lab' },
@@ -21,7 +22,6 @@ const SURFACES = Object.freeze([
 ]);
 
 const PARAMETER_KEYS = Object.freeze(['dynamicLoft', 'attackAngle', 'ballSpeed']);
-const NUMBER = new Intl.NumberFormat('en-US');
 
 const SHEETS = Object.freeze({
   mission: {
@@ -198,7 +198,7 @@ function sensitivityValue(delta) {
 }
 
 function signedNumber(value) {
-  return `${value >= 0 ? '+' : '\u2212'}${NUMBER.format(Math.abs(Math.round(value)))}`;
+  return formatSigned(Math.round(value));
 }
 
 function influenceUnit(key) {
@@ -250,7 +250,7 @@ function lessonTemplate({ xp, level, state }) {
           <span>Academy · Flight</span><strong>Backspin</strong>
         </div>
         <div class="native-lesson__progress" aria-label="${safeXp} XP, level ${levelNumber}, ${levelTitle}">
-          <strong>${NUMBER.format(safeXp)} XP</strong><span>Lv ${levelNumber} · ${levelTitle}</span>
+          <strong data-readout>${formatNumber(safeXp)} XP</strong><span>Lv ${levelNumber} · ${levelTitle}</span>
         </div>
       </header>
 
@@ -281,7 +281,7 @@ function lessonTemplate({ xp, level, state }) {
         <section class="native-lesson__surface native-lesson__surface--lab" data-surface="1" tabindex="-1" aria-labelledby="nativeLabTitle">
           <div class="native-lesson__surface-heading">
             <div><p class="native-lesson__eyebrow">7-iron · live engine</p><h2 id="nativeLabTitle">Spin Lab</h2></div>
-            <button type="button" class="native-lesson__mission-pill" data-sheet="mission">Mission <span data-mission-count>0 / 2</span></button>
+            <button type="button" class="native-lesson__mission-pill" data-sheet="mission">Mission <span data-mission-count data-readout>0 / 2</span></button>
           </div>
           <div class="native-lesson__lab-visual">
             <canvas id="flightCanvas" aria-hidden="true"></canvas>
@@ -290,28 +290,28 @@ function lessonTemplate({ xp, level, state }) {
             </div>
             <div class="native-lesson__truth">
               <span>Backspin</span>
-              <output id="backspinTruth">—</output><small>rpm</small>
+              <output id="backspinTruth" data-readout>—</output><small>rpm</small>
               <div id="backspinBand" class="native-lesson__spin-band" data-band="iron">Iron spin window</div>
-              <button type="button" class="native-lesson__truth-chip" data-sheet="spinLoft"><span id="labSpinLoft" data-spin-loft>—</span> spin loft</button>
+              <button type="button" class="native-lesson__truth-chip" data-sheet="spinLoft"><span id="labSpinLoft" data-spin-loft data-readout>—</span> spin loft</button>
             </div>
             <button type="button" id="backspinLimit" class="native-lesson__limit-chip" data-engine-limit hidden></button>
             <div id="realWorldEcho" class="native-lesson__real-world-echo" data-real-world-echo
               data-layer="real-world-estimate" hidden role="img">
-              <strong data-real-world-echo-value></strong>
+              <strong data-real-world-echo-value data-readout></strong>
               <small data-real-world-echo-condition></small>
               <small data-real-world-echo-source></small>
             </div>
           </div>
           <div class="native-lesson__outcomes" aria-label="Engine outcomes">
-            <button type="button" data-sheet="carry"><span>Carry</span><strong id="labCarry" data-carry>—</strong></button>
-            <div><span>Height</span><strong id="labHeight" data-apex>—</strong></div>
-            <div><span>Landing</span><strong id="labLanding" data-landing>—</strong></div>
+            <button type="button" data-sheet="carry"><span>Carry</span><strong id="labCarry" data-carry data-readout>—</strong></button>
+            <div><span>Height</span><strong id="labHeight" data-apex data-readout>—</strong></div>
+            <div><span>Landing</span><strong id="labLanding" data-landing data-readout>—</strong></div>
           </div>
           <div class="native-lesson__lab-controls">
             <div class="native-lesson__chips" id="labParamTabs" role="radiogroup" aria-label="Choose an input">${paramButtons}</div>
-            <label class="native-lesson__range-label" for="labRange"><span data-range-label>Dynamic loft</span><output data-range-value>25°</output></label>
+            <label class="native-lesson__range-label" for="labRange"><span data-range-label>Dynamic loft</span><output data-range-value data-readout>25°</output></label>
             <input id="labRange" type="range" aria-describedby="causeChain">
-            <div id="causeChain" class="native-lesson__cause" aria-label="Cause chain">Move one input to reveal the cause chain.</div>
+            <div id="causeChain" class="native-lesson__cause" data-readout aria-label="Cause chain">Move one input to reveal the cause chain.</div>
           </div>
         </section>
 
@@ -331,7 +331,7 @@ function lessonTemplate({ xp, level, state }) {
           <button type="button" id="realWorldRegister" class="native-lesson__real-world" data-sheet="realWorld" hidden>
             <span id="realWorldBand" class="native-lesson__real-world-band" data-real-world-band
               data-layer="real-world-estimate" aria-hidden="true">
-              <span>Real-world estimate</span><strong data-real-world-band-value></strong>
+              <span>Real-world estimate</span><strong data-real-world-band-value data-readout></strong>
               <small data-real-world-band-condition></small>
               <small data-real-world-band-source></small>
             </span>
@@ -363,8 +363,8 @@ function lessonTemplate({ xp, level, state }) {
             <h2 id="nativeResultTitle" tabindex="-1">Your stopping-flight read</h2>
             <p data-result-copy>Complete the Mastery Check to see the ability you demonstrated.</p>
             <div class="native-lesson__result-summary" data-result-summary hidden>
-              <strong data-result-score>0 / 5</strong>
-              <span data-result-xp>+0 XP</span>
+              <strong data-result-score data-readout>0 / 5</strong>
+              <span data-result-xp data-readout>+0 XP</span>
               <span data-result-rank hidden></span>
             </div>
             <div class="native-lesson__result-abilities" data-result-abilities hidden></div>
@@ -716,11 +716,11 @@ export function mountNativeBackspinLesson(options = {}) {
       showFlightFallback();
       return;
     }
-    lesson.querySelector('#backspinTruth').textContent = NUMBER.format(solved.rpm);
-    lesson.querySelector('[data-spin-loft]').textContent = `${solved.spinLoft}°`;
-    lesson.querySelector('[data-carry]').textContent = `${solved.carryM} m`;
-    lesson.querySelector('[data-apex]').textContent = `${solved.apexM} m`;
-    lesson.querySelector('[data-landing]').textContent = `${solved.landingAngle}°`;
+    lesson.querySelector('#backspinTruth').textContent = formatNumber(solved.rpm);
+    lesson.querySelector('[data-spin-loft]').textContent = formatValue(solved.spinLoft, '°');
+    lesson.querySelector('[data-carry]').textContent = formatValue(solved.carryM, ' m');
+    lesson.querySelector('[data-apex]').textContent = formatValue(solved.apexM, ' m');
+    lesson.querySelector('[data-landing]').textContent = formatValue(solved.landingAngle, '°');
     const band = spinBand(solved.rpm);
     const bandNode = lesson.querySelector('#backspinBand');
     bandNode.dataset.band = band.key;
@@ -750,7 +750,8 @@ export function mountNativeBackspinLesson(options = {}) {
     range.setAttribute('aria-label', parameter.label);
     range.setAttribute('aria-valuetext', `${state.input[state.activeParam]}${parameter.unit}`);
     lesson.querySelector('[data-range-label]').textContent = parameter.label;
-    lesson.querySelector('[data-range-value]').textContent = `${state.input[state.activeParam]}${parameter.unit}`;
+    lesson.querySelector('[data-range-value]').textContent =
+      formatValue(state.input[state.activeParam], parameter.unit);
     lesson.querySelectorAll('[data-param]').forEach(button => {
       const active = button.dataset.param === state.activeParam;
       button.setAttribute('aria-checked', String(active));
@@ -791,7 +792,7 @@ export function mountNativeBackspinLesson(options = {}) {
       const unit = item.key === 'ballSpeed' ? 'rpm / mph' : 'rpm / degree';
       return `<button type="button" class="native-lesson__influence-row" data-influence="${item.key}">
         <span class="native-lesson__rank">${index + 1}</span>
-        <span class="native-lesson__influence-label">${BACKSPIN_PARAMS[item.key].label}<small>${direction}${NUMBER.format(magnitude)} ${unit}</small></span>
+        <span class="native-lesson__influence-label">${BACKSPIN_PARAMS[item.key].label}<small data-readout>${direction}${formatNumber(magnitude)} ${unit}</small></span>
         <span class="native-lesson__bar" aria-hidden="true"><i style="width:${Math.max(8, Math.round(Math.abs(item.value) / peak * 100))}%"></i></span>
       </button>`;
     }).join('');
@@ -811,7 +812,7 @@ export function mountNativeBackspinLesson(options = {}) {
       button.setAttribute('aria-expanded', String(expanded));
       if (expanded) button.setAttribute('aria-controls', detailId);
       else button.removeAttribute('aria-controls');
-      button.setAttribute('aria-label', `${contract.label}. ${direction} backspin by ${NUMBER.format(Math.round(Math.abs(item.value)))} ${influenceUnit(key)}.${rawExplanation} ${expanded ? 'Hide' : 'Show'} A/B comparison.`);
+      button.setAttribute('aria-label', `${contract.label}. ${direction} backspin by ${formatNumber(Math.round(Math.abs(item.value)))} ${influenceUnit(key)}.${rawExplanation} ${expanded ? 'Hide' : 'Show'} A/B comparison.`);
       const valueNode = button.querySelector('.native-lesson__influence-label small');
       if (valueNode) valueNode.textContent = `${signedNumber(item.value)} ${influenceUnit(key)}`;
 
@@ -828,9 +829,9 @@ export function mountNativeBackspinLesson(options = {}) {
       };
       const inputSuffix = key === 'ballSpeed' ? ' mph' : contract.unit;
       const rawBase = base.rawRpm !== base.rpm
-        ? `<small>Raw ${NUMBER.format(base.rawRpm)} rpm</small>` : '';
+        ? `<small data-readout>Raw ${formatNumber(base.rawRpm)} rpm</small>` : '';
       const rawSample = sample.rawRpm !== sample.rpm
-        ? `<small>Raw ${NUMBER.format(sample.rawRpm)} rpm</small>` : '';
+        ? `<small data-readout>Raw ${formatNumber(sample.rawRpm)} rpm</small>` : '';
       const rawCopy = normalizedDisplay !== normalizedRaw
         ? ' (underlying raw model; displayed value is limited)'
         : '';
@@ -841,10 +842,10 @@ export function mountNativeBackspinLesson(options = {}) {
         data-raw-delta="${normalizedRaw}" data-sample-direction="${sampleDirection}"
         role="region" aria-label="${escapeHtml(contract.label)} A/B engine comparison">
         <div class="native-lesson__influence-states">
-          <div data-influence-a><span>A &middot; ${escapeHtml(contract.label)} ${baseInput[key]}${escapeHtml(inputSuffix)}</span><strong>${NUMBER.format(base.rpm)} rpm</strong>${rawBase}</div>
-          <div data-influence-b><span>B &middot; ${escapeHtml(contract.label)} ${sampleInput[key]}${escapeHtml(inputSuffix)}</span><strong>${NUMBER.format(sample.rpm)} rpm</strong>${rawSample}</div>
+          <div data-influence-a><span>A &middot; ${escapeHtml(contract.label)} <span data-readout>${escapeHtml(formatValue(baseInput[key], inputSuffix))}</span></span><strong data-readout>${formatNumber(base.rpm)} rpm</strong>${rawBase}</div>
+          <div data-influence-b><span>B &middot; ${escapeHtml(contract.label)} <span data-readout>${escapeHtml(formatValue(sampleInput[key], inputSuffix))}</span></span><strong data-readout>${formatNumber(sample.rpm)} rpm</strong>${rawSample}</div>
         </div>
-        <p data-influence-effect>Equivalent +1${escapeHtml(inputSuffix)} sensitivity: ${signedNumber(normalized)} rpm${rawCopy}.</p>
+        <p data-influence-effect data-readout>Equivalent +1${escapeHtml(inputSuffix)} sensitivity: ${signedNumber(normalized)} rpm${rawCopy}.</p>
       </div>`);
     });
     const usesRaw = ranked.some(item => item.usesRaw);
@@ -897,8 +898,8 @@ export function mountNativeBackspinLesson(options = {}) {
     const estimate = LIE_ESTIMATES[state.lie];
     const rangeEstimate = realWorldRange(rpm, estimate.keep);
     register.hidden = false;
-    const rangeCopy = `\u2248 ${NUMBER.format(rangeEstimate.low)}\u2013${NUMBER.format(rangeEstimate.high)} rpm`;
-    const semanticCopy = `Approximate real-world estimate for ${estimate.label}: ${NUMBER.format(rangeEstimate.low)} to ${NUMBER.format(rangeEstimate.high)} rpm. Source: ${estimate.source}; not the simulator.`;
+    const rangeCopy = `\u2248 ${formatNumber(rangeEstimate.low)}\u2013${formatNumber(rangeEstimate.high)} rpm`;
+    const semanticCopy = `Approximate real-world estimate for ${estimate.label}: ${formatNumber(rangeEstimate.low)} to ${formatNumber(rangeEstimate.high)} rpm. Source: ${estimate.source}; not the simulator.`;
     register.setAttribute('aria-label', `${semanticCopy} Open source sheet.`);
     band.dataset.low = String(rangeEstimate.low);
     band.dataset.high = String(rangeEstimate.high);
@@ -924,12 +925,12 @@ export function mountNativeBackspinLesson(options = {}) {
 
   function mythBackspinMetric(solved) {
     const limit = solved.displayLimit === 'ceiling'
-      ? `<small>Raw ${NUMBER.format(solved.rawRpm)} rpm \u00B7 display ceiling</small>`
+      ? `<small>Raw ${formatNumber(solved.rawRpm)} rpm \u00B7 display ceiling</small>`
       : '<small>Engine output</small>';
     return `<span class="native-lesson__myth-metric-value" data-myth-metric="backspin"
       data-rpm="${solved.rpm}" data-raw-rpm="${solved.rawRpm}"
       data-display-limit="${solved.displayLimit || 'none'}">
-      <strong>${NUMBER.format(solved.rpm)} rpm</strong>${limit}</span>`;
+      <strong data-readout>${formatNumber(solved.rpm)} rpm</strong>${limit}</span>`;
   }
 
   function mythMetricRows(experiment, input, solved) {
@@ -1040,24 +1041,24 @@ export function mountNativeBackspinLesson(options = {}) {
   function mythAnnouncement(experiment, correct, { before, after }) {
     const verdict = correct ? 'Prediction confirmed.' : 'Not quite. Follow the engine evidence.';
     if (experiment.id === 'ground') {
-      return `${verdict} Spin loft changes from ${before.spinLoft} to ${after.spinLoft} degrees and backspin changes from ${NUMBER.format(before.rpm)} to ${NUMBER.format(after.rpm)} rpm.`;
+      return `${verdict} Spin loft changes from ${before.spinLoft} to ${after.spinLoft} degrees and backspin changes from ${formatNumber(before.rpm)} to ${formatNumber(after.rpm)} rpm.`;
     }
     if (experiment.id === 'loft-alone') {
       const spinLoft = before.spinLoft === after.spinLoft
         ? `stays at ${after.spinLoft} degrees` : `changes from ${before.spinLoft} to ${after.spinLoft} degrees`;
       const backspin = before.rpm === after.rpm
-        ? `stays at ${NUMBER.format(after.rpm)} rpm` : `changes from ${NUMBER.format(before.rpm)} to ${NUMBER.format(after.rpm)} rpm`;
+        ? `stays at ${formatNumber(after.rpm)} rpm` : `changes from ${formatNumber(before.rpm)} to ${formatNumber(after.rpm)} rpm`;
       return `${verdict} Spin loft ${spinLoft} and backspin ${backspin}.`;
     }
     const raw = after.displayLimit && after.rawRpm !== after.rpm
-      ? ` Raw model spin is ${NUMBER.format(after.rawRpm)} rpm at the ${after.displayLimit}.` : '';
+      ? ` Raw model spin is ${formatNumber(after.rawRpm)} rpm at the ${after.displayLimit}.` : '';
     const carry = before.carryM === after.carryM
       ? `stays at ${after.carryM} metres` : `changes from ${before.carryM} to ${after.carryM} metres`;
     const apex = before.apexM === after.apexM
       ? `stays at ${after.apexM} metres` : `changes from ${before.apexM} to ${after.apexM} metres`;
     const landing = before.landingAngle === after.landingAngle
       ? `stays at ${after.landingAngle} degrees` : `changes from ${before.landingAngle} to ${after.landingAngle} degrees`;
-    return `${verdict} Displayed backspin changes from ${NUMBER.format(before.rpm)} to ${NUMBER.format(after.rpm)} rpm.${raw} Carry ${carry}, apex ${apex}, and landing ${landing}.`;
+    return `${verdict} Displayed backspin changes from ${formatNumber(before.rpm)} to ${formatNumber(after.rpm)} rpm.${raw} Carry ${carry}, apex ${apex}, and landing ${landing}.`;
   }
 
   function answerMyth(choiceIndex) {
@@ -1134,9 +1135,9 @@ export function mountNativeBackspinLesson(options = {}) {
       <article class="native-lesson__mastery-run" data-mastery-engine-output="${side}"
         data-rpm="${solved.rpm}" data-spin-loft="${solved.spinLoft}"
         data-landing="${solved.landingAngle}">
-        <span>${label} &middot; ${input.dynamicLoft}\u00b0 loft / ${input.attackAngle >= 0 ? '+' : '\u2212'}${Math.abs(input.attackAngle)}\u00b0 attack</span>
-        <strong>${NUMBER.format(solved.rpm)} rpm</strong>
-        <small>${solved.spinLoft}\u00b0 spin loft</small>
+        <span>${label} &middot; <span data-readout>${formatValue(input.dynamicLoft, '\u00b0')}</span> loft / <span data-readout>${formatSigned(input.attackAngle, '\u00b0')}</span> attack</span>
+        <strong data-readout>${formatNumber(solved.rpm)} rpm</strong>
+        <small data-readout>${formatValue(solved.spinLoft, '\u00b0')} spin loft</small>
       </article>`;
     return `<div class="native-lesson__mastery-comparison" data-mastery-comparison
       data-revealed="true" aria-label="Revealed engine outputs">
@@ -1189,18 +1190,18 @@ export function mountNativeBackspinLesson(options = {}) {
         tabindex="${active ? '0' : '-1'}">${escapeHtml(BACKSPIN_PARAMS[key].label)}</button>`;
     }).join('');
     const verdict = !record ? '' : record.correct
-      ? `Target met: ${NUMBER.format(record.solved.rpm)} rpm and ${record.solved.landingAngle}\u00b0 landing.`
-      : `Current submitted result: ${NUMBER.format(record.solved.rpm)} rpm and ${record.solved.landingAngle}\u00b0 landing. ${masteryTargetFailure(record.solved)}`;
+      ? `Target met: ${formatNumber(record.solved.rpm)} rpm and ${record.solved.landingAngle}\u00b0 landing.`
+      : `Current submitted result: ${formatNumber(record.solved.rpm)} rpm and ${record.solved.landingAngle}\u00b0 landing. ${masteryTargetFailure(record.solved)}`;
     return `
       <div class="native-lesson__mastery-target" data-mastery-target data-locked="${locked}">
         <div class="native-lesson__mastery-target-readout" aria-label="Live model result">
-          <div><span>Backspin</span><strong data-mastery-rpm data-value="${shown?.rpm ?? ''}">${shown ? NUMBER.format(shown.rpm) : '\u2014'} rpm</strong></div>
-          <div><span>Landing</span><strong data-mastery-landing data-value="${shown?.landingAngle ?? ''}">${shown ? shown.landingAngle : '\u2014'}\u00b0</strong></div>
+          <div><span>Backspin</span><strong data-mastery-rpm data-readout data-value="${shown?.rpm ?? ''}">${shown ? formatNumber(shown.rpm) : '\u2014'} rpm</strong></div>
+          <div><span>Landing</span><strong data-mastery-landing data-readout data-value="${shown?.landingAngle ?? ''}">${shown ? formatNumber(shown.landingAngle) : '\u2014'}\u00b0</strong></div>
         </div>
         <div class="native-lesson__mastery-params" role="radiogroup" aria-label="Choose target input">${chips}</div>
         <label class="native-lesson__range-label" for="masteryTargetRange">
           <span data-mastery-range-label>${escapeHtml(parameter.label)}</span>
-          <output data-mastery-range-value>${state.masteryTargetInput[state.masteryTargetParam]}${parameter.unit}</output>
+          <output data-mastery-range-value data-readout>${formatValue(state.masteryTargetInput[state.masteryTargetParam], parameter.unit)}</output>
         </label>
         <input id="masteryTargetRange" data-mastery-range type="range"
           min="${parameter.min}" max="${parameter.max}" step="${parameter.step}"
@@ -1280,7 +1281,7 @@ export function mountNativeBackspinLesson(options = {}) {
     const levelTitle = String(useSummaryLevel
       ? (summaryLevel.title || level?.title || 'Rookie') : (level?.title || 'Rookie'));
     progress.setAttribute('aria-label', `${displayXp} XP, level ${levelNumber}, ${levelTitle}`);
-    progress.querySelector('strong').textContent = `${NUMBER.format(displayXp)} XP`;
+    progress.querySelector('strong').textContent = `${formatNumber(displayXp)} XP`;
     progress.querySelector('span').textContent = `Lv ${levelNumber} \u00b7 ${levelTitle}`;
   }
 
@@ -1325,7 +1326,7 @@ export function mountNativeBackspinLesson(options = {}) {
       : `${correct} of ${total} on the mastery check. Retry for mastery (4/5).`;
     summaryNode.hidden = false;
     summaryNode.querySelector('[data-result-score]').textContent = `${correct} / ${total}`;
-    summaryNode.querySelector('[data-result-xp]').textContent = `+${NUMBER.format(xpDelta)} XP`;
+    summaryNode.querySelector('[data-result-xp]').textContent = `+${formatNumber(xpDelta)} XP`;
     rank.hidden = !summary.leveledUp;
     rank.textContent = summary.leveledUp
       ? `Level ${summary.levelInfo?.lvl ?? summary.levelInfo?.number ?? ''} \u00b7 ${summary.levelInfo?.title || ''}`.trim()
@@ -1394,12 +1395,12 @@ export function mountNativeBackspinLesson(options = {}) {
     state.masteryTargetSolved = solved;
     input.setAttribute('aria-valuetext', `${value}${BACKSPIN_PARAMS[key].unit}`);
     const valueNode = lesson.querySelector('[data-mastery-range-value]');
-    if (valueNode) valueNode.textContent = `${value}${BACKSPIN_PARAMS[key].unit}`;
+    if (valueNode) valueNode.textContent = formatValue(value, BACKSPIN_PARAMS[key].unit);
     const rpm = lesson.querySelector('[data-mastery-rpm]');
     const landing = lesson.querySelector('[data-mastery-landing]');
     if (rpm) {
       rpm.dataset.value = String(solved.rpm);
-      rpm.textContent = `${NUMBER.format(solved.rpm)} rpm`;
+      rpm.textContent = `${formatNumber(solved.rpm)} rpm`;
     }
     if (landing) {
       landing.dataset.value = String(solved.landingAngle);
@@ -1424,8 +1425,8 @@ export function mountNativeBackspinLesson(options = {}) {
     renderMastery();
     updateSurfaceNavigation();
     announce(correct
-      ? `Stopping-flight target met at ${NUMBER.format(solved.rpm)} rpm and ${solved.landingAngle} degrees landing.`
-      : `Target not met. ${NUMBER.format(solved.rpm)} rpm and ${solved.landingAngle} degrees landing. ${masteryTargetFailure(solved)}`);
+      ? `Stopping-flight target met at ${formatNumber(solved.rpm)} rpm and ${solved.landingAngle} degrees landing.`
+      : `Target not met. ${formatNumber(solved.rpm)} rpm and ${solved.landingAngle} degrees landing. ${masteryTargetFailure(solved)}`);
     nextFrame(() => focusProgrammatically(lesson.querySelector('[data-mastery-target-feedback]')));
   }
 
@@ -1681,7 +1682,7 @@ export function mountNativeBackspinLesson(options = {}) {
     const solved = state.lastValidSolved;
     if (!estimate || !solved) return SHEETS.realWorld;
     const rangeEstimate = realWorldRange(solved.rpm, estimate.keep);
-    const rangeCopy = `\u2248 ${NUMBER.format(rangeEstimate.low)}\u2013${NUMBER.format(rangeEstimate.high)} rpm`;
+    const rangeCopy = `\u2248 ${formatNumber(rangeEstimate.low)}\u2013${formatNumber(rangeEstimate.high)} rpm`;
     return {
       eyebrow:'Real-world estimate',
       title:estimate.label,

@@ -18,6 +18,18 @@
   box-sizing: border-box;
 }
 
+/* Instrument law 11 (EV-TYPO-01/02): every live readout renders in the truth
+   mono with tabular numerals so values never change width while updating.
+   The animation/transition guard enforces law 12 structurally — decay and
+   motion may live on the trace, never on numbers. */
+[data-readout] {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+  transition: none;
+  animation: none;
+}
+
 .native-lesson button,
 .native-sheet button {
   min-width: 44px;
@@ -286,7 +298,7 @@
   color: var(--muted) !important;
   background: var(--plate-solid);
   cursor: pointer;
-  font-family: Georgia, serif !important;
+  font-family: var(--font-display) !important;
   font-style: italic !important;
   font-weight: 700 !important;
 }
@@ -456,7 +468,7 @@
 
 .native-lesson__truth output {
   color: var(--accent);
-  font-family: var(--font-display);
+  font-family: var(--font-mono);
   font-size: clamp(31px, 9vw, 42px);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
@@ -1479,7 +1491,7 @@
 
 .native-lesson__result-summary strong {
   color: var(--gold);
-  font-family: var(--font-display);
+  font-family: var(--font-mono);
   font-size: 25px;
   line-height: 1;
 }

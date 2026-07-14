@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
@@ -62,6 +62,23 @@ test('copy-web ships the Backspin lesson assets and never the mock', () => {
     assert.equal(existsSync(join(ROOT, 'www', file)), true, `${file} must ship`);
   }
   assert.equal(existsSync(join(ROOT, 'www', 'academy-lesson-v2-mock.html')), false);
+});
+
+test('instrument typography tokens: one font pair, no ad-hoc families in lesson CSS', () => {
+  // EV-TYPO-04: the font pair lives once in the token file; the lesson
+  // stylesheet may only reference tokens (var(...)) or inherit.
+  const lessonCss = readFileSync(join(ROOT, 'academy-native-lesson.css'), 'utf8');
+  const literalFamilies = [...lessonCss.matchAll(/font-family\s*:\s*([^;}]+)[;}]/g)]
+    .map((match) => match[1].trim().replace(/\s*!important$/, ''))
+    .filter((value) => !value.startsWith('var(') && value !== 'inherit');
+  assert.deepEqual(literalFamilies, [],
+    'lesson CSS must not declare ad-hoc font stacks — use the token file');
+
+  const tokens = readFileSync(join(ROOT, 'sa-p3.css'), 'utf8');
+  assert.equal([...tokens.matchAll(/--font-ui\s*:/g)].length, 1,
+    'exactly one UI font definition in the token file');
+  assert.equal([...tokens.matchAll(/--font-mono\s*:/g)].length, 1,
+    'exactly one truth mono definition in the token file');
 });
 
 test('snapshot evaluation separates critical failures from improvement findings', () => {
