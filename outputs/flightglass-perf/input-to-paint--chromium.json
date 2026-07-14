@@ -1,0 +1,11 @@
+{
+  "engine": "chromium",
+  "surface": "academy-lesson/lab",
+  "events": 220,
+  "budgetMsP95": 16.7,
+  "p50": 0.4,
+  "p95": 1,
+  "p99": 1.6,
+  "max": 2.4,
+  "capturedAt": "2026-07-14T11:20:29.967Z"
+}

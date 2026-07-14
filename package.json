@@ -8,6 +8,7 @@
     "test:academy": "node --test --test-concurrency=1 scripts/academy-backspin-model.test.mjs scripts/academy-lesson-journey.test.mjs scripts/academy-backspin-browser.test.mjs",
     "test:ux": "node --test --test-concurrency=1 scripts/evidence-lock.test.mjs scripts/flightglass-ux.test.mjs scripts/academy-backspin-model.test.mjs scripts/academy-lesson-journey.test.mjs scripts/academy-backspin-browser.test.mjs && npm run test:webkit",
     "test:webkit": "node scripts/academy-backspin-browser.test.mjs --project=webkit",
+    "test:perf": "node --test --test-concurrency=1 scripts/flightglass-perf.test.mjs",
     "ux:manifest": "node scripts/flightglass-ux-audit.mjs --manifest-only",
     "ux:baseline": "node scripts/flightglass-ux-audit.mjs --mode baseline --motion both",
     "ux:verify": "node scripts/flightglass-ux-audit.mjs --mode verify --motion both",
