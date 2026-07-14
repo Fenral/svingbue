@@ -1,0 +1,90 @@
+{
+  "generatedAt": "2026-07-14T10:48:31.983Z",
+  "mode": "verify",
+  "results": [
+    {
+      "surfaceId": "academy-lesson",
+      "label": "Academy lesson",
+      "viewportId": "portrait-wide",
+      "motion": "normal",
+      "baselineScore": 73,
+      "targetScore": 96,
+      "screenshot": "verify/academy-lesson--portrait-wide--normal.png",
+      "critical": [],
+      "improvements": [],
+      "snapshot": {
+        "httpStatus": 200,
+        "consoleErrors": [],
+        "pageErrors": [],
+        "resourceErrors": [],
+        "horizontalOverflowPx": 0,
+        "missingSelectors": [],
+        "smallTargets": [],
+        "clippedText": []
+      }
+    },
+    {
+      "surfaceId": "academy-lesson",
+      "label": "Academy lesson",
+      "viewportId": "portrait-wide",
+      "motion": "reduced",
+      "baselineScore": 73,
+      "targetScore": 96,
+      "screenshot": "verify/academy-lesson--portrait-wide--reduced.png",
+      "critical": [],
+      "improvements": [],
+      "snapshot": {
+        "httpStatus": 200,
+        "consoleErrors": [],
+        "pageErrors": [],
+        "resourceErrors": [],
+        "horizontalOverflowPx": 0,
+        "missingSelectors": [],
+        "smallTargets": [],
+        "clippedText": []
+      }
+    },
+    {
+      "surfaceId": "academy-lesson",
+      "label": "Academy lesson",
+      "viewportId": "portrait-compact",
+      "motion": "normal",
+      "baselineScore": 73,
+      "targetScore": 96,
+      "screenshot": "verify/academy-lesson--portrait-compact--normal.png",
+      "critical": [],
+      "improvements": [],
+      "snapshot": {
+        "httpStatus": 200,
+        "consoleErrors": [],
+        "pageErrors": [],
+        "resourceErrors": [],
+        "horizontalOverflowPx": 0,
+        "missingSelectors": [],
+        "smallTargets": [],
+        "clippedText": []
+      }
+    },
+    {
+      "surfaceId": "academy-lesson",
+      "label": "Academy lesson",
+      "viewportId": "portrait-compact",
+      "motion": "reduced",
+      "baselineScore": 73,
+      "targetScore": 96,
+      "screenshot": "verify/academy-lesson--portrait-compact--reduced.png",
+      "critical": [],
+      "improvements": [],
+      "snapshot": {
+        "httpStatus": 200,
+        "consoleErrors": [],
+        "pageErrors": [],
+        "resourceErrors": [],
+        "horizontalOverflowPx": 0,
+        "missingSelectors": [],
+        "smallTargets": [],
+        "clippedText": []
+      }
+    }
+  ]
+}

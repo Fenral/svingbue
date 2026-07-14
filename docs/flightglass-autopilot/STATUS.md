@@ -1,6 +1,6 @@
 # Flightglass autonomous execution status
 
-Updated: 2026-07-13
+Updated: 2026-07-14
 
 Release authorization: granted for GitHub, Vercel and configured Apple/Google
 publication after all Phase 8 gates pass. See `RELEASE-AUTHORIZATION.md`.
@@ -13,27 +13,42 @@ publication after all Phase 8 gates pass. See `RELEASE-AUTHORIZATION.md`.
 | 3 · Outcome / Compare | Ready | Decisions and references locked in master plan |
 | 4 · Geometry 3D / Strike Window 2D | Ready | Consensus documents named |
 | 5 · Academy overview | Ready | Path and polish documents named |
-| 6 · Academy lesson system | Ready | Backspin reference lesson selected |
+| 6 · Academy lesson system | Backspin complete (96) | Tasks 1-11 verified 2026-07-14; see current checkpoint |
 | 7 · Paywall | Ready | Pricing and compatibility rules locked |
 | 8 · Convergence and release QA | Ready | Global gates locked |
 
 ## Current checkpoint
 
-The owner explicitly resumed Academy on 2026-07-13. The active work is the
-Backspin 96-97 reference lesson in Phase 6. Tasks 1-8 and the Task 9 source/test
-checkpoint are pushed on `agent/travel-sync` through commit `259a0b4`. The
-latest focused Task 9 run passed 10/10 cases covering both target viewports,
-keyboard navigation, reduced-motion parity, storage failure, canvas fallback,
-an actual image 404, route cleanup and non-finite Spin Lab input.
+The Backspin 96-97 reference lesson (Phase 6, Tasks 1-11) completed final
+verification on 2026-07-14. Task 10 shipped the lesson through the native
+package (commit `4d01eef`); Task 11 recorded the evidence below.
 
-This is a WIP checkpoint, not a completed Phase 6 verification. The isolated
-non-finite Mastery test was started but interrupted before a result was
-recorded. Fresh full runs of `npm run test:academy` and `npm run test:ux` have
-not been completed after the Task 9 changes. Task 10 native packaging and Task
-11 final visual verification, score audit and documentation remain undone.
-Local untracked `outputs/flightglass-ux/verify*` audit files were deliberately
-left untouched and are not part of the GitHub checkpoint. The exact resumption
-steps are recorded in `docs/SESSION-HANDOFF.md`.
+Task 11 verification evidence (all runs fresh on 2026-07-14):
+
+- Isolated interrupted case `a non-finite Mastery target input cannot alter
+  readouts or receive target credit`: PASS (1/1).
+- `npm run test:academy`: 47/47 PASS. `npm run test:ux`: 60/60 PASS
+  (includes the new Task 10 packaging and 96-target manifest locks).
+- `npm run brand:verify`: PASS. `npm run copy-web`: clean; the five Academy
+  assets ship in `www/` and `academy-lesson-v2-mock.html` does not.
+- Focused audit `--mode verify --surface academy-lesson --motion both`:
+  4 captures, 0 critical findings. Reports:
+  `outputs/flightglass-ux/verify--academy-lesson-report.json` / `.md`.
+- Full six-surface walk captured and visually inspected at 430x932 and
+  375x812 in normal and reduced motion (24 screenshots, 0 runtime errors):
+  `outputs/flightglass-ux/verify/task11-surfaces/` (regeneratable local
+  evidence; not committed).
+- Score audit against the ten v3 rows: all evidence statements true.
+  Recorded score 96 with category floor 95 (Content quality, Motivation);
+  no critical runtime, content or accessibility defect.
+- `impact-flight.js` byte-identical: no working-tree change, untouched since
+  pre-Phase-0 history, root and `www/` copies share SHA-256 `7e5323c3…`.
+- Storage key `strikearc.academy.v1` migrates without loss: covered by the
+  journey migration suite (legacy deep-merge, idempotent attempt commit) and
+  the legacy Carry reward regression test.
+- Deferred, outside the exit contract: generalization of the remaining 23
+  lessons (explicit rollout boundary) and the instrument-law hardening now
+  ordered in `docs/superpowers/plans/2026-07-14-instrument-gates.md`.
 
 ## Phase 0 evidence
 
@@ -61,5 +76,5 @@ steps are recorded in `docs/SESSION-HANDOFF.md`.
 | Geometry 3D | 74 | 90+ |
 | Strike Window 2D | 82 | 90+ |
 | Academy overview | 70 | 90+ |
-| Academy lesson | 73 | 96-97 |
+| Academy lesson | 96 | 96-97 |
 | Paywall | 76 | 90+ |

@@ -1,6 +1,6 @@
 # Flightglass session handoff
 
-Updated: 2026-07-13
+Updated: 2026-07-14
 
 ## Repository checkpoint
 
@@ -23,19 +23,18 @@ Floodlights remains ready and resumes after this owner-directed sequencing
 exception. Read `docs/FLIGHTGLASS-CLAUDE-CODE-MASTER-PLAN.md` and
 `docs/flightglass-autopilot/STATUS.md` before implementation.
 
-Backspin Tasks 1-8 and the Task 9 source/test checkpoint are pushed through
-`259a0b4` on `agent/travel-sync`. The latest focused Task 9 run passed 10/10:
-both portrait viewports, all six surfaces, keyboard-only flow, motion parity,
-storage failure, canvas fallback, a real image 404, route teardown and
-non-finite Spin Lab input.
+Backspin Tasks 1-11 are complete and verified on 2026-07-14. Task 10 shipped
+the lesson into `www/` and locked the 96 target (`4d01eef`); Task 11 recorded
+the full verification evidence, the ten-row score audit (96, floor 95) and the
+byte-identical `impact-flight.js` confirmation in
+`docs/flightglass-autopilot/STATUS.md`. The previous machine's untracked
+`outputs/flightglass-ux/verify*` files were never pushed; equivalent evidence
+was regenerated fresh on this machine.
 
-The checkpoint is intentionally incomplete. The isolated non-finite Mastery
-test was interrupted before completion, and fresh full `npm run test:academy`
-and `npm run test:ux` runs have not been recorded after Task 9. Task 10 (ship
-Academy through the Capacitor/native package and lock the 96 audit target) and
-Task 11 (final visual verification, score audit, status and evidence handoff)
-have not been implemented. Local untracked files under
-`outputs/flightglass-ux/verify*` were left untouched and are not on GitHub.
+The active work is now the instrument-gates work order
+(`docs/superpowers/plans/2026-07-14-instrument-gates.md`, committed `2e2f4c0`):
+laws 11-13, evidence-based gates, Tasks 12-20, ending at the §6 human
+checkpoint boundary.
 
 
 Backspin has a separate 96-97 reference-lesson design and implementation plan:
@@ -60,15 +59,15 @@ approved the Academy architecture.
 
 ## Exact next actions
 
-1. Run the isolated browser case named `a non-finite Mastery target input cannot
-   alter readouts or receive target credit` and record its result.
-2. Run fresh `npm run test:academy` and `npm run test:ux`; fix any regression
-   before describing Task 9 as complete.
-3. Continue the approved Backspin plan at Task 10, then complete every Task 11
-   verification and screenshot/score gate. Do not generalize the remaining 23
-   lessons.
-4. Inspect the local untracked `outputs/flightglass-ux/verify*` files before
-   deciding whether to regenerate, preserve or remove them; do not assume they
-   are remote evidence.
-5. Keep the Academy overview recommendation pending and push a new travel
+1. Execute the instrument-gates work order sequentially from Task 12
+   (evaluation infrastructure — the evidence manifest must be locked and
+   committed before any implementation task starts).
+2. Follow the order's §3 routing: fg-mekaniker for pure command runs,
+   fg-dommer for all judgment; the main thread never scores its own work.
+3. Stop only under the order's §7 conditions; ordinary ambiguity is resolved,
+   documented in STATUS.md and work continues.
+4. The order ends at the §6 boundary with the human pack delivered under
+   `outputs/flightglass-eval/human-pack/`. Do not convert the remaining 23
+   Academy lessons and do not take release decisions.
+5. Keep the Academy overview recommendation pending and push a travel
    checkpoint before the next pause.
