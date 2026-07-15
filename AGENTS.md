@@ -32,3 +32,32 @@ Never force-push, push checkpoint work directly to `main`, commit credentials,
 or add ignored dependencies, generated bundles, store exports or local backup
 directories. A travel checkpoint is a recoverability action, not authorization
 to deploy to Vercel or publish to an app store.
+
+## Multi-agent coordination (Codex and Claude share this repo)
+
+More than one agent (Claude Code and Codex) may work this repo. They coordinate
+through git and one shared file — never through a live channel. To avoid
+colliding edits and divergent runs:
+
+1. **One agent per branch.** Never two agents on the same branch/working tree at
+   once. Codex works on its own branch (e.g. `agent/academy-codex`); do not
+   commit onto another agent's active branch.
+2. **Claim work in `docs/flightglass-autopilot/COORDINATION.md` before starting.**
+   Read it first. If another agent owns the files or batch you intend to touch,
+   take a different batch or wait. Update the file when you start and when you
+   finish. It is the mutex.
+3. **Clean tree before handing off.** Commit (or stash) your changes and push
+   before another agent picks up. A dirty tree inherited mid-edit is the main
+   cause of collisions.
+4. **One owner of shared docs at a time.** `STATUS.md`, `SESSION-HANDOFF.md` and
+   `COORDINATION.md` must not be edited by two agents concurrently.
+
+## Acceptance model (summary — full detail in CLAUDE.md)
+
+A numeric score is a derived byproduct and tripwire, never a target to aim for.
+Acceptance of any surface or lesson is four evidence gates: zero critical
+defects, every category floor cleared, all critical checks pass, and pairwise-
+blind won against the previous generation. Figures like `90+` or `96-97` are the
+score expected to fall out once the gates pass, not the goal. Build through the
+gate pipeline in `docs/flightglass-autopilot/academy-completion-loop.md`; the
+Backspin lesson (Tasks 1-20, STUDIO-GRADE) is the proven reference shell.
