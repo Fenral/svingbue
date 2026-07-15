@@ -13,7 +13,7 @@ wait.
 
 | Agent | Branch | Working on | Since |
 |-------|--------|-----------|-------|
-| _None_ | — | — | — |
+| Codex | `agent/academy-codex` | Voice refinement round 2: `scripts/academy-voice-production*`, `package.json`, voice runbook; ignored audio/provenance only | 2026-07-16 |
 
 ## Queue / free to take
 
