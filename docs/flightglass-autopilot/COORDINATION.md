@@ -13,7 +13,7 @@ wait.
 
 | Agent | Branch | Working on | Since |
 |-------|--------|-----------|-------|
-| _None_ | — | — | — |
+| Codex | `agent/academy-codex` | British Systems Engineer blind Voice audition; `scripts/academy-voice-production*`, `package.json`, Voice production runbook | 2026-07-16 |
 
 ## Queue / free to take
 
