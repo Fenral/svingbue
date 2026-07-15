@@ -204,14 +204,36 @@ The final planning artifacts are:
   `docs/superpowers/specs/2026-07-15-academy-cross-curriculum-acceptance-audit.md`;
 - exact 15-batch rollout and all per-experience pairings:
   `docs/superpowers/plans/2026-07-15-academy-outcome-curriculum-rollout.md`.
+- normative shared Voice System design:
+  `docs/superpowers/specs/2026-07-15-academy-voice-system-design.md`;
+- TDD-first Voice System companion plan:
+  `docs/superpowers/plans/2026-07-15-academy-voice-system.md`.
+
+The Voice System decision is now explicit: the first pack is the local
+`Control Room` character (calm adult American female laboratory voice), first
+use asks once for `Voice + captions`, `Captions only` or `Off`, and nothing
+auto-speaks while preference is unset. After Voice consent, at most one
+12–24-word entry cue is eligible for a genuinely new surface signature.
+Unchanged revisits/back navigation stay silent, consequence cues are rare,
+recovery is learner-triggered through `Hear a hint`, and there is never a stale
+audio queue. Captions, Replay, immediate Voice Off, one-to-three semantic screen
+beats, offline assets, screen-reader suppression and future pack boundaries are
+all implementation-gated. Voice never blocks mastery or replaces visible truth.
 
 Planning acceptance is **PASS / READY FOR BATCH 0**. This is not production or
 release acceptance. No production file or protected physics engine changed.
+Fresh voice-planning verification confirms both dedicated artifacts are linked
+through every Batch 0 handoff, all 99 experience cues remain within 12–24 words
+with no experience above eight signatures, secret/diff checks are clean, and
+`npm run test:academy` passes 59/59 with zero failures/skips. The intended diff
+contains documentation only.
 
 ## Exact next actions
 
 1. Start Batch 0 only from the Home/store design and implementation plan named
-   in the rollout index; do not combine it with Start Line.
+   in the rollout index. Execute the mandatory Voice System companion plan
+   inside Batch 0 after store migration and before Home/Backspin acceptance; do
+   not combine it with Start Line.
 2. Execute its tasks TDD-first, preserve Backspin and legacy storage, and run
    every focused and full gate before accepting the batch.
 3. Keep gate acceptance separate from derived scores: zero critical defects,

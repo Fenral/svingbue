@@ -263,6 +263,10 @@ The complete planning program is now **ACCEPTED / READY FOR BATCH 0**:
 
 - shared Academy Home/store/registry/router/voice/store migration design and
   task plan are complete;
+- the shared Voice System now has its own normative design and TDD-first
+  implementation plan covering Control Room character, first-use consent,
+  12–24-word cues, captions, Replay, Voice Off, semantic screen beats,
+  repetition suppression, local assets and future pack boundaries;
 - every one of the 14 experience rows has a dedicated sequential
   implementation plan;
 - the final rollout index pairs all 15 batches with exact authoritative
@@ -273,8 +277,21 @@ The complete planning program is now **ACCEPTED / READY FOR BATCH 0**:
 
 No production source or protected physics engine changed during planning. The
 next action is Batch 0 only: implement the shared native Home/store host from
-its exact spec/plan pair, collect fresh gate evidence, commit/push acceptance,
-then continue to Batch 1.
+its exact spec/plan pair and execute the mandatory Voice System companion plan
+inside that batch, collect fresh gate evidence, commit/push acceptance, then
+continue to Batch 1.
+
+Voice planning verification completed fresh on 2026-07-15:
+
+- Home spec/plan, rollout index, completion loop, STATUS and handoff all point
+  to both dedicated Voice System artifacts;
+- implementation plan contains the required executable-plan header, exact
+  Goal/Architecture/Tech Stack, Tasks 1–10 and explicit staging commands;
+- independent parsing of all 14 experience voice tables confirms 99 cues,
+  zero outside 12–24 words and a maximum of eight per experience;
+- `git diff --check` and the intended-document secret scan PASS;
+- intended diff is documentation-only with no protected physics file diff;
+- `npm run test:academy`: 59/59 PASS, 0 failed, 0 skipped in 168.9 seconds.
 
 ## Parked refinements (non-blocking, reference-shell polish)
 

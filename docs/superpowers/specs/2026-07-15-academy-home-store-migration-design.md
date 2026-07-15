@@ -486,12 +486,15 @@ The top-level version remains `1`. Additive objects are normalized on read.
     exploreExpanded: false,
     lastExperienceId: null
   },
-  academyVoice: {
-    enabled: true,
-    captionsEnabled: true,
-    packId: 'control-room-en-us-v1',
-    playedSignatures: {},
-    updatedAt: null
+  preferences: {
+    voice: {
+      mode: 'unset',
+      packId: 'control-room-en-us-v1',
+      locale: 'en-US',
+      volume: 1,
+      seen: {},
+      updatedAt: null
+    }
   },
   migration: {
     academyOutcomeV1Applied: false,
@@ -883,6 +886,17 @@ more than one pulsing target. Do not use decorative golf-course imagery.
 
 ## 14. Voice event contract
 
+This section's complete normative companion is
+`docs/superpowers/specs/2026-07-15-academy-voice-system-design.md`. The dedicated
+Voice System design governs first-use consent, `voice`/`captions`/`off` modes,
+the Control Room performance brief, cue schema, screen beats, repetition,
+assets and acceptance. The Home rules below remain the three shared Home cue
+definitions.
+
+Execute it through
+`docs/superpowers/plans/2026-07-15-academy-voice-system.md` inside Batch 0 after
+the shared store exists and before Home/Backspin acceptance.
+
 ### 14.1 First voice pack
 
 Target character: calm American female laboratory/control-room voice, concise
@@ -943,12 +957,12 @@ Home has at most three authored signatures:
 | Cue | Trigger | Text | Synchronized target |
 |---|---|---|---|
 | Orient | first migrated/new Home visit | “Choose the outcome you want to control. Flightglass will connect the important inputs and remember the evidence you earn.” | outcome horizon and goal chooser settle |
-| Recommend | first new recommendation signature | “Your next experiment is <title>. <short stored-evidence reason>.” | one primary coach card outline |
+| Recommend | first eligible recommendation after consent | “Your next experiment is ready. The recommendation follows from the evidence you have already earned.” | one primary coach card outline; visible title/reason stay authoritative |
 | Mastery return | first return after new mastery | “That evidence is saved. Your next recommendation now follows from the outcome you just mastered.” | completed state resolves, next action appears |
 
-The dynamic recommendation line uses approved title + approved reason fragments,
-not free-form language generation. Every possible fragment has a content-truth
-test and visible caption.
+The voice never splices a dynamic title or reason. The generic approved line
+directs attention; the visible coach card owns the exact title and stored-
+evidence reason. No free-form language generation is used.
 
 ---
 

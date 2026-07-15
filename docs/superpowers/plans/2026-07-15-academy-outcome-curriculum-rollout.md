@@ -12,6 +12,8 @@
 
 **Cross-curriculum gate:** `docs/superpowers/specs/2026-07-15-academy-cross-curriculum-acceptance-audit.md`
 
+**Shared Voice System:** `docs/superpowers/specs/2026-07-15-academy-voice-system-design.md` and `docs/superpowers/plans/2026-07-15-academy-voice-system.md`
+
 ---
 
 ## 1. Authorization and operating rule
@@ -60,6 +62,16 @@ Every implementation row has an accepted design source and a task-by-task plan.
 | 14 | Plane Coupling optional MODEL LAB | `specs/2026-07-15-academy-plane-coupling-lab-design.md` | `plans/2026-07-15-academy-plane-coupling-lab.md` |
 
 Paths in the table are relative to `docs/superpowers/`.
+
+Batch 0 also has one mandatory shared-subsystem companion pair:
+
+- `specs/2026-07-15-academy-voice-system-design.md`;
+- `plans/2026-07-15-academy-voice-system.md`.
+
+This is executed inside Batch 0 after the shared store exists and before Home/
+Backspin acceptance. It is not a sixteenth batch and does not authorize a new
+experience. Later experience batches add their own cues/assets to the accepted
+shared Voice System.
 
 Backspin also retains:
 
@@ -161,10 +173,11 @@ Read completely:
 2. Academy blueprint;
 3. cross-curriculum audit;
 4. Home/store spec and plan;
-5. `docs/flightglass-autopilot/STATUS.md`;
-6. `docs/SESSION-HANDOFF.md`;
-7. `docs/flightglass-autopilot/academy-completion-loop.md`;
-8. `AGENTS.md` and `CLAUDE.md`.
+5. Voice System spec and plan;
+6. `docs/flightglass-autopilot/STATUS.md`;
+7. `docs/SESSION-HANDOFF.md`;
+8. `docs/flightglass-autopilot/academy-completion-loop.md`;
+9. `AGENTS.md` and `CLAUDE.md`.
 
 Before each later batch, read that row's full spec and plan plus the previous
 batch's final STATUS entry.
@@ -259,11 +272,19 @@ bar chart, generic article or generic trajectory.
 
 ### 7.5 Voice
 
+- Follow the dedicated Voice System spec/plan as the authoritative shared
+  contract inside Batch 0.
+- First use requires an explicit `Voice + captions`, `Captions only` or `Off`
+  choice; nothing auto-speaks while preference is unset.
 - Local semantic cue manifest only; no runtime generation/network/token need.
 - 12–24 words, no more than eight signatures per experience.
 - One automatic entry cue per surface at most.
-- Rare consequence/recovery cue only on genuinely new evidence.
-- Captions/Replay/global mute/screen-reader suppression/failure-safe content.
+- Rare consequence cue only on genuinely new evidence; recovery is exposed as
+  learner-triggered `Hear a hint`, not automatic nagging.
+- Captions/Replay/immediate Voice Off/screen-reader suppression/failure-safe
+  content.
+- Cue and screen use one to three semantic beats; beats never move focus,
+  change inputs or animate numeric truth.
 - Missing audio cannot block Academy or mastery.
 
 ### 7.6 Native accessibility
@@ -426,10 +447,13 @@ Read completely:
 1. docs/superpowers/plans/2026-07-15-academy-outcome-curriculum-rollout.md
 2. docs/superpowers/specs/2026-07-15-academy-outcome-curriculum-blueprint.md
 3. docs/superpowers/specs/2026-07-15-academy-cross-curriculum-acceptance-audit.md
-4. docs/flightglass-autopilot/STATUS.md
-5. docs/SESSION-HANDOFF.md
+4. docs/superpowers/specs/2026-07-15-academy-voice-system-design.md
+5. docs/superpowers/plans/2026-07-15-academy-voice-system.md
+6. docs/flightglass-autopilot/STATUS.md
+7. docs/SESSION-HANDOFF.md
 
-Start with Batch 0 and its exact spec/plan pair. Execute every task TDD-first.
+Start with Batch 0, its Home/store pair and the mandatory Voice System
+companion pair. Execute every task TDD-first.
 Implement one batch at a time. Do not ask for module approval between accepted
 batches. Stop only on the rollout index's explicit escalation conditions.
 Never modify protected physics inside an Academy batch. Use gate acceptance,

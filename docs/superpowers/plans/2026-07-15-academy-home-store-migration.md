@@ -423,6 +423,16 @@ git commit -m "feat: route Academy outcome journeys"
 
 ### Task 6: Implement local voice cue arbitration
 
+**Required companion plan:** Execute
+`docs/superpowers/plans/2026-07-15-academy-voice-system.md` task-by-task here,
+after the shared store exists and before Task 7 Home acceptance. The companion
+plan is authoritative where it adds consent modes, cue validation, semantic
+screen beats, captions, Replay, Voice Off, reference assets and lifecycle
+gates. The abbreviated steps below remain a minimum compatibility summary.
+
+Read its normative design first:
+`docs/superpowers/specs/2026-07-15-academy-voice-system-design.md`.
+
 **Files:**
 
 - Create: `academy-voice.js`
@@ -434,13 +444,17 @@ git commit -m "feat: route Academy outcome journeys"
 
 Use fake clock, fake audio factory and fake screen-reader state. Cover:
 
-- first automatic cue plays once;
+- unset preference never auto-plays and requests the one-time mode choice;
+- first eligible automatic cue after explicit Voice choice plays once;
+- Captions only publishes the caption without audio;
+- Voice Off publishes neither automatic caption nor audio;
 - identical signature is suppressed;
 - content-version change plays once;
 - Replay plays without changing automatic history;
-- mute stops current audio and persists through supplied store callback;
+- Voice Off stops current audio and persists through the supplied store;
 - no overlap;
-- stale queued cue is dropped after route epoch changes;
+- stale automatic request is discarded after route epoch changes; no queue
+  exists;
 - screen-reader active suppresses audio but preserves caption;
 - background stops audio and foreground does not resume;
 - missing asset returns caption-only state;
@@ -458,12 +472,28 @@ Suggested public API:
 ```js
 export function createAcademyVoiceController({
   getPreferences,
-  persistPreferences,
+  setMode,
+  markSeen,
   createAudio,
-  isScreenReaderActive,
-  onCaption
+  getScreenReaderState,
+  getForegroundState,
+  now,
+  setTimer,
+  clearTimer,
+  onCaption,
+  onPlayback,
+  onDiagnostic
 }) {
-  return { enterRoute, playAutomatic, replay, setEnabled, stop, destroy };
+  return {
+    enterRoute,
+    deliverAutomatic,
+    offerRecovery,
+    replay,
+    stop,
+    setVoiceMode,
+    getState,
+    destroy
+  };
 }
 ```
 
@@ -472,9 +502,9 @@ synthesis, fetch a remote endpoint or generate language.
 
 **Step 4: Add the three Home cue definitions**
 
-Keep approved static fragments and title interpolation from registry only.
-Validate the final line remains 12–24 words for every possible title/reason
-combination or use separate approved full variants.
+Use the three approved static Home lines. The recommendation cue never splices
+the current title/reason; those exact details remain visible on the coach card.
+Validate each line remains 12–24 words.
 
 **Step 5: Run tests and commit**
 

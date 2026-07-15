@@ -368,6 +368,12 @@ two target viewports.
 
 ## 10. Voice and synchronized screen behavior
 
+The dedicated normative system contract is
+`docs/superpowers/specs/2026-07-15-academy-voice-system-design.md`. It narrows
+this section for consent, cue eligibility, captions, Replay, Voice Off,
+synchronization, repetition, local assets and future packs without changing
+the authored experience cue tables.
+
 Narration is optional, local-first and supplementary. The target character is a
 calm American female laboratory/control-room voice: concise, observant and
 technically confident, never theatrical or conversationally needy.

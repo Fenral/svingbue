@@ -20,10 +20,12 @@ batcher. Du fortsetter automatisk til neste batch når den forrige er akseptert.
 1. `docs/superpowers/plans/2026-07-15-academy-outcome-curriculum-rollout.md`
 2. `docs/superpowers/specs/2026-07-15-academy-outcome-curriculum-blueprint.md`
 3. `docs/superpowers/specs/2026-07-15-academy-cross-curriculum-acceptance-audit.md`
-4. `docs/flightglass-autopilot/STATUS.md`
-5. `docs/SESSION-HANDOFF.md`
-6. `AGENTS.md`
-7. `CLAUDE.md`
+4. `docs/superpowers/specs/2026-07-15-academy-voice-system-design.md`
+5. `docs/superpowers/plans/2026-07-15-academy-voice-system.md`
+6. `docs/flightglass-autopilot/STATUS.md`
+7. `docs/SESSION-HANDOFF.md`
+8. `AGENTS.md`
+9. `CLAUDE.md`
 
 Før hver batch leser du hele den eksakte spec/plan-paret fra rollout-indeksen.
 
@@ -58,7 +60,9 @@ dem.
 14. Plane Coupling optional MODEL LAB.
 
 Bygg aldri mer enn én ny opplevelse i samme batch. Batch 0 kan bare bygge delt
-infrastruktur og Home, med Backspin-regresjon.
+infrastruktur og Home, med Backspin-regresjon. Det dedikerte Voice System-
+spec/plan-paret er en obligatorisk del av Batch 0, ikke en egen modul eller
+batch.
 
 ## Løkken
 
@@ -113,6 +117,8 @@ En avledet score er bare biprodukt/tripwire. Den kan aldri skjule en rød port.
 - Plane Coupling gir ingen core mastery, XP eller prerequisite.
 - Renderer hardkoder aldri universell neste modul.
 - Voice er lokal, valgfri, captioned, replaybar og aldri nødvendig for mastery.
+- Ingen automatisk voice før brukeren har valgt Voice + captions. Uendret
+  innhold gjentas ikke; recovery er brukerutløst via Hear a hint.
 - Ingen separat webprodukt, ny skytjeneste eller runtime AI-tokenavhengighet.
 
 ## Stopp bare ved reell blokkering
