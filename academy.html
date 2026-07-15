@@ -1504,6 +1504,21 @@
     },
     onDiagnostic:diagnostic => console.warn('[Academy voice]', diagnostic.code, diagnostic.cueId || '')
   });
+  function backspinNextAction(){
+    const selected=selectAcademyAction(store);
+    if(selected.experienceId==='flight-height-descent'){
+      return {...selected,title:experienceById(selected.experienceId)?.title||selected.title||selected.label,
+        preview:'Connect Ball Speed and Launch Angle to Apex, then explain modeled descent.'};
+    }
+    return {...selected,label:'Return to current goal',title:'Academy Home',route:'#/academy',preview:selected.reason||'Continue your selected goal.'};
+  }
+  function continueAfterBackspin(){
+    const action=backspinNextAction();
+    store.lastOpened=action.experienceId||'backspin';
+    saveNow();
+    pendingRouteAnnouncement=action.reason||'';
+    go(action.route||'#/academy');
+  }
   const experienceHost = createAcademyExperienceHost({
     root:app,
     renderers:{
@@ -1585,19 +1600,8 @@
           onJourney:(patch, options) => updateJourney('backspin', patch, options),
           onSubmit:submission => commitNativeLessonAttempt('backspin', submission),
           onBack:() => go('#/academy'),
-          onNextLesson:() => {
-            const nextId = 'launch-angle';
-            if (nodeState(nextId) === 'locked') {
-              store.lastOpened = 'backspin';
-              saveNow();
-              pendingRouteAnnouncement = `Launch Angle unlocks after ${prereqLabels(nextId)}. Returning to the Academy path.`;
-              go('#/path');
-              return;
-            }
-            store.lastOpened = nextId;
-            saveNow();
-            go('#/lesson/' + nextId);
-          },
+          nextAction:backspinNextAction,
+          onNextLesson:continueAfterBackspin,
           onDiagramTouched:() => markDiagramTouched('backspin'),
           onAnnounce:announce,
           voiceTargets:hostVoiceTargets,
@@ -2379,20 +2383,9 @@
         journey:getJourney(id),
         onJourney:(patch, options) => updateJourney(id, patch, options),
         onSubmit:submission => commitNativeLessonAttempt(id, submission),
-        onBack:() => go('#/path'),
-        onNextLesson:() => {
-          const nextId = 'launch-angle';
-          if (nodeState(nextId) === 'locked') {
-            store.lastOpened = id;
-            saveNow();
-            pendingRouteAnnouncement = `Launch Angle unlocks after ${prereqLabels(nextId)}. Returning to the Academy path.`;
-            go('#/path');
-            return;
-          }
-          store.lastOpened = nextId;
-          saveNow();
-          go('#/lesson/' + nextId);
-        },
+        onBack:() => go('#/academy'),
+        nextAction:backspinNextAction,
+        onNextLesson:continueAfterBackspin,
         onDiagramTouched:() => markDiagramTouched(id),
         onAnnounce:announce
       });

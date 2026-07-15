@@ -116,7 +116,7 @@ const EXPECTED_MASTERY_TASKS = [
   {
     id:'target',
     kind:'lab-target',
-    prompt:'Create 6,800\u20137,400 rpm with landing angle at or above 50\u00b0.'
+    prompt:'Create 6,800\u20137,400 rpm and keep modeled Landing Angle at or above 50\u00b0. Both are gates from the final live solveFlight() state.'
   }
 ];
 
@@ -125,7 +125,13 @@ const EXPECTED_MASTERY_ABILITIES = [
   'Compare model deliveries',
   'Reduce spin loft',
   'Separate estimates from simulator truth',
-  'Build a stopping flight'
+  'Meet Backspin and Landing gates independently'
+];
+
+const EXPECTED_VERIFIED_EVIDENCE = [
+  'Spin Loft components separated',
+  'Backspin target created live',
+  'Landing Angle gate met independently'
 ];
 
 const MASTERY_TARGET_FIXTURES = Object.freeze({
@@ -862,7 +868,7 @@ async function assertNativeResult(root, {
   assert.deepEqual(
     await result.locator('[data-result-ability]').allTextContents()
       .then(values => values.map(value => value.replace(/\s+/g, ' ').trim())),
-    abilities
+    mastered ? EXPECTED_VERIFIED_EVIDENCE : abilities
   );
   const rankNode = result.locator('[data-result-rank]');
   if (rank) {
@@ -878,7 +884,7 @@ async function assertNativeResult(root, {
   if (mastered) {
     assert.equal(
       (await result.locator('[data-result-copy]').textContent()).replace(/\s+/g, ' ').trim(),
-      'You can separate spin loft from \u201chitting down\u201d and control a shot\'s stopping flight in the Flightglass model.'
+      'You can build Spin Loft from delivered face and travel, then use Ball Speed to create a requested Backspin state in the Flightglass model.'
     );
     assert.equal(await result.locator('[data-action="next-lesson"]').isVisible(), true);
   } else {
@@ -2350,7 +2356,7 @@ test('Backspin myth predictions reveal exact engine runs and varied supported an
       assert.match(await cappedBackspin.textContent(), /Raw 10,368 rpm/i);
       assert.match(await cappedBackspin.textContent(), /display ceiling/i);
       assert.match(await experiment.locator('[data-myth-explanation]').textContent(),
-        /holds carry steady.*Real excess-spin shots can balloon.*not modeled here/i);
+        /More engine Backspin does not numerically cause more current-engine Carry.*rpm output and flight trajectory partly decoupled/i);
     }
 
     const localNext = root.locator('[data-myth-next]');
@@ -2842,19 +2848,13 @@ test('Backspin Mastery keeps one stable attempt, submits atomically and upgrades
 
   const beforeLockedNext = await hapticLog(page);
   await root.locator('[data-action="next-lesson"]').click();
-  await page.waitForFunction(() => location.hash === '#/path');
-  // Route announcement lands after a 260 ms settle + rAF (aca a11y contract); wait for it
-  // to populate rather than racing a fixed timeout, which is flaky on WebKit under load.
-  // A navigation haptic would fire synchronously on click, so this settle also covers the
-  // haptic assertion below. Mirrors the #live wait idiom at the model-error test.
-  await page.waitForFunction(() =>
-    /Returning to the Academy path/i.test(document.querySelector('#live')?.textContent || ''));
+  await page.waitForFunction(() => location.hash === '#/experience/flight-height-descent/surface/0');
+  await page.locator('.academy-unavailable h1').waitFor();
   assert.deepEqual(await hapticLog(page), beforeLockedNext,
-    'Locked next-lesson fallback is navigation and must not emit a haptic');
-  assert.match(await page.locator('#live').textContent(),
-    /Launch Angle unlocks after .*Dynamic Loft.*Attack Angle.*Returning to the Academy path/i);
+    'Shared next-action navigation must not emit a haptic');
+  assert.equal((await page.locator('.academy-unavailable h1').textContent()).trim(), 'Flight Height & Descent');
   stored = await storedAcademy(page);
-  assert.equal(stored.lastOpened, 'backspin');
+  assert.equal(stored.lastOpened, 'flight-height-descent');
 
   assert.deepEqual(runtimeErrors, []);
 });
@@ -2983,7 +2983,7 @@ test('fresh 5/5 mastery earns 190 XP, persists every ability and follows unlocke
       const copy = (await feedback.textContent()).replace(/\s+/g, ' ').trim();
       assert.match(copy, /7,128 rpm/);
       assert.match(copy, /54\.4\u00b0/);
-      assert.match(copy, /target|stopping flight|complete/i);
+      assert.match(copy, /target|independent|complete/i);
     }
   });
 
@@ -3018,12 +3018,6 @@ test('fresh 5/5 mastery earns 190 XP, persists every ability and follows unlocke
   });
   await assertMasteryViewport(page, root, viewport, 5, result, '430px perfect Result');
 
-  await page.evaluate(key => {
-    const saved = JSON.parse(localStorage.getItem(key));
-    saved.lessons['dynamic-loft'].completed = true;
-    saved.lessons['attack-angle'].completed = true;
-    localStorage.setItem(key, JSON.stringify(saved));
-  }, STORE_KEY);
   await page.reload({ waitUntil:'networkidle' });
   await root.waitFor({ timeout:5_000 });
   await assertEventuallyRootSurface(page, root, '5');
@@ -3037,13 +3031,13 @@ test('fresh 5/5 mastery earns 190 XP, persists every ability and follows unlocke
 
   const beforeUnlockedNext = await hapticLog(page);
   await root.locator('[data-action="next-lesson"]').click();
-  await page.waitForFunction(() => location.hash === '#/lesson/launch-angle');
-  await page.locator('.view.lesson h1').waitFor();
-  assert.equal((await page.locator('.view.lesson h1').textContent()).trim(), 'Launch Angle');
+  await page.waitForFunction(() => location.hash === '#/experience/flight-height-descent/surface/0');
+  await page.locator('.academy-unavailable h1').waitFor();
+  assert.equal((await page.locator('.academy-unavailable h1').textContent()).trim(), 'Flight Height & Descent');
   assert.equal(await page.locator('#nativeLesson').count(), 0);
   assert.deepEqual(await hapticLog(page), beforeUnlockedNext,
     'An unlocked next-lesson navigation must not emit a haptic');
-  assert.equal((await storedAcademy(page)).lastOpened, 'launch-angle');
+  assert.equal((await storedAcademy(page)).lastOpened, 'flight-height-descent');
   assert.deepEqual(runtimeErrors, []);
 });
 test('persisted XP crosses the real 400 threshold only on the 300-to-420 mastery commit', { timeout:120_000 }, async () => {

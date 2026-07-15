@@ -21,7 +21,9 @@ const visited = value => {
 export function canEnterMastery(experienceId, store) {
   const experience = experienceById(experienceId);
   if (!experience) return { allowed:false, missingPrerequisiteIds:[], placementAvailable:false };
-  const missingPrerequisiteIds = experience.prerequisiteExperienceIds.filter(id => !mastered(store, id));
+  const acceptedBackspinBypass = experienceId === 'flight-height-descent' && mastered(store, 'backspin');
+  const missingPrerequisiteIds = experience.prerequisiteExperienceIds.filter(id =>
+    !mastered(store, id) && !(acceptedBackspinBypass && id === 'delivered-loft-launch'));
   const placementPassed = Boolean(store?.experiences?.[experienceId]?.placementPassed);
   return { allowed:missingPrerequisiteIds.length === 0 || placementPassed, missingPrerequisiteIds, placementAvailable:missingPrerequisiteIds.length > 0 && !placementPassed };
 }
@@ -29,7 +31,8 @@ export function canEnterMastery(experienceId, store) {
 function action(kind, experience, reasonCode = kind, surface) {
   const labelPrefix = { continue:'Continue', repair:'Repair', review:'Review', start:'Start' }[kind];
   return {
-    kind, experienceId:experience.id, label:kind === 'start' ? `Start with ${experience.title}` : `${labelPrefix} ${experience.title}`,
+    kind, experienceId:experience.id, title:experience.title,
+    label:kind === 'start' ? `Start with ${experience.title}` : `${labelPrefix} ${experience.title}`,
     reason:REASONS[reasonCode], reasonCode,
     route:`#/experience/${experience.id}/surface/${Number.isInteger(surface) ? surface : kind === 'review' || kind === 'repair' ? 4 : 0}`
   };
@@ -49,6 +52,12 @@ function earliestMissingPrerequisite(experienceId, store, seen = new Set()) {
 export function selectAcademyAction(store) {
   if (CORE_EXPERIENCE_IDS.every(id => mastered(store, id))) return { kind:'explore', experienceId:null, label:'Explore the physics', reason:REASONS.explore, reasonCode:'explore', route:'#/explore' };
   const order = orderFor(store);
+  const goal = goalFor(store);
+  const flightHeight = experienceById('flight-height-descent');
+  if ((!goal || goal.id === 'launch-flight') && store?.lastOpened === 'backspin' && mastered(store, 'backspin')
+      && !mastered(store, 'flight-height-descent') && canEnterMastery('flight-height-descent', store).allowed) {
+    return action('start', flightHeight);
+  }
   const partials = order.map(id => experienceById(id)).filter(Boolean).filter(item => {
     const state = store?.experiences?.[item.id];
     if (state?.status !== 'practiced') return false;

@@ -113,6 +113,14 @@ test('mastery target is evaluated from the live engine state', () => {
   assert.equal(passesStoppingFlightTarget({ dynamicLoft:NaN, attackAngle:-3, ballSpeed:120 }), false);
 });
 
+test('Backspin and Landing are independent gates evaluated from the same final state', () => {
+  const finalState={ dynamicLoft:30, attackAngle:-3, ballSpeed:120 };
+  const solved=solveBackspinState(finalState);
+  const gates={ backspin:solved.rpm>=6800&&solved.rpm<=7400, landing:solved.landingAngle>=50 };
+  assert.deepEqual(gates,{backspin:true,landing:true});
+  assert.equal(passesStoppingFlightTarget(finalState),gates.backspin&&gates.landing);
+});
+
 test('phosphor trace state keeps at most two ghosts with falling opacity (EV-MOT-03)', async () => {
   const { MAX_GHOSTS, GHOST_OPACITIES, pushSettledTrace, ghostRenderPlan } =
     await import('../academy-trace-state.js');

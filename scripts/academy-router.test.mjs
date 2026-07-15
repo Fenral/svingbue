@@ -21,6 +21,14 @@ test('every legacy concept route resolves to its unique owner', () => {
   }
 });
 
+test('Backspin and Spin Loft deep links share the canonical Backspin experience', () => {
+  for (const conceptId of ['backspin','spin-loft']) {
+    const route=resolveAcademyRoute(`#/lesson/${conceptId}`);
+    assert.equal(route.experienceId,'backspin');
+    assert.equal(route.conceptId,conceptId);
+  }
+});
+
 test('unknown hashes fall back with a non-blocking diagnostic', () => {
   const route = resolveAcademyRoute('#/lesson/future-unknown');
   assert.equal(route.view, 'home');

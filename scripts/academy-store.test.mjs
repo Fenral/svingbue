@@ -82,6 +82,35 @@ test('accepted native Backspin is grandfathered once with a zero-value reward gu
   assert.equal(next.xp, 420);
 });
 
+test('Backspin completion below mastery remains retryable without silent mastery', () => {
+  const seed=createAcademySeed();seed.lessons.backspin.completed=true;seed.lessons.backspin.quizBestCorrect=3;
+  const next=migrateOutcomeAcademy(seed,{now:NOW});
+  assert.equal(next.lessons.backspin.completed,true);
+  assert.equal(next.experiences.backspin.status,'practiced');
+  assert.equal(next.experiences.backspin.reviewEligible,true);
+  assert.equal(next.experiences.backspin.acceptedAttemptId,null);
+});
+
+test('Spin Loft-only history opens one canonical Backspin review without a reward', () => {
+  const seed=createAcademySeed();seed.lessons['spin-loft'].completed=true;seed.xp=80;
+  const next=migrateOutcomeAcademy(seed,{now:NOW});
+  assert.equal(next.experiences.backspin.status,'practiced');
+  assert.equal(next.experiences.backspin.reviewEligible,true);
+  assert.deepEqual(next.experiences.backspin.legacyEvidence,['spin-loft']);
+  assert.equal(next.experiences.backspin.acceptedAttemptId,null);
+  assert.equal(next.xp,80);
+});
+
+test('both Backspin aliases merge into one canonical record and no duplicate reward', () => {
+  const seed=createAcademySeed();seed.lessons['spin-loft'].completed=true;seed.lessons.backspin.completed=true;seed.xp=140;
+  const next=migrateOutcomeAcademy(seed,{now:NOW});
+  assert.deepEqual(next.experiences.backspin.legacyEvidence,['spin-loft','backspin']);
+  assert.equal(Object.keys(next.experiences).filter(id=>id==='backspin').length,1);
+  assert.equal(next.experiences.backspin.acceptedAttemptId,null);
+  assert.deepEqual(next.rewardLedger,{});
+  assert.equal(next.xp,140);
+});
+
 test('mastery requires 4/5 plus live transfer and rewards only once', () => {
   const seed = createAcademySeed();
   const base = { attemptId:'attempt-a', experienceId:'start-line', contentVersion:1, knowledgeTotal:5, liveTransferEvidence:{ fixtureIds:['a'] } };

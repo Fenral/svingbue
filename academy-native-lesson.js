@@ -19,7 +19,7 @@ const SURFACES = Object.freeze([
   { key:'influence', label:'Influence', next:'Test the myths' },
   { key:'myths', label:'Myths', next:'Start Mastery Check' },
   { key:'mastery', label:'Mastery', next:'View result' },
-  { key:'result', label:'Result', next:'Next: Launch Angle' }
+  { key:'result', label:'Result', next:'Continue' }
 ]);
 
 const PARAMETER_KEYS = Object.freeze(['dynamicLoft', 'attackAngle', 'ballSpeed']);
@@ -50,7 +50,7 @@ const SHEETS = Object.freeze({
   mission: {
     eyebrow:'Mission',
     title:'Build, then cut',
-    body:`<p>First build at least <strong>7,000 rpm</strong>. After that stage is credited, cut the same 7-iron model below <strong>3,500 rpm</strong>.</p><p>The low-spin stage is a delivery experiment. It is not a driver simulation.</p>`
+    body:`<p>First build at least <strong>7,000 rpm</strong>. After that stage is credited, cut the same 7-iron model below <strong>3,500 rpm</strong>.</p><p>The low-spin stage is a delivery experiment. It is not a driver simulation.</p><p>Flightglass calculates Backspin as an outcome. The current flight fit does not feed that rpm value back into Carry, Apex or Landing Angle.</p>`
   },
   spinLoft: {
     eyebrow:'Model term',
@@ -139,7 +139,7 @@ const MYTH_EXPERIMENTS = Object.freeze([
     answerIndex:2,
     before:Object.freeze({ dynamicLoft:30, attackAngle:-3, ballSpeed:120 }),
     after:Object.freeze({ dynamicLoft:44, attackAngle:-4, ballSpeed:120 }),
-    explanation:'This Flightglass model holds carry steady at fixed ball speed while height and landing change. Real excess-spin shots can balloon; that effect is not modeled here.'
+    explanation:'More engine Backspin does not numerically cause more current-engine Carry. Real spin affects flight; this fitted app model currently keeps rpm output and flight trajectory partly decoupled.'
   })
 ]);
 
@@ -171,8 +171,8 @@ const MASTERY_TASKS = Object.freeze([
   }),
   Object.freeze({
     id:'target', kind:'lab-target',
-    prompt:'Create 6,800\u20137,400 rpm with landing angle at or above 50\u00b0.',
-    ability:'Build a stopping flight'
+    prompt:'Create 6,800\u20137,400 rpm and keep modeled Landing Angle at or above 50\u00b0. Both are gates from the final live solveFlight() state.',
+    ability:'Meet Backspin and Landing gates independently'
   })
 ]);
 
@@ -284,7 +284,7 @@ function lessonTemplate({ xp, level, state }) {
           <div class="native-lesson__mission-copy">
             <p class="native-lesson__eyebrow">Academy · Flight</p>
             <h1 id="nativeMissionTitle">Backspin</h1>
-            <p class="native-lesson__lede">Backspin is the ball's backward rotation that creates lift and helps a shot hold its flight.</p>
+            <p class="native-lesson__lede">Backspin is an outcome. Build the delivered-face-to-travel gap, then see how Ball Speed scales it.</p>
             <div class="native-lesson__mission-card" aria-labelledby="nativeMissionLabel">
               <div class="native-lesson__card-heading">
                 <p id="nativeMissionLabel">Your mission</p>
@@ -299,6 +299,7 @@ function lessonTemplate({ xp, level, state }) {
                   <span aria-hidden="true"></span><p><strong>Cut it in half</strong><small>Then drop below 3,500 rpm</small></p>
                 </div>
               </div>
+              <p class="native-lesson__support">One 7-iron preset · centered, clean/dry contact. Friction, grooves, moisture, strike location and ball/face properties are not modeled.</p>
             </div>
           </div>
         </section>
@@ -344,10 +345,10 @@ function lessonTemplate({ xp, level, state }) {
         <section class="native-lesson__surface" data-surface="2" tabindex="-1" aria-labelledby="nativeInfluenceTitle">
           <div class="native-lesson__surface-heading">
             <div><p class="native-lesson__eyebrow">Current lab state</p><h2 id="nativeInfluenceTitle">Influence</h2></div>
-            <span class="native-lesson__stamp" data-influence-stamp>Simulator ranking</span>
+            <span class="native-lesson__stamp" data-influence-stamp>Model roles</span>
           </div>
-          <p class="native-lesson__support">How much each input moves backspin by one unit here.</p>
-          <div id="influenceBars" class="native-lesson__influence" role="group" aria-label="Backspin sensitivity ranked"></div>
+          <p class="native-lesson__support">SPIN LOFT · DIRECT GEOMETRIC DRIVER — Dynamic Loft and Attack are its components. BALL SPEED · MULTIPLICATIVE SCALER. FRICTION / STRIKE CONDITIONS · HELD OR NOT MODELED.</p>
+          <div id="influenceBars" class="native-lesson__influence" role="group" aria-label="Backspin model roles and sensitivity"></div>
           <p id="influenceLimitNote" class="native-lesson__influence-limit" hidden></p>
           <div class="native-lesson__lie-control" role="radiogroup" aria-label="Surface condition">
             <button type="button" role="radio" data-lie="clean" aria-checked="true" tabindex="0">Clean</button>
@@ -386,7 +387,7 @@ function lessonTemplate({ xp, level, state }) {
         <section class="native-lesson__surface native-lesson__surface--result" data-surface="5" tabindex="-1" aria-labelledby="nativeResultTitle">
           <div id="nativeLessonResult" class="native-lesson__result" data-result-mastered="false" data-result-status="pending">
             <p class="native-lesson__eyebrow" data-result-eyebrow>Backspin result</p>
-            <h2 id="nativeResultTitle" tabindex="-1">Your stopping-flight read</h2>
+            <h2 id="nativeResultTitle" tabindex="-1">Your Backspin evidence</h2>
             <p data-result-copy>Complete the Mastery Check to see the ability you demonstrated.</p>
             <div class="native-lesson__result-summary" data-result-summary hidden>
               <strong data-result-score data-readout>0 / 5</strong>
@@ -395,13 +396,14 @@ function lessonTemplate({ xp, level, state }) {
             </div>
             <div class="native-lesson__result-abilities" data-result-abilities hidden></div>
             <div class="native-lesson__result-preview" data-result-next-preview hidden>
-              <span>Next question</span>
-              <strong>What changes when launch rises at the same ball speed?</strong>
+              <span data-result-next-kicker>Next</span>
+              <strong data-result-next-title>Continue your Academy goal</strong>
+              <small data-result-next-copy></small>
             </div>
             <div class="native-lesson__result-actions">
-              <button type="button" class="native-lesson__primary-action" data-action="next-lesson" hidden>Next: Launch Angle</button>
+              <button type="button" class="native-lesson__primary-action" data-action="next-lesson" hidden>Continue</button>
               <button type="button" class="native-lesson__primary-action" data-action="retry-mastery" hidden>Retry the check</button>
-              <button type="button" class="native-lesson__secondary-action" data-action="back-to-path">Back to path</button>
+              <button type="button" class="native-lesson__secondary-action" data-action="back-to-path">Return to current goal</button>
             </div>
           </div>
         </section>
@@ -445,6 +447,7 @@ export function mountNativeBackspinLesson(options = {}) {
     onSubmit,
     onBack,
     onNextLesson,
+    nextAction,
     onAnnounce,
     onDiagramTouched,
     onEngage,
@@ -469,6 +472,9 @@ export function mountNativeBackspinLesson(options = {}) {
     onVoiceMilestone:callback(onVoiceMilestone),
     onVoiceInterrupt:callback(onVoiceInterrupt)
   };
+  const getNextAction = typeof nextAction === 'function'
+    ? nextAction
+    : () => ({ label:'Return to current goal', route:'#/academy', title:'Academy Home', reason:'' });
   const cleanups = [];
   const timers = new Set();
   const frames = new Set();
@@ -1336,10 +1342,11 @@ export function mountNativeBackspinLesson(options = {}) {
       : `Current submitted result: ${formatNumber(record.solved.rpm)} rpm and ${record.solved.landingAngle}\u00b0 landing. ${masteryTargetFailure(record.solved)}`;
     return `
       <div class="native-lesson__mastery-target" data-mastery-target data-locked="${locked}">
-        <div class="native-lesson__mastery-target-readout" aria-label="Live model result">
-          <div><span>Backspin</span><strong data-mastery-rpm data-readout data-value="${shown?.rpm ?? ''}">${shown ? formatNumber(shown.rpm) : '\u2014'} rpm</strong></div>
-          <div><span>Landing</span><strong data-mastery-landing data-readout data-value="${shown?.landingAngle ?? ''}">${shown ? formatNumber(shown.landingAngle) : '\u2014'}\u00b0</strong></div>
+        <div class="native-lesson__mastery-target-readout" aria-label="Two independent gates from one live model state">
+          <div data-mastery-gate="backspin"><span>Backspin · independent gate</span><strong data-mastery-rpm data-readout data-value="${shown?.rpm ?? ''}">${shown ? formatNumber(shown.rpm) : '\u2014'} rpm</strong></div>
+          <div data-mastery-gate="landing"><span>Landing · independent gate</span><strong data-mastery-landing data-readout data-value="${shown?.landingAngle ?? ''}">${shown ? formatNumber(shown.landingAngle) : '\u2014'}\u00b0</strong></div>
         </div>
+        <p class="native-lesson__support" data-mastery-gate-truth>Both rows are independent gates from this live solveFlight state.</p>
         <div class="native-lesson__mastery-params" role="radiogroup" aria-label="Choose target input">${chips}</div>
         <label class="native-lesson__range-label" for="masteryTargetRange">
           <span data-mastery-range-label>${escapeHtml(parameter.label)}</span>
@@ -1446,7 +1453,7 @@ export function mountNativeBackspinLesson(options = {}) {
       summaryNode.hidden = true;
       result.querySelector('[data-result-abilities]').hidden = true;
       result.querySelector('[data-result-next-preview]').hidden = true;
-      actions.innerHTML = '<button type="button" class="native-lesson__secondary-action" data-action="back-to-path">Back to path</button>';
+      actions.innerHTML = '<button type="button" class="native-lesson__secondary-action" data-action="back-to-path">Return to current goal</button>';
       return;
     }
     const correct = Math.max(0, Number(summary.correct) || 0);
@@ -1464,7 +1471,7 @@ export function mountNativeBackspinLesson(options = {}) {
     result.dataset.resultStatus = mastered ? 'mastered' : 'complete';
     result.querySelector('[data-result-eyebrow]').textContent = mastered ? 'Backspin mastered' : 'Backspin complete';
     result.querySelector('[data-result-copy]').textContent = mastered
-      ? "You can separate spin loft from \u201chitting down\u201d and control a shot's stopping flight in the Flightglass model."
+      ? 'You can build Spin Loft from delivered face and travel, then use Ball Speed to create a requested Backspin state in the Flightglass model.'
       : `${correct} of ${total} on the mastery check. Retry for mastery (4/5).`;
     summaryNode.hidden = false;
     summaryNode.querySelector('[data-result-score]').textContent = `${correct} / ${total}`;
@@ -1474,16 +1481,30 @@ export function mountNativeBackspinLesson(options = {}) {
       ? `Level ${summary.levelInfo?.lvl ?? summary.levelInfo?.number ?? ''} \u00b7 ${summary.levelInfo?.title || ''}`.trim()
       : '';
     abilitiesNode.hidden = false;
-    abilitiesNode.innerHTML = `<strong>Abilities demonstrated</strong>${abilities
-      ? `<ul>${abilities}</ul>`
-      : '<p>No ability checks demonstrated yet.</p>'}`;
+    abilitiesNode.innerHTML = mastered
+      ? `<strong>VERIFIED</strong><ul>
+          <li data-result-ability>Spin Loft components separated</li>
+          <li data-result-ability>Backspin target created live</li>
+          <li data-result-ability>Landing Angle gate met independently</li>
+        </ul>`
+      : `<strong>Abilities demonstrated</strong>${abilities
+        ? `<ul>${abilities}</ul>`
+        : '<p>No ability checks demonstrated yet.</p>'}`;
     const preview = result.querySelector('[data-result-next-preview]');
     preview.hidden = !mastered;
+    let destination;
+    try { destination = getNextAction() || {}; } catch { destination = {}; }
+    const destinationLabel = String(destination.label || 'Return to current goal');
+    const destinationTitle = String(destination.title || destinationLabel);
+    if (mastered) {
+      preview.querySelector('[data-result-next-title]').textContent = destinationTitle;
+      preview.querySelector('[data-result-next-copy]').textContent = String(destination.preview || destination.reason || 'Continue from Academy Home.');
+    }
     actions.innerHTML = mastered
-      ? `<button type="button" class="native-lesson__primary-action" data-action="next-lesson">Next: Launch Angle</button>
-         <button type="button" class="native-lesson__secondary-action" data-action="back-to-path">Back to path</button>`
+      ? `<button type="button" class="native-lesson__primary-action" data-action="next-lesson">${escapeHtml(destinationLabel)}</button>
+         <button type="button" class="native-lesson__secondary-action" data-action="back-to-path">Return to current goal</button>`
       : `<button type="button" class="native-lesson__primary-action" data-action="retry-mastery">Retry the check</button>
-         <button type="button" class="native-lesson__secondary-action" data-action="back-to-path">Back to path</button>`;
+         <button type="button" class="native-lesson__secondary-action" data-action="back-to-path">Return to current goal</button>`;
     updateHeaderFromSummary(summary);
   }
 
@@ -1718,7 +1739,11 @@ export function mountNativeBackspinLesson(options = {}) {
         : (state.masteryIndex < MASTERY_TASKS.length - 1 ? 'Next task' : 'View result');
     } else if (state.surface === 5) {
       next.title = '';
-      label.textContent = resultMastered(state.lastSubmission?.summary) ? 'Next: Launch Angle' : 'Retry the check';
+      let destination;
+      try { destination = getNextAction() || {}; } catch { destination = {}; }
+      label.textContent = resultMastered(state.lastSubmission?.summary)
+        ? String(destination.label || 'Return to current goal')
+        : 'Retry the check';
     } else {
       next.title = '';
       label.textContent = state.surface === 3 && state.mythIndex < MYTH_EXPERIMENTS.length - 1
@@ -1964,9 +1989,10 @@ export function mountNativeBackspinLesson(options = {}) {
     try {
       const chain = buildCauseChain(beforeSettled, state.input, parameterKey);
       const cause = lesson.querySelector('#causeChain');
-      cause.innerHTML = chain.visual.map(item => `<span>${escapeHtml(item)}</span>`).join('<span aria-hidden="true">→</span>');
-      state.lastChainSpeech = chain.speech;
-      if (announceChain) announce(chain.speech);
+      const causeSentence = `Dynamic Loft ${formatValue(state.input.dynamicLoft, '\u00b0')} minus Attack ${formatSigned(state.input.attackAngle, '\u00b0')} gives Spin Loft ${formatValue(solved.spinLoft, '\u00b0')}. At Ball Speed ${formatValue(state.input.ballSpeed, ' mph')}, Flightglass returns ${formatNumber(solved.rpm)} rpm of Backspin.`;
+      cause.innerHTML = `<span>${escapeHtml(causeSentence)}</span><span>Separate current flight fit: Apex ${escapeHtml(formatValue(solved.apexM, ' m'))}; rpm is not fed back.</span>`;
+      state.lastChainSpeech = causeSentence;
+      if (announceChain) announce(causeSentence);
     } catch {
       rejectModelUpdate();
       return;

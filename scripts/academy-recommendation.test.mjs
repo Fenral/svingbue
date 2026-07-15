@@ -61,6 +61,17 @@ test('preview is open while mastery reports exact missing prerequisites', () => 
   assert.equal(gate.placementAvailable, true);
 });
 
+test('accepted Backspin bypasses new preceding work for Flight Height and forwards through the shared router', () => {
+  const store=createAcademySeed();
+  master(store,'backspin');store.lastOpened='backspin';
+  const gate=canEnterMastery('flight-height-descent',store);
+  assert.equal(gate.allowed,true);
+  assert.deepEqual(gate.missingPrerequisiteIds,[]);
+  const action=selectAcademyAction(store);
+  assert.equal(action.experienceId,'flight-height-descent');
+  assert.equal(action.route,'#/experience/flight-height-descent/surface/0');
+});
+
 test('all thirteen core mastered recommends Explore and ignores optional lab', () => {
   const store = createAcademySeed();
   for (const id of Object.keys(store.experiences).filter(id => id !== 'plane-coupling-lab')) master(store, id);

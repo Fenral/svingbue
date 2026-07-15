@@ -278,6 +278,11 @@
   pointer-events: none;
 }
 
+.native-lesson__surface[data-surface="2"] {
+  gap: 10px;
+  padding-top: calc(var(--native-header-h) + env(safe-area-inset-top) + 2px);
+}
+
 .native-lesson__eyebrow {
   margin: 0;
   color: var(--muted);
@@ -849,6 +854,15 @@
   background: var(--plate);
   cursor: pointer;
   text-align: left;
+}
+
+.native-lesson__surface[data-surface="2"] .native-lesson__influence-row {
+  min-height: 64px !important;
+  padding-block: 7px;
+}
+
+.native-lesson__surface[data-surface="2"] .native-lesson__real-world {
+  padding-block: 10px;
 }
 
 .native-lesson__rank {
