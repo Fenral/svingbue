@@ -41,6 +41,12 @@ test('Shape legacy aliases migrate additively to Practiced and only both enable 
   assert.equal(bothNext.experiences.shape.status, 'practiced');assert.equal(bothNext.experiences.shape.reviewEligible, true);assert.equal(bothNext.experiences.shape.acceptedAttemptId, null);
 });
 
+test('legacy Offline completion becomes reviewable Carry Side without mastery or reward', () => {
+  const seed=createAcademySeed();seed.lessons.offline.completed=true;
+  const next=migrateOutcomeAcademy(seed,{now:NOW});const experience=next.experiences['shot-pattern'];
+  assert.equal(experience.status,'practiced');assert.equal(experience.reviewEligible,true);assert.deepEqual(experience.legacyEvidence,['offline']);assert.equal(experience.acceptedAttemptId,null);assert.equal(next.xp,0);
+});
+
 test('accepted native Backspin is grandfathered once with a zero-value reward guard', () => {
   const seed = createAcademySeed();
   seed.xp = 420;

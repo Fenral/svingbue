@@ -6,13 +6,14 @@ import { fileURLToPath } from 'node:url';
 import { ACADEMY_BACKSPIN_CUES, ACADEMY_HOME_CUES } from '../academy-voice-reference-cues.js';
 import { START_LINE_CUES } from '../academy-start-line-content.js';
 import { SHAPE_CUES } from '../academy-shape-content.js';
+import { CARRY_SIDE_CUES } from '../academy-carry-side-content.js';
 import { ACADEMY_VOICE_LOCALE, ACADEMY_VOICE_PACK_ID } from '../academy-voice-manifest.js';
 
 const ROOT=resolve(dirname(fileURLToPath(import.meta.url)),'..');
 const sha=value=>createHash('sha256').update(value).digest('hex');
 const inside=(root,file)=>`${resolve(file)}${sep}`.toLowerCase().startsWith(`${resolve(root)}${sep}`.toLowerCase());
 
-export function verifyAcademyVoicePack({ root=ROOT, config, cues=[...ACADEMY_HOME_CUES.cues,...ACADEMY_BACKSPIN_CUES.cues,...START_LINE_CUES.cues,...SHAPE_CUES.cues], mode='development' }={}){
+export function verifyAcademyVoicePack({ root=ROOT, config, cues=[...ACADEMY_HOME_CUES.cues,...ACADEMY_BACKSPIN_CUES.cues,...START_LINE_CUES.cues,...SHAPE_CUES.cues,...CARRY_SIDE_CUES.cues], mode='development' }={}){
   const errors=[];const records=Array.isArray(config?.assets)?config.assets:[];const byCue=new Map();
   if(config?.packId!==ACADEMY_VOICE_PACK_ID)errors.push('pack-id');
   if(config?.locale!==ACADEMY_VOICE_LOCALE)errors.push('locale');
