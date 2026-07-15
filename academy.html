@@ -22,6 +22,7 @@
 <link rel="stylesheet" href="./academy-delivered-loft-launch.css" />
 <link rel="stylesheet" href="./academy-flight-height-descent.css" />
 <link rel="stylesheet" href="./academy-speed-transfer.css" />
+<link rel="stylesheet" href="./academy-carry.css" />
 <style>
   :root{
     /* ══ P3 "Ultraviolet Ember" — colour + type consumed from sa-p3.css ══
@@ -767,6 +768,8 @@
   import { flightHeightDescentCue } from './academy-flight-height-descent-content.js';
   import { mountSpeedTransferExperience } from './academy-speed-transfer-experience.js';
   import { speedTransferCue } from './academy-speed-transfer-content.js';
+  import { mountCarryExperience } from './academy-carry-experience.js';
+  import { carryCue } from './academy-carry-content.js';
 
   /* ══ DATA ══ */
   const GRAPH = JSON.parse(document.getElementById('graph-data').textContent);
@@ -1601,6 +1604,12 @@
         const cleanup=mountSpeedTransferExperience({...input,onVoiceSurface:(surface,cueId)=>{currentSurface=surface;deliver(cueId);},onVoiceInterrupt:reason=>voiceController.stop(reason),onVoiceMilestone:cueId=>deliver(cueId)});
         voiceUi=mountAcademyVoiceUi({root:app.querySelector('[data-academy-voice-slot]'),controller:voiceController,getMode:()=>store.preferences.voice.mode,showInlineChoice:false,onModeChange:mode=>{if(mode!=='off')deliver(['academy.speed-transfer.s0.entry','academy.speed-transfer.s1.ratio','academy.speed-transfer.s2.equal','academy.speed-transfer.s3.boundary',null,null][currentSurface]);}});voiceUi.update(voiceController.getState());return cleanup;
       },
+      'carry':input => {
+        let currentSurface=Number.isInteger(input.surface)?input.surface:0;
+        const deliver=cueId=>{const cue=cueId&&carryCue(cueId);return cue?voiceController.deliverAutomatic(cue):null;};
+        const cleanup=mountCarryExperience({...input,prerequisiteMet:canEnterMastery('carry',store).allowed,onVoiceSurface:(surface,cueId)=>{currentSurface=surface;deliver(cueId);},onVoiceInterrupt:reason=>voiceController.stop(reason),onVoiceMilestone:cueId=>deliver(cueId)});
+        voiceUi=mountAcademyVoiceUi({root:app.querySelector('[data-academy-voice-slot]'),controller:voiceController,getMode:()=>store.preferences.voice.mode,showInlineChoice:false,onModeChange:mode=>{if(mode!=='off')deliver(['academy.carry.s0.entry','academy.carry.s1.definition',null,null,null,null][currentSurface]);}});voiceUi.update(voiceController.getState());return cleanup;
+      },
       'backspin-native':({ surface, state:experienceState, voiceTargets:hostVoiceTargets }) => {
         const li = levelInfo(store.xp);
         let currentVoiceSurface = Number.isInteger(surface) ? surface : getJourney('backspin').surface;
@@ -1924,7 +1933,7 @@
     if (h.indexOf('#/proto') === 0) renderProto();
     else if (parsed.view === 'home') renderAcademyHome();
     else if (parsed.view === 'explore') renderPath();
-    else if (parsed.legacy && !['backspin','start-line','shape','shot-pattern','attack-at-impact','low-point','strike-depth','delivered-loft-launch','flight-height-descent','speed-transfer'].includes(parsed.experienceId) && LESSONS[parsed.conceptId]) renderLesson(parsed.conceptId);
+    else if (parsed.legacy && !['backspin','start-line','shape','shot-pattern','attack-at-impact','low-point','strike-depth','delivered-loft-launch','flight-height-descent','speed-transfer','carry'].includes(parsed.experienceId) && LESSONS[parsed.conceptId]) renderLesson(parsed.conceptId);
     else renderOutcomeExperience(parsed);
     window.scrollTo(0,0);
     // Move focus to the new view's heading on every SPA route change, but not on the very
