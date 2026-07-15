@@ -15,7 +15,7 @@ export function buildVoiceUiViewModel(controllerState = {}, mode = 'unset') {
   };
 }
 
-export function mountAcademyVoiceUi({ root, controller, getMode = () => 'unset', onModeChange = () => {} } = {}) {
+export function mountAcademyVoiceUi({ root, controller, getMode = () => 'unset', onModeChange = () => {}, showInlineChoice = true } = {}) {
   if (!root) throw new TypeError('Academy voice UI root is required');
   root.innerHTML = `<div class="academy-voice" data-academy-voice>
     <button type="button" class="academy-voice__control" data-academy-voice-settings aria-haspopup="dialog">Choose voice</button>
@@ -55,7 +55,7 @@ export function mountAcademyVoiceUi({ root, controller, getMode = () => 'unset',
   listen(el('[data-academy-voice-close]'),'click',()=>{caption.hidden=true;});
   const update=state=>{
     const vm=buildVoiceUiViewModel(state,getMode()); opener.textContent=vm.controlLabel;
-    choice.hidden=!vm.preferenceRequired; caption.hidden=!vm.showCaption; text.textContent=vm.caption || '';
+    choice.hidden=!showInlineChoice || !vm.preferenceRequired; caption.hidden=!vm.showCaption; text.textContent=vm.caption || '';
     replay.textContent=vm.replayLabel; replay.disabled=Boolean(vm.replayDisabledReason); replay.title=vm.replayDisabledReason || '';
     root.querySelectorAll('input[name="voice-mode"]').forEach(input=>{input.checked=input.value===vm.mode;});
   };

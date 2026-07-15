@@ -77,6 +77,23 @@ test('canonical Backspin uses the shared host and legacy articles remain reachab
   assert.deepEqual(errors,[]);await context.close();
 });
 
+test('Backspin uses shared voice consent, surface cues and semantic targets without blocking the lesson',async()=>{
+  const {context,page,errors}=await open({width:430,height:932});
+  await page.locator('[data-voice-mode="captions"]').click();
+  await page.evaluate(()=>{location.hash='#/experience/backspin';});await page.locator('#nativeLesson').waitFor();
+  assert.equal(await page.locator('[data-academy-voice-settings]').count(),1);
+  assert.match(await page.locator('[data-academy-voice-text]').textContent(),/^Backspin is an outcome\./);
+  await page.locator('[data-action="next"]').click();
+  assert.match(await page.locator('[data-academy-voice-text]').textContent(),/^Dynamic Loft minus Attack/);
+  const setLabValue=value=>page.locator('#labRange').evaluate((input,next)=>{input.value=String(next);input.dispatchEvent(new Event('input',{bubbles:true}));},value);
+  await setLabValue(50);
+  assert.match(await page.locator('[data-academy-voice-text]').textContent(),/^The gap is larger\./);
+  await setLabValue(10);
+  assert.match(await page.locator('[data-academy-voice-text]').textContent(),/^A smaller gap lowers raw rpm\./);
+  assert.equal(await page.locator('#nativeLesson').getAttribute('data-surface'),'1');
+  assert.deepEqual(errors,[]);await context.close();
+});
+
 test('corrupt legacy storage is not overwritten merely by opening Home',async()=>{
   const corrupt='{broken';const {context,page}=await open({width:375,height:812},{stored:corrupt});
   assert.equal(await page.locator('.academy-home__storage-warning').isVisible(),true);

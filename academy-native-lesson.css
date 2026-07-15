@@ -146,6 +146,57 @@
   background: var(--plate-solid);
 }
 
+.native-lesson__voice-slot {
+  position: absolute;
+  z-index: 8;
+  top: max(8px, env(safe-area-inset-top));
+  right: 98px;
+  width: 58px;
+  pointer-events: none;
+}
+
+.native-lesson__voice-slot .academy-voice > * {
+  pointer-events: auto;
+}
+
+.native-lesson__voice-slot .academy-voice__control {
+  float: none;
+  width: 58px;
+  min-width: 0;
+  min-height: 44px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 0;
+  letter-spacing: .12em;
+}
+
+.native-lesson__voice-slot .academy-voice__control::after {
+  content: "VOICE";
+  font-family: var(--font-mono);
+  font-size: .5625rem;
+}
+
+.native-lesson__voice-slot .academy-voice__caption,
+.native-lesson__voice-slot .academy-voice__choice {
+  position: fixed;
+  top: calc(var(--native-header-h) + env(safe-area-inset-top) + 8px);
+  left: 12px;
+  right: 12px;
+  width: auto;
+}
+
+.native-lesson [data-voice-emphasis] {
+  outline: 2px solid var(--secondary);
+  outline-offset: 3px;
+}
+
+.native-lesson [data-voice-emphasis="connector"] {
+  border-color: var(--secondary);
+}
+
 .native-lesson__icon-button {
   flex: 0 0 44px;
   border-radius: var(--radius-control);

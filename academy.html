@@ -739,7 +739,7 @@
   import { createAcademyVoiceController } from './academy-voice.js';
   import { createAcademyVoiceSync, createVoiceTargetRegistry } from './academy-voice-sync.js';
   import { mountAcademyVoiceUi } from './academy-voice-ui.js';
-  import { homeCue } from './academy-voice-reference-cues.js';
+  import { backspinCue, homeCue } from './academy-voice-reference-cues.js';
 
   /* ══ DATA ══ */
   const GRAPH = JSON.parse(document.getElementById('graph-data').textContent);
@@ -1486,9 +1486,16 @@
   const experienceHost = createAcademyExperienceHost({
     root:app,
     renderers:{
-      'backspin-native':({ surface }) => {
+      'backspin-native':({ surface, state:experienceState, voiceTargets:hostVoiceTargets }) => {
         const li = levelInfo(store.xp);
-        return mountNativeBackspinLesson({
+        let currentVoiceSurface = Number.isInteger(surface) ? surface : getJourney('backspin').surface;
+        const reviewSilent = experienceState?.status === 'mastered';
+        const surfaceCue = index => ({ 0:'academy.backspin.s0.entry', 1:'academy.backspin.s1.entry', 2:'academy.backspin.s2.entry', 4:'academy.backspin.s4.entry' })[index] || null;
+        const deliverBackspin = cueId => {
+          const cue = cueId && backspinCue(cueId);
+          return cue ? voiceController.deliverAutomatic(cue) : null;
+        };
+        const cleanup = mountNativeBackspinLesson({
           root:app,
           xp:store.xp,
           level:{ number:li.lvl, title:li.title },
@@ -1510,8 +1517,21 @@
             go('#/lesson/' + nextId);
           },
           onDiagramTouched:() => markDiagramTouched('backspin'),
-          onAnnounce:announce
+          onAnnounce:announce,
+          voiceTargets:hostVoiceTargets,
+          onVoiceSurface:index => { currentVoiceSurface=index; if (!reviewSilent) deliverBackspin(surfaceCue(index)); },
+          onVoiceMilestone:event => deliverBackspin({ built:'academy.backspin.s1.build', cut:'academy.backspin.s1.cut', 'model-boundary':'academy.backspin.s3.boundary', 'mastery-pass':'academy.backspin.s5.pass' }[event]),
+          onVoiceInterrupt:reason => voiceController.stop(reason)
         });
+        voiceUi = mountAcademyVoiceUi({
+          root:app.querySelector('[data-academy-voice-slot]'),
+          controller:voiceController,
+          getMode:() => store.preferences.voice.mode,
+          showInlineChoice:false,
+          onModeChange:mode => { if (mode !== 'off' && !reviewSilent) deliverBackspin(surfaceCue(currentVoiceSurface)); }
+        });
+        voiceUi.update(voiceController.getState());
+        return cleanup;
       }
     },
     services:{

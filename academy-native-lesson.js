@@ -277,6 +277,8 @@ function lessonTemplate({ xp, level, state }) {
         </div>
       </header>
 
+      <div class="native-lesson__voice-slot" data-academy-voice-slot></div>
+
       <div class="native-lesson__pager" data-native-pager>
         <section class="native-lesson__surface native-lesson__surface--mission" data-surface="0" tabindex="-1" aria-labelledby="nativeMissionTitle">
           <div class="native-lesson__mission-copy">
@@ -445,7 +447,11 @@ export function mountNativeBackspinLesson(options = {}) {
     onNextLesson,
     onAnnounce,
     onDiagramTouched,
-    onEngage
+    onEngage,
+    voiceTargets,
+    onVoiceSurface,
+    onVoiceMilestone,
+    onVoiceInterrupt
   } = options;
 
   if (typeof HTMLElement === 'undefined' || !(root instanceof HTMLElement)) {
@@ -458,7 +464,10 @@ export function mountNativeBackspinLesson(options = {}) {
     onBack:callback(onBack),
     onNextLesson:callback(onNextLesson),
     onAnnounce:callback(onAnnounce),
-    onDiagramTouched:callback(typeof onDiagramTouched === 'function' ? onDiagramTouched : onEngage)
+    onDiagramTouched:callback(typeof onDiagramTouched === 'function' ? onDiagramTouched : onEngage),
+    onVoiceSurface:callback(onVoiceSurface),
+    onVoiceMilestone:callback(onVoiceMilestone),
+    onVoiceInterrupt:callback(onVoiceInterrupt)
   };
   const cleanups = [];
   const timers = new Set();
@@ -535,6 +544,39 @@ export function mountNativeBackspinLesson(options = {}) {
   const range = lesson.querySelector('#labRange');
   const canvas = lesson.querySelector('#flightCanvas');
   const fallback = lesson.querySelector('#flightFallback');
+
+  const voiceTargetSelectors = Object.freeze({
+    'backspin-spin-loft-chain':['.native-lesson__mission-card', '#causeChain'],
+    'backspin-ball-speed':['.native-lesson__mission-card', '[data-param="ballSpeed"]'],
+    'backspin-raw-rpm':['#backspinTruth'],
+    'backspin-clamp-state':['.native-lesson__truth'],
+    'backspin-held-assumption':['#causeChain'],
+    'backspin-influence-roles':['#influenceBars'],
+    'backspin-model-boundary':['#mythExperiment'],
+    'backspin-mastery-gates':['#masteryTask'],
+    'backspin-next-preview':['[data-result-next-preview]']
+  });
+  if (voiceTargets?.register) {
+    for (const [id, selectors] of Object.entries(voiceTargetSelectors)) {
+      const elements = selectors.flatMap(selector => [...lesson.querySelectorAll(selector)]);
+      const clear = () => elements.forEach(element => {
+        delete element.dataset.voiceEmphasis;
+        delete element.dataset.voiceStatic;
+      });
+      const unregister = voiceTargets.register(id, {
+        setEmphasis:({ kind, reducedMotion }) => {
+          clear();
+          const emphasized = elements.find(element => element.closest('.native-lesson__surface')?.getAttribute('aria-hidden') === 'false') || elements[0] || null;
+          if (emphasized) {
+            emphasized.dataset.voiceEmphasis = kind;
+            emphasized.dataset.voiceStatic = String(reducedMotion);
+          }
+        },
+        clear
+      });
+      cleanups.push(() => { clear(); unregister(); });
+    }
+  }
 
   function prefersReducedMotion() {
     try {
@@ -1180,6 +1222,7 @@ export function mountNativeBackspinLesson(options = {}) {
     updateStepper();
     updateSurfaceNavigation();
     announce(mythAnnouncement(experiment, correct, runs));
+    if (experiment.id === 'more-is-better') callbacks.onVoiceMilestone('model-boundary');
     nextFrame(() => focusProgrammatically(lesson.querySelector(`[data-myth-choice="${choiceIndex}"]`)));
   }
 
@@ -1481,6 +1524,7 @@ export function mountNativeBackspinLesson(options = {}) {
   }
 
   function updateMasteryTargetInput(input) {
+    callbacks.onVoiceInterrupt('model-input');
     if (!(input instanceof HTMLInputElement) || state.mastery[4]?.correct || state.submitting || hasSubmittedMastery()) return;
     const key = state.masteryTargetParam;
     const value = input.valueAsNumber;
@@ -1571,6 +1615,7 @@ export function mountNativeBackspinLesson(options = {}) {
       updateSurfaceNavigation();
       const mastered = resultMastered(summary);
       announce(`Backspin ${mastered ? 'mastered' : 'complete'}. ${summary.correct} of ${MASTERY_TASKS.length}. Plus ${Math.max(0, Number(summary.totalDelta ?? summary.delta) || 0)} XP.`);
+      if (mastered) callbacks.onVoiceMilestone('mastery-pass');
       setSurface(5, { persist:false, unlock:true });
     } catch {
       if (destroyed) return;
@@ -1758,6 +1803,7 @@ export function mountNativeBackspinLesson(options = {}) {
     });
     if (target === 1) nextFrame(() => drawTrajectory(state.lastValidSolved));
     if (target === 2) renderInfluence();
+    callbacks.onVoiceSurface(target, { from, initial:from === target });
     return true;
   }
 
@@ -1935,6 +1981,7 @@ export function mountNativeBackspinLesson(options = {}) {
   }
 
   function handleRangeInput() {
+    callbacks.onVoiceInterrupt('model-input');
     const activeParamAtInput = state.activeParam;
     const value = range.valueAsNumber;
     const settledGhost = state.previousSettled || state.lastValidSolved;
@@ -1948,6 +1995,7 @@ export function mountNativeBackspinLesson(options = {}) {
       persistJourney({ mission:{ ...state.mission } }, { immediate:true });
       safeHaptic('notify', 'success');
       announce(mission.event === 'built' ? 'Build stage complete. Now cut the spin below 3,500 rpm.' : 'Mission complete. You built and cut the spin.');
+      callbacks.onVoiceMilestone(mission.event);
       if (mission.complete) state.unlockedSurface = Math.max(state.unlockedSurface, 2);
       renderMission();
       updateStepper();

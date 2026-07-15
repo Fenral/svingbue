@@ -21,3 +21,4 @@ export const ACADEMY_BACKSPIN_CUES = defineAcademyCueSet({ ownerId:'backspin', c
 ] });
 
 export function homeCue(id) { return ACADEMY_HOME_CUES.cues.find(cue => cue.cueId === id) || null; }
+export function backspinCue(id) { return ACADEMY_BACKSPIN_CUES.cues.find(cue => cue.cueId === id) || null; }
