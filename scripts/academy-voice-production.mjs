@@ -64,6 +64,11 @@ export const VOICE_DIRECTIONS = Object.freeze({
   generic: 'Adult General American female virtual-assistant narrator. Bright, polished, friendly, evenly emphasized and conventionally helpful. This is an intentionally generic assistant comparison candidate.'
 });
 
+export const REFINEMENT_DIRECTIONS = Object.freeze({
+  target: 'Preserve this voice identity, General American accent, grounded middle register and technical clarity. Make the delivery subtly more restrained and lower-energy, with softer emphatic peaks, natural short pauses and a calm 150 to 155 words-per-minute control-room cadence. Keep it dry, close-mic, confident and clear at low phone volume. Never breathy, intimate, chirpy or robotic.',
+  theatrical: 'Preserve the appealing voice identity, General American accent and grounded timbre. Remove theatrical and dramatic delivery: shorten trailer-like pauses, flatten heightened stakes, reduce performative emphasis and use a calm 150 to 155 words-per-minute laboratory control-room cadence. Keep restrained warmth, precise diction, dry close-mic clarity and low fatigue. Never intimate, breathy, futuristic or chirpy.'
+});
+
 const sha256 = value => createHash('sha256').update(value).digest('hex');
 const json = value => `${JSON.stringify(value, null, 2)}\n`;
 const sleep = ms => new Promise(resolveSleep => setTimeout(resolveSleep, ms));
@@ -121,6 +126,29 @@ export function createAuditionRequests() {
       guidance_scale: 4
     }
   }));
+}
+
+export function createRefinementRequests(finalists) {
+  if (!Array.isArray(finalists) || finalists.length !== 2) throw new TypeError('Voice refinement requires exactly two finalists.');
+  const text = AUDITION_LINES.join(' ');
+  return finalists.map((finalist, index) => {
+    const sourceLabel = String(finalist.blindLabel || '').toUpperCase();
+    const direction = REFINEMENT_DIRECTIONS[finalist.direction];
+    if (!/^[A-Z]$/.test(sourceLabel) || !direction || !finalist.generatedVoiceId) throw new TypeError('Voice refinement finalist is incomplete.');
+    return {
+      sourceLabel,
+      sourceDirection: finalist.direction,
+      generatedVoiceId: finalist.generatedVoiceId,
+      body: {
+        voice_description: direction,
+        text,
+        auto_generate_text: false,
+        loudness: 0.05,
+        seed: 5201 + index,
+        guidance_scale: 3
+      }
+    };
+  });
 }
 
 export function stableCueSeed(cueId) {
@@ -254,10 +282,134 @@ function argumentValue(args, name) {
   return index >= 0 ? args[index + 1] : null;
 }
 
+function refinementLabels(args) {
+  const labels = String(argumentValue(args, '--finalists') || 'B,E').toUpperCase().split(',').map(label => label.trim()).filter(Boolean);
+  if (labels.length !== 2 || new Set(labels).size !== 2 || labels.some(label => !/^[A-Z]$/.test(label))) {
+    throw new Error('Refine exactly two round-one labels with --finalists B,E.');
+  }
+  return labels;
+}
+
+async function refineVoices(args) {
+  const roundOnePath = resolve(WORK_ROOT, 'private', 'provenance-map.json');
+  if (!existsSync(roundOnePath)) throw new Error('Run the round-one audition stage first.');
+  const labels = refinementLabels(args);
+  const roundOne = JSON.parse(readFileSync(roundOnePath, 'utf8'));
+  const finalists = labels.map(label => roundOne.candidates.find(item => item.blindLabel === label));
+  if (finalists.some(item => !item)) throw new Error(`Round-one finalists ${labels.join(',')} do not all exist.`);
+
+  const refinementRoot = resolve(WORK_ROOT, 'refinement-round-2');
+  const auditionRoot = resolve(refinementRoot, 'auditions');
+  const blindRoot = resolve(refinementRoot, 'blind');
+  const privateRoot = resolve(WORK_ROOT, 'private');
+  const progressPath = resolve(privateRoot, 'refinement-round-2-progress.json');
+  const provenancePath = resolve(privateRoot, 'refinement-round-2-provenance.json');
+  ensureDir(auditionRoot); ensureDir(blindRoot); ensureDir(privateRoot);
+
+  if (existsSync(provenancePath)) {
+    const existing = JSON.parse(readFileSync(provenancePath, 'utf8'));
+    return {
+      existing: true,
+      candidateCount: existing.candidates.length,
+      blindDirectory: relative(ROOT, blindRoot).replaceAll('\\', '/'),
+      paidProviderCalls: 0
+    };
+  }
+
+  writeJson(resolve(blindRoot, 'round-1-finalists.json'), {
+    schemaVersion: 1,
+    recordedAt: new Date().toISOString(),
+    finalists: labels,
+    criteria: ['clarity at low phone volume', 'technical trust', 'low fatigue', 'Control Room fit'],
+    note: 'Round-one provenance was opened only after these finalists were recorded.'
+  });
+
+  const key = requireApiKey();
+  const progress = existsSync(progressPath)
+    ? JSON.parse(readFileSync(progressPath, 'utf8'))
+    : { schemaVersion: 1, finalists: labels, baseVoices: [], candidates: [] };
+  if (progress.finalists.join(',') !== labels.join(',')) throw new Error('Existing refinement progress belongs to different finalists.');
+  const requests = createRefinementRequests(finalists);
+  let paidProviderCalls = 0;
+
+  for (const request of requests) {
+    let baseVoice = progress.baseVoices.find(item => item.sourceLabel === request.sourceLabel);
+    if (!baseVoice) {
+      const created = await providerRequest('/v1/text-to-voice', {
+        key,
+        body: {
+          voice_name: `Flightglass Finalist ${request.sourceLabel} Base`,
+          voice_description: VOICE_DIRECTIONS[request.sourceDirection],
+          generated_voice_id: request.generatedVoiceId,
+          labels: { accent: 'American', age: 'adult', gender: 'female', use_case: 'education', stage: 'temporary-finalist' }
+        }
+      });
+      baseVoice = { sourceLabel: request.sourceLabel, voiceId: created.voice_id, voiceName: created.name };
+      progress.baseVoices.push(baseVoice);
+      writeJson(progressPath, progress);
+    }
+
+    if (progress.candidates.some(item => item.sourceLabel === request.sourceLabel)) continue;
+    const response = await providerRequest(`/v1/text-to-voice/${encodeURIComponent(baseVoice.voiceId)}/remix?output_format=${SOURCE_FORMAT}`, {
+      key,
+      body: request.body
+    });
+    paidProviderCalls += 1;
+    for (const [index, preview] of response.previews.entries()) {
+      const path = resolve(auditionRoot, `source-${request.sourceLabel}-${index + 1}.mp3`);
+      writeFileSync(path, Buffer.from(preview.audio_base_64, 'base64'));
+      progress.candidates.push({
+        sourceLabel: request.sourceLabel,
+        sourceDirection: request.sourceDirection,
+        variant: index + 1,
+        generatedVoiceId: preview.generated_voice_id,
+        durationSeconds: preview.duration_secs,
+        mediaType: preview.media_type,
+        sourceFile: relative(WORK_ROOT, path).replaceAll('\\', '/'),
+        refinementDescriptionSha256: sha256(request.body.voice_description),
+        auditionTextSha256: sha256(request.body.text)
+      });
+    }
+    writeJson(progressPath, progress);
+  }
+
+  const mapping = shuffled(progress.candidates).map((candidate, index) => ({ blindLabel: `R2-${String.fromCharCode(65 + index)}`, ...candidate }));
+  for (const candidate of mapping) {
+    copyFileSync(resolve(WORK_ROOT, candidate.sourceFile), resolve(blindRoot, `${candidate.blindLabel}.mp3`));
+  }
+  writeJson(provenancePath, {
+    schemaVersion: 1,
+    round: 2,
+    createdAt: new Date().toISOString(),
+    provider: 'ElevenLabs',
+    roundOneFinalists: labels,
+    candidates: mapping
+  });
+  writeJson(resolve(blindRoot, 'instructions.json'), {
+    schemaVersion: 1,
+    round: 2,
+    criteria: ['clarity at low phone volume', 'technical trust', 'low fatigue', 'Control Room fit'],
+    auditionLines: AUDITION_LINES,
+    verdictTemplate: { winner: null, clarity: null, trust: null, lowFatigue: null, notes: '' },
+    warning: 'Do not open ../../private/refinement-round-2-provenance.json until the round-two verdict is recorded.'
+  });
+  return {
+    candidateCount: mapping.length,
+    blindDirectory: relative(ROOT, blindRoot).replaceAll('\\', '/'),
+    paidProviderCalls,
+    temporaryBaseVoicesCreated: progress.baseVoices.length
+  };
+}
+
+export function selectionProvenanceFile(candidate) {
+  const label = String(candidate || '').toUpperCase();
+  if (!/^(?:[A-Z]|R2-[A-F])$/.test(label)) throw new Error('Select one blind label with --candidate A or --candidate R2-A.');
+  return label.startsWith('R2-') ? 'refinement-round-2-provenance.json' : 'provenance-map.json';
+}
+
 async function selectVoice(args) {
   const label = String(argumentValue(args, '--candidate') || '').toUpperCase();
-  if (!/^[A-Z]$/.test(label)) throw new Error('Select one blind label with --candidate A.');
-  const provenancePath = resolve(WORK_ROOT, 'private', 'provenance-map.json');
+  const provenancePath = resolve(WORK_ROOT, 'private', selectionProvenanceFile(label));
   if (!existsSync(provenancePath)) throw new Error('Run the audition stage first.');
   const provenance = JSON.parse(readFileSync(provenancePath, 'utf8'));
   const candidate = provenance.candidates.find(item => item.blindLabel === label);
@@ -278,7 +430,8 @@ async function selectVoice(args) {
     selectedAt: new Date().toISOString(),
     provider: 'ElevenLabs',
     blindCandidate: label,
-    sourceDirection: candidate.direction,
+    sourceDirection: candidate.direction || candidate.sourceDirection,
+    refinementSourceLabel: candidate.sourceLabel || null,
     generatedVoiceId: candidate.generatedVoiceId,
     voiceId: selected.voice_id,
     voiceName: selected.name,
@@ -381,7 +534,23 @@ async function generatePack(args) {
 function dryRun(command, args) {
   const inventory = academyVoiceInventory();
   if (command === 'audition') return { dryRun: true, command, paidProviderCalls: 3, characters: createAuditionRequests().reduce((sum, request) => sum + request.body.text.length, 0), executeWith: 'npm run voice:audition -- --execute --confirm-paid-api' };
-  if (command === 'select') return { dryRun: true, command, candidate: argumentValue(args, '--candidate'), externalMutation: 'Creates the selected designed voice in the ElevenLabs account', executeWith: 'npm run voice:select -- --candidate A --execute --confirm-paid-api' };
+  if (command === 'refine') {
+    const finalists = refinementLabels(args);
+    return {
+      dryRun: true,
+      command,
+      finalists,
+      temporaryVoiceCreations: 2,
+      paidProviderCalls: 2,
+      characters: AUDITION_LINES.join(' ').length * 2,
+      expectedBlindCandidates: 6,
+      executeWith: `npm run voice:refine -- --finalists ${finalists.join(',')} --execute --confirm-paid-api`
+    };
+  }
+  if (command === 'select') {
+    const candidate = String(argumentValue(args, '--candidate') || 'A').toUpperCase();
+    return { dryRun: true, command, candidate, externalMutation: 'Creates the selected designed voice in the ElevenLabs account', executeWith: `npm run voice:select -- --candidate ${candidate} --execute --confirm-paid-api` };
+  }
   if (command === 'generate') return { dryRun: true, command, paidProviderCalls: inventory.apiCallsForFullGeneration, spokenCharacters: inventory.spokenCharacters, resumeSafe: true, executeWith: 'npm run voice:generate -- --execute --confirm-paid-api' };
   return { dryRun: true, command };
 }
@@ -396,9 +565,10 @@ export async function main(argv = process.argv.slice(2)) {
     workRootIgnored: true,
     paidCallMade: false
   };
-  if (!['audition', 'select', 'generate'].includes(command)) throw new Error(`Unknown Academy voice-production command: ${command}`);
+  if (!['audition', 'refine', 'select', 'generate'].includes(command)) throw new Error(`Unknown Academy voice-production command: ${command}`);
   if (!paidExecutionRequested(args)) return dryRun(command, args);
   if (command === 'audition') return createAuditions();
+  if (command === 'refine') return refineVoices(args);
   if (command === 'select') return selectVoice(args);
   return generatePack(args);
 }

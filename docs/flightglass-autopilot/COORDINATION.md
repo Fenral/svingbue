@@ -13,7 +13,7 @@ wait.
 
 | Agent | Branch | Working on | Since |
 |-------|--------|-----------|-------|
-| Codex | `agent/academy-codex` | Voice refinement round 2: `scripts/academy-voice-production*`, `package.json`, voice runbook; ignored audio/provenance only | 2026-07-16 |
+| _None_ | — | — | — |
 
 ## Queue / free to take
 
@@ -30,6 +30,13 @@ wait.
   pair before build.
 
 ## Done / handed off
+
+- Academy Voice refinement round 2 — `agent/academy-codex`; B and E were
+  recorded as round-one finalists, each received one subtle ElevenLabs Remix,
+  and six unique `R2-*` candidates were generated under ignored local
+  provenance. The resumable `voice:refine` and round-two `voice:select` paths
+  are documented and covered by the green 27-test Voice suite. Final blind
+  selection and full 102-cue generation remain pending.
 
 - Flightglass model/effort routing — `agent/academy-codex`; the normal route is
   Terra/medium, Luna/low owns lightweight deterministic work, and Sol/high is

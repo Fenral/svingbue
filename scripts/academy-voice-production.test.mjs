@@ -10,10 +10,12 @@ import {
   academyVoiceInventory,
   buildFfmpegArgs,
   createAuditionRequests,
+  createRefinementRequests,
   createTtsRequest,
   loadElevenLabsApiKey,
   paidExecutionRequested,
   safeCueStem,
+  selectionProvenanceFile,
   speakableText,
   stableCueSeed
 } from './academy-voice-production.mjs';
@@ -48,6 +50,28 @@ test('audition stage compares target, theatrical and generic directions on ident
   assert.ok(requests[0].body.text.length >= 100 && requests[0].body.text.length <= 1000);
   assert.equal(new Set(requests.map(request => request.body.text)).size, 1);
   assert.equal(requests.some(request => 'xi-api-key' in request.body), false);
+});
+
+test('refinement stage preserves B and E identity while correcting different delivery risks', () => {
+  const requests = createRefinementRequests([
+    { blindLabel: 'B', direction: 'target', generatedVoiceId: 'generated-b' },
+    { blindLabel: 'E', direction: 'theatrical', generatedVoiceId: 'generated-e' }
+  ]);
+  assert.deepEqual(requests.map(request => request.sourceLabel), ['B', 'E']);
+  assert.deepEqual(requests.map(request => request.generatedVoiceId), ['generated-b', 'generated-e']);
+  assert.equal(new Set(requests.map(request => request.body.text)).size, 1);
+  assert.match(requests[0].body.voice_description, /restrained|emphatic/i);
+  assert.match(requests[1].body.voice_description, /theatrical|dramatic/i);
+  assert.equal(requests.every(request => request.body.auto_generate_text === false), true);
+  assert.equal(requests.every(request => request.body.text.length >= 100 && request.body.text.length <= 1000), true);
+  assert.equal(requests.every(request => request.body.loudness <= 0.1), true);
+  assert.equal(requests.some(request => 'xi-api-key' in request.body), false);
+});
+
+test('round-two selection stays on its separate private provenance map', () => {
+  assert.equal(selectionProvenanceFile('B'), 'provenance-map.json');
+  assert.equal(selectionProvenanceFile('r2-e'), 'refinement-round-2-provenance.json');
+  assert.throws(() => selectionProvenanceFile('R3-A'));
 });
 
 test('TTS request preserves caption truth while expanding spoken rpm', () => {

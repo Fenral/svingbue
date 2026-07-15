@@ -36,6 +36,7 @@ These commands make no paid call:
 npm run voice:inventory
 npm run voice:preflight
 npm run voice:audition
+npm run voice:refine -- --finalists B,E
 npm run voice:generate
 ```
 
@@ -48,14 +49,34 @@ npm run voice:audition -- --execute --confirm-paid-api
 
 Listen only to `.voice-production/control-room-en-us-v1/blind/A.mp3` and the
 other lettered files. Record a winner for clarity, trust and low fatigue before
-opening `private/provenance-map.json`. Then create the selected designed voice:
+opening `private/provenance-map.json`.
+
+If two finalists cannot be separated, record their labels and run one
+refinement round. This creates two temporary base voices and makes two paid
+Remix calls; it does not overwrite round one:
+
+```powershell
+npm run voice:refine -- --finalists B,E
+npm run voice:refine -- --finalists B,E --execute --confirm-paid-api
+```
+
+Listen only to the six files under
+`.voice-production/control-room-en-us-v1/refinement-round-2/blind/`, then record
+one `R2-*` winner before opening the private round-two provenance. Round two is
+resume-safe and returns the existing candidates when rerun.
+
+Create the selected designed voice from either round:
 
 ```powershell
 npm run voice:select -- --candidate A --execute --confirm-paid-api
+npm run voice:select -- --candidate R2-A --execute --confirm-paid-api
 ```
 
-Replace `A` with the recorded blind winner. Generate the complete resumable
-pack only after that selection:
+Run only one of those commands and replace the example with the recorded blind
+winner. Keep the two temporary finalist voices until the final voice is created;
+then remove the temporary voices from the ElevenLabs account after recording
+their IDs in the private provenance. Generate the complete resumable pack only
+after final selection:
 
 ```powershell
 npm run voice:generate -- --execute --confirm-paid-api
