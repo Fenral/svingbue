@@ -13,7 +13,7 @@ publication after all Phase 8 gates pass. See `RELEASE-AUTHORIZATION.md`.
 | 3 · Outcome / Compare | Ready | Decisions and references locked in master plan |
 | 4 · Geometry 3D / Strike Window 2D | Ready | Consensus documents named |
 | 5 · Academy overview | Batch 0 implemented; acceptance held | Native Home/store/registry/router/host and caption-ready Voice foundation are coded and packaged; visual, audio-rights and human gates remain open |
-| 6 · Academy lesson system | Backspin STUDIO-GRADE base; Start Line + Shape + Carry Side implemented | Three outcome experiences now own native S0–S5 renderers, raw mastery gates and caption-ready cues; later curriculum batches remain sequential |
+| 6 · Academy lesson system | Backspin STUDIO-GRADE base; four outcome experiences implemented | Start Line, Shape, Carry Side and Up or Down at Impact own native S0–S5 renderers, raw mastery gates and caption-ready cues; later curriculum batches remain sequential |
 | 7 · Paywall | Ready | Pricing and compatibility rules locked |
 | 8 · Convergence and release QA | Ready | Global gates locked |
 
@@ -211,6 +211,38 @@ Batch 3 is **source-complete but not release-accepted**. Pairwise, licensed
 audio/rights/listening and device/human gates remain open and fail-closed. Owner
 authorization allows the source loop to continue to Batch 4 Up or Down at
 Impact.
+
+## Academy Batch 4 implementation checkpoint
+
+Up or Down at Impact source implementation is complete on
+`agent/academy-codex` at `4902562`. The canonical `attack-at-impact` route and
+legacy `attack-angle` route share a native S0–S5 side-on tangent instrument.
+The outcome lab separates clubhead travel, face orientation and ball launch;
+the mandatory live gate removes direct Attack control and derives one
+descending then one ascending state from the unchanged rigid-circle engine.
+
+Fresh implementation evidence on 2026-07-15:
+
+- Model/content: 13/13 PASS across five protected flight fixtures, six
+  protected geometry fixtures, exact per-degree sensitivities, vertical-depth
+  invariance, every live provenance/near-miss gate, seven cues and inference
+  boundaries.
+- Browser contract: 4/4 Chromium and 4/4 WebKit PASS. It covers canonical and
+  legacy routes, S0–S5 progression, reduced motion, tangent/loft/launch
+  separation, hidden-number mastery, raw near misses, Practiced without live,
+  two-sign mastery, reload and one-time XP.
+- Legacy Attack Angle completion becomes reviewable Practiced evidence without
+  automatic mastery or reward.
+- Full `npm run test:academy`: 92/92 foundation plus 83/83
+  integration/browser PASS. Development voice verification reports 40 exact
+  captions and zero remote or runtime audio.
+- Brand verification and fresh `npm run copy-web` PASS. Mission and live gate
+  were visually inspected at 430×932. All four protected hashes exactly match
+  the pre-batch baseline.
+
+Batch 4 is **source-complete but not release-accepted**. Pairwise, licensed
+audio/rights/listening and device/human gates remain open and fail-closed. Owner
+authorization allows the source loop to continue to Batch 5 Low Point.
 
 The Backspin 96-97 reference lesson (Phase 6, Tasks 1-11) completed final
 verification on 2026-07-14. Task 10 shipped the lesson through the native

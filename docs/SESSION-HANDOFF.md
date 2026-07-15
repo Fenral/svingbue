@@ -7,7 +7,7 @@ Updated: 2026-07-15
 - Remote: `Fenral/svingbue`
 - Working branch for this handoff: `agent/academy-codex`, rebased on
   `agent/travel-sync` commit `2978756`.
-- Purpose: recoverable Batch 0–3 implementation and truthful verification
+- Purpose: recoverable Batch 0–4 implementation and truthful verification
   evidence. This branch is not a release branch.
 - Repository visibility: private, verified on 2026-07-13.
 
@@ -20,21 +20,21 @@ identity concept pages are preserved in `docs/concepts/flightglass/`.
 Phase 0 is complete and the Backspin reference shell remains STUDIO-GRADE.
 Academy Batch 0 is implemented through `449fc1c`; Batch 1 Start Line is source-
 complete at `3ba5a83`; Batch 2 Shape is source-complete at `7ea653b`; Batch 3
-Carry Side is source-complete at `a4d075d`. Carry Side adds the three-bracket
-start/curve/carry-plane instrument, an explicitly outcome-only composer,
-legacy Offline migration and mandatory mirrored engine captures. Read
+Carry Side is source-complete at `a4d075d`; Batch 4 Up or Down at Impact is
+source-complete at `4902562`. Batch 4 adds a side-on tangent instrument,
+protected flight/geometry adapters, legacy Attack Angle migration and mandatory
+descending/ascending engine captures. Read
 `docs/FLIGHTGLASS-CLAUDE-CODE-MASTER-PLAN.md`, the Academy rollout index and
 `docs/flightglass-autopilot/STATUS.md` before implementation.
 
-Fresh Batch 3 automated evidence is green: Carry Side model/content 12/12,
-browser 4/4 in each engine, Academy foundation 78/78 and full integration/browser
-79/79. Brand and native package parity pass, and protected physics hashes are
-unchanged. The voice pack now has 33 exact local captions and zero licensed audio assets;
+Fresh Batch 4 automated evidence is green: model/content 13/13, browser 4/4 in
+each engine, Academy foundation 92/92 and full integration/browser 83/83. Brand
+and native package parity pass, and protected physics hashes are unchanged. The
+voice pack now has 40 exact local captions and zero licensed audio assets;
 strict release verification remains fail-closed. Pairwise-blind UI judgment and
 physical-device/VoiceOver/audio/fatigue checks also remain open. Therefore
-Batches 0–3 are implemented, **not release-accepted**. The owner explicitly
-authorized sequential source work to continue; Batch 4 Up or Down at Impact is
-next.
+Batches 0–4 are implemented, **not release-accepted**. The owner explicitly
+authorized sequential source work to continue; Batch 5 Low Point is next.
 
 Use `docs/flightglass-autopilot/academy-batch-loop-prompt.md` for the next loop.
 The two committed Home captures are under `outputs/academy-batch0/`; temporary
@@ -278,15 +278,15 @@ contains documentation only.
 
 ## Exact next actions
 
-1. Claim Batch 4 Up or Down at Impact in `COORDINATION.md`, then execute its
+1. Claim Batch 5 Low Point in `COORDINATION.md`, then execute its
    exact spec/plan pair TDD-first without changing a protected physics engine.
-2. Preserve Backspin, all legacy routes/storage and the completed Batch 0–3
+2. Preserve Backspin, all legacy routes/storage and the completed Batch 0–4
    renderers; run focused model/content/browser gates in both engines.
 3. Keep gate acceptance separate from derived scores: zero critical defects,
    every category floor, all critical checks and pairwise-blind must each pass.
 4. Update STATUS/HANDOFF with exact evidence and protected hashes, then secret
-   scan, stage only intended files, commit and push Batch 4.
-5. Continue automatically to Batch 5 only after Batch 4 source gates pass; do not ask
+   scan, stage only intended files, commit and push Batch 5.
+5. Continue automatically to Batch 6 only after Batch 5 source gates pass; do not ask
    for module approval between batches unless an explicit rollout stop condition
    occurs.
 6. Owner runs the physical-iPhone performance session, manual VoiceOver and
