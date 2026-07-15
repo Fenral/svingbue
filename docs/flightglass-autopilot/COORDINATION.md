@@ -13,7 +13,7 @@ wait.
 
 | Agent | Branch | Working on | Since |
 |-------|--------|-----------|-------|
-| Codex | `agent/academy-codex` | Batch 12 — Air Density source implementation + regressions | 2026-07-15 |
+| Codex | `agent/academy-codex` | Batch 13 — Wind source implementation + regressions | 2026-07-15 |
 
 ## Queue / free to take
 
@@ -31,6 +31,9 @@ wait.
 
 ## Done / handed off
 
+- Academy Batch 12 Air Density source implementation — `agent/academy-codex`,
+  commit `6d66a3e`; immutable engine baseline, combined air proxy, same-shot
+  mastery, eight voice cues and both browser engines green.
 - Academy Batch 11 Carry source implementation — `agent/academy-codex`, commit
   `360dcfb`; protected Carry/Total adapter, shared-plane mastery, seven voice
   cues and both browser engines green.
