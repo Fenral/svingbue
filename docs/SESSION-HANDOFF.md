@@ -7,7 +7,7 @@ Updated: 2026-07-15
 - Remote: `Fenral/svingbue`
 - Working branch for this handoff: `agent/academy-codex`, rebased on
   `agent/travel-sync` commit `2978756`.
-- Purpose: recoverable Batch 0–1 implementation and truthful verification
+- Purpose: recoverable Batch 0–2 implementation and truthful verification
   evidence. This branch is not a release branch.
 - Repository visibility: private, verified on 2026-07-13.
 
@@ -19,21 +19,20 @@ identity concept pages are preserved in `docs/concepts/flightglass/`.
 
 Phase 0 is complete and the Backspin reference shell remains STUDIO-GRADE.
 Academy Batch 0 is implemented through `449fc1c`; Batch 1 Start Line is source-
-complete at `3ba5a83`. Start Line now has its native S0–S5 departure instrument,
-model adapter, content/sheets, myths, deterministic two-phase mastery transfer,
-shared-store reward transaction and six caption-ready voice cues. Read
+complete at `3ba5a83`; Batch 2 Shape is source-complete at `7ea653b`. Shape adds
+the same-start tunnel, Face-to-Path/Spin Axis/Curve chain, Carry amplifier,
+legacy alias migration and mandatory left/right live captures. Read
 `docs/FLIGHTGLASS-CLAUDE-CODE-MASTER-PLAN.md`, the Academy rollout index and
 `docs/flightglass-autopilot/STATUS.md` before implementation.
 
-Fresh Batch 1 automated evidence is green: model/content 10/10, Start Line
-browser 6/6 in each engine, Academy foundation 53/53, full integration/browser
-71/71, perf 2/2 and visual regression 3/3 without baseline changes. Brand and
-native package parity pass, and protected physics hashes are unchanged. The
-voice pack now has 17 exact local captions and zero licensed audio assets;
+Fresh Batch 2 automated evidence is green: Shape model/content 11/11, Shape
+browser 4/4 in each engine, Academy foundation 65/65 and full integration/browser
+75/75. Brand and native package parity pass, and protected physics hashes are
+unchanged. The voice pack now has 25 exact local captions and zero licensed audio assets;
 strict release verification remains fail-closed. Pairwise-blind UI judgment and
 physical-device/VoiceOver/audio/fatigue checks also remain open. Therefore
-Batches 0–1 are implemented, **not release-accepted**. The owner explicitly
-authorized sequential source work to continue; Batch 2 Shape is next.
+Batches 0–2 are implemented, **not release-accepted**. The owner explicitly
+authorized sequential source work to continue; Batch 3 Carry Side is next.
 
 Use `docs/flightglass-autopilot/academy-batch-loop-prompt.md` for the next loop.
 The two committed Home captures are under `outputs/academy-batch0/`; temporary

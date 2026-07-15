@@ -13,7 +13,7 @@ publication after all Phase 8 gates pass. See `RELEASE-AUTHORIZATION.md`.
 | 3 · Outcome / Compare | Ready | Decisions and references locked in master plan |
 | 4 · Geometry 3D / Strike Window 2D | Ready | Consensus documents named |
 | 5 · Academy overview | Batch 0 implemented; acceptance held | Native Home/store/registry/router/host and caption-ready Voice foundation are coded and packaged; visual, audio-rights and human gates remain open |
-| 6 · Academy lesson system | Backspin STUDIO-GRADE base; Start Line implemented | Start Line now owns its native S0–S5 renderer, raw model adapter, mandatory transfer gate and six caption-ready cues; later curriculum batches remain sequential |
+| 6 · Academy lesson system | Backspin STUDIO-GRADE base; Start Line + Shape implemented | Two outcome experiences now own native S0–S5 renderers, raw mastery gates and caption-ready cues; later curriculum batches remain sequential |
 | 7 · Paywall | Ready | Pricing and compatibility rules locked |
 | 8 · Convergence and release QA | Ready | Global gates locked |
 
@@ -147,6 +147,37 @@ Batch 1 is **source-complete but not release-accepted**. Provenance-blind
 pairwise judgment, licensed female voice assets/rights/listening evidence and
 physical-device/VoiceOver/fatigue gates remain open. Owner authorization allows
 the source loop to continue to Batch 2 without reporting those gates as passed.
+
+## Academy Batch 2 implementation checkpoint
+
+Shape source implementation is complete on `agent/academy-codex` at `7ea653b`.
+The canonical Shape route and legacy `spin-axis`/`curve` routes share one native
+S0–S5 renderer. Its top-down tunnel measures Curve from the held Launch rail,
+not the target line; the guided proof creates straight, left and right flights
+with the same +1.0° Launch, while the amplifier proof changes Carry without
+changing modeled Spin Axis. The two-capture live gate requires learner-built
+left then right Curve with both raw Launch values inside ±0.10°.
+
+Fresh implementation evidence on 2026-07-15:
+
+- Shape model/content: 11/11 PASS, including five protected-engine fixtures,
+  every raw transfer near miss, negative-zero normalization, eight cues and
+  model/real-world boundary copy.
+- Shape browser contract: 4/4 Chromium and 4/4 WebKit PASS. Canonical/legacy
+  routes, prerequisite preview, same-start proof, Carry amplifier, boundaries,
+  Practiced without live transfer, Mastered with live transfer, reload and
+  one-time XP are covered.
+- Shape legacy migration preserves either prior concept as Practiced, makes both
+  completed concepts review-eligible and never auto-masters.
+- Full `npm run test:academy`: 65/65 foundation plus 75/75 integration/browser
+  PASS. Development voice verification reports 25 exact captions and no remote
+  or runtime audio.
+- Brand verification and fresh `npm run copy-web` PASS; all five Shape shipping
+  files match `www/`. Protected physics hashes remain unchanged.
+
+Batch 2 is **source-complete but not release-accepted**. Pairwise, licensed
+audio/rights/listening and device/human gates remain open and fail-closed. Owner
+authorization allows the source loop to continue to Batch 3 Carry Side.
 
 The Backspin 96-97 reference lesson (Phase 6, Tasks 1-11) completed final
 verification on 2026-07-14. Task 10 shipped the lesson through the native
