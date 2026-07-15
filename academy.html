@@ -13,6 +13,7 @@
 <link rel="stylesheet" href="./academy-native-lesson.css" />
 <link rel="stylesheet" href="./academy-home.css" />
 <link rel="stylesheet" href="./academy-voice.css" />
+<link rel="stylesheet" href="./academy-start-line.css" />
 <style>
   :root{
     /* ══ P3 "Ultraviolet Ember" — colour + type consumed from sa-p3.css ══
@@ -731,7 +732,7 @@
   import { freshLessonJourney, mergeLessonJourney } from './academy-lesson-journey.js';
   import { mountNativeBackspinLesson } from './academy-native-lesson.js';
   import { experienceById } from './academy-curriculum.js';
-  import { normalizeAcademyStore, setVoiceMode as updateVoiceMode, markVoiceCueSeen } from './academy-store.js';
+  import { acceptExperienceAttempt, normalizeAcademyStore, setVoiceMode as updateVoiceMode, markVoiceCueSeen } from './academy-store.js';
   import { resolveAcademyRoute } from './academy-router.js';
   import { selectAcademyAction } from './academy-journey-router.js';
   import { buildAcademyHomeViewModel, mountAcademyHome } from './academy-home.js';
@@ -740,6 +741,8 @@
   import { createAcademyVoiceSync, createVoiceTargetRegistry } from './academy-voice-sync.js';
   import { mountAcademyVoiceUi } from './academy-voice-ui.js';
   import { backspinCue, homeCue } from './academy-voice-reference-cues.js';
+  import { mountStartLineExperience } from './academy-start-line-experience.js';
+  import { startLineCue } from './academy-start-line-content.js';
 
   /* ══ DATA ══ */
   const GRAPH = JSON.parse(document.getElementById('graph-data').textContent);
@@ -1486,6 +1489,26 @@
   const experienceHost = createAcademyExperienceHost({
     root:app,
     renderers:{
+      'start-line':input => {
+        let currentSurface = Number.isInteger(input.surface) ? input.surface : 0;
+        const deliver = cueId => {
+          const cue=cueId&&startLineCue(cueId);
+          return cue?voiceController.deliverAutomatic(cue):null;
+        };
+        const cleanup=mountStartLineExperience({
+          ...input,
+          onVoiceSurface:(surface,cueId)=>{currentSurface=surface;deliver(cueId);},
+          onVoiceInterrupt:reason=>voiceController.stop(reason),
+          onVoiceMilestone:cueId=>deliver(cueId)
+        });
+        voiceUi=mountAcademyVoiceUi({
+          root:app.querySelector('[data-academy-voice-slot]'),controller:voiceController,
+          getMode:()=>store.preferences.voice.mode,showInlineChoice:false,
+          onModeChange:mode=>{if(mode!=='off')deliver(['academy.start-line.s0.entry','academy.start-line.s1.entry','academy.start-line.s2.entry','academy.start-line.s3.entry','academy.start-line.s4.entry',null][currentSurface]);}
+        });
+        voiceUi.update(voiceController.getState());
+        return cleanup;
+      },
       'backspin-native':({ surface, state:experienceState, voiceTargets:hostVoiceTargets }) => {
         const li = levelInfo(store.xp);
         let currentVoiceSurface = Number.isInteger(surface) ? surface : getJourney('backspin').surface;
@@ -1537,7 +1560,19 @@
     services:{
       voiceTargets,
       navigate:go,
-      submitMastery:submission => submission,
+      submitMastery:submission => {
+        const result=acceptExperienceAttempt(store,submission);
+        store=result.store;saveNow();return result;
+      },
+      saveProgress:(experienceId,patch) => {
+        store=normalizeAcademyStore(store);
+        const current=store.experiences[experienceId];
+        if(!current)return null;
+        const timestamp=new Date().toISOString();
+        store.experiences[experienceId]={ ...current,...patch,startedAt:current.startedAt||timestamp,lastVisitedAt:timestamp,
+          evidence:{ ...current.evidence,...(patch?.evidence||{}) } };
+        store=normalizeAcademyStore(store);saveNow();return store.experiences[experienceId];
+      },
       nextAction:() => selectAcademyAction(store)
     }
   });
@@ -1808,7 +1843,7 @@
     if (h.indexOf('#/proto') === 0) renderProto();
     else if (parsed.view === 'home') renderAcademyHome();
     else if (parsed.view === 'explore') renderPath();
-    else if (parsed.legacy && parsed.experienceId !== 'backspin' && LESSONS[parsed.conceptId]) renderLesson(parsed.conceptId);
+    else if (parsed.legacy && !['backspin','start-line'].includes(parsed.experienceId) && LESSONS[parsed.conceptId]) renderLesson(parsed.conceptId);
     else renderOutcomeExperience(parsed);
     window.scrollTo(0,0);
     // Move focus to the new view's heading on every SPA route change, but not on the very
