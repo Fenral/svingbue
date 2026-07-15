@@ -16,11 +16,13 @@ identity concept pages are preserved in `docs/concepts/flightglass/`.
 
 ## Execution state
 
-Phase 0 of the autonomous implementation package is complete. On 2026-07-13
-the owner explicitly resumed Academy after reviewing its latest state, so the
-active coded phase is the Phase 6 Backspin reference lesson. Phase 1 Home /
-Floodlights remains ready and resumes after this owner-directed sequencing
-exception. Read `docs/FLIGHTGLASS-CLAUDE-CODE-MASTER-PLAN.md` and
+Phase 0 of the autonomous implementation package is complete. The Backspin
+reference lesson and instrument gates are accepted at STUDIO-GRADE. The full
+outcome-led Academy curriculum is now implementation-ready; no production work
+for the remaining curriculum was started during planning. The next coded work
+is Academy Batch 0, the shared native Home/store host. Phase 1 Home/Floodlights
+remains ready outside this owner-directed Academy sequence. Read
+`docs/FLIGHTGLASS-CLAUDE-CODE-MASTER-PLAN.md`, the Academy rollout index and
 `docs/flightglass-autopilot/STATUS.md` before implementation.
 
 Backspin Tasks 1-11 are complete and verified on 2026-07-14. Task 10 shipped
@@ -48,8 +50,8 @@ Backspin has a separate 96-97 reference-lesson design and implementation plan:
 
 ## Academy continuation state
 
-The current Academy-overview recommendation, still awaiting an approved
-dedicated plan/spec pair, is:
+The Academy overview architecture is accepted through its dedicated design and
+implementation plan:
 
 - make Academy home a goal-led coach with one dominant Continue/Start action;
 - move the full physics constellation to a secondary Explore surface;
@@ -59,16 +61,15 @@ dedicated plan/spec pair, is:
 - use no more than four to six assessed transfer bridges instead of a general
   network of related-module links.
 
-Do not convert this recommendation into production work until the owner has
-approved the Academy architecture through the required
-`docs/superpowers/plans/*.md` + `docs/superpowers/specs/*.md` pair.
+The architecture is no longer waiting for module-by-module owner approval.
+Production work must still follow the exact sequential plan/spec pair and gate
+rules in the rollout index.
 
 The autonomous sequence is defined in
-`docs/flightglass-autopilot/academy-completion-loop.md`. Its inventory gate was
-applied on 2026-07-15: Phase 5 and all 23 non-Backspin lessons are parked because
-none has its own approved plan/spec pair. Existing path, polish, low-point and
-v2 documents remain source material, not authorization to improvise a new
-production design.
+`docs/flightglass-autopilot/academy-completion-loop.md`. Its completed inventory
+gate points to 15 exact artifact pairs: shared Home/store, 13 core experiences
+and one optional MODEL LAB. Existing path, polish, low-point and v2 documents
+remain source material; they cannot override the accepted outcome curriculum.
 
 On 2026-07-15 the owner then explicitly authorized a comprehensive,
 outcome-led planning pass for the full Academy without approval pauses between
@@ -147,18 +148,33 @@ engine Carry Side +13.4326 yd. The corrected first-order endpoints are
 +19.6251 yd for the normative head/left-cross state and +5.8006 yd for the
 tail/right-cross state. No protected physics code changed.
 
+The final planning artifacts are:
+
+- Home/store design:
+  `docs/superpowers/specs/2026-07-15-academy-home-store-migration-design.md`;
+- Home/store task plan:
+  `docs/superpowers/plans/2026-07-15-academy-home-store-migration.md`;
+- cross-curriculum audit:
+  `docs/superpowers/specs/2026-07-15-academy-cross-curriculum-acceptance-audit.md`;
+- exact 15-batch rollout and all per-experience pairings:
+  `docs/superpowers/plans/2026-07-15-academy-outcome-curriculum-rollout.md`.
+
+Planning acceptance is **PASS / READY FOR BATCH 0**. This is not production or
+release acceptance. No production file or protected physics engine changed.
+
 ## Exact next actions
 
-1. Produce the shared Academy Home/store migration specification and plan.
-2. Produce one sequential implementation plan per experience (or amendment),
-   then a Claude Code execution index that forbids multi-experience batches.
-3. Do not begin production implementation or modify `impact-flight.js` during
-   this planning goal.
-4. Keep gate acceptance separate from derived scores: zero critical defects,
+1. Start Batch 0 only from the Home/store design and implementation plan named
+   in the rollout index; do not combine it with Start Line.
+2. Execute its tasks TDD-first, preserve Backspin and legacy storage, and run
+   every focused and full gate before accepting the batch.
+3. Keep gate acceptance separate from derived scores: zero critical defects,
    every category floor, all critical checks and pairwise-blind must each pass.
-5. Owner runs the delivered §6 package: physical-iPhone performance session,
-   manual VoiceOver, and the five-person five-second test. These are release
-   checkpoints, not permission to invent missing lesson plans.
-6. Do not take a release decision or publish
-   stores until their recorded gates and the applicable release boundary pass.
-7. Push each completed planning-family checkpoint to `agent/travel-sync`.
+4. Update STATUS/HANDOFF with exact evidence and protected hashes, then secret
+   scan, stage only intended files, commit and push Batch 0.
+5. Continue automatically to Batch 1 only after Batch 0 is accepted; do not ask
+   for module approval between batches unless an explicit rollout stop condition
+   occurs.
+6. Owner runs the physical-iPhone performance session, manual VoiceOver and
+   five-person five-second test before release. Do not publish stores until all
+   release gates and authorization boundaries pass.

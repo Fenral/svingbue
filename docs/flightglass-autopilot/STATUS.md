@@ -12,8 +12,8 @@ publication after all Phase 8 gates pass. See `RELEASE-AUTHORIZATION.md`.
 | 2 · Range / Visualise | Ready | Decisions and references locked in master plan |
 | 3 · Outcome / Compare | Ready | Decisions and references locked in master plan |
 | 4 · Geometry 3D / Strike Window 2D | Ready | Consensus documents named |
-| 5 · Academy overview | Planning active | Outcome-led curriculum blueprint complete; shared native Home/store implementation spec and plan still pending |
-| 6 · Academy lesson system | Backspin STUDIO-GRADE (Tasks 1-20); remaining curriculum planning active | Every outcome family is complete at experience-specification level; shared Home/store, implementation plans and cross-audit still pending; no new production implementation started |
+| 5 · Academy overview | Planned / ready for implementation | Native Home/store/registry/router/voice migration has an accepted design, task plan and Batch 0 handoff |
+| 6 · Academy lesson system | Backspin STUDIO-GRADE; full curriculum implementation-ready | 13 core experiences plus one optional MODEL LAB have complete spec/plan pairs, cross-audit and sequential rollout index; no new production implementation started |
 | 7 · Paywall | Ready | Pricing and compatibility rules locked |
 | 8 · Convergence and release QA | Ready | Global gates locked |
 
@@ -118,22 +118,23 @@ loop iterations that already have approved plans/specs.
 ## Academy completion loop
 
 `docs/flightglass-autopilot/academy-completion-loop.md` now governs the Academy
-sequence. The required plan/spec inventory was checked on 2026-07-15:
+sequence. The required plan/spec inventory was completed and checked on
+2026-07-15:
 
-- Backspin has an approved implementation plan and design spec; Tasks 1-20 are
-  closed by the STUDIO-GRADE acceptance above.
-- Phase 5 Academy overview is parked as `waiting for plan from owner`. Existing
-  path/polish notes are inputs, but no required dedicated
-  `docs/superpowers/plans/*.md` + `docs/superpowers/specs/*.md` pair exists.
-- All 23 remaining lessons are parked for the same reason: `club-speed`,
-  `dynamic-loft`, `attack-angle`, `face-angle`, `club-path`, `low-point`,
-  `strike-depth`, `plane-coupling`, `carry`, `spin-loft`, `smash`, `ball-speed`,
-  `launch-angle`, `start-direction`, `spin-axis`, `apex`, `landing-angle`,
-  `total`, `curve`, `offline`, `altitude`, `wind`, `temperature`.
+- Batch 0 has the dedicated native Academy Home/store migration design and
+  implementation plan.
+- Batches 1-13 cover the 13 core outcome experiences, including the accepted
+  Backspin base plus its compatibility amendment.
+- Batch 14 is the optional Plane Coupling MODEL LAB and cannot affect core
+  completion, XP or recommendations.
+- All 24 legacy topic IDs have one owner and retain migration/deep-link
+  compatibility.
+- Every batch has an exact specification/implementation-plan pair in
+  `docs/superpowers/plans/2026-07-15-academy-outcome-curriculum-rollout.md`.
 
-There is no further Academy implementation item with the required approved
-plan/spec pair. The next loop iteration begins when one such pair is added;
-product design is not improvised from older notes.
+The loop may now execute the accepted batches sequentially without
+module-by-module owner approval. It must still stop for the rollout index's
+explicit escalation conditions and preserve all release/device/human gates.
 
 ## Academy outcome-curriculum planning checkpoint
 
@@ -256,9 +257,24 @@ one automatic entry line per surface, with only rare first-time consequence or
 recovery cues under an eight-signature experience budget.
 
 The audit decision is specification PASS for implementation planning, not
-production acceptance. Planning remains incomplete. Shared Academy Home/store
-migration, per-experience implementation plans and the final Claude Code
-handoff are still required before the planning program can be called complete.
+production acceptance.
+
+The complete planning program is now **ACCEPTED / READY FOR BATCH 0**:
+
+- shared Academy Home/store/registry/router/voice/store migration design and
+  task plan are complete;
+- every one of the 14 experience rows has a dedicated sequential
+  implementation plan;
+- the final rollout index pairs all 15 batches with exact authoritative
+  artifacts, execution order, TDD loop, stop conditions, acceptance gates,
+  regressions and Claude Code handoff;
+- `docs/flightglass-autopilot/academy-completion-loop.md` now starts Batch 0 and
+  proceeds automatically between accepted batches.
+
+No production source or protected physics engine changed during planning. The
+next action is Batch 0 only: implement the shared native Home/store host from
+its exact spec/plan pair, collect fresh gate evidence, commit/push acceptance,
+then continue to Batch 1.
 
 ## Parked refinements (non-blocking, reference-shell polish)
 
