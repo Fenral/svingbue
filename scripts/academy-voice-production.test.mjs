@@ -6,16 +6,20 @@ import { join } from 'node:path';
 import {
   ALTERNATIVE_DIRECTIONS,
   AUDITION_LINES,
+  PACE_REFINEMENT_DIRECTION,
   VOICE_DIRECTIONS,
   academyVoiceCatalog,
   academyVoiceInventory,
   buildFfmpegArgs,
   createAuditionRequests,
   createAlternativeRequests,
+  createPaceRefinementRequest,
   createRefinementRequests,
   createTtsRequest,
   loadElevenLabsApiKey,
+  main,
   paidExecutionRequested,
+  productionSpeed,
   safeCueStem,
   selectionProvenanceFile,
   speakableText,
@@ -80,11 +84,31 @@ test('alternative round explores three distinct Flightglass brand voices on iden
   assert.equal(requests.some(request => 'xi-api-key' in request.body), false);
 });
 
+test('pace refinement preserves one R3 identity while explicitly slowing the delivery', () => {
+  const request = createPaceRefinementRequest({
+    blindLabel: 'R3-D',
+    direction: 'flightDirector',
+    generatedVoiceId: 'generated-r3-d'
+  });
+  assert.equal(request.sourceLabel, 'R3-D');
+  assert.equal(request.sourceDirection, 'flightDirector');
+  assert.equal(request.generatedVoiceId, 'generated-r3-d');
+  assert.equal(request.body.text, AUDITION_LINES.join(' '));
+  assert.equal(request.body.auto_generate_text, false);
+  assert.equal(request.body.loudness <= 0.1, true);
+  assert.match(PACE_REFINEMENT_DIRECTION, /preserve.*voice identity/i);
+  assert.match(PACE_REFINEMENT_DIRECTION, /150 to 160 words per minute/i);
+  assert.match(PACE_REFINEMENT_DIRECTION, /natural.*pauses/i);
+  assert.equal('xi-api-key' in request.body, false);
+  assert.throws(() => createPaceRefinementRequest({ blindLabel: 'D', generatedVoiceId: 'wrong-round' }));
+});
+
 test('round-two selection stays on its separate private provenance map', () => {
   assert.equal(selectionProvenanceFile('B'), 'provenance-map.json');
   assert.equal(selectionProvenanceFile('r2-e'), 'refinement-round-2-provenance.json');
   assert.equal(selectionProvenanceFile('r3-i'), 'alternative-round-3-provenance.json');
-  assert.throws(() => selectionProvenanceFile('R4-A'));
+  assert.equal(selectionProvenanceFile('r4-c'), 'pace-refinement-round-4-provenance.json');
+  assert.throws(() => selectionProvenanceFile('R5-A'));
 });
 
 test('TTS request preserves caption truth while expanding spoken rpm', () => {
@@ -98,6 +122,28 @@ test('TTS request preserves caption truth while expanding spoken rpm', () => {
   assert.equal(request.seed, stableCueSeed(cue.cueId));
   assert.ok(Number.isInteger(request.seed));
   assert.equal('apiKey' in request, false);
+});
+
+test('TTS pace preview and production selection share one bounded speed control', async () => {
+  const cue = academyVoiceCatalog().find(item => item.cueId === 'academy.backspin.s1.build');
+  const request = createTtsRequest(cue, { speed: 0.8 });
+  assert.equal(request.voice_settings.speed, 0.8);
+  assert.equal(productionSpeed('0.80'), 0.8);
+  assert.throws(() => productionSpeed('0.69'));
+  assert.throws(() => productionSpeed('1.21'));
+  const preview = await main(['pace-preview', '--candidate', 'R3-D', '--speed', '0.8']);
+  assert.deepEqual(preview, {
+    dryRun: true,
+    command: 'pace-preview',
+    candidate: 'R3-D',
+    speed: 0.8,
+    paidProviderCalls: 1,
+    characters: AUDITION_LINES.join(' ').length,
+    executeWith: 'npm run voice:pace-preview -- --candidate R3-D --speed 0.8 --execute --confirm-paid-api'
+  });
+  const selection = await main(['select', '--candidate', 'R3-D', '--speed', '0.8']);
+  assert.equal(selection.speed, 0.8);
+  assert.match(selection.executeWith, /--candidate R3-D --speed 0\.8/);
 });
 
 test('FFmpeg contract targets local mono AAC-LC at 48 kHz without a shell', () => {

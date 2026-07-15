@@ -38,6 +38,8 @@ npm run voice:preflight
 npm run voice:audition
 npm run voice:explore
 npm run voice:refine -- --finalists B,E
+npm run voice:pace-refine -- --candidate R3-D
+npm run voice:pace-preview -- --candidate R3-D --speed 0.8
 npm run voice:generate
 ```
 
@@ -81,12 +83,44 @@ Listen only under
 one winner before opening its private provenance map. Rerunning the command
 returns the existing candidates and makes no additional paid calls.
 
-Create the selected designed voice from either round:
+If one round-three identity is right but its prosody needs another design pass,
+preserve it through a separate refinement. This creates one temporary base
+voice and makes one paid Remix call for three blinded `R4-*` candidates:
+
+```powershell
+npm run voice:pace-refine -- --candidate R3-D
+npm run voice:pace-refine -- --candidate R3-D --execute --confirm-paid-api
+```
+
+Listen only under
+`.voice-production/control-room-en-us-v1/pace-refinement-round-4/blind/`.
+Judge preserved identity, natural pauses, technical trust and low fatigue. The
+round is resume-safe and never overwrites R3. Voice Design descriptions do not
+guarantee an exact pace, so measure every output before accepting it. Record one
+`R4-*` winner before opening its private provenance map.
+
+For exact production pacing, audition the chosen identity through the same TTS
+speed control used by full-pack generation. `0.8` is the current R3-D test
+setting and still requires listening approval:
+
+```powershell
+npm run voice:pace-preview -- --candidate R3-D --speed 0.8
+npm run voice:pace-preview -- --candidate R3-D --speed 0.8 --execute --confirm-paid-api
+```
+
+This makes one paid TTS call on the shared audition copy and writes an ignored
+MP3 under `pace-refinement-round-4/speed-previews/`. It neither selects the
+voice nor generates the full pack.
+
+Create the selected designed voice from any round. If an approved pace preview
+used a non-default speed, pass that same value to selection so full generation
+records and reuses it:
 
 ```powershell
 npm run voice:select -- --candidate A --execute --confirm-paid-api
 npm run voice:select -- --candidate R2-A --execute --confirm-paid-api
-npm run voice:select -- --candidate R3-A --execute --confirm-paid-api
+npm run voice:select -- --candidate R3-A --speed 0.8 --execute --confirm-paid-api
+npm run voice:select -- --candidate R4-A --speed 0.8 --execute --confirm-paid-api
 ```
 
 Run only one of those commands and replace the example with the recorded blind

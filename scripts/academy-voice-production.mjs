@@ -75,6 +75,8 @@ export const ALTERNATIVE_DIRECTIONS = Object.freeze({
   performanceScientist: 'Adult female elite golf performance scientist speaking General American English. Observant, practical and technically fluent with subtle athletic energy and humane curiosity. Clear grounded register, restrained warmth, concise 150 to 155 words-per-minute delivery and natural short pauses. Sounds like a scientist beside the player, never a motivational coach, virtual assistant, broadcaster, intimate narrator or theatrical character.'
 });
 
+export const PACE_REFINEMENT_DIRECTION = 'Preserve this exact voice identity, mature character, accent, authority and grounded timbre. Slow the delivery to 150 to 160 words per minute with deliberate but natural short pauses between ideas. Keep the energy controlled, the warmth restrained and the technical diction exceptionally clear at low phone volume. Do not make the voice softer, older, breathier, theatrical, coachy or robotic; change pacing and emphasis, not identity.';
+
 const sha256 = value => createHash('sha256').update(value).digest('hex');
 const json = value => `${JSON.stringify(value, null, 2)}\n`;
 const sleep = ms => new Promise(resolveSleep => setTimeout(resolveSleep, ms));
@@ -173,11 +175,37 @@ export function createAlternativeRequests() {
   }));
 }
 
+export function createPaceRefinementRequest(candidate) {
+  const sourceLabel = String(candidate?.blindLabel || '').toUpperCase();
+  if (!/^R3-[A-I]$/.test(sourceLabel) || !candidate?.direction || !candidate?.generatedVoiceId) {
+    throw new TypeError('Pace refinement requires one complete R3 candidate.');
+  }
+  return {
+    sourceLabel,
+    sourceDirection: candidate.direction,
+    generatedVoiceId: candidate.generatedVoiceId,
+    body: {
+      voice_description: PACE_REFINEMENT_DIRECTION,
+      text: AUDITION_LINES.join(' '),
+      auto_generate_text: false,
+      loudness: 0.05,
+      seed: 7401,
+      guidance_scale: 4
+    }
+  };
+}
+
 export function stableCueSeed(cueId) {
   return Number.parseInt(sha256(cueId).slice(0, 8), 16);
 }
 
-export function createTtsRequest(cue) {
+export function productionSpeed(value = 1) {
+  const speed = Number(value);
+  if (!Number.isFinite(speed) || speed < 0.7 || speed > 1.2) throw new TypeError('Academy voice speed must be between 0.7 and 1.2.');
+  return speed;
+}
+
+export function createTtsRequest(cue, { speed = 1 } = {}) {
   return {
     text: speakableText(cue.text),
     model_id: MODEL_ID,
@@ -186,7 +214,7 @@ export function createTtsRequest(cue) {
       similarity_boost: 0.75,
       style: 0.05,
       use_speaker_boost: true,
-      speed: 1
+      speed: productionSpeed(speed)
     },
     seed: stableCueSeed(cue.cueId),
     apply_text_normalization: 'on'
@@ -362,6 +390,158 @@ async function exploreAlternativeVoices() {
   };
 }
 
+function paceRefinementLabel(args) {
+  const label = String(argumentValue(args, '--candidate') || '').toUpperCase();
+  if (!/^R3-[A-I]$/.test(label)) throw new Error('Refine exactly one round-three label with --candidate R3-D.');
+  return label;
+}
+
+async function refineVoicePace(args) {
+  const roundThreePath = resolve(WORK_ROOT, 'private', 'alternative-round-3-provenance.json');
+  if (!existsSync(roundThreePath)) throw new Error('Run the round-three exploration stage first.');
+  const sourceLabel = paceRefinementLabel(args);
+  const roundThree = JSON.parse(readFileSync(roundThreePath, 'utf8'));
+  const sourceCandidate = roundThree.candidates.find(item => item.blindLabel === sourceLabel);
+  if (!sourceCandidate) throw new Error(`Round-three candidate ${sourceLabel} does not exist.`);
+  const request = createPaceRefinementRequest(sourceCandidate);
+
+  const refinementRoot = resolve(WORK_ROOT, 'pace-refinement-round-4');
+  const auditionRoot = resolve(refinementRoot, 'auditions');
+  const blindRoot = resolve(refinementRoot, 'blind');
+  const privateRoot = resolve(WORK_ROOT, 'private');
+  const progressPath = resolve(privateRoot, 'pace-refinement-round-4-progress.json');
+  const provenancePath = resolve(privateRoot, 'pace-refinement-round-4-provenance.json');
+  ensureDir(auditionRoot); ensureDir(blindRoot); ensureDir(privateRoot);
+
+  if (existsSync(provenancePath)) {
+    const existing = JSON.parse(readFileSync(provenancePath, 'utf8'));
+    if (existing.sourceCandidate !== sourceLabel) throw new Error('Existing pace refinement belongs to a different round-three candidate.');
+    return {
+      existing: true,
+      candidateCount: existing.candidates.length,
+      blindDirectory: relative(ROOT, blindRoot).replaceAll('\\', '/'),
+      paidProviderCalls: 0
+    };
+  }
+
+  writeJson(resolve(blindRoot, 'round-3-finalist.json'), {
+    schemaVersion: 1,
+    recordedAt: new Date().toISOString(),
+    finalist: sourceLabel,
+    requestedChange: 'Preserve identity; slow to 150-160 words per minute with natural pauses and controlled warmth.'
+  });
+
+  const key = requireApiKey();
+  const progress = existsSync(progressPath)
+    ? JSON.parse(readFileSync(progressPath, 'utf8'))
+    : { schemaVersion: 1, sourceCandidate: sourceLabel, baseVoice: null, candidates: [] };
+  if (progress.sourceCandidate !== sourceLabel) throw new Error('Existing pace-refinement progress belongs to a different candidate.');
+  let paidProviderCalls = 0;
+
+  if (!progress.baseVoice) {
+    const created = await providerRequest('/v1/text-to-voice', {
+      key,
+      body: {
+        voice_name: `Flightglass ${sourceLabel} Pace Base`,
+        voice_description: ALTERNATIVE_DIRECTIONS[sourceCandidate.direction] || PACE_REFINEMENT_DIRECTION,
+        generated_voice_id: request.generatedVoiceId,
+        labels: { accent: 'American', age: 'adult', gender: 'female', use_case: 'education', stage: 'temporary-pace-finalist' }
+      }
+    });
+    progress.baseVoice = { voiceId: created.voice_id, voiceName: created.name };
+    writeJson(progressPath, progress);
+  }
+
+  if (progress.candidates.length === 0) {
+    const response = await providerRequest(`/v1/text-to-voice/${encodeURIComponent(progress.baseVoice.voiceId)}/remix?output_format=${SOURCE_FORMAT}`, {
+      key,
+      body: request.body
+    });
+    paidProviderCalls += 1;
+    for (const [index, preview] of response.previews.entries()) {
+      const path = resolve(auditionRoot, `source-${sourceLabel}-${index + 1}.mp3`);
+      writeFileSync(path, Buffer.from(preview.audio_base_64, 'base64'));
+      progress.candidates.push({
+        sourceLabel,
+        sourceDirection: request.sourceDirection,
+        variant: index + 1,
+        generatedVoiceId: preview.generated_voice_id,
+        durationSeconds: preview.duration_secs,
+        mediaType: preview.media_type,
+        sourceFile: relative(WORK_ROOT, path).replaceAll('\\', '/'),
+        refinementDescriptionSha256: sha256(request.body.voice_description),
+        auditionTextSha256: sha256(request.body.text)
+      });
+    }
+    writeJson(progressPath, progress);
+  }
+
+  const mapping = shuffled(progress.candidates).map((candidate, index) => ({ blindLabel: `R4-${String.fromCharCode(65 + index)}`, ...candidate }));
+  for (const candidate of mapping) {
+    copyFileSync(resolve(WORK_ROOT, candidate.sourceFile), resolve(blindRoot, `${candidate.blindLabel}.mp3`));
+  }
+  writeJson(provenancePath, {
+    schemaVersion: 1,
+    round: 4,
+    createdAt: new Date().toISOString(),
+    provider: 'ElevenLabs',
+    sourceCandidate: sourceLabel,
+    candidates: mapping
+  });
+  writeJson(resolve(blindRoot, 'instructions.json'), {
+    schemaVersion: 1,
+    round: 4,
+    criteria: ['preserved R3 identity', '150-160 words per minute', 'natural pauses', 'technical trust', 'low fatigue'],
+    auditionLines: AUDITION_LINES,
+    verdictTemplate: { winner: null, identity: null, pace: null, trust: null, lowFatigue: null, notes: '' },
+    warning: 'Do not open ../../private/pace-refinement-round-4-provenance.json until the round-four verdict is recorded.'
+  });
+  return {
+    candidateCount: mapping.length,
+    blindDirectory: relative(ROOT, blindRoot).replaceAll('\\', '/'),
+    paidProviderCalls,
+    temporaryBaseVoicesCreated: 1
+  };
+}
+
+async function createPacePreview(args) {
+  const sourceLabel = paceRefinementLabel(args);
+  const speed = productionSpeed(argumentValue(args, '--speed') || 0.8);
+  const progressPath = resolve(WORK_ROOT, 'private', 'pace-refinement-round-4-progress.json');
+  if (!existsSync(progressPath)) throw new Error('Run pace refinement once to create the temporary R3 base voice.');
+  const progress = JSON.parse(readFileSync(progressPath, 'utf8'));
+  if (progress.sourceCandidate !== sourceLabel || !progress.baseVoice?.voiceId) {
+    throw new Error(`The temporary pace base does not belong to ${sourceLabel}.`);
+  }
+  const previewRoot = resolve(WORK_ROOT, 'pace-refinement-round-4', 'speed-previews');
+  const speedToken = speed.toFixed(2).replace('.', '_');
+  const previewPath = resolve(previewRoot, `${sourceLabel}-speed-${speedToken}.mp3`);
+  ensureDir(previewRoot);
+  if (existsSync(previewPath)) {
+    return {
+      existing: true,
+      candidate: sourceLabel,
+      speed,
+      previewFile: relative(ROOT, previewPath).replaceAll('\\', '/'),
+      paidProviderCalls: 0
+    };
+  }
+  const text = AUDITION_LINES.join(' ');
+  const key = requireApiKey();
+  const audio = await providerRequest(`/v1/text-to-speech/${encodeURIComponent(progress.baseVoice.voiceId)}?output_format=${SOURCE_FORMAT}`, {
+    key,
+    body: createTtsRequest({ cueId: `academy.voice.pace-preview.${sourceLabel.toLowerCase()}`, text }, { speed }),
+    audio: true
+  });
+  writeFileSync(previewPath, audio);
+  return {
+    candidate: sourceLabel,
+    speed,
+    previewFile: relative(ROOT, previewPath).replaceAll('\\', '/'),
+    paidProviderCalls: 1
+  };
+}
+
 function argumentValue(args, name) {
   const index = args.indexOf(name);
   return index >= 0 ? args[index + 1] : null;
@@ -488,13 +668,15 @@ async function refineVoices(args) {
 
 export function selectionProvenanceFile(candidate) {
   const label = String(candidate || '').toUpperCase();
-  if (!/^(?:[A-Z]|R2-[A-F]|R3-[A-I])$/.test(label)) throw new Error('Select one blind label with --candidate A, --candidate R2-A or --candidate R3-A.');
+  if (!/^(?:[A-Z]|R2-[A-F]|R3-[A-I]|R4-[A-C])$/.test(label)) throw new Error('Select one blind label with --candidate A, --candidate R2-A, --candidate R3-A or --candidate R4-A.');
+  if (label.startsWith('R4-')) return 'pace-refinement-round-4-provenance.json';
   if (label.startsWith('R3-')) return 'alternative-round-3-provenance.json';
   return label.startsWith('R2-') ? 'refinement-round-2-provenance.json' : 'provenance-map.json';
 }
 
 async function selectVoice(args) {
   const label = String(argumentValue(args, '--candidate') || '').toUpperCase();
+  const ttsSpeed = productionSpeed(argumentValue(args, '--speed') || 1);
   const provenancePath = resolve(WORK_ROOT, 'private', selectionProvenanceFile(label));
   if (!existsSync(provenancePath)) throw new Error('Run the audition stage first.');
   const provenance = JSON.parse(readFileSync(provenancePath, 'utf8'));
@@ -521,11 +703,12 @@ async function selectVoice(args) {
     generatedVoiceId: candidate.generatedVoiceId,
     voiceId: selected.voice_id,
     voiceName: selected.name,
+    ttsSpeed,
     modelId: MODEL_ID,
     sourceFormat: SOURCE_FORMAT
   };
   writeJson(resolve(WORK_ROOT, 'private', 'selected-voice.json'), record);
-  return { selected: true, blindCandidate: label, voiceId: record.voiceId, next: 'npm run voice:generate -- --execute --confirm-paid-api' };
+  return { selected: true, blindCandidate: label, voiceId: record.voiceId, ttsSpeed, next: 'npm run voice:generate -- --execute --confirm-paid-api' };
 }
 
 function processAudio(inputPath, outputPath) {
@@ -587,7 +770,7 @@ async function generatePack(args) {
     const finalPath = resolve(ASSET_ROOT, cue.relativeAssetPath);
     if (!existsSync(finalPath) || args.includes('--reprocess')) {
       if (!existsSync(rawPath)) {
-        const audio = await providerRequest(`/v1/text-to-speech/${encodeURIComponent(selected.voiceId)}?output_format=${SOURCE_FORMAT}`, { key, body: createTtsRequest(cue), audio: true });
+        const audio = await providerRequest(`/v1/text-to-speech/${encodeURIComponent(selected.voiceId)}?output_format=${SOURCE_FORMAT}`, { key, body: createTtsRequest(cue, { speed: selected.ttsSpeed || 1 }), audio: true });
         writeFileSync(rawPath, audio);
       }
       processAudio(rawPath, finalPath);
@@ -603,7 +786,7 @@ async function generatePack(args) {
     rightsStatus: 'pending-elevenlabs-commercial-license-evidence',
     voiceIdentityStatus: 'pending-blind-listening-gate',
     productionGuide: 'Calm General American female laboratory/control-room delivery; concise, technically confident, low fatigue; no music or theatrical effects.',
-    provider: { name: 'ElevenLabs', voiceId: selected.voiceId, modelId: MODEL_ID, generatedUnderPaidPlan: true },
+    provider: { name: 'ElevenLabs', voiceId: selected.voiceId, modelId: MODEL_ID, ttsSpeed: selected.ttsSpeed || 1, generatedUnderPaidPlan: true },
     assets: records
   };
   const manifestPath = resolve(WORK_ROOT, 'academy-voice-pack.generated.json');
@@ -642,9 +825,36 @@ function dryRun(command, args) {
       executeWith: `npm run voice:refine -- --finalists ${finalists.join(',')} --execute --confirm-paid-api`
     };
   }
+  if (command === 'pace-refine') {
+    const candidate = paceRefinementLabel(args);
+    return {
+      dryRun: true,
+      command,
+      candidate,
+      temporaryVoiceCreations: 1,
+      paidProviderCalls: 1,
+      characters: AUDITION_LINES.join(' ').length,
+      expectedBlindCandidates: 3,
+      executeWith: `npm run voice:pace-refine -- --candidate ${candidate} --execute --confirm-paid-api`
+    };
+  }
+  if (command === 'pace-preview') {
+    const candidate = paceRefinementLabel(args);
+    const speed = productionSpeed(argumentValue(args, '--speed') || 0.8);
+    return {
+      dryRun: true,
+      command,
+      candidate,
+      speed,
+      paidProviderCalls: 1,
+      characters: AUDITION_LINES.join(' ').length,
+      executeWith: `npm run voice:pace-preview -- --candidate ${candidate} --speed ${speed} --execute --confirm-paid-api`
+    };
+  }
   if (command === 'select') {
     const candidate = String(argumentValue(args, '--candidate') || 'A').toUpperCase();
-    return { dryRun: true, command, candidate, externalMutation: 'Creates the selected designed voice in the ElevenLabs account', executeWith: `npm run voice:select -- --candidate ${candidate} --execute --confirm-paid-api` };
+    const speed = productionSpeed(argumentValue(args, '--speed') || 1);
+    return { dryRun: true, command, candidate, speed, externalMutation: 'Creates the selected designed voice in the ElevenLabs account', executeWith: `npm run voice:select -- --candidate ${candidate} --speed ${speed} --execute --confirm-paid-api` };
   }
   if (command === 'generate') return { dryRun: true, command, paidProviderCalls: inventory.apiCallsForFullGeneration, spokenCharacters: inventory.spokenCharacters, resumeSafe: true, executeWith: 'npm run voice:generate -- --execute --confirm-paid-api' };
   return { dryRun: true, command };
@@ -660,11 +870,13 @@ export async function main(argv = process.argv.slice(2)) {
     workRootIgnored: true,
     paidCallMade: false
   };
-  if (!['audition', 'explore', 'refine', 'select', 'generate'].includes(command)) throw new Error(`Unknown Academy voice-production command: ${command}`);
+  if (!['audition', 'explore', 'refine', 'pace-refine', 'pace-preview', 'select', 'generate'].includes(command)) throw new Error(`Unknown Academy voice-production command: ${command}`);
   if (!paidExecutionRequested(args)) return dryRun(command, args);
   if (command === 'audition') return createAuditions();
   if (command === 'explore') return exploreAlternativeVoices();
   if (command === 'refine') return refineVoices(args);
+  if (command === 'pace-refine') return refineVoicePace(args);
+  if (command === 'pace-preview') return createPacePreview(args);
   if (command === 'select') return selectVoice(args);
   return generatePack(args);
 }

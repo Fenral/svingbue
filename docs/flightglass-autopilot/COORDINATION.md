@@ -13,7 +13,7 @@ wait.
 
 | Agent | Branch | Working on | Since |
 |-------|--------|-----------|-------|
-| Codex | `agent/academy-codex` | R3-D pace refinement; `scripts/academy-voice-production*`, `package.json`, Voice production runbook | 2026-07-16 |
+| _None_ | — | — | — |
 
 ## Queue / free to take
 
@@ -30,6 +30,14 @@ wait.
   pair before build.
 
 ## Done / handed off
+
+- Academy R3-D pace refinement — `agent/academy-codex`; one resume-safe Remix
+  produced three unique `R4-*` candidates, but measurement correctly rejected
+  their 194-200 wpm delivery. The same R3-D identity then passed through the
+  production TTS speed control at `0.8`, yielding a 159.6 wpm listening preview.
+  The selected speed can now be persisted into full-pack generation; Voice is
+  30/30 green. Final owner listening selection and 102-cue generation remain
+  pending.
 
 - Academy distinct Voice exploration round 3 — `agent/academy-codex`; Nordic
   Lab Lead, Flight Director and Performance Scientist each produced three
