@@ -3,6 +3,7 @@ import {
 } from './academy-curriculum.js';
 
 export const ACADEMY_STORE_KEY = 'strikearc.academy.v1';
+export const PLANE_COUPLING_EXPLORATION_KEY = 'academy.explore.plane-coupling-lab';
 const VOICE_MODES = new Set(['unset','voice','captions','off']);
 const iso = value => typeof value === 'string' || Number.isFinite(value) ? value : null;
 const object = value => value && typeof value === 'object' && !Array.isArray(value);
@@ -66,6 +67,14 @@ function experienceSeed(definition) {
   };
 }
 
+function explorationSeed() {
+  return {
+    schemaVersion:1, contentVersion:1, status:'not-started', previouslyExplored:false,
+    completedAt:null, attempts:0, acceptedAttemptId:null, itemsAnswered:[],
+    compensation:null, boundaryAcknowledged:false, legacyEvidence:[]
+  };
+}
+
 export function createAcademySeed() {
   const lessons = {};
   for (const conceptId of Object.keys(CONCEPT_OWNER)) lessons[conceptId] = legacyLessonSeed();
@@ -73,6 +82,7 @@ export function createAcademySeed() {
     version:1, xp:0, lessons, unlocked:[], badges:[], lastOpened:null,
     academySchemaVersion:1,
     experiences:Object.fromEntries(ACADEMY_EXPERIENCES.map(item => [item.id, experienceSeed(item)])),
+    explorations:{ [PLANE_COUPLING_EXPLORATION_KEY]:explorationSeed() },
     rewardLedger:{},
     academyHome:{ goalId:null, exploreExpanded:false, lastExperienceId:null },
     preferences:{ voice:normalizeVoicePreferences() },
@@ -150,6 +160,23 @@ export function normalizeAcademyStore(raw, { now = new Date().toISOString(), mig
   const home = object(source.academyHome) ? source.academyHome : {};
   const preferences = object(source.preferences) ? source.preferences : {};
   const migration = object(source.migration) ? source.migration : {};
+  const sourceExplorations=object(source.explorations)?source.explorations:{};
+  const sourcePlane=object(sourceExplorations[PLANE_COUPLING_EXPLORATION_KEY])?sourceExplorations[PLANE_COUPLING_EXPLORATION_KEY]:{};
+  const legacyPlane=lessons['plane-coupling'];
+  const legacyExplored=meaningfulLesson(legacyPlane);
+  const legacyCompleted=Boolean(legacyPlane?.completed||legacyPlane?.mastered);
+  const planeExploration={
+    ...explorationSeed(),...clone(sourcePlane),schemaVersion:1,contentVersion:1,
+    status:sourcePlane.status==='explored'||legacyCompleted?'explored':legacyExplored?'previously-explored':'not-started',
+    previouslyExplored:Boolean(sourcePlane.previouslyExplored||legacyExplored),
+    completedAt:iso(sourcePlane.completedAt)||(legacyCompleted?iso(legacyPlane.completedAt)||now:null),
+    attempts:Number.isInteger(sourcePlane.attempts)&&sourcePlane.attempts>=0?sourcePlane.attempts:0,
+    acceptedAttemptId:typeof sourcePlane.acceptedAttemptId==='string'?sourcePlane.acceptedAttemptId:(legacyCompleted?'legacy:plane-coupling':null),
+    itemsAnswered:unique(array(sourcePlane.itemsAnswered).filter(Number.isInteger).filter(value=>value>=0&&value<=2)),
+    compensation:object(sourcePlane.compensation)?clone(sourcePlane.compensation):null,
+    boundaryAcknowledged:Boolean(sourcePlane.boundaryAcknowledged),
+    legacyEvidence:unique([...array(sourcePlane.legacyEvidence),...(legacyExplored?['plane-coupling']:[])])
+  };
   return {
     ...base, ...source,
     version:1,
@@ -160,6 +187,7 @@ export function normalizeAcademyStore(raw, { now = new Date().toISOString(), mig
     lastOpened:source.lastOpened ?? null,
     academySchemaVersion:1,
     experiences,
+    explorations:{ ...clone(sourceExplorations),[PLANE_COUPLING_EXPLORATION_KEY]:planeExploration },
     rewardLedger,
     academyHome:{ ...clone(home), goalId:typeof home.goalId === 'string' ? home.goalId : null, exploreExpanded:Boolean(home.exploreExpanded), lastExperienceId:typeof home.lastExperienceId === 'string' ? home.lastExperienceId : null },
     preferences:{ ...clone(preferences), voice:normalizeVoicePreferences(preferences.voice || source.voice || {}) },
@@ -200,6 +228,23 @@ export function acceptExperienceAttempt(rawStore, submission, { now = new Date()
   target.status = 'mastered';
   next.xp += xpAward;
   return { store:next, accepted:true, duplicate:false, reason:'accepted', xpAwarded:xpAward, experience:clone(target) };
+}
+
+export function acceptExploration(rawStore, submission, { now = new Date().toISOString() } = {}) {
+  const store=normalizeAcademyStore(rawStore,{now});
+  const record=store.explorations[PLANE_COUPLING_EXPLORATION_KEY];
+  const fail=reason=>({store,accepted:false,duplicate:reason==='duplicate',reason,exploration:clone(record)});
+  if(!object(submission)||submission.experienceId!=='plane-coupling-lab'||submission.contentVersion!==1
+    ||typeof submission.attemptId!=='string'||!submission.attemptId||submission.knowledgeCorrect!==3
+    ||submission.knowledgeTotal!==3||submission.liveCompensationPassed!==true
+    ||submission.modelAcknowledged!==true||!object(submission.compensation)
+    ||![submission.compensation.rawLowPointCm,submission.compensation.effectiveLowPointCm].every(Number.isFinite))return fail('invalid');
+  if(record.acceptedAttemptId)return fail('duplicate');
+  const next=clone(store),target=next.explorations[PLANE_COUPLING_EXPLORATION_KEY];
+  target.status='explored';target.previouslyExplored=true;target.completedAt=now;target.attempts+=1;
+  target.acceptedAttemptId=submission.attemptId;target.itemsAnswered=[0,1,2];
+  target.compensation=clone(submission.compensation);target.boundaryAcknowledged=true;
+  return {store:next,accepted:true,duplicate:false,reason:'accepted',exploration:clone(target)};
 }
 
 export function createAcademyStorage({ storage, now = () => new Date().toISOString() } = {}) {

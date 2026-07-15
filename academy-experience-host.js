@@ -19,6 +19,7 @@ export function createAcademyExperienceHost({ root, renderers = {}, services = {
     const input = Object.freeze({ root, definition, state:clone(state), conceptId, surface, voiceTargets,
       navigate:route => services.navigate?.(route),
       submitMastery:submission => services.submitMastery?.(clone(submission)),
+      submitExploration:submission => services.submitExploration?.(clone(submission)),
       saveProgress:patch => services.saveProgress?.(definition.id, clone(patch)),
       nextAction:() => clone(services.nextAction?.(definition.id))
     });

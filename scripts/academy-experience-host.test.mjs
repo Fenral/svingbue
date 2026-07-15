@@ -19,3 +19,11 @@ test('renderer submits mastery only through the supplied transaction service', (
   host.mount({definition:{id:'a',title:'A',rendererKey:'demo'},state:{},conceptId:'face-angle'});
   input.submitMastery({attemptId:'one'}); assert.deepEqual(submitted,[{attemptId:'one'}]); assert.equal(input.conceptId,'face-angle');
 });
+
+test('renderer submits optional exploration only through its no-reward service', () => {
+  const root=fakeRoot(),submitted=[];let input;
+  const host=createAcademyExperienceHost({root,renderers:{demo:value=>{input=value;}},services:{submitExploration:value=>submitted.push(value)}});
+  host.mount({definition:{id:'lab',title:'Lab',rendererKey:'demo'},state:{}});
+  input.submitExploration({attemptId:'lab-one'});
+  assert.deepEqual(submitted,[{attemptId:'lab-one'}]);
+});

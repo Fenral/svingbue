@@ -16,13 +16,14 @@ import { SPEED_TRANSFER_CUES } from '../academy-speed-transfer-content.js';
 import { CARRY_CUES } from '../academy-carry-content.js';
 import { AIR_DENSITY_CUES } from '../academy-air-density-content.js';
 import { WIND_CUES } from '../academy-wind-content.js';
+import { PLANE_COUPLING_CUES } from '../academy-plane-coupling-content.js';
 import { ACADEMY_VOICE_LOCALE, ACADEMY_VOICE_PACK_ID } from '../academy-voice-manifest.js';
 
 const ROOT=resolve(dirname(fileURLToPath(import.meta.url)),'..');
 const sha=value=>createHash('sha256').update(value).digest('hex');
 const inside=(root,file)=>`${resolve(file)}${sep}`.toLowerCase().startsWith(`${resolve(root)}${sep}`.toLowerCase());
 
-export function verifyAcademyVoicePack({ root=ROOT, config, cues=[...ACADEMY_HOME_CUES.cues,...ACADEMY_BACKSPIN_CUES.cues,...START_LINE_CUES.cues,...SHAPE_CUES.cues,...CARRY_SIDE_CUES.cues,...ATTACK_AT_IMPACT_CUES.cues,...LOW_POINT_CUES.cues,...CONTACT_HEIGHT_CUES.cues,...DELIVERED_LOFT_LAUNCH_CUES.cues,...FLIGHT_HEIGHT_DESCENT_CUES.cues,...SPEED_TRANSFER_CUES.cues,...CARRY_CUES.cues,...AIR_DENSITY_CUES.cues,...WIND_CUES.cues], mode='development' }={}){
+export function verifyAcademyVoicePack({ root=ROOT, config, cues=[...ACADEMY_HOME_CUES.cues,...ACADEMY_BACKSPIN_CUES.cues,...START_LINE_CUES.cues,...SHAPE_CUES.cues,...CARRY_SIDE_CUES.cues,...ATTACK_AT_IMPACT_CUES.cues,...LOW_POINT_CUES.cues,...CONTACT_HEIGHT_CUES.cues,...DELIVERED_LOFT_LAUNCH_CUES.cues,...FLIGHT_HEIGHT_DESCENT_CUES.cues,...SPEED_TRANSFER_CUES.cues,...CARRY_CUES.cues,...AIR_DENSITY_CUES.cues,...WIND_CUES.cues,...PLANE_COUPLING_CUES.cues], mode='development' }={}){
   const errors=[];const records=Array.isArray(config?.assets)?config.assets:[];const byCue=new Map();
   if(config?.packId!==ACADEMY_VOICE_PACK_ID)errors.push('pack-id');
   if(config?.locale!==ACADEMY_VOICE_LOCALE)errors.push('locale');

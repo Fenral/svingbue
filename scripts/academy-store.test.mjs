@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  ACADEMY_STORE_KEY, createAcademySeed, migrateOutcomeAcademy, acceptExperienceAttempt,
+  ACADEMY_STORE_KEY, PLANE_COUPLING_EXPLORATION_KEY, createAcademySeed, migrateOutcomeAcademy, acceptExperienceAttempt, acceptExploration,
   createAcademyStorage, normalizeVoicePreferences, setVoiceMode, markVoiceCueSeen
 } from '../academy-store.js';
 
@@ -139,6 +139,25 @@ test('stale and optional mastery submissions are rejected', () => {
   const attempt = { attemptId:'x', knowledgeCorrect:5, knowledgeTotal:5, liveTransferPassed:true, liveTransferEvidence:{ fixtureIds:['a'] } };
   assert.equal(acceptExperienceAttempt(seed, { ...attempt, experienceId:'backspin', contentVersion:1 }, { now:NOW }).reason, 'stale-content');
   assert.equal(acceptExperienceAttempt(seed, { ...attempt, experienceId:'plane-coupling-lab', contentVersion:1 }, { now:NOW }).reason, 'invalid');
+});
+
+test('optional Plane Coupling exploration is idempotent and leaves core rewards byte-equivalent', () => {
+  const seed=createAcademySeed(),coreBefore=JSON.stringify({xp:seed.xp,rewardLedger:seed.rewardLedger,experiences:seed.experiences});
+  const submission={experienceId:'plane-coupling-lab',contentVersion:1,attemptId:'lab-1',knowledgeCorrect:3,knowledgeTotal:3,liveCompensationPassed:true,modelAcknowledged:true,compensation:{rawLowPointCm:16.42384391754449,effectiveLowPointCm:10.5}};
+  const accepted=acceptExploration(seed,submission,{now:NOW});
+  assert.equal(accepted.accepted,true);assert.equal(accepted.exploration.status,'explored');
+  assert.equal(JSON.stringify({xp:accepted.store.xp,rewardLedger:accepted.store.rewardLedger,experiences:accepted.store.experiences}),coreBefore);
+  const duplicate=acceptExploration(accepted.store,{...submission,attemptId:'lab-2'},{now:NOW});
+  assert.equal(duplicate.reason,'duplicate');assert.equal(duplicate.store.explorations[PLANE_COUPLING_EXPLORATION_KEY].attempts,1);
+});
+
+test('legacy Plane Coupling history migrates to exploration only', () => {
+  const seed=createAcademySeed();seed.lessons['plane-coupling'].completed=true;seed.lessons['plane-coupling'].completedAt=NOW;
+  const migrated=migrateOutcomeAcademy(seed,{now:NOW});
+  assert.equal(migrated.explorations[PLANE_COUPLING_EXPLORATION_KEY].status,'explored');
+  assert.equal(migrated.experiences['plane-coupling-lab'].status,'practiced');
+  assert.equal(migrated.experiences['plane-coupling-lab'].acceptedAttemptId,null);
+  assert.equal(migrated.xp,0);assert.deepEqual(migrated.rewardLedger,{});
 });
 
 test('corrupt storage is recoverable and is not overwritten during load', () => {

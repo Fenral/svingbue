@@ -25,6 +25,7 @@
 <link rel="stylesheet" href="./academy-carry.css" />
 <link rel="stylesheet" href="./academy-air-density.css" />
 <link rel="stylesheet" href="./academy-wind.css" />
+<link rel="stylesheet" href="./academy-plane-coupling.css" />
 <style>
   :root{
     /* ══ P3 "Ultraviolet Ember" — colour + type consumed from sa-p3.css ══
@@ -743,7 +744,7 @@
   import { freshLessonJourney, mergeLessonJourney } from './academy-lesson-journey.js';
   import { mountNativeBackspinLesson } from './academy-native-lesson.js';
   import { experienceById } from './academy-curriculum.js';
-  import { acceptExperienceAttempt, normalizeAcademyStore, setVoiceMode as updateVoiceMode, markVoiceCueSeen } from './academy-store.js';
+  import { acceptExperienceAttempt, acceptExploration, PLANE_COUPLING_EXPLORATION_KEY, normalizeAcademyStore, setVoiceMode as updateVoiceMode, markVoiceCueSeen } from './academy-store.js';
   import { resolveAcademyRoute } from './academy-router.js';
   import { canEnterMastery, selectAcademyAction } from './academy-journey-router.js';
   import { buildAcademyHomeViewModel, mountAcademyHome } from './academy-home.js';
@@ -776,6 +777,8 @@
   import { airDensityCue } from './academy-air-density-content.js';
   import { mountWindExperience } from './academy-wind-experience.js';
   import { windCue } from './academy-wind-content.js';
+  import { mountPlaneCouplingExperience } from './academy-plane-coupling-experience.js';
+  import { planeCouplingCue } from './academy-plane-coupling-content.js';
 
   /* ══ DATA ══ */
   const GRAPH = JSON.parse(document.getElementById('graph-data').textContent);
@@ -1628,6 +1631,12 @@
         const cleanup=mountWindExperience({...input,prerequisiteMet:canEnterMastery('wind',store).allowed,onVoiceSurface:(surface,cueId)=>{currentSurface=surface;deliver(cueId);},onVoiceInterrupt:reason=>voiceController.stop(reason),onVoiceMilestone:cueId=>deliver(cueId)});
         voiceUi=mountAcademyVoiceUi({root:app.querySelector('[data-academy-voice-slot]'),controller:voiceController,getMode:()=>store.preferences.voice.mode,showInlineChoice:false,onModeChange:mode=>{if(mode!=='off')deliver(['academy.wind.s0.entry','academy.wind.s1.engine',null,null,null,null][currentSurface]);}});voiceUi.update(voiceController.getState());return cleanup;
       },
+      'plane-coupling-lab':input => {
+        let currentSurface=Number.isInteger(input.surface)?input.surface:0;
+        const deliver=cueId=>{const cue=cueId&&planeCouplingCue(cueId);return cue?voiceController.deliverAutomatic(cue):null;};
+        const cleanup=mountPlaneCouplingExperience({...input,exploration:store.explorations?.[PLANE_COUPLING_EXPLORATION_KEY],onVoiceSurface:(surface,cueId)=>{currentSurface=surface;deliver(cueId);},onVoiceInterrupt:reason=>voiceController.stop(reason),onVoiceMilestone:cueId=>deliver(cueId)});
+        voiceUi=mountAcademyVoiceUi({root:app.querySelector('[data-academy-voice-slot]'),controller:voiceController,getMode:()=>store.preferences.voice.mode,showInlineChoice:false,onModeChange:mode=>{if(mode!=='off')deliver(['academy.plane-coupling.s0.entry','academy.plane-coupling.s1.entry','academy.plane-coupling.s2.entry','academy.plane-coupling.s3.entry','academy.plane-coupling.s4.entry',null][currentSurface]);}});voiceUi.update(voiceController.getState());return cleanup;
+      },
       'backspin-native':({ surface, state:experienceState, voiceTargets:hostVoiceTargets }) => {
         const li = levelInfo(store.xp);
         let currentVoiceSurface = Number.isInteger(surface) ? surface : getJourney('backspin').surface;
@@ -1670,6 +1679,10 @@
       navigate:go,
       submitMastery:submission => {
         const result=acceptExperienceAttempt(store,submission);
+        store=result.store;saveNow();return result;
+      },
+      submitExploration:submission => {
+        const result=acceptExploration(store,submission);
         store=result.store;saveNow();return result;
       },
       saveProgress:(experienceId,patch) => {
@@ -1951,7 +1964,7 @@
     if (h.indexOf('#/proto') === 0) renderProto();
     else if (parsed.view === 'home') renderAcademyHome();
     else if (parsed.view === 'explore') renderPath();
-    else if (parsed.legacy && !['backspin','start-line','shape','shot-pattern','attack-at-impact','low-point','strike-depth','delivered-loft-launch','flight-height-descent','speed-transfer','carry','air-density','wind'].includes(parsed.experienceId) && LESSONS[parsed.conceptId]) renderLesson(parsed.conceptId);
+    else if (parsed.legacy && !['backspin','start-line','shape','shot-pattern','attack-at-impact','low-point','strike-depth','delivered-loft-launch','flight-height-descent','speed-transfer','carry','air-density','wind','plane-coupling-lab'].includes(parsed.experienceId) && LESSONS[parsed.conceptId]) renderLesson(parsed.conceptId);
     else renderOutcomeExperience(parsed);
     window.scrollTo(0,0);
     // Move focus to the new view's heading on every SPA route change, but not on the very
