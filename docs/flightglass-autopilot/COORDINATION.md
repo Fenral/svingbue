@@ -13,7 +13,7 @@ wait.
 
 | Agent | Branch | Working on | Since |
 |-------|--------|-----------|-------|
-| Codex | `agent/academy-codex` | Academy visual acceptance: `academy-native-lesson.{js,css}` plus `www/` copies, `outputs/visreg-baselines/*.png`, new `outputs/flightglass-academy-acceptance/` evidence, and final `STATUS.md` / `SESSION-HANDOFF.md` updates | 2026-07-15 |
+| _None_ | — | — | — |
 
 ## Queue / free to take
 
@@ -21,15 +21,23 @@ wait.
   `docs/superpowers/plans/2026-07-15-academy-outcome-curriculum-rollout.md`.
   Each batch has a spec/plan pair under `docs/superpowers/{specs,plans}/`.
   Build through the gate pipeline in `academy-completion-loop.md`.
-  Owner instruction on 2026-07-15 authorizes the remaining curriculum source
-  implementation to continue sequentially. Batch 0 visreg/pairwise,
-  licensed-audio and device/human gates remain release/acceptance holds in
+  Owner instruction on 2026-07-15 authorized the curriculum source
+  implementation, which is now complete. New-module pairwise, licensed-audio,
+  native-platform and device/human gates remain release/acceptance holds in
   `STATUS.md`; they may not be reported as passed or waived.
 - Ready surfaces (Home, Range, Visualise, Outcome, Compare, Strike Window,
   Paywall) — mocks + decision docs exist; each still needs its own plan/spec
   pair before build.
 
 ## Done / handed off
+
+- Academy Backspin visual acceptance and control hardening —
+  `agent/academy-codex`; the current generation won 8/8 valid balanced blind
+  pairs, all 48 baselines were deliberately approved, two independent visual
+  suites passed with a maximum 0.099% difference, and the Apex annotation is
+  deterministic without a threshold relaxation. Brand, autopilot, focused
+  Chromium/WebKit and performance gates are green. New-module pairwise,
+  licensed audio, native-platform and device/human gates remain open.
 
 - Academy curriculum final convergence — `agent/academy-codex`, source through
   `46ff9a0` and final test compatibility through `2b601b3`; all 13 core

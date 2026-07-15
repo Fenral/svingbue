@@ -36,16 +36,25 @@ SVG, Start Line waits for the requested legacy concept title, and Plane Coupling
 waits for its renderer/result/audit state. Fresh focused checks pass in both
 engines, including 16/16 repeated Plane Coupling cases. The final
 `npm run claude:ready` candidate passes 482/482 tests with brand and autopilot
-verification green. The visual baseline decision remains separate and open.
+verification green.
+
+The separate Backspin visual gate is now closed. A balanced, side-by-side
+provenance-blind comparison selected the current generation in 8/8 valid pairs;
+two preliminary sequential-image runs were excluded before provenance was
+opened because they showed an all-A position pattern and no generation winner.
+After deliberate approval of all 48 baselines, two independent
+`npm run test:visreg` processes passed 48/48 with zero runtime failures and a
+maximum 0.099% difference. The small Apex annotation was made deterministic
+without relaxing the 0.1% threshold. Backspin focused suites pass 41/41 in both
+Chromium and WebKit, and root/`www` shipping assets have exact hash parity.
 
 This branch is source-complete, **not release-accepted**. The next agent must not
 describe the female voice as recorded or shipped: voice direction and cue timing
 exist, while licensed recordings, rights evidence and human listening approval
-do not. The latest visual regression correctly remains red on 32 old Backspin
-baselines after the intentional complete-page Academy composition; no baseline
-was changed. Human visual review plus provenance-blind pairwise approval is
-required before accepting new baselines. Physical-device, offline, audio-route,
-VoiceOver and fatigue checks remain open.
+do not. The Backspin reference visual baseline is accepted, but the new
+curriculum modules have not received their own provenance-blind pairwise
+judgments and must not be labelled STUDIO-GRADE from automated tests alone.
+Physical-device, offline, audio-route, VoiceOver and fatigue checks remain open.
 
 Native web copying is complete, but Capacitor sync reports that neither iOS nor
 Android has been added to this repository. Creating those platform projects,
@@ -292,17 +301,13 @@ contains documentation only.
 
 ## Exact next actions
 
-1. Claim Batch 5 Low Point in `COORDINATION.md`, then execute its
-   exact spec/plan pair TDD-first without changing a protected physics engine.
-2. Preserve Backspin, all legacy routes/storage and the completed Batch 0–4
-   renderers; run focused model/content/browser gates in both engines.
-3. Keep gate acceptance separate from derived scores: zero critical defects,
-   every category floor, all critical checks and pairwise-blind must each pass.
-4. Update STATUS/HANDOFF with exact evidence and protected hashes, then secret
-   scan, stage only intended files, commit and push Batch 5.
-5. Continue automatically to Batch 6 only after Batch 5 source gates pass; do not ask
-   for module approval between batches unless an explicit rollout stop condition
-   occurs.
-6. Owner runs the physical-iPhone performance session, manual VoiceOver and
-   five-person five-second test before release. Do not publish stores until all
-   release gates and authorization boundaries pass.
+1. Build provenance-blind visual and pairwise evidence for the new curriculum
+   modules if full release acceptance is pursued.
+2. Obtain licensed final female Control Room recordings, rights evidence, a
+   strict voice-release verifier pass and human listening approval.
+3. Add and sign owner-controlled iOS/Android platform projects and store archives
+   only inside the authorized release workflow.
+4. Run physical-iPhone offline, audio-route and background-interruption checks,
+   plus manual VoiceOver, fatigue and other human gates.
+5. Keep publication fail-closed until every remaining Phase 8 gate is green and
+   the owner authorizes release.

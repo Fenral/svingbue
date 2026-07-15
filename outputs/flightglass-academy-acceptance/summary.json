@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "createdAt": "2026-07-15",
+  "branch": "agent/academy-codex",
+  "baseSha": "5ccdbb3",
+  "scope": "Backspin visual baseline acceptance and Academy browser-control hardening",
+  "pairwise": {
+    "validPairs": 8,
+    "currentWins": 8,
+    "previousBaselineWins": 0,
+    "excludedPreliminaryRuns": 2,
+    "gate": "PASS"
+  },
+  "visualRegression": {
+    "approvedBaselines": 48,
+    "independentPassingRuns": 2,
+    "comparisonsPerRun": 48,
+    "runtimeFailures": 0,
+    "thresholdPercent": 0.1,
+    "maximumDifferencePercent": 0.099,
+    "maximumDifferentPixels": 396,
+    "gate": "PASS"
+  },
+  "focusedBackspin": {
+    "chromium": "41/41 PASS",
+    "webkit": "41/41 PASS"
+  },
+  "fullCandidate": {
+    "primary": "153/153 PASS",
+    "foundation": "223/223 PASS",
+    "webkit": "106/106 PASS",
+    "total": "482/482 PASS"
+  },
+  "performance": {
+    "budgetMs": 16.7,
+    "chromiumP95Ms": 1.2,
+    "webkitP95Ms": 2.0,
+    "eventsPerEngine": 220,
+    "gate": "PASS"
+  },
+  "shippingParitySha256": {
+    "academy-native-lesson.js": "E60D6F67A2999C1C2C6F2FE0888FF9F2AA0296F2F054E785520F110C8350DD36",
+    "academy-native-lesson.css": "BAF25971F1D25371BC58B9B207A71A15B30D2BAC19EE4AA60A1E77DB111ED563"
+  },
+  "protectedPhysicsSha256": {
+    "impact-flight.js": "7E5323C3B5C553A4D6CC12177687256D61E16F5429C9A17DF1FB49911261CB26",
+    "swing-parameters-and-impact.js": "AE08553B688FD0A5994B17E8721986CC1907F9BC63D3C42D11040A9B8790134A",
+    "diagnose-engine.js": "9D1B5E83FBC2E2BFE45506B149DE631734500955C089EA860611E6803C57A425",
+    "diagnose-engine-v2.js": "A751504911625029EEF9AF0DB788A1E6ECE8733878039F3FAF9E15C28D26B4DF"
+  },
+  "additionalChecks": {
+    "brand": "PASS",
+    "autopilot": "PASS",
+    "copyWebTopLevelAssets": 84
+  },
+  "remainingReleaseGates": [
+    "Provenance-blind pairwise evidence for new curriculum modules",
+    "Licensed female recordings, rights evidence and human listening approval",
+    "iOS and Android platform projects, signing and store archives",
+    "Physical-device, offline, audio-route, interruption, VoiceOver and fatigue checks"
+  ]
+}

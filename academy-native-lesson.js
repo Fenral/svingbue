@@ -844,10 +844,10 @@ export function mountNativeBackspinLesson(options = {}) {
       const annotation = lesson.querySelector('[data-trace-annotation]');
       if (annotation) {
         annotation.hidden = false;
-        annotation.style.left = `${Math.round(apexX)}px`;
-        annotation.style.top = `${Math.round(Math.max(6, apexY - 42))}px`;
         annotation.querySelector('[data-annotation-value]').textContent =
           formatValue(solved.apexM, ' m');
+        annotation.style.left = `${Math.round(apexX - annotation.offsetWidth / 2)}px`;
+        annotation.style.top = `${Math.round(Math.max(6, apexY - 42))}px`;
       }
       lesson.dataset.traceSignature = 'ruler,landing,annotation';
       showFlightCanvas();

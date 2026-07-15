@@ -1,0 +1,74 @@
+{
+  "pairs": [
+    {
+      "pair": 1,
+      "aEvidence": "Backspin is an outcome. Build the delivered-face-to-travel gap, then see how Ball Speed scales it.",
+      "bEvidence": "Backspin is the ball's backward rotation that creates lift and helps a shot hold its flight.",
+      "choice": "A",
+      "reason": "A teaches the controllable causal chain, scopes the model, and gives the mission a clearer learning purpose.",
+      "criticalDefects": ["B omits visible model assumptions and can be read as a complete real-world account."]
+    },
+    {
+      "pair": 2,
+      "aEvidence": "Backspin is the ball's backward rotation that creates lift and helps a shot hold its flight.",
+      "bEvidence": "Backspin is an outcome. Build the delivered-face-to-travel gap, then see how Ball Speed scales it.",
+      "choice": "B",
+      "reason": "B has stronger causal truth and model boundaries while retaining a clear mobile mission hierarchy.",
+      "criticalDefects": ["A does not connect the task controls to the modeled outcome or disclose material omissions."]
+    },
+    {
+      "pair": 3,
+      "aEvidence": "Ball speed +0 mph to Spin loft +0 degrees to Backspin +0 rpm.",
+      "bEvidence": "Dynamic Loft 25 degrees minus Attack -3 degrees gives Spin Loft 28 degrees.",
+      "choice": "B",
+      "reason": "B makes the causal calculation and separation between spin output and the flight fit explicit.",
+      "criticalDefects": ["A's unexplained zero-delta chain is ambiguous beside the nonzero current values."]
+    },
+    {
+      "pair": 4,
+      "aEvidence": "Flightglass returns 6,048 rpm of Backspin. Separate current flight fit: Apex 27 m.",
+      "bEvidence": "Ball speed +0 mph to Spin loft +0 degrees to Backspin +0 rpm.",
+      "choice": "A",
+      "reason": "A preserves the complete cause-and-boundary explanation in the compact mobile layout.",
+      "criticalDefects": ["B's zero-delta summary has no visible baseline and obscures the displayed state's cause."]
+    },
+    {
+      "pair": 5,
+      "aEvidence": "SPIN LOFT - DIRECT GEOMETRIC DRIVER. BALL SPEED - MULTIPLICATIVE SCALER.",
+      "bEvidence": "How much each input moves backspin by one unit here.",
+      "choice": "A",
+      "reason": "A explains the ranking, distinguishes causal roles, and exposes held or unmodeled variables.",
+      "criticalDefects": ["B uses unit-ambiguous language and omits material model boundaries."]
+    },
+    {
+      "pair": 6,
+      "aEvidence": "How much each input moves backspin by one unit here.",
+      "bEvidence": "SPIN LOFT - DIRECT GEOMETRIC DRIVER. BALL SPEED - MULTIPLICATIVE SCALER.",
+      "choice": "B",
+      "reason": "B adds causal and scope information without breaking the mobile hierarchy.",
+      "criticalDefects": ["A's ambiguous unit language and absent model boundaries weaken visible learning truth."]
+    },
+    {
+      "pair": 7,
+      "aEvidence": "Your stopping-flight read.",
+      "bEvidence": "Your Backspin evidence.",
+      "choice": "B",
+      "reason": "B ties completion to the demonstrated evidence and provides a clearer prerequisite-to-next-topic bridge.",
+      "criticalDefects": ["A overstates the demonstrated scope by claiming control of stopping flight."]
+    },
+    {
+      "pair": 8,
+      "aEvidence": "Your Backspin evidence.",
+      "bEvidence": "Your stopping-flight read.",
+      "choice": "A",
+      "reason": "A provides the stronger mastery record and a more explicit learning progression.",
+      "criticalDefects": ["B extends beyond the visible Backspin evidence and offers a less explicit next step."]
+    }
+  ],
+  "overall": {
+    "validPairs": 8,
+    "winnerPattern": "A,B,B,A,A,B,B,A",
+    "criticalDefects": [],
+    "verdict": "The same causal, evidence-rich, model-scoped generation wins all eight balanced comparisons. This is a pairwise visual verdict only."
+  }
+}

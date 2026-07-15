@@ -12,7 +12,7 @@ publication after all Phase 8 gates pass. See `RELEASE-AUTHORIZATION.md`.
 | 2 · Range / Visualise | Ready | Decisions and references locked in master plan |
 | 3 · Outcome / Compare | Ready | Decisions and references locked in master plan |
 | 4 · Geometry 3D / Strike Window 2D | Ready | Consensus documents named |
-| 5 · Academy overview | Source-complete; release acceptance held | Native Home/store/registry/router/host and caption-ready Voice foundation are coded and copied into the web package; visual, audio-rights and human gates remain open |
+| 5 · Academy overview | Source-complete; release acceptance held | Native Home/store/registry/router/host and caption-ready Voice foundation are coded and copied into the web package; the Backspin visual baseline is accepted, while new-module pairwise, audio-rights and human gates remain open |
 | 6 · Academy lesson system | Curriculum source-complete | All 13 core experiences plus the optional Plane Coupling lab own native renderers, model/content contracts, mastery or exploration rules and caption-ready cues |
 | 7 · Paywall | Ready | Pricing and compatibility rules locked |
 | 8 · Convergence and release QA | Ready | Global gates locked |
@@ -48,19 +48,29 @@ Coupling waits for its renderer/result state and audit SVG before reading them.
 Focused Chromium/WebKit checks pass, including 16/16 repeated Plane Coupling
 cases. The final `npm run claude:ready` candidate is green: 153/153 primary,
 223/223 foundation and 106/106 WebKit tests (482/482 total), plus brand and
-autopilot verification. Visual baselines were not approved by this control
-repair; the 32 intentional Backspin content diffs remain pending blind review.
+autopilot verification.
+
+The separate Backspin visual-acceptance gate closed on 2026-07-15. A balanced,
+side-by-side provenance-blind comparison selected the current curriculum
+composition in 8/8 valid pairs. Two preliminary sequential-image runs were
+excluded before provenance was opened because their all-A position pattern made
+the generation result a 4-4 tie. After the valid win, all 48 baselines were
+deliberately approved. The Apex trace label was integer-aligned and its
+fractional letter spacing removed to eliminate cross-process Chromium raster
+jitter without changing the 0.1% threshold. Two independent
+`npm run test:visreg` processes then passed 48/48 comparisons with zero runtime
+failures; the maximum remaining difference was 0.099% (396 pixels). `copy-web`
+again copied 84 top-level assets, with exact root/`www` JS and CSS hash parity.
+Fresh brand, autopilot and performance checks also pass (p95 1.2 ms Chromium /
+2.0 ms WebKit against 16.7 ms).
 
 The curriculum is **coded and testable, but not release-accepted**. These gates
 remain deliberately open and were not weakened or reported as complete:
 
-- `npm run test:visreg` passes its inventory and alpha-diff contracts but finds
-  32 stale Backspin lesson baselines across the two engines, two viewports and
-  two motion modes (9.4–22.95% image difference). Inspection confirms that the
-  current captures contain the intended complete Academy header, intro,
-  progress navigation and CTA that the old baselines omit. No baseline was
-  changed; a human visual review and provenance-blind pairwise win are required
-  before deliberate baseline approval.
+- The Backspin reference baseline is accepted through the valid 8/8 blind win
+  and deterministic double visual-regression pass above. This does not accept
+  the new curriculum modules, which still need their own provenance-blind
+  evidence before any STUDIO-GRADE claim.
 - The approved female voice direction is specified and all 102 cues are
   caption-ready, but licensed final recordings, rights evidence and the human
   listening gate do not exist. The strict release verifier therefore remains

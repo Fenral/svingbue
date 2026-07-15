@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "createdAt": "2026-07-15",
+  "purpose": "Provenance-blind comparison of the accepted Backspin baseline content against the current curriculum amendment",
+  "judgeVisibleArtifacts": "outputs/flightglass-academy-acceptance/pairwise/contact/pair-{1..8}.png",
+  "pairs": [
+    {"pair": 1, "engine": "chromium", "viewport": "430x932", "motion": "normal", "surface": "mission", "A": "current", "B": "previous-baseline", "choice": "A"},
+    {"pair": 2, "engine": "webkit", "viewport": "375x812", "motion": "reduced", "surface": "mission", "A": "previous-baseline", "B": "current", "choice": "B"},
+    {"pair": 3, "engine": "chromium", "viewport": "430x932", "motion": "normal", "surface": "lab", "A": "previous-baseline", "B": "current", "choice": "B"},
+    {"pair": 4, "engine": "webkit", "viewport": "375x812", "motion": "reduced", "surface": "lab", "A": "current", "B": "previous-baseline", "choice": "A"},
+    {"pair": 5, "engine": "chromium", "viewport": "430x932", "motion": "normal", "surface": "influence", "A": "current", "B": "previous-baseline", "choice": "A"},
+    {"pair": 6, "engine": "webkit", "viewport": "375x812", "motion": "reduced", "surface": "influence", "A": "previous-baseline", "B": "current", "choice": "B"},
+    {"pair": 7, "engine": "chromium", "viewport": "430x932", "motion": "normal", "surface": "result", "A": "previous-baseline", "B": "current", "choice": "B"},
+    {"pair": 8, "engine": "webkit", "viewport": "375x812", "motion": "reduced", "surface": "result", "A": "current", "B": "previous-baseline", "choice": "A"}
+  ],
+  "result": {
+    "currentWins": 8,
+    "previousBaselineWins": 0,
+    "validPairs": 8,
+    "pairwiseGate": "PASS"
+  },
+  "excludedPreliminaryRuns": {
+    "count": 2,
+    "reason": "Sequential image presentation produced an all-A position pattern and a 4-4 generation tie; those runs were excluded before provenance was opened."
+  }
+}
