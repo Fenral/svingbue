@@ -87,7 +87,11 @@ Completed planning artifacts at this travel checkpoint:
 - `docs/superpowers/specs/2026-07-15-academy-plane-coupling-lab-design.md`;
 - `docs/superpowers/specs/2026-07-15-academy-delivered-loft-launch-design.md`;
 - `docs/superpowers/specs/2026-07-15-academy-backspin-curriculum-amendment.md`;
-- `docs/superpowers/specs/2026-07-15-academy-flight-height-descent-design.md`.
+- `docs/superpowers/specs/2026-07-15-academy-flight-height-descent-design.md`;
+- `docs/superpowers/specs/2026-07-15-academy-speed-transfer-design.md`;
+- `docs/superpowers/specs/2026-07-15-academy-carry-design.md`;
+- `docs/superpowers/specs/2026-07-15-academy-air-density-design.md`;
+- `docs/superpowers/specs/2026-07-15-academy-wind-design.md`.
 
 The blueprint reconciles all 24 stored IDs exactly once. Start Line, Shape and
 Carry Side are now specified surface by surface with exact copy, interaction,
@@ -117,13 +121,23 @@ Descent separates Apex from Landing Angle, direct from mediated Launch paths,
 and descent from stopping distance. Ten frozen fixtures plus the same-Apex /
 different-descent live pair pass against the unchanged flight equations.
 
+Every remaining outcome family is now complete at experience-specification
+level. Speed Transfer treats Smash as a speed ratio and current Spin-Loft model,
+not a centeredness or percent-energy diagnosis. Carry exposes that the current
+fit consumes Ball Speed only, keeps real Launch/Spin effects visible as omitted,
+and labels Total as an illustrative roll extension. Air Density combines
+Altitude and Temperature through one post-solve EST proxy while freezing every
+launch value. Wind preserves engine Start + Curve = Carry Side, then adds Wind
+Drift as a separate first-order EST layer. All frozen speed, carry, air and wind
+fixtures pass.
+
 ## Exact next actions
 
-1. Continue the autonomous planning pass with Speed Transfer, Carry, Air
-   Density and Wind.
-2. Then complete the shared Academy Home/store migration specification,
-   per-experience implementation plans, cross-curriculum audit and sequential
-   Claude Code handoff.
+1. Complete the cross-curriculum physics, ownership, prerequisite, voice,
+   accessibility, migration and live-gate audit across all 14 experiences.
+2. Produce the shared Academy Home/store migration specification and plan.
+3. Produce one sequential implementation plan per experience (or amendment),
+   then a Claude Code execution index that forbids multi-experience batches.
 3. Do not begin production implementation or modify `impact-flight.js` during
    this planning goal.
 4. Keep gate acceptance separate from derived scores: zero critical defects,

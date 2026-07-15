@@ -13,7 +13,7 @@ publication after all Phase 8 gates pass. See `RELEASE-AUTHORIZATION.md`.
 | 3 · Outcome / Compare | Ready | Decisions and references locked in master plan |
 | 4 · Geometry 3D / Strike Window 2D | Ready | Consensus documents named |
 | 5 · Academy overview | Planning active | Outcome-led curriculum blueprint complete; shared native Home/store implementation spec and plan still pending |
-| 6 · Academy lesson system | Backspin STUDIO-GRADE (Tasks 1-20); remaining curriculum planning active | Direction, strike/contact and launch/spin/descent families complete at specification level; later families still in progress; no new production implementation started |
+| 6 · Academy lesson system | Backspin STUDIO-GRADE (Tasks 1-20); remaining curriculum planning active | Every outcome family is complete at experience-specification level; shared Home/store, implementation plans and cross-audit still pending; no new production implementation started |
 | 7 · Paywall | Ready | Pricing and compatibility rules locked |
 | 8 · Convergence and release QA | Ready | Global gates locked |
 
@@ -211,8 +211,34 @@ pass against the unchanged `solveFlight()` equations. Official TrackMan
 definitions for Dynamic Loft, Launch Angle, Spin Loft and Landing Angle were
 rechecked on 2026-07-15. `impact-flight.js` remains unedited.
 
-Planning remains incomplete. Speed/distance/conditions, shared Academy
-Home/store migration, per-experience
+Speed/distance and playing conditions completed at this checkpoint:
+
+- Speed Transfer, owning `club-speed`, `smash` and `ball-speed`:
+  `docs/superpowers/specs/2026-07-15-academy-speed-transfer-design.md`;
+- Carry, owning `carry` and `total`:
+  `docs/superpowers/specs/2026-07-15-academy-carry-design.md`;
+- Air Density, owning `altitude` and `temperature`:
+  `docs/superpowers/specs/2026-07-15-academy-air-density-design.md`;
+- Wind:
+  `docs/superpowers/specs/2026-07-15-academy-wind-design.md`.
+
+These specifications correct four legacy truth failures: Smash is a speed
+ratio/model output rather than a percent-energy or centeredness diagnosis;
+current Carry consumes Ball Speed only and exposes its real-world launch/spin
+omission; Altitude and Temperature combine through one EST density proxy rather
+than earning duplicate causal credit; and Wind Drift is added after the
+engine's existing Carry Side instead of replacing Start Line plus Curve.
+
+The four families include exact S0-S5 copy, native interaction and visual
+direction, DFII review, voice synchronization, migration, accessibility,
+mandatory live gates and frozen numeric fixtures. Speed, Carry, air and wind
+fixtures all pass against the unchanged flight equations and documented
+post-solve estimates. Official TrackMan definitions/normalization guidance and
+NOAA atmosphere context were rechecked on 2026-07-15. `impact-flight.js`
+remains unedited.
+
+All 24 stored topic IDs now have one completed experience-level design owner.
+Planning remains incomplete. Shared Academy Home/store migration, per-experience
 implementation plans, the cross-curriculum audit and the final Claude Code
 handoff are still required before the planning program can be called complete.
 
