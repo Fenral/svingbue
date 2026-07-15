@@ -11,6 +11,8 @@
 <!-- P3 "Ultraviolet Ember" shared cohesion source: tokens + type roles + .sa-strip shell contract (relative import) -->
 <link rel="stylesheet" href="./sa-p3.css" />
 <link rel="stylesheet" href="./academy-native-lesson.css" />
+<link rel="stylesheet" href="./academy-home.css" />
+<link rel="stylesheet" href="./academy-voice.css" />
 <style>
   :root{
     /* ══ P3 "Ultraviolet Ember" — colour + type consumed from sa-p3.css ══
@@ -728,6 +730,16 @@
   import saHaptics from './sa-haptics.js';
   import { freshLessonJourney, mergeLessonJourney } from './academy-lesson-journey.js';
   import { mountNativeBackspinLesson } from './academy-native-lesson.js';
+  import { experienceById } from './academy-curriculum.js';
+  import { normalizeAcademyStore, setVoiceMode as updateVoiceMode, markVoiceCueSeen } from './academy-store.js';
+  import { resolveAcademyRoute } from './academy-router.js';
+  import { selectAcademyAction } from './academy-journey-router.js';
+  import { buildAcademyHomeViewModel, mountAcademyHome } from './academy-home.js';
+  import { createAcademyExperienceHost } from './academy-experience-host.js';
+  import { createAcademyVoiceController } from './academy-voice.js';
+  import { createAcademyVoiceSync, createVoiceTargetRegistry } from './academy-voice-sync.js';
+  import { mountAcademyVoiceUi } from './academy-voice-ui.js';
+  import { homeCue } from './academy-voice-reference-cues.js';
 
   /* ══ DATA ══ */
   const GRAPH = JSON.parse(document.getElementById('graph-data').textContent);
@@ -1303,40 +1315,47 @@
     // Start with NOTHING pre-unlocked; recomputeUnlocks() (run at init and after every
     // completion) opens the graph ROOTS + the two demo modules, then gates the Derived
     // tier behind the dependency graph. This keeps the "unlock the next node" progression.
-    return { version:1, xp:0, lessons, unlocked:[], badges:[], lastOpened:null };
+    return normalizeAcademyStore({ version:1, xp:0, lessons, unlocked:[], badges:[], lastOpened:null });
   }
+  let storeDiagnostic = null;
   let store = load();
   function load(){
     try {
       const raw = localStorage.getItem(STORE_KEY);
       if (!raw) return seed();
       const p = JSON.parse(raw);
-      if (!p || p.version !== 1 || !p.lessons) return seed();
+      if (!p || p.version !== 1 || !p.lessons) {
+        storeDiagnostic = { code:'invalid-shape', message:'Saved Academy progress could not be read. The original value has not been overwritten.' };
+        return seed();
+      }
       const base = seed();
-      // Merge any saved per-lesson progress; fill in modules added since the save (robust migration).
-      const lessons = {};
+      // Preserve every historical/future lesson while filling known records.
+      const lessons = { ...p.lessons };
       for (const id of LESSON_IDS) {
         const savedLesson = p.lessons[id] || {};
         lessons[id] = { ...base.lessons[id], ...savedLesson,
           journey:mergeLessonJourney(savedLesson.journey)
         };
       }
-      return { ...base, ...p, lessons,
-        unlocked: Array.isArray(p.unlocked)?p.unlocked:base.unlocked, badges: Array.isArray(p.badges)?p.badges:[] };
-    } catch(e){ return seed(); }
+      return normalizeAcademyStore({ ...base, ...p, lessons,
+        unlocked: Array.isArray(p.unlocked)?p.unlocked:base.unlocked, badges: Array.isArray(p.badges)?p.badges:[] });
+    } catch(e){
+      storeDiagnostic = { code:'invalid-json', message:'Saved Academy progress could not be read. The original value has not been overwritten.' };
+      return seed();
+    }
   }
   let saveTimer = null;
   function save(){
     if (saveTimer) clearTimeout(saveTimer);
     saveTimer = setTimeout(() => {
       saveTimer = null;
-      try { localStorage.setItem(STORE_KEY, JSON.stringify(store)); } catch(e){}
+      try { store = normalizeAcademyStore(store); localStorage.setItem(STORE_KEY, JSON.stringify(store)); storeDiagnostic = null; } catch(e){}
     }, 120);
   }
   function saveNow(){
     if (saveTimer) clearTimeout(saveTimer);
     saveTimer = null;
-    try { localStorage.setItem(STORE_KEY, JSON.stringify(store)); } catch(e){}
+    try { store = normalizeAcademyStore(store); localStorage.setItem(STORE_KEY, JSON.stringify(store)); storeDiagnostic = null; } catch(e){}
   }
   function getJourney(id){
     return mergeLessonJourney(store.lessons[id]?.journey);
@@ -1443,6 +1462,65 @@
   const app = $('#app');
   const liveEl = $('#live');
   let activeLessonCleanup = null;
+  let voiceUi = null;
+  const voiceTargets = createVoiceTargetRegistry();
+  const voiceSync = createAcademyVoiceSync({
+    registry:voiceTargets,
+    reducedMotion:reduced,
+    onDiagnostic:diagnostic => console.warn('[Academy voice]', diagnostic.code, diagnostic.targetId || diagnostic.cueId || '')
+  });
+  const voiceController = createAcademyVoiceController({
+    getPreferences:() => store.preferences.voice,
+    setMode:mode => { store = updateVoiceMode(store, mode); saveNow(); },
+    markSeen:(signature, delivery) => { store = markVoiceCueSeen(store, signature, delivery); saveNow(); },
+    createAudio:asset => asset ? new Audio(asset) : null,
+    getScreenReaderState:() => 'unknown',
+    getForegroundState:() => document.visibilityState !== 'hidden',
+    onCaption:({ cue }) => voiceSync.start(cue),
+    onPlayback:state => {
+      voiceUi?.update(state);
+      if (state.status === 'idle' && ['route','model-input','foreground-loss','destroyed','ended'].includes(state.reason)) voiceSync.stop();
+    },
+    onDiagnostic:diagnostic => console.warn('[Academy voice]', diagnostic.code, diagnostic.cueId || '')
+  });
+  const experienceHost = createAcademyExperienceHost({
+    root:app,
+    renderers:{
+      'backspin-native':({ surface }) => {
+        const li = levelInfo(store.xp);
+        return mountNativeBackspinLesson({
+          root:app,
+          xp:store.xp,
+          level:{ number:li.lvl, title:li.title },
+          journey:{ ...getJourney('backspin'), surface:Number.isInteger(surface) ? surface : getJourney('backspin').surface },
+          onJourney:(patch, options) => updateJourney('backspin', patch, options),
+          onSubmit:submission => commitNativeLessonAttempt('backspin', submission),
+          onBack:() => go('#/academy'),
+          onNextLesson:() => {
+            const nextId = 'launch-angle';
+            if (nodeState(nextId) === 'locked') {
+              store.lastOpened = 'backspin';
+              saveNow();
+              pendingRouteAnnouncement = `Launch Angle unlocks after ${prereqLabels(nextId)}. Returning to the Academy path.`;
+              go('#/path');
+              return;
+            }
+            store.lastOpened = nextId;
+            saveNow();
+            go('#/lesson/' + nextId);
+          },
+          onDiagramTouched:() => markDiagramTouched('backspin'),
+          onAnnounce:announce
+        });
+      }
+    },
+    services:{
+      voiceTargets,
+      navigate:go,
+      submitMastery:submission => submission,
+      nextAction:() => selectAcademyAction(store)
+    }
+  });
   let liveT = null;
   let liveFrame = null;
   function clearLiveAnnouncement(){
@@ -1453,9 +1531,13 @@
     liveEl.textContent = '';
   }
   function destroyActiveLesson(){
-    if (!activeLessonCleanup) return;
-    activeLessonCleanup();
-    activeLessonCleanup = null;
+    if (activeLessonCleanup) {
+      activeLessonCleanup();
+      activeLessonCleanup = null;
+    }
+    voiceUi?.destroy();
+    voiceUi = null;
+    voiceController.enterRoute();
     clearLiveAnnouncement();
   }
 
@@ -1623,26 +1705,101 @@
     if (!heading.hasAttribute('tabindex')) heading.setAttribute('tabindex', '-1');
     heading.focus({ preventScroll:true });
   }
+  function openAcademyOutcomeProgress(viewModel, trigger){
+    const rows = viewModel.families.map(family => {
+      const mastered = family.experiences.filter(experience => experience.status === 'mastered').length;
+      const practiced = family.experiences.filter(experience => experience.status === 'practiced').length;
+      return `<div class="msheet-tier"><span class="mt-l">${esc(family.title)}</span><span class="mt-r">${mastered} mastered · ${practiced} practiced</span></div>`;
+    }).join('');
+    const html = `
+      <div class="sa-sheet__grip" aria-hidden="true"></div>
+      <span class="sa-sheet__tier">Academy evidence</span>
+      <h2 class="sa-sheet__title" id="sheet-title">Outcome progress</h2>
+      <p class="sa-sheet__blurb"><b>${viewModel.progress.mastered}</b> of ${viewModel.progress.total} core experiences mastered · <b>${viewModel.progress.practiced}</b> practiced.</p>
+      ${rows}
+      <p class="sa-sheet__blurb">The advanced model lab is optional and never changes this total.</p>
+      <div class="sa-sheet__foot"><button class="sa-sheet__close" data-sheet-close type="button" data-autofocus>Close</button></div>`;
+    openSheet(html, { trigger, labelId:'sheet-title' });
+    sheetEl.querySelector('[data-sheet-close]')?.addEventListener('click', () => closeSheet());
+  }
   let pendingRouteAnnouncement = null;
   let hasRoutedOnce = false;
+  function renderAcademyHome(){
+    document.title = 'Flightglass Academy';
+    const recommendation = selectAcademyAction(store);
+    const viewModel = buildAcademyHomeViewModel({ store, recommendation });
+    activeLessonCleanup = mountAcademyHome({
+      root:app,
+      viewModel,
+      voiceTargets,
+      callbacks:{
+        onNavigate:go,
+        onOpenProgress:trigger => openAcademyOutcomeProgress(viewModel, trigger),
+        onGoalChange:goalId => {
+          store.academyHome.goalId = goalId;
+          saveNow();
+          const cleanup = activeLessonCleanup;
+          activeLessonCleanup = null;
+          cleanup?.();
+          voiceUi?.destroy();
+          voiceUi = null;
+          renderAcademyHome();
+          requestAnimationFrame(() => app.querySelector(`input[name="academy-goal"][value="${goalId}"]`)?.focus());
+        }
+      }
+    });
+    if (storeDiagnostic) {
+      const warning = document.createElement('p');
+      warning.className = 'academy-home__storage-warning';
+      warning.setAttribute('role','status');
+      warning.textContent = storeDiagnostic.message;
+      app.querySelector('.academy-home__hero')?.after(warning);
+    }
+    const voiceRoot = app.querySelector('[data-academy-voice-slot]');
+    voiceUi = mountAcademyVoiceUi({
+      root:voiceRoot,
+      controller:voiceController,
+      getMode:() => store.preferences.voice.mode,
+      onModeChange:mode => {
+        if (mode !== 'off') voiceController.deliverAutomatic(homeCue('academy.home.orient'));
+      }
+    });
+    voiceController.deliverAutomatic(homeCue('academy.home.orient'));
+  }
+  function renderOutcomeExperience(parsed){
+    const definition = experienceById(parsed.experienceId);
+    document.title = `${definition?.title || 'Academy'} — Flightglass Academy`;
+    const result = experienceHost.mount({
+      definition,
+      state:store.experiences?.[parsed.experienceId],
+      conceptId:parsed.conceptId,
+      surface:parsed.surface
+    });
+    activeLessonCleanup = () => experienceHost.destroy();
+    return result;
+  }
   function route(){
     const routeAnnouncement = pendingRouteAnnouncement;
     pendingRouteAnnouncement = null;
     destroyActiveLesson();
     closeSheet(false, true);   // a sheet must never survive a route change (browser back etc.)
-    const h = location.hash || '#/path';
-    const m = h.match(/^#\/lesson\/([\w-]+)$/);
-    if (h.indexOf('#/proto') === 0) renderProto();   // hidden dev gallery of the archetypes (not linked in the path)
-    else if (m && LESSONS[m[1]]) renderLesson(m[1]);
-    else renderPath();
+    const h = location.hash || '#/academy';
+    const parsed = resolveAcademyRoute(h, { lastSurfaceFor:id => store.experiences?.[id]?.surface || getJourney(id)?.surface || 0 });
+    if (h.indexOf('#/proto') === 0) renderProto();
+    else if (parsed.view === 'home') renderAcademyHome();
+    else if (parsed.view === 'explore') renderPath();
+    else if (parsed.legacy && parsed.experienceId !== 'backspin' && LESSONS[parsed.conceptId]) renderLesson(parsed.conceptId);
+    else renderOutcomeExperience(parsed);
     window.scrollTo(0,0);
     // Move focus to the new view's heading on every SPA route change, but not on the very
     // first paint — that would rob keyboard users of the skip link as their first Tab stop.
     if (hasRoutedOnce) focusMainHeading();
     hasRoutedOnce = true;
-    if (routeAnnouncement) announce(routeAnnouncement);
+    if (routeAnnouncement || parsed.announcement) announce(routeAnnouncement || parsed.announcement);
   }
   window.addEventListener('hashchange', route);
+  window.addEventListener('pagehide', () => voiceController.stop('foreground-loss'));
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') voiceController.stop('foreground-loss'); });
 
   /* ══ ARCHETYPE GALLERY (dev-only, #/proto) ══
      A hidden preview of every reusable diagram archetype with a demo config, so a
