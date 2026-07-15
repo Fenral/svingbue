@@ -8,12 +8,12 @@ const config=JSON.parse(readFileSync(resolve('config/academy-voice-pack.json'),'
 
 test('development pack truthfully reports caption-ready Academy cues',()=>{
   const report=verifyAcademyVoicePack({config,mode:'development'});
-  assert.equal(report.pass,true);assert.equal(report.cueCount,67);assert.equal(report.assetCount,0);assert.equal(report.captionOnly.length,67);assert.equal(report.rightsStatus,'pending-final-licensed-assets');
+  assert.equal(report.pass,true);assert.equal(report.cueCount,74);assert.equal(report.assetCount,0);assert.equal(report.captionOnly.length,74);assert.equal(report.rightsStatus,'pending-final-licensed-assets');
 });
 
 test('release pack fails closed until licensed verified assets exist',()=>{
   const report=verifyAcademyVoicePack({config,mode:'release'});
-  assert.equal(report.pass,false);assert.equal(report.missing.length,67);assert.ok(report.errors.includes('rights-not-approved'));
+  assert.equal(report.pass,false);assert.equal(report.missing.length,74);assert.ok(report.errors.includes('rights-not-approved'));
 });
 
 test('remote, escaping and orphan records never pass',()=>{
