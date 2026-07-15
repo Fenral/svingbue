@@ -70,7 +70,7 @@ test('canonical and three legacy concept routes share one Start Line renderer an
   assert.equal(await page.locator('#startLineExperience').count(),1);
   for(const [concept,title] of [['face-angle','Face Angle'],['club-path','Club Path'],['start-direction','Launch Direction']]){
     await page.evaluate(id=>{location.hash=`#/lesson/${id}`;},concept);
-    await page.locator('#startLineExperience').waitFor();
+    await page.locator('[data-start-line-sheet-title]').filter({hasText:title}).waitFor();
     assert.equal((await page.locator('h1').textContent()).trim(),'Start Line');
     assert.equal((await page.locator('[data-start-line-sheet-title]').textContent()).trim(),title);
     await page.locator('[data-start-line-sheet-close]').click();

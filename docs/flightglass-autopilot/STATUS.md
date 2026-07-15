@@ -40,6 +40,17 @@ Fresh convergence evidence on 2026-07-15:
 - Development voice-pack verification PASS with 102/102 exact local captions,
   no remote dependency and no audio files.
 
+Acceptance-control hardening on 2026-07-15 removed three asynchronous browser
+harness races without changing shipping code or acceptance assertions. Flight
+Height now waits for its rendered profile before the viewport audit, Start Line
+waits for the requested legacy sheet title after hash navigation, and Plane
+Coupling waits for its renderer/result state and audit SVG before reading them.
+Focused Chromium/WebKit checks pass, including 16/16 repeated Plane Coupling
+cases. The final `npm run claude:ready` candidate is green: 153/153 primary,
+223/223 foundation and 106/106 WebKit tests (482/482 total), plus brand and
+autopilot verification. Visual baselines were not approved by this control
+repair; the 32 intentional Backspin content diffs remain pending blind review.
+
 The curriculum is **coded and testable, but not release-accepted**. These gates
 remain deliberately open and were not weakened or reported as complete:
 

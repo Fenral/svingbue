@@ -30,6 +30,14 @@ physics hashes and both performance engines (p95 2.1 ms Chromium / 5.0 ms
 WebKit, budget 16.7 ms). `copy-web` copied 84 top-level shipping assets. The
 voice pack contains 102 exact local captions and zero licensed audio assets.
 
+The Academy acceptance continuation hardened three browser-test readiness
+boundaries only; no product source changed. Flight Height waits for the profile
+SVG, Start Line waits for the requested legacy concept title, and Plane Coupling
+waits for its renderer/result/audit state. Fresh focused checks pass in both
+engines, including 16/16 repeated Plane Coupling cases. The final
+`npm run claude:ready` candidate passes 482/482 tests with brand and autopilot
+verification green. The visual baseline decision remains separate and open.
+
 This branch is source-complete, **not release-accepted**. The next agent must not
 describe the female voice as recorded or shipped: voice direction and cue timing
 exist, while licensed recordings, rights evidence and human listening approval
