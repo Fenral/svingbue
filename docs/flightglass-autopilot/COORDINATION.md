@@ -13,7 +13,7 @@ wait.
 
 | Agent | Branch | Working on | Since |
 |-------|--------|-----------|-------|
-| Codex | `agent/academy-codex` | ElevenLabs Academy voice-production tooling: `.gitignore`, `package.json`, new `scripts/academy-voice-production*`, production runbook/evidence templates; no paid generation or final audio assets in this claim | 2026-07-15 |
+| _None_ | — | — | — |
 
 ## Queue / free to take
 
@@ -30,6 +30,14 @@ wait.
   pair before build.
 
 ## Done / handed off
+
+- Academy ElevenLabs voice-production tooling — `agent/academy-codex`; all 102
+  exact cues are inventoried, three blind Voice Design directions and a
+  resumable full-pack generator are implemented, provider credentials/raw work
+  are ignored, paid calls require two explicit flags, and FFmpeg processing,
+  metadata and hash generation are covered by the green foundation suite. No
+  paid call or final audio asset was produced; Creator account/key setup and the
+  listening/rights gates remain owner-controlled.
 
 - Academy Backspin visual acceptance and control hardening —
   `agent/academy-codex`; the current generation won 8/8 valid balanced blind
