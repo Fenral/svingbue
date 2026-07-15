@@ -13,6 +13,7 @@ wait.
 
 | Agent | Branch | Working on | Since |
 |-------|--------|-----------|-------|
+| Codex | `agent/academy-codex` | Batch 5 — Low Point model/content/native S0–S5/mastery/voice + regressions | 2026-07-15 |
 
 ## Queue / free to take
 
