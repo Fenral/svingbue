@@ -238,8 +238,26 @@ NOAA atmosphere context were rechecked on 2026-07-15. `impact-flight.js`
 remains unedited.
 
 All 24 stored topic IDs now have one completed experience-level design owner.
-Planning remains incomplete. Shared Academy Home/store migration, per-experience
-implementation plans, the cross-curriculum audit and the final Claude Code
+
+Cross-curriculum specification acceptance completed at the next checkpoint:
+
+- `docs/superpowers/specs/2026-07-15-academy-cross-curriculum-acceptance-audit.md`;
+- 24/24 concept IDs have exactly one owner with no duplicate or orphan;
+- all 14 experience documents retain the required structure;
+- 99 authored voice cues are within the 12–24-word budget and each experience
+  remains at or below eight cue signatures;
+- 297 fresh numeric assertions pass against the unchanged flight and geometry
+  engines across direction, strike, launch, descent, speed, carry, air and wind.
+
+The audit found and corrected a stale Wind specification fixture: Dynamic Loft
+30° uses the current 0.7500 face weight, producing Start Direction +0.2500° and
+engine Carry Side +13.4326 yd before wind. It also clarified the voice contract:
+one automatic entry line per surface, with only rare first-time consequence or
+recovery cues under an eight-signature experience budget.
+
+The audit decision is specification PASS for implementation planning, not
+production acceptance. Planning remains incomplete. Shared Academy Home/store
+migration, per-experience implementation plans and the final Claude Code
 handoff are still required before the planning program can be called complete.
 
 ## Parked refinements (non-blocking, reference-shell polish)

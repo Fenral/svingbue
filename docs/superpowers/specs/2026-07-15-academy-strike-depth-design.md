@@ -769,7 +769,7 @@ ground-crossing and invariance fixtures are current Flightglass model outputs.
 |---|---|---|
 | S0 | “Move the arc vertically. Contact height changes millimeter for millimeter; the modeled tangent does not rotate.” | z and Contact Height rulers move; Attack chip locks |
 | S1 | “Bottom height plus arc lift gives the modeled height at the ball.” | signed ledger resolves |
-| Above-center | “You crossed the ball center without changing Attack Angle.” | point crosses center line |
+| Above-center | “You crossed the ball center while the modeled Attack Angle stayed exactly unchanged.” | point crosses center line |
 | S2 | “Vertical height moves contact directly. Low Point distance changes the lift available before the ball. Neither should be counted twice through Attack.” | z and x causal roles separate |
 | S3 | “This model separates coordinates cleanly. It does not simulate a clubface, turf deformation, or a real divot.” | NOT MODELED chips appear |
 | S4 | “Change only vertical arc height. Capture one low point-path state and one above-center state with the same Attack.” | two height gates appear |

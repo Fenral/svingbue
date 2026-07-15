@@ -698,7 +698,7 @@ Sources define the real parameters only. They do not validate
 | S4 | “Use the ledger to preserve the effective value. The engine, not the rounded display, decides the gate.” | live target gate |
 | S5 | “You can now read the app's raw-to-effective transform. Core Academy progress remains unchanged.” | EXPLORED result |
 
-Shared voice/caption/accessibility policy applies. Voice never says “mastered.”
+Shared voice/caption/accessibility policy applies. Voice never says `mastered`.
 
 ## 10. State, compatibility and rewards
 

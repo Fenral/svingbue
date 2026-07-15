@@ -361,7 +361,8 @@ The learner holds the lock control for one deliberate confirmation. Announce:
 
 Voice:
 
-> “These launch numbers will not move while you change the chamber.”
+> “These launch numbers stay fixed while you change the air inside this
+> chamber.”
 
 #### Step B — Change altitude
 
@@ -389,7 +390,8 @@ Reveal:
 
 Voice:
 
-> “Warmer air lowered this proxy. Ball speed and launch stayed fixed.”
+> “Warmer air lowered this proxy while Ball Speed and Launch remained
+> completely fixed.”
 
 #### Step D — Combine them
 
@@ -651,10 +653,10 @@ Show the two mandatory states and unchanged launch ledger.
 | Trigger | Voice line | Visual companion |
 |---|---|---|
 | S0 first visit | “The strike is sealed. Altitude and temperature change only the estimated air layer after launch.” | launch partition locks |
-| Launch lock | “These launch numbers will not move while you change the chamber.” | immutable chips pin |
-| Altitude | “Higher altitude lowered the proxy. The solid engine flight stayed fixed.” | altitude feeds gauge |
-| Temperature | “Warmer air lowered this proxy. Ball speed and launch stayed fixed.” | temperature feeds same gauge |
-| Combined | “Two inputs, one density proxy, one estimated layer.” | connectors merge |
+| Launch lock | “These launch numbers stay fixed while you change the air inside this chamber.” | immutable chips pin |
+| Altitude | “Higher altitude lowered the proxy while the solid engine flight stayed completely fixed.” | altitude feeds gauge |
+| Temperature | “Warmer air lowered this proxy while Ball Speed and Launch remained completely fixed.” | temperature feeds same gauge |
+| Combined | “Two environmental inputs now feed one density proxy and one estimated flight layer.” | connectors merge |
 | Same-shot success | “Same engine shot. Different estimate. Do not move the cause back into the strike.” | dashed traces split |
 | Drag/lift | “Thinner air reduces drag and lift. This multiplier compresses both into an estimate.” | opposing arrows merge |
 | Mastery | “Air layer confirmed. Next, separate wind's distance effect from its sideways drift.” | Wind route appears |

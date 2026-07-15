@@ -131,12 +131,26 @@ launch value. Wind preserves engine Start + Curve = Carry Side, then adds Wind
 Drift as a separate first-order EST layer. All frozen speed, carry, air and wind
 fixtures pass.
 
+The cross-curriculum acceptance audit is also complete at specification level:
+
+- `docs/superpowers/specs/2026-07-15-academy-cross-curriculum-acceptance-audit.md`;
+- ownership reconciliation: 24/24, no duplicate or orphan;
+- voice reconciliation: 99/99 cues within 12–24 words and no experience above
+  the eight-signature budget;
+- structure reconciliation: all 14 experience documents pass;
+- 297 fresh flight/geometry/conditions assertions pass against the unchanged
+  engines.
+
+The audit corrected one stale Wind fixture before acceptance. The current
+Dynamic-Loft-30 baseline uses Face weight 0.7500, Start Direction +0.2500° and
+engine Carry Side +13.4326 yd. The corrected first-order endpoints are
++19.6251 yd for the normative head/left-cross state and +5.8006 yd for the
+tail/right-cross state. No protected physics code changed.
+
 ## Exact next actions
 
-1. Complete the cross-curriculum physics, ownership, prerequisite, voice,
-   accessibility, migration and live-gate audit across all 14 experiences.
-2. Produce the shared Academy Home/store migration specification and plan.
-3. Produce one sequential implementation plan per experience (or amendment),
+1. Produce the shared Academy Home/store migration specification and plan.
+2. Produce one sequential implementation plan per experience (or amendment),
    then a Claude Code execution index that forbids multi-experience batches.
 3. Do not begin production implementation or modify `impact-flight.js` during
    this planning goal.

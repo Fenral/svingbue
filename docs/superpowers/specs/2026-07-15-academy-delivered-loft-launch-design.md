@@ -370,7 +370,8 @@ Correct:
 
 1. “Dynamic Loft sets face orientation. Attack sets clubhead travel. The ball
    launch sits closer to loft.”
-2. “Attack has a smaller coefficient, but it still changes the outcome.”
+2. “Attack has a smaller coefficient than Dynamic Loft, but it still changes
+   the outcome.”
 
 Only line 1 autoplays.
 
@@ -719,7 +720,7 @@ all fixtures are Flightglass model claims.
 |---|---|---|
 | S0 | “Face, clubhead travel, and ball launch are three different arrows. Keep all three visible.” | arrows separate |
 | S1 | “Dynamic Loft sets face orientation. Attack sets clubhead travel. The ball launch sits closer to loft.” | labels highlight |
-| Attack comparison | “Attack has a smaller coefficient, but it still changes the outcome.” | smaller rail moves |
+| Attack comparison | “Attack has a smaller coefficient than Dynamic Loft, but it still changes the outcome.” | smaller rail moves |
 | S2 | “Dynamic Loft leads launch per degree. Both inputs also reshape Spin Loft, so equal launch can hide very different flights.” | Launch aligns, downstream diverges |
 | S3 | “Launch Angle is one outcome. It cannot uniquely identify delivered loft, Attack, or the whole flight.” | boundary chips |
 | S4 | “Match the launch window twice. Change the face-to-travel gap enough to separate Spin Loft.” | two capture slots |

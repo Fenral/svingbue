@@ -629,7 +629,8 @@ Five tasks; pass requires at least four plus Task 5.
 
 **Voice**
 
-> “Move only the bottom. Build ball-then-bottom, then bottom-then-ball.”
+> “Move only the bottom. Build ball-then-bottom first, then reverse it to
+> bottom-then-ball.”
 
 ### S5 — Result
 
@@ -748,7 +749,7 @@ fixtures come from the current Flightglass geometry engine.
 | S1 behind | “Move the bottom behind the ball, and impact occurs on the ascending side.” | order reverses |
 | S2 entry | “Low Point position leads the angle. Plane changes the exchange rate. Vertical depth leaves the model tangent unchanged.” | position, plane, depth roles sequence |
 | S3 | “Low Point helps explain the tangent. It does not, by itself, grade the strike or prescribe a swing.” | boundary chips resolve |
-| S4 | “Move only the bottom. Build ball-then-bottom, then bottom-then-ball.” | two capture slots appear |
+| S4 | “Move only the bottom. Build ball-then-bottom first, then reverse it to bottom-then-ball.” | two capture slots appear |
 | Pass | “You located the bottom and read its order. Next, move the arc up and down without changing that direction.” | Strike Depth destination |
 
 Shared voice/caption policy from the curriculum blueprint applies.

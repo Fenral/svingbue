@@ -646,8 +646,8 @@ Show both normative states and the inference limit.
 | Trigger | Voice line | Visual companion |
 |---|---|---|
 | S0 first visit | “This engine gives Carry one direct input: ball speed. Launch and spin still matter in real flight.” | Ball Speed connector appears |
-| Definition | “Carry ends at the equal-elevation crossing, before any roll.” | carry plane locks |
-| Speed change | “Ball speed rose. The fitted carry endpoint moved with it.” | endpoint slides |
+| Definition | “Carry ends at the equal-elevation crossing, before any illustrative roll is added.” | carry plane locks |
+| Speed change | “Ball speed rose, so the fitted Carry endpoint moved farther downrange with it.” | endpoint slides |
 | Equal-Carry switch | “The trajectories changed. Current Carry did not. That is a model boundary, not a law of golf.” | traces meet the same plane |
 | Roll reveal | “Landing angle changes this illustrative tail. It does not predict the ground beneath you.” | dashed tails grow |
 | Real-world bridge | “Real carry also depends on launch and spin. This fit does not consume them.” | dotted connectors stop at boundary |

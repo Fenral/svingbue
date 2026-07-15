@@ -372,8 +372,12 @@ Narration is optional, local-first and supplementary. The target character is a
 calm American female laboratory/control-room voice: concise, observant and
 technically confident, never theatrical or conversationally needy.
 
-Each experience specification provides at most one authored line for each
-surface, selected from four jobs:
+Each experience specification provides at most one **automatic entry line** for
+each surface, selected from four jobs. A surface may additionally own a
+first-time Consequence or Recovery cue when the learner reveals a genuinely new
+relationship inside the instrument. These event cues are not page narration:
+they share the same once-per-signature suppression and never fire merely
+because a control moved.
 
 - **Orient:** name the new question.
 - **Cue:** direct attention to one control or comparison.
@@ -383,6 +387,10 @@ surface, selected from four jobs:
 Voice rules:
 
 - 12–24 words and normally 3–8 seconds per line;
+- no more than eight authored cue signatures per experience, including its six
+  possible surface-entry cues;
+- never start a second automatic line while another line is speaking, and do
+  not queue stale cues after rapid manipulation;
 - play only on first entry to content with a new narration signature;
 - do not replay on backward navigation, restore or unchanged revisits;
 - provide a visible Replay control and persistent captions;

@@ -363,7 +363,8 @@ Answer:
 
 Voice:
 
-> “Smash is a speed ratio, not an energy percentage.”
+> “Smash is a speed ratio between Ball Speed and Club Speed, not an energy
+> percentage.”
 
 #### Step C — Change Club Speed
 
@@ -659,11 +660,11 @@ Shared voice: calm American female laboratory/control-room character.
 | Trigger | Line | Visual companion |
 |---|---|---|
 | S0 first visit | “Club speed supplies the scale. The transfer ratio decides how much ball speed this model returns.” | CLUB and BALL illuminate |
-| Smash definition | “Smash is a speed ratio, not an energy percentage.” | divide equation resolves |
+| Smash definition | “Smash is a speed ratio between Ball Speed and Club Speed, not an energy percentage.” | divide equation resolves |
 | Club Speed change | “The ratio held. Ten more club miles per hour returned thirteen point two eight more ball speed.” | rails show before/after |
 | Spin-Loft change | “Club speed held. The model narrowed the transfer ratio as the delivery gap grew.” | ratio gate narrows |
 | Equal-output success | “Different speed and ratio. Same ball speed. The outcome alone cannot tell you which delivery created it.” | pulses meet one ruler tick |
-| Boundary reveal | “Impact location is real. This transfer model does not measure it.” | dashed port appears |
+| Boundary reveal | “Impact location is real, but this transfer model cannot see or measure it.” | dashed port appears |
 | Mastery | “Transfer confirmed. Next, test what this ball speed does — and does not do — to carry.” | Carry destination appears |
 
 Rules:

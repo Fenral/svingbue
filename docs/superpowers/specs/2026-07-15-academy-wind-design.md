@@ -236,8 +236,8 @@ Immutable current outputs:
 
 | Output | Value |
 |---|---:|
-| Face weight | 0.7700 |
-| Start Direction | +0.3100° |
+| Face weight | 0.7500 |
+| Start Direction | +0.2500° |
 | Spin Loft | 33° |
 | Smash | 1.328 |
 | Ball Speed | 126.16 mph |
@@ -246,7 +246,7 @@ Immutable current outputs:
 | Backspin | 7493.90 rpm |
 | Carry | 183.5339 yd |
 | Curve | +12.6318 yd |
-| Carry Side | +13.6248 yd |
+| Carry Side | +13.4326 yd |
 
 ### 4.8 Normative wind states
 
@@ -259,7 +259,7 @@ HeadTailMultiplier 0.8776
 EstimatedWindCarry 161.0693 yd
 ExposureAmplifier 1.153392857
 WindDrift +6.1925 yd
-FirstOrderWindSideEstimate +19.8173 yd
+FirstOrderWindSideEstimate +19.6251 yd
 ```
 
 State B:
@@ -271,7 +271,7 @@ HeadTailMultiplier 1.0816
 EstimatedWindCarry 198.5103 yd
 ExposureAmplifier 1.153392857
 WindDrift −7.6320 yd
-FirstOrderWindSideEstimate +5.9928 yd
+FirstOrderWindSideEstimate +5.8006 yd
 ```
 
 The 12 mph headwind costs 22.4645 yd relative to engine Carry; the equal
@@ -445,7 +445,8 @@ Then compare 12 mph tailwind:
 
 Voice:
 
-> “Equal headwind and tailwind are not mirror images in this estimator.”
+> “Equal headwind and tailwind are not mirror images inside this Flightglass
+> estimator.”
 
 #### Step D — Apply crosswind component
 
@@ -455,7 +456,7 @@ Reveal:
 
 Then compose:
 
-> 13.6248 engine Carry Side + 6.1925 wind drift = 19.8173 yd · FIRST-ORDER EST
+> 13.4326 engine Carry Side + 6.1925 wind drift = 19.6251 yd · FIRST-ORDER EST
 
 The engine endpoint remains visible underneath.
 
@@ -743,7 +744,7 @@ formulas. Source UI must not imply otherwise.
 |---|---|---|
 | S0 first visit | “One wind, two jobs. Along the line changes estimated Carry. Across it adds estimated drift.” | vector splits |
 | Engine baseline | “Wind starts after this result. It does not erase the shot's own start and curve.” | solid components lock |
-| Head/tail | “Equal headwind and tailwind are not mirror images in this estimator.” | Carry rulers compare |
+| Head/tail | “Equal headwind and tailwind are not mirror images inside this Flightglass estimator.” | Carry rulers compare |
 | Crosswind | “Crosswind adds drift after engine Carry Side. It is not engine Curve.” | dashed segment attaches |
 | Exposure | “Launch and Spin Loft are only exposure proxies here, not a measured flight-time solve.” | EST badge pulses once |
 | Invariance | “The wind estimate moved the flight layer. Launch spin and spin axis stayed where impact set them.” | launch chips pin |
@@ -830,7 +831,7 @@ Normative baseline must return:
 - Carry 183.5338981;
 - Spin Axis +4.5°;
 - Curve +12.6317594;
-- Carry Side +13.6247685;
+- Carry Side +13.4325746;
 - Backspin 7493.904 rpm.
 
 State A must return:
@@ -839,14 +840,14 @@ State A must return:
 - Carry 161.0693490;
 - exposure 1.153392857;
 - drift +6.1925412;
-- first-order side +19.8173097.
+- first-order side +19.6251158.
 
 State B must return:
 
 - multiplier 1.0816;
 - Carry 198.5102642;
 - drift −7.6320107;
-- first-order side +5.9927578.
+- first-order side +5.8005639.
 
 All immutable engine fields must be value-identical across Calm/A/B.
 

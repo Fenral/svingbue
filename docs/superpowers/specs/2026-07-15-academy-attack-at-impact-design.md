@@ -750,7 +750,7 @@ Flightglass's coefficients and rigid-circle mapping remain model claims.
 |---|---|---|
 | First S0 entry | “Ignore loft and launch for a moment. Read only the clubhead's direction at impact.” | Other arrows dim; tangent remains |
 | First S1 entry | “The tangent is the direction. Below the horizon is negative; above it is positive.” | Horizon and wedge highlight |
-| Arrow distinction | “Loft, launch, and attack can point differently. Keep their arrows separate.” | Three labeled arrows separate |
+| Arrow distinction | “Loft, launch, and attack can point differently. Keep their arrows separate inside this instrument.” | Three labeled arrows separate |
 | S2 entry | “Attack moves modeled Spin Loft one for one. Its direct Launch Angle effect is smaller: one quarter degree.” | Two rails update together |
 | S3 conclusion | “Attack tells direction at impact. It does not, by itself, tell launch, contact quality, or the correct target.” | Four inference chips resolve |
 | S4 live | “Move the impact point, not the number. Build one descending and one ascending tangent.” | Number hides; arc gate appears |

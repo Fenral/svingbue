@@ -894,10 +894,10 @@ and boundaries; they do not validate Flightglass's numeric transforms.
 | First S0 entry | “Keep the same start line. Now make the flight bend left, right, or not at all.” | Three traces share the rail, then separate | Yes |
 | First S1 entry | “Match Face and Path first. The flight starts right, but it does not bend.” | Face and Path align; axis puck levels | Yes |
 | First separated state | “The start stayed fixed. The gap changed, so the modeled shape changed.” | Gap brace opens; curve trace draws | Yes |
-| First reversed state | “Reverse the gap, and the curve reverses with it.” | Brace and axis flip; trace crosses rail | Yes |
+| First reversed state | “Reverse the gap, and the modeled curve reverses while the separate start line remains visible.” | Brace and axis flip; trace crosses rail | Yes |
 | S2 entry | “The gap sets the modeled tilt. Carry changes how far that tilt can move the ball sideways.” | Chain highlights, then Carry amplifier | Yes |
 | S3 boundary reveal | “Face-to-Path is powerful, but centered contact is an assumption—not a fact measured by this phone.” | HELD and NOT MODELED chips appear | Yes |
-| S4 live task | “Same start. Opposite gaps. Build both shapes yourself.” | Start gate pulses once | Yes |
+| S4 live task | “Hold the same start, create opposite gaps, and build both modeled shapes yourself.” | Start gate pulses once | Yes |
 | Pass | “You held the start and changed the shape. Next, combine both to explain the landing side.” | Evidence card resolves | Yes |
 
 Voice requirements:
