@@ -47,6 +47,12 @@ test('legacy Offline completion becomes reviewable Carry Side without mastery or
   assert.equal(experience.status,'practiced');assert.equal(experience.reviewEligible,true);assert.deepEqual(experience.legacyEvidence,['offline']);assert.equal(experience.acceptedAttemptId,null);assert.equal(next.xp,0);
 });
 
+test('legacy Attack Angle completion becomes reviewable without silent mastery or reward', () => {
+  const seed=createAcademySeed();seed.lessons['attack-angle'].completed=true;seed.lessons['attack-angle'].quizBestCorrect=5;
+  const next=migrateOutcomeAcademy(seed,{now:NOW});const experience=next.experiences['attack-at-impact'];
+  assert.equal(experience.status,'practiced');assert.equal(experience.reviewEligible,true);assert.deepEqual(experience.legacyEvidence,['attack-angle']);assert.equal(experience.acceptedAttemptId,null);assert.equal(experience.evidence.liveTransferPassed,false);assert.equal(next.xp,0);
+});
+
 test('accepted native Backspin is grandfathered once with a zero-value reward guard', () => {
   const seed = createAcademySeed();
   seed.xp = 420;
