@@ -31,6 +31,12 @@ www/
 
 # Build outputs
 build/
+# ...but the vendored Three.js build is a dependency that must travel with the
+# repo (the native WKWebView has no CDN and loads it by relative path). The
+# generic build/ rule above was silently swallowing it, which left Geometry 3D
+# blank on every fresh checkout.
+!vendor/three/build/
+!vendor/three/build/**
 *.ipa
 *.app.dSYM
 *.dSYM.zip
