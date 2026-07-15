@@ -13,7 +13,7 @@ wait.
 
 | Agent | Branch | Working on | Since |
 |-------|--------|-----------|-------|
-| — | — | — | — |
+| Codex | `agent/academy-codex` | Batch 1 — Start Line model/content/instrument/mastery/voice + regressions | 2026-07-15 |
 
 ## Queue / free to take
 
@@ -21,8 +21,10 @@ wait.
   `docs/superpowers/plans/2026-07-15-academy-outcome-curriculum-rollout.md`.
   Each batch has a spec/plan pair under `docs/superpowers/{specs,plans}/`.
   Build through the gate pipeline in `academy-completion-loop.md`.
-  **Batch 1 is blocked** until the Batch 0 visreg/pairwise, licensed-audio and
-  required device/human gates recorded in `STATUS.md` are closed.
+  Owner instruction on 2026-07-15 authorizes the remaining curriculum source
+  implementation to continue sequentially. Batch 0 visreg/pairwise,
+  licensed-audio and device/human gates remain release/acceptance holds in
+  `STATUS.md`; they may not be reported as passed or waived.
 - Ready surfaces (Home, Range, Visualise, Outcome, Compare, Strike Window,
   Paywall) — mocks + decision docs exist; each still needs its own plan/spec
   pair before build.
