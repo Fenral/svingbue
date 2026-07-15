@@ -13,7 +13,7 @@ wait.
 
 | Agent | Branch | Working on | Since |
 |-------|--------|-----------|-------|
-| Codex | `agent/academy-codex` | Batch 9 — Flight Height & Descent source implementation + regressions | 2026-07-15 |
+| Codex | `agent/academy-codex` | Batch 10 — Speed Transfer source implementation + regressions | 2026-07-15 |
 
 ## Queue / free to take
 
@@ -31,6 +31,9 @@ wait.
 
 ## Done / handed off
 
+- Academy Batch 9 Flight Height & Descent source implementation —
+  `agent/academy-codex`, commit `5263fb2`; protected profile adapter, same-Apex
+  live mastery, grandfather path, six voice cues and both browser engines green.
 - Academy Batch 8 Backspin compatibility amendment — `agent/academy-codex`,
   commit `915f300`; exact truth/result/router copy, grandfather migration and
   both browser engines are green. Licensed-audio and external visual gates remain.
