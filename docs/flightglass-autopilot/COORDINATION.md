@@ -13,7 +13,7 @@ wait.
 
 | Agent | Branch | Working on | Since |
 |-------|--------|-----------|-------|
-| _None_ | — | — | — |
+| Codex | `agent/academy-codex` | Academy visual acceptance: `outputs/visreg-baselines/*.png`, new `outputs/flightglass-academy-acceptance/` evidence, and final `STATUS.md` / `SESSION-HANDOFF.md` updates | 2026-07-15 |
 
 ## Queue / free to take
 
