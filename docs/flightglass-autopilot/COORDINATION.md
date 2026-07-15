@@ -13,7 +13,7 @@ wait.
 
 | Agent | Branch | Working on | Since |
 |-------|--------|-----------|-------|
-| Codex | `agent/academy-codex` | Distinct Voice exploration round 3: production script/test, `package.json`, runbook; ignored audio/provenance only | 2026-07-16 |
+| _None_ | — | — | — |
 
 ## Queue / free to take
 
@@ -30,6 +30,12 @@ wait.
   pair before build.
 
 ## Done / handed off
+
+- Academy distinct Voice exploration round 3 — `agent/academy-codex`; Nordic
+  Lab Lead, Flight Director and Performance Scientist each produced three
+  provenance-blind `R3-*` candidates on identical copy. The resume-safe
+  `voice:explore` and round-three selection path are documented and covered by
+  the green 28-test Voice suite. Final blind selection remains pending.
 
 - Academy Voice refinement round 2 — `agent/academy-codex`; B and E were
   recorded as round-one finalists, each received one subtle ElevenLabs Remix,

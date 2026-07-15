@@ -4,12 +4,14 @@ import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
+  ALTERNATIVE_DIRECTIONS,
   AUDITION_LINES,
   VOICE_DIRECTIONS,
   academyVoiceCatalog,
   academyVoiceInventory,
   buildFfmpegArgs,
   createAuditionRequests,
+  createAlternativeRequests,
   createRefinementRequests,
   createTtsRequest,
   loadElevenLabsApiKey,
@@ -68,10 +70,21 @@ test('refinement stage preserves B and E identity while correcting different del
   assert.equal(requests.some(request => 'xi-api-key' in request.body), false);
 });
 
+test('alternative round explores three distinct Flightglass brand voices on identical copy', () => {
+  const requests = createAlternativeRequests();
+  assert.deepEqual(requests.map(request => request.direction), ['nordicLabLead', 'flightDirector', 'performanceScientist']);
+  assert.equal(Object.keys(ALTERNATIVE_DIRECTIONS).length, 3);
+  assert.equal(new Set(requests.map(request => request.body.text)).size, 1);
+  assert.equal(new Set(requests.map(request => request.body.voice_description)).size, 3);
+  assert.equal(requests.every(request => request.body.loudness <= 0.1), true);
+  assert.equal(requests.some(request => 'xi-api-key' in request.body), false);
+});
+
 test('round-two selection stays on its separate private provenance map', () => {
   assert.equal(selectionProvenanceFile('B'), 'provenance-map.json');
   assert.equal(selectionProvenanceFile('r2-e'), 'refinement-round-2-provenance.json');
-  assert.throws(() => selectionProvenanceFile('R3-A'));
+  assert.equal(selectionProvenanceFile('r3-i'), 'alternative-round-3-provenance.json');
+  assert.throws(() => selectionProvenanceFile('R4-A'));
 });
 
 test('TTS request preserves caption truth while expanding spoken rpm', () => {

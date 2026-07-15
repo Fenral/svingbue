@@ -12,6 +12,7 @@
     "voice:inventory": "node scripts/academy-voice-production.mjs inventory",
     "voice:preflight": "node scripts/academy-voice-production.mjs preflight",
     "voice:audition": "node scripts/academy-voice-production.mjs audition",
+    "voice:explore": "node scripts/academy-voice-production.mjs explore",
     "voice:refine": "node scripts/academy-voice-production.mjs refine",
     "voice:select": "node scripts/academy-voice-production.mjs select",
     "voice:generate": "node scripts/academy-voice-production.mjs generate",

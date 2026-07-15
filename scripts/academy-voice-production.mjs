@@ -69,6 +69,12 @@ export const REFINEMENT_DIRECTIONS = Object.freeze({
   theatrical: 'Preserve the appealing voice identity, General American accent and grounded timbre. Remove theatrical and dramatic delivery: shorten trailer-like pauses, flatten heightened stakes, reduce performative emphasis and use a calm 150 to 155 words-per-minute laboratory control-room cadence. Keep restrained warmth, precise diction, dry close-mic clarity and low fatigue. Never intimate, breathy, futuristic or chirpy.'
 });
 
+export const ALTERNATIVE_DIRECTIONS = Object.freeze({
+  nordicLabLead: 'Adult female Nordic laboratory lead speaking near-native international English with only a faint Scandinavian cadence. Grounded lower-middle register, understated warmth, quiet confidence and precise scientific diction. Calm 150 to 155 words per minute, natural short pauses and dry close-mic clarity at low phone volume. Distinctly human and observant, never strongly accented, breathy, intimate, theatrical, chirpy or assistant-like.',
+  flightDirector: 'Mature General American female aerospace flight director. Calm under pressure, concise, authoritative without severity and exceptionally clear. Grounded middle register, restrained emphasis, clipped but natural technical phrasing, 150 to 155 words per minute and dry close-mic delivery. Trustworthy over long sessions, never cinematic, militaristic, futuristic, breathy, chatty or robotic.',
+  performanceScientist: 'Adult female elite golf performance scientist speaking General American English. Observant, practical and technically fluent with subtle athletic energy and humane curiosity. Clear grounded register, restrained warmth, concise 150 to 155 words-per-minute delivery and natural short pauses. Sounds like a scientist beside the player, never a motivational coach, virtual assistant, broadcaster, intimate narrator or theatrical character.'
+});
+
 const sha256 = value => createHash('sha256').update(value).digest('hex');
 const json = value => `${JSON.stringify(value, null, 2)}\n`;
 const sleep = ms => new Promise(resolveSleep => setTimeout(resolveSleep, ms));
@@ -149,6 +155,22 @@ export function createRefinementRequests(finalists) {
       }
     };
   });
+}
+
+export function createAlternativeRequests() {
+  const text = AUDITION_LINES.join(' ');
+  return Object.entries(ALTERNATIVE_DIRECTIONS).map(([direction, voiceDescription], index) => ({
+    direction,
+    body: {
+      voice_description: voiceDescription,
+      text,
+      auto_generate_text: false,
+      loudness: 0.05,
+      quality: 0.9,
+      seed: 6301 + index,
+      guidance_scale: 3
+    }
+  }));
 }
 
 export function stableCueSeed(cueId) {
@@ -277,6 +299,69 @@ async function createAuditions() {
   return { candidateCount: mapping.length, blindDirectory: relative(ROOT, blindRoot).replaceAll('\\', '/'), paidProviderCalls: createAuditionRequests().length };
 }
 
+async function exploreAlternativeVoices() {
+  const explorationRoot = resolve(WORK_ROOT, 'alternative-round-3');
+  const auditionRoot = resolve(explorationRoot, 'auditions');
+  const blindRoot = resolve(explorationRoot, 'blind');
+  const privateRoot = resolve(WORK_ROOT, 'private');
+  const provenancePath = resolve(privateRoot, 'alternative-round-3-provenance.json');
+  ensureDir(auditionRoot); ensureDir(blindRoot); ensureDir(privateRoot);
+  if (existsSync(provenancePath)) {
+    const existing = JSON.parse(readFileSync(provenancePath, 'utf8'));
+    return {
+      existing: true,
+      candidateCount: existing.candidates.length,
+      blindDirectory: relative(ROOT, blindRoot).replaceAll('\\', '/'),
+      paidProviderCalls: 0
+    };
+  }
+
+  const key = requireApiKey();
+  const candidates = [];
+  for (const request of createAlternativeRequests()) {
+    const response = await providerRequest(`/v1/text-to-voice/create-previews?output_format=${SOURCE_FORMAT}`, { key, body: request.body });
+    for (const [index, preview] of response.previews.entries()) {
+      const path = resolve(auditionRoot, `source-${request.direction}-${index + 1}.mp3`);
+      writeFileSync(path, Buffer.from(preview.audio_base_64, 'base64'));
+      candidates.push({
+        direction: request.direction,
+        variant: index + 1,
+        generatedVoiceId: preview.generated_voice_id,
+        durationSeconds: preview.duration_secs,
+        mediaType: preview.media_type,
+        sourceFile: relative(WORK_ROOT, path).replaceAll('\\', '/'),
+        voiceDescriptionSha256: sha256(request.body.voice_description),
+        auditionTextSha256: sha256(request.body.text)
+      });
+    }
+  }
+  const mapping = shuffled(candidates).map((candidate, index) => ({ blindLabel: `R3-${String.fromCharCode(65 + index)}`, ...candidate }));
+  for (const candidate of mapping) {
+    copyFileSync(resolve(WORK_ROOT, candidate.sourceFile), resolve(blindRoot, `${candidate.blindLabel}.mp3`));
+  }
+  writeJson(provenancePath, {
+    schemaVersion: 1,
+    round: 3,
+    createdAt: new Date().toISOString(),
+    provider: 'ElevenLabs',
+    directions: Object.keys(ALTERNATIVE_DIRECTIONS),
+    candidates: mapping
+  });
+  writeJson(resolve(blindRoot, 'instructions.json'), {
+    schemaVersion: 1,
+    round: 3,
+    criteria: ['distinct Flightglass identity', 'clarity at low phone volume', 'technical trust', 'low fatigue'],
+    auditionLines: AUDITION_LINES,
+    verdictTemplate: { winner: null, identity: null, clarity: null, trust: null, lowFatigue: null, notes: '' },
+    warning: 'Do not open ../../private/alternative-round-3-provenance.json until the round-three verdict is recorded.'
+  });
+  return {
+    candidateCount: mapping.length,
+    blindDirectory: relative(ROOT, blindRoot).replaceAll('\\', '/'),
+    paidProviderCalls: createAlternativeRequests().length
+  };
+}
+
 function argumentValue(args, name) {
   const index = args.indexOf(name);
   return index >= 0 ? args[index + 1] : null;
@@ -403,7 +488,8 @@ async function refineVoices(args) {
 
 export function selectionProvenanceFile(candidate) {
   const label = String(candidate || '').toUpperCase();
-  if (!/^(?:[A-Z]|R2-[A-F])$/.test(label)) throw new Error('Select one blind label with --candidate A or --candidate R2-A.');
+  if (!/^(?:[A-Z]|R2-[A-F]|R3-[A-I])$/.test(label)) throw new Error('Select one blind label with --candidate A, --candidate R2-A or --candidate R3-A.');
+  if (label.startsWith('R3-')) return 'alternative-round-3-provenance.json';
   return label.startsWith('R2-') ? 'refinement-round-2-provenance.json' : 'provenance-map.json';
 }
 
@@ -534,6 +620,15 @@ async function generatePack(args) {
 function dryRun(command, args) {
   const inventory = academyVoiceInventory();
   if (command === 'audition') return { dryRun: true, command, paidProviderCalls: 3, characters: createAuditionRequests().reduce((sum, request) => sum + request.body.text.length, 0), executeWith: 'npm run voice:audition -- --execute --confirm-paid-api' };
+  if (command === 'explore') return {
+    dryRun: true,
+    command,
+    directions: Object.keys(ALTERNATIVE_DIRECTIONS),
+    paidProviderCalls: 3,
+    characters: createAlternativeRequests().reduce((sum, request) => sum + request.body.text.length, 0),
+    expectedBlindCandidates: 9,
+    executeWith: 'npm run voice:explore -- --execute --confirm-paid-api'
+  };
   if (command === 'refine') {
     const finalists = refinementLabels(args);
     return {
@@ -565,9 +660,10 @@ export async function main(argv = process.argv.slice(2)) {
     workRootIgnored: true,
     paidCallMade: false
   };
-  if (!['audition', 'refine', 'select', 'generate'].includes(command)) throw new Error(`Unknown Academy voice-production command: ${command}`);
+  if (!['audition', 'explore', 'refine', 'select', 'generate'].includes(command)) throw new Error(`Unknown Academy voice-production command: ${command}`);
   if (!paidExecutionRequested(args)) return dryRun(command, args);
   if (command === 'audition') return createAuditions();
+  if (command === 'explore') return exploreAlternativeVoices();
   if (command === 'refine') return refineVoices(args);
   if (command === 'select') return selectVoice(args);
   return generatePack(args);

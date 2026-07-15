@@ -36,6 +36,7 @@ These commands make no paid call:
 npm run voice:inventory
 npm run voice:preflight
 npm run voice:audition
+npm run voice:explore
 npm run voice:refine -- --finalists B,E
 npm run voice:generate
 ```
@@ -65,11 +66,27 @@ Listen only to the six files under
 one `R2-*` winner before opening the private round-two provenance. Round two is
 resume-safe and returns the existing candidates when rerun.
 
+If the original concept still feels too generic, run the separate brand-voice
+exploration. It compares Nordic Lab Lead, Flight Director and Performance
+Scientist on identical copy, producing nine blinded `R3-*` candidates without
+overwriting either earlier round:
+
+```powershell
+npm run voice:explore
+npm run voice:explore -- --execute --confirm-paid-api
+```
+
+Listen only under
+`.voice-production/control-room-en-us-v1/alternative-round-3/blind/` and record
+one winner before opening its private provenance map. Rerunning the command
+returns the existing candidates and makes no additional paid calls.
+
 Create the selected designed voice from either round:
 
 ```powershell
 npm run voice:select -- --candidate A --execute --confirm-paid-api
 npm run voice:select -- --candidate R2-A --execute --confirm-paid-api
+npm run voice:select -- --candidate R3-A --execute --confirm-paid-api
 ```
 
 Run only one of those commands and replace the example with the recorded blind
