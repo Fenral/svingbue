@@ -7,7 +7,7 @@ Updated: 2026-07-15
 - Remote: `Fenral/svingbue`
 - Working branch for this handoff: `agent/academy-codex`, rebased on
   `agent/travel-sync` commit `2978756`.
-- Purpose: recoverable Batch 0 implementation and truthful verification
+- Purpose: recoverable Batch 0–1 implementation and truthful verification
   evidence. This branch is not a release branch.
 - Repository visibility: private, verified on 2026-07-13.
 
@@ -18,23 +18,22 @@ identity concept pages are preserved in `docs/concepts/flightglass/`.
 ## Execution state
 
 Phase 0 is complete and the Backspin reference shell remains STUDIO-GRADE.
-Academy Batch 0 is now implemented on `agent/academy-codex` through source
-commit `449fc1c`: native outcome Home, additive store migration, registry,
-router, recommendation logic, shared experience host and local caption-ready
-Voice foundation. Backspin is connected to that host without physics or copy
-changes. No later Academy module was started. Read
+Academy Batch 0 is implemented through `449fc1c`; Batch 1 Start Line is source-
+complete at `3ba5a83`. Start Line now has its native S0–S5 departure instrument,
+model adapter, content/sheets, myths, deterministic two-phase mastery transfer,
+shared-store reward transaction and six caption-ready voice cues. Read
 `docs/FLIGHTGLASS-CLAUDE-CODE-MASTER-PLAN.md`, the Academy rollout index and
 `docs/flightglass-autopilot/STATUS.md` before implementation.
 
-Final automated evidence is green except the deliberately unapproved visual
-and release-only voice gates: Academy 108/108, WebKit 47/47, shared controls
-28/28, voice 18/18, perf 1.5/2.0 ms p95, brand/autopilot PASS and 16/16 native
-package parity. Visual regression has one remaining 0.135% Chromium Lab delta;
-47/48 captures pass. The voice pack has 11 exact local captions and zero audio
-assets; strict release verification fails closed on missing licensed files and
-rights. Pairwise-blind UI judgment and physical-device/VoiceOver/audio/fatigue
-checks also remain open. Therefore Batch 0 is implemented, **not accepted**, and
-Batch 1 must not start.
+Fresh Batch 1 automated evidence is green: model/content 10/10, Start Line
+browser 6/6 in each engine, Academy foundation 53/53, full integration/browser
+71/71, perf 2/2 and visual regression 3/3 without baseline changes. Brand and
+native package parity pass, and protected physics hashes are unchanged. The
+voice pack now has 17 exact local captions and zero licensed audio assets;
+strict release verification remains fail-closed. Pairwise-blind UI judgment and
+physical-device/VoiceOver/audio/fatigue checks also remain open. Therefore
+Batches 0–1 are implemented, **not release-accepted**. The owner explicitly
+authorized sequential source work to continue; Batch 2 Shape is next.
 
 Use `docs/flightglass-autopilot/academy-batch-loop-prompt.md` for the next loop.
 The two committed Home captures are under `outputs/academy-batch0/`; temporary

@@ -13,7 +13,6 @@ wait.
 
 | Agent | Branch | Working on | Since |
 |-------|--------|-----------|-------|
-| Codex | `agent/academy-codex` | Batch 1 — Start Line model/content/instrument/mastery/voice + regressions | 2026-07-15 |
 
 ## Queue / free to take
 
@@ -31,6 +30,9 @@ wait.
 
 ## Done / handed off
 
+- Academy Batch 1 Start Line source implementation — `agent/academy-codex`,
+  commit `3ba5a83`; model/content/native S0–S5/mastery/voice and regressions are
+  green. External pairwise, licensed-audio and device/human gates remain open.
 - Academy Batch 0 implementation — `agent/academy-codex`, native Home/store/
   registry/router/voice/host plus Backspin voice integration. Automated source
   work is handed off; acceptance remains held on the explicit external/visual

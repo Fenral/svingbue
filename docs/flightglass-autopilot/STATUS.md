@@ -13,7 +13,7 @@ publication after all Phase 8 gates pass. See `RELEASE-AUTHORIZATION.md`.
 | 3 · Outcome / Compare | Ready | Decisions and references locked in master plan |
 | 4 · Geometry 3D / Strike Window 2D | Ready | Consensus documents named |
 | 5 · Academy overview | Batch 0 implemented; acceptance held | Native Home/store/registry/router/host and caption-ready Voice foundation are coded and packaged; visual, audio-rights and human gates remain open |
-| 6 · Academy lesson system | Backspin STUDIO-GRADE base; shared Voice host integrated | Backspin retains its accepted renderer and now supplies semantic targets/events to Batch 0; later curriculum batches remain implementation-ready and sequential |
+| 6 · Academy lesson system | Backspin STUDIO-GRADE base; Start Line implemented | Start Line now owns its native S0–S5 renderer, raw model adapter, mandatory transfer gate and six caption-ready cues; later curriculum batches remain sequential |
 | 7 · Paywall | Ready | Pricing and compatibility rules locked |
 | 8 · Convergence and release QA | Ready | Global gates locked |
 
@@ -96,13 +96,12 @@ Fresh final implementation evidence on 2026-07-15:
 - Academy Home captures are committed under `outputs/academy-batch0/`.
   Regeneratable global visreg current captures remain uncommitted.
 
-Batch 0 is **implemented but not accepted**. Do not start Batch 1 yet. Open
-gates are explicit:
+Batch 0 is **implemented but not accepted**. The owner explicitly authorized
+sequential source implementation to continue while these release/acceptance
+gates remain fail-closed:
 
-- global visual regression is 2/3 PASS: 47/48 captures are within 0.1%; only
-  `chromium--430x932--normal--1-lab.png` is at 0.135% (541 pixels) after the
-  intentional quiet VOICE header action plus canvas raster variation. The
-  baseline was not auto-approved;
+- fresh global visual regression is now 3/3 PASS without changing an approved
+  baseline; the earlier transient 0.135% Chromium Lab delta did not reproduce;
 - provenance-blind pairwise judgment for Academy Home/voice UI has not run;
 - final licensed local audio, voice identity, rights evidence and listening
   gate do not exist yet, so the product remains caption-ready rather than
@@ -113,6 +112,41 @@ gates are explicit:
 Reusable autonomous execution text for later batches is committed at
 `docs/flightglass-autopilot/academy-batch-loop-prompt.md`. It requires the loop
 to fail external gates closed rather than weaken them.
+
+## Academy Batch 1 implementation checkpoint
+
+Start Line source implementation is complete on `agent/academy-codex` at
+`3ba5a83`. The canonical experience and all three legacy concept routes now use
+one native six-surface renderer. It includes the engine-backed departure
+instrument, Face/Path direct controls, delivered-loft modifier experiment,
+three prediction myths, deterministic mastery fixtures and the mandatory
+two-phase raw-value transfer. A shared store transaction owns Mastered and the
+single 120 XP award; the renderer cannot award either directly.
+
+Fresh implementation evidence on 2026-07-15:
+
+- Start Line model/content tests: 10/10 PASS; seven protected-engine fixtures,
+  contribution sums, raw ±0.10° tolerance, near miss and matched-state exception
+  are locked.
+- Start Line browser contract: 6/6 Chromium and 6/6 WebKit PASS. It proves
+  S0–S5 progression, legacy routing/sheets, 4/5 without transfer = Practiced,
+  valid transfer = Mastered, deterministic retry, reload and one-time XP.
+- `npm run test:academy`: 53/53 foundation plus 71/71 integration/browser PASS.
+- Development voice verification: 17 exact captions total, including six Start
+  Line cues; zero remote/runtime audio. Strict release remains fail-closed on
+  17 missing licensed files and unapproved distribution rights.
+- `npm run test:perf`: 2/2 PASS at 1.5 ms Chromium / 3.0 ms WebKit p95, below
+  the 16.7 ms budget. `npm run test:visreg`: 3/3 PASS without baseline changes.
+- Brand verification and fresh `npm run copy-web` PASS; Start Line shipping
+  source and `www/` copies are byte-identical.
+- Protected hashes remain unchanged: `impact-flight.js` `7e5323c3...`,
+  `swing-parameters-and-impact.js` `ae08553b...`, `diagnose-engine.js`
+  `9d1b5e83...`, `diagnose-engine-v2.js` `a7515049...`.
+
+Batch 1 is **source-complete but not release-accepted**. Provenance-blind
+pairwise judgment, licensed female voice assets/rights/listening evidence and
+physical-device/VoiceOver/fatigue gates remain open. Owner authorization allows
+the source loop to continue to Batch 2 without reporting those gates as passed.
 
 The Backspin 96-97 reference lesson (Phase 6, Tasks 1-11) completed final
 verification on 2026-07-14. Task 10 shipped the lesson through the native
