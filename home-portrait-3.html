@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#07060C">
+<meta name="robots" content="noindex">
+<title>Flightglass — Aperture</title>
+<link rel="stylesheet" href="./sa-p3.css">
+<style>
+  @view-transition{navigation:auto}
+  /* Fluid portrait composition verified at the 375 px and 430 px target widths. */
+  *{box-sizing:border-box}
+  html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg)}
+  body{min-width:320px;min-height:100dvh;color:var(--ink);font-family:var(--font-ui);-webkit-font-smoothing:antialiased;background:var(--bg)}
+  header{position:fixed;z-index:20;left:max(20px,env(safe-area-inset-left));right:max(20px,env(safe-area-inset-right));top:max(18px,env(safe-area-inset-top));height:44px;display:flex;align-items:center;justify-content:space-between}
+  .lockup{display:block;width:132px;height:auto;view-transition-name:sa-logo}.help{display:grid;place-items:center;width:44px;height:44px;border:1px solid var(--line);border-radius:50%;color:var(--muted);text-decoration:none;font:600 14px var(--font-mono)}
+  main{position:fixed;inset:0;padding:max(84px,calc(env(safe-area-inset-top) + 74px)) max(18px,env(safe-area-inset-right)) max(20px,env(safe-area-inset-bottom)) max(18px,env(safe-area-inset-left));display:flex;flex-direction:column;align-items:center;overflow:hidden}
+  .intro{align-self:stretch;display:flex;align-items:end;justify-content:space-between;gap:16px;padding:0 2px 14px;border-bottom:1px solid var(--line)}
+  .intro__kicker{margin:0 0 6px;color:var(--secondary);font-size:9px;font-weight:700;letter-spacing:.17em;text-transform:uppercase}.intro h1{margin:0;font:600 clamp(34px,9vw,43px)/.94 var(--font-display);letter-spacing:-.045em}.intro__counter{color:var(--muted);font:500 11px var(--font-mono);font-variant-numeric:tabular-nums}
+  .aperture-wrap{position:relative;width:min(82vw,352px);aspect-ratio:1;margin:32px auto 18px;flex:0 0 auto;touch-action:none}
+  .aperture{position:absolute;inset:17%;border:1px solid var(--line-strong);border-radius:50%;display:grid;place-items:center;text-align:center;background:#0D0A18;transition:border-color .2s var(--ease)}
+  .aperture::before{content:"";position:absolute;inset:-16%;border:1px solid var(--secondary-line);border-radius:50%;clip-path:polygon(0 0,100% 0,100% 62%,0 42%)}
+  .aperture::after{content:"";position:absolute;left:50%;top:-16%;width:2px;height:18%;background:var(--accent);transform:translateX(-50%)}
+  .reading{position:relative;z-index:2;display:grid;justify-items:center;gap:8px;padding:18px}
+  .reading__mode{color:var(--secondary);font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase}.reading__value{font:600 clamp(48px,15vw,68px)/.9 var(--font-display);letter-spacing:-.05em;font-variant-numeric:tabular-nums}.reading__detail{color:var(--muted);font-size:12px;line-height:1.35;min-height:32px}.reading__action{display:inline-flex;align-items:center;justify-content:center;min-width:138px;min-height:48px;margin-top:4px;padding:0 18px;border:1px solid var(--accent-line);border-radius:999px;color:var(--ink);text-decoration:none;font-size:12px;font-weight:700}.reading__action span{color:var(--accent);margin-left:8px}
+  .mode{position:absolute;z-index:4;min-width:82px;min-height:46px;padding:0 11px;border:1px solid var(--line);border-radius:999px;background:var(--bg);color:var(--muted);font:700 9px var(--font-ui);letter-spacing:.13em;text-transform:uppercase;cursor:pointer}.mode[aria-pressed="true"]{color:var(--ink);border-color:var(--secondary)}
+  .m-range{left:50%;top:0;transform:translate(-50%,-50%)}.m-outcome{right:0;top:50%;transform:translate(50%,-50%) rotate(90deg)}.m-academy{left:50%;bottom:0;transform:translate(-50%,50%)}.m-lab{left:0;top:50%;transform:translate(-50%,-50%) rotate(-90deg)}
+  .instruction{margin:auto 0 0;min-height:48px;display:flex;align-items:center;color:var(--muted);font-size:10px;letter-spacing:.06em;text-align:center;border-top:1px solid var(--line);padding:0 20px}
+  @media(max-width:390px){
+    .aperture-wrap{width:min(78vw,300px);margin-top:24px}.mode{min-width:74px;padding-inline:8px}.intro h1{font-size:34px}.reading__value{font-size:50px}.reading__action{min-height:46px}.intro{padding-bottom:10px}
+  }
+  @media(max-height:850px){
+    main{padding-top:max(76px,calc(env(safe-area-inset-top) + 66px))}.intro h1{font-size:32px}.aperture-wrap{width:min(70vw,280px);margin-top:20px;margin-bottom:10px}.reading{gap:6px}.reading__value{font-size:46px}.reading__detail{font-size:11px}.instruction{margin-top:auto}
+  }
+  @media(prefers-reduced-motion:reduce){.aperture{transition:none}::view-transition-old(root),::view-transition-new(root){animation-duration:.12s}}
+</style>
+</head>
+<body>
+<header>
+  <img class="lockup" src="./assets/flightglass-lockup.svg" alt="Flightglass">
+  <a class="help sa-focus" href="./academy.html" aria-label="Open Academy help">?</a>
+</header>
+<main aria-labelledby="apertureTitle">
+  <section class="intro">
+    <div><p class="intro__kicker">Portrait study 03 · Aperture</p><h1 id="apertureTitle">One lens.<br>Four depths.</h1></div>
+    <span class="intro__counter" id="counter" aria-hidden="true">01 / 04</span>
+  </section>
+  <div class="aperture-wrap" id="apertureWrap">
+    <button class="mode m-range sa-focus" type="button" data-mode="range" aria-pressed="true">Range</button>
+    <button class="mode m-outcome sa-focus" type="button" data-mode="outcome" aria-pressed="false">Outcome</button>
+    <button class="mode m-academy sa-focus" type="button" data-mode="academy" aria-pressed="false">Academy</button>
+    <button class="mode m-lab sa-focus" type="button" data-mode="lab" aria-pressed="false">Lab</button>
+    <section class="aperture" aria-live="polite">
+      <div class="reading">
+        <span class="reading__mode" id="modeLabel">Range</span>
+        <strong class="reading__value" id="modeValue" data-readout>154 m</strong>
+        <span class="reading__detail" id="modeDetail">Demo shot · 12 m right</span>
+        <a class="reading__action sa-focus" id="modeAction" href="./impact-viz-mock.html">Open Range <span>↗</span></a>
+      </div>
+    </section>
+  </div>
+  <p class="instruction">Tap a depth · swipe the aperture · use arrow keys</p>
+</main>
+<script>
+(() => {
+  const modes = {
+    range:{label:'Range',value:'154 m',detail:'Demo shot · 12 m right',href:'./impact-viz-mock.html'},
+    outcome:{label:'Outcome',value:'Fade',detail:'Demo reading · finished right',href:'./impact-outcome-mock.html'},
+    lab:{label:'Lab',value:'−3.5°',detail:'Attack · demo geometry',href:'./geometry-window-mock.html'},
+    academy:{label:'Academy',value:'Physics',detail:'Follow the cause, not a tip',href:'./academy.html'}
+  };
+  const order=['range','outcome','lab','academy'];
+  const label=document.getElementById('modeLabel'),value=document.getElementById('modeValue'),detail=document.getElementById('modeDetail'),action=document.getElementById('modeAction'),counter=document.getElementById('counter'),wrap=document.getElementById('apertureWrap');
+  let active='range',startX=0;
+  function select(key,focus=false){
+    if(!modes[key])return; active=key; const m=modes[key],i=order.indexOf(key);
+    label.textContent=m.label;value.textContent=m.value;detail.textContent=m.detail;action.href=m.href;action.firstChild.textContent=`Open ${m.label} `;counter.textContent=`0${i+1} / 04`;
+    document.querySelectorAll('[data-mode]').forEach(b=>{
+      if(b.hasAttribute('aria-pressed'))b.setAttribute('aria-pressed',String(b.dataset.mode===key));
+      if(b.hasAttribute('aria-selected'))b.setAttribute('aria-selected',String(b.dataset.mode===key));
+    });
+    if(focus)document.querySelector(`.mode[data-mode="${key}"]`)?.focus();
+  }
+  document.querySelectorAll('[data-mode]').forEach(b=>b.addEventListener('click',()=>select(b.dataset.mode)));
+  document.querySelectorAll('.mode').forEach(b=>b.addEventListener('keydown',e=>{
+    if(!['ArrowLeft','ArrowRight','Home','End'].includes(e.key))return;e.preventDefault();let i=order.indexOf(active);
+    if(e.key==='Home')i=0;else if(e.key==='End')i=order.length-1;else i=(i+(e.key==='ArrowRight'?1:-1)+order.length)%order.length;select(order[i],true);
+  }));
+  wrap.addEventListener('pointerdown',e=>{
+    if(e.target.closest('button,a'))return;
+    startX=e.clientX;wrap.setPointerCapture(e.pointerId);
+  });
+  wrap.addEventListener('pointerup',e=>{
+    if(e.target.closest('button,a') || !wrap.hasPointerCapture(e.pointerId))return;
+    const dx=e.clientX-startX;if(Math.abs(dx)<36)return;let i=order.indexOf(active);i=(i+(dx<0?1:-1)+order.length)%order.length;select(order[i]);
+  });
+  select(active);
+})();
+</script>
+</body>
+</html>

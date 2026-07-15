@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#07060C">
+<meta name="robots" content="noindex">
+<title>Flightglass — Shot Spine</title>
+<link rel="stylesheet" href="./sa-p3.css">
+<style>
+  @view-transition{navigation:auto}
+  *{box-sizing:border-box}
+  html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg)}
+  body{min-width:320px;min-height:100dvh;color:var(--ink);font-family:var(--font-ui);-webkit-font-smoothing:antialiased;background:radial-gradient(100% 60% at 50% 45%,#140E24 0%,#07060C 72%)}
+  header{position:fixed;z-index:20;left:max(20px,env(safe-area-inset-left));right:max(20px,env(safe-area-inset-right));top:max(18px,env(safe-area-inset-top));height:44px;display:flex;align-items:center;justify-content:space-between}
+  .lockup{display:block;width:132px;height:auto;view-transition-name:sa-logo}.help{display:grid;place-items:center;width:44px;height:44px;border:1px solid var(--line);border-radius:50%;color:var(--muted);text-decoration:none;font:600 14px var(--font-mono)}
+  main{position:fixed;inset:0;overflow:hidden;touch-action:none}
+  .title{position:absolute;z-index:4;left:max(20px,env(safe-area-inset-left));top:max(90px,calc(env(safe-area-inset-top) + 78px));max-width:240px}
+  .title__kicker{margin:0 0 7px;color:var(--secondary);font-size:10px;font-weight:700;letter-spacing:.17em;text-transform:uppercase}
+  .title h1{margin:0;font:600 clamp(36px,10vw,48px)/.92 var(--font-display);letter-spacing:-.05em}
+  .title p{margin:10px 0 0;color:var(--muted);font-size:12px;line-height:1.45}
+  .instrument{position:absolute;inset:148px 0 50px}
+  .instrument svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+  .axis{stroke:var(--secondary-line);stroke-width:1;stroke-dasharray:2 7;fill:none}
+  .trace{stroke:var(--accent);stroke-width:2.6;fill:none;stroke-linecap:round}
+  .tick{stroke:var(--secondary-line);stroke-width:1}
+  .tick-label{fill:var(--muted);font:500 9px var(--font-mono);letter-spacing:.08em}
+  .scrubber{position:absolute;z-index:8;left:50%;top:65%;width:64px;height:64px;transform:translate(-50%,-50%);border:0;background:transparent;border-radius:50%;cursor:grab;touch-action:none}
+  .scrubber::before{content:"";position:absolute;inset:20px;border-radius:50%;background:var(--accent);border:2px solid var(--ink)}
+  .scrubber::after{content:"";position:absolute;inset:11px;border:1px solid var(--accent-line);border-radius:50%}
+  .scrubber:active{cursor:grabbing}
+  .readout{position:absolute;z-index:7;left:max(20px,env(safe-area-inset-left));bottom:max(22px,env(safe-area-inset-bottom));display:grid;grid-template-columns:repeat(3,auto);gap:18px;min-height:56px;align-items:center}
+  .readout__item{display:grid;gap:3px}.readout__label{color:var(--muted);font-size:8px;font-weight:700;letter-spacing:.14em;text-transform:uppercase}.readout__value{font:600 14px var(--font-mono);font-variant-numeric:tabular-nums;color:var(--ink);min-width:52px}
+  .readout__value.live{color:var(--accent)}
+  nav{position:absolute;z-index:6;inset:0}
+  .station{position:absolute;display:grid;gap:3px;min-width:116px;min-height:54px;padding:9px 11px;color:var(--ink);text-decoration:none;border:1px solid var(--line);border-radius:12px;background:var(--plate-solid)}
+  .station:hover{border-color:var(--secondary-line)}
+  .station__label{color:var(--muted);font-size:8px;font-weight:700;letter-spacing:.14em;text-transform:uppercase}.station__value{font:600 12px/1.25 var(--font-mono);font-variant-numeric:tabular-nums}.station--range{border-color:var(--accent-line)}.station--range .station__label,.station--range .station__value{color:var(--accent)}.station--academy .station__value{color:var(--gold)}
+  .st-lab{left:max(18px,env(safe-area-inset-left));bottom:8%}.st-range{right:max(18px,env(safe-area-inset-right));bottom:32%}.st-outcome{left:max(18px,env(safe-area-inset-left));top:32%}.st-academy{right:max(18px,env(safe-area-inset-right));top:12%}
+  .hint{position:absolute;z-index:5;right:max(20px,env(safe-area-inset-right));bottom:max(26px,env(safe-area-inset-bottom));margin:0;color:var(--muted);font-size:9px;letter-spacing:.1em;text-transform:uppercase;white-space:nowrap}
+  @media(max-width:390px){
+    .title{max-width:210px}.title h1{font-size:36px}.station{min-width:106px;padding-inline:9px}.station__value{font-size:11px}
+    .readout{gap:10px}.readout__value{font-size:12px;min-width:46px}
+  }
+  @media(max-height:850px){
+    .title p{display:none}.title{top:max(80px,calc(env(safe-area-inset-top) + 68px))}.instrument{inset:132px 0 46px}
+    .st-academy{top:10%}.st-outcome{top:29%}.st-range{top:43%;bottom:auto}.st-lab{bottom:14%}
+  }
+  @media(prefers-reduced-motion:reduce){.scrubber{transition:none}.station{transition:none}::view-transition-old(root),::view-transition-new(root){animation-duration:.12s}}
+</style>
+</head>
+<body>
+<header>
+  <img class="lockup" src="./assets/flightglass-lockup.svg" alt="Flightglass">
+  <a class="help sa-focus" href="./academy.html" aria-label="Open Academy help">?</a>
+</header>
+<main id="stage" aria-labelledby="shotSpineTitle">
+  <section class="title">
+    <p class="title__kicker">Portrait study 02 · Shot Spine</p>
+    <h1 id="shotSpineTitle">Hold the<br>whole flight.</h1>
+    <p>Drag the ember. The shot explains itself at every point.</p>
+  </section>
+  <div class="instrument" id="instrument" aria-hidden="true">
+    <svg viewBox="0 0 430 720" preserveAspectRatio="none">
+      <path class="axis" d="M215 680 C130 560 302 420 215 70"/>
+      <path class="trace" d="M215 680 C130 560 302 420 215 70"/>
+      <g><line class="tick" x1="200" y1="680" x2="230" y2="680"/><text class="tick-label" x="238" y="684">IMPACT</text></g>
+      <g><line class="tick" x1="201" y1="500" x2="229" y2="500"/><text class="tick-label" x="237" y="504">50 M</text></g>
+      <g><line class="tick" x1="201" y1="315" x2="229" y2="315"/><text class="tick-label" x="237" y="319">APEX</text></g>
+      <g><line class="tick" x1="200" y1="70" x2="230" y2="70"/><text class="tick-label" x="238" y="74">LAND</text></g>
+    </svg>
+  </div>
+  <button class="scrubber sa-focus" id="scrubber" type="button" role="slider" aria-label="Explore the demo ball flight" aria-valuemin="0" aria-valuemax="100" aria-valuenow="35" aria-valuetext="35 percent through the demo flight"></button>
+  <nav aria-label="Flightglass destinations">
+    <a class="station st-lab sa-focus" href="./geometry-window-mock.html"><span class="station__label">Lab · Impact</span><span class="station__value">How it was made</span></a>
+    <a class="station station--range st-range sa-focus" href="./impact-viz-mock.html"><span class="station__label">Continue · Range</span><span class="station__value">Fly the shot</span></a>
+    <a class="station st-outcome sa-focus" href="./impact-outcome-mock.html"><span class="station__label">Outcome</span><span class="station__value">Read the fade</span></a>
+    <a class="station station--academy st-academy sa-focus" href="./academy.html"><span class="station__label">Academy</span><span class="station__value">Learn the cause</span></a>
+  </nav>
+  <div class="readout" aria-live="polite">
+    <span class="readout__item"><span class="readout__label">Height</span><span class="readout__value live" id="heightValue" data-readout>21 m</span></span>
+    <span class="readout__item"><span class="readout__label">Distance</span><span class="readout__value" id="distanceValue" data-readout>54 m</span></span>
+    <span class="readout__item"><span class="readout__label">Side</span><span class="readout__value" id="sideValue" data-readout>4 m R</span></span>
+  </div>
+  <p class="hint">Drag · or use arrow keys</p>
+</main>
+<script>
+(() => {
+  const stage = document.getElementById('stage');
+  const scrubber = document.getElementById('scrubber');
+  const h = document.getElementById('heightValue');
+  const d = document.getElementById('distanceValue');
+  const s = document.getElementById('sideValue');
+  let progress = .35, stageRect = null, ariaTimer = 0;
+  const clamp = (n,a,b) => Math.max(a,Math.min(b,n));
+  function announce(){
+    const metres = Math.round(progress*154);
+    const height = Math.max(0,Math.round(Math.sin(progress*Math.PI)*29));
+    scrubber.setAttribute('aria-valuenow',String(Math.round(progress*100)));
+    scrubber.setAttribute('aria-valuetext',`${Math.round(progress*100)} percent through the demo flight, ${height} metres high, ${metres} metres travelled`);
+  }
+  function render(immediateAnnouncement=false){
+    const top = 18 + (1-progress)*70;
+    const curve = Math.sin(progress*Math.PI)*9;
+    scrubber.style.top = `${top}%`;
+    scrubber.style.marginLeft = `${curve}%`;
+    const metres = Math.round(progress*154);
+    const height = Math.max(0,Math.round(Math.sin(progress*Math.PI)*29));
+    const side = Math.round(progress*12);
+    h.textContent = `${height} m`; d.textContent = `${metres} m`; s.textContent = `${side} m R`;
+    clearTimeout(ariaTimer);
+    if(immediateAnnouncement)announce();else ariaTimer=setTimeout(announce,140);
+  }
+  function fromPointer(e){ const r=stageRect||stage.getBoundingClientRect(); progress=clamp(1-(e.clientY-r.top)/r.height,.02,.98); render(false); }
+  let dragging=false;
+  scrubber.addEventListener('pointerdown',e=>{dragging=true;stageRect=stage.getBoundingClientRect();scrubber.setPointerCapture(e.pointerId);fromPointer(e)});
+  scrubber.addEventListener('pointermove',e=>{if(dragging)fromPointer(e)});
+  scrubber.addEventListener('pointerup',()=>{dragging=false;stageRect=null;announce()});
+  scrubber.addEventListener('pointercancel',()=>{dragging=false;stageRect=null;announce()});
+  scrubber.addEventListener('keydown',e=>{
+    if(!['ArrowUp','ArrowRight','ArrowDown','ArrowLeft','Home','End'].includes(e.key))return;
+    e.preventDefault();
+    if(e.key==='Home')progress=0;else if(e.key==='End')progress=1;else progress=clamp(progress+(['ArrowUp','ArrowRight'].includes(e.key)?.04:-.04),0,1);
+    render(true);
+  });
+  render(true);
+})();
+</script>
+</body>
+</html>

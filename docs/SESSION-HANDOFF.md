@@ -63,6 +63,31 @@ This concept checkpoint does not change the active Academy phase, mark Home
 Phase 1 implemented or alter the production `index.html`. The next production
 action remains the Backspin Task 10/11 sequence below.
 
+## Portrait front-page checkpoint — 2026-07-15
+
+A second, portrait-native concept round is complete at 430×932 and 375×812.
+The three non-shipping studies are `home-portrait-1.html` (Night Ladder),
+`home-portrait-2.html` (Shot Spine) and `home-portrait-3.html` (Aperture). Their
+research, rationale, evidence and recommendation are recorded in
+`docs/front-page-portrait-directions-2026-07-15.md`.
+
+Independent acceptance produced a manifest-derived SHIPPBAR score of 96.3 with
+zero critical failures. The new portrait work won all six anonymous
+current-versus-baseline comparisons. The only remaining finding is non-critical
+`EV-TYPO-04`, caused by the shared `sa-p3.css` three-family font token setup;
+the shared production token file was intentionally not changed for this
+non-shipping study.
+
+Final evidence passed 36/36 layout and interaction cases across both target
+sizes, Chromium and WebKit, normal and reduced motion, and 130% text. Twelve
+axe-core scans had zero critical or serious findings; all visible targets met
+44 px; the authoritative 240-event interaction run stayed below budget; and 24
+approved-baseline visual-regression pairs stayed below the locked 0.1%
+threshold. Direct reduced-motion captures were complete and nonblank.
+
+This checkpoint does not implement Home Phase 1 or change the production
+`index.html`, protected physics, compatibility IDs or Academy storage keys.
+
 
 Backspin has a separate 96-97 reference-lesson design and implementation plan:
 
