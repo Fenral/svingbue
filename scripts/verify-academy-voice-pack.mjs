@@ -10,13 +10,14 @@ import { CARRY_SIDE_CUES } from '../academy-carry-side-content.js';
 import { ATTACK_AT_IMPACT_CUES } from '../academy-attack-at-impact-content.js';
 import { LOW_POINT_CUES } from '../academy-low-point-content.js';
 import { CONTACT_HEIGHT_CUES } from '../academy-contact-height-content.js';
+import { DELIVERED_LOFT_LAUNCH_CUES } from '../academy-delivered-loft-launch-content.js';
 import { ACADEMY_VOICE_LOCALE, ACADEMY_VOICE_PACK_ID } from '../academy-voice-manifest.js';
 
 const ROOT=resolve(dirname(fileURLToPath(import.meta.url)),'..');
 const sha=value=>createHash('sha256').update(value).digest('hex');
 const inside=(root,file)=>`${resolve(file)}${sep}`.toLowerCase().startsWith(`${resolve(root)}${sep}`.toLowerCase());
 
-export function verifyAcademyVoicePack({ root=ROOT, config, cues=[...ACADEMY_HOME_CUES.cues,...ACADEMY_BACKSPIN_CUES.cues,...START_LINE_CUES.cues,...SHAPE_CUES.cues,...CARRY_SIDE_CUES.cues,...ATTACK_AT_IMPACT_CUES.cues,...LOW_POINT_CUES.cues,...CONTACT_HEIGHT_CUES.cues], mode='development' }={}){
+export function verifyAcademyVoicePack({ root=ROOT, config, cues=[...ACADEMY_HOME_CUES.cues,...ACADEMY_BACKSPIN_CUES.cues,...START_LINE_CUES.cues,...SHAPE_CUES.cues,...CARRY_SIDE_CUES.cues,...ATTACK_AT_IMPACT_CUES.cues,...LOW_POINT_CUES.cues,...CONTACT_HEIGHT_CUES.cues,...DELIVERED_LOFT_LAUNCH_CUES.cues], mode='development' }={}){
   const errors=[];const records=Array.isArray(config?.assets)?config.assets:[];const byCue=new Map();
   if(config?.packId!==ACADEMY_VOICE_PACK_ID)errors.push('pack-id');
   if(config?.locale!==ACADEMY_VOICE_LOCALE)errors.push('locale');

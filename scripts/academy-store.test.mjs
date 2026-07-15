@@ -65,6 +65,12 @@ test('legacy Strike Depth completion becomes Contact Height practice without mas
   assert.equal(experience.status,'practiced');assert.equal(experience.reviewEligible,true);assert.deepEqual(experience.legacyEvidence,['strike-depth']);assert.equal(experience.acceptedAttemptId,null);assert.equal(experience.evidence.liveTransferPassed,false);assert.equal(next.xp,0);
 });
 
+test('legacy Dynamic Loft and Launch Angle merge into one reviewable experience without mastery', () => {
+  const seed=createAcademySeed();seed.lessons['dynamic-loft'].completed=true;seed.lessons['launch-angle'].mastered=true;
+  const next=migrateOutcomeAcademy(seed,{now:NOW});const experience=next.experiences['delivered-loft-launch'];
+  assert.equal(experience.status,'practiced');assert.equal(experience.reviewEligible,true);assert.deepEqual(experience.legacyEvidence,['dynamic-loft','launch-angle']);assert.equal(experience.acceptedAttemptId,null);assert.equal(experience.evidence.liveTransferPassed,false);assert.equal(next.xp,0);
+});
+
 test('accepted native Backspin is grandfathered once with a zero-value reward guard', () => {
   const seed = createAcademySeed();
   seed.xp = 420;
