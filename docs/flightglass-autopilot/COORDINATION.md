@@ -13,7 +13,7 @@ wait.
 
 | Agent | Branch | Working on | Since |
 |-------|--------|-----------|-------|
-| _(none claimed)_ | — | — | — |
+| Codex | `agent/academy-codex` | Batch 0 — Academy Home/store/registry/router/voice/host + Backspin regression | 2026-07-15 |
 
 ## Queue / free to take
 
