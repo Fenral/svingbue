@@ -13,6 +13,7 @@ wait.
 
 | Agent | Branch | Working on | Since |
 |-------|--------|-----------|-------|
+| Codex | `agent/academy-codex` | Batch 8 — Backspin curriculum/voice compatibility amendment + regressions | 2026-07-15 |
 
 ## Queue / free to take
 
