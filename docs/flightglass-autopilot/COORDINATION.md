@@ -13,7 +13,7 @@ wait.
 
 | Agent | Branch | Working on | Since |
 |-------|--------|-----------|-------|
-| Codex | `agent/academy-codex` | Academy final convergence — native package, full gates and handoff | 2026-07-15 |
+| _None_ | — | — | — |
 
 ## Queue / free to take
 
@@ -30,6 +30,14 @@ wait.
   pair before build.
 
 ## Done / handed off
+
+- Academy curriculum final convergence — `agent/academy-codex`, source through
+  `46ff9a0` and final test compatibility through `2b601b3`; all 13 core
+  experiences plus the optional Plane Coupling lab are implemented. The full
+  Academy and UX matrices and both performance engines pass. Native platform
+  creation, licensed female audio, visual-baseline/pairwise approval and human
+  device gates remain explicitly fail-closed in `STATUS.md` and
+  `SESSION-HANDOFF.md`.
 
 - Academy Batch 14 optional Plane Coupling MODEL LAB — `agent/academy-codex`,
   commit `46ff9a0`; protected geometry adapters, separate no-reward exploration

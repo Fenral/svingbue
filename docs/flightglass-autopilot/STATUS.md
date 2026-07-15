@@ -12,10 +12,62 @@ publication after all Phase 8 gates pass. See `RELEASE-AUTHORIZATION.md`.
 | 2 · Range / Visualise | Ready | Decisions and references locked in master plan |
 | 3 · Outcome / Compare | Ready | Decisions and references locked in master plan |
 | 4 · Geometry 3D / Strike Window 2D | Ready | Consensus documents named |
-| 5 · Academy overview | Batch 0 implemented; acceptance held | Native Home/store/registry/router/host and caption-ready Voice foundation are coded and packaged; visual, audio-rights and human gates remain open |
-| 6 · Academy lesson system | Backspin STUDIO-GRADE base; seven outcome experiences implemented | Start Line, Shape, Carry Side, Up or Down at Impact, Low Point, Contact Height and Delivered Loft & Launch own native S0–S5 renderers, raw mastery gates and caption-ready cues; later curriculum batches remain sequential |
+| 5 · Academy overview | Source-complete; release acceptance held | Native Home/store/registry/router/host and caption-ready Voice foundation are coded and copied into the web package; visual, audio-rights and human gates remain open |
+| 6 · Academy lesson system | Curriculum source-complete | All 13 core experiences plus the optional Plane Coupling lab own native renderers, model/content contracts, mastery or exploration rules and caption-ready cues |
 | 7 · Paywall | Ready | Pricing and compatibility rules locked |
 | 8 · Convergence and release QA | Ready | Global gates locked |
+
+## Academy final convergence checkpoint
+
+The Academy curriculum is source-complete on `agent/academy-codex`. All 13 core
+experiences and the optional no-reward Plane Coupling lab are implemented; the
+last curriculum source commit is `46ff9a0`, with final legacy Carry coverage at
+`2b601b3`. This includes Academy Home, the complete learner-facing module
+designs, persistent progress/mastery, canonical and legacy routing, and a local
+voice/caption system with 102 exact semantic cues.
+
+Fresh convergence evidence on 2026-07-15:
+
+- `npm run test:academy`: 348/348 PASS — 223 foundation and 125 Chromium
+  integration/browser cases, with zero skipped tests.
+- `npm run test:ux`: PASS, including the complete Chromium and WebKit Academy
+  matrices and the shared global UX evidence.
+- `npm run test:perf`: 2/2 PASS over 220 events per engine. Chromium p95 is
+  2.1 ms and WebKit p95 is 5.0 ms against the 16.7 ms budget.
+- `npm run brand:verify` and `node scripts/verify-claude-autopilot.mjs` PASS.
+  All four protected physics hashes remain exact.
+- `npm run copy-web` PASS and copied 84 top-level JS/CSS assets into `www/`.
+- Development voice-pack verification PASS with 102/102 exact local captions,
+  no remote dependency and no audio files.
+
+The curriculum is **coded and testable, but not release-accepted**. These gates
+remain deliberately open and were not weakened or reported as complete:
+
+- `npm run test:visreg` passes its inventory and alpha-diff contracts but finds
+  32 stale Backspin lesson baselines across the two engines, two viewports and
+  two motion modes (9.4–22.95% image difference). Inspection confirms that the
+  current captures contain the intended complete Academy header, intro,
+  progress navigation and CTA that the old baselines omit. No baseline was
+  changed; a human visual review and provenance-blind pairwise win are required
+  before deliberate baseline approval.
+- The approved female voice direction is specified and all 102 cues are
+  caption-ready, but licensed final recordings, rights evidence and the human
+  listening gate do not exist. The strict release verifier therefore remains
+  fail-closed.
+- `npm run sync` and `npm run sync:android` cannot package native targets because
+  this repository has neither an `ios/` nor an `android/` platform project.
+  Platform creation, signing and store archives remain owner-controlled release
+  work; the completed web payload was not presented as a native archive.
+- Physical iPhone/offline/audio-route/background-interruption, manual VoiceOver
+  and fatigue checks remain `PENDING OWNER DEVICE/HUMAN GATE`.
+- Provenance-blind pairwise judging was not performed for the new curriculum
+  modules, so no new module is being labelled STUDIO-GRADE solely from its
+  automated score or passing tests.
+
+The previously interrupted isolated Mastery run and the previously outstanding
+full `test:academy` / `test:ux` runs are superseded by the passing full results
+above. Temporary untracked audit directories under `outputs/flightglass-*` were
+left untouched and are not part of the GitHub handoff.
 
 ## Current checkpoint
 

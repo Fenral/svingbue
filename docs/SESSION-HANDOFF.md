@@ -7,8 +7,8 @@ Updated: 2026-07-15
 - Remote: `Fenral/svingbue`
 - Working branch for this handoff: `agent/academy-codex`, rebased on
   `agent/travel-sync` commit `2978756`.
-- Purpose: recoverable Batch 0–7 implementation and truthful verification
-  evidence. This branch is not a release branch.
+- Purpose: recoverable, source-complete Academy curriculum and truthful final
+  verification evidence. This branch is not a release branch.
 - Repository visibility: private, verified on 2026-07-13.
 
 Durable chat
@@ -18,32 +18,33 @@ identity concept pages are preserved in `docs/concepts/flightglass/`.
 ## Execution state
 
 Phase 0 is complete and the Backspin reference shell remains STUDIO-GRADE.
-Academy Batch 0 is implemented through `449fc1c`; Batch 1 Start Line is source-
-complete at `3ba5a83`; Batch 2 Shape is source-complete at `7ea653b`; Batch 3
-Carry Side is source-complete at `a4d075d`; Batch 4 Up or Down at Impact is
-source-complete at `4902562`; Batch 5 Low Point is source-complete at
-`3a7d9e2`; Batch 6 Contact Height is source-complete at `3d82aa2`; Batch 7
-Delivered Loft & Launch is source-complete at `76eae59`. Batch 7 adds a native
-three-arrow wedge, protected flight adapter, two legacy aliases and mandatory
-equal-Launch/opposite-Attack captures while preserving prior Backspin. Read
-`docs/FLIGHTGLASS-CLAUDE-CODE-MASTER-PLAN.md`, the Academy rollout index and
-`docs/flightglass-autopilot/STATUS.md` before implementation.
+Academy Batches 0–13 and optional Batch 14 are source-complete on
+`agent/academy-codex`: all 13 core curriculum experiences, Academy Home, shared
+store/router/host, and the no-reward Plane Coupling lab are coded. Curriculum
+source ends at `46ff9a0`; final legacy Carry test compatibility is `2b601b3`.
+There is no remaining planned Academy module implementation for the next agent.
 
-Fresh Batch 7 affected evidence is green: model/content 14/14, browser 4/4 in
-each engine and Academy foundation 136/136. The last complete cross-module
-integration run remains 91/91 from Batch 6 and is due again at convergence.
-Brand and native package parity pass, and protected physics hashes are
-unchanged. The voice pack now has 61 exact
-local captions and zero licensed audio assets;
-strict release verification remains fail-closed. Pairwise-blind UI judgment and
-physical-device/VoiceOver/audio/fatigue checks also remain open. Therefore
-Batches 0–7 are implemented, **not release-accepted**. The owner explicitly
-authorized sequential source work to continue; Batch 8 Backspin curriculum
-amendment is next.
+Fresh convergence evidence is green for `test:academy` (348/348), the full
+`test:ux` Chromium/WebKit/global matrix, brand/autopilot verification, protected
+physics hashes and both performance engines (p95 2.1 ms Chromium / 5.0 ms
+WebKit, budget 16.7 ms). `copy-web` copied 84 top-level shipping assets. The
+voice pack contains 102 exact local captions and zero licensed audio assets.
 
-Use `docs/flightglass-autopilot/academy-batch-loop-prompt.md` for the next loop.
-The two committed Home captures are under `outputs/academy-batch0/`; temporary
-`outputs/flightglass-visreg/current/` files are regeneratable and not pushed.
+This branch is source-complete, **not release-accepted**. The next agent must not
+describe the female voice as recorded or shipped: voice direction and cue timing
+exist, while licensed recordings, rights evidence and human listening approval
+do not. The latest visual regression correctly remains red on 32 old Backspin
+baselines after the intentional complete-page Academy composition; no baseline
+was changed. Human visual review plus provenance-blind pairwise approval is
+required before accepting new baselines. Physical-device, offline, audio-route,
+VoiceOver and fatigue checks remain open.
+
+Native web copying is complete, but Capacitor sync reports that neither iOS nor
+Android has been added to this repository. Creating those platform projects,
+signing them and building store archives is owner-controlled release work, not
+missing curriculum code. Temporary untracked audit directories — including
+`outputs/flightglass-visreg/` — were deliberately left untouched and unpushed.
+Read `docs/flightglass-autopilot/STATUS.md` for exact results and open gates.
 
 Backspin Tasks 1-11 are complete and verified on 2026-07-14. Task 10 shipped
 the lesson into `www/` and locked the 96 target (`4d01eef`); Task 11 recorded

@@ -3,9 +3,9 @@
   "surface": "academy-lesson/lab",
   "events": 220,
   "budgetMsP95": 16.7,
-  "p50": 1,
-  "p95": 2,
-  "p99": 3,
-  "max": 6,
-  "capturedAt": "2026-07-15T11:06:29.316Z"
+  "p50": 3,
+  "p95": 5,
+  "p99": 6,
+  "max": 30,
+  "capturedAt": "2026-07-15T17:03:55.666Z"
 }
