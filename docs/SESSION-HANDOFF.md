@@ -7,7 +7,7 @@ Updated: 2026-07-15
 - Remote: `Fenral/svingbue`
 - Working branch for this handoff: `agent/academy-codex`, rebased on
   `agent/travel-sync` commit `2978756`.
-- Purpose: recoverable Batch 0–2 implementation and truthful verification
+- Purpose: recoverable Batch 0–3 implementation and truthful verification
   evidence. This branch is not a release branch.
 - Repository visibility: private, verified on 2026-07-13.
 
@@ -19,20 +19,22 @@ identity concept pages are preserved in `docs/concepts/flightglass/`.
 
 Phase 0 is complete and the Backspin reference shell remains STUDIO-GRADE.
 Academy Batch 0 is implemented through `449fc1c`; Batch 1 Start Line is source-
-complete at `3ba5a83`; Batch 2 Shape is source-complete at `7ea653b`. Shape adds
-the same-start tunnel, Face-to-Path/Spin Axis/Curve chain, Carry amplifier,
-legacy alias migration and mandatory left/right live captures. Read
+complete at `3ba5a83`; Batch 2 Shape is source-complete at `7ea653b`; Batch 3
+Carry Side is source-complete at `a4d075d`. Carry Side adds the three-bracket
+start/curve/carry-plane instrument, an explicitly outcome-only composer,
+legacy Offline migration and mandatory mirrored engine captures. Read
 `docs/FLIGHTGLASS-CLAUDE-CODE-MASTER-PLAN.md`, the Academy rollout index and
 `docs/flightglass-autopilot/STATUS.md` before implementation.
 
-Fresh Batch 2 automated evidence is green: Shape model/content 11/11, Shape
-browser 4/4 in each engine, Academy foundation 65/65 and full integration/browser
-75/75. Brand and native package parity pass, and protected physics hashes are
-unchanged. The voice pack now has 25 exact local captions and zero licensed audio assets;
+Fresh Batch 3 automated evidence is green: Carry Side model/content 12/12,
+browser 4/4 in each engine, Academy foundation 78/78 and full integration/browser
+79/79. Brand and native package parity pass, and protected physics hashes are
+unchanged. The voice pack now has 33 exact local captions and zero licensed audio assets;
 strict release verification remains fail-closed. Pairwise-blind UI judgment and
 physical-device/VoiceOver/audio/fatigue checks also remain open. Therefore
-Batches 0–2 are implemented, **not release-accepted**. The owner explicitly
-authorized sequential source work to continue; Batch 3 Carry Side is next.
+Batches 0–3 are implemented, **not release-accepted**. The owner explicitly
+authorized sequential source work to continue; Batch 4 Up or Down at Impact is
+next.
 
 Use `docs/flightglass-autopilot/academy-batch-loop-prompt.md` for the next loop.
 The two committed Home captures are under `outputs/academy-batch0/`; temporary
@@ -276,17 +278,15 @@ contains documentation only.
 
 ## Exact next actions
 
-1. Start Batch 0 only from the Home/store design and implementation plan named
-   in the rollout index. Execute the mandatory Voice System companion plan
-   inside Batch 0 after store migration and before Home/Backspin acceptance; do
-   not combine it with Start Line.
-2. Execute its tasks TDD-first, preserve Backspin and legacy storage, and run
-   every focused and full gate before accepting the batch.
+1. Claim Batch 4 Up or Down at Impact in `COORDINATION.md`, then execute its
+   exact spec/plan pair TDD-first without changing a protected physics engine.
+2. Preserve Backspin, all legacy routes/storage and the completed Batch 0–3
+   renderers; run focused model/content/browser gates in both engines.
 3. Keep gate acceptance separate from derived scores: zero critical defects,
    every category floor, all critical checks and pairwise-blind must each pass.
 4. Update STATUS/HANDOFF with exact evidence and protected hashes, then secret
-   scan, stage only intended files, commit and push Batch 0.
-5. Continue automatically to Batch 1 only after Batch 0 is accepted; do not ask
+   scan, stage only intended files, commit and push Batch 4.
+5. Continue automatically to Batch 5 only after Batch 4 source gates pass; do not ask
    for module approval between batches unless an explicit rollout stop condition
    occurs.
 6. Owner runs the physical-iPhone performance session, manual VoiceOver and

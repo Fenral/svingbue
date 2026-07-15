@@ -13,7 +13,7 @@ publication after all Phase 8 gates pass. See `RELEASE-AUTHORIZATION.md`.
 | 3 · Outcome / Compare | Ready | Decisions and references locked in master plan |
 | 4 · Geometry 3D / Strike Window 2D | Ready | Consensus documents named |
 | 5 · Academy overview | Batch 0 implemented; acceptance held | Native Home/store/registry/router/host and caption-ready Voice foundation are coded and packaged; visual, audio-rights and human gates remain open |
-| 6 · Academy lesson system | Backspin STUDIO-GRADE base; Start Line + Shape implemented | Two outcome experiences now own native S0–S5 renderers, raw mastery gates and caption-ready cues; later curriculum batches remain sequential |
+| 6 · Academy lesson system | Backspin STUDIO-GRADE base; Start Line + Shape + Carry Side implemented | Three outcome experiences now own native S0–S5 renderers, raw mastery gates and caption-ready cues; later curriculum batches remain sequential |
 | 7 · Paywall | Ready | Pricing and compatibility rules locked |
 | 8 · Convergence and release QA | Ready | Global gates locked |
 
@@ -178,6 +178,39 @@ Fresh implementation evidence on 2026-07-15:
 Batch 2 is **source-complete but not release-accepted**. Pairwise, licensed
 audio/rights/listening and device/human gates remain open and fail-closed. Owner
 authorization allows the source loop to continue to Batch 3 Carry Side.
+
+## Academy Batch 3 implementation checkpoint
+
+Carry Side source implementation is complete on `agent/academy-codex` at
+`a4d075d`. The canonical `shot-pattern` route and legacy `offline` route share
+one native S0–S5 renderer while the learner-visible title remains Carry Side.
+Its three-bracket carry-plane instrument keeps Start Side, Curve and Carry Side
+distinct; the guided outcome composer is explicitly not an engine solve or a
+mastery path. The live gate requires learner-built mirrored engine flights that
+start and curve in opposite directions and finish within raw ±0.5 yd.
+
+Fresh implementation evidence on 2026-07-15:
+
+- Carry Side model/content: 12/12 PASS, including seven protected-engine
+  fixtures, exact signed decomposition, composer isolation, every raw transfer
+  near miss, negative-zero normalization, eight cues and honest one-shot copy.
+- Carry Side browser contract: 4/4 Chromium and 4/4 WebKit PASS. Canonical and
+  legacy routes, S0–S5 progression, three reference brackets, Practiced without
+  live transfer, rounded-display/raw-value rejection, mirrored mastery, reload
+  and one-time XP are covered.
+- Legacy Offline migration is additive and reviewable but never auto-masters or
+  awards XP.
+- Full `npm run test:academy`: 78/78 foundation plus 79/79
+  integration/browser PASS. Development voice verification reports 33 exact
+  captions and zero remote or runtime audio.
+- Brand verification and fresh `npm run copy-web` PASS. Visual review at
+  430×932 confirms the mission and mastery hierarchy. Protected physics hashes
+  remain unchanged.
+
+Batch 3 is **source-complete but not release-accepted**. Pairwise, licensed
+audio/rights/listening and device/human gates remain open and fail-closed. Owner
+authorization allows the source loop to continue to Batch 4 Up or Down at
+Impact.
 
 The Backspin 96-97 reference lesson (Phase 6, Tasks 1-11) completed final
 verification on 2026-07-14. Task 10 shipped the lesson through the native

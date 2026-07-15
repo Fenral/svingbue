@@ -13,7 +13,6 @@ wait.
 
 | Agent | Branch | Working on | Since |
 |-------|--------|-----------|-------|
-| Codex | `agent/academy-codex` | Batch 3 — Carry Side model/content/native S0–S5/mastery/voice + regressions | 2026-07-15 |
 
 ## Queue / free to take
 
@@ -31,6 +30,10 @@ wait.
 
 ## Done / handed off
 
+- Academy Batch 3 Carry Side source implementation — `agent/academy-codex`,
+  commit `a4d075d`; model/content/native S0–S5/two-flight mastery/voice and
+  regressions are green. External pairwise, licensed-audio and device/human
+  gates remain.
 - Academy Batch 2 Shape source implementation — `agent/academy-codex`, commit
   `7ea653b`; model/content/native S0–S5/two-capture mastery/voice and regressions
   are green. External pairwise, licensed-audio and device/human gates remain.
