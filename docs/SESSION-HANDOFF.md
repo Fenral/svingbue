@@ -7,7 +7,7 @@ Updated: 2026-07-15
 - Remote: `Fenral/svingbue`
 - Working branch for this handoff: `agent/academy-codex`, rebased on
   `agent/travel-sync` commit `2978756`.
-- Purpose: recoverable Batch 0–4 implementation and truthful verification
+- Purpose: recoverable Batch 0–5 implementation and truthful verification
   evidence. This branch is not a release branch.
 - Repository visibility: private, verified on 2026-07-13.
 
@@ -21,20 +21,22 @@ Phase 0 is complete and the Backspin reference shell remains STUDIO-GRADE.
 Academy Batch 0 is implemented through `449fc1c`; Batch 1 Start Line is source-
 complete at `3ba5a83`; Batch 2 Shape is source-complete at `7ea653b`; Batch 3
 Carry Side is source-complete at `a4d075d`; Batch 4 Up or Down at Impact is
-source-complete at `4902562`. Batch 4 adds a side-on tangent instrument,
-protected flight/geometry adapters, legacy Attack Angle migration and mandatory
-descending/ascending engine captures. Read
+source-complete at `4902562`; Batch 5 Low Point is source-complete at
+`3a7d9e2`. Batch 5 adds a native event-ruler, protected raw/effective Low Point
+adapter, legacy migration and mandatory ball-first/bottom-first captures. Read
 `docs/FLIGHTGLASS-CLAUDE-CODE-MASTER-PLAN.md`, the Academy rollout index and
 `docs/flightglass-autopilot/STATUS.md` before implementation.
 
-Fresh Batch 4 automated evidence is green: model/content 13/13, browser 4/4 in
-each engine, Academy foundation 92/92 and full integration/browser 83/83. Brand
-and native package parity pass, and protected physics hashes are unchanged. The
-voice pack now has 40 exact local captions and zero licensed audio assets;
+Fresh Batch 5 automated evidence is green: model/content 13/13, browser 4/4 in
+each engine, Academy foundation 106/106 and full integration/browser 87/87.
+The shared voice control remains mounted through all five native renderers,
+with 22/22 affected Chromium cases green. Brand and native package parity pass,
+and protected physics hashes are unchanged. The voice pack now has 47 exact
+local captions and zero licensed audio assets;
 strict release verification remains fail-closed. Pairwise-blind UI judgment and
 physical-device/VoiceOver/audio/fatigue checks also remain open. Therefore
-Batches 0–4 are implemented, **not release-accepted**. The owner explicitly
-authorized sequential source work to continue; Batch 5 Low Point is next.
+Batches 0–5 are implemented, **not release-accepted**. The owner explicitly
+authorized sequential source work to continue; Batch 6 Contact Height is next.
 
 Use `docs/flightglass-autopilot/academy-batch-loop-prompt.md` for the next loop.
 The two committed Home captures are under `outputs/academy-batch0/`; temporary

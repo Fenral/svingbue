@@ -13,7 +13,6 @@ wait.
 
 | Agent | Branch | Working on | Since |
 |-------|--------|-----------|-------|
-| Codex | `agent/academy-codex` | Batch 5 — Low Point model/content/native S0–S5/mastery/voice + regressions | 2026-07-15 |
 
 ## Queue / free to take
 
@@ -31,6 +30,10 @@ wait.
 
 ## Done / handed off
 
+- Academy Batch 5 Low Point source implementation — `agent/academy-codex`,
+  commit `3a7d9e2`; raw/effective Low Point model, native S0–S5/two-event
+  mastery/voice, persistent shared voice controls and regressions are green.
+  External pairwise, licensed-audio and device/human gates remain.
 - Academy Batch 4 Up or Down at Impact source implementation —
   `agent/academy-codex`, commit `4902562`; protected-engine adapters, native
   S0–S5/two-tangent mastery/voice and regressions are green. External pairwise,

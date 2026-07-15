@@ -13,7 +13,7 @@ publication after all Phase 8 gates pass. See `RELEASE-AUTHORIZATION.md`.
 | 3 · Outcome / Compare | Ready | Decisions and references locked in master plan |
 | 4 · Geometry 3D / Strike Window 2D | Ready | Consensus documents named |
 | 5 · Academy overview | Batch 0 implemented; acceptance held | Native Home/store/registry/router/host and caption-ready Voice foundation are coded and packaged; visual, audio-rights and human gates remain open |
-| 6 · Academy lesson system | Backspin STUDIO-GRADE base; four outcome experiences implemented | Start Line, Shape, Carry Side and Up or Down at Impact own native S0–S5 renderers, raw mastery gates and caption-ready cues; later curriculum batches remain sequential |
+| 6 · Academy lesson system | Backspin STUDIO-GRADE base; five outcome experiences implemented | Start Line, Shape, Carry Side, Up or Down at Impact and Low Point own native S0–S5 renderers, raw mastery gates and caption-ready cues; later curriculum batches remain sequential |
 | 7 · Paywall | Ready | Pricing and compatibility rules locked |
 | 8 · Convergence and release QA | Ready | Global gates locked |
 
@@ -243,6 +243,38 @@ Fresh implementation evidence on 2026-07-15:
 Batch 4 is **source-complete but not release-accepted**. Pairwise, licensed
 audio/rights/listening and device/human gates remain open and fail-closed. Owner
 authorization allows the source loop to continue to Batch 5 Low Point.
+
+## Academy Batch 5 implementation checkpoint
+
+Low Point source implementation is complete on `agent/academy-codex` at
+`3a7d9e2`. The canonical and legacy `low-point` route uses a native S0–S5
+event-ruler experience. It distinguishes raw Low Point input from the effective
+Low Point derived by the unchanged geometry engine, shows Attack as a secondary
+tangent and requires one ball-first and one bottom-first learner-built state.
+
+Fresh implementation evidence on 2026-07-15:
+
+- Model/content: 13/13 PASS across raw/effective compensation, held geometry,
+  plane sensitivity, vertical-depth invariance, every live near miss, five
+  myths, seven voice cues and the exact mastery contract.
+- Browser contract: 4/4 Chromium and 4/4 WebKit PASS. It covers preview and
+  legacy routing, S0–S5 progression, reduced motion, raw/effective evidence,
+  Practiced without both event orders, Mastered with both, reload and one-time
+  XP.
+- Full `npm run test:academy`: 106/106 foundation plus 87/87
+  integration/browser PASS. Development voice verification reports 47 exact
+  captions and zero licensed audio assets.
+- The shared voice mount now survives every native renderer update; 22/22
+  affected Chromium browser cases pass across Start Line through Low Point,
+  including an explicit post-interaction visibility assertion.
+- Brand verification and fresh `npm run copy-web` PASS. The mission and live
+  event-ruler states were visually inspected at 430×932. All four protected
+  physics hashes exactly match the pre-batch baseline.
+
+Batch 5 is **source-complete but not release-accepted**. Pairwise, licensed
+female audio/rights/listening and physical-device/VoiceOver/fatigue gates remain
+open and fail-closed. Owner authorization allows the source loop to continue to
+Batch 6 Contact Height.
 
 The Backspin 96-97 reference lesson (Phase 6, Tasks 1-11) completed final
 verification on 2026-07-14. Task 10 shipped the lesson through the native
