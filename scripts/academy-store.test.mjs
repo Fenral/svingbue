@@ -59,6 +59,12 @@ test('legacy Low Point completion is placement evidence only and never rewards i
   assert.equal(experience.status,'practiced');assert.equal(experience.reviewEligible,true);assert.deepEqual(experience.legacyEvidence,['low-point']);assert.equal(experience.acceptedAttemptId,null);assert.equal(experience.evidence.liveTransferPassed,false);assert.equal(next.xp,0);
 });
 
+test('legacy Strike Depth completion becomes Contact Height practice without mastery or reward', () => {
+  const seed=createAcademySeed();seed.lessons['strike-depth'].completed=true;seed.lessons['strike-depth'].mastered=true;
+  const next=migrateOutcomeAcademy(seed,{now:NOW});const experience=next.experiences['strike-depth'];
+  assert.equal(experience.status,'practiced');assert.equal(experience.reviewEligible,true);assert.deepEqual(experience.legacyEvidence,['strike-depth']);assert.equal(experience.acceptedAttemptId,null);assert.equal(experience.evidence.liveTransferPassed,false);assert.equal(next.xp,0);
+});
+
 test('accepted native Backspin is grandfathered once with a zero-value reward guard', () => {
   const seed = createAcademySeed();
   seed.xp = 420;

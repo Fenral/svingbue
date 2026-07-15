@@ -18,6 +18,7 @@
 <link rel="stylesheet" href="./academy-carry-side.css" />
 <link rel="stylesheet" href="./academy-attack-at-impact.css" />
 <link rel="stylesheet" href="./academy-low-point.css" />
+<link rel="stylesheet" href="./academy-contact-height.css" />
 <style>
   :root{
     /* ══ P3 "Ultraviolet Ember" — colour + type consumed from sa-p3.css ══
@@ -755,6 +756,8 @@
   import { attackAtImpactCue } from './academy-attack-at-impact-content.js';
   import { mountLowPointExperience } from './academy-low-point-experience.js';
   import { lowPointCue } from './academy-low-point-content.js';
+  import { mountContactHeightExperience } from './academy-contact-height-experience.js';
+  import { contactHeightCue } from './academy-contact-height-content.js';
 
   /* ══ DATA ══ */
   const GRAPH = JSON.parse(document.getElementById('graph-data').textContent);
@@ -1550,6 +1553,12 @@
         const cleanup=mountLowPointExperience({...input,prerequisiteMet:store.experiences?.['attack-at-impact']?.status==='mastered',onVoiceSurface:(surface,cueId)=>{currentSurface=surface;deliver(cueId);},onVoiceInterrupt:reason=>voiceController.stop(reason),onVoiceMilestone:cueId=>deliver(cueId)});
         voiceUi=mountAcademyVoiceUi({root:app.querySelector('[data-academy-voice-slot]'),controller:voiceController,getMode:()=>store.preferences.voice.mode,showInlineChoice:false,onModeChange:mode=>{if(mode!=='off')deliver(['academy.low-point.s0.entry','academy.low-point.s1.entry','academy.low-point.s2.entry',null,'academy.low-point.s4.live',null][currentSurface]);}});voiceUi.update(voiceController.getState());return cleanup;
       },
+      'strike-depth':input => {
+        let currentSurface=Number.isInteger(input.surface)?input.surface:0;
+        const deliver=cueId=>{const cue=cueId&&contactHeightCue(cueId);return cue?voiceController.deliverAutomatic(cue):null;};
+        const cleanup=mountContactHeightExperience({...input,prerequisiteMet:store.experiences?.['low-point']?.status==='mastered',onVoiceSurface:(surface,cueId)=>{currentSurface=surface;deliver(cueId);},onVoiceInterrupt:reason=>voiceController.stop(reason),onVoiceMilestone:cueId=>deliver(cueId)});
+        voiceUi=mountAcademyVoiceUi({root:app.querySelector('[data-academy-voice-slot]'),controller:voiceController,getMode:()=>store.preferences.voice.mode,showInlineChoice:false,onModeChange:mode=>{if(mode!=='off')deliver(['academy.contact-height.s0.entry','academy.contact-height.s1.entry','academy.contact-height.s2.entry',null,'academy.contact-height.s4.live',null][currentSurface]);}});voiceUi.update(voiceController.getState());return cleanup;
+      },
       'backspin-native':({ surface, state:experienceState, voiceTargets:hostVoiceTargets }) => {
         const li = levelInfo(store.xp);
         let currentVoiceSurface = Number.isInteger(surface) ? surface : getJourney('backspin').surface;
@@ -1884,7 +1893,7 @@
     if (h.indexOf('#/proto') === 0) renderProto();
     else if (parsed.view === 'home') renderAcademyHome();
     else if (parsed.view === 'explore') renderPath();
-    else if (parsed.legacy && !['backspin','start-line','shape','shot-pattern','attack-at-impact','low-point'].includes(parsed.experienceId) && LESSONS[parsed.conceptId]) renderLesson(parsed.conceptId);
+    else if (parsed.legacy && !['backspin','start-line','shape','shot-pattern','attack-at-impact','low-point','strike-depth'].includes(parsed.experienceId) && LESSONS[parsed.conceptId]) renderLesson(parsed.conceptId);
     else renderOutcomeExperience(parsed);
     window.scrollTo(0,0);
     // Move focus to the new view's heading on every SPA route change, but not on the very
