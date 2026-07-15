@@ -4,7 +4,11 @@
   "version": "1.0.0",
   "description": "StrikeArc (svingbue) native packaging scaffold — Capacitor wrapper around the static web app for iOS/TestFlight builds via Codemagic.",
   "scripts": {
+    "test": "npm run test:home",
     "test:home": "node --test scripts/home-night-ladder.test.mjs",
+    "test:gate": "node --test scripts/flightglass-change-gate.test.mjs",
+    "spot:browser": "node scripts/flightglass-browser-spot.mjs",
+    "verify:change": "node scripts/flightglass-change-gate.mjs",
     "copy-web": "node scripts/copy-web.mjs",
     "shots": "node scripts/store-screenshots.mjs",
     "sync": "cap sync ios",

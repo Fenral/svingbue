@@ -31,6 +31,7 @@ www/
 
 # Build outputs
 build/
+outputs/flightglass-gates/
 # ...but the vendored Three.js build is a dependency that must travel with the
 # repo (the native WKWebView has no CDN and loads it by relative path). The
 # generic build/ rule above was silently swallowing it, which left Geometry 3D
