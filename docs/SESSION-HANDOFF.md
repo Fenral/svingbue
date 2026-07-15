@@ -42,6 +42,27 @@ judge runs (including all 10 critical checks), and the native generation won
 number is a byproduct, not the acceptance target. Fresh raw gates are under
 `outputs/flightglass-eval/final-gates/`.
 
+## Front-page concept checkpoint — 2026-07-15
+
+Three non-shipping front-page studies were refreshed after a Mobbin entry-screen
+reference pass. `home-concept-1.html`, `home-concept-2.html` and
+`home-concept-3.html` now use the current Flightglass lockup while preserving
+the protected `strikearc.academy.v1` storage key. The interaction directions
+remain Floodlights (world-as-menu), Summon (orbital reveal) and The Arc
+(trajectory-as-control). The scored design rationale and Mobbin citations are
+in `docs/front-page-directions-2026-07-15.md`.
+
+Focused evidence passed: current-brand source assertions, direct destination
+and reduced-motion contracts, `npm run brand:verify`, zero browser errors,
+zero horizontal overflow, and 44 px minimum visible target height at 932×430
+and 812×375. Reduced-motion static composition was also exercised through the
+mock review flag. Generated captures under `outputs/front-page-directions/`
+remain local evidence and are not part of this checkpoint.
+
+This concept checkpoint does not change the active Academy phase, mark Home
+Phase 1 implemented or alter the production `index.html`. The next production
+action remains the Backspin Task 10/11 sequence below.
+
 
 Backspin has a separate 96-97 reference-lesson design and implementation plan:
 
