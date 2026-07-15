@@ -62,6 +62,34 @@ decisions between recent mocks when a primary reference is already named.
 
 ## Model and effort routing (instrument-gates order §3)
 
+Choose the route before starting a new Flightglass Codex run. The default is
+`flightglass-terra`; do not use the most expensive model or effort merely
+because it is available.
+
+| Route | Local profile | Model | Effort | Use when |
+|---|---|---|---|---|
+| Light | `flightglass-luna` | `gpt-5.6-luna` | `low` | Read-only inspection, file discovery, deterministic command reruns, small documentation/copy edits and mechanical evidence collection. |
+| Standard | `flightglass-terra` | `gpt-5.6-terra` | `medium` | Ordinary implementation, bounded UI work, focused tests, refactors and debugging with a clear local failure. This is the normal Flightglass route. |
+| Critical | `flightglass-sol` | `gpt-5.6-sol` | `high` | Architecture, cross-cutting ambiguity, protected physics boundaries, security/privacy/payment, migrations, release work or external actions that consume money. |
+
+Escalate effort within the chosen model only when fresh evidence justifies it:
+
+- raise Terra from `medium` to `high` for multi-file integration, cross-browser
+  nondeterminism or a root cause that survives one focused repair attempt;
+- raise Sol from `high` to `xhigh` only for unresolved high-consequence work,
+  broad architecture synthesis or final review of a high-risk candidate;
+- never select `max` or `ultra` by default. They require an explicit owner need
+  or a documented failure of the narrower route;
+- reduce the route again at the next clean task boundary. Do not carry an
+  escalation into unrelated work.
+
+The model and effort are fixed for an already-running Codex thread. Never claim
+that an instruction file switched them mid-thread. If the active model is more
+capable than required, continue without restarting; if it is below the required
+Critical route, stop before the consequential edit and restart with
+`codex -p flightglass-sol`. At the first progress update, state the selected
+route when it matters to cost, latency or risk.
+
 - Delegate to the `fg-mekaniker` subagent for all pure command runs —
   test suites, `npm run copy-web`, `brand:verify`, harness screenshot
   capture, file moves, `.sa-backups` — anything with machine-readable

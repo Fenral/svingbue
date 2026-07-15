@@ -13,7 +13,7 @@ wait.
 
 | Agent | Branch | Working on | Since |
 |-------|--------|-----------|-------|
-| Codex | `agent/academy-codex` | Model/effort routing policy in `CLAUDE.md` plus local Codex profiles; no Academy shipping files | 2026-07-15 |
+| _None_ | — | — | — |
 
 ## Queue / free to take
 
@@ -30,6 +30,13 @@ wait.
   pair before build.
 
 ## Done / handed off
+
+- Flightglass model/effort routing — `agent/academy-codex`; the normal route is
+  Terra/medium, Luna/low owns lightweight deterministic work, and Sol/high is
+  reserved for consequential architecture, protected boundaries, release and
+  paid external actions. Local `flightglass-{luna,terra,sol}` Codex profiles
+  were created and parsed successfully; model choice remains fixed within an
+  already-running thread.
 
 - Academy ElevenLabs voice-production tooling — `agent/academy-codex`; all 102
   exact cues are inventoried, three blind Voice Design directions and a
