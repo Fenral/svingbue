@@ -27,6 +27,8 @@ wait.
 
 ## Done / handed off
 
+- Implementation-to-verification control audit — docs-only decision support,
+  completed on `codex/process-control-audit`.
 - Backspin lesson — Tasks 1-20, STUDIO-GRADE, committed and pushed.
 - Geometry 3D — un-broken (vendored `three.module.js`, commit `5e22f97`),
   renders again; not yet raised to 90+.
