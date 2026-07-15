@@ -13,7 +13,7 @@ wait.
 
 | Agent | Branch | Working on | Since |
 |-------|--------|-----------|-------|
-| Codex | `agent/academy-codex` | Batch 8 — Backspin curriculum/voice compatibility amendment + regressions | 2026-07-15 |
+| Codex | `agent/academy-codex` | Batch 9 — Flight Height & Descent source implementation + regressions | 2026-07-15 |
 
 ## Queue / free to take
 
@@ -31,6 +31,9 @@ wait.
 
 ## Done / handed off
 
+- Academy Batch 8 Backspin compatibility amendment — `agent/academy-codex`,
+  commit `915f300`; exact truth/result/router copy, grandfather migration and
+  both browser engines are green. Licensed-audio and external visual gates remain.
 - Academy Batch 7 Delivered Loft & Launch source implementation —
   `agent/academy-codex`, commit `76eae59`; protected flight adapter, native
   three-arrow S0–S5/equal-launch mastery/voice and regressions are green.
