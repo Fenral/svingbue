@@ -13,7 +13,7 @@ wait.
 
 | Agent | Branch | Working on | Since |
 |-------|--------|-----------|-------|
-| Codex | `agent/academy-codex` | Batch 14 — optional Plane Coupling Lab source + regressions | 2026-07-15 |
+| Codex | `agent/academy-codex` | Academy final convergence — native package, full gates and handoff | 2026-07-15 |
 
 ## Queue / free to take
 
@@ -30,6 +30,10 @@ wait.
   pair before build.
 
 ## Done / handed off
+
+- Academy Batch 14 optional Plane Coupling MODEL LAB — `agent/academy-codex`,
+  commit `46ff9a0`; protected geometry adapters, separate no-reward exploration
+  storage, six caption cues and both browser engines green.
 
 - Academy Batch 13 Wind source implementation — `agent/academy-codex`, commit
   `c536826`; immutable engine baseline, along/across first-order estimates,
