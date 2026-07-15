@@ -13,7 +13,7 @@ publication after all Phase 8 gates pass. See `RELEASE-AUTHORIZATION.md`.
 | 3 · Outcome / Compare | Ready | Decisions and references locked in master plan |
 | 4 · Geometry 3D / Strike Window 2D | Ready | Consensus documents named |
 | 5 · Academy overview | Batch 0 implemented; acceptance held | Native Home/store/registry/router/host and caption-ready Voice foundation are coded and packaged; visual, audio-rights and human gates remain open |
-| 6 · Academy lesson system | Backspin STUDIO-GRADE base; five outcome experiences implemented | Start Line, Shape, Carry Side, Up or Down at Impact and Low Point own native S0–S5 renderers, raw mastery gates and caption-ready cues; later curriculum batches remain sequential |
+| 6 · Academy lesson system | Backspin STUDIO-GRADE base; six outcome experiences implemented | Start Line, Shape, Carry Side, Up or Down at Impact, Low Point and Contact Height own native S0–S5 renderers, raw mastery gates and caption-ready cues; later curriculum batches remain sequential |
 | 7 · Paywall | Ready | Pricing and compatibility rules locked |
 | 8 · Convergence and release QA | Ready | Global gates locked |
 
@@ -275,6 +275,36 @@ Batch 5 is **source-complete but not release-accepted**. Pairwise, licensed
 female audio/rights/listening and physical-device/VoiceOver/fatigue gates remain
 open and fail-closed. Owner authorization allows the source loop to continue to
 Batch 6 Contact Height.
+
+## Academy Batch 6 implementation checkpoint
+
+Contact Height source implementation is complete on `agent/academy-codex` at
+`3d82aa2`. The canonical and legacy `strike-depth` route now uses a native
+close side-on Contact Window while the learner-visible title is Contact Height.
+It consumes unchanged `clubBallContact()`, `deriveImpact()` and ground-crossing
+authority, distinguishes point-path height from face impact and requires two
+raw height windows at one invariant Attack.
+
+Fresh implementation evidence on 2026-07-15:
+
+- Model/content: 14/14 PASS across the nine-state z sweep, exact 1:1
+  translation, four-state lift budget, ground-entry order, compensation pair,
+  all raw/held/provenance near misses, five myths and seven voice cues.
+- Browser contract: 4/4 Chromium and 4/4 WebKit PASS. It covers preview and
+  legacy routing, S0–S5 progression, reduced motion, ground/ball-center truth,
+  Practiced without live invariance, both raw mastery windows, reload and
+  one-time XP.
+- Full Academy evidence: 121/121 foundation and 91/91 integration/browser
+  PASS. Development voice verification reports 54 exact captions and zero
+  licensed audio assets.
+- Fresh `npm run copy-web`, byte-parity for all four Contact Height shipping
+  assets and brand verification PASS. Mission and live states were inspected
+  at 430×932. All four protected physics hashes remain exact.
+
+Batch 6 is **source-complete but not release-accepted**. Pairwise, licensed
+female audio/rights/listening and physical-device/VoiceOver/fatigue gates remain
+open and fail-closed. Owner authorization allows the source loop to continue to
+Batch 7 Delivered Loft & Launch.
 
 The Backspin 96-97 reference lesson (Phase 6, Tasks 1-11) completed final
 verification on 2026-07-14. Task 10 shipped the lesson through the native
