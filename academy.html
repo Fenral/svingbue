@@ -14,6 +14,7 @@
 <link rel="stylesheet" href="./academy-home.css" />
 <link rel="stylesheet" href="./academy-voice.css" />
 <link rel="stylesheet" href="./academy-start-line.css" />
+<link rel="stylesheet" href="./academy-shape.css" />
 <style>
   :root{
     /* ══ P3 "Ultraviolet Ember" — colour + type consumed from sa-p3.css ══
@@ -743,6 +744,8 @@
   import { backspinCue, homeCue } from './academy-voice-reference-cues.js';
   import { mountStartLineExperience } from './academy-start-line-experience.js';
   import { startLineCue } from './academy-start-line-content.js';
+  import { mountShapeExperience } from './academy-shape-experience.js';
+  import { shapeCue } from './academy-shape-content.js';
 
   /* ══ DATA ══ */
   const GRAPH = JSON.parse(document.getElementById('graph-data').textContent);
@@ -1509,6 +1512,17 @@
         voiceUi.update(voiceController.getState());
         return cleanup;
       },
+      'shape':input => {
+        let currentSurface=Number.isInteger(input.surface)?input.surface:0;
+        const deliver=cueId=>{const cue=cueId&&shapeCue(cueId);return cue?voiceController.deliverAutomatic(cue):null;};
+        const cleanup=mountShapeExperience({
+          ...input,prerequisiteMet:store.experiences?.['start-line']?.status==='mastered',
+          onVoiceSurface:(surface,cueId)=>{currentSurface=surface;deliver(cueId);},
+          onVoiceInterrupt:reason=>voiceController.stop(reason),onVoiceMilestone:cueId=>deliver(cueId)
+        });
+        voiceUi=mountAcademyVoiceUi({root:app.querySelector('[data-academy-voice-slot]'),controller:voiceController,getMode:()=>store.preferences.voice.mode,showInlineChoice:false,onModeChange:mode=>{if(mode!=='off')deliver(['academy.shape.s0.entry','academy.shape.s1.entry','academy.shape.s2.entry',null,'academy.shape.s4.entry',null][currentSurface]);}});
+        voiceUi.update(voiceController.getState());return cleanup;
+      },
       'backspin-native':({ surface, state:experienceState, voiceTargets:hostVoiceTargets }) => {
         const li = levelInfo(store.xp);
         let currentVoiceSurface = Number.isInteger(surface) ? surface : getJourney('backspin').surface;
@@ -1843,7 +1857,7 @@
     if (h.indexOf('#/proto') === 0) renderProto();
     else if (parsed.view === 'home') renderAcademyHome();
     else if (parsed.view === 'explore') renderPath();
-    else if (parsed.legacy && !['backspin','start-line'].includes(parsed.experienceId) && LESSONS[parsed.conceptId]) renderLesson(parsed.conceptId);
+    else if (parsed.legacy && !['backspin','start-line','shape'].includes(parsed.experienceId) && LESSONS[parsed.conceptId]) renderLesson(parsed.conceptId);
     else renderOutcomeExperience(parsed);
     window.scrollTo(0,0);
     // Move focus to the new view's heading on every SPA route change, but not on the very

@@ -32,6 +32,15 @@ test('completed merged concepts become review eligible but never mastered', () =
   assert.equal(next.experiences['speed-transfer'].evidence.liveTransferPassed, false);
 });
 
+test('Shape legacy aliases migrate additively to Practiced and only both enable review', () => {
+  const one = createAcademySeed(); one.lessons['spin-axis'].completed = true;
+  const oneNext = migrateOutcomeAcademy(one, { now:NOW });
+  assert.equal(oneNext.experiences.shape.status, 'practiced');assert.equal(oneNext.experiences.shape.reviewEligible, false);assert.deepEqual(oneNext.experiences.shape.legacyEvidence, ['spin-axis']);
+  const both = createAcademySeed(); both.lessons['spin-axis'].completed = true;both.lessons.curve.completed = true;
+  const bothNext = migrateOutcomeAcademy(both, { now:NOW });
+  assert.equal(bothNext.experiences.shape.status, 'practiced');assert.equal(bothNext.experiences.shape.reviewEligible, true);assert.equal(bothNext.experiences.shape.acceptedAttemptId, null);
+});
+
 test('accepted native Backspin is grandfathered once with a zero-value reward guard', () => {
   const seed = createAcademySeed();
   seed.xp = 420;
