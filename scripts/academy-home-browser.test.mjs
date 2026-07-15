@@ -68,12 +68,14 @@ test('explicit Captions choice persists, shows exact local cue and keeps navigat
   assert.deepEqual(errors,[]);await context.close();
 });
 
-test('canonical Backspin uses the shared host and legacy articles remain reachable',async()=>{
+test('canonical Backspin and legacy Carry alias use their shared native hosts',async()=>{
   const {context,page,errors}=await open({width:430,height:932});
   await page.evaluate(()=>{location.hash='#/experience/backspin';});await page.locator('#nativeLesson').waitFor();
   assert.equal(await page.locator('#nativeLesson').getAttribute('data-lesson'),'backspin');
-  await page.evaluate(()=>{location.hash='#/lesson/carry';});await page.locator('.lesson h1').waitFor();
-  assert.equal((await page.locator('.lesson h1').textContent()).trim(),'Carry');
+  await page.evaluate(()=>{location.hash='#/lesson/carry';});await page.locator('#carryExperience').waitFor();
+  assert.equal((await page.locator('#carryExperience [data-experience="carry"]').count()),0);
+  assert.equal((await page.locator('#carryExperience').getAttribute('data-experience')),'carry');
+  assert.equal((await page.locator('[data-sheet-title]').textContent()).trim(),'Carry');
   assert.deepEqual(errors,[]);await context.close();
 });
 

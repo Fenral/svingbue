@@ -3720,7 +3720,7 @@ test('a non-finite Mastery target input cannot alter readouts or receive target 
     assert.deepEqual(await hapticLog(page), hapticsBefore);
     assert.deepEqual(runtimeErrors, []);
   });
-test('generic Carry preserves legacy rewards and storage across 3/5, 4/5 and reload', { timeout: 30_000 }, async () => {
+test('legacy Carry route preserves historical rewards while opening the canonical native experience', { timeout: 30_000 }, async () => {
   const context = await browser.newContext({
     viewport: { width: 430, height: 932 },
     reducedMotion: 'reduce'
@@ -3735,66 +3735,24 @@ test('generic Carry preserves legacy rewards and storage across 3/5, 4/5 and rel
   const runtimeErrors = observeRuntimeErrors(page);
 
   await page.goto(`${baseUrl}/academy.html#/lesson/carry`, { waitUntil: 'networkidle' });
-  await page.locator('#quizMount .q').first().waitFor();
-  assert.equal((await page.locator('.view.lesson h1').textContent()).trim(), 'Carry');
+  await page.locator('#carryExperience').waitFor();
+  await page.locator('[data-sheet-title]').waitFor();
+  assert.equal((await page.locator('[data-sheet-title]').textContent()).trim(), 'Carry');
   assert.equal(await page.locator('#nativeLesson').count(), 0);
-  assert.equal(await page.locator('#quizMount .q').count(), 5);
-
-  for (let question = 0; question < CARRY_ANSWERS.length; question += 1) {
-    const correct = CARRY_ANSWERS[question];
-    const option = question < 3 ? correct : (correct + 1) % 4;
-    await answer(page, question, option);
-  }
-  await page.locator('#finishBtn.ready').click();
-  await page.locator('#completionMount .completion').waitFor();
-  assert.equal((await page.locator('#completionMount .ck').textContent()).trim(), 'Module complete');
-  assert.equal((await page.locator('#completionMount h2').textContent()).trim(), 'Carry complete');
-
-  const completed = await waitForStored(page, { attempts: 1, best: 60 });
-  assert.equal(completed.xp, 100, '40 read XP plus three first-try answers');
-  assert.equal(completed.lessons.carry.read, true);
-  assert.equal(completed.lessons.carry.completed, true);
-  assert.equal(completed.lessons.carry.mastered, false);
-  assert.equal(completed.lessons.carry.quizBestCorrect, 3);
-  assert.equal(completed.lessons.carry.quizLen, 5);
-  assert.equal(completed.lessons.carry.quizAttempts, 1);
-  assert.equal(completed.lessons.carry.quizBest, 60);
-  assert.deepEqual(completed.legacyStoreField, LEGACY_STORE.legacyStoreField);
-  assert.deepEqual(
-    completed.lessons.carry.legacyLessonField,
-    LEGACY_STORE.lessons.carry.legacyLessonField
-  );
-
-  await page.locator('[data-retry="3"]').click();
-  await answer(page, 3, CARRY_ANSWERS[3]);
-  await page.locator('#finishBtn.ready').click();
-  assert.equal((await page.locator('#completionMount .ck').textContent()).trim(), 'Module mastered');
-  assert.equal((await page.locator('#completionMount h2').textContent()).trim(), 'Carry mastered');
-
-  const mastered = await waitForStored(page, { attempts: 2, best: 70 });
-  assert.equal(mastered.xp, 110, 'read XP is not repeated and only the improved quiz best is awarded');
-  assert.equal(mastered.lessons.carry.read, true);
-  assert.equal(mastered.lessons.carry.completed, true);
-  assert.equal(mastered.lessons.carry.mastered, true);
-  assert.equal(mastered.lessons.carry.quizBestCorrect, 4);
-  assert.equal(mastered.lessons.carry.quizAttempts, 2);
-  assert.equal(mastered.lessons.carry.quizBest, 70);
-  assert.equal(mastered.lessons.carry.perfect, false);
-  assert.deepEqual(mastered.legacyStoreField, LEGACY_STORE.legacyStoreField);
-  assert.deepEqual(
-    mastered.lessons.carry.legacyLessonField,
-    LEGACY_STORE.lessons.carry.legacyLessonField
-  );
-
+  const opened = await storedAcademy(page);
+  assert.equal(opened.xp, LEGACY_STORE.xp);
+  assert.deepEqual(opened.rewardLedger, LEGACY_STORE.rewardLedger);
+  assert.deepEqual(opened.legacyStoreField, LEGACY_STORE.legacyStoreField);
+  assert.deepEqual(opened.lessons.carry.legacyLessonField, LEGACY_STORE.lessons.carry.legacyLessonField);
   const beforeReload = await page.evaluate(key => localStorage.getItem(key), STORE_KEY);
   const beforeReloadState = JSON.parse(beforeReload);
   await page.reload({ waitUntil: 'networkidle' });
-  await page.locator('#quizMount .q').first().waitFor();
+  await page.locator('#carryExperience').waitFor();
   await page.waitForTimeout(250);
   const afterReload = await page.evaluate(key => localStorage.getItem(key), STORE_KEY);
   const afterReloadState = JSON.parse(afterReload);
 
-  assert.equal(afterReload, beforeReload, 'opening the completed generic lesson must not submit again');
+  assert.equal(afterReload, beforeReload, 'reopening the native alias must not submit or reward');
   assert.equal(afterReloadState.xp, beforeReloadState.xp);
   assert.equal(
     afterReloadState.lessons.carry.quizAttempts,
