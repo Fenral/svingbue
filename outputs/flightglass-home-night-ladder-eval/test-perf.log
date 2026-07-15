@@ -1,0 +1,14 @@
+
+> svingbue-app@1.0.0 test:perf
+> node --test --test-concurrency=1 scripts/flightglass-perf.test.mjs
+
+✔ Lab drag input→paint p95 stays under 16.7 ms on Chromium (4012.8409ms)
+✔ Lab drag input→paint p95 stays under 16.7 ms on WebKit (2151.0478ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 6493.483

@@ -5,6 +5,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { join } from 'node:path';
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { createRequire } from 'node:module';
 import {
   BASELINE_DIR,
   CURRENT_DIR,
@@ -14,6 +17,29 @@ import {
   diffPng,
   expectedShotNames
 } from './lib/flightglass-visreg.mjs';
+
+const require = createRequire(import.meta.url);
+const sharp = require('sharp');
+
+test('pixel diff rejects an alpha-only image change', async () => {
+  const directory = mkdtempSync(join(tmpdir(), 'flightglass-visreg-alpha-'));
+  const opaque = join(directory, 'opaque.png');
+  const transparent = join(directory, 'transparent.png');
+  try {
+    await sharp(Buffer.from([12, 18, 24, 255]), {
+      raw: { width:1, height:1, channels:4 }
+    }).png().toFile(opaque);
+    await sharp(Buffer.from([12, 18, 24, 0]), {
+      raw: { width:1, height:1, channels:4 }
+    }).png().toFile(transparent);
+
+    const result = await diffPng(opaque, transparent);
+    assert.equal(result.diffPixels, 1);
+    assert.equal(result.diffPct, 100);
+  } finally {
+    rmSync(directory, { recursive:true, force:true });
+  }
+});
 
 test('approved visual baselines exist for every surface, viewport, motion and engine', () => {
   const inventory = baselineInventory();

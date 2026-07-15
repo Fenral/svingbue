@@ -16,9 +16,9 @@
       "targetScore": 90,
       "route": "index.html",
       "sourceType": "shipping",
-      "viewportIds": ["landscape-wide", "landscape-compact"],
-      "requiredSelectors": ["body", ".shell", ".wordmark"],
-      "references": ["home-concept-1.html", "docs/home-creative-concepts.md"],
+      "viewportIds": ["portrait-wide", "portrait-compact", "landscape-wide", "landscape-compact"],
+      "requiredSelectors": ["body[data-home-direction=\"night-ladder\"]", ".scene", ".flight", ".place--primary"],
+      "references": ["home-portrait-1.html", "home-concept-1.html", "docs/home-creative-concepts.md"],
       "primaryJob": "Choose the next Flightglass territory from a night driving range."
     },
     {

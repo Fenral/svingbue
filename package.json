@@ -6,7 +6,7 @@
   "scripts": {
     "test": "npm run test:ux",
     "test:academy": "node --test --test-concurrency=1 scripts/academy-backspin-model.test.mjs scripts/academy-lesson-journey.test.mjs scripts/academy-backspin-browser.test.mjs",
-    "test:ux": "node --test --test-concurrency=1 scripts/evidence-lock.test.mjs scripts/flightglass-ux.test.mjs scripts/academy-backspin-model.test.mjs scripts/academy-lesson-journey.test.mjs scripts/academy-backspin-browser.test.mjs && npm run test:webkit",
+    "test:ux": "node --test --test-concurrency=1 scripts/evidence-lock.test.mjs scripts/flightglass-ux.test.mjs scripts/home-night-ladder.test.mjs scripts/academy-backspin-model.test.mjs scripts/academy-lesson-journey.test.mjs scripts/academy-backspin-browser.test.mjs && npm run test:webkit",
     "test:webkit": "node scripts/academy-backspin-browser.test.mjs --project=webkit",
     "test:perf": "node --test --test-concurrency=1 scripts/flightglass-perf.test.mjs",
     "test:visreg": "node --test --test-concurrency=1 scripts/flightglass-visreg.test.mjs",

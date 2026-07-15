@@ -1,0 +1,838 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-07-15T09:36:57.050Z",
+  "command": "npm run test:visreg (post-fix) followed by sharp decode/alpha/RGB scan of outputs/flightglass-visreg/current",
+  "requirements": {
+    "expectedImageCount": 48,
+    "opaqueAlphaValue": 255,
+    "nonblankMinimumBytes": 1024,
+    "nonblankMinimumRgbStandardDeviation": 1
+  },
+  "counts": {
+    "expected": 48,
+    "actual": 48,
+    "opaque": 48,
+    "nonblank": 48,
+    "passes": 48,
+    "failures": 0
+  },
+  "images": [
+    {
+      "path": "C:/Users/SkotvoldSivertSende/OneDrive - IdrettsKontor/Dokumenter/Golfapp/svingbue/outputs/flightglass-visreg/current/chromium--375x812--normal--0-mission.png",
+      "bytes": 197155,
+      "sha256": "cc6545b9808d676039df7e35d9b5ef80fa76d7c58cf3cda32009b2d09d1ba8b3",
+      "width": 375,
+      "height": 812,
+      "alphaMin": 255,
+      "alphaMax": 255,
+      "rgbStdDev": [
+        42.153,
+        40.26,
+        54.745
+      ],
+      "opaque": true,
+      "nonblank": true,
+      "pass": true
+    },
+    {
+      "path": "C:/Users/SkotvoldSivertSende/OneDrive - IdrettsKontor/Dokumenter/Golfapp/svingbue/outputs/flightglass-visreg/current/chromium--375x812--normal--1-lab.png",
+      "bytes": 206012,
+      "sha256": "7aaf5dc0dd337be896cd6e730309ba638e65b6a3d6c9b19a6cb709982ee6bf72",
+      "width": 375,
+      "height": 812,
+      "alphaMin": 255,
+      "alphaMax": 255,
+      "rgbStdDev": [
+        39.69,
+        34.615,
+        49.976
+      ],
+      "opaque": true,
+      "nonblank": true,
+      "pass": true
+    },
+    {
+      "path": "C:/Users/SkotvoldSivertSende/OneDrive - IdrettsKontor/Dokumenter/Golfapp/svingbue/outputs/flightglass-visreg/current/chromium--375x812--normal--2-influence.png",
+      "bytes": 191516,
+      "sha256": "5c25e7c01e6136bc4a6362087927451920478682adb35b9bbac3ff4757595bad",
+      "width": 375,
+      "height": 812,
+      "alphaMin": 255,
+      "alphaMax": 255,
+      "rgbStdDev": [
+        44.186,
+        42.172,
+        57.687
+      ],
+      "opaque": true,
+      "nonblank": true,
+      "pass": true
+    },
+    {
+      "path": "C:/Users/SkotvoldSivertSende/OneDrive - IdrettsKontor/Dokumenter/Golfapp/svingbue/outputs/flightglass-visreg/current/chromium--375x812--normal--3-myths.png",
+      "bytes": 183233,
+      "sha256": "e006e9470fd0c3a6bf072f917caf1cb63879f2511f30ce5aa7bd4743dc0f2ef1",
+      "width": 375,
+      "height": 812,
+      "alphaMin": 255,
+      "alphaMax": 255,
+      "rgbStdDev": [
+        38.754,
+        38.586,
+        39.934
+      ],
+      "opaque": true,
+      "nonblank": true,
+      "pass": true
+    },
+    {
+      "path": "C:/Users/SkotvoldSivertSende/OneDrive - IdrettsKontor/Dokumenter/Golfapp/svingbue/outputs/flightglass-visreg/current/chromium--375x812--normal--4-mastery.png",
+      "bytes": 183558,
+      "sha256": "3df67a438d546c2dca651fb04919af9b52d841fd6876ed08fe3a7d576a1acecb",
+      "width": 375,
+      "height": 812,
+      "alphaMin": 255,
+      "alphaMax": 255,
+      "rgbStdDev": [
+        29.953,
+        29.716,
+        31.296
+      ],
+      "opaque": true,
+      "nonblank": true,
+      "pass": true
+    },
+    {
+      "path": "C:/Users/SkotvoldSivertSende/OneDrive - IdrettsKontor/Dokumenter/Golfapp/svingbue/outputs/flightglass-visreg/current/chromium--375x812--normal--5-result.png",
+      "bytes": 219277,
+      "sha256": "96d9af5831dd2b3fcc4b0fdb6d82ecce43f3910d6afdfa88442064f2eeb451f3",
+      "width": 375,
+      "height": 812,
+      "alphaMin": 255,
+      "alphaMax": 255,
+      "rgbStdDev": [
+        48.006,
+        45.36,
+        64.561
+      ],
+      "opaque": true,
+      "nonblank": true,
+      "pass": true
+    },
+    {
+      "path": "C:/Users/SkotvoldSivertSende/OneDrive - IdrettsKontor/Dokumenter/Golfapp/svingbue/outputs/flightglass-visreg/current/chromium--375x812--reduced--0-mission.png",
+      "bytes": 197155,
+      "sha256": "cc6545b9808d676039df7e35d9b5ef80fa76d7c58cf3cda32009b2d09d1ba8b3",
+      "width": 375,
+      "height": 812,
+      "alphaMin": 255,
+      "alphaMax": 255,
+      "rgbStdDev": [
+        42.153,
+        40.26,
+        54.745
+      ],
+      "opaque": true,
+      "nonblank": true,
+      "pass": true
+    },
+    {
+      "path": "C:/Users/SkotvoldSivertSende/OneDrive - IdrettsKontor/Dokumenter/Golfapp/svingbue/outputs/flightglass-visreg/current/chromium--375x812--reduced--1-lab.png",
+      "bytes": 205988,
+      "sha256": "6d243bc5c7b8894f00c28919e9c9949dba5ce8482bbb3223f82c290fce9f82aa",
+      "width": 375,
+      "height": 812,
+      "alphaMin": 255,
+      "alphaMax": 255,
+      "rgbStdDev": [
+        39.699,
+        34.619,
+        49.977
+      ],
+      "opaque": true,
+      "nonblank": true,
+      "pass": true
+    },
+    {
+      "path": "C:/Users/SkotvoldSivertSende/OneDrive - IdrettsKontor/Dokumenter/Golfapp/svingbue/outputs/flightglass-visreg/current/chromium--375x812--reduced--2-influence.png",
+      "bytes": 191516,
+      "sha256": "5c25e7c01e6136bc4a6362087927451920478682adb35b9bbac3ff4757595bad",
+      "width": 375,
+      "height": 812,
+      "alphaMin": 255,
+      "alphaMax": 255,
+      "rgbStdDev": [
+        44.186,
+        42.172,
+        57.687
+      ],
+      "opaque": true,
+      "nonblank": true,
+      "pass": true
+    },
+    {
+      "path": "C:/Users/SkotvoldSivertSende/OneDrive - IdrettsKontor/Dokumenter/Golfapp/svingbue/outputs/flightglass-visreg/current/chromium--375x812--reduced--3-myths.png",
+      "bytes": 183233,
+      "sha256": "e006e9470fd0c3a6bf072f917caf1cb63879f2511f30ce5aa7bd4743dc0f2ef1",
+      "width": 375,
+      "height": 812,
+      "alphaMin": 255,
+      "alphaMax": 255,
+      "rgbStdDev": [
+        38.754,
+        38.586,
+        39.934
+      ],
+      "opaque": true,
+      "nonblank": true,
+      "pass": true
+    },
+    {
+      "path": "C:/Users/SkotvoldSivertSende/OneDrive - IdrettsKontor/Dokumenter/Golfapp/svingbue/outputs/flightglass-visreg/current/chromium--375x812--reduced--4-mastery.png",
+      "bytes": 183558,
+      "sha256": "3df67a438d546c2dca651fb04919af9b52d841fd6876ed08fe3a7d576a1acecb",
+      "width": 375,
+      "height": 812,
+      "alphaMin": 255,
+      "alphaMax": 255,
+      "rgbStdDev": [
+        29.953,
+        29.716,
+        31.296
+      ],
+      "opaque": true,
+      "nonblank": true,
+      "pass": true
+    },
+    {
+      "path": "C:/Users/SkotvoldSivertSende/OneDrive - IdrettsKontor/Dokumenter/Golfapp/svingbue/outputs/flightglass-visreg/current/chromium--375x812--reduced--5-result.png",
+      "bytes": 219277,
+      "sha256": "96d9af5831dd2b3fcc4b0fdb6d82ecce43f3910d6afdfa88442064f2eeb451f3",
+      "width": 375,
+      "height": 812,
+      "alphaMin": 255,
+      "alphaMax": 255,
+      "rgbStdDev": [
+        48.006,
+        45.36,
+        64.561
+      ],
+      "opaque": true,
+      "nonblank": true,
+      "pass": true
+    },
+    {
+      "path": "C:/Users/SkotvoldSivertSende/OneDrive - IdrettsKontor/Dokumenter/Golfapp/svingbue/outputs/flightglass-visreg/current/chromium--430x932--normal--0-mission.png",
+      "bytes": 225135,
+      "sha256": "bcf435e0ae21f5ed860c8bae83aa099abcba48c34d97cd5240509c5da75d5253",
+      "width": 430,
+      "height": 932,
+      "alphaMin": 255,
+      "alphaMax": 255,
+      "rgbStdDev": [
+        38.754,
+        36.856,
+        51.212
+      ],
+      "opaque": true,
+      "nonblank": true,
+      "pass": true
+    },
+    {
+      "path": "C:/Users/SkotvoldSivertSende/OneDrive - IdrettsKontor/Dokumenter/Golfapp/svingbue/outputs/flightglass-visreg/current/chromium--430x932--normal--1-lab.png",
+      "bytes": 236677,
+      "sha256": "13637f01996d4918df4eec8c03aeaa43c40e467708f80f0b80bace8b77aa74cf",
+      "width": 430,
+      "height": 932,
+      "alphaMin": 255,
+      "alphaMax": 255,
+      "rgbStdDev": [
+        37.186,
+        32.279,
+        47.344
+      ],
+      "opaque": true,
+      "nonblank": true,
+      "pass": true
+    },
+    {
+      "path": "C:/Users/SkotvoldSivertSende/OneDrive - IdrettsKontor/Dokumenter/Golfapp/svingbue/outputs/flightglass-visreg/current/chromium--430x932--normal--2-influence.png",
+      "bytes": 220788,
+      "sha256": "5125c4b9837ce0cc2c4d99ac4e5af4ac3bc641b4d883c762a7f3cc629c98d900",
+      "width": 430,
+      "height": 932,
+      "alphaMin": 255,
+      "alphaMax": 255,
+      "rgbStdDev": [
+        41.687,
+        39.722,
+        54.774
+      ],
+      "opaque": true,
+      "nonblank": true,
+      "pass": true
+    },
+    {
+      "path": "C:/Users/SkotvoldSivertSende/OneDrive - IdrettsKontor/Dokumenter/Golfapp/svingbue/outputs/flightglass-visreg/current/chromium--430x932--normal--3-myths.png",
+      "bytes": 212357,
+      "sha256": "dfaeb3f76c7cdaf35a6d2642eb5d4b4288f75223fc46d5ec3cfe2564bf16fee1",
+      "width": 430,
+      "height": 932,
+      "alphaMin": 255,
+      "alphaMax": 255,
+      "rgbStdDev": [
+        35.624,
+        35.465,
+        36.747
+      ],
+      "opaque": true,
+      "nonblank": true,
+      "pass": true
+    },
+    {
+      "path": "C:/Users/SkotvoldSivertSende/OneDrive - IdrettsKontor/Dokumenter/Golfapp/svingbue/outputs/flightglass-visreg/current/chromium--430x932--normal--4-mastery.png",
+      "bytes": 212725,
+      "sha256": "7e8f4dce2a039884ac7ef38d226f3f5f88215e8f5e38debab8624ec6133eb237",
+      "width": 430,
+      "height": 932,
+      "alphaMin": 255,
+      "alphaMax": 255,
+      "rgbStdDev": [
+        27.307,
+        27.079,
+        28.617
+      ],
+      "opaque": true,
+      "nonblank": true,
+      "pass": true
+    },
+    {
+      "path": "C:/Users/SkotvoldSivertSende/OneDrive - IdrettsKontor/Dokumenter/Golfapp/svingbue/outputs/flightglass-visreg/current/chromium--430x932--normal--5-result.png",
+      "bytes": 249546,
+      "sha256": "b8430614c4bbae5b070fd0e2a92facf8cadccc96110b67f2f4b33aa6c257a13d",
+      "width": 430,
+      "height": 932,
+      "alphaMin": 255,
+      "alphaMax": 255,
+      "rgbStdDev": [
+        44.718,
+        42.111,
+        61.055
+      ],
+      "opaque": true,
+      "nonblank": true,
+      "pass": true
+    },
+    {
+      "path": "C:/Users/SkotvoldSivertSende/OneDrive - IdrettsKontor/Dokumenter/Golfapp/svingbue/outputs/flightglass-visreg/current/chromium--430x932--reduced--0-mission.png",
+      "bytes": 225135,
+      "sha256": "bcf435e0ae21f5ed860c8bae83aa099abcba48c34d97cd5240509c5da75d5253",
+      "width": 430,
+      "height": 932,
+      "alphaMin": 255,
+      "alphaMax": 255,
+      "rgbStdDev": [
+        38.754,
+        36.856,
+        51.212
+      ],
+      "opaque": true,
+      "nonblank": true,
+      "pass": true
+    },
+    {
+      "path": "C:/Users/SkotvoldSivertSende/OneDrive - IdrettsKontor/Dokumenter/Golfapp/svingbue/outputs/flightglass-visreg/current/chromium--430x932--reduced--1-lab.png",
+      "bytes": 236497,
+      "sha256": "fb01a35455747b15e45367d5a73e5347fa142943e8982792541b2f27e8c784b2",
+      "width": 430,
+      "height": 932,
+      "alphaMin": 255,
+      "alphaMax": 255,
+      "rgbStdDev": [
+        37.209,
+        32.292,
+        47.357
+      ],
+      "opaque": true,
+      "nonblank": true,
+      "pass": true
+    },
+    {
+      "path": "C:/Users/SkotvoldSivertSende/OneDrive - IdrettsKontor/Dokumenter/Golfapp/svingbue/outputs/flightglass-visreg/current/chromium--430x932--reduced--2-influence.png",
+      "bytes": 220788,
+      "sha256": "5125c4b9837ce0cc2c4d99ac4e5af4ac3bc641b4d883c762a7f3cc629c98d900",
+      "width": 430,
+      "height": 932,
+      "alphaMin": 255,
+      "alphaMax": 255,
+      "rgbStdDev": [
+        41.687,
+        39.722,
+        54.774
+      ],
+      "opaque": true,
+      "nonblank": true,
+      "pass": true
+    },
+    {
+      "path": "C:/Users/SkotvoldSivertSende/OneDrive - IdrettsKontor/Dokumenter/Golfapp/svingbue/outputs/flightglass-visreg/current/chromium--430x932--reduced--3-myths.png",
+      "bytes": 212357,
+      "sha256": "dfaeb3f76c7cdaf35a6d2642eb5d4b4288f75223fc46d5ec3cfe2564bf16fee1",
+      "width": 430,
+      "height": 932,
+      "alphaMin": 255,
+      "alphaMax": 255,
+      "rgbStdDev": [
+        35.624,
+        35.465,
+        36.747
+      ],
+      "opaque": true,
+      "nonblank": true,
+      "pass": true
+    },
+    {
+      "path": "C:/Users/SkotvoldSivertSende/OneDrive - IdrettsKontor/Dokumenter/Golfapp/svingbue/outputs/flightglass-visreg/current/chromium--430x932--reduced--4-mastery.png",
+      "bytes": 212725,
+      "sha256": "7e8f4dce2a039884ac7ef38d226f3f5f88215e8f5e38debab8624ec6133eb237",
+      "width": 430,
+      "height": 932,
+      "alphaMin": 255,
+      "alphaMax": 255,
+      "rgbStdDev": [
+        27.307,
+        27.079,
+        28.617
+      ],
+      "opaque": true,
+      "nonblank": true,
+      "pass": true
+    },
+    {
+      "path": "C:/Users/SkotvoldSivertSende/OneDrive - IdrettsKontor/Dokumenter/Golfapp/svingbue/outputs/flightglass-visreg/current/chromium--430x932--reduced--5-result.png",
+      "bytes": 249546,
+      "sha256": "b8430614c4bbae5b070fd0e2a92facf8cadccc96110b67f2f4b33aa6c257a13d",
+      "width": 430,
+      "height": 932,
+      "alphaMin": 255,
+      "alphaMax": 255,
+      "rgbStdDev": [
+        44.718,
+        42.111,
+        61.055
+      ],
+      "opaque": true,
+      "nonblank": true,
+      "pass": true
+    },
+    {
+      "path": "C:/Users/SkotvoldSivertSende/OneDrive - IdrettsKontor/Dokumenter/Golfapp/svingbue/outputs/flightglass-visreg/current/webkit--375x812--normal--0-mission.png",
+      "bytes": 217044,
+      "sha256": "a96707a992719d2452ab488772c7e694c80b19c43ee0327affbfc5e811065bd0",
+      "width": 375,
+      "height": 812,
+      "alphaMin": 255,
+      "alphaMax": 255,
+      "rgbStdDev": [
+        35.801,
+        33.582,
+        50.159
+      ],
+      "opaque": true,
+      "nonblank": true,
+      "pass": true
+    },
+    {
+      "path": "C:/Users/SkotvoldSivertSende/OneDrive - IdrettsKontor/Dokumenter/Golfapp/svingbue/outputs/flightglass-visreg/current/webkit--375x812--normal--1-lab.png",
+      "bytes": 238355,
+      "sha256": "bea04d2801e1174e2a036d22e922eeaa80a9babeb2d8f868289a0881afe50c71",
+      "width": 375,
+      "height": 812,
+      "alphaMin": 255,
+      "alphaMax": 255,
+      "rgbStdDev": [
+        37.256,
+        31.631,
+        48.136
+      ],
+      "opaque": true,
+      "nonblank": true,
+      "pass": true
+    },
+    {
+      "path": "C:/Users/SkotvoldSivertSende/OneDrive - IdrettsKontor/Dokumenter/Golfapp/svingbue/outputs/flightglass-visreg/current/webkit--375x812--normal--2-influence.png",
+      "bytes": 220048,
+      "sha256": "0dc2fa010af8b6906616c90be2cede1c955e812ef21fea57efcc617319036222",
+      "width": 375,
+      "height": 812,
+      "alphaMin": 255,
+      "alphaMax": 255,
+      "rgbStdDev": [
+        41.678,
+        39.641,
+        55.893
+      ],
+      "opaque": true,
+      "nonblank": true,
+      "pass": true
+    },
+    {
+      "path": "C:/Users/SkotvoldSivertSende/OneDrive - IdrettsKontor/Dokumenter/Golfapp/svingbue/outputs/flightglass-visreg/current/webkit--375x812--normal--3-myths.png",
+      "bytes": 209627,
+      "sha256": "cedd55e9025e27c0c130f2b5ebe401ee80214c65b17461a110928856bcd066d7",
+      "width": 375,
+      "height": 812,
+      "alphaMin": 255,
+      "alphaMax": 255,
+      "rgbStdDev": [
+        32.052,
+        32.047,
+        33.131
+      ],
+      "opaque": true,
+      "nonblank": true,
+      "pass": true
+    },
+    {
+      "path": "C:/Users/SkotvoldSivertSende/OneDrive - IdrettsKontor/Dokumenter/Golfapp/svingbue/outputs/flightglass-visreg/current/webkit--375x812--normal--4-mastery.png",
+      "bytes": 215803,
+      "sha256": "b16a239cf7120b0b413fac6c8fc6ba1df28799fd578d3d6e99f05e6012c3c674",
+      "width": 375,
+      "height": 812,
+      "alphaMin": 255,
+      "alphaMax": 255,
+      "rgbStdDev": [
+        23.448,
+        23.366,
+        24.715
+      ],
+      "opaque": true,
+      "nonblank": true,
+      "pass": true
+    },
+    {
+      "path": "C:/Users/SkotvoldSivertSende/OneDrive - IdrettsKontor/Dokumenter/Golfapp/svingbue/outputs/flightglass-visreg/current/webkit--375x812--normal--5-result.png",
+      "bytes": 247570,
+      "sha256": "aed4e0250e6da73f1db835cb4962698bae381e5e99d473cd9d1f688aa1535491",
+      "width": 375,
+      "height": 812,
+      "alphaMin": 255,
+      "alphaMax": 255,
+      "rgbStdDev": [
+        43.763,
+        41,
+        61.679
+      ],
+      "opaque": true,
+      "nonblank": true,
+      "pass": true
+    },
+    {
+      "path": "C:/Users/SkotvoldSivertSende/OneDrive - IdrettsKontor/Dokumenter/Golfapp/svingbue/outputs/flightglass-visreg/current/webkit--375x812--reduced--0-mission.png",
+      "bytes": 217044,
+      "sha256": "a96707a992719d2452ab488772c7e694c80b19c43ee0327affbfc5e811065bd0",
+      "width": 375,
+      "height": 812,
+      "alphaMin": 255,
+      "alphaMax": 255,
+      "rgbStdDev": [
+        35.801,
+        33.582,
+        50.159
+      ],
+      "opaque": true,
+      "nonblank": true,
+      "pass": true
+    },
+    {
+      "path": "C:/Users/SkotvoldSivertSende/OneDrive - IdrettsKontor/Dokumenter/Golfapp/svingbue/outputs/flightglass-visreg/current/webkit--375x812--reduced--1-lab.png",
+      "bytes": 238353,
+      "sha256": "6d6cfe60acc27057d5bd7c93668d3e7f91206665bd6f18464502c81e886ffbe3",
+      "width": 375,
+      "height": 812,
+      "alphaMin": 255,
+      "alphaMax": 255,
+      "rgbStdDev": [
+        37.263,
+        31.635,
+        48.137
+      ],
+      "opaque": true,
+      "nonblank": true,
+      "pass": true
+    },
+    {
+      "path": "C:/Users/SkotvoldSivertSende/OneDrive - IdrettsKontor/Dokumenter/Golfapp/svingbue/outputs/flightglass-visreg/current/webkit--375x812--reduced--2-influence.png",
+      "bytes": 220048,
+      "sha256": "0dc2fa010af8b6906616c90be2cede1c955e812ef21fea57efcc617319036222",
+      "width": 375,
+      "height": 812,
+      "alphaMin": 255,
+      "alphaMax": 255,
+      "rgbStdDev": [
+        41.678,
+        39.641,
+        55.893
+      ],
+      "opaque": true,
+      "nonblank": true,
+      "pass": true
+    },
+    {
+      "path": "C:/Users/SkotvoldSivertSende/OneDrive - IdrettsKontor/Dokumenter/Golfapp/svingbue/outputs/flightglass-visreg/current/webkit--375x812--reduced--3-myths.png",
+      "bytes": 209627,
+      "sha256": "cedd55e9025e27c0c130f2b5ebe401ee80214c65b17461a110928856bcd066d7",
+      "width": 375,
+      "height": 812,
+      "alphaMin": 255,
+      "alphaMax": 255,
+      "rgbStdDev": [
+        32.052,
+        32.047,
+        33.131
+      ],
+      "opaque": true,
+      "nonblank": true,
+      "pass": true
+    },
+    {
+      "path": "C:/Users/SkotvoldSivertSende/OneDrive - IdrettsKontor/Dokumenter/Golfapp/svingbue/outputs/flightglass-visreg/current/webkit--375x812--reduced--4-mastery.png",
+      "bytes": 215803,
+      "sha256": "b16a239cf7120b0b413fac6c8fc6ba1df28799fd578d3d6e99f05e6012c3c674",
+      "width": 375,
+      "height": 812,
+      "alphaMin": 255,
+      "alphaMax": 255,
+      "rgbStdDev": [
+        23.448,
+        23.366,
+        24.715
+      ],
+      "opaque": true,
+      "nonblank": true,
+      "pass": true
+    },
+    {
+      "path": "C:/Users/SkotvoldSivertSende/OneDrive - IdrettsKontor/Dokumenter/Golfapp/svingbue/outputs/flightglass-visreg/current/webkit--375x812--reduced--5-result.png",
+      "bytes": 247570,
+      "sha256": "aed4e0250e6da73f1db835cb4962698bae381e5e99d473cd9d1f688aa1535491",
+      "width": 375,
+      "height": 812,
+      "alphaMin": 255,
+      "alphaMax": 255,
+      "rgbStdDev": [
+        43.763,
+        41,
+        61.679
+      ],
+      "opaque": true,
+      "nonblank": true,
+      "pass": true
+    },
+    {
+      "path": "C:/Users/SkotvoldSivertSende/OneDrive - IdrettsKontor/Dokumenter/Golfapp/svingbue/outputs/flightglass-visreg/current/webkit--430x932--normal--0-mission.png",
+      "bytes": 250517,
+      "sha256": "c1ca138bb0bbf14988fc0f358f4331e108c0554146c212b64994329901fc72dc",
+      "width": 430,
+      "height": 932,
+      "alphaMin": 255,
+      "alphaMax": 255,
+      "rgbStdDev": [
+        33.321,
+        31.128,
+        47.33
+      ],
+      "opaque": true,
+      "nonblank": true,
+      "pass": true
+    },
+    {
+      "path": "C:/Users/SkotvoldSivertSende/OneDrive - IdrettsKontor/Dokumenter/Golfapp/svingbue/outputs/flightglass-visreg/current/webkit--430x932--normal--1-lab.png",
+      "bytes": 275693,
+      "sha256": "0c996e250907af86d36a41457e5ff91bb16dc3b2335b32e4363bc2533ab6c4bc",
+      "width": 430,
+      "height": 932,
+      "alphaMin": 255,
+      "alphaMax": 255,
+      "rgbStdDev": [
+        35.084,
+        29.707,
+        45.746
+      ],
+      "opaque": true,
+      "nonblank": true,
+      "pass": true
+    },
+    {
+      "path": "C:/Users/SkotvoldSivertSende/OneDrive - IdrettsKontor/Dokumenter/Golfapp/svingbue/outputs/flightglass-visreg/current/webkit--430x932--normal--2-influence.png",
+      "bytes": 256660,
+      "sha256": "a764702dcc00a49b86406d6fcde10f331fb1121ed29286d4059dc332fbdeb606",
+      "width": 430,
+      "height": 932,
+      "alphaMin": 255,
+      "alphaMax": 255,
+      "rgbStdDev": [
+        39.503,
+        37.515,
+        53.199
+      ],
+      "opaque": true,
+      "nonblank": true,
+      "pass": true
+    },
+    {
+      "path": "C:/Users/SkotvoldSivertSende/OneDrive - IdrettsKontor/Dokumenter/Golfapp/svingbue/outputs/flightglass-visreg/current/webkit--430x932--normal--3-myths.png",
+      "bytes": 249496,
+      "sha256": "ddd24c5616e29bc2b6f56c888ed6aad6e00741ad9b8158916ce68744bf9a1205",
+      "width": 430,
+      "height": 932,
+      "alphaMin": 255,
+      "alphaMax": 255,
+      "rgbStdDev": [
+        29.856,
+        29.86,
+        30.898
+      ],
+      "opaque": true,
+      "nonblank": true,
+      "pass": true
+    },
+    {
+      "path": "C:/Users/SkotvoldSivertSende/OneDrive - IdrettsKontor/Dokumenter/Golfapp/svingbue/outputs/flightglass-visreg/current/webkit--430x932--normal--4-mastery.png",
+      "bytes": 253753,
+      "sha256": "ef776e5d48b0a1d75459b6e640ea5856f74021303897e96bc833acbc59949825",
+      "width": 430,
+      "height": 932,
+      "alphaMin": 255,
+      "alphaMax": 255,
+      "rgbStdDev": [
+        21.562,
+        21.496,
+        22.825
+      ],
+      "opaque": true,
+      "nonblank": true,
+      "pass": true
+    },
+    {
+      "path": "C:/Users/SkotvoldSivertSende/OneDrive - IdrettsKontor/Dokumenter/Golfapp/svingbue/outputs/flightglass-visreg/current/webkit--430x932--normal--5-result.png",
+      "bytes": 288773,
+      "sha256": "9a53c1d48b7597eeba11d7e4db14d0c51fdd346a33d6de41303489d2e52c283c",
+      "width": 430,
+      "height": 932,
+      "alphaMin": 255,
+      "alphaMax": 255,
+      "rgbStdDev": [
+        40.942,
+        38.263,
+        58.475
+      ],
+      "opaque": true,
+      "nonblank": true,
+      "pass": true
+    },
+    {
+      "path": "C:/Users/SkotvoldSivertSende/OneDrive - IdrettsKontor/Dokumenter/Golfapp/svingbue/outputs/flightglass-visreg/current/webkit--430x932--reduced--0-mission.png",
+      "bytes": 250517,
+      "sha256": "c1ca138bb0bbf14988fc0f358f4331e108c0554146c212b64994329901fc72dc",
+      "width": 430,
+      "height": 932,
+      "alphaMin": 255,
+      "alphaMax": 255,
+      "rgbStdDev": [
+        33.321,
+        31.128,
+        47.33
+      ],
+      "opaque": true,
+      "nonblank": true,
+      "pass": true
+    },
+    {
+      "path": "C:/Users/SkotvoldSivertSende/OneDrive - IdrettsKontor/Dokumenter/Golfapp/svingbue/outputs/flightglass-visreg/current/webkit--430x932--reduced--1-lab.png",
+      "bytes": 275718,
+      "sha256": "8a6df1fac7a2491cf4bf5921fc353797af810308f75b8e0bed45de466e3eb635",
+      "width": 430,
+      "height": 932,
+      "alphaMin": 255,
+      "alphaMax": 255,
+      "rgbStdDev": [
+        35.091,
+        29.711,
+        45.747
+      ],
+      "opaque": true,
+      "nonblank": true,
+      "pass": true
+    },
+    {
+      "path": "C:/Users/SkotvoldSivertSende/OneDrive - IdrettsKontor/Dokumenter/Golfapp/svingbue/outputs/flightglass-visreg/current/webkit--430x932--reduced--2-influence.png",
+      "bytes": 256660,
+      "sha256": "a764702dcc00a49b86406d6fcde10f331fb1121ed29286d4059dc332fbdeb606",
+      "width": 430,
+      "height": 932,
+      "alphaMin": 255,
+      "alphaMax": 255,
+      "rgbStdDev": [
+        39.503,
+        37.515,
+        53.199
+      ],
+      "opaque": true,
+      "nonblank": true,
+      "pass": true
+    },
+    {
+      "path": "C:/Users/SkotvoldSivertSende/OneDrive - IdrettsKontor/Dokumenter/Golfapp/svingbue/outputs/flightglass-visreg/current/webkit--430x932--reduced--3-myths.png",
+      "bytes": 249496,
+      "sha256": "ddd24c5616e29bc2b6f56c888ed6aad6e00741ad9b8158916ce68744bf9a1205",
+      "width": 430,
+      "height": 932,
+      "alphaMin": 255,
+      "alphaMax": 255,
+      "rgbStdDev": [
+        29.856,
+        29.86,
+        30.898
+      ],
+      "opaque": true,
+      "nonblank": true,
+      "pass": true
+    },
+    {
+      "path": "C:/Users/SkotvoldSivertSende/OneDrive - IdrettsKontor/Dokumenter/Golfapp/svingbue/outputs/flightglass-visreg/current/webkit--430x932--reduced--4-mastery.png",
+      "bytes": 253753,
+      "sha256": "ef776e5d48b0a1d75459b6e640ea5856f74021303897e96bc833acbc59949825",
+      "width": 430,
+      "height": 932,
+      "alphaMin": 255,
+      "alphaMax": 255,
+      "rgbStdDev": [
+        21.562,
+        21.496,
+        22.825
+      ],
+      "opaque": true,
+      "nonblank": true,
+      "pass": true
+    },
+    {
+      "path": "C:/Users/SkotvoldSivertSende/OneDrive - IdrettsKontor/Dokumenter/Golfapp/svingbue/outputs/flightglass-visreg/current/webkit--430x932--reduced--5-result.png",
+      "bytes": 288773,
+      "sha256": "9a53c1d48b7597eeba11d7e4db14d0c51fdd346a33d6de41303489d2e52c283c",
+      "width": 430,
+      "height": 932,
+      "alphaMin": 255,
+      "alphaMax": 255,
+      "rgbStdDev": [
+        40.942,
+        38.263,
+        58.475
+      ],
+      "opaque": true,
+      "nonblank": true,
+      "pass": true
+    }
+  ],
+  "pass": true
+}

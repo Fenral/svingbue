@@ -8,7 +8,7 @@ publication after all Phase 8 gates pass. See `RELEASE-AUTHORIZATION.md`.
 | Phase | State | Evidence |
 |---|---|---|
 | 0 - QA baseline and control package | Complete | 40-state baseline, 11 contract tests, brand and handoff verifiers |
-| 1 · Home / Floodlights | Ready | Decisions and references locked in master plan |
+| 1 · Home / Night Ladder | STUDIO-GRADE | Owner-selected night-range Home; 17/17 manifest PASS, 2/2 blind wins, portrait and landscape evidence |
 | 2 · Range / Visualise | Ready | Decisions and references locked in master plan |
 | 3 · Outcome / Compare | Ready | Decisions and references locked in master plan |
 | 4 · Geometry 3D / Strike Window 2D | Ready | Consensus documents named |
@@ -18,6 +18,45 @@ publication after all Phase 8 gates pass. See `RELEASE-AUTHORIZATION.md`.
 | 8 · Convergence and release QA | Ready | Global gates locked |
 
 ## Current checkpoint
+
+Phase 1 Home is now implemented as the owner-selected **Night Ladder** direction.
+The former diagonal split in `index.html` has been replaced by one responsive
+night-range navigation world that preserves the portrait concept at 430×932 and
+375×812 and resolves into a horizontal shot journey at 932×430 and 812×375.
+All Home destinations resolve to native-package pages: Range and Outcome states
+use `impact.html`, Lab uses `geometry.html`, and Academy uses `academy.html`.
+Fresh `sa.stat.*` and Academy state is shown only when it is inside the existing
+30-day contract; otherwise the values are explicitly labelled `Demo shot`.
+
+Phase 1 acceptance evidence (fresh 2026-07-15):
+
+- focused Night Ladder contract: 4/4 PASS; manifest now audits Home at all four
+  target viewports;
+- focused Home verify: 8 captures, zero critical or improvement findings;
+- Chromium/source suite 87/87 PASS; WebKit 41/41 PASS; brand and clean native
+  packaging PASS;
+- 24/24 extended layout states and 24/24 local axe-core scans PASS with zero
+  critical/serious findings; 8/8 text-130 states remain intact;
+- 160 target-pair checks across both engines, all viewports and both motion
+  modes: zero overlap, minimum separation 8 px;
+- digit-cycle width delta 0 px; Home→Impact navigation 4/4 PASS in normal and
+  reduced motion; p95 input-to-paint 1.7 ms Chromium / 3.0 ms WebKit over 220
+  events per engine;
+- Home deterministic visual regression: 16/16 pairs, maximum 0.000%; global
+  visual regression 3/3 PASS after the harness was hardened to compare alpha,
+  disable capture-time animations and wait for the exact ghost count. No
+  visual baseline was approved or changed;
+- independent blind comparison selected the new shipping Home in 2/2 pairs;
+  independent manifest judgment: 17/17 PASS, every category floor PASS, zero
+  critical failures;
+- `derive-score.mjs --pairwise-won`: STUDIO-GRADE / 100. This is a derived
+  byproduct; the four evidence gates determined acceptance.
+
+Evidence is under `outputs/flightglass-home-night-ladder-eval/`. The rollback
+unit is `.sa-backups/night-ladder-home-20260715-101854`. Protected physics and
+compatibility identifiers are unchanged. This Phase 1 completion does not
+authorize Phase 8 publication; the next owner-directed production action
+remains Academy Batch 0 from the accepted rollout.
 
 The Backspin 96-97 reference lesson (Phase 6, Tasks 1-11) completed final
 verification on 2026-07-14. Task 10 shipped the lesson through the native

@@ -168,6 +168,11 @@ async function walkAndShoot(page, root, shot) {
   await page.waitForFunction(() =>
     document.querySelector('#backspinTruth')?.textContent.replaceAll(',', '').trim() === '6048');
   await page.waitForTimeout(SETTLE_MS);
+  await page.waitForFunction(() => {
+    const lesson = document.querySelector('#nativeLesson');
+    const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    return lesson?.dataset.ghostCount === (reduced ? '1' : '2');
+  }, undefined, { timeout: 4000 });
   await waitForCanvasStable(page);
   await shot('1-lab');
 
@@ -250,7 +255,11 @@ export async function captureAll(outDir, { engines = ENGINES } = {}) {
             const root = page.locator('#nativeLesson');
             await root.waitFor({ timeout: 8000 });
             await walkAndShoot(page, root, (name) =>
-              page.screenshot({ path: join(outDir, `${tag}--${name}.png`) }));
+              page.screenshot({
+                path: join(outDir, `${tag}--${name}.png`),
+                animations: 'disabled',
+                caret: 'hide'
+              }));
             await context.close();
           }
         }
@@ -280,6 +289,7 @@ export async function diffPng(baselinePath, candidatePath, { channelTolerance = 
       Math.abs(a.data[offset] - b.data[offset]) > channelTolerance
       || Math.abs(a.data[offset + 1] - b.data[offset + 1]) > channelTolerance
       || Math.abs(a.data[offset + 2] - b.data[offset + 2]) > channelTolerance
+      || Math.abs(a.data[offset + 3] - b.data[offset + 3]) > channelTolerance
     ) {
       diffPixels += 1;
     }

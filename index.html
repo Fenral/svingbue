@@ -1,261 +1,252 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#07060C">
 <meta name="robots" content="noindex">
-<title>Flightglass</title>
+<title>Flightglass — Night Ladder</title>
 <link rel="icon" href="./assets/flightglass-mark-micro.svg" type="image/svg+xml">
-<link rel="stylesheet" href="./sa.css">
+<link rel="preload" as="image" href="./assets/range-night-3d-33.png">
+<link rel="stylesheet" href="./sa-p3.css">
 <style>
-  :root{
-    --accent:#FF8A4D; --accent-soft:rgba(255,138,77,.16); --accent-line:rgba(255,138,77,.55);
-    --ink:#e8f0fb; --muted:#9aabc6;                     /* unified ink + AAA-ish muted */
-    --bg:#0A0E12; --bg-top:#0b1220;
-    --panel:rgba(12,20,33,.72); --line:rgba(255,255,255,.30);  /* line raised to ≥3:1 */
-    --radius-pill:999px; --radius-card:16px; --radius-control:12px;
-    --blur-surface:10px; --blur-overlay:18px;
+  @view-transition{navigation:auto}
+  *{box-sizing:border-box}
+  html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg)}
+  body{min-width:320px;min-height:100dvh;color:var(--ink);font-family:var(--font-ui);-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
+  .scene{position:fixed;inset:0;overflow:hidden;background:var(--bg)}
+  .scene__photo{position:absolute;inset:-2%;width:104%;height:104%;object-fit:cover;object-position:50% 48%;filter:saturate(.76) brightness(.62);transform:scale(1.01);transition:filter .72s var(--ease),transform .72s var(--ease)}
+  .scene__wash{position:absolute;inset:0;background:rgba(7,6,12,.28)}
+  .scene__lower{position:absolute;inset:40% 0 0;background:linear-gradient(180deg,transparent,rgba(7,6,12,.84))}
+  .scene__horizon{position:absolute;left:0;right:0;top:37%;height:1px;background:var(--secondary-line);opacity:.32}
+  .is-booting:not(.is-ready) .scene__photo{filter:saturate(.5) brightness(.40);transform:scale(1.035)}
+
+  .masthead{position:fixed;z-index:20;left:max(20px,env(safe-area-inset-left));right:max(20px,env(safe-area-inset-right));top:max(16px,env(safe-area-inset-top));height:44px;display:flex;align-items:center;justify-content:space-between}
+  .wordmark{display:block;width:132px;height:auto;view-transition-name:sa-logo}
+  .help{display:grid;place-items:center;width:44px;height:44px;border:1px solid var(--line-strong);border-radius:50%;color:var(--muted);text-decoration:none;font:600 14px/1 var(--font-mono);background:rgba(7,6,12,.82)}
+  .help:hover{color:var(--ink);border-color:var(--secondary-line)}
+
+  main{position:fixed;z-index:3;inset:0;padding-top:max(74px,calc(env(safe-area-inset-top) + 64px));padding-bottom:max(24px,env(safe-area-inset-bottom))}
+  .intro{position:absolute;z-index:3;left:max(20px,env(safe-area-inset-left));top:max(84px,calc(env(safe-area-inset-top) + 74px));width:min(240px,calc(100vw - 40px))}
+  .intro__kicker{margin:0 0 8px;color:var(--secondary);font:700 10px/1 var(--font-ui);letter-spacing:.18em;text-transform:uppercase}
+  .intro h1{margin:0;font:600 clamp(34px,10vw,46px)/.94 var(--font-display);letter-spacing:-.045em;text-wrap:balance}
+  .intro__body{margin:12px 0 0;color:var(--muted);font-size:13px;line-height:1.45;max-width:220px}
+
+  .flight{position:absolute;inset:70px 0 54px;pointer-events:none}
+  .flight svg{width:100%;height:100%;overflow:visible}
+  .flight--landscape{display:none}
+  .trace-under{fill:none;stroke:rgba(255,138,77,.13);stroke-width:9;stroke-linecap:round}
+  .trace{fill:none;stroke:var(--accent);stroke-width:2.4;stroke-linecap:round;stroke-dasharray:1;stroke-dashoffset:1;animation:draw 1.2s var(--ease) .12s forwards}
+  .trace-structure{fill:none;stroke:var(--secondary-line);stroke-width:1;stroke-dasharray:4 8}
+  .ball{fill:var(--accent);offset-distance:0%;animation:fly 1.2s var(--ease) .12s forwards}
+  .ball--portrait{offset-path:path('M 212 780 C 150 650 287 522 212 214')}
+  .ball--landscape{offset-path:path('M 188 374 C 390 118 642 238 850 74')}
+  @keyframes draw{to{stroke-dashoffset:0}}
+  @keyframes fly{to{offset-distance:100%}}
+
+  .places{position:absolute;inset:0;list-style:none;margin:0;padding:0}
+  .place{position:absolute;display:flex;min-height:56px;max-width:min(188px,calc(100vw - 36px));align-items:center;text-decoration:none;color:var(--ink);border:1px solid var(--line-strong);border-left:2px solid var(--secondary);background:rgba(7,6,12,.92);padding:10px 13px;border-radius:12px;transition:transform .16s var(--ease),border-color .16s var(--ease),opacity .48s var(--ease);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+  .is-booting:not(.is-ready) .place{opacity:.38}
+  .place:hover{transform:translateY(-2px);border-color:var(--secondary-line)}
+  .place--primary{border-left-color:var(--accent);background:rgba(7,6,12,.97)}
+  .place__copy{display:grid;gap:4px;min-width:0}
+  .place__label{color:var(--muted);font-size:9px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;white-space:nowrap}
+  .place__value{font:600 15px/1.15 var(--font-mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+  .place--primary .place__label,.place--primary .place__value{color:var(--accent)}
+  .place--academy .place__value{color:var(--gold)}
+  .p-range{left:max(18px,env(safe-area-inset-left));bottom:12%}
+  .p-lab{right:max(18px,env(safe-area-inset-right));bottom:35%}
+  .p-outcome{left:max(18px,env(safe-area-inset-left));top:35%}
+  .p-academy{right:max(18px,env(safe-area-inset-right));top:20%}
+  .footnote{position:absolute;left:max(20px,env(safe-area-inset-left));right:max(20px,env(safe-area-inset-right));bottom:max(14px,env(safe-area-inset-bottom));display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:10px;letter-spacing:.08em;text-transform:uppercase;pointer-events:none}
+  .footnote__state{font-family:var(--font-mono);font-variant-numeric:tabular-nums;color:var(--ink)}
+
+  @media(max-width:390px){
+    .intro{width:210px}.intro h1{font-size:35px}.intro__body{font-size:12px}
+    .place{max-width:166px;padding-inline:11px}.place__value{font-size:13px}
+    .p-academy{top:21%}.p-outcome{top:37%}.p-lab{bottom:34%}.p-range{bottom:11%}
   }
-  *{box-sizing:border-box;margin:0;padding:0;}
-  html,body{height:100%;}
-  body{background:radial-gradient(130% 120% at 50% -10%, var(--bg-top), var(--bg));color:var(--ink);overflow:hidden;
-    font-family:"SF Pro Display",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased;}
-
-  /* one cohesive landscape scene fills the whole frame (cover, no crop on landscape) */
-  /* base linear-gradient sits UNDER the photo so labels keep contrast on any art */
-  .shell{position:fixed;inset:0;height:100dvh;width:100vw;overflow:hidden;
-    background:
-      url("./assets/home-diag-landscape.png") center/cover no-repeat,
-      linear-gradient(135deg, #0c141d 0%, #0A0E12 55%, #0c141d 100%);
-    background-color:#0A0E12;}
-
-  /* two equal-weight diagonal hit-zones, corner-to-corner */
-  .zone{position:absolute;inset:0;text-decoration:none;color:inherit;display:block;-webkit-tap-highlight-color:transparent;}
-  /* top-left triangle = Geometry, bottom-right triangle = Impact (equal area) */
-  .zone.geo{clip-path:polygon(0 0, 100% 0, 0 100%);view-transition-name:sa-zone-geo;}
-  .zone.imp{clip-path:polygon(100% 0, 100% 100%, 0 100%);view-transition-name:sa-zone-imp;}
-
-  .veil{position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .4s ease;background:rgba(5,8,11,.5);}
-  .scrim{position:absolute;inset:0;pointer-events:none;}
-  /* equal-strength scrims anchored at each zone's outer corner for legible labels */
-  .geo .scrim{background:radial-gradient(115% 115% at 0% 0%, rgba(7,10,13,.82), rgba(7,10,13,.12) 40%, transparent 58%);}
-  .imp .scrim{background:radial-gradient(115% 115% at 100% 100%, rgba(7,10,13,.82), rgba(7,10,13,.12) 40%, transparent 58%);}
-
-  .content{position:absolute;display:flex;flex-direction:column;padding:clamp(20px,4vw,52px);max-width:58%;}
-  .geo .content{top:40px;left:0;align-items:flex-start;text-align:left;
-    padding-left:max(clamp(20px,4vw,52px),env(safe-area-inset-left));}
-  .imp .content{bottom:0;right:0;align-items:flex-end;text-align:right;
-    padding-right:max(clamp(20px,4vw,52px),env(safe-area-inset-right));
-    padding-bottom:max(clamp(20px,4vw,52px),env(safe-area-inset-bottom));}
-  .tag{display:inline-flex;align-items:center;gap:8px;font-size:clamp(9px,1.1vw,11px);letter-spacing:.26em;text-transform:uppercase;
-    color:var(--accent);font-weight:600;margin-bottom:12px;}
-  .imp .tag{flex-direction:row-reverse;}
-  .tag .dot{width:5px;height:5px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent);}
-  /* identical type scale on both zones = equal prominence */
-  .label{font-size:clamp(34px,7vw,68px);font-weight:600;letter-spacing:.05em;line-height:1;
-    text-shadow:0 2px 30px rgba(0,0,0,.7);transition:transform .5s cubic-bezier(.2,.7,.2,1),color .3s;}
-  .sub{margin-top:11px;font-size:clamp(12px,1.7vw,16px);letter-spacing:.03em;color:var(--muted);max-width:24ch;}
-  /* persistent ENTER pill so each half reads as an equal tappable button */
-  .enter{margin-top:20px;display:inline-flex;align-items:center;gap:7px;min-height:44px;
-    font-size:clamp(10px,1.2vw,12px);letter-spacing:.16em;text-transform:uppercase;
-    color:var(--accent);font-weight:600;background:var(--accent-soft);border:1px solid var(--accent-line);
-    border-radius:var(--radius-pill);padding:11px 18px;opacity:.92;transition:background .3s ease,opacity .3s ease,transform .3s ease;}
-  .imp .enter{align-self:flex-end;flex-direction:row-reverse;}
-
-
-  .wordmark{position:absolute;z-index:10;top:max(8px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);
-    display:inline-flex;align-items:center;gap:9px;opacity:.92;pointer-events:none;
-    filter:drop-shadow(0 2px 18px rgba(0,0,0,.6));view-transition-name:sa-logo;}
-  .wordmark .sa-word{width:clamp(118px,15vw,150px);height:auto;display:block;}
-
-  /* hover/focus: dim the OTHER zone, lift this label */
-  .shell:has(.geo:hover) .imp .veil, .shell:has(.geo:focus-visible) .imp .veil,
-  .shell:has(.imp:hover) .geo .veil, .shell:has(.imp:focus-visible) .geo .veil{opacity:1;}
-  .zone:hover .label,.zone:focus-visible .label{color:#F2FFFD;transform:translateY(-3px);}
-  .zone:hover .enter,.zone:focus-visible .enter{opacity:1;background:var(--accent-soft);transform:translateY(-2px);}
-  .zone:focus-visible{outline:none;}
-  /* backdrop-proof DOUBLE ring: dark 1px under a 2px accent so it survives the photo */
-  .zone:focus-visible .ring{position:absolute;inset:0;
-    box-shadow:inset 0 0 0 1px rgba(0,0,0,.85), inset 0 0 0 3px var(--accent);}
-
-  /* ══ SHARED MODULE NAV — identical compact top-strip across screens ══ */
-  .topstrip{position:absolute;z-index:9;top:0;left:0;right:0;
-    flex:0 0 auto;display:flex;align-items:center;gap:10px;
-    height:40px;padding:0 max(12px,env(safe-area-inset-left));
-    border-bottom:1px solid rgba(255,255,255,.06);
-    background:linear-gradient(180deg, rgba(12,20,33,.55), rgba(10,14,18,.2));
-    backdrop-filter:blur(var(--blur-surface));-webkit-backdrop-filter:blur(var(--blur-surface));}
-  .modnav{display:flex;align-items:center;gap:4px;view-transition-name:sa-nav}
-  .modnav a{
-    -webkit-tap-highlight-color:transparent;text-decoration:none;color:var(--muted);
-    border:1px solid transparent;border-radius:8px;
-    min-height:44px;display:inline-flex;align-items:center;justify-content:center;
-    font-size:11px;font-weight:600;line-height:1;padding:0 10px;
-    transition:background .2s,border-color .2s,color .2s;}
-  .modnav a.home{min-width:44px;padding:0;font-size:15px}
-  .modnav a:hover{background:rgba(255,255,255,.08);color:var(--ink)}
-  .modnav a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-  .modnav a[aria-current="page"]{color:var(--accent);border-color:var(--accent-line);background:var(--accent-soft)}
-
-  /* ══ BRAND SPLASH — brief, every open; tap anywhere to skip ══ */
-  .splash{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;
-    background:radial-gradient(130% 120% at 50% -10%, var(--bg-top), var(--bg));
-    -webkit-tap-highlight-color:transparent;cursor:default;}
-  .splash.is-hidden{opacity:0;pointer-events:none;}
-  .splash-lockup{display:inline-flex;flex-direction:column;align-items:center;gap:clamp(14px,3vh,22px);
-    filter:drop-shadow(0 4px 28px rgba(0,0,0,.6));}
-  .splash-mark{width:clamp(64px,12vw,92px);height:clamp(64px,12vw,92px);display:block;}
-  .splash-word{width:clamp(150px,24vw,220px);height:auto;display:block;}
-  .splash-skip{position:absolute;width:1px;height:1px;margin:-1px;padding:0;border:0;
-    clip:rect(0 0 0 0);clip-path:inset(50%);overflow:hidden;white-space:nowrap;}
-
-  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important;}}
+  @media(max-height:850px) and (orientation:portrait){
+    .intro__body{display:none}.intro h1{font-size:34px}.intro{top:max(76px,calc(env(safe-area-inset-top) + 66px))}
+    .p-academy{top:20%}.p-outcome{top:36%}.p-lab{bottom:32%}.p-range{bottom:10%}
+  }
+  @media(orientation:landscape){
+    .masthead{left:max(18px,env(safe-area-inset-left));right:max(18px,env(safe-area-inset-right));top:max(8px,env(safe-area-inset-top))}
+    .wordmark{width:120px}
+    .intro{left:max(20px,env(safe-area-inset-left));top:max(62px,calc(env(safe-area-inset-top) + 54px));width:190px}
+    .intro h1{font-size:clamp(34px,5vw,44px)}
+    .intro__body{font-size:12px;max-width:180px}
+    .flight--portrait{display:none}.flight--landscape{display:block;inset:18px 8px 14px 150px}
+    .p-range{left:30%;bottom:7%}.p-lab{left:47%;right:auto;bottom:31%}.p-outcome{left:62%;top:29%}.p-academy{right:calc(max(18px,env(safe-area-inset-right)) + 52px);top:14%}
+    .place{min-height:54px;max-width:180px;padding:8px 12px}
+    .place__value{font-size:14px}
+    .footnote{bottom:max(8px,env(safe-area-inset-bottom))}
+  }
+  @media(max-height:390px) and (orientation:landscape){
+    .intro__body{display:none}.intro{top:max(58px,calc(env(safe-area-inset-top) + 50px))}
+    .intro h1{font-size:34px}.p-range{left:31%;bottom:6%}.p-lab{bottom:29%}.p-outcome{left:62%;top:29%}.p-academy{top:10%}
+    .place{min-height:50px}.place__label{font-size:8px}.place__value{font-size:13px}
+  }
+  @media(prefers-reduced-motion:reduce){
+    @view-transition{navigation:none}
+    .trace{stroke-dashoffset:0;animation:none}.ball{offset-distance:100%;animation:none}
+    .scene__photo,.place{transition:none}.is-booting:not(.is-ready) .place{opacity:1}
+  }
 </style>
 </head>
-<body>
-<div class="shell">
-  <div class="splash" id="saSplash" aria-hidden="true">
-    <div class="splash-lockup">
-      <img class="splash-mark" src="./assets/logo.svg" alt="">
-      <img class="splash-word" src="./assets/flightglass-wordmark.svg" alt="Flightglass">
-    </div>
-    <button type="button" class="splash-skip" id="saSplashSkip">Skip intro</button>
-  </div>
-
-  <div class="topstrip">
-    <nav class="modnav" aria-label="Modules">
-      <a class="home" href="#" aria-current="page" aria-label="Home"><img src="./assets/flightglass-mark-micro.svg" width="20" height="20" alt=""></a>
-      <a class="tab" href="./geometry.html">Geometry</a>
-      <a class="tab" href="./impact.html">Impact</a>
-    </nav>
-  </div>
-
-  <a class="zone geo" href="./geometry.html" aria-label="Geometry — Model swing plane and arc">
-    <span class="veil" aria-hidden="true"></span>
-    <span class="scrim" aria-hidden="true"></span>
-    <span class="ring" aria-hidden="true"></span>
-    <span class="content">
-      <span class="label">GEOMETRY</span>
-      <span class="sub">Model swing plane &amp; arc</span>
-      <span class="enter" aria-hidden="true">Enter →</span>
-    </span>
-  </a>
-
-  <a class="zone imp" href="./impact.html" aria-label="Impact — Launch and ball flight">
-    <span class="veil" aria-hidden="true"></span>
-    <span class="scrim" aria-hidden="true"></span>
-    <span class="ring" aria-hidden="true"></span>
-    <span class="content">
-      <span class="label">IMPACT</span>
-      <span class="sub">Launch &amp; ball flight</span>
-      <span class="enter" aria-hidden="true">Enter →</span>
-    </span>
-  </a>
-
-  <h1 class="wordmark" aria-label="Flightglass">
-    <img class="sa-word" src="./assets/flightglass-lockup.svg" alt="">
-  </h1>
+<body class="is-booting" data-home-direction="night-ladder">
+<div class="scene shell" aria-hidden="true">
+  <img class="scene__photo" src="./assets/range-night-3d-33.png" alt="">
+  <div class="scene__wash"></div>
+  <div class="scene__lower"></div>
+  <div class="scene__horizon"></div>
 </div>
 
-<script src="./vendor/gsap/gsap.min.js"></script>
-<script src="./sa-firstrun.js" defer></script>
+<header class="masthead">
+  <img class="wordmark" src="./assets/flightglass-lockup.svg" alt="Flightglass">
+  <a class="help sa-focus" href="./academy.html" aria-label="Open Academy help">?</a>
+</header>
+
+<main>
+  <section class="intro" aria-labelledby="homeTitle">
+    <p class="intro__kicker">The range is live</p>
+    <h1 id="homeTitle">Walk the<br>shot.</h1>
+    <p class="intro__body">Every light downrange opens a different part of the explanation.</p>
+  </section>
+
+  <div class="flight flight--portrait" aria-hidden="true">
+    <svg viewBox="0 0 430 860" preserveAspectRatio="none">
+      <path class="trace-structure" d="M212 780 C150 650 287 522 212 214" pathLength="1"/>
+      <path class="trace-under" d="M212 780 C150 650 287 522 212 214" pathLength="1"/>
+      <path class="trace" d="M212 780 C150 650 287 522 212 214" pathLength="1"/>
+      <circle class="ball ball--portrait" r="5" cx="0" cy="0"/>
+    </svg>
+  </div>
+  <div class="flight flight--landscape" aria-hidden="true">
+    <svg viewBox="0 0 932 430" preserveAspectRatio="none">
+      <path class="trace-structure" d="M188 374 C390 118 642 238 850 74" pathLength="1"/>
+      <path class="trace-under" d="M188 374 C390 118 642 238 850 74" pathLength="1"/>
+      <path class="trace" d="M188 374 C390 118 642 238 850 74" pathLength="1"/>
+      <circle class="ball ball--landscape" r="5" cx="0" cy="0"/>
+    </svg>
+  </div>
+
+  <nav class="places" aria-label="Flightglass destinations">
+    <a id="placeRange" class="place place--primary p-range sa-focus" data-key="flight" href="./impact.html" aria-label="Range — demo shot 154 metres, 12 metres right">
+      <span class="place__copy"><span id="labelRange" class="place__label">Start here · Range</span><span id="valueRange" class="place__value">154 m · 12 m R</span></span>
+    </a>
+    <a id="placeLab" class="place p-lab sa-focus" data-key="geometry" href="./geometry.html" aria-label="Lab — inspect the strike">
+      <span class="place__copy"><span id="labelLab" class="place__label">Lab</span><span id="valueLab" class="place__value">Inspect the strike</span></span>
+    </a>
+    <a id="placeOutcome" class="place p-outcome sa-focus" data-key="outcome" href="./impact.html?play=1" aria-label="Outcome — demo shot faded right">
+      <span class="place__copy"><span id="labelOutcome" class="place__label">Outcome</span><span id="valueOutcome" class="place__value">Fade · demo shot</span></span>
+    </a>
+    <a id="placeAcademy" class="place place--academy p-academy sa-focus" data-key="academy" href="./academy.html" aria-label="Academy — open the physics path">
+      <span class="place__copy"><span id="labelAcademy" class="place__label">Academy</span><span id="valueAcademy" class="place__value">Physics path</span></span>
+    </a>
+  </nav>
+
+  <div class="footnote" aria-hidden="true"><span>Night Ladder</span><span id="sessionState" class="footnote__state">Demo shot</span></div>
+</main>
+
 <script>
-  /* ══ BRAND SPLASH (every open) → then first-run ONBOARDING ══
-     Splash: logo draws/scales/fades in (~1.0–1.3s) then fades out to reveal the
-     menu. Tap/click/key anywhere skips immediately. Reduced-motion: hold the
-     logo statically for a beat, no animation. Removed cleanly so it never blocks
-     interaction. */
-  window.addEventListener("load", function () {
-    var splash = document.getElementById("saSplash");
-    var skipBtn = document.getElementById("saSplashSkip");
-    if (!splash) return;
+(() => {
+  const readJSON = key => {
+    try {
+      const raw = localStorage.getItem(key);
+      return raw ? JSON.parse(raw) : null;
+    } catch (_) { return null; }
+  };
+  const readString = key => {
+    try { return localStorage.getItem(key); } catch (_) { return null; }
+  };
+  const writeString = (key, value) => {
+    try { localStorage.setItem(key, value); } catch (_) {}
+  };
+  const fresh = value => value && typeof value.ts === 'number' && Date.now() - value.ts < 30 * 864e5;
+  const signed = value => `${value < 0 ? '−' : value > 0 ? '+' : ''}${Math.abs(value).toFixed(1)}`;
+  const byId = id => document.getElementById(id);
 
-    var reduced = false;
-    try { reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) {}
-    var hasGSAP = typeof gsap !== "undefined";
-    var done = false;
+  const flight = readJSON('sa.stat.flight');
+  const geometry = readJSON('sa.stat.geometry');
+  const outcome = readJSON('sa.stat.outcome');
+  const academy = readJSON('strikearc.academy.v1');
+  const hasFlight = fresh(flight);
+  const hasGeometry = fresh(geometry);
+  const hasOutcome = fresh(outcome);
+  const xp = academy && Number.isFinite(academy.xp) ? Math.max(0, academy.xp) : 0;
+  const hasSavedState = hasFlight || hasGeometry || hasOutcome || xp > 0;
 
-    function teardown() {
-      if (done) return;
-      done = true;
-      splash.removeEventListener("click", teardown);
-      window.removeEventListener("keydown", onKey, true);
-      var remove = function () {
-        if (splash.parentNode) splash.parentNode.removeChild(splash);
-      };
-      if (reduced || !hasGSAP) {
-        splash.classList.add("is-hidden");
-        remove();
-      } else {
-        gsap.to(splash, { opacity: 0, duration: 0.35, ease: "power1.in", onComplete: remove });
-      }
+  if (hasFlight) {
+    const total = Math.round(Number(flight.total) || 0);
+    const offline = Math.round(Math.abs(Number(flight.offlineM) || 0));
+    const side = flight.offlineSide === 'L' ? 'L' : flight.offlineSide === 'R' ? 'R' : '';
+    const sideWords = side === 'L' ? 'left' : side === 'R' ? 'right' : 'on line';
+    byId('valueRange').textContent = `${total} m · ${offline} m ${side}`.trim();
+    byId('placeRange').setAttribute('aria-label', `Range — last shot ${total} metres, ${offline} metres ${sideWords}`);
+  }
+
+  if (hasGeometry) {
+    const band = String(geometry.band || 'Saved strike');
+    const attack = signed(Number(geometry.attack) || 0);
+    byId('valueLab').textContent = `${band} · ${attack}°`;
+    byId('placeLab').setAttribute('aria-label', `Lab — ${band}, ${attack} degrees attack`);
+  }
+
+  if (hasOutcome) {
+    const carry = Math.round(Number(outcome.carry) || 0);
+    const shape = String(outcome.shape || 'Saved outcome');
+    byId('valueOutcome').textContent = `${shape} · ${carry} m`;
+    byId('placeOutcome').setAttribute('aria-label', `Outcome — ${shape}, ${carry} metres carry`);
+  }
+
+  if (xp > 0) {
+    const thresholds = [0, 150, 350, 650, 1000, 1500];
+    let level = 1;
+    for (let index = 0; index < thresholds.length; index += 1) {
+      if (xp >= thresholds[index]) level = index + 1;
     }
+    if (xp >= 2100) level = 7 + Math.floor((xp - 2100) / 600);
+    byId('valueAcademy').textContent = `Level ${level} · ${xp} XP`;
+    byId('placeAcademy').setAttribute('aria-label', `Academy — level ${level}, ${xp} XP`);
+  }
 
-    function onKey(e) {
-      // any key (besides modifier-only) skips; keeps splash non-focus-trapping
-      if (e.key === "Tab") return;
-      teardown();
-    }
+  const keyToIds = {
+    flight:['placeRange','labelRange','Range'],
+    geometry:['placeLab','labelLab','Lab'],
+    outcome:['placeOutcome','labelOutcome','Outcome'],
+    academy:['placeAcademy','labelAcademy','Academy']
+  };
+  let last = readString('sa.home.last');
+  if (!hasSavedState || !keyToIds[last]) last = 'flight';
+  document.querySelectorAll('.place').forEach(place => place.classList.remove('place--primary'));
+  const [placeId, labelId, label] = keyToIds[last];
+  byId(placeId).classList.add('place--primary');
+  byId(labelId).textContent = `${hasSavedState ? 'Continue' : 'Start here'} · ${label}`;
+  byId('sessionState').textContent = hasSavedState ? 'Latest saved session' : 'Demo shot';
 
-    splash.addEventListener("click", teardown);
-    window.addEventListener("keydown", onKey, true);
-    if (skipBtn) skipBtn.addEventListener("click", function (e) { e.stopPropagation(); teardown(); });
-
-    if (hasGSAP) {
-      var mm = gsap.matchMedia();
-      mm.add("(prefers-reduced-motion: no-preference)", function () {
-        var lockup = splash.querySelector(".splash-lockup");
-        var tl = gsap.timeline({ onComplete: teardown });
-        gsap.set(lockup, { scale: 0.96, opacity: 0, transformOrigin: "50% 50%" });
-        tl.to(lockup, { scale: 1, opacity: 1, duration: 0.5, ease: "power2.out" });
-        tl.to({}, { duration: 0.45 });
-        return function () { tl.kill(); };
-      });
-      mm.add("(prefers-reduced-motion: reduce)", function () {
-        // static logo for a beat, no animation
-        var t = setTimeout(teardown, 700);
-        return function () { clearTimeout(t); };
-      });
-    } else {
-      // no GSAP: show static, then reveal
-      setTimeout(teardown, reduced ? 600 : 1100);
-    }
+  document.querySelectorAll('.place[data-key]').forEach(place => {
+    place.addEventListener('click', () => writeString('sa.home.last', place.dataset.key));
   });
-</script>
-<script>
-  /* Subtle, premium idle motion. Entirely gated by prefers-reduced-motion
-     via gsap.matchMedia() — transform/opacity only. */
-  window.addEventListener("load", function () {
-    if (typeof gsap === "undefined") return;
 
-    var mm = gsap.matchMedia();
-
-    mm.add("(prefers-reduced-motion: no-preference)", function () {
-      var pills   = gsap.utils.toArray(".enter");
-      var built   = [];
-
-      /* soft breathing glow on the two ENTER pills (opacity only, equal) */
-      if (pills.length) {
-        built.push(
-          gsap.to(pills, {
-            opacity: 1,
-            duration: 2.6,
-            ease: "sine.inOut",
-            repeat: -1,
-            yoyo: true,
-            stagger: { each: 0.6, from: "edges" }
-          })
-        );
-      }
-
-      /* cleanup if the media condition stops matching */
-      return function () {
-        built.forEach(function (t) { t && t.kill(); });
-        if (pills.length) gsap.set(pills, { clearProps: "opacity" });
-      };
-    });
-  });
+  let ready = false;
+  const finishBoot = () => {
+    if (ready) return;
+    ready = true;
+    document.body.classList.add('is-ready');
+    try { sessionStorage.setItem('sa.home.night-ladder.ready', '1'); } catch (_) {}
+  };
+  let reduced = false;
+  let seen = false;
+  try {
+    reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    seen = sessionStorage.getItem('sa.home.night-ladder.ready') === '1';
+  } catch (_) {}
+  if (reduced || seen) finishBoot();
+  else setTimeout(finishBoot, 900);
+  window.addEventListener('pointerdown', finishBoot, { once:true, passive:true });
+  window.addEventListener('keydown', finishBoot, { once:true });
+})();
 </script>
 </body>
 </html>

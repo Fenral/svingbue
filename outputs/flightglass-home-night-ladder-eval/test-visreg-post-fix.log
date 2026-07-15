@@ -1,0 +1,15 @@
+
+> svingbue-app@1.0.0 test:visreg
+> node --test --test-concurrency=1 scripts/flightglass-visreg.test.mjs
+
+✔ pixel diff rejects an alpha-only image change (34.9197ms)
+✔ approved visual baselines exist for every surface, viewport, motion and engine (3.8414ms)
+✔ current render diffs at most 0.1% against every approved baseline (90800.0842ms)
+ℹ tests 3
+ℹ suites 0
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 91441.1844

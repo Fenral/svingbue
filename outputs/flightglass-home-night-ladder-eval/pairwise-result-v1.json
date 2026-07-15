@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "judgeRole": "fg-dommer",
+  "mode": "blind-pairwise",
+  "provenanceInspected": false,
+  "pairs": [
+    {
+      "pairId": "pair-1",
+      "dimensions": "932x430",
+      "winner": "B",
+      "choice": "B",
+      "reasons": [
+        "The orange flight path creates a single readable journey through four destinations instead of two competing hero panels.",
+        "The Start here treatment supplies a dominant next action while the remaining cards keep clear secondary hierarchy.",
+        "Demo-state wording and the range setting make the screen's purpose immediately legible."
+      ],
+      "loserStrength": "A has a striking image and strong large-scale type, but its two equal Enter calls create a less decisive navigation hierarchy."
+    },
+    {
+      "pairId": "pair-2",
+      "dimensions": "812x375",
+      "winner": "A",
+      "choice": "A",
+      "reasons": [
+        "The compact composition preserves four distinct destinations without clipping or collision.",
+        "The flight trace links the cards spatially and the primary Range card remains the clearest entry point.",
+        "Typography, card contrast and spacing stay readable at the shorter viewport."
+      ],
+      "loserStrength": "B is visually dramatic and clean, but the two oversized territories read as parallel promotions rather than a guided next-step system."
+    }
+  ],
+  "overall": "PASS",
+  "blindPreference": "The same anonymous design direction wins both viewport pairs."
+}

@@ -88,6 +88,39 @@ threshold. Direct reduced-motion captures were complete and nonblank.
 This checkpoint does not implement Home Phase 1 or change the production
 `index.html`, protected physics, compatibility IDs or Academy storage keys.
 
+## Shipping Home — Night Ladder — 2026-07-15
+
+After reviewing the portrait round, the owner selected Night Ladder for the
+actual Flightglass Home. That later decision supersedes the non-shipping note
+above: `index.html` is now the responsive Night Ladder world, and `www/index.html`
+is rebuilt from it. The original concept remains in `home-portrait-1.html`.
+
+The shipping version uses only real native-package destinations, reads existing
+fresh Home/Academy state without migrating any storage key, and labels its
+fallback values as a demo. It supports portrait 430×932 / 375×812 and landscape
+932×430 / 812×375, including complete reduced-motion states and 130% text.
+
+Acceptance is STUDIO-GRADE: 17/17 independent manifest requirements PASS, all
+category floors PASS, zero critical failures and 2/2 blind wins against the
+previous shipping Home. The manifest-derived score is 100; it is a byproduct,
+not the acceptance target. Home-specific evidence includes 8/8 focused captures
+with zero findings, 24/24 extended layout and axe states, 160/160 target-pair
+checks with zero overlap, 0 px digit-width drift, 4/4 cross-page navigation,
+and 16/16 deterministic visual-regression pairs at 0.000% maximum difference.
+
+The visual-regression harness was hardened during acceptance: alpha-only pixel
+changes now count, screenshots disable capture-time animations, and Academy Lab
+captures wait for the exact phosphor ghost count. The post-fix global suite
+passes 3/3 with 48/48 opaque, nonblank images; no baseline was re-approved.
+Full Chromium/source tests pass 87/87, WebKit passes 41/41, and p95 performance
+is 1.7 ms / 3.0 ms over 220 events per engine. Evidence is under
+`outputs/flightglass-home-night-ladder-eval/`; rollback is
+`.sa-backups/night-ladder-home-20260715-101854`.
+
+Protected physics, bundle/store/product identifiers and Academy storage keys
+are unchanged. Phase 8 publication remains blocked on the complete release
+program. The next production action remains Academy Batch 0.
+
 
 Backspin has a separate 96-97 reference-lesson design and implementation plan:
 

@@ -1,0 +1,190 @@
+[
+  {
+    "id": "EV-TYPO-01",
+    "critical": true,
+    "status": "PASS",
+    "finding": "Live readouts use tabular numeric styling in source and the browser typography contract passes.",
+    "citations": [
+      "index.html (.place__value and .footnote__state)",
+      "outputs/flightglass-home-night-ladder-eval/test-webkit.log (instrument typography test)"
+    ],
+    "result": "PASS"
+  },
+  {
+    "id": "EV-TYPO-02",
+    "critical": true,
+    "status": "PASS",
+    "finding": "Digit cycling across both engines reports zero readout-width delta.",
+    "citations": [
+      "outputs/flightglass-home-night-ladder-eval/consolidated-machine-proof.json (digitWidthStability; maximumDigitWidthDeltaPx 0)"
+    ],
+    "result": "PASS"
+  },
+  {
+    "id": "EV-TYPO-03",
+    "critical": false,
+    "status": "PASS",
+    "finding": "The signed formatter emits U+2212 and the browser scan reports hyphen-free readouts.",
+    "citations": [
+      "index.html (signed formatter)",
+      "outputs/flightglass-home-night-ladder-eval/test-webkit.log (instrument typography test)"
+    ],
+    "result": "PASS"
+  },
+  {
+    "id": "EV-TYPO-04",
+    "critical": false,
+    "status": "PASS",
+    "finding": "The canonical font definitions are centralized in the token stylesheet; lesson CSS references only --font-ui, --font-display and --font-mono and contains no ad-hoc family literal.",
+    "citations": [
+      "sa-p3.css (font-face declarations and canonical font-token block)",
+      "academy-native-lesson.css (font-family declarations use var(--font-*) only)",
+      "outputs/flightglass-home-night-ladder-eval/ev-typo-04-source-evidence.json"
+    ],
+    "result": "PASS"
+  },
+  {
+    "id": "EV-MOT-01",
+    "critical": true,
+    "status": "PASS",
+    "finding": "Both engines pass the input-to-paint budget over 220 synthetic drag events with zero runtime errors.",
+    "citations": [
+      "outputs/flightglass-perf/input-to-paint--chromium.json",
+      "outputs/flightglass-perf/input-to-paint--webkit.json",
+      "outputs/flightglass-home-night-ladder-eval/test-perf.log",
+      "scripts/flightglass-perf.test.mjs"
+    ],
+    "result": "PASS"
+  },
+  {
+    "id": "EV-MOT-02",
+    "critical": false,
+    "status": "PASS",
+    "finding": "The browser contract confines phosphor ghosts to the canvas and excludes numeric text.",
+    "citations": [
+      "outputs/flightglass-home-night-ladder-eval/test-webkit.log (phosphor ghost test)"
+    ],
+    "result": "PASS"
+  },
+  {
+    "id": "EV-MOT-03",
+    "critical": false,
+    "status": "PASS",
+    "finding": "Browser and visual-regression settling evidence enforces one reduced-motion ghost or two normal-motion ghosts with falling opacity.",
+    "citations": [
+      "outputs/flightglass-home-night-ladder-eval/test-webkit.log (falling-opacity ghost test)",
+      "scripts/lib/flightglass-visreg.mjs (settled ghost-count wait)"
+    ],
+    "result": "PASS"
+  },
+  {
+    "id": "EV-MOT-04",
+    "critical": true,
+    "status": "PASS",
+    "finding": "Normal navigation provides the aperture signature and reduced motion provides an equivalent direct/fade state without stale truth.",
+    "citations": [
+      "outputs/flightglass-home-night-ladder-eval/test-webkit.log (aperture signature transition test)",
+      "outputs/flightglass-home-night-ladder-eval/proof-screenshots/navigation/chromium--normal--impact.png",
+      "outputs/flightglass-home-night-ladder-eval/proof-screenshots/navigation/chromium--reduced--impact.png",
+      "outputs/flightglass-home-night-ladder-eval/proof-screenshots/navigation/webkit--normal--impact.png",
+      "outputs/flightglass-home-night-ladder-eval/proof-screenshots/navigation/webkit--reduced--impact.png"
+    ],
+    "result": "PASS"
+  },
+  {
+    "id": "EV-REN-01",
+    "critical": true,
+    "status": "PASS",
+    "finding": "Computed lesson-surface audit reports no gradient, glow, shadow or filter violations.",
+    "citations": [
+      "outputs/flightglass-home-night-ladder-eval/test-webkit.log (rendered lesson-surface style test)",
+      "academy-native-lesson.css"
+    ],
+    "result": "PASS"
+  },
+  {
+    "id": "EV-REN-02",
+    "critical": false,
+    "status": "PASS",
+    "finding": "The browser state sweep reports one annotation in the active trace state.",
+    "citations": [
+      "outputs/flightglass-home-night-ladder-eval/test-webkit.log (trace annotation test)"
+    ],
+    "result": "PASS"
+  },
+  {
+    "id": "EV-REN-03",
+    "critical": true,
+    "status": "PASS",
+    "finding": "The trace test keeps the violet annotation separate from its engine-truth value twin, preserving token semantics.",
+    "citations": [
+      "outputs/flightglass-home-night-ladder-eval/test-webkit.log (trace annotation and engine-truth twin test)"
+    ],
+    "result": "PASS"
+  },
+  {
+    "id": "EV-NAT-01",
+    "critical": true,
+    "status": "PASS",
+    "finding": "All scaled layout cases pass; the eight judge-visible 130-percent screenshots show no clipping, overlap or horizontal scroll.",
+    "citations": [
+      "outputs/flightglass-home-night-ladder-eval/consolidated-machine-proof.json (layoutAndAxe and text130 coverage)",
+      "outputs/flightglass-home-night-ladder-eval/proof-screenshots/text130/"
+    ],
+    "result": "PASS"
+  },
+  {
+    "id": "EV-NAT-02",
+    "critical": true,
+    "status": "PASS",
+    "finding": "All indexed axe scans pass with no critical or serious violations.",
+    "citations": [
+      "outputs/flightglass-home-night-ladder-eval/consolidated-machine-proof.json (axe summary)",
+      "outputs/flightglass-home-night-ladder-eval/test-webkit.log (EV-NAT-02 test)"
+    ],
+    "result": "PASS"
+  },
+  {
+    "id": "EV-NAT-03",
+    "critical": false,
+    "status": "PASS",
+    "finding": "Sliders expose unit-bearing plain-language values and announcements debounce to settle.",
+    "citations": [
+      "outputs/flightglass-home-night-ladder-eval/test-webkit.log (slider announcement test)"
+    ],
+    "result": "PASS"
+  },
+  {
+    "id": "EV-NAT-04",
+    "critical": false,
+    "status": "PASS",
+    "finding": "The surface manifest includes explicit Mission, Lab, Mastery and Result selectors in the academy-lesson contract.",
+    "citations": [
+      "config/flightglass-surfaces.json (academy-lesson.requiredSelectors)"
+    ],
+    "result": "PASS"
+  },
+  {
+    "id": "EV-REG-01",
+    "critical": true,
+    "status": "PASS",
+    "finding": "The current post-hardening visual-regression gate passes all indexed cases. Baselines were not re-approved, alpha-only changes are detected, and all current images are opaque and nonblank.",
+    "citations": [
+      "outputs/flightglass-home-night-ladder-eval/test-visreg-post-fix.log",
+      "outputs/flightglass-home-night-ladder-eval/post-fix-visreg-image-integrity.json",
+      "scripts/lib/flightglass-visreg.mjs",
+      "scripts/flightglass-visreg.test.mjs"
+    ],
+    "result": "PASS"
+  },
+  {
+    "id": "EV-GATE-01",
+    "critical": true,
+    "status": "PASS",
+    "finding": "The full indexed WebKit suite passes viewport, target, keyboard and failure-path coverage.",
+    "citations": [
+      "outputs/flightglass-home-night-ladder-eval/test-webkit.log"
+    ],
+    "result": "PASS"
+  }
+]

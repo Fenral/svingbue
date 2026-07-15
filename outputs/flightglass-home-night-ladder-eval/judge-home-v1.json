@@ -1,0 +1,277 @@
+{
+  "schemaVersion": 1,
+  "judgeRole": "fg-dommer",
+  "surface": "home",
+  "evidenceManifest": "config/evidence/instrument-laws.json",
+  "artifactIndex": "outputs/flightglass-home-night-ladder-eval/artifact-index.json",
+  "artifactIndexSchemaVersion": 6,
+  "provenanceInspected": false,
+  "integrity": {
+    "status": "PASS",
+    "indexedArtifactsChecked": 133,
+    "hashMismatches": 0,
+    "note": "Every judge-visible indexed artifact was hash-verified; provenance-map.json was deliberately excluded and not opened."
+  },
+  "overall": "PASS",
+  "criticalFailures": [],
+  "requirements": [
+    {
+      "id": "EV-TYPO-01",
+      "critical": true,
+      "status": "PASS",
+      "finding": "Live readouts use tabular numeric styling in source and the browser typography contract passes.",
+      "citations": [
+        "index.html (.place__value and .footnote__state)",
+        "outputs/flightglass-home-night-ladder-eval/test-webkit.log (instrument typography test)"
+      ]
+    },
+    {
+      "id": "EV-TYPO-02",
+      "critical": true,
+      "status": "PASS",
+      "finding": "Digit cycling across both engines reports zero readout-width delta.",
+      "citations": [
+        "outputs/flightglass-home-night-ladder-eval/consolidated-machine-proof.json (digitWidthStability; maximumDigitWidthDeltaPx 0)"
+      ]
+    },
+    {
+      "id": "EV-TYPO-03",
+      "critical": false,
+      "status": "PASS",
+      "finding": "The signed formatter emits U+2212 and the browser scan reports hyphen-free readouts.",
+      "citations": [
+        "index.html (signed formatter)",
+        "outputs/flightglass-home-night-ladder-eval/test-webkit.log (instrument typography test)"
+      ]
+    },
+    {
+      "id": "EV-TYPO-04",
+      "critical": false,
+      "status": "PASS",
+      "finding": "The canonical font definitions are centralized in the token stylesheet; lesson CSS references only --font-ui, --font-display and --font-mono and contains no ad-hoc family literal.",
+      "citations": [
+        "sa-p3.css (font-face declarations and canonical font-token block)",
+        "academy-native-lesson.css (font-family declarations use var(--font-*) only)",
+        "outputs/flightglass-home-night-ladder-eval/ev-typo-04-source-evidence.json"
+      ]
+    },
+    {
+      "id": "EV-MOT-01",
+      "critical": true,
+      "status": "PASS",
+      "finding": "Both engines pass the input-to-paint budget over 220 synthetic drag events with zero runtime errors.",
+      "citations": [
+        "outputs/flightglass-perf/input-to-paint--chromium.json",
+        "outputs/flightglass-perf/input-to-paint--webkit.json",
+        "outputs/flightglass-home-night-ladder-eval/test-perf.log",
+        "scripts/flightglass-perf.test.mjs"
+      ]
+    },
+    {
+      "id": "EV-MOT-02",
+      "critical": false,
+      "status": "PASS",
+      "finding": "The browser contract confines phosphor ghosts to the canvas and excludes numeric text.",
+      "citations": [
+        "outputs/flightglass-home-night-ladder-eval/test-webkit.log (phosphor ghost test)"
+      ]
+    },
+    {
+      "id": "EV-MOT-03",
+      "critical": false,
+      "status": "PASS",
+      "finding": "Browser and visual-regression settling evidence enforces one reduced-motion ghost or two normal-motion ghosts with falling opacity.",
+      "citations": [
+        "outputs/flightglass-home-night-ladder-eval/test-webkit.log (falling-opacity ghost test)",
+        "scripts/lib/flightglass-visreg.mjs (settled ghost-count wait)"
+      ]
+    },
+    {
+      "id": "EV-MOT-04",
+      "critical": true,
+      "status": "PASS",
+      "finding": "Normal navigation provides the aperture signature and reduced motion provides an equivalent direct/fade state without stale truth.",
+      "citations": [
+        "outputs/flightglass-home-night-ladder-eval/test-webkit.log (aperture signature transition test)",
+        "outputs/flightglass-home-night-ladder-eval/proof-screenshots/navigation/chromium--normal--impact.png",
+        "outputs/flightglass-home-night-ladder-eval/proof-screenshots/navigation/chromium--reduced--impact.png",
+        "outputs/flightglass-home-night-ladder-eval/proof-screenshots/navigation/webkit--normal--impact.png",
+        "outputs/flightglass-home-night-ladder-eval/proof-screenshots/navigation/webkit--reduced--impact.png"
+      ]
+    },
+    {
+      "id": "EV-REN-01",
+      "critical": true,
+      "status": "PASS",
+      "finding": "Computed lesson-surface audit reports no gradient, glow, shadow or filter violations.",
+      "citations": [
+        "outputs/flightglass-home-night-ladder-eval/test-webkit.log (rendered lesson-surface style test)",
+        "academy-native-lesson.css"
+      ]
+    },
+    {
+      "id": "EV-REN-02",
+      "critical": false,
+      "status": "PASS",
+      "finding": "The browser state sweep reports one annotation in the active trace state.",
+      "citations": [
+        "outputs/flightglass-home-night-ladder-eval/test-webkit.log (trace annotation test)"
+      ]
+    },
+    {
+      "id": "EV-REN-03",
+      "critical": true,
+      "status": "PASS",
+      "finding": "The trace test keeps the violet annotation separate from its engine-truth value twin, preserving token semantics.",
+      "citations": [
+        "outputs/flightglass-home-night-ladder-eval/test-webkit.log (trace annotation and engine-truth twin test)"
+      ]
+    },
+    {
+      "id": "EV-NAT-01",
+      "critical": true,
+      "status": "PASS",
+      "finding": "All scaled layout cases pass; the eight judge-visible 130-percent screenshots show no clipping, overlap or horizontal scroll.",
+      "citations": [
+        "outputs/flightglass-home-night-ladder-eval/consolidated-machine-proof.json (layoutAndAxe and text130 coverage)",
+        "outputs/flightglass-home-night-ladder-eval/proof-screenshots/text130/"
+      ]
+    },
+    {
+      "id": "EV-NAT-02",
+      "critical": true,
+      "status": "PASS",
+      "finding": "All indexed axe scans pass with no critical or serious violations.",
+      "citations": [
+        "outputs/flightglass-home-night-ladder-eval/consolidated-machine-proof.json (axe summary)",
+        "outputs/flightglass-home-night-ladder-eval/test-webkit.log (EV-NAT-02 test)"
+      ]
+    },
+    {
+      "id": "EV-NAT-03",
+      "critical": false,
+      "status": "PASS",
+      "finding": "Sliders expose unit-bearing plain-language values and announcements debounce to settle.",
+      "citations": [
+        "outputs/flightglass-home-night-ladder-eval/test-webkit.log (slider announcement test)"
+      ]
+    },
+    {
+      "id": "EV-NAT-04",
+      "critical": false,
+      "status": "PASS",
+      "finding": "The surface manifest includes explicit Mission, Lab, Mastery and Result selectors in the academy-lesson contract.",
+      "citations": [
+        "config/flightglass-surfaces.json (academy-lesson.requiredSelectors)"
+      ]
+    },
+    {
+      "id": "EV-REG-01",
+      "critical": true,
+      "status": "PASS",
+      "finding": "The current post-hardening visual-regression gate passes all indexed cases. Baselines were not re-approved, alpha-only changes are detected, and all current images are opaque and nonblank.",
+      "citations": [
+        "outputs/flightglass-home-night-ladder-eval/test-visreg-post-fix.log",
+        "outputs/flightglass-home-night-ladder-eval/post-fix-visreg-image-integrity.json",
+        "scripts/lib/flightglass-visreg.mjs",
+        "scripts/flightglass-visreg.test.mjs"
+      ]
+    },
+    {
+      "id": "EV-GATE-01",
+      "critical": true,
+      "status": "PASS",
+      "finding": "The full indexed WebKit suite passes viewport, target, keyboard and failure-path coverage.",
+      "citations": [
+        "outputs/flightglass-home-night-ladder-eval/test-webkit.log"
+      ]
+    }
+  ],
+  "categoryFloors": [
+    { "category": "TYPO", "status": "PASS", "requirements": ["EV-TYPO-01", "EV-TYPO-02", "EV-TYPO-03", "EV-TYPO-04"] },
+    { "category": "MOTION", "status": "PASS", "requirements": ["EV-MOT-01", "EV-MOT-02", "EV-MOT-03", "EV-MOT-04"] },
+    { "category": "RENDERING", "status": "PASS", "requirements": ["EV-REN-01", "EV-REN-02", "EV-REN-03"] },
+    { "category": "NATIVE", "status": "PASS", "requirements": ["EV-NAT-01", "EV-NAT-02", "EV-NAT-03", "EV-NAT-04"] },
+    { "category": "REGRESSION", "status": "PASS", "requirements": ["EV-REG-01"] },
+    { "category": "GATE", "status": "PASS", "requirements": ["EV-GATE-01"] },
+    { "category": "PAIRWISE_BLIND", "status": "PASS", "citation": "outputs/flightglass-home-night-ladder-eval/pairwise-result-v1.json" }
+  ],
+  "visualReview": [
+    {
+      "viewport": "portrait-wide",
+      "dimensions": "430x932",
+      "normalCapture": "outputs/flightglass-ux/verify/home--portrait-wide--normal.png",
+      "reducedCapture": "outputs/flightglass-ux/verify/home--portrait-wide--reduced.png",
+      "status": "PASS",
+      "clipping": "None; masthead, four destination cards and both footer labels remain inside the viewport.",
+      "hierarchy": "The headline leads, Range is the clear primary action, and the flight path orders the secondary destinations.",
+      "legibility": "Strong contrast and readable card labels over the dark range image.",
+      "targetOverlap": "None.",
+      "honestDemoLabelling": "PASS; Outcome and the footer explicitly say demo shot, and saved-state source switches to Latest saved session.",
+      "reducedMotion": "Complete for Home; the reduced capture is byte-identical to the settled normal frame while source disables trace, ball, scene and card motion."
+    },
+    {
+      "viewport": "portrait-compact",
+      "dimensions": "375x812",
+      "normalCapture": "outputs/flightglass-ux/verify/home--portrait-compact--normal.png",
+      "reducedCapture": "outputs/flightglass-ux/verify/home--portrait-compact--reduced.png",
+      "status": "PASS",
+      "clipping": "None; compact mode intentionally removes the intro paragraph and preserves all actions.",
+      "hierarchy": "Headline and primary Range card remain dominant despite the shorter height.",
+      "legibility": "Labels and values remain readable without wrapping into neighboring cards.",
+      "targetOverlap": "None.",
+      "honestDemoLabelling": "PASS; demo state remains visible in Outcome and the footer.",
+      "reducedMotion": "Complete; the settled reduced and normal images are byte-identical."
+    },
+    {
+      "viewport": "landscape-wide",
+      "dimensions": "932x430",
+      "normalCapture": "outputs/flightglass-ux/verify/home--landscape-wide--normal.png",
+      "reducedCapture": "outputs/flightglass-ux/verify/home--landscape-wide--reduced.png",
+      "status": "PASS",
+      "clipping": "None; copy, cards, help target and footer all retain edge clearance.",
+      "hierarchy": "The left-aligned mission statement anchors the composition and the arc reads cleanly from Range through Academy.",
+      "legibility": "All four destinations remain distinct against the photographic field.",
+      "targetOverlap": "None; machine geometry also reports disjoint rectangles across both engines and motion modes.",
+      "honestDemoLabelling": "PASS; both Outcome and the footer disclose the demo state.",
+      "reducedMotion": "Complete; the settled reduced and normal images are byte-identical."
+    },
+    {
+      "viewport": "landscape-compact",
+      "dimensions": "812x375",
+      "normalCapture": "outputs/flightglass-ux/verify/home--landscape-compact--normal.png",
+      "reducedCapture": "outputs/flightglass-ux/verify/home--landscape-compact--reduced.png",
+      "status": "PASS",
+      "clipping": "None.",
+      "hierarchy": "The shortened layout still preserves the primary Range action and ordered downstream cards.",
+      "legibility": "Compact labels remain crisp and do not collide with the trajectory.",
+      "targetOverlap": "None; the closest Help-to-Academy edge separation is 8 px and all indexed target intersections are zero.",
+      "honestDemoLabelling": "PASS; demo state remains explicit.",
+      "reducedMotion": "Complete; the settled reduced and normal images are byte-identical."
+    }
+  ],
+  "reducedMotionCompleteness": {
+    "status": "PASS",
+    "homeStaticEquivalence": "All four normal/reduced Home capture pairs have identical hashes.",
+    "sourceCoverage": "Home reduced-motion CSS disables view transition navigation, trace and ball animation, scene/card transitions, and boot opacity delay.",
+    "crossSurfaceEvidence": "The indexed browser test and four navigation screenshots show normal aperture behavior and reduced-motion equivalent truth."
+  },
+  "historicalGateContext": {
+    "currentStatus": "PASS",
+    "currentVisreg": "Post-hardening visual regression passes all tests without baseline approval.",
+    "historicalAttempts": "Two pre-hardening runs narrowly exceeded the global Academy Lab threshold; they are retained as history, are not Home failures, and are superseded by the hardened current gate.",
+    "citations": [
+      "outputs/flightglass-home-night-ladder-eval/test-visreg.log",
+      "outputs/flightglass-home-night-ladder-eval/test-visreg-retry.log",
+      "outputs/flightglass-home-night-ladder-eval/test-visreg-post-fix.log",
+      "outputs/flightglass-home-night-ladder-eval/consolidated-machine-proof.json"
+    ]
+  },
+  "noncriticalFindings": [
+    {
+      "id": "HOME-VIS-01",
+      "finding": "Landscape-compact Help and Academy targets clear by exactly 8 px; this passes the indexed contract but is the tightest spacing in the Home layout.",
+      "citation": "outputs/flightglass-home-night-ladder-eval/machine-checks.json (targetGeometry)"
+    }
+  ]
+}

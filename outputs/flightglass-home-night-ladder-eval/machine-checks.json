@@ -1,0 +1,1687 @@
+{
+  "schemaVersion": 2,
+  "createdAt": "2026-07-15T08:56:04.525Z",
+  "focusedVerify": {
+    "command": "node scripts/flightglass-ux-audit.mjs --mode verify --surface home --motion both",
+    "status": "PASS",
+    "captures": 8,
+    "criticalFindings": 0
+  },
+  "nonblankCaptures": {
+    "status": "PASS",
+    "count": 8,
+    "method": "Decoded with sharp; positive dimensions, file size above 1024 bytes, and at least one RGB channel standard deviation above 1.",
+    "captures": [
+      {
+        "path": "outputs/flightglass-ux/verify/home--landscape-compact--normal.png",
+        "width": 812,
+        "height": 375,
+        "bytes": 298371,
+        "rgbStdDev": [
+          32.312,
+          29.341,
+          32.159
+        ],
+        "pass": true
+      },
+      {
+        "path": "outputs/flightglass-ux/verify/home--landscape-compact--reduced.png",
+        "width": 812,
+        "height": 375,
+        "bytes": 298371,
+        "rgbStdDev": [
+          32.312,
+          29.341,
+          32.159
+        ],
+        "pass": true
+      },
+      {
+        "path": "outputs/flightglass-ux/verify/home--landscape-wide--normal.png",
+        "width": 932,
+        "height": 430,
+        "bytes": 385583,
+        "rgbStdDev": [
+          33.336,
+          30.487,
+          33.535
+        ],
+        "pass": true
+      },
+      {
+        "path": "outputs/flightglass-ux/verify/home--landscape-wide--reduced.png",
+        "width": 932,
+        "height": 430,
+        "bytes": 385583,
+        "rgbStdDev": [
+          33.336,
+          30.487,
+          33.535
+        ],
+        "pass": true
+      },
+      {
+        "path": "outputs/flightglass-ux/verify/home--portrait-compact--normal.png",
+        "width": 375,
+        "height": 812,
+        "bytes": 243851,
+        "rgbStdDev": [
+          32.865,
+          29.588,
+          32.243
+        ],
+        "pass": true
+      },
+      {
+        "path": "outputs/flightglass-ux/verify/home--portrait-compact--reduced.png",
+        "width": 375,
+        "height": 812,
+        "bytes": 243851,
+        "rgbStdDev": [
+          32.865,
+          29.588,
+          32.243
+        ],
+        "pass": true
+      },
+      {
+        "path": "outputs/flightglass-ux/verify/home--portrait-wide--normal.png",
+        "width": 430,
+        "height": 932,
+        "bytes": 308921,
+        "rgbStdDev": [
+          33.889,
+          30.773,
+          33.552
+        ],
+        "pass": true
+      },
+      {
+        "path": "outputs/flightglass-ux/verify/home--portrait-wide--reduced.png",
+        "width": 430,
+        "height": 932,
+        "bytes": 308921,
+        "rgbStdDev": [
+          33.889,
+          30.773,
+          33.552
+        ],
+        "pass": true
+      }
+    ]
+  },
+  "targetGeometry": {
+    "status": "PASS",
+    "requirement": "All pairwise intersections among five interactive targets must have zero overlap. Separation is axis distance for aligned rectangles and Euclidean distance for diagonal rectangles.",
+    "targets": [
+      {
+        "id": "help",
+        "selector": ".help"
+      },
+      {
+        "id": "range",
+        "selector": "#placeRange"
+      },
+      {
+        "id": "lab",
+        "selector": "#placeLab"
+      },
+      {
+        "id": "outcome",
+        "selector": "#placeOutcome"
+      },
+      {
+        "id": "academy",
+        "selector": "#placeAcademy"
+      }
+    ],
+    "caseCount": 16,
+    "totalPairwiseIntersections": 160,
+    "totalOverlaps": 0,
+    "globalMinimumEdgeSeparationPx": 8,
+    "globalClosestPair": "help::academy",
+    "globalClosestCase": {
+      "engine": "chromium",
+      "viewport": "landscape-compact",
+      "motion": "normal"
+    },
+    "cases": [
+      {
+        "engine": "chromium",
+        "viewport": "portrait-wide",
+        "width": 430,
+        "height": 932,
+        "motion": "normal",
+        "targetCount": 5,
+        "pairCount": 10,
+        "overlapCount": 0,
+        "minimumEdgeSeparationPx": 118.65,
+        "closestPair": "outcome::academy",
+        "boxes": {
+          "help": {
+            "x": 366,
+            "y": 16,
+            "width": 44,
+            "height": 44
+          },
+          "range": {
+            "x": 18,
+            "y": 764.171875,
+            "width": 155,
+            "height": 56
+          },
+          "lab": {
+            "x": 224,
+            "y": 549.8125,
+            "width": 188,
+            "height": 56
+          },
+          "outcome": {
+            "x": 18,
+            "y": 326.1875,
+            "width": 173,
+            "height": 56
+          },
+          "academy": {
+            "x": 275,
+            "y": 186.390625,
+            "width": 137,
+            "height": 56
+          }
+        },
+        "pairs": [
+          {
+            "pair": "help::range",
+            "overlapArea": 0,
+            "separationPx": 730.142
+          },
+          {
+            "pair": "help::lab",
+            "overlapArea": 0,
+            "separationPx": 489.813
+          },
+          {
+            "pair": "help::outcome",
+            "overlapArea": 0,
+            "separationPx": 318.56
+          },
+          {
+            "pair": "help::academy",
+            "overlapArea": 0,
+            "separationPx": 126.391
+          },
+          {
+            "pair": "range::lab",
+            "overlapArea": 0,
+            "separationPx": 166.369
+          },
+          {
+            "pair": "range::outcome",
+            "overlapArea": 0,
+            "separationPx": 381.984
+          },
+          {
+            "pair": "range::academy",
+            "overlapArea": 0,
+            "separationPx": 531.657
+          },
+          {
+            "pair": "lab::outcome",
+            "overlapArea": 0,
+            "separationPx": 170.842
+          },
+          {
+            "pair": "lab::academy",
+            "overlapArea": 0,
+            "separationPx": 307.422
+          },
+          {
+            "pair": "outcome::academy",
+            "overlapArea": 0,
+            "separationPx": 118.65
+          }
+        ]
+      },
+      {
+        "engine": "chromium",
+        "viewport": "portrait-wide",
+        "width": 430,
+        "height": 932,
+        "motion": "reduced",
+        "targetCount": 5,
+        "pairCount": 10,
+        "overlapCount": 0,
+        "minimumEdgeSeparationPx": 118.65,
+        "closestPair": "outcome::academy",
+        "boxes": {
+          "help": {
+            "x": 366,
+            "y": 16,
+            "width": 44,
+            "height": 44
+          },
+          "range": {
+            "x": 18,
+            "y": 764.171875,
+            "width": 155,
+            "height": 56
+          },
+          "lab": {
+            "x": 224,
+            "y": 549.8125,
+            "width": 188,
+            "height": 56
+          },
+          "outcome": {
+            "x": 18,
+            "y": 326.1875,
+            "width": 173,
+            "height": 56
+          },
+          "academy": {
+            "x": 275,
+            "y": 186.390625,
+            "width": 137,
+            "height": 56
+          }
+        },
+        "pairs": [
+          {
+            "pair": "help::range",
+            "overlapArea": 0,
+            "separationPx": 730.142
+          },
+          {
+            "pair": "help::lab",
+            "overlapArea": 0,
+            "separationPx": 489.813
+          },
+          {
+            "pair": "help::outcome",
+            "overlapArea": 0,
+            "separationPx": 318.56
+          },
+          {
+            "pair": "help::academy",
+            "overlapArea": 0,
+            "separationPx": 126.391
+          },
+          {
+            "pair": "range::lab",
+            "overlapArea": 0,
+            "separationPx": 166.369
+          },
+          {
+            "pair": "range::outcome",
+            "overlapArea": 0,
+            "separationPx": 381.984
+          },
+          {
+            "pair": "range::academy",
+            "overlapArea": 0,
+            "separationPx": 531.657
+          },
+          {
+            "pair": "lab::outcome",
+            "overlapArea": 0,
+            "separationPx": 170.842
+          },
+          {
+            "pair": "lab::academy",
+            "overlapArea": 0,
+            "separationPx": 307.422
+          },
+          {
+            "pair": "outcome::academy",
+            "overlapArea": 0,
+            "separationPx": 118.65
+          }
+        ]
+      },
+      {
+        "engine": "chromium",
+        "viewport": "portrait-compact",
+        "width": 375,
+        "height": 812,
+        "motion": "normal",
+        "targetCount": 5,
+        "pairCount": 10,
+        "overlapCount": 0,
+        "minimumEdgeSeparationPx": 102.204,
+        "closestPair": "outcome::academy",
+        "boxes": {
+          "help": {
+            "x": 311,
+            "y": 16,
+            "width": 44,
+            "height": 44
+          },
+          "range": {
+            "x": 18,
+            "y": 674.8125,
+            "width": 143.65625,
+            "height": 56
+          },
+          "lab": {
+            "x": 191.59375,
+            "y": 496.171875,
+            "width": 165.40625,
+            "height": 56
+          },
+          "outcome": {
+            "x": 18,
+            "y": 292.3125,
+            "width": 149.8125,
+            "height": 56
+          },
+          "academy": {
+            "x": 238.390625,
+            "y": 162.390625,
+            "width": 118.609375,
+            "height": 56
+          }
+        },
+        "pairs": [
+          {
+            "pair": "help::range",
+            "overlapArea": 0,
+            "separationPx": 632.691
+          },
+          {
+            "pair": "help::lab",
+            "overlapArea": 0,
+            "separationPx": 436.172
+          },
+          {
+            "pair": "help::outcome",
+            "overlapArea": 0,
+            "separationPx": 272.895
+          },
+          {
+            "pair": "help::academy",
+            "overlapArea": 0,
+            "separationPx": 102.391
+          },
+          {
+            "pair": "range::lab",
+            "overlapArea": 0,
+            "separationPx": 126.242
+          },
+          {
+            "pair": "range::outcome",
+            "overlapArea": 0,
+            "separationPx": 326.5
+          },
+          {
+            "pair": "range::academy",
+            "overlapArea": 0,
+            "separationPx": 462.827
+          },
+          {
+            "pair": "lab::outcome",
+            "overlapArea": 0,
+            "separationPx": 149.76
+          },
+          {
+            "pair": "lab::academy",
+            "overlapArea": 0,
+            "separationPx": 277.781
+          },
+          {
+            "pair": "outcome::academy",
+            "overlapArea": 0,
+            "separationPx": 102.204
+          }
+        ]
+      },
+      {
+        "engine": "chromium",
+        "viewport": "portrait-compact",
+        "width": 375,
+        "height": 812,
+        "motion": "reduced",
+        "targetCount": 5,
+        "pairCount": 10,
+        "overlapCount": 0,
+        "minimumEdgeSeparationPx": 102.204,
+        "closestPair": "outcome::academy",
+        "boxes": {
+          "help": {
+            "x": 311,
+            "y": 16,
+            "width": 44,
+            "height": 44
+          },
+          "range": {
+            "x": 18,
+            "y": 674.8125,
+            "width": 143.65625,
+            "height": 56
+          },
+          "lab": {
+            "x": 191.59375,
+            "y": 496.171875,
+            "width": 165.40625,
+            "height": 56
+          },
+          "outcome": {
+            "x": 18,
+            "y": 292.3125,
+            "width": 149.8125,
+            "height": 56
+          },
+          "academy": {
+            "x": 238.390625,
+            "y": 162.390625,
+            "width": 118.609375,
+            "height": 56
+          }
+        },
+        "pairs": [
+          {
+            "pair": "help::range",
+            "overlapArea": 0,
+            "separationPx": 632.691
+          },
+          {
+            "pair": "help::lab",
+            "overlapArea": 0,
+            "separationPx": 436.172
+          },
+          {
+            "pair": "help::outcome",
+            "overlapArea": 0,
+            "separationPx": 272.895
+          },
+          {
+            "pair": "help::academy",
+            "overlapArea": 0,
+            "separationPx": 102.391
+          },
+          {
+            "pair": "range::lab",
+            "overlapArea": 0,
+            "separationPx": 126.242
+          },
+          {
+            "pair": "range::outcome",
+            "overlapArea": 0,
+            "separationPx": 326.5
+          },
+          {
+            "pair": "range::academy",
+            "overlapArea": 0,
+            "separationPx": 462.827
+          },
+          {
+            "pair": "lab::outcome",
+            "overlapArea": 0,
+            "separationPx": 149.76
+          },
+          {
+            "pair": "lab::academy",
+            "overlapArea": 0,
+            "separationPx": 277.781
+          },
+          {
+            "pair": "outcome::academy",
+            "overlapArea": 0,
+            "separationPx": 102.204
+          }
+        ]
+      },
+      {
+        "engine": "chromium",
+        "viewport": "landscape-wide",
+        "width": 932,
+        "height": 430,
+        "motion": "normal",
+        "targetCount": 5,
+        "pairCount": 10,
+        "overlapCount": 0,
+        "minimumEdgeSeparationPx": 10.5,
+        "closestPair": "outcome::academy",
+        "boxes": {
+          "help": {
+            "x": 870,
+            "y": 8,
+            "width": 44,
+            "height": 44
+          },
+          "range": {
+            "x": 279.59375,
+            "y": 345.90625,
+            "width": 145.65625,
+            "height": 54
+          },
+          "lab": {
+            "x": 438.03125,
+            "y": 242.703125,
+            "width": 178.203125,
+            "height": 54
+          },
+          "outcome": {
+            "x": 577.828125,
+            "y": 124.6875,
+            "width": 161.40625,
+            "height": 54
+          },
+          "academy": {
+            "x": 734.1875,
+            "y": 60.1875,
+            "width": 127.8125,
+            "height": 54
+          }
+        },
+        "pairs": [
+          {
+            "pair": "help::range",
+            "overlapArea": 0,
+            "separationPx": 533.089
+          },
+          {
+            "pair": "help::lab",
+            "overlapArea": 0,
+            "separationPx": 317.435
+          },
+          {
+            "pair": "help::outcome",
+            "overlapArea": 0,
+            "separationPx": 149.61
+          },
+          {
+            "pair": "help::academy",
+            "overlapArea": 0,
+            "separationPx": 11.447
+          },
+          {
+            "pair": "range::lab",
+            "overlapArea": 0,
+            "separationPx": 50.836
+          },
+          {
+            "pair": "range::outcome",
+            "overlapArea": 0,
+            "separationPx": 226.367
+          },
+          {
+            "pair": "range::academy",
+            "overlapArea": 0,
+            "separationPx": 386.181
+          },
+          {
+            "pair": "lab::outcome",
+            "overlapArea": 0,
+            "separationPx": 64.016
+          },
+          {
+            "pair": "lab::academy",
+            "overlapArea": 0,
+            "separationPx": 174.44
+          },
+          {
+            "pair": "outcome::academy",
+            "overlapArea": 0,
+            "separationPx": 10.5
+          }
+        ]
+      },
+      {
+        "engine": "chromium",
+        "viewport": "landscape-wide",
+        "width": 932,
+        "height": 430,
+        "motion": "reduced",
+        "targetCount": 5,
+        "pairCount": 10,
+        "overlapCount": 0,
+        "minimumEdgeSeparationPx": 10.5,
+        "closestPair": "outcome::academy",
+        "boxes": {
+          "help": {
+            "x": 870,
+            "y": 8,
+            "width": 44,
+            "height": 44
+          },
+          "range": {
+            "x": 279.59375,
+            "y": 345.90625,
+            "width": 145.65625,
+            "height": 54
+          },
+          "lab": {
+            "x": 438.03125,
+            "y": 242.703125,
+            "width": 178.203125,
+            "height": 54
+          },
+          "outcome": {
+            "x": 577.828125,
+            "y": 124.6875,
+            "width": 161.40625,
+            "height": 54
+          },
+          "academy": {
+            "x": 734.1875,
+            "y": 60.1875,
+            "width": 127.8125,
+            "height": 54
+          }
+        },
+        "pairs": [
+          {
+            "pair": "help::range",
+            "overlapArea": 0,
+            "separationPx": 533.089
+          },
+          {
+            "pair": "help::lab",
+            "overlapArea": 0,
+            "separationPx": 317.435
+          },
+          {
+            "pair": "help::outcome",
+            "overlapArea": 0,
+            "separationPx": 149.61
+          },
+          {
+            "pair": "help::academy",
+            "overlapArea": 0,
+            "separationPx": 11.447
+          },
+          {
+            "pair": "range::lab",
+            "overlapArea": 0,
+            "separationPx": 50.836
+          },
+          {
+            "pair": "range::outcome",
+            "overlapArea": 0,
+            "separationPx": 226.367
+          },
+          {
+            "pair": "range::academy",
+            "overlapArea": 0,
+            "separationPx": 386.181
+          },
+          {
+            "pair": "lab::outcome",
+            "overlapArea": 0,
+            "separationPx": 64.016
+          },
+          {
+            "pair": "lab::academy",
+            "overlapArea": 0,
+            "separationPx": 174.44
+          },
+          {
+            "pair": "outcome::academy",
+            "overlapArea": 0,
+            "separationPx": 10.5
+          }
+        ]
+      },
+      {
+        "engine": "chromium",
+        "viewport": "landscape-compact",
+        "width": 812,
+        "height": 375,
+        "motion": "normal",
+        "targetCount": 5,
+        "pairCount": 10,
+        "overlapCount": 0,
+        "minimumEdgeSeparationPx": 8,
+        "closestPair": "help::academy",
+        "boxes": {
+          "help": {
+            "x": 750,
+            "y": 8,
+            "width": 44,
+            "height": 44
+          },
+          "range": {
+            "x": 251.71875,
+            "y": 302.5,
+            "width": 136.203125,
+            "height": 50
+          },
+          "lab": {
+            "x": 381.625,
+            "y": 216.25,
+            "width": 167.40625,
+            "height": 50
+          },
+          "outcome": {
+            "x": 503.4375,
+            "y": 108.75,
+            "width": 151.8125,
+            "height": 50
+          },
+          "academy": {
+            "x": 621.390625,
+            "y": 37.5,
+            "width": 120.609375,
+            "height": 50
+          }
+        },
+        "pairs": [
+          {
+            "pair": "help::range",
+            "overlapArea": 0,
+            "separationPx": 440.285
+          },
+          {
+            "pair": "help::lab",
+            "overlapArea": 0,
+            "separationPx": 259.551
+          },
+          {
+            "pair": "help::outcome",
+            "overlapArea": 0,
+            "separationPx": 110.445
+          },
+          {
+            "pair": "help::academy",
+            "overlapArea": 0,
+            "separationPx": 8
+          },
+          {
+            "pair": "range::lab",
+            "overlapArea": 0,
+            "separationPx": 36.25
+          },
+          {
+            "pair": "range::outcome",
+            "overlapArea": 0,
+            "separationPx": 184.412
+          },
+          {
+            "pair": "range::academy",
+            "overlapArea": 0,
+            "separationPx": 317.384
+          },
+          {
+            "pair": "lab::outcome",
+            "overlapArea": 0,
+            "separationPx": 57.5
+          },
+          {
+            "pair": "lab::academy",
+            "overlapArea": 0,
+            "separationPx": 147.69
+          },
+          {
+            "pair": "outcome::academy",
+            "overlapArea": 0,
+            "separationPx": 21.25
+          }
+        ]
+      },
+      {
+        "engine": "chromium",
+        "viewport": "landscape-compact",
+        "width": 812,
+        "height": 375,
+        "motion": "reduced",
+        "targetCount": 5,
+        "pairCount": 10,
+        "overlapCount": 0,
+        "minimumEdgeSeparationPx": 8,
+        "closestPair": "help::academy",
+        "boxes": {
+          "help": {
+            "x": 750,
+            "y": 8,
+            "width": 44,
+            "height": 44
+          },
+          "range": {
+            "x": 251.71875,
+            "y": 302.5,
+            "width": 136.203125,
+            "height": 50
+          },
+          "lab": {
+            "x": 381.625,
+            "y": 216.25,
+            "width": 167.40625,
+            "height": 50
+          },
+          "outcome": {
+            "x": 503.4375,
+            "y": 108.75,
+            "width": 151.8125,
+            "height": 50
+          },
+          "academy": {
+            "x": 621.390625,
+            "y": 37.5,
+            "width": 120.609375,
+            "height": 50
+          }
+        },
+        "pairs": [
+          {
+            "pair": "help::range",
+            "overlapArea": 0,
+            "separationPx": 440.285
+          },
+          {
+            "pair": "help::lab",
+            "overlapArea": 0,
+            "separationPx": 259.551
+          },
+          {
+            "pair": "help::outcome",
+            "overlapArea": 0,
+            "separationPx": 110.445
+          },
+          {
+            "pair": "help::academy",
+            "overlapArea": 0,
+            "separationPx": 8
+          },
+          {
+            "pair": "range::lab",
+            "overlapArea": 0,
+            "separationPx": 36.25
+          },
+          {
+            "pair": "range::outcome",
+            "overlapArea": 0,
+            "separationPx": 184.412
+          },
+          {
+            "pair": "range::academy",
+            "overlapArea": 0,
+            "separationPx": 317.384
+          },
+          {
+            "pair": "lab::outcome",
+            "overlapArea": 0,
+            "separationPx": 57.5
+          },
+          {
+            "pair": "lab::academy",
+            "overlapArea": 0,
+            "separationPx": 147.69
+          },
+          {
+            "pair": "outcome::academy",
+            "overlapArea": 0,
+            "separationPx": 21.25
+          }
+        ]
+      },
+      {
+        "engine": "webkit",
+        "viewport": "portrait-wide",
+        "width": 430,
+        "height": 932,
+        "motion": "normal",
+        "targetCount": 5,
+        "pairCount": 10,
+        "overlapCount": 0,
+        "minimumEdgeSeparationPx": 118.65,
+        "closestPair": "outcome::academy",
+        "boxes": {
+          "help": {
+            "x": 366,
+            "y": 16,
+            "width": 44,
+            "height": 44
+          },
+          "range": {
+            "x": 18,
+            "y": 764.171875,
+            "width": 155,
+            "height": 56
+          },
+          "lab": {
+            "x": 224,
+            "y": 549.8125,
+            "width": 188,
+            "height": 56
+          },
+          "outcome": {
+            "x": 18,
+            "y": 326.1875,
+            "width": 173,
+            "height": 56
+          },
+          "academy": {
+            "x": 275,
+            "y": 186.390625,
+            "width": 137,
+            "height": 56
+          }
+        },
+        "pairs": [
+          {
+            "pair": "help::range",
+            "overlapArea": 0,
+            "separationPx": 730.142
+          },
+          {
+            "pair": "help::lab",
+            "overlapArea": 0,
+            "separationPx": 489.813
+          },
+          {
+            "pair": "help::outcome",
+            "overlapArea": 0,
+            "separationPx": 318.56
+          },
+          {
+            "pair": "help::academy",
+            "overlapArea": 0,
+            "separationPx": 126.391
+          },
+          {
+            "pair": "range::lab",
+            "overlapArea": 0,
+            "separationPx": 166.369
+          },
+          {
+            "pair": "range::outcome",
+            "overlapArea": 0,
+            "separationPx": 381.984
+          },
+          {
+            "pair": "range::academy",
+            "overlapArea": 0,
+            "separationPx": 531.657
+          },
+          {
+            "pair": "lab::outcome",
+            "overlapArea": 0,
+            "separationPx": 170.842
+          },
+          {
+            "pair": "lab::academy",
+            "overlapArea": 0,
+            "separationPx": 307.422
+          },
+          {
+            "pair": "outcome::academy",
+            "overlapArea": 0,
+            "separationPx": 118.65
+          }
+        ]
+      },
+      {
+        "engine": "webkit",
+        "viewport": "portrait-wide",
+        "width": 430,
+        "height": 932,
+        "motion": "reduced",
+        "targetCount": 5,
+        "pairCount": 10,
+        "overlapCount": 0,
+        "minimumEdgeSeparationPx": 118.65,
+        "closestPair": "outcome::academy",
+        "boxes": {
+          "help": {
+            "x": 366,
+            "y": 16,
+            "width": 44,
+            "height": 44
+          },
+          "range": {
+            "x": 18,
+            "y": 764.171875,
+            "width": 155,
+            "height": 56
+          },
+          "lab": {
+            "x": 224,
+            "y": 549.8125,
+            "width": 188,
+            "height": 56
+          },
+          "outcome": {
+            "x": 18,
+            "y": 326.1875,
+            "width": 173,
+            "height": 56
+          },
+          "academy": {
+            "x": 275,
+            "y": 186.390625,
+            "width": 137,
+            "height": 56
+          }
+        },
+        "pairs": [
+          {
+            "pair": "help::range",
+            "overlapArea": 0,
+            "separationPx": 730.142
+          },
+          {
+            "pair": "help::lab",
+            "overlapArea": 0,
+            "separationPx": 489.813
+          },
+          {
+            "pair": "help::outcome",
+            "overlapArea": 0,
+            "separationPx": 318.56
+          },
+          {
+            "pair": "help::academy",
+            "overlapArea": 0,
+            "separationPx": 126.391
+          },
+          {
+            "pair": "range::lab",
+            "overlapArea": 0,
+            "separationPx": 166.369
+          },
+          {
+            "pair": "range::outcome",
+            "overlapArea": 0,
+            "separationPx": 381.984
+          },
+          {
+            "pair": "range::academy",
+            "overlapArea": 0,
+            "separationPx": 531.657
+          },
+          {
+            "pair": "lab::outcome",
+            "overlapArea": 0,
+            "separationPx": 170.842
+          },
+          {
+            "pair": "lab::academy",
+            "overlapArea": 0,
+            "separationPx": 307.422
+          },
+          {
+            "pair": "outcome::academy",
+            "overlapArea": 0,
+            "separationPx": 118.65
+          }
+        ]
+      },
+      {
+        "engine": "webkit",
+        "viewport": "portrait-compact",
+        "width": 375,
+        "height": 812,
+        "motion": "normal",
+        "targetCount": 5,
+        "pairCount": 10,
+        "overlapCount": 0,
+        "minimumEdgeSeparationPx": 102.204,
+        "closestPair": "outcome::academy",
+        "boxes": {
+          "help": {
+            "x": 311,
+            "y": 16,
+            "width": 44,
+            "height": 44
+          },
+          "range": {
+            "x": 18,
+            "y": 674.8125,
+            "width": 143.65625,
+            "height": 56
+          },
+          "lab": {
+            "x": 191.59375,
+            "y": 496.171875,
+            "width": 165.40625,
+            "height": 56
+          },
+          "outcome": {
+            "x": 18,
+            "y": 292.3125,
+            "width": 149.8125,
+            "height": 56
+          },
+          "academy": {
+            "x": 238.390625,
+            "y": 162.390625,
+            "width": 118.609375,
+            "height": 56
+          }
+        },
+        "pairs": [
+          {
+            "pair": "help::range",
+            "overlapArea": 0,
+            "separationPx": 632.691
+          },
+          {
+            "pair": "help::lab",
+            "overlapArea": 0,
+            "separationPx": 436.172
+          },
+          {
+            "pair": "help::outcome",
+            "overlapArea": 0,
+            "separationPx": 272.895
+          },
+          {
+            "pair": "help::academy",
+            "overlapArea": 0,
+            "separationPx": 102.391
+          },
+          {
+            "pair": "range::lab",
+            "overlapArea": 0,
+            "separationPx": 126.242
+          },
+          {
+            "pair": "range::outcome",
+            "overlapArea": 0,
+            "separationPx": 326.5
+          },
+          {
+            "pair": "range::academy",
+            "overlapArea": 0,
+            "separationPx": 462.827
+          },
+          {
+            "pair": "lab::outcome",
+            "overlapArea": 0,
+            "separationPx": 149.76
+          },
+          {
+            "pair": "lab::academy",
+            "overlapArea": 0,
+            "separationPx": 277.781
+          },
+          {
+            "pair": "outcome::academy",
+            "overlapArea": 0,
+            "separationPx": 102.204
+          }
+        ]
+      },
+      {
+        "engine": "webkit",
+        "viewport": "portrait-compact",
+        "width": 375,
+        "height": 812,
+        "motion": "reduced",
+        "targetCount": 5,
+        "pairCount": 10,
+        "overlapCount": 0,
+        "minimumEdgeSeparationPx": 102.204,
+        "closestPair": "outcome::academy",
+        "boxes": {
+          "help": {
+            "x": 311,
+            "y": 16,
+            "width": 44,
+            "height": 44
+          },
+          "range": {
+            "x": 18,
+            "y": 674.8125,
+            "width": 143.65625,
+            "height": 56
+          },
+          "lab": {
+            "x": 191.59375,
+            "y": 496.171875,
+            "width": 165.40625,
+            "height": 56
+          },
+          "outcome": {
+            "x": 18,
+            "y": 292.3125,
+            "width": 149.8125,
+            "height": 56
+          },
+          "academy": {
+            "x": 238.390625,
+            "y": 162.390625,
+            "width": 118.609375,
+            "height": 56
+          }
+        },
+        "pairs": [
+          {
+            "pair": "help::range",
+            "overlapArea": 0,
+            "separationPx": 632.691
+          },
+          {
+            "pair": "help::lab",
+            "overlapArea": 0,
+            "separationPx": 436.172
+          },
+          {
+            "pair": "help::outcome",
+            "overlapArea": 0,
+            "separationPx": 272.895
+          },
+          {
+            "pair": "help::academy",
+            "overlapArea": 0,
+            "separationPx": 102.391
+          },
+          {
+            "pair": "range::lab",
+            "overlapArea": 0,
+            "separationPx": 126.242
+          },
+          {
+            "pair": "range::outcome",
+            "overlapArea": 0,
+            "separationPx": 326.5
+          },
+          {
+            "pair": "range::academy",
+            "overlapArea": 0,
+            "separationPx": 462.827
+          },
+          {
+            "pair": "lab::outcome",
+            "overlapArea": 0,
+            "separationPx": 149.76
+          },
+          {
+            "pair": "lab::academy",
+            "overlapArea": 0,
+            "separationPx": 277.781
+          },
+          {
+            "pair": "outcome::academy",
+            "overlapArea": 0,
+            "separationPx": 102.204
+          }
+        ]
+      },
+      {
+        "engine": "webkit",
+        "viewport": "landscape-wide",
+        "width": 932,
+        "height": 430,
+        "motion": "normal",
+        "targetCount": 5,
+        "pairCount": 10,
+        "overlapCount": 0,
+        "minimumEdgeSeparationPx": 10.5,
+        "closestPair": "outcome::academy",
+        "boxes": {
+          "help": {
+            "x": 870,
+            "y": 8,
+            "width": 44,
+            "height": 44
+          },
+          "range": {
+            "x": 279.59375,
+            "y": 345.90625,
+            "width": 145.65625,
+            "height": 54
+          },
+          "lab": {
+            "x": 438.03125,
+            "y": 242.703125,
+            "width": 178.203125,
+            "height": 54
+          },
+          "outcome": {
+            "x": 577.828125,
+            "y": 124.6875,
+            "width": 161.40625,
+            "height": 54
+          },
+          "academy": {
+            "x": 734.1875,
+            "y": 60.1875,
+            "width": 127.8125,
+            "height": 54
+          }
+        },
+        "pairs": [
+          {
+            "pair": "help::range",
+            "overlapArea": 0,
+            "separationPx": 533.089
+          },
+          {
+            "pair": "help::lab",
+            "overlapArea": 0,
+            "separationPx": 317.435
+          },
+          {
+            "pair": "help::outcome",
+            "overlapArea": 0,
+            "separationPx": 149.61
+          },
+          {
+            "pair": "help::academy",
+            "overlapArea": 0,
+            "separationPx": 11.447
+          },
+          {
+            "pair": "range::lab",
+            "overlapArea": 0,
+            "separationPx": 50.836
+          },
+          {
+            "pair": "range::outcome",
+            "overlapArea": 0,
+            "separationPx": 226.367
+          },
+          {
+            "pair": "range::academy",
+            "overlapArea": 0,
+            "separationPx": 386.181
+          },
+          {
+            "pair": "lab::outcome",
+            "overlapArea": 0,
+            "separationPx": 64.016
+          },
+          {
+            "pair": "lab::academy",
+            "overlapArea": 0,
+            "separationPx": 174.44
+          },
+          {
+            "pair": "outcome::academy",
+            "overlapArea": 0,
+            "separationPx": 10.5
+          }
+        ]
+      },
+      {
+        "engine": "webkit",
+        "viewport": "landscape-wide",
+        "width": 932,
+        "height": 430,
+        "motion": "reduced",
+        "targetCount": 5,
+        "pairCount": 10,
+        "overlapCount": 0,
+        "minimumEdgeSeparationPx": 10.5,
+        "closestPair": "outcome::academy",
+        "boxes": {
+          "help": {
+            "x": 870,
+            "y": 8,
+            "width": 44,
+            "height": 44
+          },
+          "range": {
+            "x": 279.59375,
+            "y": 345.90625,
+            "width": 145.65625,
+            "height": 54
+          },
+          "lab": {
+            "x": 438.03125,
+            "y": 242.703125,
+            "width": 178.203125,
+            "height": 54
+          },
+          "outcome": {
+            "x": 577.828125,
+            "y": 124.6875,
+            "width": 161.40625,
+            "height": 54
+          },
+          "academy": {
+            "x": 734.1875,
+            "y": 60.1875,
+            "width": 127.8125,
+            "height": 54
+          }
+        },
+        "pairs": [
+          {
+            "pair": "help::range",
+            "overlapArea": 0,
+            "separationPx": 533.089
+          },
+          {
+            "pair": "help::lab",
+            "overlapArea": 0,
+            "separationPx": 317.435
+          },
+          {
+            "pair": "help::outcome",
+            "overlapArea": 0,
+            "separationPx": 149.61
+          },
+          {
+            "pair": "help::academy",
+            "overlapArea": 0,
+            "separationPx": 11.447
+          },
+          {
+            "pair": "range::lab",
+            "overlapArea": 0,
+            "separationPx": 50.836
+          },
+          {
+            "pair": "range::outcome",
+            "overlapArea": 0,
+            "separationPx": 226.367
+          },
+          {
+            "pair": "range::academy",
+            "overlapArea": 0,
+            "separationPx": 386.181
+          },
+          {
+            "pair": "lab::outcome",
+            "overlapArea": 0,
+            "separationPx": 64.016
+          },
+          {
+            "pair": "lab::academy",
+            "overlapArea": 0,
+            "separationPx": 174.44
+          },
+          {
+            "pair": "outcome::academy",
+            "overlapArea": 0,
+            "separationPx": 10.5
+          }
+        ]
+      },
+      {
+        "engine": "webkit",
+        "viewport": "landscape-compact",
+        "width": 812,
+        "height": 375,
+        "motion": "normal",
+        "targetCount": 5,
+        "pairCount": 10,
+        "overlapCount": 0,
+        "minimumEdgeSeparationPx": 8,
+        "closestPair": "help::academy",
+        "boxes": {
+          "help": {
+            "x": 750,
+            "y": 8,
+            "width": 44,
+            "height": 44
+          },
+          "range": {
+            "x": 251.71875,
+            "y": 302.5,
+            "width": 136.203125,
+            "height": 50
+          },
+          "lab": {
+            "x": 381.625,
+            "y": 216.25,
+            "width": 167.40625,
+            "height": 50
+          },
+          "outcome": {
+            "x": 503.4375,
+            "y": 108.75,
+            "width": 151.8125,
+            "height": 50
+          },
+          "academy": {
+            "x": 621.390625,
+            "y": 37.5,
+            "width": 120.609375,
+            "height": 50
+          }
+        },
+        "pairs": [
+          {
+            "pair": "help::range",
+            "overlapArea": 0,
+            "separationPx": 440.285
+          },
+          {
+            "pair": "help::lab",
+            "overlapArea": 0,
+            "separationPx": 259.551
+          },
+          {
+            "pair": "help::outcome",
+            "overlapArea": 0,
+            "separationPx": 110.445
+          },
+          {
+            "pair": "help::academy",
+            "overlapArea": 0,
+            "separationPx": 8
+          },
+          {
+            "pair": "range::lab",
+            "overlapArea": 0,
+            "separationPx": 36.25
+          },
+          {
+            "pair": "range::outcome",
+            "overlapArea": 0,
+            "separationPx": 184.412
+          },
+          {
+            "pair": "range::academy",
+            "overlapArea": 0,
+            "separationPx": 317.384
+          },
+          {
+            "pair": "lab::outcome",
+            "overlapArea": 0,
+            "separationPx": 57.5
+          },
+          {
+            "pair": "lab::academy",
+            "overlapArea": 0,
+            "separationPx": 147.69
+          },
+          {
+            "pair": "outcome::academy",
+            "overlapArea": 0,
+            "separationPx": 21.25
+          }
+        ]
+      },
+      {
+        "engine": "webkit",
+        "viewport": "landscape-compact",
+        "width": 812,
+        "height": 375,
+        "motion": "reduced",
+        "targetCount": 5,
+        "pairCount": 10,
+        "overlapCount": 0,
+        "minimumEdgeSeparationPx": 8,
+        "closestPair": "help::academy",
+        "boxes": {
+          "help": {
+            "x": 750,
+            "y": 8,
+            "width": 44,
+            "height": 44
+          },
+          "range": {
+            "x": 251.71875,
+            "y": 302.5,
+            "width": 136.203125,
+            "height": 50
+          },
+          "lab": {
+            "x": 381.625,
+            "y": 216.25,
+            "width": 167.40625,
+            "height": 50
+          },
+          "outcome": {
+            "x": 503.4375,
+            "y": 108.75,
+            "width": 151.8125,
+            "height": 50
+          },
+          "academy": {
+            "x": 621.390625,
+            "y": 37.5,
+            "width": 120.609375,
+            "height": 50
+          }
+        },
+        "pairs": [
+          {
+            "pair": "help::range",
+            "overlapArea": 0,
+            "separationPx": 440.285
+          },
+          {
+            "pair": "help::lab",
+            "overlapArea": 0,
+            "separationPx": 259.551
+          },
+          {
+            "pair": "help::outcome",
+            "overlapArea": 0,
+            "separationPx": 110.445
+          },
+          {
+            "pair": "help::academy",
+            "overlapArea": 0,
+            "separationPx": 8
+          },
+          {
+            "pair": "range::lab",
+            "overlapArea": 0,
+            "separationPx": 36.25
+          },
+          {
+            "pair": "range::outcome",
+            "overlapArea": 0,
+            "separationPx": 184.412
+          },
+          {
+            "pair": "range::academy",
+            "overlapArea": 0,
+            "separationPx": 317.384
+          },
+          {
+            "pair": "lab::outcome",
+            "overlapArea": 0,
+            "separationPx": 57.5
+          },
+          {
+            "pair": "lab::academy",
+            "overlapArea": 0,
+            "separationPx": 147.69
+          },
+          {
+            "pair": "outcome::academy",
+            "overlapArea": 0,
+            "separationPx": 21.25
+          }
+        ]
+      }
+    ]
+  }
+}

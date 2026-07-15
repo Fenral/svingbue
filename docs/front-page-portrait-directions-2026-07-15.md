@@ -80,3 +80,9 @@ result below and were not forced to the requested 95+ aspiration.
 ## Recommendation
 
 Advance **Shot Spine** as the product-defining direction: it turns Flightglass's causal explanation into the first interaction. Keep **Night Ladder** as the cinematic brand route and **Aperture** as the quieter, most iconic instrument route. Production selection remains an owner decision; none of the studies changes the shipping home page.
+
+Owner decision, later on 2026-07-15: **Night Ladder was selected for the
+shipping Home**. Its cinematic range context was preferred over the independent
+scorecard recommendation. The production implementation and fresh acceptance
+evidence are recorded in `docs/flightglass-autopilot/STATUS.md` and
+`docs/SESSION-HANDOFF.md`.
