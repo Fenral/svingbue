@@ -86,7 +86,7 @@ ownership.
 | Start line & shape | `shot-pattern` — **Carry Side** | `offline` | How can a shot start one way and reach the carry plane somewhere else? | Core integration experience combining Launch Direction and Curve. “Shot Pattern” remains an internal curriculum label only because one deterministic shot is not a dispersion pattern. |
 | Strike & contact | `attack-at-impact` — **Up or Down at Impact** | `attack-angle` | Was the club moving up or down at impact? | Separate core experience. It teaches the measured delivery result before Low Point geometry. |
 | Strike & contact | `low-point` — **Low Point** | `low-point` | Where is the bottom of the modeled arc relative to the ball? | Separate core geometry experience. It owns ball-first/turf-first sequence in the rigid-circle model. |
-| Strike & contact | `strike-depth` — **Strike Depth** | `strike-depth` | How does vertical arc depth change contact without changing attack direction? | Core contact experience. It must prove the Attack Angle invariance in the current model. |
+| Strike & contact | `strike-depth` — **Contact Height** | `strike-depth` | How does vertical arc placement change modeled path height at the ball without changing Attack? | Core outcome experience. “Strike Depth” remains the internal label; Contact Height is explicitly a point-path model, not measured face impact or literal divot depth. |
 | Strike & contact | `plane-coupling-lab` — **Plane Coupling** | `plane-coupling` | Why can plane and swing direction move the effective Low Point? | Optional advanced **MODEL LAB**, not a core journey gate, until independently validated. |
 | Launch, spin & descent | `delivered-loft-launch` — **Delivered Loft & Launch** | `dynamic-loft`, `launch-angle` | Why did the ball leave at that vertical angle? | One core experience. Dynamic Loft dominates; Attack Angle is material but smaller in the app model. |
 | Launch, spin & descent | `backspin` — **Backspin** | `spin-loft`, `backspin` | What creates launch spin, and how can the model change it? | Existing reference experience. Spin Loft is embedded here instead of receiving a duplicate lesson. |
@@ -188,8 +188,8 @@ Environment chain:
 
 The physics graph must not claim dependencies the engine does not implement.
 In particular: Backspin does not move current engine Carry; Temperature does
-not move Ball Speed; wind does not change Spin Axis; Strike Depth does not
-numerically drive Smash.
+not move Ball Speed; wind does not change Spin Axis; vertical arc height does
+not change derived Attack Angle or numerically drive Smash.
 
 ### 6.2 Pedagogical prerequisite graph
 
@@ -201,8 +201,8 @@ may be bypassed by an explicit placement challenge.
 - Carry Side (`shot-pattern`): Start Line + Shape.
 - Up or Down at Impact: none.
 - Low Point: Up or Down at Impact.
-- Strike Depth: Low Point.
-- Plane Coupling lab: Low Point + Strike Depth; Shape is recommended context,
+- Contact Height (`strike-depth`): Low Point.
+- Plane Coupling lab: Low Point + Contact Height; Shape is recommended context,
   not a hard prerequisite.
 - Delivered Loft & Launch: Up or Down at Impact.
 - Backspin: Delivered Loft & Launch + Up or Down at Impact for new guided
@@ -220,7 +220,7 @@ Academy Home asks for one honest goal and gives one dominant Start/Continue/
 Repair action with a human-readable reason.
 
 - **Start line & shape:** Start Line → Shape → Carry Side.
-- **Strike & contact:** Up or Down at Impact → Low Point → Strike Depth.
+- **Strike & contact:** Up or Down at Impact → Low Point → Contact Height.
 - **Launch, spin & descent:** Up or Down at Impact → Delivered Loft & Launch →
   Backspin → Flight Height & Descent.
 - **Speed & distance:** Speed Transfer → Carry.
@@ -405,7 +405,7 @@ The six-surface shell is shared; the instrument is not.
 |---|---|---|
 | Top-down D-plane | Start Line, Shape, Carry Side | Separate face, path, launch vector, axis/curve and carry-side outcome without displaying all as equal at once. |
 | Side-on delivery wedge | Up or Down at Impact, Delivered Loft & Launch | Show vertical club travel, face orientation and ball launch as distinct vectors. |
-| Arc/contact window | Low Point, Strike Depth, Plane Coupling | Keep the ball, modeled arc, low point and contact/turf consequence spatially coherent. |
+| Arc/contact window | Low Point, Contact Height, Plane Coupling | Keep the ball, modeled arc, low point and point-path/ground-plane consequence spatially coherent without implying a face/sole collision. |
 | Spin instrument | Backspin | Existing engine-driven spin-loft and trajectory instrument remains the reference. |
 | Energy transfer ledger | Speed Transfer | Show Club Speed → modeled efficiency → Ball Speed without implying impact-location simulation. |
 | Trajectory profile | Flight Height & Descent, Carry, Air Density | Keep the baseline/current trace and outcome rulers authoritative; estimate layers remain dashed. |
@@ -413,7 +413,7 @@ The six-surface shell is shared; the instrument is not.
 
 S2 Influence is deliberately not one universal bar component. Start Line needs
 a contribution split under loft changes; Shape needs matched face/path pairs;
-Carry Side needs start-versus-bend decomposition; Strike Depth needs an
+Carry Side needs start-versus-bend decomposition; Contact Height needs an
 invariance proof; Air Density and Wind need baseline-versus-estimate layers.
 
 ## 12. Academy Home behavior
@@ -528,7 +528,8 @@ The autonomous planning program must produce the following durable artifacts:
 1. this shared curriculum blueprint;
 2. three direction-family experience specs: Start Line, Shape, Carry Side
    (canonical ID `shot-pattern`);
-3. four strike/contact specs: Up or Down at Impact, Low Point, Strike Depth,
+3. four strike/contact specs: Up or Down at Impact, Low Point, Contact Height
+   (canonical ID `strike-depth`),
    optional Plane Coupling model lab;
 4. two new launch/flight specs: Delivered Loft & Launch, Flight Height &
    Descent, plus a Backspin compatibility amendment rather than a redesign;
@@ -550,7 +551,7 @@ Recommended implementation order after all planning is complete:
 4. Carry Side;
 5. Up or Down at Impact;
 6. Low Point;
-7. Strike Depth;
+7. Contact Height;
 8. Delivered Loft & Launch;
 9. Backspin compatibility amendment;
 10. Flight Height & Descent;

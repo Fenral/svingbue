@@ -80,7 +80,11 @@ Completed planning artifacts at this travel checkpoint:
 - `docs/superpowers/specs/2026-07-15-academy-outcome-curriculum-blueprint.md`;
 - `docs/superpowers/specs/2026-07-15-academy-start-line-design.md`;
 - `docs/superpowers/specs/2026-07-15-academy-shape-design.md`;
-- `docs/superpowers/specs/2026-07-15-academy-shot-pattern-design.md`.
+- `docs/superpowers/specs/2026-07-15-academy-shot-pattern-design.md`;
+- `docs/superpowers/specs/2026-07-15-academy-attack-at-impact-design.md`;
+- `docs/superpowers/specs/2026-07-15-academy-low-point-design.md`;
+- `docs/superpowers/specs/2026-07-15-academy-strike-depth-design.md`;
+- `docs/superpowers/specs/2026-07-15-academy-plane-coupling-lab-design.md`.
 
 The blueprint reconciles all 24 stored IDs exactly once. Start Line, Shape and
 Carry Side are now specified surface by surface with exact copy, interaction,
@@ -93,12 +97,19 @@ No production file changed. Numeric direction-family fixtures were verified
 against the current protected `solveFlight()` implementation, and
 `impact-flight.js` remains untouched.
 
+The strike/contact family is also complete at specification level. Contact
+Height is the learner-visible title for canonical `strike-depth` and is bounded
+as point-path geometry, not measured face Impact Height or literal divot depth.
+Plane Coupling is an optional MODEL LAB stored outside core mastery. Its exact
+fixtures and the Low Point/Contact Height invariants were verified against the
+unchanged geometry engine.
+
 ## Exact next actions
 
-1. Continue the autonomous planning pass with `attack-at-impact`, `low-point`,
-   `strike-depth` and the optional `plane-coupling-lab` specifications.
-2. Then complete launch/spin/descent, speed/distance/conditions, the Backspin
-   compatibility amendment, shared Academy Home/store migration specification,
+1. Continue the autonomous planning pass with Delivered Loft & Launch, the
+   Backspin compatibility amendment and Flight Height & Descent.
+2. Then complete speed/distance/conditions, shared Academy Home/store migration
+   specification,
    per-experience implementation plans, cross-curriculum audit and sequential
    Claude Code handoff.
 3. Do not begin production implementation or modify `impact-flight.js` during

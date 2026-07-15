@@ -13,7 +13,7 @@ publication after all Phase 8 gates pass. See `RELEASE-AUTHORIZATION.md`.
 | 3 · Outcome / Compare | Ready | Decisions and references locked in master plan |
 | 4 · Geometry 3D / Strike Window 2D | Ready | Consensus documents named |
 | 5 · Academy overview | Planning active | Outcome-led curriculum blueprint complete; shared native Home/store implementation spec and plan still pending |
-| 6 · Academy lesson system | Backspin STUDIO-GRADE (Tasks 1-20); remaining curriculum planning active | Direction family complete at specification level; strike/contact and later families still in progress; no new production implementation started |
+| 6 · Academy lesson system | Backspin STUDIO-GRADE (Tasks 1-20); remaining curriculum planning active | Direction and strike/contact families complete at specification level; later families still in progress; no new production implementation started |
 | 7 · Paywall | Ready | Pricing and compatibility rules locked |
 | 8 · Convergence and release QA | Ready | Global gates locked |
 
@@ -165,7 +165,29 @@ accessibility, migration semantics, mastery gates and acceptance evidence.
 Start Line, Shape and Carry Side fixtures were generated from the unchanged
 `solveFlight()` implementation. `impact-flight.js` has not been edited.
 
-Planning remains incomplete. Strike/contact, launch/spin/descent,
+Strike/contact completed at the next checkpoint:
+
+- Up or Down at Impact, owning `attack-angle`:
+  `docs/superpowers/specs/2026-07-15-academy-attack-at-impact-design.md`;
+- Low Point:
+  `docs/superpowers/specs/2026-07-15-academy-low-point-design.md`;
+- Contact Height, retaining canonical ID/legacy concept `strike-depth`:
+  `docs/superpowers/specs/2026-07-15-academy-strike-depth-design.md`;
+- optional Plane Coupling MODEL LAB:
+  `docs/superpowers/specs/2026-07-15-academy-plane-coupling-lab-design.md`.
+
+Contact Height replaces “Strike Depth” as the learner-visible outcome because
+the engine input is vertical arc height while the learner outcome is modeled
+point-path height at the ball. It is explicitly not face Impact Height or
+literal divot depth. Plane Coupling stores exploration outside core mastery and
+never blocks a journey or awards a core reward.
+
+The frozen strike/contact fixtures pass against the unchanged
+`swing-parameters-and-impact.js` implementation, including Low Point/plane
+sensitivities, exact z-to-contact-height translation, Attack invariance and
+raw-to-effective Low Point compensation.
+
+Planning remains incomplete. Launch/spin/descent,
 speed/distance/conditions, shared Academy Home/store migration, per-experience
 implementation plans, the cross-curriculum audit and the final Claude Code
 handoff are still required before the planning program can be called complete.
