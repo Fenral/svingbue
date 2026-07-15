@@ -13,7 +13,6 @@ wait.
 
 | Agent | Branch | Working on | Since |
 |-------|--------|-----------|-------|
-| Codex | `agent/academy-codex` | Batch 7 — Delivered Loft & Launch model/content/native S0–S5/mastery/voice + regressions | 2026-07-15 |
 
 ## Queue / free to take
 
@@ -31,6 +30,10 @@ wait.
 
 ## Done / handed off
 
+- Academy Batch 7 Delivered Loft & Launch source implementation —
+  `agent/academy-codex`, commit `76eae59`; protected flight adapter, native
+  three-arrow S0–S5/equal-launch mastery/voice and regressions are green.
+  External pairwise, licensed-audio and device/human gates remain.
 - Academy Batch 6 Contact Height source implementation —
   `agent/academy-codex`, commit `3d82aa2`; protected point-path/ground adapters,
   native S0–S5/two-height invariant mastery/voice and regressions are green.

@@ -13,7 +13,7 @@ publication after all Phase 8 gates pass. See `RELEASE-AUTHORIZATION.md`.
 | 3 · Outcome / Compare | Ready | Decisions and references locked in master plan |
 | 4 · Geometry 3D / Strike Window 2D | Ready | Consensus documents named |
 | 5 · Academy overview | Batch 0 implemented; acceptance held | Native Home/store/registry/router/host and caption-ready Voice foundation are coded and packaged; visual, audio-rights and human gates remain open |
-| 6 · Academy lesson system | Backspin STUDIO-GRADE base; six outcome experiences implemented | Start Line, Shape, Carry Side, Up or Down at Impact, Low Point and Contact Height own native S0–S5 renderers, raw mastery gates and caption-ready cues; later curriculum batches remain sequential |
+| 6 · Academy lesson system | Backspin STUDIO-GRADE base; seven outcome experiences implemented | Start Line, Shape, Carry Side, Up or Down at Impact, Low Point, Contact Height and Delivered Loft & Launch own native S0–S5 renderers, raw mastery gates and caption-ready cues; later curriculum batches remain sequential |
 | 7 · Paywall | Ready | Pricing and compatibility rules locked |
 | 8 · Convergence and release QA | Ready | Global gates locked |
 
@@ -305,6 +305,34 @@ Batch 6 is **source-complete but not release-accepted**. Pairwise, licensed
 female audio/rights/listening and physical-device/VoiceOver/fatigue gates remain
 open and fail-closed. Owner authorization allows the source loop to continue to
 Batch 7 Delivered Loft & Launch.
+
+## Academy Batch 7 implementation checkpoint
+
+Delivered Loft & Launch source implementation is complete on
+`agent/academy-codex` at `76eae59`. The canonical experience and legacy
+`dynamic-loft`/`launch-angle` routes share a native three-arrow delivery wedge.
+It consumes unchanged `solveFlight()`, keeps FACE/TRAVEL/BALL distinct and
+requires two raw equal-Launch states with opposite Attack signs and a wide
+Spin Loft gap.
+
+Fresh implementation evidence on 2026-07-15:
+
+- Model/content: 14/14 PASS across base/Loft+4/Attack+4, per-degree
+  sensitivities, equal-launch downstream divergence, raw edges, clamp metadata,
+  every live provenance condition, five myths and seven voice cues.
+- Browser contract: 4/4 Chromium and 4/4 WebKit PASS. Both legacy routes,
+  S0–S5, reduced motion, predictions, equal-launch proof, Practiced without
+  live, raw near misses, Backspin preservation, reload and one-time XP pass.
+- Academy foundation is 136/136 PASS; voice verification reports 61 exact
+  captions and zero licensed audio assets. The last full unchanged cross-module
+  integration run was 91/91 at Batch 6; Batch 7's affected surfaces were rerun.
+- Fresh native packaging, four-file byte parity and brand verification PASS.
+  Mission was visually inspected at 430×932. Protected hashes remain exact.
+
+Batch 7 is **source-complete but not release-accepted**. Pairwise, licensed
+female audio/rights/listening and physical-device/VoiceOver/fatigue gates remain
+open and fail-closed. The full integration matrix is due again at final
+convergence. Owner authorization allows Batch 8 Backspin amendment next.
 
 The Backspin 96-97 reference lesson (Phase 6, Tasks 1-11) completed final
 verification on 2026-07-14. Task 10 shipped the lesson through the native

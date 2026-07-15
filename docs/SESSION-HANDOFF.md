@@ -7,7 +7,7 @@ Updated: 2026-07-15
 - Remote: `Fenral/svingbue`
 - Working branch for this handoff: `agent/academy-codex`, rebased on
   `agent/travel-sync` commit `2978756`.
-- Purpose: recoverable Batch 0–6 implementation and truthful verification
+- Purpose: recoverable Batch 0–7 implementation and truthful verification
   evidence. This branch is not a release branch.
 - Repository visibility: private, verified on 2026-07-13.
 
@@ -22,22 +22,24 @@ Academy Batch 0 is implemented through `449fc1c`; Batch 1 Start Line is source-
 complete at `3ba5a83`; Batch 2 Shape is source-complete at `7ea653b`; Batch 3
 Carry Side is source-complete at `a4d075d`; Batch 4 Up or Down at Impact is
 source-complete at `4902562`; Batch 5 Low Point is source-complete at
-`3a7d9e2`; Batch 6 Contact Height is source-complete at `3d82aa2`. Batch 6 adds
-a native Contact Window, protected point-height/ground adapter, legacy Strike
-Depth migration and mandatory low/above-center captures at invariant Attack. Read
+`3a7d9e2`; Batch 6 Contact Height is source-complete at `3d82aa2`; Batch 7
+Delivered Loft & Launch is source-complete at `76eae59`. Batch 7 adds a native
+three-arrow wedge, protected flight adapter, two legacy aliases and mandatory
+equal-Launch/opposite-Attack captures while preserving prior Backspin. Read
 `docs/FLIGHTGLASS-CLAUDE-CODE-MASTER-PLAN.md`, the Academy rollout index and
 `docs/flightglass-autopilot/STATUS.md` before implementation.
 
-Fresh Batch 6 automated evidence is green: model/content 14/14, browser 4/4 in
-each engine, Academy foundation 121/121 and full integration/browser 91/91.
+Fresh Batch 7 affected evidence is green: model/content 14/14, browser 4/4 in
+each engine and Academy foundation 136/136. The last complete cross-module
+integration run remains 91/91 from Batch 6 and is due again at convergence.
 Brand and native package parity pass, and protected physics hashes are
-unchanged. The voice pack now has 54 exact
+unchanged. The voice pack now has 61 exact
 local captions and zero licensed audio assets;
 strict release verification remains fail-closed. Pairwise-blind UI judgment and
 physical-device/VoiceOver/audio/fatigue checks also remain open. Therefore
-Batches 0–6 are implemented, **not release-accepted**. The owner explicitly
-authorized sequential source work to continue; Batch 7 Delivered Loft & Launch
-is next.
+Batches 0–7 are implemented, **not release-accepted**. The owner explicitly
+authorized sequential source work to continue; Batch 8 Backspin curriculum
+amendment is next.
 
 Use `docs/flightglass-autopilot/academy-batch-loop-prompt.md` for the next loop.
 The two committed Home captures are under `outputs/academy-batch0/`; temporary
