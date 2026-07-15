@@ -5,8 +5,9 @@ Updated: 2026-07-15
 ## Repository checkpoint
 
 - Remote: `Fenral/svingbue`
-- Working branch: `agent/travel-sync`
-- Purpose: recoverable travel copy of design, analysis, source and verification
+- Working branch for this handoff: `agent/academy-codex`, rebased on
+  `agent/travel-sync` commit `2978756`.
+- Purpose: recoverable Batch 0 implementation and truthful verification
   evidence. This branch is not a release branch.
 - Repository visibility: private, verified on 2026-07-13.
 
@@ -16,14 +17,28 @@ identity concept pages are preserved in `docs/concepts/flightglass/`.
 
 ## Execution state
 
-Phase 0 of the autonomous implementation package is complete. The Backspin
-reference lesson and instrument gates are accepted at STUDIO-GRADE. The full
-outcome-led Academy curriculum is now implementation-ready; no production work
-for the remaining curriculum was started during planning. The next coded work
-is Academy Batch 0, the shared native Home/store host. Phase 1 Home/Floodlights
-remains ready outside this owner-directed Academy sequence. Read
+Phase 0 is complete and the Backspin reference shell remains STUDIO-GRADE.
+Academy Batch 0 is now implemented on `agent/academy-codex` through source
+commit `449fc1c`: native outcome Home, additive store migration, registry,
+router, recommendation logic, shared experience host and local caption-ready
+Voice foundation. Backspin is connected to that host without physics or copy
+changes. No later Academy module was started. Read
 `docs/FLIGHTGLASS-CLAUDE-CODE-MASTER-PLAN.md`, the Academy rollout index and
 `docs/flightglass-autopilot/STATUS.md` before implementation.
+
+Final automated evidence is green except the deliberately unapproved visual
+and release-only voice gates: Academy 108/108, WebKit 47/47, shared controls
+28/28, voice 18/18, perf 1.5/2.0 ms p95, brand/autopilot PASS and 16/16 native
+package parity. Visual regression has one remaining 0.135% Chromium Lab delta;
+47/48 captures pass. The voice pack has 11 exact local captions and zero audio
+assets; strict release verification fails closed on missing licensed files and
+rights. Pairwise-blind UI judgment and physical-device/VoiceOver/audio/fatigue
+checks also remain open. Therefore Batch 0 is implemented, **not accepted**, and
+Batch 1 must not start.
+
+Use `docs/flightglass-autopilot/academy-batch-loop-prompt.md` for the next loop.
+The two committed Home captures are under `outputs/academy-batch0/`; temporary
+`outputs/flightglass-visreg/current/` files are regeneratable and not pushed.
 
 Backspin Tasks 1-11 are complete and verified on 2026-07-14. Task 10 shipped
 the lesson into `www/` and locked the 96 target (`4d01eef`); Task 11 recorded

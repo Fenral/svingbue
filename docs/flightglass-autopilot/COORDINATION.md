@@ -13,7 +13,7 @@ wait.
 
 | Agent | Branch | Working on | Since |
 |-------|--------|-----------|-------|
-| Codex | `agent/academy-codex` | Batch 0 — Academy Home/store/registry/router/voice/host + Backspin regression | 2026-07-15 |
+| — | — | — | — |
 
 ## Queue / free to take
 
@@ -21,12 +21,18 @@ wait.
   `docs/superpowers/plans/2026-07-15-academy-outcome-curriculum-rollout.md`.
   Each batch has a spec/plan pair under `docs/superpowers/{specs,plans}/`.
   Build through the gate pipeline in `academy-completion-loop.md`.
+  **Batch 1 is blocked** until the Batch 0 visreg/pairwise, licensed-audio and
+  required device/human gates recorded in `STATUS.md` are closed.
 - Ready surfaces (Home, Range, Visualise, Outcome, Compare, Strike Window,
   Paywall) — mocks + decision docs exist; each still needs its own plan/spec
   pair before build.
 
 ## Done / handed off
 
+- Academy Batch 0 implementation — `agent/academy-codex`, native Home/store/
+  registry/router/voice/host plus Backspin voice integration. Automated source
+  work is handed off; acceptance remains held on the explicit external/visual
+  gates in `STATUS.md`.
 - Backspin lesson — Tasks 1-20, STUDIO-GRADE, committed and pushed.
 - Geometry 3D — un-broken (vendored `three.module.js`, commit `5e22f97`),
   renders again; not yet raised to 90+.

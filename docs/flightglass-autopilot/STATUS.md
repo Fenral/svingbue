@@ -12,8 +12,8 @@ publication after all Phase 8 gates pass. See `RELEASE-AUTHORIZATION.md`.
 | 2 · Range / Visualise | Ready | Decisions and references locked in master plan |
 | 3 · Outcome / Compare | Ready | Decisions and references locked in master plan |
 | 4 · Geometry 3D / Strike Window 2D | Ready | Consensus documents named |
-| 5 · Academy overview | Planned / ready for implementation | Native Home/store/registry/router/voice migration has an accepted design, task plan and Batch 0 handoff |
-| 6 · Academy lesson system | Backspin STUDIO-GRADE; full curriculum implementation-ready | 13 core experiences plus one optional MODEL LAB have complete spec/plan pairs, cross-audit and sequential rollout index; no new production implementation started |
+| 5 · Academy overview | Batch 0 implemented; acceptance held | Native Home/store/registry/router/host and caption-ready Voice foundation are coded and packaged; visual, audio-rights and human gates remain open |
+| 6 · Academy lesson system | Backspin STUDIO-GRADE base; shared Voice host integrated | Backspin retains its accepted renderer and now supplies semantic targets/events to Batch 0; later curriculum batches remain implementation-ready and sequential |
 | 7 · Paywall | Ready | Pricing and compatibility rules locked |
 | 8 · Convergence and release QA | Ready | Global gates locked |
 
@@ -57,6 +57,62 @@ unit is `.sa-backups/night-ladder-home-20260715-101854`. Protected physics and
 compatibility identifiers are unchanged. This Phase 1 completion does not
 authorize Phase 8 publication; the next owner-directed production action
 remains Academy Batch 0 from the accepted rollout.
+
+## Academy Batch 0 implementation checkpoint
+
+Batch 0 production implementation is handed off on `agent/academy-codex`.
+Source commit range: `2978756..449fc1c`. It adds the 14-experience/13-core
+registry, additive Academy v1 migration, canonical and legacy routing, shared
+experience host, deterministic recommendations, goal-led Academy Home, honest
+progress sheet and the local Control Room voice/caption foundation. Backspin
+retains its accepted six-surface renderer while registering the approved
+semantic targets and emitting surface, model-input, mission, model-boundary and
+mastery events through the shared host.
+
+Fresh final implementation evidence on 2026-07-15:
+
+- `npm run test:academy`: 108/108 PASS (43 foundation plus 65 model, migration,
+  Home, shared-host and Backspin browser cases). The added browser case proves
+  shared Backspin consent/captions, S0/S1 entries and actual build/cut milestone
+  cues in Chromium.
+- `npm run test:webkit`: 47/47 PASS (6 Home/host and 41 accepted Backspin
+  cases). The same shared voice/milestone case passes in WebKit.
+- Non-duplicative final shared matrix: 28/28 evidence, UX and shipping-Home
+  checks PASS; brand and autopilot verifiers PASS. The exact `claude:ready`
+  command was green before the final Backspin adapter; its final affected
+  components were then rerun above instead of duplicating the full matrix.
+- `npm run test:academy-voice`: 18/18 PASS. Development voice-pack verification
+  passes with 11/11 exact captions (3 Home, 8 Backspin), zero remote assets and
+  zero audio files. Strict release verification correctly FAILS CLOSED:
+  `rights-not-approved`, 11 missing licensed assets.
+- `npm run test:perf`: 2/2 PASS; p95 input-to-paint 1.5 ms Chromium / 2.0 ms
+  WebKit over 220 events per engine, budget 16.7 ms.
+- `npm run copy-web` and brand verification PASS. Sixteen modified/created
+  Academy shipping files are byte-identical to their `www/` copies.
+- Four protected physics files remain byte-identical to the pre-Batch-0
+  baseline: `impact-flight.js` `7e5323c3...`,
+  `swing-parameters-and-impact.js` `ae08553b...`, `diagnose-engine.js`
+  `9d1b5e83...`, `diagnose-engine-v2.js` `a7515049...`.
+- Academy Home captures are committed under `outputs/academy-batch0/`.
+  Regeneratable global visreg current captures remain uncommitted.
+
+Batch 0 is **implemented but not accepted**. Do not start Batch 1 yet. Open
+gates are explicit:
+
+- global visual regression is 2/3 PASS: 47/48 captures are within 0.1%; only
+  `chromium--430x932--normal--1-lab.png` is at 0.135% (541 pixels) after the
+  intentional quiet VOICE header action plus canvas raster variation. The
+  baseline was not auto-approved;
+- provenance-blind pairwise judgment for Academy Home/voice UI has not run;
+- final licensed local audio, voice identity, rights evidence and listening
+  gate do not exist yet, so the product remains caption-ready rather than
+  Voice-ready;
+- physical iPhone/offline/audio-route/background-interruption and manual
+  VoiceOver/fatigue checks remain `PENDING OWNER DEVICE/HUMAN GATE`.
+
+Reusable autonomous execution text for later batches is committed at
+`docs/flightglass-autopilot/academy-batch-loop-prompt.md`. It requires the loop
+to fail external gates closed rather than weaken them.
 
 The Backspin 96-97 reference lesson (Phase 6, Tasks 1-11) completed final
 verification on 2026-07-14. Task 10 shipped the lesson through the native
