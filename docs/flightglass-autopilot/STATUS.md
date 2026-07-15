@@ -13,7 +13,7 @@ publication after all Phase 8 gates pass. See `RELEASE-AUTHORIZATION.md`.
 | 3 · Outcome / Compare | Ready | Decisions and references locked in master plan |
 | 4 · Geometry 3D / Strike Window 2D | Ready | Consensus documents named |
 | 5 · Academy overview | Planning active | Outcome-led curriculum blueprint complete; shared native Home/store implementation spec and plan still pending |
-| 6 · Academy lesson system | Backspin STUDIO-GRADE (Tasks 1-20); remaining curriculum planning active | Direction and strike/contact families complete at specification level; later families still in progress; no new production implementation started |
+| 6 · Academy lesson system | Backspin STUDIO-GRADE (Tasks 1-20); remaining curriculum planning active | Direction, strike/contact and launch/spin/descent families complete at specification level; later families still in progress; no new production implementation started |
 | 7 · Paywall | Ready | Pricing and compatibility rules locked |
 | 8 · Convergence and release QA | Ready | Global gates locked |
 
@@ -187,8 +187,32 @@ The frozen strike/contact fixtures pass against the unchanged
 sensitivities, exact z-to-contact-height translation, Attack invariance and
 raw-to-effective Low Point compensation.
 
-Planning remains incomplete. Launch/spin/descent,
-speed/distance/conditions, shared Academy Home/store migration, per-experience
+Launch/spin/descent completed at this checkpoint:
+
+- Delivered Loft & Launch, owning `dynamic-loft` and `launch-angle`:
+  `docs/superpowers/specs/2026-07-15-academy-delivered-loft-launch-design.md`;
+- Backspin curriculum/voice amendment, preserving the accepted Backspin
+  instrument while assigning it `spin-loft` and `backspin`:
+  `docs/superpowers/specs/2026-07-15-academy-backspin-curriculum-amendment.md`;
+- Flight Height & Descent, owning `apex` and `landing-angle`:
+  `docs/superpowers/specs/2026-07-15-academy-flight-height-descent-design.md`.
+
+This family explicitly distinguishes definitions, current-model causality and
+real-world ball flight. Dynamic Loft is the dominant direct per-degree Launch
+input in the current linear transform; Attack is smaller but material. Spin
+Loft is taught in Backspin. Current-engine Backspin rpm does not feed Carry,
+Apex or Landing, so Backspin mastery must not claim it caused those outputs.
+Flight Height & Descent keeps Launch's direct and Apex-mediated paths separate,
+defines both measurements at equal elevation and does not equate Landing Angle
+with stopping distance.
+
+Ten normative flight fixtures and the same-Apex/different-descent transfer pair
+pass against the unchanged `solveFlight()` equations. Official TrackMan
+definitions for Dynamic Loft, Launch Angle, Spin Loft and Landing Angle were
+rechecked on 2026-07-15. `impact-flight.js` remains unedited.
+
+Planning remains incomplete. Speed/distance/conditions, shared Academy
+Home/store migration, per-experience
 implementation plans, the cross-curriculum audit and the final Claude Code
 handoff are still required before the planning program can be called complete.
 

@@ -84,7 +84,10 @@ Completed planning artifacts at this travel checkpoint:
 - `docs/superpowers/specs/2026-07-15-academy-attack-at-impact-design.md`;
 - `docs/superpowers/specs/2026-07-15-academy-low-point-design.md`;
 - `docs/superpowers/specs/2026-07-15-academy-strike-depth-design.md`;
-- `docs/superpowers/specs/2026-07-15-academy-plane-coupling-lab-design.md`.
+- `docs/superpowers/specs/2026-07-15-academy-plane-coupling-lab-design.md`;
+- `docs/superpowers/specs/2026-07-15-academy-delivered-loft-launch-design.md`;
+- `docs/superpowers/specs/2026-07-15-academy-backspin-curriculum-amendment.md`;
+- `docs/superpowers/specs/2026-07-15-academy-flight-height-descent-design.md`.
 
 The blueprint reconciles all 24 stored IDs exactly once. Start Line, Shape and
 Carry Side are now specified surface by surface with exact copy, interaction,
@@ -104,12 +107,21 @@ Plane Coupling is an optional MODEL LAB stored outside core mastery. Its exact
 fixtures and the Low Point/Contact Height invariants were verified against the
 unchanged geometry engine.
 
+The launch/spin/descent family is complete at specification level. Delivered
+Loft & Launch teaches the current 0.62 Dynamic-Loft / 0.25 Attack transform
+without turning coefficients into percentages or hiding Dynamic Loft's other
+model paths. The Backspin amendment preserves the STUDIO-GRADE instrument,
+grandfathers existing progress and states the crucial boundary that calculated
+Backspin rpm does not feed current Carry, Apex or Landing. Flight Height &
+Descent separates Apex from Landing Angle, direct from mediated Launch paths,
+and descent from stopping distance. Ten frozen fixtures plus the same-Apex /
+different-descent live pair pass against the unchanged flight equations.
+
 ## Exact next actions
 
-1. Continue the autonomous planning pass with Delivered Loft & Launch, the
-   Backspin compatibility amendment and Flight Height & Descent.
-2. Then complete speed/distance/conditions, shared Academy Home/store migration
-   specification,
+1. Continue the autonomous planning pass with Speed Transfer, Carry, Air
+   Density and Wind.
+2. Then complete the shared Academy Home/store migration specification,
    per-experience implementation plans, cross-curriculum audit and sequential
    Claude Code handoff.
 3. Do not begin production implementation or modify `impact-flight.js` during
