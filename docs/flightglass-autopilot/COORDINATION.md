@@ -13,7 +13,7 @@ wait.
 
 | Agent | Branch | Working on | Since |
 |-------|--------|-----------|-------|
-| _None_ | — | — | — |
+| Codex | `agent/academy-codex` | Model/effort routing policy in `CLAUDE.md` plus local Codex profiles; no Academy shipping files | 2026-07-15 |
 
 ## Queue / free to take
 
