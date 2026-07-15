@@ -13,7 +13,7 @@ wait.
 
 | Agent | Branch | Working on | Since |
 |-------|--------|-----------|-------|
-| _None_ | — | — | — |
+| Codex | `agent/academy-codex` | ElevenLabs Academy voice-production tooling: `.gitignore`, `package.json`, new `scripts/academy-voice-production*`, production runbook/evidence templates; no paid generation or final audio assets in this claim | 2026-07-15 |
 
 ## Queue / free to take
 
