@@ -70,15 +70,44 @@ none has its own approved plan/spec pair. Existing path, polish, low-point and
 v2 documents remain source material, not authorization to improvise a new
 production design.
 
+On 2026-07-15 the owner then explicitly authorized a comprehensive,
+outcome-led planning pass for the full Academy without approval pauses between
+modules. The active work is design and implementation planning only; no
+production code or protected physics may change.
+
+Completed planning artifacts at this travel checkpoint:
+
+- `docs/superpowers/specs/2026-07-15-academy-outcome-curriculum-blueprint.md`;
+- `docs/superpowers/specs/2026-07-15-academy-start-line-design.md`;
+- `docs/superpowers/specs/2026-07-15-academy-shape-design.md`;
+- `docs/superpowers/specs/2026-07-15-academy-shot-pattern-design.md`.
+
+The blueprint reconciles all 24 stored IDs exactly once. Start Line, Shape and
+Carry Side are now specified surface by surface with exact copy, interaction,
+voice, model/truth boundaries, live mastery, accessibility, migration and
+acceptance evidence. The learner-facing name **Carry Side** replaces “Shot
+Pattern”; `shot-pattern` remains the internal ID. This prevents one
+deterministic result from being misrepresented as dispersion.
+
+No production file changed. Numeric direction-family fixtures were verified
+against the current protected `solveFlight()` implementation, and
+`impact-flight.js` remains untouched.
+
 ## Exact next actions
 
-1. When an approved Phase 5 or per-lesson plan/spec pair is added, resume the
-   Academy completion loop from STATUS and implement that next planned item.
-2. Keep gate acceptance separate from derived scores: zero critical defects,
+1. Continue the autonomous planning pass with `attack-at-impact`, `low-point`,
+   `strike-depth` and the optional `plane-coupling-lab` specifications.
+2. Then complete launch/spin/descent, speed/distance/conditions, the Backspin
+   compatibility amendment, shared Academy Home/store migration specification,
+   per-experience implementation plans, cross-curriculum audit and sequential
+   Claude Code handoff.
+3. Do not begin production implementation or modify `impact-flight.js` during
+   this planning goal.
+4. Keep gate acceptance separate from derived scores: zero critical defects,
    every category floor, all critical checks and pairwise-blind must each pass.
-3. Owner runs the delivered §6 package: physical-iPhone performance session,
+5. Owner runs the delivered §6 package: physical-iPhone performance session,
    manual VoiceOver, and the five-person five-second test. These are release
    checkpoints, not permission to invent missing lesson plans.
-4. Do not generalize the remaining lessons, take a release decision or publish
+6. Do not take a release decision or publish
    stores until their recorded gates and the applicable release boundary pass.
-5. Push the current `agent/travel-sync` checkpoint before the next pause.
+7. Push each completed planning-family checkpoint to `agent/travel-sync`.

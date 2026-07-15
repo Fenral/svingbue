@@ -12,8 +12,8 @@ publication after all Phase 8 gates pass. See `RELEASE-AUTHORIZATION.md`.
 | 2 · Range / Visualise | Ready | Decisions and references locked in master plan |
 | 3 · Outcome / Compare | Ready | Decisions and references locked in master plan |
 | 4 · Geometry 3D / Strike Window 2D | Ready | Consensus documents named |
-| 5 · Academy overview | Parked | Waiting for its own approved `docs/superpowers/plans/` + `specs/` pair |
-| 6 · Academy lesson system | Backspin STUDIO-GRADE (Tasks 1-20); 23 lessons parked | Four acceptance gates green; remaining lessons wait for per-lesson plan/spec pairs |
+| 5 · Academy overview | Planning active | Outcome-led curriculum blueprint complete; shared native Home/store implementation spec and plan still pending |
+| 6 · Academy lesson system | Backspin STUDIO-GRADE (Tasks 1-20); remaining curriculum planning active | Direction family complete at specification level; strike/contact and later families still in progress; no new production implementation started |
 | 7 · Paywall | Ready | Pricing and compatibility rules locked |
 | 8 · Convergence and release QA | Ready | Global gates locked |
 
@@ -134,6 +134,41 @@ sequence. The required plan/spec inventory was checked on 2026-07-15:
 There is no further Academy implementation item with the required approved
 plan/spec pair. The next loop iteration begins when one such pair is added;
 product design is not improvised from older notes.
+
+## Academy outcome-curriculum planning checkpoint
+
+The owner explicitly authorized an uninterrupted end-to-end planning pass on
+2026-07-15. This pass may make and document curriculum/design decisions without
+module-by-module approval, but it does not authorize production-code or
+physics-engine changes.
+
+Completed at this checkpoint:
+
+- normative curriculum blueprint with 24/24 stored topic IDs assigned exactly
+  once to 13 core experiences plus one optional advanced model lab:
+  `docs/superpowers/specs/2026-07-15-academy-outcome-curriculum-blueprint.md`;
+- Start Line specification, owning `face-angle`, `club-path` and
+  `start-direction`:
+  `docs/superpowers/specs/2026-07-15-academy-start-line-design.md`;
+- Shape specification, owning `spin-axis` and `curve`:
+  `docs/superpowers/specs/2026-07-15-academy-shape-design.md`;
+- Carry Side integration specification, owning `offline`:
+  `docs/superpowers/specs/2026-07-15-academy-shot-pattern-design.md`.
+
+Critical naming correction: `shot-pattern` remains the canonical internal
+experience ID, but the learner-visible outcome is **Carry Side**. One
+deterministic simulated shot is not a statistical shot pattern or dispersion.
+
+The three direction experiences include exact S0-S5 copy, interactions,
+voice/caption behavior, engine-verified fixtures, causal roles, truth labels,
+accessibility, migration semantics, mastery gates and acceptance evidence.
+Start Line, Shape and Carry Side fixtures were generated from the unchanged
+`solveFlight()` implementation. `impact-flight.js` has not been edited.
+
+Planning remains incomplete. Strike/contact, launch/spin/descent,
+speed/distance/conditions, shared Academy Home/store migration, per-experience
+implementation plans, the cross-curriculum audit and the final Claude Code
+handoff are still required before the planning program can be called complete.
 
 ## Parked refinements (non-blocking, reference-shell polish)
 
