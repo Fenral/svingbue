@@ -53,6 +53,12 @@ test('legacy Attack Angle completion becomes reviewable without silent mastery o
   assert.equal(experience.status,'practiced');assert.equal(experience.reviewEligible,true);assert.deepEqual(experience.legacyEvidence,['attack-angle']);assert.equal(experience.acceptedAttemptId,null);assert.equal(experience.evidence.liveTransferPassed,false);assert.equal(next.xp,0);
 });
 
+test('legacy Low Point completion is placement evidence only and never rewards itself', () => {
+  const seed=createAcademySeed();seed.lessons['low-point'].completed=true;seed.lessons['low-point'].mastered=true;
+  const next=migrateOutcomeAcademy(seed,{now:NOW});const experience=next.experiences['low-point'];
+  assert.equal(experience.status,'practiced');assert.equal(experience.reviewEligible,true);assert.deepEqual(experience.legacyEvidence,['low-point']);assert.equal(experience.acceptedAttemptId,null);assert.equal(experience.evidence.liveTransferPassed,false);assert.equal(next.xp,0);
+});
+
 test('accepted native Backspin is grandfathered once with a zero-value reward guard', () => {
   const seed = createAcademySeed();
   seed.xp = 420;

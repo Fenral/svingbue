@@ -239,7 +239,7 @@ export function mountStartLineExperience(options={}) {
     if(destroyed)return;
     if(progress.surface===4)ensureMasteryAttempt();
     const body=[missionHtml,labHtml,influenceHtml,mythsHtml,masteryHtml,resultHtml][progress.surface]();
-    root.innerHTML=shellHtml(body);wire();registerVoiceTargets();
+    const voiceSlot=root.querySelector('[data-academy-voice-slot]');root.innerHTML=shellHtml(body);const nextVoiceSlot=root.querySelector('[data-academy-voice-slot]');if(voiceSlot?.hasChildNodes()&&nextVoiceSlot)nextVoiceSlot.replaceWith(voiceSlot);wire();registerVoiceTargets();
     if(announceSurface)onVoiceSurface(progress.surface,SURFACE_CUES[progress.surface]);
   }
 
