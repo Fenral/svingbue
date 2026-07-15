@@ -20,6 +20,7 @@
 <link rel="stylesheet" href="./academy-low-point.css" />
 <link rel="stylesheet" href="./academy-contact-height.css" />
 <link rel="stylesheet" href="./academy-delivered-loft-launch.css" />
+<link rel="stylesheet" href="./academy-flight-height-descent.css" />
 <style>
   :root{
     /* ══ P3 "Ultraviolet Ember" — colour + type consumed from sa-p3.css ══
@@ -740,7 +741,7 @@
   import { experienceById } from './academy-curriculum.js';
   import { acceptExperienceAttempt, normalizeAcademyStore, setVoiceMode as updateVoiceMode, markVoiceCueSeen } from './academy-store.js';
   import { resolveAcademyRoute } from './academy-router.js';
-  import { selectAcademyAction } from './academy-journey-router.js';
+  import { canEnterMastery, selectAcademyAction } from './academy-journey-router.js';
   import { buildAcademyHomeViewModel, mountAcademyHome } from './academy-home.js';
   import { createAcademyExperienceHost } from './academy-experience-host.js';
   import { createAcademyVoiceController } from './academy-voice.js';
@@ -761,6 +762,8 @@
   import { contactHeightCue } from './academy-contact-height-content.js';
   import { mountDeliveredLoftLaunchExperience } from './academy-delivered-loft-launch-experience.js';
   import { deliveredLoftLaunchCue } from './academy-delivered-loft-launch-content.js';
+  import { mountFlightHeightDescentExperience } from './academy-flight-height-descent-experience.js';
+  import { flightHeightDescentCue } from './academy-flight-height-descent-content.js';
 
   /* ══ DATA ══ */
   const GRAPH = JSON.parse(document.getElementById('graph-data').textContent);
@@ -1583,6 +1586,12 @@
         const cleanup=mountDeliveredLoftLaunchExperience({...input,prerequisiteMet:store.experiences?.['attack-at-impact']?.status==='mastered',backspinMastered:store.experiences?.backspin?.status==='mastered',onVoiceSurface:(surface,cueId)=>{currentSurface=surface;deliver(cueId);},onVoiceInterrupt:reason=>voiceController.stop(reason),onVoiceMilestone:cueId=>deliver(cueId)});
         voiceUi=mountAcademyVoiceUi({root:app.querySelector('[data-academy-voice-slot]'),controller:voiceController,getMode:()=>store.preferences.voice.mode,showInlineChoice:false,onModeChange:mode=>{if(mode!=='off')deliver(['academy.delivered-launch.s0.entry','academy.delivered-launch.s1.entry','academy.delivered-launch.s2.entry',null,'academy.delivered-launch.s4.live',null][currentSurface]);}});voiceUi.update(voiceController.getState());return cleanup;
       },
+      'flight-height-descent':input => {
+        let currentSurface=Number.isInteger(input.surface)?input.surface:0;
+        const deliver=cueId=>{const cue=cueId&&flightHeightDescentCue(cueId);return cue?voiceController.deliverAutomatic(cue):null;};
+        const cleanup=mountFlightHeightDescentExperience({...input,prerequisiteMet:canEnterMastery('flight-height-descent',store).allowed,onVoiceSurface:(surface,cueId)=>{currentSurface=surface;deliver(cueId);},onVoiceInterrupt:reason=>voiceController.stop(reason),onVoiceMilestone:cueId=>deliver(cueId)});
+        voiceUi=mountAcademyVoiceUi({root:app.querySelector('[data-academy-voice-slot]'),controller:voiceController,getMode:()=>store.preferences.voice.mode,showInlineChoice:false,onModeChange:mode=>{if(mode!=='off')deliver(['academy.flight-height.s0.entry','academy.flight-height.s1.entry','academy.flight-height.s2.entry','academy.flight-height.s3.entry','academy.flight-height.s4.entry',null][currentSurface]);}});voiceUi.update(voiceController.getState());return cleanup;
+      },
       'backspin-native':({ surface, state:experienceState, voiceTargets:hostVoiceTargets }) => {
         const li = levelInfo(store.xp);
         let currentVoiceSurface = Number.isInteger(surface) ? surface : getJourney('backspin').surface;
@@ -1906,7 +1915,7 @@
     if (h.indexOf('#/proto') === 0) renderProto();
     else if (parsed.view === 'home') renderAcademyHome();
     else if (parsed.view === 'explore') renderPath();
-    else if (parsed.legacy && !['backspin','start-line','shape','shot-pattern','attack-at-impact','low-point','strike-depth','delivered-loft-launch'].includes(parsed.experienceId) && LESSONS[parsed.conceptId]) renderLesson(parsed.conceptId);
+    else if (parsed.legacy && !['backspin','start-line','shape','shot-pattern','attack-at-impact','low-point','strike-depth','delivered-loft-launch','flight-height-descent'].includes(parsed.experienceId) && LESSONS[parsed.conceptId]) renderLesson(parsed.conceptId);
     else renderOutcomeExperience(parsed);
     window.scrollTo(0,0);
     // Move focus to the new view's heading on every SPA route change, but not on the very

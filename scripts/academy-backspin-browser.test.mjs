@@ -2849,10 +2849,10 @@ test('Backspin Mastery keeps one stable attempt, submits atomically and upgrades
   const beforeLockedNext = await hapticLog(page);
   await root.locator('[data-action="next-lesson"]').click();
   await page.waitForFunction(() => location.hash === '#/experience/flight-height-descent/surface/0');
-  await page.locator('.academy-unavailable h1').waitFor();
+  await page.locator('#flightHeightDescentExperience h1').waitFor();
   assert.deepEqual(await hapticLog(page), beforeLockedNext,
     'Shared next-action navigation must not emit a haptic');
-  assert.equal((await page.locator('.academy-unavailable h1').textContent()).trim(), 'Flight Height & Descent');
+  assert.equal((await page.locator('#flightHeightDescentExperience h1').textContent()).trim(), 'Same peak. Different return.');
   stored = await storedAcademy(page);
   assert.equal(stored.lastOpened, 'flight-height-descent');
 
@@ -3032,8 +3032,8 @@ test('fresh 5/5 mastery earns 190 XP, persists every ability and follows unlocke
   const beforeUnlockedNext = await hapticLog(page);
   await root.locator('[data-action="next-lesson"]').click();
   await page.waitForFunction(() => location.hash === '#/experience/flight-height-descent/surface/0');
-  await page.locator('.academy-unavailable h1').waitFor();
-  assert.equal((await page.locator('.academy-unavailable h1').textContent()).trim(), 'Flight Height & Descent');
+  await page.locator('#flightHeightDescentExperience h1').waitFor();
+  assert.equal((await page.locator('#flightHeightDescentExperience h1').textContent()).trim(), 'Same peak. Different return.');
   assert.equal(await page.locator('#nativeLesson').count(), 0);
   assert.deepEqual(await hapticLog(page), beforeUnlockedNext,
     'An unlocked next-lesson navigation must not emit a haptic');

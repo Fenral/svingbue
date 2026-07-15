@@ -1,0 +1,54 @@
+.flight-height{--lp-green:#78d8ff;--fh-violet:#a99bff;--fh-amber:#ffc06f}
+.flight-height__profile{margin:8px 0;border:1px solid var(--lp-line);background:#0a0e14}
+.flight-height__profile svg{display:block;width:100%;height:210px}
+.fh-horizon{stroke:rgba(247,248,251,.35);stroke-width:1}
+.fh-profile{fill:none;stroke:var(--lp-green);stroke-width:2.5}
+.fh-profile--ghost{stroke:var(--fh-violet);stroke-width:1.5;stroke-dasharray:6 4}
+.fh-apex{stroke:var(--fh-violet);stroke-width:1;stroke-dasharray:3 3}
+.fh-descent{stroke:var(--fh-amber);stroke-width:2}
+.fh-descent--ghost{stroke:var(--fh-violet);stroke-width:1.5;stroke-dasharray:4 3}
+.flight-height__profile text{fill:var(--lp-muted);font:7px var(--f-mono,monospace)}
+.flight-height__profile figcaption{padding:9px;border-top:1px solid var(--lp-line);display:grid;gap:5px}
+.flight-height__profile figcaption>span,.flight-height__profile figcaption small{color:var(--lp-muted);font:700 8px var(--f-mono,monospace)}
+.flight-height__profile figcaption>div{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.flight-height__profile figcaption strong{color:var(--lp-green);font:700 13px var(--f-mono,monospace)}
+.flight-height__profile figcaption strong+strong{color:var(--fh-amber);text-align:right}
+.flight-height__pair{padding-top:5px;border-top:1px solid var(--lp-line);display:grid!important;grid-template-columns:1fr 1fr!important;gap:8px}
+.flight-height__pair span{color:var(--lp-muted);font:700 8px var(--f-mono,monospace)}
+.flight-height__boundaries{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:8px 0}
+.flight-height__boundaries button,.flight-height__boundaries span{min-height:44px;padding:7px;border:1px solid var(--lp-line);background:transparent;color:var(--lp-muted);font:700 8px var(--f-mono,monospace);text-align:left}
+.flight-height__boundaries span{grid-column:1/3;min-height:0;text-align:center}
+.flight-height__tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:8px 0}
+.flight-height__tabs--five{grid-template-columns:repeat(5,1fr)}
+.flight-height__tabs button,.flight-height__fixtures button{min-height:44px;padding:7px;border:1px solid var(--lp-line);background:transparent;color:var(--lp-muted);font:700 8px var(--f-mono,monospace)}
+.flight-height__fixtures{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:7px 0}
+.flight-height__fixtures [aria-pressed=true]{border-color:var(--lp-green);color:var(--lp-green)}
+.flight-height__ledger{border:1px solid var(--lp-line);background:var(--lp-panel)}
+.flight-height__ledger>div{min-height:38px;padding:7px 10px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--lp-line)}
+.flight-height__ledger>div:last-child{border:0}
+.flight-height__ledger span{color:var(--lp-muted);font:700 8px var(--f-mono,monospace)}
+.flight-height__ledger strong{color:var(--lp-ink);font:700 11px var(--f-mono,monospace)}
+.flight-height__ledger>div:nth-last-child(-n+2) strong{color:var(--fh-amber)}
+.flight-height__controls{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:8px 0}
+.flight-height__controls label{display:grid;grid-template-columns:1fr auto;color:var(--lp-muted);font-size:10px}
+.flight-height__controls output{color:var(--lp-ink);font:700 10px var(--f-mono,monospace)}
+.flight-height__controls input{grid-column:1/3;width:100%;height:44px;accent-color:var(--lp-green)}
+.flight-height .low-point__captures small{display:block;margin-top:3px}
+.flight-height [data-live-feedback]{margin:4px 0}
+.flight-height [data-voice-emphasis]{outline:2px solid var(--lp-green);outline-offset:3px}
+@media(max-width:430px){
+  .flight-height__profile svg{height:158px}
+  .flight-height__profile figcaption>div{grid-template-columns:1fr}
+  .flight-height__profile figcaption strong+strong{text-align:left}
+  .flight-height__pair{grid-template-columns:1fr 1fr!important}
+  .flight-height__tabs--five{grid-template-columns:repeat(3,1fr)}
+  .flight-height__controls{grid-template-columns:1fr}
+  .flight-height__boundaries{grid-template-columns:1fr}
+  .flight-height__boundaries span{grid-column:auto}
+}
+@media(max-width:380px){
+  .flight-height__profile svg{height:140px}
+  .flight-height__tabs{grid-template-columns:1fr 1fr}
+  .flight-height__fixtures{grid-template-columns:1fr 1fr}
+  .flight-height__profile figcaption small{display:none}
+}

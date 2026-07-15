@@ -125,7 +125,7 @@ function normalizeExperience(raw, definition, lessons, now, ledger) {
     unlockedSurfaces:unique([0, ...array(source.unlockedSurfaces).filter(Number.isInteger).filter(value => value >= 0 && value <= 5)]).sort((a,b) => a-b),
     startedAt:iso(source.startedAt), lastVisitedAt:iso(source.lastVisitedAt), masteredAt,
     reviewEligible:Boolean(source.reviewEligible || allLegacyComplete
-      || (definition.id === 'backspin' && legacyEvidence.length > 0)),
+      || (['backspin','flight-height-descent'].includes(definition.id) && legacyEvidence.length > 0)),
     placementPassed:Boolean(source.placementPassed), legacyEvidence, evidence,
     activeAttempt:object(source.activeAttempt) ? clone(source.activeAttempt) : null,
     acceptedAttemptId

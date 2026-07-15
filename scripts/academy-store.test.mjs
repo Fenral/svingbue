@@ -111,6 +111,14 @@ test('both Backspin aliases merge into one canonical record and no duplicate rew
   assert.equal(next.xp,140);
 });
 
+test('either Apex or Landing history opens the combined profile review without mastery',()=>{
+  for(const conceptId of ['apex','landing-angle']){
+    const seed=createAcademySeed();seed.lessons[conceptId].completed=true;seed.xp=55;
+    const next=migrateOutcomeAcademy(seed,{now:NOW}),experience=next.experiences['flight-height-descent'];
+    assert.equal(experience.status,'practiced');assert.equal(experience.reviewEligible,true);assert.deepEqual(experience.legacyEvidence,[conceptId]);assert.equal(experience.acceptedAttemptId,null);assert.equal(next.xp,55);
+  }
+});
+
 test('mastery requires 4/5 plus live transfer and rewards only once', () => {
   const seed = createAcademySeed();
   const base = { attemptId:'attempt-a', experienceId:'start-line', contentVersion:1, knowledgeTotal:5, liveTransferEvidence:{ fixtureIds:['a'] } };
