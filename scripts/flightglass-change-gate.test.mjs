@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import {
   buildCommandPlan,
@@ -12,6 +13,10 @@ import {
 
 const ids = (assessment) => buildCommandPlan(assessment).map((control) => control.id);
 const cli = fileURLToPath(new URL('./flightglass-change-gate.mjs', import.meta.url));
+const browserSpotSource = readFileSync(
+  new URL('./flightglass-browser-spot.mjs', import.meta.url),
+  'utf8'
+);
 
 test('documentation-only changes stay at level A without runtime work', () => {
   const assessment = classifyChanges(['docs/notes.md']);
@@ -53,6 +58,13 @@ test('the browser harness runs one real WebKit Home spot when it changes', () =>
   const assessment = classifyChanges(['scripts/flightglass-browser-spot.mjs']);
   assert.equal(assessment.level, 'B');
   assert.deepEqual(ids(assessment), ['gate-contract', 'chromium-spot', 'webkit-spot']);
+});
+
+test('browser inspection excludes targets covered by a blocking layer', () => {
+  assert.match(browserSpotSource, /document\.elementFromPoint/);
+  assert.match(browserSpotSource, /element\.contains\(hit\)/);
+  assert.match(browserSpotSource, /activeModal\.contains\(element\)/);
+  assert.match(browserSpotSource, /scopedSet\.has\(peer\)/);
 });
 
 test('physics changes are C and use the complete current-main plan once', () => {

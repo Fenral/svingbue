@@ -121,6 +121,16 @@ function ignoredResource(url = '') {
 
 async function inspectPage(page, requiredSelectors) {
   return page.evaluate(async (selectors) => {
+    const interactiveSelector = [
+      'a',
+      'button',
+      'input',
+      'select',
+      'textarea',
+      '[role="button"]',
+      '[role="slider"]',
+      '[tabindex]:not([tabindex="-1"])'
+    ].join(',');
     const visible = (element) => {
       const style = getComputedStyle(element);
       const rect = element.getBoundingClientRect();
@@ -130,16 +140,52 @@ async function inspectPage(page, requiredSelectors) {
         && rect.width > 0
         && rect.height > 0;
     };
+    const modalCandidates = [...document.querySelectorAll(
+      'dialog[open], [role="dialog"][aria-modal="true"], [role="alertdialog"][aria-modal="true"]'
+    )].filter((element) => visible(element));
+    const activeModal = modalCandidates.find((modal) => modal.contains(document.activeElement))
+      || modalCandidates.at(-1)
+      || null;
+    const candidates = [...document.querySelectorAll(interactiveSelector)]
+      .filter((element) => visible(element)
+        && !element.matches(':disabled')
+        && element.getAttribute('aria-disabled') !== 'true'
+        && !element.closest('[aria-hidden="true"], [inert]'));
+    const scoped = activeModal
+      ? candidates.filter((element) => activeModal.contains(element))
+      : candidates;
+    const scopedSet = new Set(scoped);
+    const reachable = (element) => {
+      const rect = element.getBoundingClientRect();
+      const left = Math.max(0, rect.left);
+      const top = Math.max(0, rect.top);
+      const right = Math.min(innerWidth, rect.right);
+      const bottom = Math.min(innerHeight, rect.bottom);
+      if (right <= left || bottom <= top) return false;
+
+      const insetX = (right - left) * 0.2;
+      const insetY = (bottom - top) * 0.2;
+      const points = [
+        [(left + right) / 2, (top + bottom) / 2],
+        [left + insetX, top + insetY],
+        [right - insetX, top + insetY],
+        [left + insetX, bottom - insetY],
+        [right - insetX, bottom - insetY]
+      ];
+      return points.some(([x, y]) => {
+        const hit = document.elementFromPoint(x, y);
+        if (!hit) return false;
+        if (hit === element || element.contains(hit)) return true;
+        const peer = hit.closest?.(interactiveSelector);
+        return Boolean(peer && scopedSet.has(peer));
+      });
+    };
     const selectorFor = (element) => {
       if (element.id) return `#${element.id}`;
       const classes = [...element.classList].slice(0, 2).map((name) => `.${name}`).join('');
       return `${element.tagName.toLowerCase()}${classes}`;
     };
-    const interactive = [...document.querySelectorAll(
-      'a,button,input,select,textarea,[role="button"],[role="slider"],[tabindex]:not([tabindex="-1"])'
-    )].filter((element) => visible(element)
-      && !element.disabled
-      && element.getAttribute('aria-hidden') !== 'true');
+    const interactive = scoped.filter((element) => reachable(element));
     const targets = interactive.map((element) => {
       const rect = element.getBoundingClientRect();
       return {
