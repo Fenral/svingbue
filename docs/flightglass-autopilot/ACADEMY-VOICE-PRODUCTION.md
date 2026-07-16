@@ -1,6 +1,6 @@
 # Academy Control Room production runbook
 
-Updated: 2026-07-15
+Updated: 2026-07-16
 
 This runbook produces the `control-room-en-us-v1` pack with ElevenLabs at build
 time. The shipping application remains offline and never calls ElevenLabs.
@@ -40,6 +40,7 @@ npm run voice:explore
 npm run voice:refine -- --finalists B,E
 npm run voice:pace-refine -- --candidate R3-D
 npm run voice:pace-preview -- --candidate R3-D --speed 0.8
+npm run voice:british-audition -- --speed 0.8
 npm run voice:generate
 ```
 
@@ -112,6 +113,22 @@ This makes one paid TTS call on the shared audition copy and writes an ignored
 MP3 under `pace-refinement-round-4/speed-previews/`. It neither selects the
 voice nor generates the full pack.
 
+To challenge R3-D with a British direction, use the British Systems Engineer
+round. One Voice Design call creates three identities; three TTS calls render
+them at the same `0.8` speed as R3-D. All four files then pass through the same
+shipping normalization before being shuffled together:
+
+```powershell
+npm run voice:british-audition -- --speed 0.8
+npm run voice:british-audition -- --speed 0.8 --execute --confirm-paid-api
+```
+
+The dry run reports four paid calls and 1,356 characters. Listen only under
+`.voice-production/control-room-en-us-v1/british-systems-engineer-round-5/blind/`.
+Judge technical clarity, authority without distance, low fatigue and absence of
+posh/BBC/assistant affect. One anonymous file is the R3-D control. Record one
+`R5-*` winner before opening the private provenance map.
+
 Create the selected designed voice from any round. If an approved pace preview
 used a non-default speed, pass that same value to selection so full generation
 records and reuses it:
@@ -121,6 +138,7 @@ npm run voice:select -- --candidate A --execute --confirm-paid-api
 npm run voice:select -- --candidate R2-A --execute --confirm-paid-api
 npm run voice:select -- --candidate R3-A --speed 0.8 --execute --confirm-paid-api
 npm run voice:select -- --candidate R4-A --speed 0.8 --execute --confirm-paid-api
+npm run voice:select -- --candidate R5-A --speed 0.8 --execute --confirm-paid-api
 ```
 
 Run only one of those commands and replace the example with the recorded blind

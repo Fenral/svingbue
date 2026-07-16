@@ -6,6 +6,7 @@ import { join } from 'node:path';
 import {
   ALTERNATIVE_DIRECTIONS,
   AUDITION_LINES,
+  BRITISH_SYSTEMS_ENGINEER_DIRECTION,
   PACE_REFINEMENT_DIRECTION,
   VOICE_DIRECTIONS,
   academyVoiceCatalog,
@@ -13,6 +14,7 @@ import {
   buildFfmpegArgs,
   createAuditionRequests,
   createAlternativeRequests,
+  createBritishVoiceDesignRequest,
   createPaceRefinementRequest,
   createRefinementRequests,
   createTtsRequest,
@@ -84,6 +86,23 @@ test('alternative round explores three distinct Flightglass brand voices on iden
   assert.equal(requests.some(request => 'xi-api-key' in request.body), false);
 });
 
+test('British Systems Engineer audition is neutral, restrained and directly comparable with R3-D', async () => {
+  const request = createBritishVoiceDesignRequest();
+  assert.equal(request.body.text, AUDITION_LINES.join(' '));
+  assert.equal(request.body.auto_generate_text, false);
+  assert.match(BRITISH_SYSTEMS_ENGINEER_DIRECTION, /mature British female systems engineer/i);
+  assert.match(BRITISH_SYSTEMS_ENGINEER_DIRECTION, /neutral contemporary Southern British accent/i);
+  assert.match(BRITISH_SYSTEMS_ENGINEER_DIRECTION, /never posh.*BBC-like.*assistant-like/i);
+  assert.equal('xi-api-key' in request.body, false);
+  const dryRun = await main(['british-audition', '--speed', '0.8']);
+  assert.equal(dryRun.candidateCount, 4);
+  assert.equal(dryRun.britishCandidates, 3);
+  assert.equal(dryRun.controlCandidate, 'R3-D');
+  assert.equal(dryRun.speed, 0.8);
+  assert.equal(dryRun.paidProviderCalls, 4);
+  assert.equal(dryRun.characters, AUDITION_LINES.join(' ').length * 4);
+});
+
 test('pace refinement preserves one R3 identity while explicitly slowing the delivery', () => {
   const request = createPaceRefinementRequest({
     blindLabel: 'R3-D',
@@ -108,7 +127,8 @@ test('round-two selection stays on its separate private provenance map', () => {
   assert.equal(selectionProvenanceFile('r2-e'), 'refinement-round-2-provenance.json');
   assert.equal(selectionProvenanceFile('r3-i'), 'alternative-round-3-provenance.json');
   assert.equal(selectionProvenanceFile('r4-c'), 'pace-refinement-round-4-provenance.json');
-  assert.throws(() => selectionProvenanceFile('R5-A'));
+  assert.equal(selectionProvenanceFile('r5-d'), 'british-systems-engineer-round-5-provenance.json');
+  assert.throws(() => selectionProvenanceFile('R6-A'));
 });
 
 test('TTS request preserves caption truth while expanding spoken rpm', () => {

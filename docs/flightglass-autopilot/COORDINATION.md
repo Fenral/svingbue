@@ -13,7 +13,7 @@ wait.
 
 | Agent | Branch | Working on | Since |
 |-------|--------|-----------|-------|
-| Codex | `agent/academy-codex` | British Systems Engineer blind Voice audition; `scripts/academy-voice-production*`, `package.json`, Voice production runbook | 2026-07-16 |
+| _None_ | — | — | — |
 
 ## Queue / free to take
 
@@ -30,6 +30,13 @@ wait.
   pair before build.
 
 ## Done / handed off
+
+- Academy British Systems Engineer Voice audition — `agent/academy-codex`;
+  three neutral contemporary British female identities were rendered through
+  the same `0.8` TTS speed and shipping normalization as the anonymous R3-D
+  control. Four unique `R5-*` files are provenance-blind, technically measured
+  and ready for owner listening; Voice is 31/31 green. No winner was selected
+  and the 102-cue pack remains pending.
 
 - Academy R3-D pace refinement — `agent/academy-codex`; one resume-safe Remix
   produced three unique `R4-*` candidates, but measurement correctly rejected

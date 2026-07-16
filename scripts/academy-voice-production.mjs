@@ -75,6 +75,8 @@ export const ALTERNATIVE_DIRECTIONS = Object.freeze({
   performanceScientist: 'Adult female elite golf performance scientist speaking General American English. Observant, practical and technically fluent with subtle athletic energy and humane curiosity. Clear grounded register, restrained warmth, concise 150 to 155 words-per-minute delivery and natural short pauses. Sounds like a scientist beside the player, never a motivational coach, virtual assistant, broadcaster, intimate narrator or theatrical character.'
 });
 
+export const BRITISH_SYSTEMS_ENGINEER_DIRECTION = 'Mature British female systems engineer with a neutral contemporary Southern British accent. Grounded lower-middle register, calm authority, restrained warmth and precise technical diction. Natural and unhurried at low phone volume. Never posh, theatrical, BBC-like, breathy, maternal or assistant-like.';
+
 export const PACE_REFINEMENT_DIRECTION = 'Preserve this exact voice identity, mature character, accent, authority and grounded timbre. Slow the delivery to 150 to 160 words per minute with deliberate but natural short pauses between ideas. Keep the energy controlled, the warmth restrained and the technical diction exceptionally clear at low phone volume. Do not make the voice softer, older, breathier, theatrical, coachy or robotic; change pacing and emphasis, not identity.';
 
 const sha256 = value => createHash('sha256').update(value).digest('hex');
@@ -173,6 +175,21 @@ export function createAlternativeRequests() {
       guidance_scale: 3
     }
   }));
+}
+
+export function createBritishVoiceDesignRequest() {
+  return {
+    direction: 'britishSystemsEngineer',
+    body: {
+      voice_description: BRITISH_SYSTEMS_ENGINEER_DIRECTION,
+      text: AUDITION_LINES.join(' '),
+      auto_generate_text: false,
+      loudness: 0.05,
+      quality: 0.9,
+      seed: 8501,
+      guidance_scale: 4
+    }
+  };
 }
 
 export function createPaceRefinementRequest(candidate) {
@@ -542,6 +559,149 @@ async function createPacePreview(args) {
   };
 }
 
+async function createBritishSystemsEngineerAudition(args) {
+  requireTool('ffmpeg'); requireTool('ffprobe');
+  const speed = productionSpeed(argumentValue(args, '--speed') || 0.8);
+  const roundRoot = resolve(WORK_ROOT, 'british-systems-engineer-round-5');
+  const designRoot = resolve(roundRoot, 'voice-design');
+  const ttsRoot = resolve(roundRoot, 'tts');
+  const normalizedRoot = resolve(roundRoot, 'normalized');
+  const blindRoot = resolve(roundRoot, 'blind');
+  const privateRoot = resolve(WORK_ROOT, 'private');
+  const progressPath = resolve(privateRoot, 'british-systems-engineer-round-5-progress.json');
+  const provenancePath = resolve(privateRoot, 'british-systems-engineer-round-5-provenance.json');
+  ensureDir(designRoot); ensureDir(ttsRoot); ensureDir(normalizedRoot); ensureDir(blindRoot); ensureDir(privateRoot);
+
+  if (existsSync(provenancePath)) {
+    const existing = JSON.parse(readFileSync(provenancePath, 'utf8'));
+    if (existing.ttsSpeed !== speed) throw new Error('Existing British audition uses a different TTS speed.');
+    return {
+      existing: true,
+      candidateCount: existing.candidates.length,
+      britishCandidates: existing.candidates.filter(item => item.comparisonRole === 'british-challenger').length,
+      controlCandidate: 'R3-D',
+      speed,
+      blindDirectory: relative(ROOT, blindRoot).replaceAll('\\', '/'),
+      paidProviderCalls: 0
+    };
+  }
+
+  const roundThreePath = resolve(privateRoot, 'alternative-round-3-provenance.json');
+  const controlRawPath = resolve(WORK_ROOT, 'pace-refinement-round-4', 'speed-previews', 'R3-D-speed-0_80.mp3');
+  if (!existsSync(roundThreePath) || !existsSync(controlRawPath)) throw new Error('R3-D at speed 0.8 is required as the blind control.');
+  const roundThree = JSON.parse(readFileSync(roundThreePath, 'utf8'));
+  const controlSource = roundThree.candidates.find(item => item.blindLabel === 'R3-D');
+  if (!controlSource?.generatedVoiceId) throw new Error('R3-D private provenance is incomplete.');
+
+  const key = requireApiKey();
+  const progress = existsSync(progressPath)
+    ? JSON.parse(readFileSync(progressPath, 'utf8'))
+    : { schemaVersion: 1, ttsSpeed: speed, designCandidates: [], baseVoices: [], ttsCandidates: [] };
+  if (progress.ttsSpeed !== speed) throw new Error('Existing British audition progress uses a different TTS speed.');
+  let paidProviderCalls = 0;
+
+  if (progress.designCandidates.length === 0) {
+    const request = createBritishVoiceDesignRequest();
+    const response = await providerRequest(`/v1/text-to-voice/create-previews?output_format=${SOURCE_FORMAT}`, { key, body: request.body });
+    paidProviderCalls += 1;
+    for (const [index, preview] of response.previews.entries()) {
+      const sourcePath = resolve(designRoot, `british-${index + 1}.mp3`);
+      writeFileSync(sourcePath, Buffer.from(preview.audio_base_64, 'base64'));
+      progress.designCandidates.push({
+        variant: index + 1,
+        generatedVoiceId: preview.generated_voice_id,
+        sourceFile: relative(WORK_ROOT, sourcePath).replaceAll('\\', '/'),
+        voiceDescriptionSha256: sha256(request.body.voice_description),
+        auditionTextSha256: sha256(request.body.text)
+      });
+    }
+    writeJson(progressPath, progress);
+  }
+
+  const comparisonText = AUDITION_LINES.join(' ');
+  for (const candidate of progress.designCandidates) {
+    let baseVoice = progress.baseVoices.find(item => item.variant === candidate.variant);
+    if (!baseVoice) {
+      const created = await providerRequest('/v1/text-to-voice', {
+        key,
+        body: {
+          voice_name: `Flightglass British Systems Engineer ${candidate.variant}`,
+          voice_description: BRITISH_SYSTEMS_ENGINEER_DIRECTION,
+          generated_voice_id: candidate.generatedVoiceId,
+          labels: { accent: 'British', age: 'adult', gender: 'female', use_case: 'education', stage: 'temporary-british-audition' }
+        }
+      });
+      baseVoice = { variant: candidate.variant, voiceId: created.voice_id, voiceName: created.name };
+      progress.baseVoices.push(baseVoice);
+      writeJson(progressPath, progress);
+    }
+
+    if (progress.ttsCandidates.some(item => item.variant === candidate.variant)) continue;
+    const rawPath = resolve(ttsRoot, `british-${candidate.variant}-speed-${speed.toFixed(2).replace('.', '_')}.mp3`);
+    const normalizedPath = resolve(normalizedRoot, `british-${candidate.variant}.m4a`);
+    const audio = await providerRequest(`/v1/text-to-speech/${encodeURIComponent(baseVoice.voiceId)}?output_format=${SOURCE_FORMAT}`, {
+      key,
+      body: createTtsRequest({ cueId: 'academy.voice.british-comparison', text: comparisonText }, { speed }),
+      audio: true
+    });
+    paidProviderCalls += 1;
+    writeFileSync(rawPath, audio);
+    processAudio(rawPath, normalizedPath);
+    progress.ttsCandidates.push({
+      comparisonRole: 'british-challenger',
+      sourceDirection: 'britishSystemsEngineer',
+      variant: candidate.variant,
+      generatedVoiceId: candidate.generatedVoiceId,
+      ttsSpeed: speed,
+      sourceFile: relative(WORK_ROOT, rawPath).replaceAll('\\', '/'),
+      comparisonFile: relative(WORK_ROOT, normalizedPath).replaceAll('\\', '/')
+    });
+    writeJson(progressPath, progress);
+  }
+
+  const controlNormalizedPath = resolve(normalizedRoot, 'r3-d-control.m4a');
+  if (!existsSync(controlNormalizedPath)) processAudio(controlRawPath, controlNormalizedPath);
+  const controlCandidate = {
+    comparisonRole: 'r3-d-control',
+    sourceLabel: 'R3-D',
+    sourceDirection: controlSource.direction,
+    generatedVoiceId: controlSource.generatedVoiceId,
+    ttsSpeed: speed,
+    sourceFile: relative(WORK_ROOT, controlRawPath).replaceAll('\\', '/'),
+    comparisonFile: relative(WORK_ROOT, controlNormalizedPath).replaceAll('\\', '/')
+  };
+  const mapping = shuffled([...progress.ttsCandidates, controlCandidate]).map((candidate, index) => ({ blindLabel: `R5-${String.fromCharCode(65 + index)}`, ...candidate }));
+  for (const candidate of mapping) {
+    copyFileSync(resolve(WORK_ROOT, candidate.comparisonFile), resolve(blindRoot, `${candidate.blindLabel}.m4a`));
+  }
+  writeJson(provenancePath, {
+    schemaVersion: 1,
+    round: 5,
+    createdAt: new Date().toISOString(),
+    provider: 'ElevenLabs',
+    ttsSpeed: speed,
+    controlCandidate: 'R3-D',
+    candidates: mapping
+  });
+  writeJson(resolve(blindRoot, 'instructions.json'), {
+    schemaVersion: 1,
+    round: 5,
+    criteria: ['distinct Flightglass identity', 'technical clarity', 'authority without distance', 'low fatigue', 'no posh or assistant affect'],
+    auditionLines: AUDITION_LINES,
+    verdictTemplate: { winner: null, identity: null, clarity: null, authority: null, lowFatigue: null, notes: '' },
+    warning: 'Do not open ../../private/british-systems-engineer-round-5-provenance.json until the round-five verdict is recorded.'
+  });
+  return {
+    candidateCount: mapping.length,
+    britishCandidates: progress.ttsCandidates.length,
+    controlCandidate: 'R3-D',
+    speed,
+    blindDirectory: relative(ROOT, blindRoot).replaceAll('\\', '/'),
+    paidProviderCalls,
+    temporaryBaseVoicesCreated: progress.baseVoices.length
+  };
+}
+
 function argumentValue(args, name) {
   const index = args.indexOf(name);
   return index >= 0 ? args[index + 1] : null;
@@ -668,7 +828,8 @@ async function refineVoices(args) {
 
 export function selectionProvenanceFile(candidate) {
   const label = String(candidate || '').toUpperCase();
-  if (!/^(?:[A-Z]|R2-[A-F]|R3-[A-I]|R4-[A-C])$/.test(label)) throw new Error('Select one blind label with --candidate A, --candidate R2-A, --candidate R3-A or --candidate R4-A.');
+  if (!/^(?:[A-Z]|R2-[A-F]|R3-[A-I]|R4-[A-C]|R5-[A-D])$/.test(label)) throw new Error('Select one blind label from rounds 1-5, for example --candidate R5-A.');
+  if (label.startsWith('R5-')) return 'british-systems-engineer-round-5-provenance.json';
   if (label.startsWith('R4-')) return 'pace-refinement-round-4-provenance.json';
   if (label.startsWith('R3-')) return 'alternative-round-3-provenance.json';
   return label.startsWith('R2-') ? 'refinement-round-2-provenance.json' : 'provenance-map.json';
@@ -676,20 +837,24 @@ export function selectionProvenanceFile(candidate) {
 
 async function selectVoice(args) {
   const label = String(argumentValue(args, '--candidate') || '').toUpperCase();
-  const ttsSpeed = productionSpeed(argumentValue(args, '--speed') || 1);
   const provenancePath = resolve(WORK_ROOT, 'private', selectionProvenanceFile(label));
   if (!existsSync(provenancePath)) throw new Error('Run the audition stage first.');
   const provenance = JSON.parse(readFileSync(provenancePath, 'utf8'));
   const candidate = provenance.candidates.find(item => item.blindLabel === label);
   if (!candidate) throw new Error(`Blind candidate ${label} does not exist.`);
+  const ttsSpeed = productionSpeed(argumentValue(args, '--speed') || candidate.ttsSpeed || 1);
+  const sourceDirection = candidate.direction || candidate.sourceDirection;
+  const voiceDescription = sourceDirection === 'britishSystemsEngineer'
+    ? BRITISH_SYSTEMS_ENGINEER_DIRECTION
+    : ALTERNATIVE_DIRECTIONS[sourceDirection] || VOICE_DIRECTIONS[sourceDirection] || VOICE_DIRECTIONS.target;
   const key = requireApiKey();
   const selected = await providerRequest('/v1/text-to-voice', {
     key,
     body: {
       voice_name: 'Flightglass Control Room',
-      voice_description: VOICE_DIRECTIONS.target,
+      voice_description: voiceDescription,
       generated_voice_id: candidate.generatedVoiceId,
-      labels: { accent: 'American', age: 'adult', gender: 'female', use_case: 'education' },
+      labels: { accent: sourceDirection === 'britishSystemsEngineer' ? 'British' : 'American', age: 'adult', gender: 'female', use_case: 'education' },
       played_not_selected_voice_ids: provenance.candidates.filter(item => item.generatedVoiceId !== candidate.generatedVoiceId).map(item => item.generatedVoiceId)
     }
   });
@@ -698,7 +863,7 @@ async function selectVoice(args) {
     selectedAt: new Date().toISOString(),
     provider: 'ElevenLabs',
     blindCandidate: label,
-    sourceDirection: candidate.direction || candidate.sourceDirection,
+    sourceDirection,
     refinementSourceLabel: candidate.sourceLabel || null,
     generatedVoiceId: candidate.generatedVoiceId,
     voiceId: selected.voice_id,
@@ -851,6 +1016,21 @@ function dryRun(command, args) {
       executeWith: `npm run voice:pace-preview -- --candidate ${candidate} --speed ${speed} --execute --confirm-paid-api`
     };
   }
+  if (command === 'british-audition') {
+    const speed = productionSpeed(argumentValue(args, '--speed') || 0.8);
+    return {
+      dryRun: true,
+      command,
+      candidateCount: 4,
+      britishCandidates: 3,
+      controlCandidate: 'R3-D',
+      speed,
+      temporaryVoiceCreations: 3,
+      paidProviderCalls: 4,
+      characters: AUDITION_LINES.join(' ').length * 4,
+      executeWith: `npm run voice:british-audition -- --speed ${speed} --execute --confirm-paid-api`
+    };
+  }
   if (command === 'select') {
     const candidate = String(argumentValue(args, '--candidate') || 'A').toUpperCase();
     const speed = productionSpeed(argumentValue(args, '--speed') || 1);
@@ -870,13 +1050,14 @@ export async function main(argv = process.argv.slice(2)) {
     workRootIgnored: true,
     paidCallMade: false
   };
-  if (!['audition', 'explore', 'refine', 'pace-refine', 'pace-preview', 'select', 'generate'].includes(command)) throw new Error(`Unknown Academy voice-production command: ${command}`);
+  if (!['audition', 'explore', 'refine', 'pace-refine', 'pace-preview', 'british-audition', 'select', 'generate'].includes(command)) throw new Error(`Unknown Academy voice-production command: ${command}`);
   if (!paidExecutionRequested(args)) return dryRun(command, args);
   if (command === 'audition') return createAuditions();
   if (command === 'explore') return exploreAlternativeVoices();
   if (command === 'refine') return refineVoices(args);
   if (command === 'pace-refine') return refineVoicePace(args);
   if (command === 'pace-preview') return createPacePreview(args);
+  if (command === 'british-audition') return createBritishSystemsEngineerAudition(args);
   if (command === 'select') return selectVoice(args);
   return generatePack(args);
 }
