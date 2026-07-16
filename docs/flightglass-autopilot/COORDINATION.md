@@ -13,6 +13,7 @@ wait.
 
 | Agent | Branch | Working on | Since |
 |-------|--------|-----------|-------|
+| Codex | `agent/academy-codex` | Faster mixed-gender Academy Voice audition: three female and three male blind candidates, measured and locally reviewable | 2026-07-16 |
 
 ## Queue / free to take
 
