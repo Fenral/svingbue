@@ -7,6 +7,7 @@ import {
   ALTERNATIVE_DIRECTIONS,
   AUDITION_LINES,
   BRITISH_SYSTEMS_ENGINEER_DIRECTION,
+  FASTER_MIXED_GENDER_DIRECTIONS,
   PACE_REFINEMENT_DIRECTION,
   STRESS_CUE_IDS,
   VOICE_DIRECTIONS,
@@ -16,6 +17,7 @@ import {
   createAuditionRequests,
   createAlternativeRequests,
   createBritishVoiceDesignRequest,
+  createFasterMixedGenderRequests,
   createPaceRefinementRequest,
   createRefinementRequests,
   createTtsRequest,
@@ -25,6 +27,7 @@ import {
   productionSpeed,
   reusableDesignedVoice,
   safeCueStem,
+  selectPaceVariant,
   selectionProvenanceFile,
   selectionMatches,
   speakableText,
@@ -105,6 +108,40 @@ test('British Systems Engineer audition is neutral, restrained and directly comp
   assert.equal(dryRun.speed, 0.8);
   assert.equal(dryRun.paidProviderCalls, 4);
   assert.equal(dryRun.characters, AUDITION_LINES.join(' ').length * 4);
+});
+
+test('faster mixed-gender round compares three distinct women and three distinct men on identical copy', async () => {
+  const requests = createFasterMixedGenderRequests();
+  assert.equal(requests.length, 6);
+  assert.deepEqual(requests.map(request => request.gender), ['female','female','female','male','male','male']);
+  assert.equal(Object.keys(FASTER_MIXED_GENDER_DIRECTIONS.female).length, 3);
+  assert.equal(Object.keys(FASTER_MIXED_GENDER_DIRECTIONS.male).length, 3);
+  assert.equal(new Set(requests.map(request => request.body.text)).size, 1);
+  assert.equal(new Set(requests.map(request => request.body.voice_description)).size, 6);
+  assert.equal(requests.every(request => /170|172|174|176|178|180/.test(request.body.voice_description)), true);
+  assert.equal(requests.every(request => request.body.auto_generate_text === false), true);
+  assert.equal(requests.some(request => 'xi-api-key' in request.body), false);
+  const dryRun = await main(['mixed-audition']);
+  assert.equal(dryRun.candidateCount, 6);
+  assert.equal(dryRun.femaleCandidates, 3);
+  assert.equal(dryRun.maleCandidates, 3);
+  assert.equal(dryRun.previewVariants, 18);
+  assert.equal(dryRun.paidProviderCalls, 6);
+});
+
+test('mixed-gender pace selection keeps the variant nearest the faster target', () => {
+  const selected = selectPaceVariant([
+    { variant:1, durationSeconds:24 },
+    { variant:2, durationSeconds:21 },
+    { variant:3, durationSeconds:18 }
+  ], { wordCount:60, targetWpm:174 });
+  assert.equal(selected.variant, 2);
+  assert.equal(selected.wordsPerMinute, 171.4);
+  assert.equal(selectPaceVariant([
+    { variant:1, durationSeconds:24 },
+    { variant:2, durationSeconds:21 }
+  ], { wordCount:60, targetWpm:174, approvedVariant:1 }).variant, 1);
+  assert.throws(() => selectPaceVariant([], { wordCount:60, targetWpm:174 }));
 });
 
 test('pace refinement preserves one R3 identity while explicitly slowing the delivery', () => {
@@ -208,6 +245,8 @@ test('FFmpeg contract targets local mono AAC-LC at 48 kHz without a shell', () =
   assert.ok(args.includes('80k'));
   assert.match(args[args.indexOf('-af') + 1], /loudnorm=I=-18:TP=-1/);
   assert.equal(args.at(-1), 'final output.m4a');
+  assert.match(buildFfmpegArgs('in.mp3','out.m4a',{tempo:0.88})[args.indexOf('-af') + 1], /atempo=0\.8800/);
+  assert.throws(() => buildFfmpegArgs('in.mp3','out.m4a',{tempo:0.4}));
 });
 
 test('paid execution requires both explicit safety flags', () => {

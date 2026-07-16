@@ -13,7 +13,6 @@ wait.
 
 | Agent | Branch | Working on | Since |
 |-------|--------|-----------|-------|
-| Codex | `agent/academy-codex` | Faster mixed-gender Academy Voice audition: three female and three male blind candidates, measured and locally reviewable | 2026-07-16 |
 
 ## Queue / free to take
 
@@ -30,6 +29,12 @@ wait.
   pair before build.
 
 ## Done / handed off
+
+- Faster mixed-gender Academy Voice challenge - `agent/academy-codex`; six
+  Voice Design calls produced 18 private raw previews and six blind finalists
+  (`F-A..F-C`, `M-A..M-C`). All finalists are transcription-approved,
+  normalized to 176.3-177.3 wpm and locally reviewable. The selected R5-A voice
+  and all 102 shipping assets remain unchanged pending an owner verdict.
 
 - Academy R5-A Voice production completion - `agent/academy-codex`; the owner-
   selected British female systems-engineer identity is fixed at speed 0.8, all

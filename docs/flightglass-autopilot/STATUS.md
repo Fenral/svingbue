@@ -40,6 +40,12 @@ iOS VoiceOver behavior. The absent `ios/` and `android/` projects also prevent
 native archive/device verification. Full evidence and provider-rights sources
 are in `ACADEMY-VOICE-QA.md`.
 
+A faster mixed-gender challenge is ready for owner listening but is not a
+shipping change. It contains three female and three male blind candidates on
+identical copy, all transcription-approved and pace-normalized to 176.3-177.3
+words per minute. R5-A and the canonical 102-file manifest remain unchanged
+until an owner verdict is recorded.
+
 | Phase | State | Evidence |
 |---|---|---|
 | 0 - QA baseline and control package | Complete | 40-state baseline, 11 contract tests, brand and handoff verifiers |

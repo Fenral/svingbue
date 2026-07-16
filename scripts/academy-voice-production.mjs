@@ -92,6 +92,19 @@ export const ALTERNATIVE_DIRECTIONS = Object.freeze({
 
 export const BRITISH_SYSTEMS_ENGINEER_DIRECTION = 'Mature British female systems engineer with a neutral contemporary Southern British accent. Grounded lower-middle register, calm authority, restrained warmth and precise technical diction. Natural and unhurried at low phone volume. Never posh, theatrical, BBC-like, breathy, maternal or assistant-like.';
 
+export const FASTER_MIXED_GENDER_DIRECTIONS = Object.freeze({
+  female: Object.freeze({
+    britishTelemetryLead: 'British woman, age 35 to 50, with a neutral contemporary Southern British accent and a grounded medium-low register. Brisk 172 to 178 words per minute, composed technical authority, crisp consonants and short natural pauses. Restrained warmth, never posh, BBC-like, maternal, breathy, theatrical or assistant-like.',
+    nordicBiomechanist: 'Nordic woman, age 30 to 45, speaking near-native international English with only a faint Scandinavian cadence. Alert performance-scientist energy, clean medium register and precise technical diction at 174 to 180 words per minute. Human and observant, never strongly accented, coachy, chirpy, breathy or virtual-assistant-like.',
+    americanFlightDirector: 'Mature American woman, age 40 to 55, with a neutral General American accent and a grounded medium-low register. Decisive flight-director clarity at 170 to 176 words per minute, calm under pressure with clipped but natural phrasing. Never cinematic, militaristic, newsreader-like, chatty or robotic.'
+  }),
+  male: Object.freeze({
+    britishSystemsArchitect: 'British man, age 35 to 50, with a neutral contemporary British accent and a dry medium-low register. Precise systems-architect delivery at 172 to 178 words per minute, concise, intelligent and quietly authoritative. Never posh, professorial, theatrical, broadcaster-like, paternal or synthetic.',
+    nordicPerformanceScientist: 'Nordic man, age 30 to 45, speaking near-native international English with a faint Scandinavian cadence. Analytical performance-scientist delivery at 174 to 180 words per minute, understated energy, clear consonants and a natural human rhythm. Never strongly accented, coachy, intimate, monotone or assistant-like.',
+    americanTelemetryDirector: 'Mature American man, age 40 to 55, with a neutral General American accent and a controlled medium register. Fast calm telemetry-director delivery at 172 to 178 words per minute, direct and technically confident without severity. Never trailer-like, militaristic, sports-broadcast, gravelly, paternal or robotic.'
+  })
+});
+
 export const PACE_REFINEMENT_DIRECTION = 'Preserve this exact voice identity, mature character, accent, authority and grounded timbre. Slow the delivery to 150 to 160 words per minute with deliberate but natural short pauses between ideas. Keep the energy controlled, the warmth restrained and the technical diction exceptionally clear at low phone volume. Do not make the voice softer, older, breathier, theatrical, coachy or robotic; change pacing and emphasis, not identity.';
 
 const sha256 = value => createHash('sha256').update(value).digest('hex');
@@ -217,6 +230,44 @@ export function createBritishVoiceDesignRequest() {
   };
 }
 
+export function createFasterMixedGenderRequests() {
+  const text = AUDITION_LINES.join(' ');
+  let index = 0;
+  return Object.entries(FASTER_MIXED_GENDER_DIRECTIONS).flatMap(([gender, directions]) =>
+    Object.entries(directions).map(([direction, voiceDescription]) => ({
+      gender,
+      direction,
+      body: {
+        voice_description: voiceDescription,
+        text,
+        auto_generate_text: false,
+        loudness: 0.05,
+        quality: 0.9,
+        seed: 9601 + index++,
+        guidance_scale: 4
+      }
+    }))
+  );
+}
+
+export function selectPaceVariant(candidates, { wordCount = countCueWords(AUDITION_LINES.join(' ')), targetWpm = 174, approvedVariant = null } = {}) {
+  if (!Array.isArray(candidates) || candidates.length === 0 || !Number.isFinite(wordCount) || wordCount <= 0 || !Number.isFinite(targetWpm)) {
+    throw new TypeError('Mixed-gender pace selection requires candidates, a word count and a target pace.');
+  }
+  const measured = candidates.map(candidate => {
+    const durationSeconds = Number(candidate.durationSeconds);
+    if (!Number.isFinite(durationSeconds) || durationSeconds <= 0) throw new TypeError('Mixed-gender candidate duration is invalid.');
+    const wordsPerMinute = Number(((wordCount / durationSeconds) * 60).toFixed(1));
+    return { ...candidate, wordsPerMinute };
+  });
+  if (approvedVariant != null) {
+    const approved = measured.find(candidate => candidate.variant === approvedVariant);
+    if (!approved) throw new TypeError(`Approved mixed-gender variant ${approvedVariant} does not exist.`);
+    return approved;
+  }
+  return measured.sort((left, right) => Math.abs(left.wordsPerMinute - targetWpm) - Math.abs(right.wordsPerMinute - targetWpm) || left.variant - right.variant)[0];
+}
+
 export function createPaceRefinementRequest(candidate) {
   const sourceLabel = String(candidate?.blindLabel || '').toUpperCase();
   if (!/^R3-[A-I]$/.test(sourceLabel) || !candidate?.direction || !candidate?.generatedVoiceId) {
@@ -275,9 +326,11 @@ export function createTtsRequest(cue, { speed = 1 } = {}) {
   };
 }
 
-export function buildFfmpegArgs(inputPath, outputPath) {
+export function buildFfmpegArgs(inputPath, outputPath, { tempo = 1 } = {}) {
+  if (!Number.isFinite(tempo) || tempo < 0.5 || tempo > 2) throw new TypeError('Academy voice comparison tempo must be between 0.5 and 2.');
   const filters = [
     'silenceremove=start_periods=1:start_duration=0.01:start_threshold=-50dB:stop_periods=-1:stop_duration=0.01:stop_threshold=-50dB',
+    ...(Math.abs(tempo - 1) > 0.001 ? [`atempo=${tempo.toFixed(4)}`] : []),
     'adelay=60:all=1',
     'apad=pad_dur=0.12',
     'loudnorm=I=-18:TP=-1:LRA=7'
@@ -379,6 +432,149 @@ async function createAuditions() {
     warning: 'Do not open ../private/provenance-map.json until the blind verdict is recorded.'
   });
   return { candidateCount: mapping.length, blindDirectory: relative(ROOT, blindRoot).replaceAll('\\', '/'), paidProviderCalls: createAuditionRequests().length };
+}
+
+function mixedGenderListeningPage(mapping) {
+  const group = gender => mapping.filter(candidate => candidate.gender === gender).map(candidate => `
+      <article class="candidate">
+        <h3>${candidate.blindLabel}</h3>
+        <audio controls preload="metadata" src="./${candidate.blindLabel}.m4a"></audio>
+      </article>`).join('');
+  return `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Flightglass faster voice audition</title>
+  <style>
+    :root{color-scheme:dark;font-family:Inter,system-ui,sans-serif;background:#08100f;color:#f2f4ed}
+    body{max-width:760px;margin:0 auto;padding:28px 18px 56px;background:radial-gradient(circle at top,#183028 0,#08100f 46%)}
+    h1{font-size:clamp(1.7rem,7vw,2.7rem);letter-spacing:-.04em;margin:.2em 0}.lede{color:#aab7af;line-height:1.55;margin-bottom:30px}
+    section{margin-top:34px}h2{font-size:.78rem;letter-spacing:.18em;text-transform:uppercase;color:#99f5bf;border-bottom:1px solid #29423a;padding-bottom:10px}
+    .candidate{display:grid;grid-template-columns:58px 1fr;gap:12px;align-items:center;padding:14px 0;border-bottom:1px solid #1c302b}.candidate h3{font:600 1rem ui-monospace,monospace;margin:0;color:#f0c46c}
+    audio{width:100%;min-height:44px}.note{margin-top:32px;padding:16px;border:1px solid #29423a;border-radius:12px;color:#bdc8c2;line-height:1.5;background:#0d1916}
+  </style>
+</head>
+<body>
+  <h1>Faster voice audition</h1>
+  <p class="lede">Identical Flightglass copy. Three distinct female voices and three distinct male voices. Judge clarity, authority, pace and fatigue. Use headphones once, then phone speaker at low volume.</p>
+  <section><h2>Female</h2>${group('female')}</section>
+  <section><h2>Male</h2>${group('male')}</section>
+  <p class="note">Choose one or two labels, for example <strong>F-B</strong> or <strong>M-A</strong>. The shipping R5-A voice has not been changed.</p>
+</body>
+</html>`;
+}
+
+async function createFasterMixedGenderAudition(args = []) {
+  requireTool('ffmpeg'); requireTool('ffprobe');
+  const roundRoot = resolve(WORK_ROOT, 'faster-mixed-gender-round-6');
+  const previewRoot = resolve(roundRoot, 'previews');
+  const normalizedRoot = resolve(roundRoot, 'normalized');
+  const blindRoot = resolve(roundRoot, 'blind');
+  const privateRoot = resolve(WORK_ROOT, 'private');
+  const progressPath = resolve(privateRoot, 'faster-mixed-gender-round-6-progress.json');
+  const provenancePath = resolve(privateRoot, 'faster-mixed-gender-round-6-provenance.json');
+  const variantApprovalsPath = resolve(privateRoot, 'faster-mixed-gender-round-6-variant-approvals.json');
+  ensureDir(previewRoot); ensureDir(normalizedRoot); ensureDir(blindRoot); ensureDir(privateRoot);
+  const existingProvenance = existsSync(provenancePath) ? JSON.parse(readFileSync(provenancePath, 'utf8')) : null;
+  if (existingProvenance && !args.includes('--reprocess')) {
+    const pace = existingProvenance.candidates.map(candidate => candidate.wordsPerMinute);
+    return {
+      existing: true,
+      candidateCount: existingProvenance.candidates.length,
+      femaleCandidates: existingProvenance.candidates.filter(candidate => candidate.gender === 'female').length,
+      maleCandidates: existingProvenance.candidates.filter(candidate => candidate.gender === 'male').length,
+      paceRangeWpm: [Math.min(...pace), Math.max(...pace)],
+      listeningPage: relative(ROOT, resolve(blindRoot, 'index.html')).replaceAll('\\', '/'),
+      paidProviderCalls: 0
+    };
+  }
+
+  const requests = createFasterMixedGenderRequests();
+  const progress = existsSync(progressPath)
+    ? JSON.parse(readFileSync(progressPath, 'utf8'))
+    : { schemaVersion:1, targetWpm:176, candidates:[] };
+  if (progress.targetWpm !== 176) {
+    progress.targetWpm = 176;
+    writeJson(progressPath, progress);
+  }
+  const key = requireApiKey();
+  let paidProviderCalls = 0;
+  for (const request of requests) {
+    const existing = progress.candidates.filter(candidate => candidate.gender === request.gender && candidate.direction === request.direction);
+    if (existing.length === 3) continue;
+    if (existing.length !== 0) throw new Error(`Incomplete mixed-gender progress for ${request.direction}.`);
+    const response = await providerRequest(`/v1/text-to-voice/create-previews?output_format=${SOURCE_FORMAT}`, { key, body: request.body });
+    paidProviderCalls += 1;
+    for (const [index, preview] of response.previews.entries()) {
+      const sourcePath = resolve(previewRoot, `${request.gender}-${request.direction}-${index + 1}.mp3`);
+      writeFileSync(sourcePath, Buffer.from(preview.audio_base_64, 'base64'));
+      progress.candidates.push({
+        gender:request.gender,
+        direction:request.direction,
+        variant:index + 1,
+        generatedVoiceId:preview.generated_voice_id,
+        durationSeconds:preview.duration_secs,
+        mediaType:preview.media_type,
+        sourceFile:relative(WORK_ROOT, sourcePath).replaceAll('\\', '/'),
+        voiceDescriptionSha256:sha256(request.body.voice_description),
+        auditionTextSha256:sha256(request.body.text)
+      });
+    }
+    writeJson(progressPath, progress);
+  }
+
+  const wordCount = countCueWords(AUDITION_LINES.join(' '));
+  const variantApprovals = existsSync(variantApprovalsPath) ? JSON.parse(readFileSync(variantApprovalsPath, 'utf8')) : {};
+  const finalists = requests.map(request => {
+    const candidates = progress.candidates.filter(candidate => candidate.gender === request.gender && candidate.direction === request.direction);
+    const selected = selectPaceVariant(candidates, { wordCount, targetWpm:progress.targetWpm, approvedVariant:variantApprovals[request.direction] });
+    const normalizedPath = resolve(normalizedRoot, `${request.gender}-${request.direction}-${selected.variant}.m4a`);
+    let playbackTempo = Number((progress.targetWpm / selected.wordsPerMinute).toFixed(4));
+    if (!existsSync(normalizedPath) || args.includes('--reprocess')) processAudio(resolve(WORK_ROOT, selected.sourceFile), normalizedPath, { tempo:playbackTempo });
+    let audio = inspectAudio(normalizedPath);
+    const firstPassWpm = Number(((wordCount / audio.durationSeconds) * 60).toFixed(1));
+    if (Math.abs(firstPassWpm - progress.targetWpm) > 1) {
+      playbackTempo = Number((playbackTempo * (progress.targetWpm / firstPassWpm)).toFixed(4));
+      processAudio(resolve(WORK_ROOT, selected.sourceFile), normalizedPath, { tempo:playbackTempo });
+      audio = inspectAudio(normalizedPath);
+    }
+    return {
+      ...selected,
+      ...audio,
+      playbackTempo,
+      wordsPerMinute:Number(((wordCount / audio.durationSeconds) * 60).toFixed(1)),
+      comparisonFile:relative(WORK_ROOT, normalizedPath).replaceAll('\\', '/')
+    };
+  });
+  const mapping = existingProvenance
+    ? existingProvenance.candidates.map(previous => ({ blindLabel:previous.blindLabel, ...finalists.find(candidate => candidate.gender === previous.gender && candidate.direction === previous.direction) }))
+    : ['female','male'].flatMap(gender => shuffled(finalists.filter(candidate => candidate.gender === gender)).map((candidate, index) => ({
+      blindLabel:`${gender === 'female' ? 'F' : 'M'}-${String.fromCharCode(65 + index)}`,
+      ...candidate
+    })));
+  for (const candidate of mapping) copyFileSync(resolve(WORK_ROOT, candidate.comparisonFile), resolve(blindRoot, `${candidate.blindLabel}.m4a`));
+  writeFileSync(resolve(blindRoot, 'index.html'), mixedGenderListeningPage(mapping));
+  writeJson(resolve(blindRoot, 'instructions.json'), {
+    schemaVersion:1,
+    round:6,
+    targetPace:'170-180 words per minute',
+    criteria:['clarity at low phone volume','technical trust','faster natural pace','low fatigue','distinct Flightglass identity'],
+    auditionLines:AUDITION_LINES,
+    verdictTemplate:{ femaleWinner:null, maleWinner:null, overallWinner:null, clarity:null, pace:null, trust:null, lowFatigue:null, notes:'' },
+    warning:'Do not open ../../private/faster-mixed-gender-round-6-provenance.json until the blind verdict is recorded.'
+  });
+  writeJson(provenancePath, { schemaVersion:1, round:6, createdAt:new Date().toISOString(), provider:'ElevenLabs', targetWpm:progress.targetWpm, previewVariants:progress.candidates.length, candidates:mapping });
+  const pace = mapping.map(candidate => candidate.wordsPerMinute);
+  return {
+    candidateCount:mapping.length,
+    femaleCandidates:mapping.filter(candidate => candidate.gender === 'female').length,
+    maleCandidates:mapping.filter(candidate => candidate.gender === 'male').length,
+    previewVariants:progress.candidates.length,
+    paceRangeWpm:[Math.min(...pace),Math.max(...pace)],
+    listeningPage:relative(ROOT, resolve(blindRoot, 'index.html')).replaceAll('\\', '/'),
+    paidProviderCalls
+  };
 }
 
 async function exploreAlternativeVoices() {
@@ -928,9 +1124,9 @@ async function selectVoice(args) {
   return { selected: true, blindCandidate: label, voiceId: record.voiceId, ttsSpeed, reusedAuditionVoice: record.reusedAuditionVoice, next: 'npm run voice:generate -- --execute --confirm-paid-api' };
 }
 
-function processAudio(inputPath, outputPath) {
+function processAudio(inputPath, outputPath, options) {
   ensureDir(dirname(outputPath));
-  run('ffmpeg', buildFfmpegArgs(inputPath, outputPath));
+  run('ffmpeg', buildFfmpegArgs(inputPath, outputPath, options));
 }
 
 export function inspectAudio(path) {
@@ -1109,6 +1305,22 @@ function dryRun(command, args) {
       executeWith: `npm run voice:british-audition -- --speed ${speed} --execute --confirm-paid-api`
     };
   }
+  if (command === 'mixed-audition') {
+    const requests = createFasterMixedGenderRequests();
+    return {
+      dryRun:true,
+      command,
+      candidateCount:6,
+      femaleCandidates:3,
+      maleCandidates:3,
+      previewVariants:18,
+      targetPace:'170-180 words per minute',
+      paidProviderCalls:requests.length,
+      characters:requests.reduce((sum, request) => sum + request.body.text.length, 0),
+      persistentVoiceCreations:0,
+      executeWith:'npm run voice:mixed-audition -- --execute --confirm-paid-api'
+    };
+  }
   if (command === 'select') {
     const candidate = String(argumentValue(args, '--candidate') || 'A').toUpperCase();
     const speed = productionSpeed(argumentValue(args, '--speed') || 1);
@@ -1140,7 +1352,7 @@ export async function main(argv = process.argv.slice(2)) {
     workRootIgnored: true,
     paidCallMade: false
   };
-  if (!['audition', 'explore', 'refine', 'pace-refine', 'pace-preview', 'british-audition', 'select', 'generate'].includes(command)) throw new Error(`Unknown Academy voice-production command: ${command}`);
+  if (!['audition', 'explore', 'refine', 'pace-refine', 'pace-preview', 'british-audition', 'mixed-audition', 'select', 'generate'].includes(command)) throw new Error(`Unknown Academy voice-production command: ${command}`);
   if (!paidExecutionRequested(args)) return dryRun(command, args);
   if (command === 'audition') return createAuditions();
   if (command === 'explore') return exploreAlternativeVoices();
@@ -1148,6 +1360,7 @@ export async function main(argv = process.argv.slice(2)) {
   if (command === 'pace-refine') return refineVoicePace(args);
   if (command === 'pace-preview') return createPacePreview(args);
   if (command === 'british-audition') return createBritishSystemsEngineerAudition(args);
+  if (command === 'mixed-audition') return createFasterMixedGenderAudition(args);
   if (command === 'select') return selectVoice(args);
   return generatePack(args);
 }

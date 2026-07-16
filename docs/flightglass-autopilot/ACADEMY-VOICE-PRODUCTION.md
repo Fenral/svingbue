@@ -32,6 +32,25 @@ Provider credentials and raw provider artifacts must never enter Git.
 - Strict release verification remains fail-closed on the five-minute fatigue,
   physical-device/audio-route and iOS VoiceOver gates.
 
+## Faster mixed-gender challenge round - 2026-07-16
+
+The owner found the shipping R5-A pace too slow. `voice:mixed-audition` creates
+a separate, resume-safe challenge without changing the selected production
+voice or any of the 102 shipping assets:
+
+```powershell
+npm run voice:mixed-audition
+npm run voice:mixed-audition -- --execute --confirm-paid-api
+```
+
+Six Voice Design requests produce 18 raw previews across three distinct female
+and three distinct male directions. One transcription-approved variant per
+direction is normalized to the same 176-177 words-per-minute comparison pace,
+AAC-LC mono 48 kHz and approximately -18 LUFS. The local blind page groups them
+as `F-A` to `F-C` and `M-A` to `M-C`; direction provenance and QA overrides stay
+ignored and private. The command creates no persistent ElevenLabs voice. A new
+shipping identity must not be selected until the owner records a blind verdict.
+
 ## Credential setup — owner action
 
 1. Create a paid ElevenLabs Creator subscription and a restricted API key with
