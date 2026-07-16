@@ -24,6 +24,13 @@ export function cueSignature(cue) {
   return [cue.packId, cue.locale, cue.cueId, cue.contentVersion].join(':');
 }
 
+export function academyVoiceAssetPath(ownerId, cueId) {
+  if (typeof ownerId !== 'string' || !/^[a-z0-9][a-z0-9-]*$/i.test(ownerId)) throw new TypeError('Voice cue ownerId must be path-safe');
+  const stem = String(cueId).toLowerCase().replace(/^academy\./, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  if (!stem) throw new TypeError('Voice cue cueId must be path-safe');
+  return `assets/audio/academy/${ACADEMY_VOICE_PACK_ID}/${ownerId}/${stem}.m4a`;
+}
+
 const reject = (cue, rule) => { throw new AcademyVoiceManifestError(cue, rule); };
 const plainClone = value => {
   if (typeof value === 'function') throw new TypeError('Academy voice manifests must be plain data');
@@ -84,6 +91,11 @@ export function defineAcademyCue(cue) {
 }
 
 export function defineAcademyCueSet(config) {
-  const copy = plainClone(config); validateAcademyCueSet(copy);
-  return deepFreeze({ ownerId:copy.ownerId, cues:copy.cues.map(defineAcademyCue) });
+  const copy = plainClone(config);
+  const hydrated = {
+    ownerId:copy.ownerId,
+    cues:copy.cues.map(cue => ({ ...cue, asset:cue.asset ?? academyVoiceAssetPath(copy.ownerId,cue.cueId) }))
+  };
+  validateAcademyCueSet(hydrated);
+  return deepFreeze({ ownerId:hydrated.ownerId, cues:hydrated.cues.map(defineAcademyCue) });
 }

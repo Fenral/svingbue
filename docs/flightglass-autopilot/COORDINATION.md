@@ -13,7 +13,6 @@ wait.
 
 | Agent | Branch | Working on | Since |
 |-------|--------|-----------|-------|
-| Codex | `agent/academy-codex` | Finalize R5-A Academy Voice: selection, 102 licensed assets, runtime binding, pack/config/verifier, transcription QA and packaging | 2026-07-16 |
 
 ## Queue / free to take
 
@@ -30,6 +29,14 @@ wait.
   pair before build.
 
 ## Done / handed off
+
+- Academy R5-A Voice production completion - `agent/academy-codex`; the owner-
+  selected British female systems-engineer identity is fixed at speed 0.8, all
+  102 licensed local masters are generated and runtime-bound, full technical/
+  transcription QA and Chromium/WebKit curriculum coverage pass, rights
+  evidence is recorded, and root/`www` hashes match. Strict release remains
+  fail-closed only on the five-minute fatigue, physical-device/audio-route and
+  iOS VoiceOver human gates; no native platform project exists in the repo.
 
 - Academy British Systems Engineer Voice audition — `agent/academy-codex`;
   three neutral contemporary British female identities were rendered through

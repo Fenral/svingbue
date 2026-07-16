@@ -28,6 +28,10 @@ export function verifyAcademyVoicePack({ root=ROOT, config, cues=[...ACADEMY_HOM
   if(config?.packId!==ACADEMY_VOICE_PACK_ID)errors.push('pack-id');
   if(config?.locale!==ACADEMY_VOICE_LOCALE)errors.push('locale');
   if(typeof config?.rightsStatus!=='string'||!config.rightsStatus)errors.push('rights-metadata');
+  if(typeof config?.voiceIdentityStatus!=='string'||!config.voiceIdentityStatus)errors.push('voice-identity-metadata');
+  if(typeof config?.humanFatigueStatus!=='string'||!config.humanFatigueStatus)errors.push('fatigue-listen-metadata');
+  if(typeof config?.devicePlaybackStatus!=='string'||!config.devicePlaybackStatus)errors.push('device-playback-metadata');
+  if(typeof config?.voiceOverStatus!=='string'||!config.voiceOverStatus)errors.push('voiceover-metadata');
   if(typeof config?.productionGuide!=='string'||!config.productionGuide)errors.push('production-guide');
   for(const record of records){
     if(!record||typeof record.cueId!=='string'||byCue.has(record.cueId)){errors.push(`duplicate-or-invalid:${record?.cueId||'unknown'}`);continue;}
@@ -38,6 +42,7 @@ export function verifyAcademyVoicePack({ root=ROOT, config, cues=[...ACADEMY_HOM
     const record=byCue.get(cue.cueId);
     if(!record){captionOnly.push(cue.cueId);if(mode==='release')missing.push(cue.cueId);continue;}
     if(typeof record.path!=='string'||!/^assets\/audio\/academy\/control-room-en-us-v1\/[a-z0-9/_-]+\.m4a$/i.test(record.path)){errors.push(`asset-path:${cue.cueId}`);continue;}
+    if(record.path!==cue.asset)errors.push(`asset-binding:${cue.cueId}`);
     const file=resolve(root,record.path);
     if(!inside(resolve(root,'assets/audio/academy/control-room-en-us-v1'),file)){errors.push(`asset-escape:${cue.cueId}`);continue;}
     if(!existsSync(file)||readFileSync(file).length===0){missing.push(cue.cueId);continue;}
@@ -47,8 +52,15 @@ export function verifyAcademyVoicePack({ root=ROOT, config, cues=[...ACADEMY_HOM
     if(record.captionSha256!==sha(cue.text))errors.push(`caption-hash:${cue.cueId}`);
   }
   const known=new Set(cues.map(cue=>cue.cueId));const orphaned=[...byCue.keys()].filter(id=>!known.has(id));
-  if(mode==='release'&&config?.rightsStatus!=='approved-for-distribution')errors.push('rights-not-approved');
-  return {packId:config?.packId,locale:config?.locale,cueCount:cues.length,assetCount:records.length,captionOnly,missing,orphaned,hashMismatches,durationOutliers,rightsStatus:config?.rightsStatus,mode,pass:errors.length===0&&missing.length===0&&orphaned.length===0&&hashMismatches.length===0&&durationOutliers.length===0,errors};
+  if(mode==='release'){
+    if(config?.rightsStatus!=='approved-for-distribution')errors.push('rights-not-approved');
+    if(typeof config?.rightsEvidence?.basis!=='string'||!Array.isArray(config?.rightsEvidence?.sources)||config.rightsEvidence.sources.length<2)errors.push('rights-evidence-incomplete');
+    if(config?.voiceIdentityStatus!=='approved-owner-blind-r5-a')errors.push('voice-identity-not-approved');
+    if(config?.humanFatigueStatus!=='approved-owner-five-minute-fatigue-listen')errors.push('fatigue-listen-not-approved');
+    if(config?.devicePlaybackStatus!=='approved-physical-device-and-audio-route-check')errors.push('device-playback-not-approved');
+    if(config?.voiceOverStatus!=='approved-ios-voiceover-check')errors.push('voiceover-not-approved');
+  }
+  return {packId:config?.packId,locale:config?.locale,cueCount:cues.length,assetCount:records.length,captionOnly,missing,orphaned,hashMismatches,durationOutliers,rightsStatus:config?.rightsStatus,voiceIdentityStatus:config?.voiceIdentityStatus,humanFatigueStatus:config?.humanFatigueStatus,devicePlaybackStatus:config?.devicePlaybackStatus,voiceOverStatus:config?.voiceOverStatus,mode,pass:errors.length===0&&missing.length===0&&orphaned.length===0&&hashMismatches.length===0&&durationOutliers.length===0,errors};
 }
 
 if(process.argv[1]&&resolve(process.argv[1])===resolve(fileURLToPath(import.meta.url))){
