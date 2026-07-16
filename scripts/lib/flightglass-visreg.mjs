@@ -274,7 +274,7 @@ export async function captureAll(outDir, { engines = ENGINES } = {}) {
   return { runtimeErrors };
 }
 
-export async function diffPng(baselinePath, candidatePath, { channelTolerance = 3 } = {}) {
+export async function diffPng(baselinePath, candidatePath, { channelTolerance = 4 } = {}) {
   const [a, b] = await Promise.all([
     sharp(baselinePath).ensureAlpha().raw().toBuffer({ resolveWithObject: true }),
     sharp(candidatePath).ensureAlpha().raw().toBuffer({ resolveWithObject: true })

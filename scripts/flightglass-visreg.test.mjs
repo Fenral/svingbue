@@ -41,6 +41,29 @@ test('pixel diff rejects an alpha-only image change', async () => {
   }
 });
 
+test('pixel diff ignores four channel steps of raster noise but rejects five', async () => {
+  const directory = mkdtempSync(join(tmpdir(), 'flightglass-visreg-raster-'));
+  const baseline = join(directory, 'baseline.png');
+  const rasterNoise = join(directory, 'raster-noise.png');
+  const visibleChange = join(directory, 'visible-change.png');
+  try {
+    await sharp(Buffer.from([40, 40, 40, 255]), {
+      raw: { width:1, height:1, channels:4 }
+    }).png().toFile(baseline);
+    await sharp(Buffer.from([44, 40, 40, 255]), {
+      raw: { width:1, height:1, channels:4 }
+    }).png().toFile(rasterNoise);
+    await sharp(Buffer.from([45, 40, 40, 255]), {
+      raw: { width:1, height:1, channels:4 }
+    }).png().toFile(visibleChange);
+
+    assert.equal((await diffPng(baseline, rasterNoise)).diffPixels, 0);
+    assert.equal((await diffPng(baseline, visibleChange)).diffPixels, 1);
+  } finally {
+    rmSync(directory, { recursive:true, force:true });
+  }
+});
+
 test('approved visual baselines exist for every surface, viewport, motion and engine', () => {
   const inventory = baselineInventory();
   assert.deepEqual(
