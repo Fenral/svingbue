@@ -5,6 +5,45 @@ Updated: 2026-07-16
 Release authorization: granted for GitHub, Vercel and configured Apple/Google
 publication after all Phase 8 gates pass. See `RELEASE-AUTHORIZATION.md`.
 
+## GitHub and Vercel web publication checkpoint
+
+On 2026-07-16 the owner explicitly directed GitHub publication and web deploy
+after being informed that the human, physical-device and native-platform gates
+below remain held. This publication is scoped to the static Vercel web app. It
+does not approve native/store publication or relabel the new Academy modules as
+STUDIO-GRADE.
+
+Published runtime source: `f7f3ee21e4ef533df76b2880285eb69ffda2a036`.
+
+- GitHub `main` was fast-forwarded from `58819f7091d487b60dcfb9586a387a49df61d67f`
+  to the published runtime source. The release-evidence entry containing this
+  checkpoint is a documentation-only descendant.
+- Fresh pre-publication `npm run verify:change -- --level C --base origin/main`
+  PASS: 14/14 gate-contract tests, 4/4 Home tests, 8 Chromium and 8 WebKit
+  runtime cases with zero critical findings, and a clean regenerated `www/`
+  package. Timing report:
+  `outputs/flightglass-gates/2026-07-16T13-32-58-040Z--level-C.json`.
+- Fresh Academy Voice PASS: 36/36 tests and development verification of 102/102
+  local assets with zero missing, orphaned, hash-mismatched or duration-outlier
+  records.
+- Vercel production deployment `dpl_BKJgyzjJWn1QtSFrtgFGKS7b69dv` reached
+  `Ready` and was assigned to `https://svingbue.vercel.app`. Deployment URL:
+  `https://svingbue-n0oa6oywm-sivert-s-projects.vercel.app`.
+- Post-deploy verification returned HTTP 200 and exact local SHA-256 matches
+  for `index.html`, `academy.html`, `academy-home.js`,
+  `academy-voice-manifest.js` and the first R5-A Voice master. Chromium smoke
+  checks rendered Home and Academy Home with zero page or console errors.
+
+Rollback is the previous ready production deployment
+`dpl_227CCV7Aj3NpGTkB7gafxA52JWGb` at
+`https://svingbue-cvo6vst8x-sivert-s-projects.vercel.app`; the previous GitHub
+`main` source was `58819f7091d487b60dcfb9586a387a49df61d67f`.
+
+The strict Voice release verifier remains held on the five-minute fatigue
+listen, physical-device/audio-route behavior and iOS VoiceOver. The repository
+still lacks `ios/` and `android/` platform projects, and new Academy modules
+still lack their own provenance-blind pairwise/human acceptance.
+
 ## Academy Voice production completion checkpoint
 
 R5-A is the owner-selected blind winner and the complete British female
