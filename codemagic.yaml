@@ -1,8 +1,8 @@
-# Codemagic iOS workflow for StrikeArc — NATIVE (svingbue) build.
+# Codemagic iOS workflow for Flightglass — NATIVE (svingbue) build.
 #
 # Wraps the static web app (index/geometry/impact + geo3d/vendor/assets)
 # in a Capacitor 7 iOS shell, landscape-locked, and ships it to TestFlight
-# on the EXISTING StrikeArc app record (ASC Apple ID 6768449250, bundle
+# on the existing App Store record (ASC Apple ID 6768449250, bundle
 # no.strikearc.app, team PL9G26C26C). This build supersedes the React/Vite
 # strikearc-3.0 build on TestFlight — chosen by Sivert 2026-07-03.
 #
@@ -22,7 +22,7 @@ definitions:
 
 workflows:
   ios-testflight:
-    name: StrikeArc — iOS TestFlight (native)
+    name: Flightglass — iOS TestFlight (native)
     instance_type: mac_mini_m2
     max_build_duration: 60
 
@@ -37,7 +37,7 @@ workflows:
     environment:
       vars:
         BUNDLE_ID: *bundle_id
-        APP_STORE_APPLE_ID: 6768449250   # existing StrikeArc ASC app id
+        APP_STORE_APPLE_ID: 6768449250   # existing ASC app id; do not migrate
         XCODE_WORKSPACE: "ios/App/App.xcworkspace"
         XCODE_SCHEME: "App"
       node: 20
@@ -81,7 +81,7 @@ workflows:
 
       - name: Inject Info.plist export-compliance answer
         script: |
-          # Auto-answer Apple's "Missing Compliance" question. StrikeArc only
+          # Auto-answer Apple's "Missing Compliance" question. Flightglass only
           # uses HTTPS via system APIs + Web Audio, which are exempt per
           # 740.17(b)(1) of the US Export Administration Regulations. ios/ is
           # gitignore'd + regenerated each run, so the injection lives here.
@@ -95,7 +95,7 @@ workflows:
           # resources/icon.png (1024²) + resources/splash.png (2732²) are the
           # sources — capacitor-assets fans them out to every iOS size after
           # the platform exists.
-          npx capacitor-assets generate --ios --iconBackgroundColor "#0A0E12"
+          npx capacitor-assets generate --ios --iconBackgroundColor "#07060C"
 
       - name: CocoaPods install
         script: |

@@ -1,0 +1,57 @@
+{
+  "schemaVersion": 1,
+  "createdAt": "2026-07-15T08:56:41.490Z",
+  "purpose": "Anonymous old-shipping-versus-current-shipping landscape comparison",
+  "judgeVisibleDirectories": [
+    "outputs/flightglass-home-night-ladder-eval/pairwise/pair-1",
+    "outputs/flightglass-home-night-ladder-eval/pairwise/pair-2"
+  ],
+  "pairs": [
+    {
+      "id": "pair-1",
+      "viewport": "landscape-wide",
+      "motion": "normal",
+      "width": 932,
+      "height": 430,
+      "sides": {
+        "A": {
+          "generation": "old-shipping-baseline",
+          "source": "outputs/flightglass-ux/baseline/home--landscape-wide--normal.png",
+          "artifact": "outputs/flightglass-home-night-ladder-eval/pairwise/pair-1/A.png",
+          "bytes": 479385,
+          "sha256": "dce3c785825e25811c20ce89a07dbb185d7adc272631316421a6d506243718ff"
+        },
+        "B": {
+          "generation": "current-shipping-verify",
+          "source": "outputs/flightglass-ux/verify/home--landscape-wide--normal.png",
+          "artifact": "outputs/flightglass-home-night-ladder-eval/pairwise/pair-1/B.png",
+          "bytes": 385583,
+          "sha256": "59ef184af067474d2124b2fbb88e8c04fbf8d642966793f3c26dbfb10e94e88d"
+        }
+      }
+    },
+    {
+      "id": "pair-2",
+      "viewport": "landscape-compact",
+      "motion": "normal",
+      "width": 812,
+      "height": 375,
+      "sides": {
+        "A": {
+          "generation": "current-shipping-verify",
+          "source": "outputs/flightglass-ux/verify/home--landscape-compact--normal.png",
+          "artifact": "outputs/flightglass-home-night-ladder-eval/pairwise/pair-2/A.png",
+          "bytes": 298371,
+          "sha256": "a27fc0a910e0d19f91e8c741e6d1c0ecf33a746f793da0c9c5f933f921732e24"
+        },
+        "B": {
+          "generation": "old-shipping-baseline",
+          "source": "outputs/flightglass-ux/baseline/home--landscape-compact--normal.png",
+          "artifact": "outputs/flightglass-home-night-ladder-eval/pairwise/pair-2/B.png",
+          "bytes": 374600,
+          "sha256": "7a2359b2c18a316173c26f221310764915d41d92409b057a3dca97c94a487eea"
+        }
+      }
+    }
+  ]
+}

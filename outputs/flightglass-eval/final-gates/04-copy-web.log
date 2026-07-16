@@ -1,0 +1,36 @@
+
+> svingbue-app@1.0.0 copy-web
+> node scripts/copy-web.mjs
+
+[copy-web] removed existing www/
+[copy-web] created fresh www/
+[copy-web] copied index.html
+[copy-web] copied geometry.html
+[copy-web] copied impact.html
+[copy-web] copied academy.html
+[copy-web] copied terms.html
+[copy-web] copied privacy.html
+[copy-web] copied vendor/
+[copy-web] copied assets/
+[copy-web] copied geo3d/
+[copy-web] copied academy-backspin-model.js
+[copy-web] copied academy-lesson-journey.js
+[copy-web] copied academy-native-lesson.css
+[copy-web] copied academy-native-lesson.js
+[copy-web] copied academy-readout-format.js
+[copy-web] copied academy-trace-state.js
+[copy-web] copied diagnose-engine-v2.js
+[copy-web] copied diagnose-engine.js
+[copy-web] copied impact-flight.js
+[copy-web] copied sa-firstrun.js
+[copy-web] copied sa-glass.css
+[copy-web] copied sa-haptics.js
+[copy-web] copied sa-iap.js
+[copy-web] copied sa-p3.css
+[copy-web] copied sa-paywall.css
+[copy-web] copied sa-paywall.js
+[copy-web] copied sa-shots.js
+[copy-web] copied sa.css
+[copy-web] copied swing-parameters-and-impact.js
+[copy-web] copied 19 top-level *.js/*.css file(s)
+[copy-web] done. www/ is ready for `npx cap sync ios`.

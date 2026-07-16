@@ -1,0 +1,135 @@
+{
+  "version": 1,
+  "name": "instrument-laws",
+  "source": "docs/superpowers/plans/2026-07-14-instrument-gates.md §4",
+  "locked": "2026-07-14",
+  "scoring": {
+    "formula": "100 × (bestått vekt / total vekt)",
+    "tiers": {
+      "NO-GO": "≥1 kritisk defekt feilet",
+      "SHIPPBAR": "alle kritiske bestått",
+      "STUDIO-GRADE": "alle krav bestått + parvis sammenligning vunnet"
+    }
+  },
+  "requirements": [
+    {
+      "id": "EV-TYPO-01",
+      "claim": "Alle live-readouts har font-variant-numeric: tabular-nums",
+      "verify": "DOM-scan av [data-readout] via getComputedStyle i harness",
+      "weight": 8,
+      "critical": true
+    },
+    {
+      "id": "EV-TYPO-02",
+      "claim": "Ingen readout endrer bredde ved verdisyklus over sifrene 0–9",
+      "verify": "getBoundingClientRect-delta = 0 px over syklus",
+      "weight": 8,
+      "critical": true
+    },
+    {
+      "id": "EV-TYPO-03",
+      "claim": "Minus i alle synlige verdier er U+2212",
+      "verify": "Formatter-enhetstest + DOM-tekstscan for /-\\d/ i readouts",
+      "weight": 4,
+      "critical": false
+    },
+    {
+      "id": "EV-TYPO-04",
+      "claim": "Én skriftpar-definisjon i token-fil; null ad-hoc font-family i lesson-CSS",
+      "verify": "grep i shipped CSS unntatt token-fil",
+      "weight": 4,
+      "critical": false
+    },
+    {
+      "id": "EV-MOT-01",
+      "claim": "p95 pointermove→paint < 16.7 ms over ≥200 syntetiske drag-events, Chromium OG WebKit",
+      "verify": "perf-harness JSON-rapport",
+      "weight": 8,
+      "critical": true
+    },
+    {
+      "id": "EV-MOT-02",
+      "claim": "Ghost-decay finnes kun på canvas-trace, aldri på tall/tekst",
+      "verify": "kodesøk + DOM-inspeksjon",
+      "weight": 4,
+      "critical": false
+    },
+    {
+      "id": "EV-MOT-03",
+      "claim": "Maks to ghosts, monotont fallende opasitet",
+      "verify": "enhetstest på trace-state",
+      "weight": 4,
+      "critical": false
+    },
+    {
+      "id": "EV-MOT-04",
+      "claim": "Aperture-transisjon finnes mellom flater; reduced-motion gir fade-ekvivalent med live sannhet",
+      "verify": "browsertest i begge motion-moduser",
+      "weight": 8,
+      "critical": true
+    },
+    {
+      "id": "EV-REN-01",
+      "claim": "Null gradient/glow/box-shadow/filter på canvas og lesson-flater",
+      "verify": "computed-style-audit + grep i canvas-kode",
+      "weight": 8,
+      "critical": true
+    },
+    {
+      "id": "EV-REN-02",
+      "claim": "Maks én annotasjon synlig per modelltilstand",
+      "verify": "browsertest over tilstandssveip",
+      "weight": 4,
+      "critical": false
+    },
+    {
+      "id": "EV-REN-03",
+      "claim": "Estimatlag aldri i ember-token; motor-sannhet aldri i violet-token",
+      "verify": "fargeaudit av computed styles mot token-verdier",
+      "weight": 8,
+      "critical": true
+    },
+    {
+      "id": "EV-NAT-01",
+      "claim": "130 % tekstskala: ingen klipping/overlapp/horisontal scroll på alle seks flater",
+      "verify": "harness med skalert rotfont + bounding-box-asserts",
+      "weight": 8,
+      "critical": true
+    },
+    {
+      "id": "EV-NAT-02",
+      "claim": "axe-core: null critical/serious violations på alle seks flater",
+      "verify": "axe-kjøring i harness",
+      "weight": 8,
+      "critical": true
+    },
+    {
+      "id": "EV-NAT-03",
+      "claim": "Slidere har aria-valuetext med enhet; verdi-annonsering er debounced (aldri per-event)",
+      "verify": "DOM-assert + event-test",
+      "weight": 4,
+      "critical": false
+    },
+    {
+      "id": "EV-NAT-04",
+      "claim": "requiredSelectors i surface-manifestet dekker Mission, Lab, Mastery OG Result",
+      "verify": "manifest-test",
+      "weight": 4,
+      "critical": false
+    },
+    {
+      "id": "EV-REG-01",
+      "claim": "Pixel-diff mot godkjente baselines ≤ 0.1 % per flate, begge motorer, begge motion-moduser",
+      "verify": "visreg-rapport",
+      "weight": 8,
+      "critical": true
+    },
+    {
+      "id": "EV-GATE-01",
+      "claim": "Hele Task 9-suiten (viewport, targets, tastatur, failure-paths) passerer på WebKit",
+      "verify": "testkjøring --project=webkit",
+      "weight": 8,
+      "critical": true
+    }
+  ]
+}

@@ -1,5 +1,10 @@
 .vercel
 
+# Local provider credentials and raw Academy voice-production work. Neither may
+# be committed; accepted, processed audio lives under assets/audio/ instead.
+.env.local
+.voice-production/
+
 # --- Native packaging (Capacitor) ---
 # Node dependencies for the Capacitor scaffold (package.json at repo root).
 node_modules/

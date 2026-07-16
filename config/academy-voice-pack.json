@@ -1,0 +1,10 @@
+{
+  "packId": "control-room-en-us-v1",
+  "locale": "en-US",
+  "displayName": "Control Room",
+  "delivery": "local-prerecorded-only",
+  "rightsStatus": "pending-final-licensed-assets",
+  "voiceIdentityStatus": "pending-blind-listening-gate",
+  "productionGuide": "Calm General American female laboratory/control-room delivery; concise, technically confident, low fatigue; no music or theatrical effects.",
+  "assets": []
+}

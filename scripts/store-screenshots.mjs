@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// scripts/store-screenshots.mjs — StrikeArc marketing screenshots at exact
+// scripts/store-screenshots.mjs — Flightglass marketing screenshots at exact
 // store pixel sizes. Run: node scripts/store-screenshots.mjs  (npm run shots)
 //
 // Prereq: cd tools && npm install   (playwright-core; uses installed Edge).

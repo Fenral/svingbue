@@ -1,0 +1,11 @@
+{
+  "engine": "webkit",
+  "surface": "academy-lesson/lab",
+  "events": 220,
+  "budgetMsP95": 16.7,
+  "p50": 3,
+  "p95": 5,
+  "p99": 6,
+  "max": 30,
+  "capturedAt": "2026-07-15T17:03:55.666Z"
+}

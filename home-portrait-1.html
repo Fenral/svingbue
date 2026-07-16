@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#07060C">
+<meta name="robots" content="noindex">
+<title>Flightglass — Night Ladder</title>
+<link rel="preload" as="image" href="./assets/range-night-3d-33.png">
+<link rel="stylesheet" href="./sa-p3.css">
+<style>
+  @view-transition{navigation:auto}
+  *{box-sizing:border-box}
+  html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg)}
+  body{min-width:320px;min-height:100dvh;color:var(--ink);font-family:var(--font-ui);-webkit-font-smoothing:antialiased}
+  .scene{position:fixed;inset:0;overflow:hidden;background:var(--scene-bg)}
+  .scene__photo{position:absolute;inset:-2%;width:104%;height:104%;object-fit:cover;object-position:50% 48%;filter:saturate(.78) brightness(.66)}
+  .scene__grade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(7,6,12,.56) 0%,rgba(20,14,36,.10) 36%,rgba(7,6,12,.18) 62%,rgba(7,6,12,.88) 100%)}
+  .scene__horizon{position:absolute;left:0;right:0;top:37%;height:1px;background:var(--secondary-line);opacity:.32}
+  header{position:fixed;z-index:10;left:max(20px,env(safe-area-inset-left));right:max(20px,env(safe-area-inset-right));top:max(18px,env(safe-area-inset-top));height:44px;display:flex;align-items:center;justify-content:space-between}
+  .lockup{display:block;width:132px;height:auto;view-transition-name:sa-logo}
+  .help{display:grid;place-items:center;width:44px;height:44px;border:1px solid var(--line);border-radius:50%;color:var(--muted);text-decoration:none;font:600 14px var(--font-mono);background:rgba(7,6,12,.62)}
+  .help:hover{color:var(--ink);border-color:var(--secondary-line)}
+  main{position:fixed;z-index:3;inset:0;padding-top:max(76px,calc(env(safe-area-inset-top) + 66px));padding-bottom:max(24px,env(safe-area-inset-bottom))}
+  .intro{position:absolute;left:max(20px,env(safe-area-inset-left));top:max(86px,calc(env(safe-area-inset-top) + 76px));width:230px}
+  .intro__kicker{margin:0 0 8px;color:var(--secondary);font:600 10px/1 var(--font-ui);letter-spacing:.18em;text-transform:uppercase}
+  .intro h1{margin:0;font:600 clamp(34px,10vw,46px)/.94 var(--font-display);letter-spacing:-.045em}
+  .intro p{margin:12px 0 0;color:var(--muted);font-size:13px;line-height:1.45;max-width:210px}
+  .flight{position:absolute;inset:72px 0 58px;pointer-events:none}
+  .flight svg{width:100%;height:100%;overflow:visible}
+  .trace-under{fill:none;stroke:rgba(255,138,77,.16);stroke-width:9;stroke-linecap:round}
+  .trace{fill:none;stroke:var(--accent);stroke-width:2.4;stroke-linecap:round;stroke-dasharray:1;stroke-dashoffset:1;animation:draw 1.35s var(--ease) .16s forwards}
+  .trace-structure{fill:none;stroke:var(--secondary-line);stroke-width:1;stroke-dasharray:4 8}
+  .ball{fill:var(--accent);offset-path:path('M 212 780 C 150 650 287 522 212 214');offset-distance:0%;animation:fly 1.35s var(--ease) .16s forwards}
+  @keyframes draw{to{stroke-dashoffset:0}}
+  @keyframes fly{to{offset-distance:100%}}
+  nav{position:absolute;inset:0;list-style:none}
+  .place{position:absolute;display:flex;min-height:56px;max-width:188px;align-items:center;text-decoration:none;color:var(--ink);border:1px solid var(--line);border-left:2px solid var(--secondary);background:rgba(7,6,12,.90);padding:10px 13px;border-radius:12px;transition:transform .16s var(--ease),border-color .16s var(--ease)}
+  .place:hover{transform:translateY(-2px);border-color:var(--secondary-line)}
+  .place--primary{border-left-color:var(--accent);background:rgba(7,6,12,.95)}
+  .place__copy{display:grid;gap:4px}
+  .place__label{color:var(--muted);font-size:9px;font-weight:700;letter-spacing:.15em;text-transform:uppercase}
+  .place__value{font:600 15px/1.15 var(--font-mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+  .place--primary .place__label,.place--primary .place__value{color:var(--accent)}
+  .place--academy .place__value{color:var(--gold)}
+  .p-range{left:max(18px,env(safe-area-inset-left));bottom:12%}
+  .p-lab{right:max(18px,env(safe-area-inset-right));bottom:35%}
+  .p-outcome{left:max(18px,env(safe-area-inset-left));top:35%}
+  .p-academy{right:max(18px,env(safe-area-inset-right));top:20%}
+  .station{position:absolute;width:8px;height:8px;border:1px solid var(--secondary);border-radius:50%;background:var(--bg);pointer-events:none}
+  .s1{left:52%;bottom:14%}.s2{left:48%;bottom:39%}.s3{left:52%;top:39%}.s4{left:49%;top:24%}
+  .footnote{position:absolute;left:max(20px,env(safe-area-inset-left));right:max(20px,env(safe-area-inset-right));bottom:max(15px,env(safe-area-inset-bottom));display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:10px;letter-spacing:.08em;text-transform:uppercase}
+  .footnote span:last-child{font-family:var(--font-mono);font-variant-numeric:tabular-nums;color:var(--ink)}
+  @media(max-width:390px){
+    .intro{width:210px}.intro h1{font-size:35px}.intro p{font-size:12px}
+    .place{max-width:166px;padding-inline:11px}.place__value{font-size:13px}
+    .p-academy{top:21%}.p-outcome{top:37%}.p-lab{bottom:34%}.p-range{bottom:11%}
+  }
+  @media(max-height:850px){
+    .intro p:not(.intro__kicker){display:none}.intro h1{font-size:34px}.intro{top:max(78px,calc(env(safe-area-inset-top) + 68px))}
+    .p-academy{top:20%}.p-outcome{top:36%}.p-lab{bottom:32%}.p-range{bottom:10%}
+  }
+  @media(prefers-reduced-motion:reduce){
+    .trace{stroke-dashoffset:0;animation:none}.ball{offset-distance:100%;animation:none}
+    .place{transition:none}.scene__photo{filter:saturate(.78) brightness(.66)}
+    ::view-transition-old(root),::view-transition-new(root){animation-duration:.12s}
+  }
+</style>
+</head>
+<body>
+<div class="scene" aria-hidden="true">
+  <img class="scene__photo" src="./assets/range-night-3d-33.png" alt="">
+  <div class="scene__grade"></div><div class="scene__horizon"></div>
+</div>
+<header>
+  <img class="lockup" src="./assets/flightglass-lockup.svg" alt="Flightglass">
+  <a class="help sa-focus" href="./academy.html" aria-label="Open Academy help">?</a>
+</header>
+<main>
+  <section class="intro" aria-labelledby="portraitOneTitle">
+    <p class="intro__kicker">Portrait study 01 · Night Ladder</p>
+    <h1 id="portraitOneTitle">Walk the<br>shot.</h1>
+    <p>The range is already live. Every light downrange opens a different part of the explanation.</p>
+  </section>
+  <div class="flight" aria-hidden="true">
+    <svg viewBox="0 0 430 860" preserveAspectRatio="none">
+      <path class="trace-structure" d="M212 780 C150 650 287 522 212 214" pathLength="1"/>
+      <path class="trace-under" d="M212 780 C150 650 287 522 212 214" pathLength="1"/>
+      <path class="trace" d="M212 780 C150 650 287 522 212 214" pathLength="1"/>
+      <circle class="ball" r="5" cx="0" cy="0"/>
+    </svg>
+  </div>
+  <nav aria-label="Flightglass destinations">
+    <a class="place place--primary p-range sa-focus" href="./impact-viz-mock.html" aria-label="Range — demo shot 154 metres, continue">
+      <span class="place__copy"><span class="place__label">Continue · Range</span><span class="place__value">154 m · 12 m R</span></span>
+    </a>
+    <a class="place p-lab sa-focus" href="./geometry-window-mock.html" aria-label="Lab — inspect the strike">
+      <span class="place__copy"><span class="place__label">Lab</span><span class="place__value">Inspect the strike</span></span>
+    </a>
+    <a class="place p-outcome sa-focus" href="./impact-outcome-mock.html" aria-label="Outcome — demo shot faded right">
+      <span class="place__copy"><span class="place__label">Outcome</span><span class="place__value">Fade · demo shot</span></span>
+    </a>
+    <a class="place place--academy p-academy sa-focus" href="./academy.html" aria-label="Academy — open the physics path">
+      <span class="place__copy"><span class="place__label">Academy</span><span class="place__value">Physics path</span></span>
+    </a>
+  </nav>
+  <span class="station s1" aria-hidden="true"></span><span class="station s2" aria-hidden="true"></span>
+  <span class="station s3" aria-hidden="true"></span><span class="station s4" aria-hidden="true"></span>
+  <div class="footnote" aria-hidden="true"><span>Demo shot</span><span>Portrait study</span></div>
+</main>
+</body>
+</html>

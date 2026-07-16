@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
 
 const home = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+const manifest = JSON.parse(readFileSync(new URL('../config/flightglass-surfaces.json', import.meta.url), 'utf8'));
 
 test('shipping Home uses the selected Night Ladder world', () => {
   assert.match(home, /data-home-direction=["']night-ladder["']/);
@@ -26,7 +27,7 @@ test('Night Ladder exposes only shipping destinations', () => {
   assert.match(home, /aria-label=["']Flightglass destinations["']/);
 });
 
-test('Night Ladder preserves state, accessibility and local assets', () => {
+test('Night Ladder preserves honest state, accessibility and local assets', () => {
   for (const key of [
     'sa.stat.flight',
     'sa.stat.geometry',
@@ -50,4 +51,21 @@ test('Night Ladder preserves state, accessibility and local assets', () => {
   assert.match(home, /min-height:\s*56px/);
   assert.match(home, /font-variant-numeric:\s*tabular-nums/);
   assert.match(home, /Demo shot/i);
+});
+
+test('Home audit covers portrait and landscape Night Ladder states', () => {
+  const surface = manifest.surfaces.find(({ id }) => id === 'home');
+  assert.ok(surface);
+  assert.deepEqual(surface.viewportIds, [
+    'portrait-wide',
+    'portrait-compact',
+    'landscape-wide',
+    'landscape-compact'
+  ]);
+  assert.deepEqual(surface.requiredSelectors, [
+    'body[data-home-direction="night-ladder"]',
+    '.scene',
+    '.flight',
+    '.place--primary'
+  ]);
 });

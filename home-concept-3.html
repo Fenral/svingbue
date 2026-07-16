@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#07060C">
 <meta name="robots" content="noindex">
-<title>StrikeArc — The Arc</title>
+<title>Flightglass — The Arc</title>
 
 <!-- favicon: arc-mark (violet strokes) + ember ball — the P3 lockup exception -->
 <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2052%2052'%20fill='none'%3E%3Cpath%20d='M11%2045%20C%2016%2026,%2024%2018,%2035%2015%20M21%2039%20L%2030%2024%20L%2043%2045'%20stroke='%239D8BFF'%20stroke-width='4.2'%20stroke-linecap='round'%20stroke-linejoin='round'/%3E%3Ccircle%20cx='37'%20cy='15'%20r='5.2'%20fill='%23FF8A4D'/%3E%3C/svg%3E">
@@ -152,6 +152,7 @@
     font-size:15px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;line-height:1;}
   .sa-wordmark .wm-text .s{color:var(--ink);}
   .sa-wordmark .wm-text .a{color:var(--accent);}
+  .sa-wordmark .lockup{display:block;width:126px;height:auto;}
 
   .sa-help{
     position:fixed;top:max(4px, calc(env(safe-area-inset-top) - 8px));
@@ -178,13 +179,8 @@
 <!-- ══ HEADER (banner first: h1 wordmark + help lead the DOM & focus order,
      WCAG 2.4.3 / 1.3.2; position:fixed so visual placement is unchanged) ═════ -->
 <header class="sa-header">
-  <h1 class="sa-wordmark" aria-label="StrikeArc">
-    <svg class="mark" viewBox="0 0 52 52" fill="none" aria-hidden="true">
-      <path class="arc" d="M11 45 C 16 26, 24 18, 35 15 M21 39 L 30 24 L 43 45"
-            stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
-      <circle class="ball" cx="37" cy="15" r="5.2"/>
-    </svg>
-    <span class="wm-text" aria-hidden="true"><span class="s">STRIKE</span><span class="a">ARC</span></span>
+  <h1 class="sa-wordmark" aria-label="Flightglass">
+    <img class="lockup" src="./assets/flightglass-lockup.svg" alt="" aria-hidden="true">
   </h1>
   <a class="sa-help" href="academy.html" aria-label="Help — open the Academy">
     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">

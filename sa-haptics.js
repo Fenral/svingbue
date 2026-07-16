@@ -1,5 +1,5 @@
 /* ══════════════════════════════════════════════════════════════════════════
-   sa-haptics.js — StrikeArc shared haptics module (Stage 4, ESM singleton)
+   sa-haptics.js — Flightglass shared haptics module (Stage 4, ESM singleton)
    Imported with `<script type="module">` from geometry.html / impact.html.
 
    Per Apple HIG: haptics mark physical events and detents, never decoration.

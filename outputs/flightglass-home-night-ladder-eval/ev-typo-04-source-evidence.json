@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-07-15T09:46:00.415Z",
+  "evidenceId": "EV-TYPO-04",
+  "evidenceType": "judge-visible source files",
+  "judgment": null,
+  "files": [
+    {
+      "path": "sa-p3.css",
+      "bytes": 27320,
+      "sha256": "dbe1405fb9603c04709c98f07f4c30911009e0d197b4908393d62b98be26d772"
+    },
+    {
+      "path": "academy-native-lesson.css",
+      "bytes": 46334,
+      "sha256": "0d93972dc09c67c5d443360695e396cb5d116e54ac542415c28cbac2e1507779"
+    }
+  ]
+}

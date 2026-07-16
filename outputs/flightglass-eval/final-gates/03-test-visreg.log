@@ -1,0 +1,14 @@
+
+> svingbue-app@1.0.0 test:visreg
+> node --test --test-concurrency=1 scripts/flightglass-visreg.test.mjs
+
+✔ approved visual baselines exist for every surface, viewport, motion and engine (2.5052ms)
+✔ current render diffs at most 0.1% against every approved baseline (94133.3315ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 94848.9428

@@ -1,0 +1,166 @@
+
+> svingbue-app@1.0.0 claude:ready
+> npm run brand:verify && npm run test:ux && node scripts/verify-claude-autopilot.mjs
+
+
+> svingbue-app@1.0.0 brand:verify
+> node scripts/verify-flightglass-brand.mjs
+
+Flightglass brand verification passed.
+
+> svingbue-app@1.0.0 test:ux
+> node --test --test-concurrency=1 scripts/evidence-lock.test.mjs scripts/flightglass-ux.test.mjs scripts/academy-backspin-model.test.mjs scripts/academy-lesson-journey.test.mjs scripts/academy-backspin-browser.test.mjs && npm run test:webkit
+
+✔ browser contract has only executable and specifically named cases (395.856ms)
+✔ the harness launches the engine selected by the webkit project flag (0.4509ms)
+✔ safe-area environment variables resolve without horizontal scroll on this engine (3023.4551ms)
+✔ phosphor ghosts live on the canvas with falling opacity and never on numbers (7160.1661ms)
+✔ the aperture signature transition runs between surfaces with a fade equivalent (6944.1678ms)
+✔ all six surfaces stay intact at 130% text scale (EV-NAT-01) (4439.1438ms)
+✔ axe-core finds no critical or serious violations on any surface (EV-NAT-02) (5004.5078ms)
+✔ rendered lesson surfaces carry zero gradient, glow, shadow or filter (EV-REN-01) (4393.3643ms)
+✔ sliders speak plain-language values and announcements debounce to settle (EV-NAT-03) (4679.067ms)
+✔ trace annotation right: one violet annotation with an engine-true value twin (3985.9889ms)
+✔ instrument typography: readouts are mono, tabular, width-stable and hyphen-free (3023.0097ms)
+✔ native Backspin production route renders its stable six-surface shell (3025.5029ms)
+✔ Backspin Spin Lab fits 430x932 and follows the model contract (3693.7616ms)
+✔ Backspin ordered mission gates and restores progress at 430x932 (4164.5135ms)
+✔ Backspin Spin Lab fits 375x812 and follows the model contract (3615.471ms)
+✔ Backspin ordered mission gates and restores progress at 375x812 (4259.294ms)
+✔ Backspin clamps inconsistent legacy Influence progress back to the Lab gate (2858.1053ms)
+✔ Backspin Influence preserves exact sensitivity through near-clamp, ceiling and floor states (5720.8661ms)
+✔ Backspin real-world register stays separate, sourced and keyboard accessible (4002.137ms)
+✔ Backspin source sheet degrades cleanly when its optional image cannot decode (3450.1658ms)
+✔ Backspin myth predictions reveal exact engine runs and varied supported answers (3906.8565ms)
+✔ wrong myth predictions still complete, persist, reload and remain inspectable (5383.7646ms)
+✔ myth prediction radios support keyboard roving, one haptic and 375px target fit (3843.9723ms)
+✔ myth evidence also fits the 430x932 reference viewport (3765.7004ms)
+✔ Backspin Mastery keeps one stable attempt, submits atomically and upgrades 3/5 to 4/5 once (9497.1773ms)
+✔ fresh 4/5 mastery earns 120 XP and keeps the 375px keyboard/range contract (5284.4318ms)
+✔ fresh 5/5 mastery earns 190 XP, persists every ability and follows unlocked prerequisites (5348.7696ms)
+✔ persisted XP crosses the real 400 threshold only on the 300-to-420 mastery commit (3861.1619ms)
+✔ a wrong mastery choice can be corrected without losing its non-first-try truth (3804.1209ms)
+✔ invalid persisted Result repairs to a fresh active Mastery attempt without rewards (2886.0946ms)
+✔ all six Backspin surfaces fit 430x932 with native target sizes (4774.5592ms)
+✔ all six Backspin surfaces fit 375x812 with native target sizes (4547.9952ms)
+✔ Backspin completes its required learning actions with keyboard input only (3649.5034ms)
+✔ normal and reduced motion produce equivalent Backspin learning state (8687.2229ms)
+✔ Backspin keeps full in-memory progression when Academy storage throws (3030.6451ms)
+✔ Backspin keeps finite model truth and mission progress when canvas context is unavailable (2969.2033ms)
+✔ a true missing Backspin JPG removes the whole media block and preserves sheet content (3392.8532ms)
+✔ Backspin route changes cancel a pending settle and close an open native sheet (4769.0408ms)
+✔ a non-finite Spin Lab input preserves the last valid truth without mission credit (3379.341ms)
+✔ a non-finite Mastery target input cannot alter readouts or receive target credit (4361.8409ms)
+✔ generic Carry preserves legacy rewards and storage across 3/5, 4/5 and reload (4562.1592ms)
+(node:41720) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/SkotvoldSivertSende/svingbue/academy-backspin-model.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to C:\Users\SkotvoldSivertSende\svingbue\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ initial state requires the learner to perform both mission stages (3.4696ms)
+✔ cut is credited only after build (0.4084ms)
+✔ display clamp never erases underlying sensitivity (1.8958ms)
+✔ the lower model floor is distinct from the upper display cap (1.4054ms)
+✔ exact display bounds remain labelled as limits (0.6137ms)
+✔ cause chain reports actual engine deltas (1.1848ms)
+✔ cause chain separates a clamped display from the underlying model delta (0.4165ms)
+✔ cause chain also labels an unchanged display at the model floor (1.616ms)
+✔ the current engine holds carry steady at fixed ball speed (0.4714ms)
+✔ real-world range remains separate from simulator truth (0.4818ms)
+✔ mastery target is evaluated from the live engine state (0.4532ms)
+✔ phosphor trace state keeps at most two ghosts with falling opacity (EV-MOT-03) (1.8693ms)
+✔ readout formatter owns U+2212, grouping and unit suffixes (EV-TYPO-03) (79.9833ms)
+(node:36124) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/SkotvoldSivertSende/svingbue/academy-lesson-journey.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to C:\Users\SkotvoldSivertSende\svingbue\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ a legacy lesson receives the complete native journey shape (2.0424ms)
+✔ partial progress deep-merges without shared nested state (0.6105ms)
+✔ journey counters and surfaces are normalized into their supported ranges (0.2712ms)
+✔ a committed submission survives migration as an idempotency record (1.5327ms)
+✔ invalid idempotency records are discarded during migration (0.3671ms)
+✔ evidence manifest exists with all 17 requirements and ordered weights (3.2713ms)
+✔ evidence manifest is locked: canonical SHA-256 matches the lock file (4.9187ms)
+✔ the canonical hash ignores line-ending rewrites but not content edits (2.9003ms)
+✔ derive-score: all passed + pairwise won derives STUDIO-GRADE at 100 (1.8778ms)
+✔ derive-score: one critical failure is NO-GO regardless of score (0.788ms)
+✔ derive-score: non-critical failures keep SHIPPBAR and weight the score down (13.0209ms)
+✔ derive-score: STUDIO-GRADE requires the pairwise comparison to be won (1.2906ms)
+✔ derive-score: refuses incomplete or unknown judge coverage (3.365ms)
+✔ lock helper: sha256 of canonical JSON matches node crypto directly (0.8046ms)
+✔ manifest defines every owner-named surface with a 90+ target (8.1704ms)
+✔ manifest maps every surface to existing files and target viewports (3.0805ms)
+✔ Backspin reference lesson targets 96 before Academy rollout (0.6687ms)
+✔ copy-web ships the Backspin lesson assets and never the mock (481.0141ms)
+✔ instrument typography tokens: one font pair, no ad-hoc families in lesson CSS (2.5968ms)
+✔ instrument render signature: no glow, gradient, shadow or filter in the lesson (1.7746ms)
+✔ snapshot evaluation separates critical failures from improvement findings (0.9389ms)
+✔ snapshot evaluation reports failed resource URLs as critical evidence (0.2975ms)
+✔ resource failures are deduplicated by URL while preserving the strongest evidence (0.3726ms)
+✔ browser favicon probes are ignored by the product audit (0.3697ms)
+✔ focused audits cannot overwrite the full baseline report (0.265ms)
+✔ the same failed resource is not counted again as a console error (0.2253ms)
+✔ markdown report names scores, criticals and screenshot evidence (0.5628ms)
+✔ audit CLI validates the manifest without launching a browser (128.0574ms)
+✔ Claude autopilot verifier approves the complete control package (107.8424ms)
+ℹ tests 83
+ℹ suites 0
+ℹ pass 83
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 180954.4424
+
+> svingbue-app@1.0.0 test:webkit
+> node scripts/academy-backspin-browser.test.mjs --project=webkit
+
+✔ browser contract has only executable and specifically named cases (139.6703ms)
+✔ the harness launches the engine selected by the webkit project flag (0.4167ms)
+✔ safe-area environment variables resolve without horizontal scroll on this engine (1194.4175ms)
+✔ phosphor ghosts live on the canvas with falling opacity and never on numbers (4031.7851ms)
+✔ the aperture signature transition runs between surfaces with a fade equivalent (4506.3959ms)
+✔ all six surfaces stay intact at 130% text scale (EV-NAT-01) (6037.3109ms)
+✔ axe-core finds no critical or serious violations on any surface (EV-NAT-02) (7304.3327ms)
+✔ rendered lesson surfaces carry zero gradient, glow, shadow or filter (EV-REN-01) (6290.0188ms)
+✔ sliders speak plain-language values and announcements debounce to settle (EV-NAT-03) (3117.3208ms)
+✔ trace annotation right: one violet annotation with an engine-true value twin (2465.9054ms)
+✔ instrument typography: readouts are mono, tabular, width-stable and hyphen-free (1421.5167ms)
+✔ native Backspin production route renders its stable six-surface shell (1121.0972ms)
+✔ Backspin Spin Lab fits 430x932 and follows the model contract (2815.7226ms)
+✔ Backspin ordered mission gates and restores progress at 430x932 (2678.1733ms)
+✔ Backspin Spin Lab fits 375x812 and follows the model contract (2953.5309ms)
+✔ Backspin ordered mission gates and restores progress at 375x812 (2598.4246ms)
+✔ Backspin clamps inconsistent legacy Influence progress back to the Lab gate (934.5563ms)
+✔ Backspin Influence preserves exact sensitivity through near-clamp, ceiling and floor states (6256.0363ms)
+✔ Backspin real-world register stays separate, sourced and keyboard accessible (3747.4137ms)
+✔ Backspin source sheet degrades cleanly when its optional image cannot decode (2209.5887ms)
+✔ Backspin myth predictions reveal exact engine runs and varied supported answers (3500.5447ms)
+✔ wrong myth predictions still complete, persist, reload and remain inspectable (5503.1509ms)
+✔ myth prediction radios support keyboard roving, one haptic and 375px target fit (3203.0764ms)
+✔ myth evidence also fits the 430x932 reference viewport (3240.8712ms)
+✔ Backspin Mastery keeps one stable attempt, submits atomically and upgrades 3/5 to 4/5 once (12922.0281ms)
+✔ fresh 4/5 mastery earns 120 XP and keeps the 375px keyboard/range contract (6391.3396ms)
+✔ fresh 5/5 mastery earns 190 XP, persists every ability and follows unlocked prerequisites (7221.9065ms)
+✔ persisted XP crosses the real 400 threshold only on the 300-to-420 mastery commit (3599.0146ms)
+✔ a wrong mastery choice can be corrected without losing its non-first-try truth (3849.3553ms)
+✔ invalid persisted Result repairs to a fresh active Mastery attempt without rewards (1172.905ms)
+✔ all six Backspin surfaces fit 430x932 with native target sizes (5720.6887ms)
+✔ all six Backspin surfaces fit 375x812 with native target sizes (5676.8321ms)
+✔ Backspin completes its required learning actions with keyboard input only (2400.0234ms)
+✔ normal and reduced motion produce equivalent Backspin learning state (5414.3089ms)
+✔ Backspin keeps full in-memory progression when Academy storage throws (1518.8232ms)
+✔ Backspin keeps finite model truth and mission progress when canvas context is unavailable (1408.7776ms)
+✔ a true missing Backspin JPG removes the whole media block and preserves sheet content (2277.4502ms)
+✔ Backspin route changes cancel a pending settle and close an open native sheet (2887.2041ms)
+✔ a non-finite Spin Lab input preserves the last valid truth without mission credit (1702.3101ms)
+✔ a non-finite Mastery target input cannot alter readouts or receive target credit (3891.3646ms)
+✔ generic Carry preserves legacy rewards and storage across 3/5, 4/5 and reload (4253.9013ms)
+ℹ tests 41
+ℹ suites 0
+ℹ pass 41
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 150679.0853
+Claude autopilot ready (11 files, 7 protected identifiers).

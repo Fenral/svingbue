@@ -14,7 +14,7 @@
 //      the app stays landscape-only even if later run on iPad.
 //   3. Sets UIRequiresFullScreen to true (no Slide Over / Split View on
 //      iPad, which would otherwise fight the landscape-only layout).
-//   4. Sets CFBundleDisplayName to "StrikeArc" (the name shown under the
+//   4. Sets CFBundleDisplayName to "Flightglass" (the name shown under the
 //      home-screen icon; separate from CFBundleName).
 //
 // Implementation notes / assumptions:
@@ -143,8 +143,8 @@ plist = setBoolKey(plist, 'UIRequiresFullScreen', true);
 log('set UIRequiresFullScreen -> true');
 
 // 4. Display name shown under the home-screen icon.
-plist = setStringKey(plist, 'CFBundleDisplayName', 'StrikeArc');
-log('set CFBundleDisplayName -> StrikeArc');
+plist = setStringKey(plist, 'CFBundleDisplayName', 'Flightglass');
+log('set CFBundleDisplayName -> Flightglass');
 
 if (plist === original) {
   log('no changes needed (already patched) — plist untouched on disk.');

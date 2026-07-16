@@ -1,6 +1,6 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
-// StrikeArc (svingbue) — Capacitor config for the iOS native wrapper.
+// Flightglass (svingbue) — Capacitor config for the iOS native wrapper.
 //
 // IMPORTANT: this project's web assets are served TWO ways:
 //   1. Vercel serves this folder's ROOT directly (svingbue.vercel.app) —
@@ -16,11 +16,11 @@ import type { CapacitorConfig } from '@capacitor/cli';
 // Store builds must be fully self-contained (no dependency on a dev machine
 // being reachable), so the app always loads the bundled `www/` contents.
 const config: CapacitorConfig = {
-  // Takes over the existing StrikeArc app record (ASC Apple ID 6768449250,
+  // Flightglass retains the existing app record (ASC Apple ID 6768449250,
   // team PL9G26C26C) — the native svingbue build supersedes the React/Vite
-  // strikearc-3.0 build on TestFlight. Same bundle id as strikearc-3.0.
+  // previous TestFlight build. The bundle id remains unchanged for continuity.
   appId: 'no.strikearc.app',
-  appName: 'StrikeArc',
+  appName: 'Flightglass',
   webDir: 'www',
   server: {
     androidScheme: 'https',

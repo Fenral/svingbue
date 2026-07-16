@@ -1,0 +1,776 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-07-15T09:18:13.542Z",
+  "command": "node outputs/flightglass-home-night-ladder-eval/home-determinism-proof.mjs",
+  "method": "Two fresh contexts and independently loaded settled Home documents per engine, viewport and motion case.",
+  "establishedSemantics": {
+    "implementation": "scripts/lib/flightglass-visreg.mjs diffPng",
+    "channelToleranceLsb": 3,
+    "maximumDiffPct": 0.1,
+    "chromiumArguments": [
+      "--disable-gpu",
+      "--force-color-profile=srgb",
+      "--disable-lcd-text",
+      "--font-render-hinting=none",
+      "--force-device-scale-factor=1",
+      "--hide-scrollbars"
+    ],
+    "settleMs": 1800
+  },
+  "browserVersions": {
+    "chromium": "150.0.4078.65",
+    "webkit": "26.5"
+  },
+  "counts": {
+    "cases": 16,
+    "captureFiles": 32,
+    "passes": 16,
+    "failures": 0
+  },
+  "maximumDiff": {
+    "diffPct": 0,
+    "diffPixels": 0,
+    "engine": "chromium",
+    "viewport": "portrait-wide",
+    "motion": "normal"
+  },
+  "results": [
+    {
+      "engine": "chromium",
+      "viewport": "portrait-wide",
+      "width": 430,
+      "height": 932,
+      "motion": "normal",
+      "captures": [
+        {
+          "path": "outputs/flightglass-home-night-ladder-eval/home-determinism/chromium--portrait-wide--normal--A.png",
+          "pageErrors": [],
+          "consoleErrors": [],
+          "nonblank": {
+            "width": 430,
+            "height": 932,
+            "rgbStdDev": [
+              33.728,
+              30.658,
+              33.118
+            ],
+            "pass": true
+          }
+        },
+        {
+          "path": "outputs/flightglass-home-night-ladder-eval/home-determinism/chromium--portrait-wide--normal--B.png",
+          "pageErrors": [],
+          "consoleErrors": [],
+          "nonblank": {
+            "width": 430,
+            "height": 932,
+            "rgbStdDev": [
+              33.728,
+              30.658,
+              33.118
+            ],
+            "pass": true
+          }
+        }
+      ],
+      "diff": {
+        "comparable": true,
+        "diffPixels": 0,
+        "totalPixels": 400760,
+        "diffPct": 0
+      },
+      "pass": true
+    },
+    {
+      "engine": "chromium",
+      "viewport": "portrait-wide",
+      "width": 430,
+      "height": 932,
+      "motion": "reduced",
+      "captures": [
+        {
+          "path": "outputs/flightglass-home-night-ladder-eval/home-determinism/chromium--portrait-wide--reduced--A.png",
+          "pageErrors": [],
+          "consoleErrors": [],
+          "nonblank": {
+            "width": 430,
+            "height": 932,
+            "rgbStdDev": [
+              33.728,
+              30.658,
+              33.118
+            ],
+            "pass": true
+          }
+        },
+        {
+          "path": "outputs/flightglass-home-night-ladder-eval/home-determinism/chromium--portrait-wide--reduced--B.png",
+          "pageErrors": [],
+          "consoleErrors": [],
+          "nonblank": {
+            "width": 430,
+            "height": 932,
+            "rgbStdDev": [
+              33.728,
+              30.658,
+              33.118
+            ],
+            "pass": true
+          }
+        }
+      ],
+      "diff": {
+        "comparable": true,
+        "diffPixels": 0,
+        "totalPixels": 400760,
+        "diffPct": 0
+      },
+      "pass": true
+    },
+    {
+      "engine": "chromium",
+      "viewport": "portrait-compact",
+      "width": 375,
+      "height": 812,
+      "motion": "normal",
+      "captures": [
+        {
+          "path": "outputs/flightglass-home-night-ladder-eval/home-determinism/chromium--portrait-compact--normal--A.png",
+          "pageErrors": [],
+          "consoleErrors": [],
+          "nonblank": {
+            "width": 375,
+            "height": 812,
+            "rgbStdDev": [
+              32.806,
+              29.536,
+              31.964
+            ],
+            "pass": true
+          }
+        },
+        {
+          "path": "outputs/flightglass-home-night-ladder-eval/home-determinism/chromium--portrait-compact--normal--B.png",
+          "pageErrors": [],
+          "consoleErrors": [],
+          "nonblank": {
+            "width": 375,
+            "height": 812,
+            "rgbStdDev": [
+              32.806,
+              29.536,
+              31.964
+            ],
+            "pass": true
+          }
+        }
+      ],
+      "diff": {
+        "comparable": true,
+        "diffPixels": 0,
+        "totalPixels": 304500,
+        "diffPct": 0
+      },
+      "pass": true
+    },
+    {
+      "engine": "chromium",
+      "viewport": "portrait-compact",
+      "width": 375,
+      "height": 812,
+      "motion": "reduced",
+      "captures": [
+        {
+          "path": "outputs/flightglass-home-night-ladder-eval/home-determinism/chromium--portrait-compact--reduced--A.png",
+          "pageErrors": [],
+          "consoleErrors": [],
+          "nonblank": {
+            "width": 375,
+            "height": 812,
+            "rgbStdDev": [
+              32.806,
+              29.536,
+              31.964
+            ],
+            "pass": true
+          }
+        },
+        {
+          "path": "outputs/flightglass-home-night-ladder-eval/home-determinism/chromium--portrait-compact--reduced--B.png",
+          "pageErrors": [],
+          "consoleErrors": [],
+          "nonblank": {
+            "width": 375,
+            "height": 812,
+            "rgbStdDev": [
+              32.806,
+              29.536,
+              31.964
+            ],
+            "pass": true
+          }
+        }
+      ],
+      "diff": {
+        "comparable": true,
+        "diffPixels": 0,
+        "totalPixels": 304500,
+        "diffPct": 0
+      },
+      "pass": true
+    },
+    {
+      "engine": "chromium",
+      "viewport": "landscape-wide",
+      "width": 932,
+      "height": 430,
+      "motion": "normal",
+      "captures": [
+        {
+          "path": "outputs/flightglass-home-night-ladder-eval/home-determinism/chromium--landscape-wide--normal--A.png",
+          "pageErrors": [],
+          "consoleErrors": [],
+          "nonblank": {
+            "width": 932,
+            "height": 430,
+            "rgbStdDev": [
+              33.193,
+              30.403,
+              33.116
+            ],
+            "pass": true
+          }
+        },
+        {
+          "path": "outputs/flightglass-home-night-ladder-eval/home-determinism/chromium--landscape-wide--normal--B.png",
+          "pageErrors": [],
+          "consoleErrors": [],
+          "nonblank": {
+            "width": 932,
+            "height": 430,
+            "rgbStdDev": [
+              33.193,
+              30.403,
+              33.116
+            ],
+            "pass": true
+          }
+        }
+      ],
+      "diff": {
+        "comparable": true,
+        "diffPixels": 0,
+        "totalPixels": 400760,
+        "diffPct": 0
+      },
+      "pass": true
+    },
+    {
+      "engine": "chromium",
+      "viewport": "landscape-wide",
+      "width": 932,
+      "height": 430,
+      "motion": "reduced",
+      "captures": [
+        {
+          "path": "outputs/flightglass-home-night-ladder-eval/home-determinism/chromium--landscape-wide--reduced--A.png",
+          "pageErrors": [],
+          "consoleErrors": [],
+          "nonblank": {
+            "width": 932,
+            "height": 430,
+            "rgbStdDev": [
+              33.193,
+              30.403,
+              33.116
+            ],
+            "pass": true
+          }
+        },
+        {
+          "path": "outputs/flightglass-home-night-ladder-eval/home-determinism/chromium--landscape-wide--reduced--B.png",
+          "pageErrors": [],
+          "consoleErrors": [],
+          "nonblank": {
+            "width": 932,
+            "height": 430,
+            "rgbStdDev": [
+              33.193,
+              30.403,
+              33.116
+            ],
+            "pass": true
+          }
+        }
+      ],
+      "diff": {
+        "comparable": true,
+        "diffPixels": 0,
+        "totalPixels": 400760,
+        "diffPct": 0
+      },
+      "pass": true
+    },
+    {
+      "engine": "chromium",
+      "viewport": "landscape-compact",
+      "width": 812,
+      "height": 375,
+      "motion": "normal",
+      "captures": [
+        {
+          "path": "outputs/flightglass-home-night-ladder-eval/home-determinism/chromium--landscape-compact--normal--A.png",
+          "pageErrors": [],
+          "consoleErrors": [],
+          "nonblank": {
+            "width": 812,
+            "height": 375,
+            "rgbStdDev": [
+              32.268,
+              29.276,
+              31.878
+            ],
+            "pass": true
+          }
+        },
+        {
+          "path": "outputs/flightglass-home-night-ladder-eval/home-determinism/chromium--landscape-compact--normal--B.png",
+          "pageErrors": [],
+          "consoleErrors": [],
+          "nonblank": {
+            "width": 812,
+            "height": 375,
+            "rgbStdDev": [
+              32.268,
+              29.276,
+              31.878
+            ],
+            "pass": true
+          }
+        }
+      ],
+      "diff": {
+        "comparable": true,
+        "diffPixels": 0,
+        "totalPixels": 304500,
+        "diffPct": 0
+      },
+      "pass": true
+    },
+    {
+      "engine": "chromium",
+      "viewport": "landscape-compact",
+      "width": 812,
+      "height": 375,
+      "motion": "reduced",
+      "captures": [
+        {
+          "path": "outputs/flightglass-home-night-ladder-eval/home-determinism/chromium--landscape-compact--reduced--A.png",
+          "pageErrors": [],
+          "consoleErrors": [],
+          "nonblank": {
+            "width": 812,
+            "height": 375,
+            "rgbStdDev": [
+              32.268,
+              29.276,
+              31.878
+            ],
+            "pass": true
+          }
+        },
+        {
+          "path": "outputs/flightglass-home-night-ladder-eval/home-determinism/chromium--landscape-compact--reduced--B.png",
+          "pageErrors": [],
+          "consoleErrors": [],
+          "nonblank": {
+            "width": 812,
+            "height": 375,
+            "rgbStdDev": [
+              32.268,
+              29.276,
+              31.878
+            ],
+            "pass": true
+          }
+        }
+      ],
+      "diff": {
+        "comparable": true,
+        "diffPixels": 0,
+        "totalPixels": 304500,
+        "diffPct": 0
+      },
+      "pass": true
+    },
+    {
+      "engine": "webkit",
+      "viewport": "portrait-wide",
+      "width": 430,
+      "height": 932,
+      "motion": "normal",
+      "captures": [
+        {
+          "path": "outputs/flightglass-home-night-ladder-eval/home-determinism/webkit--portrait-wide--normal--A.png",
+          "pageErrors": [],
+          "consoleErrors": [],
+          "nonblank": {
+            "width": 430,
+            "height": 932,
+            "rgbStdDev": [
+              29.97,
+              26.938,
+              29.421
+            ],
+            "pass": true
+          }
+        },
+        {
+          "path": "outputs/flightglass-home-night-ladder-eval/home-determinism/webkit--portrait-wide--normal--B.png",
+          "pageErrors": [],
+          "consoleErrors": [],
+          "nonblank": {
+            "width": 430,
+            "height": 932,
+            "rgbStdDev": [
+              29.97,
+              26.938,
+              29.421
+            ],
+            "pass": true
+          }
+        }
+      ],
+      "diff": {
+        "comparable": true,
+        "diffPixels": 0,
+        "totalPixels": 400760,
+        "diffPct": 0
+      },
+      "pass": true
+    },
+    {
+      "engine": "webkit",
+      "viewport": "portrait-wide",
+      "width": 430,
+      "height": 932,
+      "motion": "reduced",
+      "captures": [
+        {
+          "path": "outputs/flightglass-home-night-ladder-eval/home-determinism/webkit--portrait-wide--reduced--A.png",
+          "pageErrors": [],
+          "consoleErrors": [],
+          "nonblank": {
+            "width": 430,
+            "height": 932,
+            "rgbStdDev": [
+              29.97,
+              26.938,
+              29.421
+            ],
+            "pass": true
+          }
+        },
+        {
+          "path": "outputs/flightglass-home-night-ladder-eval/home-determinism/webkit--portrait-wide--reduced--B.png",
+          "pageErrors": [],
+          "consoleErrors": [],
+          "nonblank": {
+            "width": 430,
+            "height": 932,
+            "rgbStdDev": [
+              29.97,
+              26.938,
+              29.421
+            ],
+            "pass": true
+          }
+        }
+      ],
+      "diff": {
+        "comparable": true,
+        "diffPixels": 0,
+        "totalPixels": 400760,
+        "diffPct": 0
+      },
+      "pass": true
+    },
+    {
+      "engine": "webkit",
+      "viewport": "portrait-compact",
+      "width": 375,
+      "height": 812,
+      "motion": "normal",
+      "captures": [
+        {
+          "path": "outputs/flightglass-home-night-ladder-eval/home-determinism/webkit--portrait-compact--normal--A.png",
+          "pageErrors": [],
+          "consoleErrors": [],
+          "nonblank": {
+            "width": 375,
+            "height": 812,
+            "rgbStdDev": [
+              28.994,
+              25.81,
+              28.264
+            ],
+            "pass": true
+          }
+        },
+        {
+          "path": "outputs/flightglass-home-night-ladder-eval/home-determinism/webkit--portrait-compact--normal--B.png",
+          "pageErrors": [],
+          "consoleErrors": [],
+          "nonblank": {
+            "width": 375,
+            "height": 812,
+            "rgbStdDev": [
+              28.994,
+              25.81,
+              28.264
+            ],
+            "pass": true
+          }
+        }
+      ],
+      "diff": {
+        "comparable": true,
+        "diffPixels": 0,
+        "totalPixels": 304500,
+        "diffPct": 0
+      },
+      "pass": true
+    },
+    {
+      "engine": "webkit",
+      "viewport": "portrait-compact",
+      "width": 375,
+      "height": 812,
+      "motion": "reduced",
+      "captures": [
+        {
+          "path": "outputs/flightglass-home-night-ladder-eval/home-determinism/webkit--portrait-compact--reduced--A.png",
+          "pageErrors": [],
+          "consoleErrors": [],
+          "nonblank": {
+            "width": 375,
+            "height": 812,
+            "rgbStdDev": [
+              28.994,
+              25.81,
+              28.264
+            ],
+            "pass": true
+          }
+        },
+        {
+          "path": "outputs/flightglass-home-night-ladder-eval/home-determinism/webkit--portrait-compact--reduced--B.png",
+          "pageErrors": [],
+          "consoleErrors": [],
+          "nonblank": {
+            "width": 375,
+            "height": 812,
+            "rgbStdDev": [
+              28.994,
+              25.81,
+              28.264
+            ],
+            "pass": true
+          }
+        }
+      ],
+      "diff": {
+        "comparable": true,
+        "diffPixels": 0,
+        "totalPixels": 304500,
+        "diffPct": 0
+      },
+      "pass": true
+    },
+    {
+      "engine": "webkit",
+      "viewport": "landscape-wide",
+      "width": 932,
+      "height": 430,
+      "motion": "normal",
+      "captures": [
+        {
+          "path": "outputs/flightglass-home-night-ladder-eval/home-determinism/webkit--landscape-wide--normal--A.png",
+          "pageErrors": [],
+          "consoleErrors": [],
+          "nonblank": {
+            "width": 932,
+            "height": 430,
+            "rgbStdDev": [
+              29.047,
+              26.299,
+              29.109
+            ],
+            "pass": true
+          }
+        },
+        {
+          "path": "outputs/flightglass-home-night-ladder-eval/home-determinism/webkit--landscape-wide--normal--B.png",
+          "pageErrors": [],
+          "consoleErrors": [],
+          "nonblank": {
+            "width": 932,
+            "height": 430,
+            "rgbStdDev": [
+              29.047,
+              26.299,
+              29.109
+            ],
+            "pass": true
+          }
+        }
+      ],
+      "diff": {
+        "comparable": true,
+        "diffPixels": 0,
+        "totalPixels": 400760,
+        "diffPct": 0
+      },
+      "pass": true
+    },
+    {
+      "engine": "webkit",
+      "viewport": "landscape-wide",
+      "width": 932,
+      "height": 430,
+      "motion": "reduced",
+      "captures": [
+        {
+          "path": "outputs/flightglass-home-night-ladder-eval/home-determinism/webkit--landscape-wide--reduced--A.png",
+          "pageErrors": [],
+          "consoleErrors": [],
+          "nonblank": {
+            "width": 932,
+            "height": 430,
+            "rgbStdDev": [
+              29.047,
+              26.299,
+              29.109
+            ],
+            "pass": true
+          }
+        },
+        {
+          "path": "outputs/flightglass-home-night-ladder-eval/home-determinism/webkit--landscape-wide--reduced--B.png",
+          "pageErrors": [],
+          "consoleErrors": [],
+          "nonblank": {
+            "width": 932,
+            "height": 430,
+            "rgbStdDev": [
+              29.047,
+              26.299,
+              29.109
+            ],
+            "pass": true
+          }
+        }
+      ],
+      "diff": {
+        "comparable": true,
+        "diffPixels": 0,
+        "totalPixels": 400760,
+        "diffPct": 0
+      },
+      "pass": true
+    },
+    {
+      "engine": "webkit",
+      "viewport": "landscape-compact",
+      "width": 812,
+      "height": 375,
+      "motion": "normal",
+      "captures": [
+        {
+          "path": "outputs/flightglass-home-night-ladder-eval/home-determinism/webkit--landscape-compact--normal--A.png",
+          "pageErrors": [],
+          "consoleErrors": [],
+          "nonblank": {
+            "width": 812,
+            "height": 375,
+            "rgbStdDev": [
+              28.399,
+              25.484,
+              28.161
+            ],
+            "pass": true
+          }
+        },
+        {
+          "path": "outputs/flightglass-home-night-ladder-eval/home-determinism/webkit--landscape-compact--normal--B.png",
+          "pageErrors": [],
+          "consoleErrors": [],
+          "nonblank": {
+            "width": 812,
+            "height": 375,
+            "rgbStdDev": [
+              28.399,
+              25.484,
+              28.161
+            ],
+            "pass": true
+          }
+        }
+      ],
+      "diff": {
+        "comparable": true,
+        "diffPixels": 0,
+        "totalPixels": 304500,
+        "diffPct": 0
+      },
+      "pass": true
+    },
+    {
+      "engine": "webkit",
+      "viewport": "landscape-compact",
+      "width": 812,
+      "height": 375,
+      "motion": "reduced",
+      "captures": [
+        {
+          "path": "outputs/flightglass-home-night-ladder-eval/home-determinism/webkit--landscape-compact--reduced--A.png",
+          "pageErrors": [],
+          "consoleErrors": [],
+          "nonblank": {
+            "width": 812,
+            "height": 375,
+            "rgbStdDev": [
+              28.399,
+              25.484,
+              28.161
+            ],
+            "pass": true
+          }
+        },
+        {
+          "path": "outputs/flightglass-home-night-ladder-eval/home-determinism/webkit--landscape-compact--reduced--B.png",
+          "pageErrors": [],
+          "consoleErrors": [],
+          "nonblank": {
+            "width": 812,
+            "height": 375,
+            "rgbStdDev": [
+              28.399,
+              25.484,
+              28.161
+            ],
+            "pass": true
+          }
+        }
+      ],
+      "diff": {
+        "comparable": true,
+        "diffPixels": 0,
+        "totalPixels": 304500,
+        "diffPct": 0
+      },
+      "pass": true
+    }
+  ],
+  "pass": true
+}

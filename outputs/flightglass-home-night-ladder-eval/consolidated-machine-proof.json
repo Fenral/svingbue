@@ -1,0 +1,3970 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-07-15T09:09:32.766Z",
+  "command": "node outputs/flightglass-home-night-ladder-eval/independent-machine-proof.mjs",
+  "versions": {
+    "node": "v24.14.1",
+    "playwrightCore": "1.61.1",
+    "axeCore": "4.12.1",
+    "sharp": "0.34.5",
+    "browsers": {
+      "chromium": "150.0.4078.65",
+      "webkit": "26.5"
+    }
+  },
+  "thresholds": {
+    "viewportTolerancePx": 1,
+    "minimumTargetPx": 44,
+    "maximumTargetOverlapAreaPx2": 0,
+    "maximumCriticalAxeViolations": 0,
+    "maximumSeriousAxeViolations": 0,
+    "maximumDigitWidthDeltaPx": 0.6,
+    "nonblankMinimumBytes": 1024,
+    "nonblankMinimumRgbStandardDeviation": 1
+  },
+  "coverage": {
+    "engines": [
+      "chromium",
+      "webkit"
+    ],
+    "viewports": [
+      {
+        "id": "portrait-wide",
+        "width": 430,
+        "height": 932
+      },
+      {
+        "id": "portrait-compact",
+        "width": 375,
+        "height": 812
+      },
+      {
+        "id": "landscape-wide",
+        "width": 932,
+        "height": 430
+      },
+      {
+        "id": "landscape-compact",
+        "width": 812,
+        "height": 375
+      }
+    ],
+    "layoutStates": [
+      {
+        "id": "normal",
+        "reducedMotion": "no-preference",
+        "fontScale": 1
+      },
+      {
+        "id": "reduced",
+        "reducedMotion": "reduce",
+        "fontScale": 1
+      },
+      {
+        "id": "text130",
+        "reducedMotion": "no-preference",
+        "fontScale": 1.3
+      }
+    ],
+    "targetSelectors": [
+      {
+        "id": "help",
+        "selector": ".help"
+      },
+      {
+        "id": "range",
+        "selector": "#placeRange"
+      },
+      {
+        "id": "lab",
+        "selector": "#placeLab"
+      },
+      {
+        "id": "outcome",
+        "selector": "#placeOutcome"
+      },
+      {
+        "id": "academy",
+        "selector": "#placeAcademy"
+      }
+    ],
+    "digitValues": [
+      "0000",
+      "1111",
+      "2222",
+      "3333",
+      "4444",
+      "5555",
+      "6666",
+      "7777",
+      "8888",
+      "9999"
+    ],
+    "navigationStates": [
+      {
+        "id": "normal",
+        "reducedMotion": "no-preference"
+      },
+      {
+        "id": "reduced",
+        "reducedMotion": "reduce"
+      }
+    ]
+  },
+  "summary": {
+    "layoutCases": 24,
+    "layoutPasses": 24,
+    "axeScans": 24,
+    "axePasses": 24,
+    "criticalAxeViolations": 0,
+    "seriousAxeViolations": 0,
+    "text130Screenshots": 8,
+    "text130Nonblank": 8,
+    "digitCases": 8,
+    "digitPasses": 8,
+    "maximumDigitWidthDeltaPx": 0,
+    "navigationCases": 4,
+    "navigationPasses": 4,
+    "destinationScreenshotsNonblank": 4
+  },
+  "layoutAndAxe": [
+    {
+      "engine": "chromium",
+      "viewport": "portrait-wide",
+      "width": 430,
+      "height": 932,
+      "state": "normal",
+      "layout": {
+        "pass": true,
+        "viewport": {
+          "width": 430,
+          "height": 932
+        },
+        "rootFontSizePx": 16,
+        "documentSize": {
+          "scrollWidth": 430,
+          "scrollHeight": 932
+        },
+        "horizontalOverflowPx": 0,
+        "verticalOverflowPx": 0,
+        "targetBoxes": {
+          "help": {
+            "x": 366,
+            "y": 16,
+            "width": 44,
+            "height": 44,
+            "left": 366,
+            "right": 410,
+            "top": 16,
+            "bottom": 60
+          },
+          "range": {
+            "x": 18,
+            "y": 764.171875,
+            "width": 155,
+            "height": 56,
+            "left": 18,
+            "right": 173,
+            "top": 764.171875,
+            "bottom": 820.171875
+          },
+          "lab": {
+            "x": 224,
+            "y": 549.8125,
+            "width": 188,
+            "height": 56,
+            "left": 224,
+            "right": 412,
+            "top": 549.8125,
+            "bottom": 605.8125
+          },
+          "outcome": {
+            "x": 18,
+            "y": 326.1875,
+            "width": 173,
+            "height": 56,
+            "left": 18,
+            "right": 191,
+            "top": 326.1875,
+            "bottom": 382.1875
+          },
+          "academy": {
+            "x": 275,
+            "y": 186.390625,
+            "width": 137,
+            "height": 56,
+            "left": 275,
+            "right": 412,
+            "top": 186.390625,
+            "bottom": 242.390625
+          }
+        },
+        "missingTargets": [],
+        "smallTargets": [],
+        "clippedTargets": [],
+        "overlaps": [],
+        "clippedEssentials": [],
+        "clippedText": []
+      },
+      "axe": {
+        "criticalCount": 0,
+        "seriousCount": 0,
+        "criticalNodeCount": 0,
+        "seriousNodeCount": 0,
+        "violations": [],
+        "pass": true
+      },
+      "pageErrors": [],
+      "consoleErrors": [],
+      "screenshot": null,
+      "screenshotProof": null,
+      "pass": true
+    },
+    {
+      "engine": "chromium",
+      "viewport": "portrait-wide",
+      "width": 430,
+      "height": 932,
+      "state": "reduced",
+      "layout": {
+        "pass": true,
+        "viewport": {
+          "width": 430,
+          "height": 932
+        },
+        "rootFontSizePx": 16,
+        "documentSize": {
+          "scrollWidth": 430,
+          "scrollHeight": 932
+        },
+        "horizontalOverflowPx": 0,
+        "verticalOverflowPx": 0,
+        "targetBoxes": {
+          "help": {
+            "x": 366,
+            "y": 16,
+            "width": 44,
+            "height": 44,
+            "left": 366,
+            "right": 410,
+            "top": 16,
+            "bottom": 60
+          },
+          "range": {
+            "x": 18,
+            "y": 764.171875,
+            "width": 155,
+            "height": 56,
+            "left": 18,
+            "right": 173,
+            "top": 764.171875,
+            "bottom": 820.171875
+          },
+          "lab": {
+            "x": 224,
+            "y": 549.8125,
+            "width": 188,
+            "height": 56,
+            "left": 224,
+            "right": 412,
+            "top": 549.8125,
+            "bottom": 605.8125
+          },
+          "outcome": {
+            "x": 18,
+            "y": 326.1875,
+            "width": 173,
+            "height": 56,
+            "left": 18,
+            "right": 191,
+            "top": 326.1875,
+            "bottom": 382.1875
+          },
+          "academy": {
+            "x": 275,
+            "y": 186.390625,
+            "width": 137,
+            "height": 56,
+            "left": 275,
+            "right": 412,
+            "top": 186.390625,
+            "bottom": 242.390625
+          }
+        },
+        "missingTargets": [],
+        "smallTargets": [],
+        "clippedTargets": [],
+        "overlaps": [],
+        "clippedEssentials": [],
+        "clippedText": []
+      },
+      "axe": {
+        "criticalCount": 0,
+        "seriousCount": 0,
+        "criticalNodeCount": 0,
+        "seriousNodeCount": 0,
+        "violations": [],
+        "pass": true
+      },
+      "pageErrors": [],
+      "consoleErrors": [],
+      "screenshot": null,
+      "screenshotProof": null,
+      "pass": true
+    },
+    {
+      "engine": "chromium",
+      "viewport": "portrait-wide",
+      "width": 430,
+      "height": 932,
+      "state": "text130",
+      "layout": {
+        "pass": true,
+        "viewport": {
+          "width": 430,
+          "height": 932
+        },
+        "rootFontSizePx": 20.8,
+        "documentSize": {
+          "scrollWidth": 430,
+          "scrollHeight": 932
+        },
+        "horizontalOverflowPx": 0,
+        "verticalOverflowPx": 0,
+        "targetBoxes": {
+          "help": {
+            "x": 366,
+            "y": 16,
+            "width": 44,
+            "height": 44,
+            "left": 366,
+            "right": 410,
+            "top": 16,
+            "bottom": 60
+          },
+          "range": {
+            "x": 18,
+            "y": 764.171875,
+            "width": 155,
+            "height": 56,
+            "left": 18,
+            "right": 173,
+            "top": 764.171875,
+            "bottom": 820.171875
+          },
+          "lab": {
+            "x": 224,
+            "y": 549.8125,
+            "width": 188,
+            "height": 56,
+            "left": 224,
+            "right": 412,
+            "top": 549.8125,
+            "bottom": 605.8125
+          },
+          "outcome": {
+            "x": 18,
+            "y": 326.1875,
+            "width": 173,
+            "height": 56,
+            "left": 18,
+            "right": 191,
+            "top": 326.1875,
+            "bottom": 382.1875
+          },
+          "academy": {
+            "x": 275,
+            "y": 186.390625,
+            "width": 137,
+            "height": 56,
+            "left": 275,
+            "right": 412,
+            "top": 186.390625,
+            "bottom": 242.390625
+          }
+        },
+        "missingTargets": [],
+        "smallTargets": [],
+        "clippedTargets": [],
+        "overlaps": [],
+        "clippedEssentials": [],
+        "clippedText": []
+      },
+      "axe": {
+        "criticalCount": 0,
+        "seriousCount": 0,
+        "criticalNodeCount": 0,
+        "seriousNodeCount": 0,
+        "violations": [],
+        "pass": true
+      },
+      "pageErrors": [],
+      "consoleErrors": [],
+      "screenshot": "outputs/flightglass-home-night-ladder-eval/proof-screenshots/text130/chromium--portrait-wide--text130.png",
+      "screenshotProof": {
+        "width": 430,
+        "height": 932,
+        "bytes": 274969,
+        "rgbStdDev": [
+          27.376,
+          25.547,
+          27.569
+        ],
+        "pass": true
+      },
+      "pass": true
+    },
+    {
+      "engine": "chromium",
+      "viewport": "portrait-compact",
+      "width": 375,
+      "height": 812,
+      "state": "normal",
+      "layout": {
+        "pass": true,
+        "viewport": {
+          "width": 375,
+          "height": 812
+        },
+        "rootFontSizePx": 16,
+        "documentSize": {
+          "scrollWidth": 375,
+          "scrollHeight": 812
+        },
+        "horizontalOverflowPx": 0,
+        "verticalOverflowPx": 0,
+        "targetBoxes": {
+          "help": {
+            "x": 311,
+            "y": 16,
+            "width": 44,
+            "height": 44,
+            "left": 311,
+            "right": 355,
+            "top": 16,
+            "bottom": 60
+          },
+          "range": {
+            "x": 18,
+            "y": 674.8125,
+            "width": 143.65625,
+            "height": 56,
+            "left": 18,
+            "right": 161.65625,
+            "top": 674.8125,
+            "bottom": 730.8125
+          },
+          "lab": {
+            "x": 191.59375,
+            "y": 496.171875,
+            "width": 165.40625,
+            "height": 56,
+            "left": 191.59375,
+            "right": 357,
+            "top": 496.171875,
+            "bottom": 552.171875
+          },
+          "outcome": {
+            "x": 18,
+            "y": 292.3125,
+            "width": 149.8125,
+            "height": 56,
+            "left": 18,
+            "right": 167.8125,
+            "top": 292.3125,
+            "bottom": 348.3125
+          },
+          "academy": {
+            "x": 238.390625,
+            "y": 162.390625,
+            "width": 118.609375,
+            "height": 56,
+            "left": 238.390625,
+            "right": 357,
+            "top": 162.390625,
+            "bottom": 218.390625
+          }
+        },
+        "missingTargets": [],
+        "smallTargets": [],
+        "clippedTargets": [],
+        "overlaps": [],
+        "clippedEssentials": [],
+        "clippedText": []
+      },
+      "axe": {
+        "criticalCount": 0,
+        "seriousCount": 0,
+        "criticalNodeCount": 0,
+        "seriousNodeCount": 0,
+        "violations": [],
+        "pass": true
+      },
+      "pageErrors": [],
+      "consoleErrors": [],
+      "screenshot": null,
+      "screenshotProof": null,
+      "pass": true
+    },
+    {
+      "engine": "chromium",
+      "viewport": "portrait-compact",
+      "width": 375,
+      "height": 812,
+      "state": "reduced",
+      "layout": {
+        "pass": true,
+        "viewport": {
+          "width": 375,
+          "height": 812
+        },
+        "rootFontSizePx": 16,
+        "documentSize": {
+          "scrollWidth": 375,
+          "scrollHeight": 812
+        },
+        "horizontalOverflowPx": 0,
+        "verticalOverflowPx": 0,
+        "targetBoxes": {
+          "help": {
+            "x": 311,
+            "y": 16,
+            "width": 44,
+            "height": 44,
+            "left": 311,
+            "right": 355,
+            "top": 16,
+            "bottom": 60
+          },
+          "range": {
+            "x": 18,
+            "y": 674.8125,
+            "width": 143.65625,
+            "height": 56,
+            "left": 18,
+            "right": 161.65625,
+            "top": 674.8125,
+            "bottom": 730.8125
+          },
+          "lab": {
+            "x": 191.59375,
+            "y": 496.171875,
+            "width": 165.40625,
+            "height": 56,
+            "left": 191.59375,
+            "right": 357,
+            "top": 496.171875,
+            "bottom": 552.171875
+          },
+          "outcome": {
+            "x": 18,
+            "y": 292.3125,
+            "width": 149.8125,
+            "height": 56,
+            "left": 18,
+            "right": 167.8125,
+            "top": 292.3125,
+            "bottom": 348.3125
+          },
+          "academy": {
+            "x": 238.390625,
+            "y": 162.390625,
+            "width": 118.609375,
+            "height": 56,
+            "left": 238.390625,
+            "right": 357,
+            "top": 162.390625,
+            "bottom": 218.390625
+          }
+        },
+        "missingTargets": [],
+        "smallTargets": [],
+        "clippedTargets": [],
+        "overlaps": [],
+        "clippedEssentials": [],
+        "clippedText": []
+      },
+      "axe": {
+        "criticalCount": 0,
+        "seriousCount": 0,
+        "criticalNodeCount": 0,
+        "seriousNodeCount": 0,
+        "violations": [],
+        "pass": true
+      },
+      "pageErrors": [],
+      "consoleErrors": [],
+      "screenshot": null,
+      "screenshotProof": null,
+      "pass": true
+    },
+    {
+      "engine": "chromium",
+      "viewport": "portrait-compact",
+      "width": 375,
+      "height": 812,
+      "state": "text130",
+      "layout": {
+        "pass": true,
+        "viewport": {
+          "width": 375,
+          "height": 812
+        },
+        "rootFontSizePx": 20.8,
+        "documentSize": {
+          "scrollWidth": 375,
+          "scrollHeight": 812
+        },
+        "horizontalOverflowPx": 0,
+        "verticalOverflowPx": 0,
+        "targetBoxes": {
+          "help": {
+            "x": 311,
+            "y": 16,
+            "width": 44,
+            "height": 44,
+            "left": 311,
+            "right": 355,
+            "top": 16,
+            "bottom": 60
+          },
+          "range": {
+            "x": 18,
+            "y": 674.8125,
+            "width": 143.65625,
+            "height": 56,
+            "left": 18,
+            "right": 161.65625,
+            "top": 674.8125,
+            "bottom": 730.8125
+          },
+          "lab": {
+            "x": 191.59375,
+            "y": 496.171875,
+            "width": 165.40625,
+            "height": 56,
+            "left": 191.59375,
+            "right": 357,
+            "top": 496.171875,
+            "bottom": 552.171875
+          },
+          "outcome": {
+            "x": 18,
+            "y": 292.3125,
+            "width": 149.8125,
+            "height": 56,
+            "left": 18,
+            "right": 167.8125,
+            "top": 292.3125,
+            "bottom": 348.3125
+          },
+          "academy": {
+            "x": 238.390625,
+            "y": 162.390625,
+            "width": 118.609375,
+            "height": 56,
+            "left": 238.390625,
+            "right": 357,
+            "top": 162.390625,
+            "bottom": 218.390625
+          }
+        },
+        "missingTargets": [],
+        "smallTargets": [],
+        "clippedTargets": [],
+        "overlaps": [],
+        "clippedEssentials": [],
+        "clippedText": []
+      },
+      "axe": {
+        "criticalCount": 0,
+        "seriousCount": 0,
+        "criticalNodeCount": 0,
+        "seriousNodeCount": 0,
+        "violations": [],
+        "pass": true
+      },
+      "pageErrors": [],
+      "consoleErrors": [],
+      "screenshot": "outputs/flightglass-home-night-ladder-eval/proof-screenshots/text130/chromium--portrait-compact--text130.png",
+      "screenshotProof": {
+        "width": 375,
+        "height": 812,
+        "bytes": 218192,
+        "rgbStdDev": [
+          25.707,
+          23.797,
+          25.401
+        ],
+        "pass": true
+      },
+      "pass": true
+    },
+    {
+      "engine": "chromium",
+      "viewport": "landscape-wide",
+      "width": 932,
+      "height": 430,
+      "state": "normal",
+      "layout": {
+        "pass": true,
+        "viewport": {
+          "width": 932,
+          "height": 430
+        },
+        "rootFontSizePx": 16,
+        "documentSize": {
+          "scrollWidth": 932,
+          "scrollHeight": 430
+        },
+        "horizontalOverflowPx": 0,
+        "verticalOverflowPx": 0,
+        "targetBoxes": {
+          "help": {
+            "x": 870,
+            "y": 8,
+            "width": 44,
+            "height": 44,
+            "left": 870,
+            "right": 914,
+            "top": 8,
+            "bottom": 52
+          },
+          "range": {
+            "x": 279.59375,
+            "y": 345.90625,
+            "width": 145.65625,
+            "height": 54,
+            "left": 279.59375,
+            "right": 425.25,
+            "top": 345.90625,
+            "bottom": 399.90625
+          },
+          "lab": {
+            "x": 438.03125,
+            "y": 242.703125,
+            "width": 178.203125,
+            "height": 54,
+            "left": 438.03125,
+            "right": 616.234375,
+            "top": 242.703125,
+            "bottom": 296.703125
+          },
+          "outcome": {
+            "x": 577.828125,
+            "y": 124.6875,
+            "width": 161.40625,
+            "height": 54,
+            "left": 577.828125,
+            "right": 739.234375,
+            "top": 124.6875,
+            "bottom": 178.6875
+          },
+          "academy": {
+            "x": 734.1875,
+            "y": 60.1875,
+            "width": 127.8125,
+            "height": 54,
+            "left": 734.1875,
+            "right": 862,
+            "top": 60.1875,
+            "bottom": 114.1875
+          }
+        },
+        "missingTargets": [],
+        "smallTargets": [],
+        "clippedTargets": [],
+        "overlaps": [],
+        "clippedEssentials": [],
+        "clippedText": []
+      },
+      "axe": {
+        "criticalCount": 0,
+        "seriousCount": 0,
+        "criticalNodeCount": 0,
+        "seriousNodeCount": 0,
+        "violations": [],
+        "pass": true
+      },
+      "pageErrors": [],
+      "consoleErrors": [],
+      "screenshot": null,
+      "screenshotProof": null,
+      "pass": true
+    },
+    {
+      "engine": "chromium",
+      "viewport": "landscape-wide",
+      "width": 932,
+      "height": 430,
+      "state": "reduced",
+      "layout": {
+        "pass": true,
+        "viewport": {
+          "width": 932,
+          "height": 430
+        },
+        "rootFontSizePx": 16,
+        "documentSize": {
+          "scrollWidth": 932,
+          "scrollHeight": 430
+        },
+        "horizontalOverflowPx": 0,
+        "verticalOverflowPx": 0,
+        "targetBoxes": {
+          "help": {
+            "x": 870,
+            "y": 8,
+            "width": 44,
+            "height": 44,
+            "left": 870,
+            "right": 914,
+            "top": 8,
+            "bottom": 52
+          },
+          "range": {
+            "x": 279.59375,
+            "y": 345.90625,
+            "width": 145.65625,
+            "height": 54,
+            "left": 279.59375,
+            "right": 425.25,
+            "top": 345.90625,
+            "bottom": 399.90625
+          },
+          "lab": {
+            "x": 438.03125,
+            "y": 242.703125,
+            "width": 178.203125,
+            "height": 54,
+            "left": 438.03125,
+            "right": 616.234375,
+            "top": 242.703125,
+            "bottom": 296.703125
+          },
+          "outcome": {
+            "x": 577.828125,
+            "y": 124.6875,
+            "width": 161.40625,
+            "height": 54,
+            "left": 577.828125,
+            "right": 739.234375,
+            "top": 124.6875,
+            "bottom": 178.6875
+          },
+          "academy": {
+            "x": 734.1875,
+            "y": 60.1875,
+            "width": 127.8125,
+            "height": 54,
+            "left": 734.1875,
+            "right": 862,
+            "top": 60.1875,
+            "bottom": 114.1875
+          }
+        },
+        "missingTargets": [],
+        "smallTargets": [],
+        "clippedTargets": [],
+        "overlaps": [],
+        "clippedEssentials": [],
+        "clippedText": []
+      },
+      "axe": {
+        "criticalCount": 0,
+        "seriousCount": 0,
+        "criticalNodeCount": 0,
+        "seriousNodeCount": 0,
+        "violations": [],
+        "pass": true
+      },
+      "pageErrors": [],
+      "consoleErrors": [],
+      "screenshot": null,
+      "screenshotProof": null,
+      "pass": true
+    },
+    {
+      "engine": "chromium",
+      "viewport": "landscape-wide",
+      "width": 932,
+      "height": 430,
+      "state": "text130",
+      "layout": {
+        "pass": true,
+        "viewport": {
+          "width": 932,
+          "height": 430
+        },
+        "rootFontSizePx": 20.8,
+        "documentSize": {
+          "scrollWidth": 932,
+          "scrollHeight": 430
+        },
+        "horizontalOverflowPx": 0,
+        "verticalOverflowPx": 0,
+        "targetBoxes": {
+          "help": {
+            "x": 870,
+            "y": 8,
+            "width": 44,
+            "height": 44,
+            "left": 870,
+            "right": 914,
+            "top": 8,
+            "bottom": 52
+          },
+          "range": {
+            "x": 279.59375,
+            "y": 345.90625,
+            "width": 145.65625,
+            "height": 54,
+            "left": 279.59375,
+            "right": 425.25,
+            "top": 345.90625,
+            "bottom": 399.90625
+          },
+          "lab": {
+            "x": 438.03125,
+            "y": 242.703125,
+            "width": 178.203125,
+            "height": 54,
+            "left": 438.03125,
+            "right": 616.234375,
+            "top": 242.703125,
+            "bottom": 296.703125
+          },
+          "outcome": {
+            "x": 577.828125,
+            "y": 124.6875,
+            "width": 161.40625,
+            "height": 54,
+            "left": 577.828125,
+            "right": 739.234375,
+            "top": 124.6875,
+            "bottom": 178.6875
+          },
+          "academy": {
+            "x": 734.1875,
+            "y": 60.1875,
+            "width": 127.8125,
+            "height": 54,
+            "left": 734.1875,
+            "right": 862,
+            "top": 60.1875,
+            "bottom": 114.1875
+          }
+        },
+        "missingTargets": [],
+        "smallTargets": [],
+        "clippedTargets": [],
+        "overlaps": [],
+        "clippedEssentials": [],
+        "clippedText": []
+      },
+      "axe": {
+        "criticalCount": 0,
+        "seriousCount": 0,
+        "criticalNodeCount": 0,
+        "seriousNodeCount": 0,
+        "violations": [],
+        "pass": true
+      },
+      "pageErrors": [],
+      "consoleErrors": [],
+      "screenshot": "outputs/flightglass-home-night-ladder-eval/proof-screenshots/text130/chromium--landscape-wide--text130.png",
+      "screenshotProof": {
+        "width": 932,
+        "height": 430,
+        "bytes": 336228,
+        "rgbStdDev": [
+          27.46,
+          25.787,
+          27.906
+        ],
+        "pass": true
+      },
+      "pass": true
+    },
+    {
+      "engine": "chromium",
+      "viewport": "landscape-compact",
+      "width": 812,
+      "height": 375,
+      "state": "normal",
+      "layout": {
+        "pass": true,
+        "viewport": {
+          "width": 812,
+          "height": 375
+        },
+        "rootFontSizePx": 16,
+        "documentSize": {
+          "scrollWidth": 812,
+          "scrollHeight": 375
+        },
+        "horizontalOverflowPx": 0,
+        "verticalOverflowPx": 0,
+        "targetBoxes": {
+          "help": {
+            "x": 750,
+            "y": 8,
+            "width": 44,
+            "height": 44,
+            "left": 750,
+            "right": 794,
+            "top": 8,
+            "bottom": 52
+          },
+          "range": {
+            "x": 251.71875,
+            "y": 302.5,
+            "width": 136.203125,
+            "height": 50,
+            "left": 251.71875,
+            "right": 387.921875,
+            "top": 302.5,
+            "bottom": 352.5
+          },
+          "lab": {
+            "x": 381.625,
+            "y": 216.25,
+            "width": 167.40625,
+            "height": 50,
+            "left": 381.625,
+            "right": 549.03125,
+            "top": 216.25,
+            "bottom": 266.25
+          },
+          "outcome": {
+            "x": 503.4375,
+            "y": 108.75,
+            "width": 151.8125,
+            "height": 50,
+            "left": 503.4375,
+            "right": 655.25,
+            "top": 108.75,
+            "bottom": 158.75
+          },
+          "academy": {
+            "x": 621.390625,
+            "y": 37.5,
+            "width": 120.609375,
+            "height": 50,
+            "left": 621.390625,
+            "right": 742,
+            "top": 37.5,
+            "bottom": 87.5
+          }
+        },
+        "missingTargets": [],
+        "smallTargets": [],
+        "clippedTargets": [],
+        "overlaps": [],
+        "clippedEssentials": [],
+        "clippedText": []
+      },
+      "axe": {
+        "criticalCount": 0,
+        "seriousCount": 0,
+        "criticalNodeCount": 0,
+        "seriousNodeCount": 0,
+        "violations": [],
+        "pass": true
+      },
+      "pageErrors": [],
+      "consoleErrors": [],
+      "screenshot": null,
+      "screenshotProof": null,
+      "pass": true
+    },
+    {
+      "engine": "chromium",
+      "viewport": "landscape-compact",
+      "width": 812,
+      "height": 375,
+      "state": "reduced",
+      "layout": {
+        "pass": true,
+        "viewport": {
+          "width": 812,
+          "height": 375
+        },
+        "rootFontSizePx": 16,
+        "documentSize": {
+          "scrollWidth": 812,
+          "scrollHeight": 375
+        },
+        "horizontalOverflowPx": 0,
+        "verticalOverflowPx": 0,
+        "targetBoxes": {
+          "help": {
+            "x": 750,
+            "y": 8,
+            "width": 44,
+            "height": 44,
+            "left": 750,
+            "right": 794,
+            "top": 8,
+            "bottom": 52
+          },
+          "range": {
+            "x": 251.71875,
+            "y": 302.5,
+            "width": 136.203125,
+            "height": 50,
+            "left": 251.71875,
+            "right": 387.921875,
+            "top": 302.5,
+            "bottom": 352.5
+          },
+          "lab": {
+            "x": 381.625,
+            "y": 216.25,
+            "width": 167.40625,
+            "height": 50,
+            "left": 381.625,
+            "right": 549.03125,
+            "top": 216.25,
+            "bottom": 266.25
+          },
+          "outcome": {
+            "x": 503.4375,
+            "y": 108.75,
+            "width": 151.8125,
+            "height": 50,
+            "left": 503.4375,
+            "right": 655.25,
+            "top": 108.75,
+            "bottom": 158.75
+          },
+          "academy": {
+            "x": 621.390625,
+            "y": 37.5,
+            "width": 120.609375,
+            "height": 50,
+            "left": 621.390625,
+            "right": 742,
+            "top": 37.5,
+            "bottom": 87.5
+          }
+        },
+        "missingTargets": [],
+        "smallTargets": [],
+        "clippedTargets": [],
+        "overlaps": [],
+        "clippedEssentials": [],
+        "clippedText": []
+      },
+      "axe": {
+        "criticalCount": 0,
+        "seriousCount": 0,
+        "criticalNodeCount": 0,
+        "seriousNodeCount": 0,
+        "violations": [],
+        "pass": true
+      },
+      "pageErrors": [],
+      "consoleErrors": [],
+      "screenshot": null,
+      "screenshotProof": null,
+      "pass": true
+    },
+    {
+      "engine": "chromium",
+      "viewport": "landscape-compact",
+      "width": 812,
+      "height": 375,
+      "state": "text130",
+      "layout": {
+        "pass": true,
+        "viewport": {
+          "width": 812,
+          "height": 375
+        },
+        "rootFontSizePx": 20.8,
+        "documentSize": {
+          "scrollWidth": 812,
+          "scrollHeight": 375
+        },
+        "horizontalOverflowPx": 0,
+        "verticalOverflowPx": 0,
+        "targetBoxes": {
+          "help": {
+            "x": 750,
+            "y": 8,
+            "width": 44,
+            "height": 44,
+            "left": 750,
+            "right": 794,
+            "top": 8,
+            "bottom": 52
+          },
+          "range": {
+            "x": 251.71875,
+            "y": 302.5,
+            "width": 136.203125,
+            "height": 50,
+            "left": 251.71875,
+            "right": 387.921875,
+            "top": 302.5,
+            "bottom": 352.5
+          },
+          "lab": {
+            "x": 381.625,
+            "y": 216.25,
+            "width": 167.40625,
+            "height": 50,
+            "left": 381.625,
+            "right": 549.03125,
+            "top": 216.25,
+            "bottom": 266.25
+          },
+          "outcome": {
+            "x": 503.4375,
+            "y": 108.75,
+            "width": 151.8125,
+            "height": 50,
+            "left": 503.4375,
+            "right": 655.25,
+            "top": 108.75,
+            "bottom": 158.75
+          },
+          "academy": {
+            "x": 621.390625,
+            "y": 37.5,
+            "width": 120.609375,
+            "height": 50,
+            "left": 621.390625,
+            "right": 742,
+            "top": 37.5,
+            "bottom": 87.5
+          }
+        },
+        "missingTargets": [],
+        "smallTargets": [],
+        "clippedTargets": [],
+        "overlaps": [],
+        "clippedEssentials": [],
+        "clippedText": []
+      },
+      "axe": {
+        "criticalCount": 0,
+        "seriousCount": 0,
+        "criticalNodeCount": 0,
+        "seriousNodeCount": 0,
+        "violations": [],
+        "pass": true
+      },
+      "pageErrors": [],
+      "consoleErrors": [],
+      "screenshot": "outputs/flightglass-home-night-ladder-eval/proof-screenshots/text130/chromium--landscape-compact--text130.png",
+      "screenshotProof": {
+        "width": 812,
+        "height": 375,
+        "bytes": 261273,
+        "rgbStdDev": [
+          25.639,
+          23.818,
+          25.515
+        ],
+        "pass": true
+      },
+      "pass": true
+    },
+    {
+      "engine": "webkit",
+      "viewport": "portrait-wide",
+      "width": 430,
+      "height": 932,
+      "state": "normal",
+      "layout": {
+        "pass": true,
+        "viewport": {
+          "width": 430,
+          "height": 932
+        },
+        "rootFontSizePx": 16,
+        "documentSize": {
+          "scrollWidth": 430,
+          "scrollHeight": 932
+        },
+        "horizontalOverflowPx": 0,
+        "verticalOverflowPx": 0,
+        "targetBoxes": {
+          "help": {
+            "x": 366,
+            "y": 16,
+            "width": 44,
+            "height": 44,
+            "left": 366,
+            "right": 410,
+            "top": 16,
+            "bottom": 60
+          },
+          "range": {
+            "x": 18,
+            "y": 764.171875,
+            "width": 155,
+            "height": 56,
+            "left": 18,
+            "right": 173,
+            "top": 764.171875,
+            "bottom": 820.171875
+          },
+          "lab": {
+            "x": 224,
+            "y": 549.8125,
+            "width": 188,
+            "height": 56,
+            "left": 224,
+            "right": 412,
+            "top": 549.8125,
+            "bottom": 605.8125
+          },
+          "outcome": {
+            "x": 18,
+            "y": 326.1875,
+            "width": 173,
+            "height": 56,
+            "left": 18,
+            "right": 191,
+            "top": 326.1875,
+            "bottom": 382.1875
+          },
+          "academy": {
+            "x": 275,
+            "y": 186.390625,
+            "width": 137,
+            "height": 56,
+            "left": 275,
+            "right": 412,
+            "top": 186.390625,
+            "bottom": 242.390625
+          }
+        },
+        "missingTargets": [],
+        "smallTargets": [],
+        "clippedTargets": [],
+        "overlaps": [],
+        "clippedEssentials": [],
+        "clippedText": []
+      },
+      "axe": {
+        "criticalCount": 0,
+        "seriousCount": 0,
+        "criticalNodeCount": 0,
+        "seriousNodeCount": 0,
+        "violations": [],
+        "pass": true
+      },
+      "pageErrors": [],
+      "consoleErrors": [],
+      "screenshot": null,
+      "screenshotProof": null,
+      "pass": true
+    },
+    {
+      "engine": "webkit",
+      "viewport": "portrait-wide",
+      "width": 430,
+      "height": 932,
+      "state": "reduced",
+      "layout": {
+        "pass": true,
+        "viewport": {
+          "width": 430,
+          "height": 932
+        },
+        "rootFontSizePx": 16,
+        "documentSize": {
+          "scrollWidth": 430,
+          "scrollHeight": 932
+        },
+        "horizontalOverflowPx": 0,
+        "verticalOverflowPx": 0,
+        "targetBoxes": {
+          "help": {
+            "x": 366,
+            "y": 16,
+            "width": 44,
+            "height": 44,
+            "left": 366,
+            "right": 410,
+            "top": 16,
+            "bottom": 60
+          },
+          "range": {
+            "x": 18,
+            "y": 764.171875,
+            "width": 155,
+            "height": 56,
+            "left": 18,
+            "right": 173,
+            "top": 764.171875,
+            "bottom": 820.171875
+          },
+          "lab": {
+            "x": 224,
+            "y": 549.8125,
+            "width": 188,
+            "height": 56,
+            "left": 224,
+            "right": 412,
+            "top": 549.8125,
+            "bottom": 605.8125
+          },
+          "outcome": {
+            "x": 18,
+            "y": 326.1875,
+            "width": 173,
+            "height": 56,
+            "left": 18,
+            "right": 191,
+            "top": 326.1875,
+            "bottom": 382.1875
+          },
+          "academy": {
+            "x": 275,
+            "y": 186.390625,
+            "width": 137,
+            "height": 56,
+            "left": 275,
+            "right": 412,
+            "top": 186.390625,
+            "bottom": 242.390625
+          }
+        },
+        "missingTargets": [],
+        "smallTargets": [],
+        "clippedTargets": [],
+        "overlaps": [],
+        "clippedEssentials": [],
+        "clippedText": []
+      },
+      "axe": {
+        "criticalCount": 0,
+        "seriousCount": 0,
+        "criticalNodeCount": 0,
+        "seriousNodeCount": 0,
+        "violations": [],
+        "pass": true
+      },
+      "pageErrors": [],
+      "consoleErrors": [],
+      "screenshot": null,
+      "screenshotProof": null,
+      "pass": true
+    },
+    {
+      "engine": "webkit",
+      "viewport": "portrait-wide",
+      "width": 430,
+      "height": 932,
+      "state": "text130",
+      "layout": {
+        "pass": true,
+        "viewport": {
+          "width": 430,
+          "height": 932
+        },
+        "rootFontSizePx": 20.799999,
+        "documentSize": {
+          "scrollWidth": 430,
+          "scrollHeight": 932
+        },
+        "horizontalOverflowPx": 0,
+        "verticalOverflowPx": 0,
+        "targetBoxes": {
+          "help": {
+            "x": 366,
+            "y": 16,
+            "width": 44,
+            "height": 44,
+            "left": 366,
+            "right": 410,
+            "top": 16,
+            "bottom": 60
+          },
+          "range": {
+            "x": 18,
+            "y": 764.171875,
+            "width": 155,
+            "height": 56,
+            "left": 18,
+            "right": 173,
+            "top": 764.171875,
+            "bottom": 820.171875
+          },
+          "lab": {
+            "x": 224,
+            "y": 549.8125,
+            "width": 188,
+            "height": 56,
+            "left": 224,
+            "right": 412,
+            "top": 549.8125,
+            "bottom": 605.8125
+          },
+          "outcome": {
+            "x": 18,
+            "y": 326.1875,
+            "width": 173,
+            "height": 56,
+            "left": 18,
+            "right": 191,
+            "top": 326.1875,
+            "bottom": 382.1875
+          },
+          "academy": {
+            "x": 275,
+            "y": 186.390625,
+            "width": 137,
+            "height": 56,
+            "left": 275,
+            "right": 412,
+            "top": 186.390625,
+            "bottom": 242.390625
+          }
+        },
+        "missingTargets": [],
+        "smallTargets": [],
+        "clippedTargets": [],
+        "overlaps": [],
+        "clippedEssentials": [],
+        "clippedText": []
+      },
+      "axe": {
+        "criticalCount": 0,
+        "seriousCount": 0,
+        "criticalNodeCount": 0,
+        "seriousNodeCount": 0,
+        "violations": [],
+        "pass": true
+      },
+      "pageErrors": [],
+      "consoleErrors": [],
+      "screenshot": "outputs/flightglass-home-night-ladder-eval/proof-screenshots/text130/webkit--portrait-wide--text130.png",
+      "screenshotProof": {
+        "width": 430,
+        "height": 932,
+        "bytes": 246108,
+        "rgbStdDev": [
+          22.664,
+          20.857,
+          22.22
+        ],
+        "pass": true
+      },
+      "pass": true
+    },
+    {
+      "engine": "webkit",
+      "viewport": "portrait-compact",
+      "width": 375,
+      "height": 812,
+      "state": "normal",
+      "layout": {
+        "pass": true,
+        "viewport": {
+          "width": 375,
+          "height": 812
+        },
+        "rootFontSizePx": 16,
+        "documentSize": {
+          "scrollWidth": 375,
+          "scrollHeight": 812
+        },
+        "horizontalOverflowPx": 0,
+        "verticalOverflowPx": 0,
+        "targetBoxes": {
+          "help": {
+            "x": 311,
+            "y": 16,
+            "width": 44,
+            "height": 44,
+            "left": 311,
+            "right": 355,
+            "top": 16,
+            "bottom": 60
+          },
+          "range": {
+            "x": 18,
+            "y": 674.8125,
+            "width": 143.65625,
+            "height": 56,
+            "left": 18,
+            "right": 161.65625,
+            "top": 674.8125,
+            "bottom": 730.8125
+          },
+          "lab": {
+            "x": 191.59375,
+            "y": 496.171875,
+            "width": 165.40625,
+            "height": 56,
+            "left": 191.59375,
+            "right": 357,
+            "top": 496.171875,
+            "bottom": 552.171875
+          },
+          "outcome": {
+            "x": 18,
+            "y": 292.3125,
+            "width": 149.8125,
+            "height": 56,
+            "left": 18,
+            "right": 167.8125,
+            "top": 292.3125,
+            "bottom": 348.3125
+          },
+          "academy": {
+            "x": 238.390625,
+            "y": 162.390625,
+            "width": 118.609375,
+            "height": 56,
+            "left": 238.390625,
+            "right": 357,
+            "top": 162.390625,
+            "bottom": 218.390625
+          }
+        },
+        "missingTargets": [],
+        "smallTargets": [],
+        "clippedTargets": [],
+        "overlaps": [],
+        "clippedEssentials": [],
+        "clippedText": []
+      },
+      "axe": {
+        "criticalCount": 0,
+        "seriousCount": 0,
+        "criticalNodeCount": 0,
+        "seriousNodeCount": 0,
+        "violations": [],
+        "pass": true
+      },
+      "pageErrors": [],
+      "consoleErrors": [],
+      "screenshot": null,
+      "screenshotProof": null,
+      "pass": true
+    },
+    {
+      "engine": "webkit",
+      "viewport": "portrait-compact",
+      "width": 375,
+      "height": 812,
+      "state": "reduced",
+      "layout": {
+        "pass": true,
+        "viewport": {
+          "width": 375,
+          "height": 812
+        },
+        "rootFontSizePx": 16,
+        "documentSize": {
+          "scrollWidth": 375,
+          "scrollHeight": 812
+        },
+        "horizontalOverflowPx": 0,
+        "verticalOverflowPx": 0,
+        "targetBoxes": {
+          "help": {
+            "x": 311,
+            "y": 16,
+            "width": 44,
+            "height": 44,
+            "left": 311,
+            "right": 355,
+            "top": 16,
+            "bottom": 60
+          },
+          "range": {
+            "x": 18,
+            "y": 674.8125,
+            "width": 143.65625,
+            "height": 56,
+            "left": 18,
+            "right": 161.65625,
+            "top": 674.8125,
+            "bottom": 730.8125
+          },
+          "lab": {
+            "x": 191.59375,
+            "y": 496.171875,
+            "width": 165.40625,
+            "height": 56,
+            "left": 191.59375,
+            "right": 357,
+            "top": 496.171875,
+            "bottom": 552.171875
+          },
+          "outcome": {
+            "x": 18,
+            "y": 292.3125,
+            "width": 149.8125,
+            "height": 56,
+            "left": 18,
+            "right": 167.8125,
+            "top": 292.3125,
+            "bottom": 348.3125
+          },
+          "academy": {
+            "x": 238.390625,
+            "y": 162.390625,
+            "width": 118.609375,
+            "height": 56,
+            "left": 238.390625,
+            "right": 357,
+            "top": 162.390625,
+            "bottom": 218.390625
+          }
+        },
+        "missingTargets": [],
+        "smallTargets": [],
+        "clippedTargets": [],
+        "overlaps": [],
+        "clippedEssentials": [],
+        "clippedText": []
+      },
+      "axe": {
+        "criticalCount": 0,
+        "seriousCount": 0,
+        "criticalNodeCount": 0,
+        "seriousNodeCount": 0,
+        "violations": [],
+        "pass": true
+      },
+      "pageErrors": [],
+      "consoleErrors": [],
+      "screenshot": null,
+      "screenshotProof": null,
+      "pass": true
+    },
+    {
+      "engine": "webkit",
+      "viewport": "portrait-compact",
+      "width": 375,
+      "height": 812,
+      "state": "text130",
+      "layout": {
+        "pass": true,
+        "viewport": {
+          "width": 375,
+          "height": 812
+        },
+        "rootFontSizePx": 20.799999,
+        "documentSize": {
+          "scrollWidth": 375,
+          "scrollHeight": 812
+        },
+        "horizontalOverflowPx": 0,
+        "verticalOverflowPx": 0,
+        "targetBoxes": {
+          "help": {
+            "x": 311,
+            "y": 16,
+            "width": 44,
+            "height": 44,
+            "left": 311,
+            "right": 355,
+            "top": 16,
+            "bottom": 60
+          },
+          "range": {
+            "x": 18,
+            "y": 674.8125,
+            "width": 143.65625,
+            "height": 56,
+            "left": 18,
+            "right": 161.65625,
+            "top": 674.8125,
+            "bottom": 730.8125
+          },
+          "lab": {
+            "x": 191.59375,
+            "y": 496.171875,
+            "width": 165.40625,
+            "height": 56,
+            "left": 191.59375,
+            "right": 357,
+            "top": 496.171875,
+            "bottom": 552.171875
+          },
+          "outcome": {
+            "x": 18,
+            "y": 292.3125,
+            "width": 149.8125,
+            "height": 56,
+            "left": 18,
+            "right": 167.8125,
+            "top": 292.3125,
+            "bottom": 348.3125
+          },
+          "academy": {
+            "x": 238.390625,
+            "y": 162.390625,
+            "width": 118.609375,
+            "height": 56,
+            "left": 238.390625,
+            "right": 357,
+            "top": 162.390625,
+            "bottom": 218.390625
+          }
+        },
+        "missingTargets": [],
+        "smallTargets": [],
+        "clippedTargets": [],
+        "overlaps": [],
+        "clippedEssentials": [],
+        "clippedText": []
+      },
+      "axe": {
+        "criticalCount": 0,
+        "seriousCount": 0,
+        "criticalNodeCount": 0,
+        "seriousNodeCount": 0,
+        "violations": [],
+        "pass": true
+      },
+      "pageErrors": [],
+      "consoleErrors": [],
+      "screenshot": "outputs/flightglass-home-night-ladder-eval/proof-screenshots/text130/webkit--portrait-compact--text130.png",
+      "screenshotProof": {
+        "width": 375,
+        "height": 812,
+        "bytes": 196862,
+        "rgbStdDev": [
+          20.915,
+          19.228,
+          20.3
+        ],
+        "pass": true
+      },
+      "pass": true
+    },
+    {
+      "engine": "webkit",
+      "viewport": "landscape-wide",
+      "width": 932,
+      "height": 430,
+      "state": "normal",
+      "layout": {
+        "pass": true,
+        "viewport": {
+          "width": 932,
+          "height": 430
+        },
+        "rootFontSizePx": 16,
+        "documentSize": {
+          "scrollWidth": 932,
+          "scrollHeight": 430
+        },
+        "horizontalOverflowPx": 0,
+        "verticalOverflowPx": 0,
+        "targetBoxes": {
+          "help": {
+            "x": 870,
+            "y": 8,
+            "width": 44,
+            "height": 44,
+            "left": 870,
+            "right": 914,
+            "top": 8,
+            "bottom": 52
+          },
+          "range": {
+            "x": 279.59375,
+            "y": 345.90625,
+            "width": 145.65625,
+            "height": 54,
+            "left": 279.59375,
+            "right": 425.25,
+            "top": 345.90625,
+            "bottom": 399.90625
+          },
+          "lab": {
+            "x": 438.03125,
+            "y": 242.703125,
+            "width": 178.203125,
+            "height": 54,
+            "left": 438.03125,
+            "right": 616.234375,
+            "top": 242.703125,
+            "bottom": 296.703125
+          },
+          "outcome": {
+            "x": 577.828125,
+            "y": 124.6875,
+            "width": 161.40625,
+            "height": 54,
+            "left": 577.828125,
+            "right": 739.234375,
+            "top": 124.6875,
+            "bottom": 178.6875
+          },
+          "academy": {
+            "x": 734.1875,
+            "y": 60.1875,
+            "width": 127.8125,
+            "height": 54,
+            "left": 734.1875,
+            "right": 862,
+            "top": 60.1875,
+            "bottom": 114.1875
+          }
+        },
+        "missingTargets": [],
+        "smallTargets": [],
+        "clippedTargets": [],
+        "overlaps": [],
+        "clippedEssentials": [],
+        "clippedText": []
+      },
+      "axe": {
+        "criticalCount": 0,
+        "seriousCount": 0,
+        "criticalNodeCount": 0,
+        "seriousNodeCount": 0,
+        "violations": [],
+        "pass": true
+      },
+      "pageErrors": [],
+      "consoleErrors": [],
+      "screenshot": null,
+      "screenshotProof": null,
+      "pass": true
+    },
+    {
+      "engine": "webkit",
+      "viewport": "landscape-wide",
+      "width": 932,
+      "height": 430,
+      "state": "reduced",
+      "layout": {
+        "pass": true,
+        "viewport": {
+          "width": 932,
+          "height": 430
+        },
+        "rootFontSizePx": 16,
+        "documentSize": {
+          "scrollWidth": 932,
+          "scrollHeight": 430
+        },
+        "horizontalOverflowPx": 0,
+        "verticalOverflowPx": 0,
+        "targetBoxes": {
+          "help": {
+            "x": 870,
+            "y": 8,
+            "width": 44,
+            "height": 44,
+            "left": 870,
+            "right": 914,
+            "top": 8,
+            "bottom": 52
+          },
+          "range": {
+            "x": 279.59375,
+            "y": 345.90625,
+            "width": 145.65625,
+            "height": 54,
+            "left": 279.59375,
+            "right": 425.25,
+            "top": 345.90625,
+            "bottom": 399.90625
+          },
+          "lab": {
+            "x": 438.03125,
+            "y": 242.703125,
+            "width": 178.203125,
+            "height": 54,
+            "left": 438.03125,
+            "right": 616.234375,
+            "top": 242.703125,
+            "bottom": 296.703125
+          },
+          "outcome": {
+            "x": 577.828125,
+            "y": 124.6875,
+            "width": 161.40625,
+            "height": 54,
+            "left": 577.828125,
+            "right": 739.234375,
+            "top": 124.6875,
+            "bottom": 178.6875
+          },
+          "academy": {
+            "x": 734.1875,
+            "y": 60.1875,
+            "width": 127.8125,
+            "height": 54,
+            "left": 734.1875,
+            "right": 862,
+            "top": 60.1875,
+            "bottom": 114.1875
+          }
+        },
+        "missingTargets": [],
+        "smallTargets": [],
+        "clippedTargets": [],
+        "overlaps": [],
+        "clippedEssentials": [],
+        "clippedText": []
+      },
+      "axe": {
+        "criticalCount": 0,
+        "seriousCount": 0,
+        "criticalNodeCount": 0,
+        "seriousNodeCount": 0,
+        "violations": [],
+        "pass": true
+      },
+      "pageErrors": [],
+      "consoleErrors": [],
+      "screenshot": null,
+      "screenshotProof": null,
+      "pass": true
+    },
+    {
+      "engine": "webkit",
+      "viewport": "landscape-wide",
+      "width": 932,
+      "height": 430,
+      "state": "text130",
+      "layout": {
+        "pass": true,
+        "viewport": {
+          "width": 932,
+          "height": 430
+        },
+        "rootFontSizePx": 20.799999,
+        "documentSize": {
+          "scrollWidth": 932,
+          "scrollHeight": 430
+        },
+        "horizontalOverflowPx": 0,
+        "verticalOverflowPx": 0,
+        "targetBoxes": {
+          "help": {
+            "x": 870,
+            "y": 8,
+            "width": 44,
+            "height": 44,
+            "left": 870,
+            "right": 914,
+            "top": 8,
+            "bottom": 52
+          },
+          "range": {
+            "x": 279.59375,
+            "y": 345.90625,
+            "width": 145.65625,
+            "height": 54,
+            "left": 279.59375,
+            "right": 425.25,
+            "top": 345.90625,
+            "bottom": 399.90625
+          },
+          "lab": {
+            "x": 438.03125,
+            "y": 242.703125,
+            "width": 178.203125,
+            "height": 54,
+            "left": 438.03125,
+            "right": 616.234375,
+            "top": 242.703125,
+            "bottom": 296.703125
+          },
+          "outcome": {
+            "x": 577.828125,
+            "y": 124.6875,
+            "width": 161.40625,
+            "height": 54,
+            "left": 577.828125,
+            "right": 739.234375,
+            "top": 124.6875,
+            "bottom": 178.6875
+          },
+          "academy": {
+            "x": 734.1875,
+            "y": 60.1875,
+            "width": 127.8125,
+            "height": 54,
+            "left": 734.1875,
+            "right": 862,
+            "top": 60.1875,
+            "bottom": 114.1875
+          }
+        },
+        "missingTargets": [],
+        "smallTargets": [],
+        "clippedTargets": [],
+        "overlaps": [],
+        "clippedEssentials": [],
+        "clippedText": []
+      },
+      "axe": {
+        "criticalCount": 0,
+        "seriousCount": 0,
+        "criticalNodeCount": 0,
+        "seriousNodeCount": 0,
+        "violations": [],
+        "pass": true
+      },
+      "pageErrors": [],
+      "consoleErrors": [],
+      "screenshot": "outputs/flightglass-home-night-ladder-eval/proof-screenshots/text130/webkit--landscape-wide--text130.png",
+      "screenshotProof": {
+        "width": 932,
+        "height": 430,
+        "bytes": 305255,
+        "rgbStdDev": [
+          23.206,
+          21.036,
+          22.282
+        ],
+        "pass": true
+      },
+      "pass": true
+    },
+    {
+      "engine": "webkit",
+      "viewport": "landscape-compact",
+      "width": 812,
+      "height": 375,
+      "state": "normal",
+      "layout": {
+        "pass": true,
+        "viewport": {
+          "width": 812,
+          "height": 375
+        },
+        "rootFontSizePx": 16,
+        "documentSize": {
+          "scrollWidth": 812,
+          "scrollHeight": 375
+        },
+        "horizontalOverflowPx": 0,
+        "verticalOverflowPx": 0,
+        "targetBoxes": {
+          "help": {
+            "x": 750,
+            "y": 8,
+            "width": 44,
+            "height": 44,
+            "left": 750,
+            "right": 794,
+            "top": 8,
+            "bottom": 52
+          },
+          "range": {
+            "x": 251.71875,
+            "y": 302.5,
+            "width": 136.203125,
+            "height": 50,
+            "left": 251.71875,
+            "right": 387.921875,
+            "top": 302.5,
+            "bottom": 352.5
+          },
+          "lab": {
+            "x": 381.625,
+            "y": 216.25,
+            "width": 167.40625,
+            "height": 50,
+            "left": 381.625,
+            "right": 549.03125,
+            "top": 216.25,
+            "bottom": 266.25
+          },
+          "outcome": {
+            "x": 503.4375,
+            "y": 108.75,
+            "width": 151.8125,
+            "height": 50,
+            "left": 503.4375,
+            "right": 655.25,
+            "top": 108.75,
+            "bottom": 158.75
+          },
+          "academy": {
+            "x": 621.390625,
+            "y": 37.5,
+            "width": 120.609375,
+            "height": 50,
+            "left": 621.390625,
+            "right": 742,
+            "top": 37.5,
+            "bottom": 87.5
+          }
+        },
+        "missingTargets": [],
+        "smallTargets": [],
+        "clippedTargets": [],
+        "overlaps": [],
+        "clippedEssentials": [],
+        "clippedText": []
+      },
+      "axe": {
+        "criticalCount": 0,
+        "seriousCount": 0,
+        "criticalNodeCount": 0,
+        "seriousNodeCount": 0,
+        "violations": [],
+        "pass": true
+      },
+      "pageErrors": [],
+      "consoleErrors": [],
+      "screenshot": null,
+      "screenshotProof": null,
+      "pass": true
+    },
+    {
+      "engine": "webkit",
+      "viewport": "landscape-compact",
+      "width": 812,
+      "height": 375,
+      "state": "reduced",
+      "layout": {
+        "pass": true,
+        "viewport": {
+          "width": 812,
+          "height": 375
+        },
+        "rootFontSizePx": 16,
+        "documentSize": {
+          "scrollWidth": 812,
+          "scrollHeight": 375
+        },
+        "horizontalOverflowPx": 0,
+        "verticalOverflowPx": 0,
+        "targetBoxes": {
+          "help": {
+            "x": 750,
+            "y": 8,
+            "width": 44,
+            "height": 44,
+            "left": 750,
+            "right": 794,
+            "top": 8,
+            "bottom": 52
+          },
+          "range": {
+            "x": 251.71875,
+            "y": 302.5,
+            "width": 136.203125,
+            "height": 50,
+            "left": 251.71875,
+            "right": 387.921875,
+            "top": 302.5,
+            "bottom": 352.5
+          },
+          "lab": {
+            "x": 381.625,
+            "y": 216.25,
+            "width": 167.40625,
+            "height": 50,
+            "left": 381.625,
+            "right": 549.03125,
+            "top": 216.25,
+            "bottom": 266.25
+          },
+          "outcome": {
+            "x": 503.4375,
+            "y": 108.75,
+            "width": 151.8125,
+            "height": 50,
+            "left": 503.4375,
+            "right": 655.25,
+            "top": 108.75,
+            "bottom": 158.75
+          },
+          "academy": {
+            "x": 621.390625,
+            "y": 37.5,
+            "width": 120.609375,
+            "height": 50,
+            "left": 621.390625,
+            "right": 742,
+            "top": 37.5,
+            "bottom": 87.5
+          }
+        },
+        "missingTargets": [],
+        "smallTargets": [],
+        "clippedTargets": [],
+        "overlaps": [],
+        "clippedEssentials": [],
+        "clippedText": []
+      },
+      "axe": {
+        "criticalCount": 0,
+        "seriousCount": 0,
+        "criticalNodeCount": 0,
+        "seriousNodeCount": 0,
+        "violations": [],
+        "pass": true
+      },
+      "pageErrors": [],
+      "consoleErrors": [],
+      "screenshot": null,
+      "screenshotProof": null,
+      "pass": true
+    },
+    {
+      "engine": "webkit",
+      "viewport": "landscape-compact",
+      "width": 812,
+      "height": 375,
+      "state": "text130",
+      "layout": {
+        "pass": true,
+        "viewport": {
+          "width": 812,
+          "height": 375
+        },
+        "rootFontSizePx": 20.799999,
+        "documentSize": {
+          "scrollWidth": 812,
+          "scrollHeight": 375
+        },
+        "horizontalOverflowPx": 0,
+        "verticalOverflowPx": 0,
+        "targetBoxes": {
+          "help": {
+            "x": 750,
+            "y": 8,
+            "width": 44,
+            "height": 44,
+            "left": 750,
+            "right": 794,
+            "top": 8,
+            "bottom": 52
+          },
+          "range": {
+            "x": 251.71875,
+            "y": 302.5,
+            "width": 136.203125,
+            "height": 50,
+            "left": 251.71875,
+            "right": 387.921875,
+            "top": 302.5,
+            "bottom": 352.5
+          },
+          "lab": {
+            "x": 381.625,
+            "y": 216.25,
+            "width": 167.40625,
+            "height": 50,
+            "left": 381.625,
+            "right": 549.03125,
+            "top": 216.25,
+            "bottom": 266.25
+          },
+          "outcome": {
+            "x": 503.4375,
+            "y": 108.75,
+            "width": 151.8125,
+            "height": 50,
+            "left": 503.4375,
+            "right": 655.25,
+            "top": 108.75,
+            "bottom": 158.75
+          },
+          "academy": {
+            "x": 621.390625,
+            "y": 37.5,
+            "width": 120.609375,
+            "height": 50,
+            "left": 621.390625,
+            "right": 742,
+            "top": 37.5,
+            "bottom": 87.5
+          }
+        },
+        "missingTargets": [],
+        "smallTargets": [],
+        "clippedTargets": [],
+        "overlaps": [],
+        "clippedEssentials": [],
+        "clippedText": []
+      },
+      "axe": {
+        "criticalCount": 0,
+        "seriousCount": 0,
+        "criticalNodeCount": 0,
+        "seriousNodeCount": 0,
+        "violations": [],
+        "pass": true
+      },
+      "pageErrors": [],
+      "consoleErrors": [],
+      "screenshot": "outputs/flightglass-home-night-ladder-eval/proof-screenshots/text130/webkit--landscape-compact--text130.png",
+      "screenshotProof": {
+        "width": 812,
+        "height": 375,
+        "bytes": 238285,
+        "rgbStdDev": [
+          21.277,
+          19.314,
+          20.389
+        ],
+        "pass": true
+      },
+      "pass": true
+    }
+  ],
+  "digitWidthStability": [
+    {
+      "engine": "chromium",
+      "viewport": "portrait-wide",
+      "values": [
+        "0000",
+        "1111",
+        "2222",
+        "3333",
+        "4444",
+        "5555",
+        "6666",
+        "7777",
+        "8888",
+        "9999"
+      ],
+      "measurements": [
+        {
+          "id": "valueRange",
+          "values": [
+            "0000",
+            "1111",
+            "2222",
+            "3333",
+            "4444",
+            "5555",
+            "6666",
+            "7777",
+            "8888",
+            "9999"
+          ],
+          "widths": [
+            36,
+            36,
+            36,
+            36,
+            36,
+            36,
+            36,
+            36,
+            36,
+            36
+          ],
+          "restoredText": "154 m · 12 m R",
+          "maxDeltaPx": 0
+        },
+        {
+          "id": "valueLab",
+          "values": [
+            "0000",
+            "1111",
+            "2222",
+            "3333",
+            "4444",
+            "5555",
+            "6666",
+            "7777",
+            "8888",
+            "9999"
+          ],
+          "widths": [
+            36,
+            36,
+            36,
+            36,
+            36,
+            36,
+            36,
+            36,
+            36,
+            36
+          ],
+          "restoredText": "Inspect the strike",
+          "maxDeltaPx": 0
+        },
+        {
+          "id": "valueOutcome",
+          "values": [
+            "0000",
+            "1111",
+            "2222",
+            "3333",
+            "4444",
+            "5555",
+            "6666",
+            "7777",
+            "8888",
+            "9999"
+          ],
+          "widths": [
+            36,
+            36,
+            36,
+            36,
+            36,
+            36,
+            36,
+            36,
+            36,
+            36
+          ],
+          "restoredText": "Fade · demo shot",
+          "maxDeltaPx": 0
+        },
+        {
+          "id": "valueAcademy",
+          "values": [
+            "0000",
+            "1111",
+            "2222",
+            "3333",
+            "4444",
+            "5555",
+            "6666",
+            "7777",
+            "8888",
+            "9999"
+          ],
+          "widths": [
+            36,
+            36,
+            36,
+            36,
+            36,
+            36,
+            36,
+            36,
+            36,
+            36
+          ],
+          "restoredText": "Physics path",
+          "maxDeltaPx": 0
+        }
+      ],
+      "maxDeltaPx": 0,
+      "thresholdPx": 0.6,
+      "pageErrors": [],
+      "pass": true
+    },
+    {
+      "engine": "chromium",
+      "viewport": "portrait-compact",
+      "values": [
+        "0000",
+        "1111",
+        "2222",
+        "3333",
+        "4444",
+        "5555",
+        "6666",
+        "7777",
+        "8888",
+        "9999"
+      ],
+      "measurements": [
+        {
+          "id": "valueRange",
+          "values": [
+            "0000",
+            "1111",
+            "2222",
+            "3333",
+            "4444",
+            "5555",
+            "6666",
+            "7777",
+            "8888",
+            "9999"
+          ],
+          "widths": [
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125
+          ],
+          "restoredText": "154 m · 12 m R",
+          "maxDeltaPx": 0
+        },
+        {
+          "id": "valueLab",
+          "values": [
+            "0000",
+            "1111",
+            "2222",
+            "3333",
+            "4444",
+            "5555",
+            "6666",
+            "7777",
+            "8888",
+            "9999"
+          ],
+          "widths": [
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125
+          ],
+          "restoredText": "Inspect the strike",
+          "maxDeltaPx": 0
+        },
+        {
+          "id": "valueOutcome",
+          "values": [
+            "0000",
+            "1111",
+            "2222",
+            "3333",
+            "4444",
+            "5555",
+            "6666",
+            "7777",
+            "8888",
+            "9999"
+          ],
+          "widths": [
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125
+          ],
+          "restoredText": "Fade · demo shot",
+          "maxDeltaPx": 0
+        },
+        {
+          "id": "valueAcademy",
+          "values": [
+            "0000",
+            "1111",
+            "2222",
+            "3333",
+            "4444",
+            "5555",
+            "6666",
+            "7777",
+            "8888",
+            "9999"
+          ],
+          "widths": [
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125
+          ],
+          "restoredText": "Physics path",
+          "maxDeltaPx": 0
+        }
+      ],
+      "maxDeltaPx": 0,
+      "thresholdPx": 0.6,
+      "pageErrors": [],
+      "pass": true
+    },
+    {
+      "engine": "chromium",
+      "viewport": "landscape-wide",
+      "values": [
+        "0000",
+        "1111",
+        "2222",
+        "3333",
+        "4444",
+        "5555",
+        "6666",
+        "7777",
+        "8888",
+        "9999"
+      ],
+      "measurements": [
+        {
+          "id": "valueRange",
+          "values": [
+            "0000",
+            "1111",
+            "2222",
+            "3333",
+            "4444",
+            "5555",
+            "6666",
+            "7777",
+            "8888",
+            "9999"
+          ],
+          "widths": [
+            33.609375,
+            33.609375,
+            33.609375,
+            33.609375,
+            33.609375,
+            33.609375,
+            33.609375,
+            33.609375,
+            33.609375,
+            33.609375
+          ],
+          "restoredText": "154 m · 12 m R",
+          "maxDeltaPx": 0
+        },
+        {
+          "id": "valueLab",
+          "values": [
+            "0000",
+            "1111",
+            "2222",
+            "3333",
+            "4444",
+            "5555",
+            "6666",
+            "7777",
+            "8888",
+            "9999"
+          ],
+          "widths": [
+            33.609375,
+            33.609375,
+            33.609375,
+            33.609375,
+            33.609375,
+            33.609375,
+            33.609375,
+            33.609375,
+            33.609375,
+            33.609375
+          ],
+          "restoredText": "Inspect the strike",
+          "maxDeltaPx": 0
+        },
+        {
+          "id": "valueOutcome",
+          "values": [
+            "0000",
+            "1111",
+            "2222",
+            "3333",
+            "4444",
+            "5555",
+            "6666",
+            "7777",
+            "8888",
+            "9999"
+          ],
+          "widths": [
+            33.609375,
+            33.609375,
+            33.609375,
+            33.609375,
+            33.609375,
+            33.609375,
+            33.609375,
+            33.609375,
+            33.609375,
+            33.609375
+          ],
+          "restoredText": "Fade · demo shot",
+          "maxDeltaPx": 0
+        },
+        {
+          "id": "valueAcademy",
+          "values": [
+            "0000",
+            "1111",
+            "2222",
+            "3333",
+            "4444",
+            "5555",
+            "6666",
+            "7777",
+            "8888",
+            "9999"
+          ],
+          "widths": [
+            33.609375,
+            33.609375,
+            33.609375,
+            33.609375,
+            33.609375,
+            33.609375,
+            33.609375,
+            33.609375,
+            33.609375,
+            33.609375
+          ],
+          "restoredText": "Physics path",
+          "maxDeltaPx": 0
+        }
+      ],
+      "maxDeltaPx": 0,
+      "thresholdPx": 0.6,
+      "pageErrors": [],
+      "pass": true
+    },
+    {
+      "engine": "chromium",
+      "viewport": "landscape-compact",
+      "values": [
+        "0000",
+        "1111",
+        "2222",
+        "3333",
+        "4444",
+        "5555",
+        "6666",
+        "7777",
+        "8888",
+        "9999"
+      ],
+      "measurements": [
+        {
+          "id": "valueRange",
+          "values": [
+            "0000",
+            "1111",
+            "2222",
+            "3333",
+            "4444",
+            "5555",
+            "6666",
+            "7777",
+            "8888",
+            "9999"
+          ],
+          "widths": [
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125
+          ],
+          "restoredText": "154 m · 12 m R",
+          "maxDeltaPx": 0
+        },
+        {
+          "id": "valueLab",
+          "values": [
+            "0000",
+            "1111",
+            "2222",
+            "3333",
+            "4444",
+            "5555",
+            "6666",
+            "7777",
+            "8888",
+            "9999"
+          ],
+          "widths": [
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125
+          ],
+          "restoredText": "Inspect the strike",
+          "maxDeltaPx": 0
+        },
+        {
+          "id": "valueOutcome",
+          "values": [
+            "0000",
+            "1111",
+            "2222",
+            "3333",
+            "4444",
+            "5555",
+            "6666",
+            "7777",
+            "8888",
+            "9999"
+          ],
+          "widths": [
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125
+          ],
+          "restoredText": "Fade · demo shot",
+          "maxDeltaPx": 0
+        },
+        {
+          "id": "valueAcademy",
+          "values": [
+            "0000",
+            "1111",
+            "2222",
+            "3333",
+            "4444",
+            "5555",
+            "6666",
+            "7777",
+            "8888",
+            "9999"
+          ],
+          "widths": [
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125
+          ],
+          "restoredText": "Physics path",
+          "maxDeltaPx": 0
+        }
+      ],
+      "maxDeltaPx": 0,
+      "thresholdPx": 0.6,
+      "pageErrors": [],
+      "pass": true
+    },
+    {
+      "engine": "webkit",
+      "viewport": "portrait-wide",
+      "values": [
+        "0000",
+        "1111",
+        "2222",
+        "3333",
+        "4444",
+        "5555",
+        "6666",
+        "7777",
+        "8888",
+        "9999"
+      ],
+      "measurements": [
+        {
+          "id": "valueRange",
+          "values": [
+            "0000",
+            "1111",
+            "2222",
+            "3333",
+            "4444",
+            "5555",
+            "6666",
+            "7777",
+            "8888",
+            "9999"
+          ],
+          "widths": [
+            36,
+            36,
+            36,
+            36,
+            36,
+            36,
+            36,
+            36,
+            36,
+            36
+          ],
+          "restoredText": "154 m · 12 m R",
+          "maxDeltaPx": 0
+        },
+        {
+          "id": "valueLab",
+          "values": [
+            "0000",
+            "1111",
+            "2222",
+            "3333",
+            "4444",
+            "5555",
+            "6666",
+            "7777",
+            "8888",
+            "9999"
+          ],
+          "widths": [
+            36,
+            36,
+            36,
+            36,
+            36,
+            36,
+            36,
+            36,
+            36,
+            36
+          ],
+          "restoredText": "Inspect the strike",
+          "maxDeltaPx": 0
+        },
+        {
+          "id": "valueOutcome",
+          "values": [
+            "0000",
+            "1111",
+            "2222",
+            "3333",
+            "4444",
+            "5555",
+            "6666",
+            "7777",
+            "8888",
+            "9999"
+          ],
+          "widths": [
+            36,
+            36,
+            36,
+            36,
+            36,
+            36,
+            36,
+            36,
+            36,
+            36
+          ],
+          "restoredText": "Fade · demo shot",
+          "maxDeltaPx": 0
+        },
+        {
+          "id": "valueAcademy",
+          "values": [
+            "0000",
+            "1111",
+            "2222",
+            "3333",
+            "4444",
+            "5555",
+            "6666",
+            "7777",
+            "8888",
+            "9999"
+          ],
+          "widths": [
+            36,
+            36,
+            36,
+            36,
+            36,
+            36,
+            36,
+            36,
+            36,
+            36
+          ],
+          "restoredText": "Physics path",
+          "maxDeltaPx": 0
+        }
+      ],
+      "maxDeltaPx": 0,
+      "thresholdPx": 0.6,
+      "pageErrors": [],
+      "pass": true
+    },
+    {
+      "engine": "webkit",
+      "viewport": "portrait-compact",
+      "values": [
+        "0000",
+        "1111",
+        "2222",
+        "3333",
+        "4444",
+        "5555",
+        "6666",
+        "7777",
+        "8888",
+        "9999"
+      ],
+      "measurements": [
+        {
+          "id": "valueRange",
+          "values": [
+            "0000",
+            "1111",
+            "2222",
+            "3333",
+            "4444",
+            "5555",
+            "6666",
+            "7777",
+            "8888",
+            "9999"
+          ],
+          "widths": [
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125
+          ],
+          "restoredText": "154 m · 12 m R",
+          "maxDeltaPx": 0
+        },
+        {
+          "id": "valueLab",
+          "values": [
+            "0000",
+            "1111",
+            "2222",
+            "3333",
+            "4444",
+            "5555",
+            "6666",
+            "7777",
+            "8888",
+            "9999"
+          ],
+          "widths": [
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125
+          ],
+          "restoredText": "Inspect the strike",
+          "maxDeltaPx": 0
+        },
+        {
+          "id": "valueOutcome",
+          "values": [
+            "0000",
+            "1111",
+            "2222",
+            "3333",
+            "4444",
+            "5555",
+            "6666",
+            "7777",
+            "8888",
+            "9999"
+          ],
+          "widths": [
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125
+          ],
+          "restoredText": "Fade · demo shot",
+          "maxDeltaPx": 0
+        },
+        {
+          "id": "valueAcademy",
+          "values": [
+            "0000",
+            "1111",
+            "2222",
+            "3333",
+            "4444",
+            "5555",
+            "6666",
+            "7777",
+            "8888",
+            "9999"
+          ],
+          "widths": [
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125
+          ],
+          "restoredText": "Physics path",
+          "maxDeltaPx": 0
+        }
+      ],
+      "maxDeltaPx": 0,
+      "thresholdPx": 0.6,
+      "pageErrors": [],
+      "pass": true
+    },
+    {
+      "engine": "webkit",
+      "viewport": "landscape-wide",
+      "values": [
+        "0000",
+        "1111",
+        "2222",
+        "3333",
+        "4444",
+        "5555",
+        "6666",
+        "7777",
+        "8888",
+        "9999"
+      ],
+      "measurements": [
+        {
+          "id": "valueRange",
+          "values": [
+            "0000",
+            "1111",
+            "2222",
+            "3333",
+            "4444",
+            "5555",
+            "6666",
+            "7777",
+            "8888",
+            "9999"
+          ],
+          "widths": [
+            33.609375,
+            33.609375,
+            33.609375,
+            33.609375,
+            33.609375,
+            33.609375,
+            33.609375,
+            33.609375,
+            33.609375,
+            33.609375
+          ],
+          "restoredText": "154 m · 12 m R",
+          "maxDeltaPx": 0
+        },
+        {
+          "id": "valueLab",
+          "values": [
+            "0000",
+            "1111",
+            "2222",
+            "3333",
+            "4444",
+            "5555",
+            "6666",
+            "7777",
+            "8888",
+            "9999"
+          ],
+          "widths": [
+            33.609375,
+            33.609375,
+            33.609375,
+            33.609375,
+            33.609375,
+            33.609375,
+            33.609375,
+            33.609375,
+            33.609375,
+            33.609375
+          ],
+          "restoredText": "Inspect the strike",
+          "maxDeltaPx": 0
+        },
+        {
+          "id": "valueOutcome",
+          "values": [
+            "0000",
+            "1111",
+            "2222",
+            "3333",
+            "4444",
+            "5555",
+            "6666",
+            "7777",
+            "8888",
+            "9999"
+          ],
+          "widths": [
+            33.609375,
+            33.609375,
+            33.609375,
+            33.609375,
+            33.609375,
+            33.609375,
+            33.609375,
+            33.609375,
+            33.609375,
+            33.609375
+          ],
+          "restoredText": "Fade · demo shot",
+          "maxDeltaPx": 0
+        },
+        {
+          "id": "valueAcademy",
+          "values": [
+            "0000",
+            "1111",
+            "2222",
+            "3333",
+            "4444",
+            "5555",
+            "6666",
+            "7777",
+            "8888",
+            "9999"
+          ],
+          "widths": [
+            33.609375,
+            33.609375,
+            33.609375,
+            33.609375,
+            33.609375,
+            33.609375,
+            33.609375,
+            33.609375,
+            33.609375,
+            33.609375
+          ],
+          "restoredText": "Physics path",
+          "maxDeltaPx": 0
+        }
+      ],
+      "maxDeltaPx": 0,
+      "thresholdPx": 0.6,
+      "pageErrors": [],
+      "pass": true
+    },
+    {
+      "engine": "webkit",
+      "viewport": "landscape-compact",
+      "values": [
+        "0000",
+        "1111",
+        "2222",
+        "3333",
+        "4444",
+        "5555",
+        "6666",
+        "7777",
+        "8888",
+        "9999"
+      ],
+      "measurements": [
+        {
+          "id": "valueRange",
+          "values": [
+            "0000",
+            "1111",
+            "2222",
+            "3333",
+            "4444",
+            "5555",
+            "6666",
+            "7777",
+            "8888",
+            "9999"
+          ],
+          "widths": [
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125
+          ],
+          "restoredText": "154 m · 12 m R",
+          "maxDeltaPx": 0
+        },
+        {
+          "id": "valueLab",
+          "values": [
+            "0000",
+            "1111",
+            "2222",
+            "3333",
+            "4444",
+            "5555",
+            "6666",
+            "7777",
+            "8888",
+            "9999"
+          ],
+          "widths": [
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125
+          ],
+          "restoredText": "Inspect the strike",
+          "maxDeltaPx": 0
+        },
+        {
+          "id": "valueOutcome",
+          "values": [
+            "0000",
+            "1111",
+            "2222",
+            "3333",
+            "4444",
+            "5555",
+            "6666",
+            "7777",
+            "8888",
+            "9999"
+          ],
+          "widths": [
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125
+          ],
+          "restoredText": "Fade · demo shot",
+          "maxDeltaPx": 0
+        },
+        {
+          "id": "valueAcademy",
+          "values": [
+            "0000",
+            "1111",
+            "2222",
+            "3333",
+            "4444",
+            "5555",
+            "6666",
+            "7777",
+            "8888",
+            "9999"
+          ],
+          "widths": [
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125,
+            31.203125
+          ],
+          "restoredText": "Physics path",
+          "maxDeltaPx": 0
+        }
+      ],
+      "maxDeltaPx": 0,
+      "thresholdPx": 0.6,
+      "pageErrors": [],
+      "pass": true
+    }
+  ],
+  "navigation": [
+    {
+      "engine": "chromium",
+      "state": "normal",
+      "viewport": "portrait-wide",
+      "availability": {
+        "pageswapAvailable": true,
+        "pagerevealAvailable": true,
+        "viewTransitionAvailable": true
+      },
+      "events": [
+        {
+          "event": "pagereveal",
+          "hasViewTransition": false,
+          "path": "/index.html"
+        },
+        {
+          "event": "pageswap",
+          "hasViewTransition": true,
+          "path": "/index.html"
+        },
+        {
+          "event": "pagereveal",
+          "hasViewTransition": true,
+          "path": "/impact.html"
+        }
+      ],
+      "finalRoute": "/impact.html",
+      "pageErrors": [],
+      "consoleErrors": [],
+      "requestFailures": [],
+      "screenshot": "outputs/flightglass-home-night-ladder-eval/proof-screenshots/navigation/chromium--normal--impact.png",
+      "screenshotProof": {
+        "width": 430,
+        "height": 932,
+        "bytes": 250981,
+        "rgbStdDev": [
+          10.409,
+          10.113,
+          11.838
+        ],
+        "pass": true
+      },
+      "pass": true
+    },
+    {
+      "engine": "chromium",
+      "state": "reduced",
+      "viewport": "portrait-wide",
+      "availability": {
+        "pageswapAvailable": true,
+        "pagerevealAvailable": true,
+        "viewTransitionAvailable": true
+      },
+      "events": [
+        {
+          "event": "pagereveal",
+          "hasViewTransition": false,
+          "path": "/index.html"
+        },
+        {
+          "event": "pageswap",
+          "hasViewTransition": false,
+          "path": "/index.html"
+        },
+        {
+          "event": "pagereveal",
+          "hasViewTransition": false,
+          "path": "/impact.html"
+        }
+      ],
+      "finalRoute": "/impact.html",
+      "pageErrors": [],
+      "consoleErrors": [],
+      "requestFailures": [],
+      "screenshot": "outputs/flightglass-home-night-ladder-eval/proof-screenshots/navigation/chromium--reduced--impact.png",
+      "screenshotProof": {
+        "width": 430,
+        "height": 932,
+        "bytes": 158542,
+        "rgbStdDev": [
+          10.624,
+          10.399,
+          11.824
+        ],
+        "pass": true
+      },
+      "pass": true
+    },
+    {
+      "engine": "webkit",
+      "state": "normal",
+      "viewport": "portrait-wide",
+      "availability": {
+        "pageswapAvailable": true,
+        "pagerevealAvailable": true,
+        "viewTransitionAvailable": true
+      },
+      "events": [
+        {
+          "event": "pagereveal",
+          "hasViewTransition": false,
+          "path": "/index.html"
+        },
+        {
+          "event": "pageswap",
+          "hasViewTransition": true,
+          "path": "/index.html"
+        },
+        {
+          "event": "pagereveal",
+          "hasViewTransition": true,
+          "path": "/impact.html"
+        }
+      ],
+      "finalRoute": "/impact.html",
+      "pageErrors": [],
+      "consoleErrors": [],
+      "requestFailures": [],
+      "screenshot": "outputs/flightglass-home-night-ladder-eval/proof-screenshots/navigation/webkit--normal--impact.png",
+      "screenshotProof": {
+        "width": 430,
+        "height": 932,
+        "bytes": 216598,
+        "rgbStdDev": [
+          9.16,
+          8.936,
+          10.441
+        ],
+        "pass": true
+      },
+      "pass": true
+    },
+    {
+      "engine": "webkit",
+      "state": "reduced",
+      "viewport": "portrait-wide",
+      "availability": {
+        "pageswapAvailable": true,
+        "pagerevealAvailable": true,
+        "viewTransitionAvailable": true
+      },
+      "events": [
+        {
+          "event": "pagereveal",
+          "hasViewTransition": false,
+          "path": "/index.html"
+        },
+        {
+          "event": "pageswap",
+          "hasViewTransition": false,
+          "path": "/index.html"
+        },
+        {
+          "event": "pagereveal",
+          "hasViewTransition": false,
+          "path": "/impact.html"
+        }
+      ],
+      "finalRoute": "/impact.html",
+      "pageErrors": [],
+      "consoleErrors": [],
+      "requestFailures": [],
+      "screenshot": "outputs/flightglass-home-night-ladder-eval/proof-screenshots/navigation/webkit--reduced--impact.png",
+      "screenshotProof": {
+        "width": 430,
+        "height": 932,
+        "bytes": 189355,
+        "rgbStdDev": [
+          9.397,
+          9.166,
+          10.693
+        ],
+        "pass": true
+      },
+      "pass": true
+    }
+  ],
+  "externalCommands": [
+    {
+      "command": "npm run test:webkit",
+      "log": "outputs/flightglass-home-night-ladder-eval/test-webkit.log",
+      "exitCode": 0,
+      "bytes": 4044,
+      "sha256": "a42cf70bf09e3a6de49fb0eed7127c5119109bcce8f5528047a4d45383334408",
+      "tests": 41,
+      "pass": 41,
+      "fail": 0,
+      "status": "PASS"
+    },
+    {
+      "command": "npm run test:visreg",
+      "attempt": "post-hardening current gate",
+      "log": "outputs/flightglass-home-night-ladder-eval/test-visreg-post-fix.log",
+      "exitCode": 0,
+      "bytes": 462,
+      "sha256": "4e0b97d1b5a545214a165b8a8502f00f8899e4e506cf35ef99fe6b6e0ccce0c3",
+      "tests": 3,
+      "pass": 3,
+      "fail": 0,
+      "status": "PASS",
+      "baselineApprovalPerformed": false,
+      "requirements": {
+        "tests": "3/3",
+        "opaqueImages": "48/48",
+        "nonblankImages": "48/48"
+      },
+      "imageIntegrity": {
+        "artifact": {
+          "path": "outputs/flightglass-home-night-ladder-eval/post-fix-visreg-image-integrity.json",
+          "bytes": 25594,
+          "sha256": "b42d9170f6dc24103fc408d194de1fee59d8f9b41efae940561ec3a36b6ddd31"
+        },
+        "counts": {
+          "expected": 48,
+          "actual": 48,
+          "opaque": 48,
+          "nonblank": 48,
+          "passes": 48,
+          "failures": 0
+        },
+        "pass": true
+      }
+    },
+    {
+      "command": "npm run test:perf",
+      "log": "outputs/flightglass-home-night-ladder-eval/test-perf.log",
+      "exitCode": 0,
+      "bytes": 367,
+      "sha256": "ff26be1f736507e813050759884df87c2bbef1ae6c545cbc02205c752cbfd32a",
+      "tests": 2,
+      "pass": 2,
+      "fail": 0,
+      "status": "PASS"
+    }
+  ],
+  "harnessPass": true,
+  "externalCommandsPass": true,
+  "overallPass": true,
+  "finalizedAt": "2026-07-15T09:46:00.423Z",
+  "homeOnlyDeterministicVisualRegression": {
+    "command": "node outputs/flightglass-home-night-ladder-eval/home-determinism-proof.mjs",
+    "result": {
+      "path": "outputs/flightglass-home-night-ladder-eval/home-determinism-results.json",
+      "bytes": 19696,
+      "sha256": "c136c383a436625e27fdfbbd55afb50d1f6091a0696b558f80384a3c12223ca8"
+    },
+    "harness": {
+      "path": "outputs/flightglass-home-night-ladder-eval/home-determinism-proof.mjs",
+      "bytes": 7963,
+      "sha256": "9e470bbef0d5ce82c67003f7d851efe6814cc7ee2c6fcf5e0434397747a5e52f"
+    },
+    "establishedSemantics": {
+      "implementation": "scripts/lib/flightglass-visreg.mjs diffPng",
+      "channelToleranceLsb": 3,
+      "maximumDiffPct": 0.1,
+      "chromiumArguments": [
+        "--disable-gpu",
+        "--force-color-profile=srgb",
+        "--disable-lcd-text",
+        "--font-render-hinting=none",
+        "--force-device-scale-factor=1",
+        "--hide-scrollbars"
+      ],
+      "settleMs": 1800
+    },
+    "counts": {
+      "cases": 16,
+      "captureFiles": 32,
+      "passes": 16,
+      "failures": 0
+    },
+    "maximumDiff": {
+      "diffPct": 0,
+      "diffPixels": 0,
+      "engine": "chromium",
+      "viewport": "portrait-wide",
+      "motion": "normal"
+    },
+    "pass": true
+  },
+  "baselineApprovalPerformed": false,
+  "historicalExternalAttempts": [
+    {
+      "command": "npm run test:visreg",
+      "attempt": "initial",
+      "log": "outputs/flightglass-home-night-ladder-eval/test-visreg.log",
+      "exitCode": 1,
+      "bytes": 1356,
+      "sha256": "5c6de11d5c96d1cb68b8cb982b6be4ddba015e3a53704e5a3f23e9f305691912",
+      "tests": 2,
+      "pass": 1,
+      "fail": 1,
+      "status": "FAIL",
+      "baselineApprovalPerformed": false,
+      "failure": {
+        "scope": "global Academy Lab visual baseline, not Home",
+        "thresholdPct": 0.1,
+        "artifact": "chromium--430x932--normal--1-lab.png",
+        "actualDifferencePct": 0.101,
+        "changedPixels": 404
+      },
+      "historical": true,
+      "phase": "pre-hardening"
+    },
+    {
+      "command": "npm run test:visreg",
+      "attempt": "single retry",
+      "log": "outputs/flightglass-home-night-ladder-eval/test-visreg-retry.log",
+      "exitCode": 1,
+      "bytes": 1354,
+      "sha256": "69a1e68dfd18fc6061a28a687941df4b0ec9145ac9c8548349f122248e8579ab",
+      "tests": 2,
+      "pass": 1,
+      "fail": 1,
+      "status": "FAIL",
+      "baselineApprovalPerformed": false,
+      "failure": {
+        "scope": "global Academy Lab visual baseline, not Home",
+        "thresholdPct": 0.1,
+        "artifact": "chromium--430x932--normal--1-lab.png",
+        "actualDifferencePct": 0.107,
+        "changedPixels": 428
+      },
+      "historical": true,
+      "phase": "pre-hardening"
+    }
+  ],
+  "currentVisregGate": {
+    "command": "npm run test:visreg",
+    "attempt": "post-hardening current gate",
+    "log": "outputs/flightglass-home-night-ladder-eval/test-visreg-post-fix.log",
+    "exitCode": 0,
+    "bytes": 462,
+    "sha256": "4e0b97d1b5a545214a165b8a8502f00f8899e4e506cf35ef99fe6b6e0ccce0c3",
+    "tests": 3,
+    "pass": 3,
+    "fail": 0,
+    "status": "PASS",
+    "baselineApprovalPerformed": false,
+    "requirements": {
+      "tests": "3/3",
+      "opaqueImages": "48/48",
+      "nonblankImages": "48/48"
+    },
+    "imageIntegrity": {
+      "artifact": {
+        "path": "outputs/flightglass-home-night-ladder-eval/post-fix-visreg-image-integrity.json",
+        "bytes": 25594,
+        "sha256": "b42d9170f6dc24103fc408d194de1fee59d8f9b41efae940561ec3a36b6ddd31"
+      },
+      "counts": {
+        "expected": 48,
+        "actual": 48,
+        "opaque": 48,
+        "nonblank": 48,
+        "passes": 48,
+        "failures": 0
+      },
+      "pass": true
+    }
+  },
+  "evidenceMethodHardening": {
+    "library": {
+      "path": "scripts/lib/flightglass-visreg.mjs",
+      "bytes": 12449,
+      "sha256": "3d10fb179373c2e941ee8f38038e3da8222a86c85bf5060c6933003e28230680"
+    },
+    "regressionTest": {
+      "path": "scripts/flightglass-visreg.test.mjs",
+      "bytes": 2764,
+      "sha256": "a020f21aeafffaf6b1a3e97f49bea0e3ccacb32d70ce57e74ffa636be24cb43a"
+    },
+    "alphaRegression": "pixel diff rejects an alpha-only image change",
+    "alphaChannelIncluded": true,
+    "settledGhostCountWait": true,
+    "screenshotsDisableAnimationsAndHideCaret": true
+  },
+  "performanceGate": {
+    "command": "npm run test:perf",
+    "log": {
+      "path": "outputs/flightglass-home-night-ladder-eval/test-perf.log",
+      "bytes": 367,
+      "sha256": "ff26be1f736507e813050759884df87c2bbef1ae6c545cbc02205c752cbfd32a"
+    },
+    "tests": 2,
+    "passedTests": 2,
+    "failedTests": 0,
+    "method": "Each engine synthesizes 220 pointermove/input events, forces style/layout flush, and asserts zero page errors.",
+    "reports": [
+      {
+        "path": "outputs/flightglass-perf/input-to-paint--chromium.json",
+        "bytes": 202,
+        "sha256": "82aa62ed78627912fcd14815143e142155e4802a939fced8822ca741adea202b",
+        "engine": "chromium",
+        "surface": "academy-lesson/lab",
+        "events": 220,
+        "p50Ms": 0.7,
+        "p95Ms": 1.7,
+        "p99Ms": 2.6,
+        "maxMs": 3.1,
+        "budgetMsP95": 16.7,
+        "runtimeErrors": 0,
+        "pass": true
+      },
+      {
+        "path": "outputs/flightglass-perf/input-to-paint--webkit.json",
+        "bytes": 192,
+        "sha256": "323a23f9ba5359425270bc69be7d672e1a3f73d796559ad1f46d22c9dcac4877",
+        "engine": "webkit",
+        "surface": "academy-lesson/lab",
+        "events": 220,
+        "p50Ms": 2,
+        "p95Ms": 3,
+        "p99Ms": 4,
+        "maxMs": 5,
+        "budgetMsP95": 16.7,
+        "runtimeErrors": 0,
+        "pass": true
+      }
+    ],
+    "pass": true
+  },
+  "judgeVisibleSourceEvidence": {
+    "evidenceId": "EV-TYPO-04",
+    "manifest": {
+      "path": "outputs/flightglass-home-night-ladder-eval/ev-typo-04-source-evidence.json",
+      "bytes": 491,
+      "sha256": "bc9eca519b04311b223a3cb37d1306b9843f5e19ad2da85722a7ea4013b340be"
+    },
+    "judgment": null,
+    "files": [
+      {
+        "path": "sa-p3.css",
+        "bytes": 27320,
+        "sha256": "dbe1405fb9603c04709c98f07f4c30911009e0d197b4908393d62b98be26d772"
+      },
+      {
+        "path": "academy-native-lesson.css",
+        "bytes": 46334,
+        "sha256": "0d93972dc09c67c5d443360695e396cb5d116e54ac542415c28cbac2e1507779"
+      }
+    ]
+  }
+}

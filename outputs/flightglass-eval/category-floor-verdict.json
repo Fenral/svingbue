@@ -1,0 +1,99 @@
+{
+  "schemaVersion": 1,
+  "artifact": "Backspin reference lesson",
+  "evaluatedAt": "2026-07-15",
+  "method": {
+    "acceptanceBasis": "Independent category gates; no averaging across categories",
+    "scoreRole": "A numeric score is a derived byproduct and was not used to decide this verdict",
+    "passRule": "A category clears only when its mapped evidence passes and no category-specific critical defect remains"
+  },
+  "judgeConsistency": {
+    "result": "PASS",
+    "summary": "All 17 locked EV requirements passed in each of the three independent judge runs",
+    "runs": [
+      "outputs/flightglass-eval/judge-run-1.json",
+      "outputs/flightglass-eval/judge-run-2.json",
+      "outputs/flightglass-eval/judge-run-3.json"
+    ]
+  },
+  "criticalDefects": [],
+  "categories": [
+    {
+      "id": "accessibility",
+      "result": "PASS",
+      "floor": "All six surfaces expose usable keyboard and assistive-technology paths, with no critical or serious automated accessibility violation",
+      "evidence": [
+        "EV-NAT-02 passed 3/3: axe-core found zero critical or serious violations on all six surfaces in Chromium and WebKit",
+        "EV-NAT-03 passed 3/3: sliders expose plain-language aria-valuetext and live announcements are debounced",
+        "EV-GATE-01 passed 3/3: keyboard-only completion, focus behavior, 44px targets and failure paths passed on WebKit",
+        "The focused academy-lesson verify report records no missing selectors, clipped text, small targets, console errors or page errors in normal and reduced-motion states"
+      ]
+    },
+    {
+      "id": "motion",
+      "result": "PASS",
+      "floor": "Live truth responds within the locked performance budget; motion semantics preserve information and reduced-motion parity",
+      "evidence": [
+        "EV-MOT-01 passed 3/3: both browser engines stayed below the locked 16.7 ms p95 budget over 220 events",
+        "EV-MOT-02 and EV-MOT-03 passed 3/3: phosphor decay is confined to the trace and uses at most two monotonically fading ghosts",
+        "EV-MOT-04 passed 3/3: Aperture transition exists in normal motion and becomes an information-equivalent fade under reduced motion",
+        "Normal and reduced-motion learning state equivalence is covered by the full WebKit gate"
+      ]
+    },
+    {
+      "id": "truth",
+      "result": "PASS",
+      "floor": "Engine truth, estimates, display limits and mastery claims remain visibly and behaviorally distinct",
+      "evidence": [
+        "EV-REN-02 and EV-REN-03 passed 3/3: each state has at most one engine-true annotation, motor truth uses ember and estimate layers use violet",
+        "The browser contract verifies exact clamp/floor sensitivity, sourced real-world separation, exact myth engine runs and live-engine mastery evaluation",
+        "Non-finite model inputs preserve the last valid truth and award no mission or mastery credit",
+        "impact-flight.js and www/impact-flight.js share SHA-256 7E5323C3B5C553A4D6CC12177687256D61E16F5429C9A17DF1FB49911261CB26 and have no working-tree diff"
+      ]
+    },
+    {
+      "id": "information-architecture",
+      "result": "PASS",
+      "floor": "Each of the six paged surfaces has one clear job, an explicit next action and no essential internal-scroll dependency",
+      "evidence": [
+        "EV-NAT-04 passed 3/3: the surface manifest covers Mission, Lab, Mastery and Result essential selectors",
+        "Visual inspection of 0-mission.png through 5-result.png confirms six distinct jobs: orient, manipulate, compare influence, test myths, demonstrate mastery and conclude",
+        "The focused verify report records no clipped essential text or horizontal overflow at 430x932 and 375x812",
+        "The blind pairwise comparison preferred the native generation in all four compared states; the only noted redundancy is the duplicated Launch Angle destination on Result, which does not create a competing task"
+      ]
+    },
+    {
+      "id": "mobile",
+      "result": "PASS",
+      "floor": "Both portrait target sizes remain complete, touch-safe and stable across browser engines, text scaling and motion modes",
+      "evidence": [
+        "EV-NAT-01 passed 3/3: all six surfaces remain intact at 130% text scale with no clipping, overlap or horizontal scroll",
+        "EV-REG-01 passed 3/3: all 48 approved visual-regression states are within the locked 0.1% threshold",
+        "EV-GATE-01 passed 3/3: all six surfaces fit 430x932 and 375x812 with native target sizes on WebKit",
+        "The focused verify report has four clean portrait viewport/motion states and zero runtime, resource, overflow, selector, target-size or clipping findings"
+      ]
+    }
+  ],
+  "categoryFloorResult": {
+    "result": "PASS",
+    "cleared": 5,
+    "total": 5,
+    "failedCategories": []
+  },
+  "nonBlockingObservations": [
+    "The Result surface repeats the Launch Angle destination in the content card and sticky action; this is one destination and did not fail the information-architecture floor",
+    "Physical-device input-to-present timing, manual VoiceOver and the five-person five-second test remain owner-run release checkpoints; they are not autonomous category-floor failures"
+  ],
+  "reviewedArtifacts": [
+    "docs/superpowers/specs/2026-07-13-backspin-96-97-design.md",
+    "config/evidence/instrument-laws.json",
+    "outputs/flightglass-eval/human-pack/screenshots/0-mission.png",
+    "outputs/flightglass-eval/human-pack/screenshots/1-lab.png",
+    "outputs/flightglass-eval/human-pack/screenshots/2-influence.png",
+    "outputs/flightglass-eval/human-pack/screenshots/3-myths.png",
+    "outputs/flightglass-eval/human-pack/screenshots/4-mastery.png",
+    "outputs/flightglass-eval/human-pack/screenshots/5-result.png",
+    "outputs/flightglass-ux/verify--academy-lesson-report.json",
+    "outputs/flightglass-eval/pairwise/pairwise-result.json"
+  ]
+}

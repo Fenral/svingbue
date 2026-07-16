@@ -1,0 +1,45 @@
+import{ACADEMY_VOICE_LOCALE,ACADEMY_VOICE_PACK_ID,defineAcademyCueSet}from'./academy-voice-manifest.js';
+const freeze=value=>{if(!value||typeof value!=='object'||Object.isFrozen(value))return value;Object.values(value).forEach(freeze);return Object.freeze(value);};
+export const CARRY_CONTENT=freeze({experienceId:'carry',contentVersion:1,title:'Carry',conceptIds:['carry','total'],prerequisiteExperienceIds:['speed-transfer'],primaryOutcome:'Carry',requiredLabels:['CARRY · EQUAL-ELEVATION CROSSING · DEFINITION','BALL SPEED → ENGINE CARRY · MODEL','ILLUSTRATIVE TOTAL','LAUNCH + SPIN RATE → REAL CARRY · NOT IN CURRENT CARRY FIT','MODEL FIT BOUNDARY','RAW LANDING · DISPLAY CLAMP'],
+surfaces:[
+{id:'mission',eyebrow:'SPEED & DISTANCE · 2 OF 2',title:'One plane. Two flights.',body:'Find what moves Carry in this engine, then prove where the fit stops.'},
+{id:'range',eyebrow:'CARRY RANGE · EQUAL ELEVATION',title:'Lock the first-landing plane.',body:'Define the endpoint, move Ball Speed, then change trajectory without moving current Carry.'},
+{id:'influence',eyebrow:'CARRY FIT · MODEL BOUNDARY',title:'Read the whole fitted equation.',body:'Keep the denominator visible, sweep the core range and expose the real-flight bridge.'},
+{id:'boundary',eyebrow:'REAL FLIGHT · ILLUSTRATIVE GROUND',title:'Separate Carry from Total.',body:'Current Carry knows Ball Speed. Illustrative Total adds a Landing-Angle roll tail, not course turf.'},
+{id:'mastery',eyebrow:'4 OF 5 + LIVE CARRY PLANE',title:'Land two traces on one plane.',body:'Match Carry and Ball Speed while Launch, Apex, Landing and Illustrative Total separate.'},
+{id:'result',eyebrow:'CARRY EVIDENCE',title:'Carry model understood.',body:'The direct input, equal-elevation endpoint and model boundary are now separate.'}],
+rangeSteps:[
+{id:'definition',prompt:'Which marker defines Carry?',choices:['Equal-elevation trajectory crossing','Apex','End of illustrative roll'],answerIndex:0,reveal:'CARRY · launch to equal-elevation crossing · DEFINITION'},
+{id:'speed',prompt:'When Club Speed moves 90 → 100 mph at held delivery, current Carry:',choices:['Moves farther','Moves shorter','Stays fixed'],answerIndex:0,reveal:'Ball Speed 119.52 → 132.80 mph · Carry 172.40 → 193.95 yd'},
+{id:'equal',prompt:'At equal Ball Speed, changing Launch from 14.25° to 22.95° makes current Carry:',choices:['Stay at 174.25 yd','Rise with Launch','Fall with Backspin'],answerIndex:0,reveal:'SAME BALL SPEED · SAME CURRENT CARRY · DIFFERENT TRAJECTORY'},
+{id:'roll',prompt:'Why do the two Illustrative Totals differ?',choices:['Landing Angle changes the illustrative roll fraction','Turf firmness was measured','Backspin changes current Carry'],answerIndex:0,reveal:'Low trace 180.83 yd · High trace 177.30 yd · TURF NOT PREDICTED'}],
+influenceStages:[
+{id:'equation',label:'FULL EQUATION',copy:'0.232 × 119.52^1.389 ÷ [1 + (119.52 / 210)^6] = 172.40 yd · MODEL'},
+{id:'sweep',label:'SPEED SWEEP',copy:'92.96 → 119.52 → 146.08 mph Ball Speed. The fitted gain per added mph is not constant.'},
+{id:'equal',label:'EQUAL CARRY',copy:'Same Ball Speed and current Carry; different Launch, Apex, Landing and Illustrative Total.'},
+{id:'real',label:'REAL BRIDGE',copy:'In real golf, launch and spin materially shape Carry. Current Flightglass Carry is a Ball-Speed-only fitted estimate.'},
+{id:'boundary',label:'FIT BOUNDARY',copy:'Above roughly 172 mph Ball Speed the fit turns downward. This is a fitted-range warning, not real speed advice.'}],
+myths:[
+{claim:'Launch and Backspin drive this Carry number.',choices:['True','False in the current solve'],answerIndex:1,explanation:'They matter in real golf but are not inputs to current-engine Carry.'},
+{claim:'Carry ends where the ball stops.',choices:['True','False'],answerIndex:1,explanation:'Carry ends at the equal-elevation crossing. Illustrative Total adds a dashed roll tail.'},
+{claim:'Illustrative Total predicts my course.',choices:['True','False'],answerIndex:1,explanation:'It has no turf, slope, landing-speed or spin-at-landing model.'},
+{claim:'More Total is always the useful answer.',choices:['True','False'],answerIndex:1,explanation:'A hazard-clearance requirement uses Carry before the first landing.'},
+{claim:'The high-speed turnover means more speed shortens real shots.',choices:['True','False · fitted boundary'],answerIndex:1,explanation:'The turnover marks the boundary of this equation, not physical advice.'}],
+masteryTasks:[
+{kind:'choice',prompt:'Carry is measured to:',choices:['The resting point','The highest point','The equal-elevation trajectory crossing','The end of the visual screen'],answerIndex:2,evidence:'Definition'},
+{kind:'choice',prompt:'Which value directly enters current Flightglass Carry?',choices:['Ball Speed','Backspin rpm','Launch Angle','Spin Axis'],answerIndex:0,evidence:'Current cause'},
+{kind:'choice',prompt:'Which statement is accurate?',choices:['Launch and spin never affect real Carry','Current Carry uses them invisibly','Launch and spin matter in real flight but are omitted from current Carry','Backspin changes current Carry only in wind'],answerIndex:2,evidence:'Real-world boundary'},
+{kind:'choice',prompt:'Current Illustrative Total adds:',choices:['Measured turf roll','Carry × a Landing-Angle-derived roll fraction','Apex to Carry','Wind drift'],answerIndex:1,evidence:'Total arithmetic'},
+{kind:'live-transfer',mandatory:true,prompt:'Save two 174.15–174.35 yd Carry states with 120.50–120.70 mph Ball Speed, at least 8° Launch, 9 yd Apex, 12° Landing and 3 yd Total apart.'}],
+sheets:{carry:{title:'Carry',tags:['DEFINITION','MODEL'],body:'Straight-line distance to the equal-elevation trajectory crossing. Current fitted Carry consumes Ball Speed only and includes its full denominator.'},realCarry:{title:'Real Carry',tags:['REAL WORLD','MODEL BOUNDARY'],body:'Ball Speed, Launch Angle and Spin Rate materially interact in real golf. Current Flightglass Carry does not integrate Launch or Spin Rate.'},total:{title:'Illustrative Total',tags:['MODEL EXTENSION','NOT COURSE-SPECIFIC'],body:'Current Total equals Carry plus Carry × a Landing-Angle-derived roll fraction. It is not a turf, slope or stopping prediction.'},roll:{title:'Roll Fraction',tags:['ILLUSTRATIVE','MODEL CLAMPS'],body:'Current roll fraction falls as displayed Landing Angle steepens. The reachable range is 5.5% to 1.75%; bounce and turf physics are omitted.'},clearance:{title:'Hazard clearance',tags:['MEASUREMENT DISTINCTION'],body:'A 205-yard carry requirement is not cleared by 195 yards Carry plus 20 yards roll.'},equal:{title:'Equal Carry',tags:['LIVE PROOF','INFERENCE LIMIT'],body:'Low and high traces can share 120.60 mph Ball Speed and 174.25 yd current Carry while Apex, Landing and Illustrative Total differ.'},sources:{title:'Sources',tags:['DEFINITION SOURCES'],body:'TrackMan Carry, Total, Ball Speed, Launch Angle and Spin Rate parameter definitions. Exact fits and roll terms are Flightglass model claims.'}}});
+const base={packId:ACADEMY_VOICE_PACK_ID,locale:ACADEMY_VOICE_LOCALE,contentVersion:1,autoplay:true,interruptions:['route','foreground-loss','model-input'],asset:null};
+export const CARRY_CUES=defineAcademyCueSet({ownerId:'carry',cues:[
+{...base,cueId:'academy.carry.s0.entry',surfaceId:'carry-s0',job:'orient',trigger:'surface-entry',text:'This engine gives Carry one direct input: ball speed. Launch and spin still matter in real flight.',beats:[{targetId:'carry-ledger',atMs:0,emphasis:'connector'}]},
+{...base,cueId:'academy.carry.s1.definition',surfaceId:'carry-s1-definition',job:'cue',trigger:'proof-first',text:'Carry ends at the equal-elevation crossing, before any illustrative roll is added.',beats:[{targetId:'carry-plane',atMs:0,emphasis:'outline'}]},
+{...base,cueId:'academy.carry.s1.speed',surfaceId:'carry-s1-speed',job:'consequence',trigger:'proof-first',text:'Ball speed rose, so the fitted Carry endpoint moved farther downrange with it.',beats:[{targetId:'carry-plane',atMs:0,emphasis:'trace'}]},
+{...base,cueId:'academy.carry.s1.equal',surfaceId:'carry-s1-equal',job:'consequence',trigger:'proof-first',text:'The trajectories changed. Current Carry did not. That is a model boundary, not a law of golf.',beats:[{targetId:'carry-compare',atMs:0,emphasis:'connector'}]},
+{...base,cueId:'academy.carry.s1.roll',surfaceId:'carry-s1-roll',job:'cue',trigger:'proof-first',text:'Landing angle changes this illustrative tail. It does not predict the ground beneath you.',beats:[{targetId:'carry-roll',atMs:0,emphasis:'trace'}]},
+{...base,cueId:'academy.carry.s2.real',surfaceId:'carry-s2-real',job:'cue',trigger:'proof-first',text:'Real carry also depends on launch and spin. This fit does not consume them.',beats:[{targetId:'carry-real',atMs:0,emphasis:'outline'}]},
+{...base,cueId:'academy.carry.s5.pass',surfaceId:'carry-s5',job:'consequence',trigger:'mastery-first',text:'Carry confirmed. You now know both the result and the boundary of the fit.',beats:[{targetId:'carry-result',atMs:0,emphasis:'static-label'}]}
+]});
+export const carryCue=id=>CARRY_CUES.cues.find(cue=>cue.cueId===id)||null;
