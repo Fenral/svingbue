@@ -1,6 +1,6 @@
 # Flightglass session handoff
 
-Updated: 2026-07-15
+Updated: 2026-07-16
 
 ## Repository checkpoint
 
@@ -28,7 +28,17 @@ Fresh convergence evidence is green for `test:academy` (348/348), the full
 `test:ux` Chromium/WebKit/global matrix, brand/autopilot verification, protected
 physics hashes and both performance engines (p95 2.1 ms Chromium / 5.0 ms
 WebKit, budget 16.7 ms). `copy-web` copied 84 top-level shipping assets. The
-voice pack contains 102 exact local captions and zero licensed audio assets.
+voice pack now contains 102 exact local captions and 102 licensed local R5-A
+audio masters.
+
+Academy Voice production completed on 2026-07-16. The owner blind-selected R5-A
+against the anonymous R3-D control, and the mature British female systems-
+engineer identity is fixed at TTS speed 0.8. All 102 files passed hash, caption,
+runtime-binding, format, loudness, silence and automated transcription review.
+Development verification and the 36-test Voice suite pass; root/`www` audio
+hash parity is 102/102. Commercial-use evidence is recorded from the owner-
+confirmed ElevenLabs Creator plan and current official terms. See
+`docs/flightglass-autopilot/ACADEMY-VOICE-QA.md`.
 
 The Academy acceptance continuation hardened three browser-test readiness
 boundaries only; no product source changed. Flight Height waits for the profile
@@ -48,13 +58,14 @@ maximum 0.099% difference. The small Apex annotation was made deterministic
 without relaxing the 0.1% threshold. Backspin focused suites pass 41/41 in both
 Chromium and WebKit, and root/`www` shipping assets have exact hash parity.
 
-This branch is source-complete, **not release-accepted**. The next agent must not
-describe the female voice as recorded or shipped: voice direction and cue timing
-exist, while licensed recordings, rights evidence and human listening approval
-do not. The Backspin reference visual baseline is accepted, but the new
+This branch is source- and Voice-asset-complete, **not release-accepted**. The
+female voice is recorded, locally shipped and rights-evidenced, but the strict
+verifier intentionally holds one continuous five-minute fatigue listen,
+physical-device/offline/audio-route behavior and iOS VoiceOver. The Backspin
+reference visual baseline is accepted, but the new
 curriculum modules have not received their own provenance-blind pairwise
 judgments and must not be labelled STUDIO-GRADE from automated tests alone.
-Physical-device, offline, audio-route, VoiceOver and fatigue checks remain open.
+Those visual and human/device checks remain open.
 
 Native web copying is complete, but Capacitor sync reports that neither iOS nor
 Android has been added to this repository. Creating those platform projects,

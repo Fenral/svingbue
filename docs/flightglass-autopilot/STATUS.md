@@ -1,9 +1,44 @@
 # Flightglass autonomous execution status
 
-Updated: 2026-07-15
+Updated: 2026-07-16
 
 Release authorization: granted for GitHub, Vercel and configured Apple/Google
 publication after all Phase 8 gates pass. See `RELEASE-AUTHORIZATION.md`.
+
+## Academy Voice production completion checkpoint
+
+R5-A is the owner-selected blind winner and the complete British female
+systems-engineer Voice pack is implemented on `agent/academy-codex`. All 102
+licensed local masters are generated, hashed, bound to the runtime and copied
+into the shipping web payload. The app has no runtime ElevenLabs dependency.
+
+Fresh 2026-07-16 evidence:
+
+- `npm run test:academy-voice`: 36/36 PASS.
+- Academy foundation: 241/241 PASS; the complete Chromium and WebKit Academy
+  browser/model file sets also PASS. Long-running Backspin WebKit was split
+  into fresh workers after the monolithic worker accumulated runner resources;
+  all 41 unchanged cases passed.
+- `npm run voice:verify`: PASS with 102/102 assets, zero missing/orphaned/hash/
+  caption/binding/duration errors.
+- Faster-Whisper decoded all 102 files; six screening flags received a second
+  `small.en` review, with no confirmed wrong number, brand pronunciation,
+  technical term or changed claim.
+- All masters are AAC-LC mono 48 kHz/80 kbps. Duration is 3.453-8.1 seconds,
+  loudness -19.75 to -17.56 LUFS, true peak no higher than -1.36 dBTP and
+  leading/trailing silence no higher than 70/142 ms. Two 8.1-second technical
+  cues have explicit reviewed exceptions.
+- Commercial-use evidence is recorded from the owner-confirmed ElevenLabs
+  Creator plan and official terms retrieved 2026-07-16.
+- `npm run copy-web` PASS; root and `www/` each contain 102 masters with zero
+  SHA-256 mismatch, and the runtime manifest is byte-identical.
+
+The voice source/asset work is complete, but strict release verification still
+fails closed on exactly three human/physical-device gates: one continuous
+five-minute fatigue listen, physical-device/offline/audio-route behavior, and
+iOS VoiceOver behavior. The absent `ios/` and `android/` projects also prevent
+native archive/device verification. Full evidence and provider-rights sources
+are in `ACADEMY-VOICE-QA.md`.
 
 | Phase | State | Evidence |
 |---|---|---|
@@ -12,7 +47,7 @@ publication after all Phase 8 gates pass. See `RELEASE-AUTHORIZATION.md`.
 | 2 · Range / Visualise | Ready | Decisions and references locked in master plan |
 | 3 · Outcome / Compare | Ready | Decisions and references locked in master plan |
 | 4 · Geometry 3D / Strike Window 2D | Ready | Consensus documents named |
-| 5 · Academy overview | Source-complete; release acceptance held | Native Home/store/registry/router/host and caption-ready Voice foundation are coded and copied into the web package; the Backspin visual baseline is accepted, while new-module pairwise, audio-rights and human gates remain open |
+| 5 · Academy overview | Source and Voice assets complete; release acceptance held | Native Home/store/registry/router/host plus 102 licensed local R5-A Voice masters are coded and copied into the web package; the Backspin visual baseline is accepted, while new-module pairwise and human/device Voice gates remain open |
 | 6 · Academy lesson system | Curriculum source-complete | All 13 core experiences plus the optional Plane Coupling lab own native renderers, model/content contracts, mastery or exploration rules and caption-ready cues |
 | 7 · Paywall | Ready | Pricing and compatibility rules locked |
 | 8 · Convergence and release QA | Ready | Global gates locked |
@@ -37,8 +72,9 @@ Fresh convergence evidence on 2026-07-15:
 - `npm run brand:verify` and `node scripts/verify-claude-autopilot.mjs` PASS.
   All four protected physics hashes remain exact.
 - `npm run copy-web` PASS and copied 84 top-level JS/CSS assets into `www/`.
-- Development voice-pack verification PASS with 102/102 exact local captions,
-  no remote dependency and no audio files.
+- Development voice-pack verification PASS with 102/102 exact local captions
+  and licensed local audio masters, no remote dependency, no missing files and
+  zero hash or runtime-binding mismatches.
 
 Acceptance-control hardening on 2026-07-15 removed three asynchronous browser
 harness races without changing shipping code or acceptance assertions. Flight
@@ -71,10 +107,10 @@ remain deliberately open and were not weakened or reported as complete:
   and deterministic double visual-regression pass above. This does not accept
   the new curriculum modules, which still need their own provenance-blind
   evidence before any STUDIO-GRADE claim.
-- The approved female voice direction is specified and all 102 cues are
-  caption-ready, but licensed final recordings, rights evidence and the human
-  listening gate do not exist. The strict release verifier therefore remains
-  fail-closed.
+- The owner-selected R5-A female voice, all 102 local masters, rights evidence,
+  runtime binding and automated transcription/audio QA now exist. The strict
+  release verifier remains fail-closed only on fatigue, physical-device/audio-
+  route and iOS VoiceOver evidence.
 - `npm run sync` and `npm run sync:android` cannot package native targets because
   this repository has neither an `ios/` nor an `android/` platform project.
   Platform creation, signing and store archives remain owner-controlled release

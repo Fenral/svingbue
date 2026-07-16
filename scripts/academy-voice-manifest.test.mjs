@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { ACADEMY_VOICE_LOCALE, ACADEMY_VOICE_PACK_ID, countCueWords, cueSignature, defineAcademyCue, defineAcademyCueSet, validateAcademyCue } from '../academy-voice-manifest.js';
+import { ACADEMY_VOICE_LOCALE, ACADEMY_VOICE_PACK_ID, academyVoiceAssetPath, countCueWords, cueSignature, defineAcademyCue, defineAcademyCueSet, validateAcademyCue } from '../academy-voice-manifest.js';
 
 const cue = overrides => ({
   cueId:'start-line.s1.entry', contentVersion:1, packId:ACADEMY_VOICE_PACK_ID, locale:ACADEMY_VOICE_LOCALE,
@@ -30,4 +30,10 @@ test('manifest rejects remote assets, selectors, bad budgets and runtime generat
 test('cue sets enforce eight signatures and one automatic entry per surface', () => {
   assert.throws(() => defineAcademyCueSet({ ownerId:'x', cues:[cue(), cue({ cueId:'start-line.s1.other' })] }), /duplicate-surface-entry/);
   assert.throws(() => defineAcademyCueSet({ ownerId:'x', cues:Array.from({ length:9 }, (_,i) => cue({ cueId:`cue.${i}`, surfaceId:`surface-${i}` })) }), /exceeds 8/);
+});
+
+test('cue sets bind null assets to deterministic local masters', () => {
+  assert.equal(academyVoiceAssetPath('academy-home','academy.home.orient'),'assets/audio/academy/control-room-en-us-v1/academy-home/home-orient.m4a');
+  const set=defineAcademyCueSet({ownerId:'academy-home',cues:[cue({cueId:'academy.home.orient',surfaceId:'academy-home',asset:null})]});
+  assert.equal(set.cues[0].asset,'assets/audio/academy/control-room-en-us-v1/academy-home/home-orient.m4a');
 });

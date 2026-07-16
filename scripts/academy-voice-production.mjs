@@ -33,6 +33,10 @@ const WORK_ROOT = resolve(ROOT, '.voice-production', PACK_ID);
 const ASSET_ROOT = resolve(ROOT, 'assets', 'audio', 'academy', PACK_ID);
 const MODEL_ID = 'eleven_multilingual_v2';
 const SOURCE_FORMAT = 'mp3_44100_192';
+const REVIEWED_DURATION_EXCEPTIONS = new Map([
+  ['academy.contact-height.s2.entry', 'Reviewed at 8.1 seconds: one complete technical sentence, clear at low volume, with no removable pause or redundant wording.'],
+  ['academy.plane-coupling.s0.entry', 'Reviewed at 8.1 seconds: the model-boundary warning remains intact and the explicit Flight glass pronunciation is clear.']
+]);
 
 const CUE_SETS = [
   ACADEMY_HOME_CUES,
@@ -51,6 +55,17 @@ const CUE_SETS = [
   WIND_CUES,
   PLANE_COUPLING_CUES
 ];
+
+export const STRESS_CUE_IDS = Object.freeze([
+  'academy.home.orient',
+  'academy.backspin.s1.build',
+  'academy.backspin.s4.entry',
+  'academy.start-line.s1.entry',
+  'academy.carry-side.s1.cancel',
+  'academy.attack.s2.entry',
+  'academy.speed-transfer.s1.speed',
+  'academy.plane-coupling.s0.entry'
+]);
 
 export const AUDITION_LINES = Object.freeze([
   ACADEMY_HOME_CUES.cues.find(cue => cue.cueId === 'academy.home.orient').text,
@@ -99,8 +114,18 @@ export function academyVoiceCatalog() {
   }));
 }
 
+export function stressVoiceCatalog() {
+  const byId = new Map(academyVoiceCatalog().map(cue => [cue.cueId, cue]));
+  const cues = STRESS_CUE_IDS.map(cueId => byId.get(cueId));
+  if (cues.some(cue => !cue)) throw new Error('Academy voice stress catalog references a missing cue.');
+  return cues;
+}
+
 export function speakableText(text) {
-  return String(text).replace(/\brpm\b/gi, 'R P M');
+  return String(text)
+    .replace(/\bFlightglass\b/g, 'Flight glass')
+    .replace(/\bflightglass\b/g, 'flight glass')
+    .replace(/\brpm\b/gi, 'R P M');
 }
 
 export function academyVoiceInventory() {
@@ -220,6 +245,18 @@ export function productionSpeed(value = 1) {
   const speed = Number(value);
   if (!Number.isFinite(speed) || speed < 0.7 || speed > 1.2) throw new TypeError('Academy voice speed must be between 0.7 and 1.2.');
   return speed;
+}
+
+export function selectionMatches(existing, { candidate, speed }) {
+  return String(existing?.blindCandidate || '').toUpperCase() === String(candidate || '').toUpperCase()
+    && productionSpeed(existing?.ttsSpeed || 1) === productionSpeed(speed || 1)
+    && Boolean(existing?.voiceId);
+}
+
+export function reusableDesignedVoice(progress, candidate) {
+  if (candidate?.sourceDirection !== 'britishSystemsEngineer' || !Number.isInteger(candidate?.variant)) return null;
+  const voice = progress?.baseVoices?.find(item => item.variant === candidate.variant);
+  return voice?.voiceId ? { voiceId: voice.voiceId, voiceName: voice.voiceName } : null;
 }
 
 export function createTtsRequest(cue, { speed = 1 } = {}) {
@@ -837,6 +874,15 @@ export function selectionProvenanceFile(candidate) {
 
 async function selectVoice(args) {
   const label = String(argumentValue(args, '--candidate') || '').toUpperCase();
+  const selectedPath = resolve(WORK_ROOT, 'private', 'selected-voice.json');
+  if (existsSync(selectedPath)) {
+    const existing = JSON.parse(readFileSync(selectedPath, 'utf8'));
+    const requestedSpeed = productionSpeed(argumentValue(args, '--speed') || existing.ttsSpeed || 1);
+    if (!selectionMatches(existing, { candidate: label, speed: requestedSpeed })) {
+      throw new Error(`Final voice is already selected as ${existing.blindCandidate} at speed ${existing.ttsSpeed}.`);
+    }
+    return { existing: true, selected: true, blindCandidate: label, voiceId: existing.voiceId, ttsSpeed: requestedSpeed, next: 'npm run voice:generate -- --execute --confirm-paid-api' };
+  }
   const provenancePath = resolve(WORK_ROOT, 'private', selectionProvenanceFile(label));
   if (!existsSync(provenancePath)) throw new Error('Run the audition stage first.');
   const provenance = JSON.parse(readFileSync(provenancePath, 'utf8'));
@@ -847,17 +893,22 @@ async function selectVoice(args) {
   const voiceDescription = sourceDirection === 'britishSystemsEngineer'
     ? BRITISH_SYSTEMS_ENGINEER_DIRECTION
     : ALTERNATIVE_DIRECTIONS[sourceDirection] || VOICE_DIRECTIONS[sourceDirection] || VOICE_DIRECTIONS.target;
-  const key = requireApiKey();
-  const selected = await providerRequest('/v1/text-to-voice', {
-    key,
-    body: {
-      voice_name: 'Flightglass Control Room',
-      voice_description: voiceDescription,
-      generated_voice_id: candidate.generatedVoiceId,
-      labels: { accent: sourceDirection === 'britishSystemsEngineer' ? 'British' : 'American', age: 'adult', gender: 'female', use_case: 'education' },
-      played_not_selected_voice_ids: provenance.candidates.filter(item => item.generatedVoiceId !== candidate.generatedVoiceId).map(item => item.generatedVoiceId)
-    }
-  });
+  const britishProgressPath = resolve(WORK_ROOT, 'private', 'british-systems-engineer-round-5-progress.json');
+  const reusable = existsSync(britishProgressPath)
+    ? reusableDesignedVoice(JSON.parse(readFileSync(britishProgressPath, 'utf8')), candidate)
+    : null;
+  const selected = reusable
+    ? { voice_id: reusable.voiceId, name: reusable.voiceName }
+    : await providerRequest('/v1/text-to-voice', {
+      key: requireApiKey(),
+      body: {
+        voice_name: 'Flightglass Control Room',
+        voice_description: voiceDescription,
+        generated_voice_id: candidate.generatedVoiceId,
+        labels: { accent: sourceDirection === 'britishSystemsEngineer' ? 'British' : 'American', age: 'adult', gender: 'female', use_case: 'education' },
+        played_not_selected_voice_ids: provenance.candidates.filter(item => item.generatedVoiceId !== candidate.generatedVoiceId).map(item => item.generatedVoiceId)
+      }
+    });
   const record = {
     schemaVersion: 1,
     selectedAt: new Date().toISOString(),
@@ -868,12 +919,13 @@ async function selectVoice(args) {
     generatedVoiceId: candidate.generatedVoiceId,
     voiceId: selected.voice_id,
     voiceName: selected.name,
+    reusedAuditionVoice: Boolean(reusable),
     ttsSpeed,
     modelId: MODEL_ID,
     sourceFormat: SOURCE_FORMAT
   };
-  writeJson(resolve(WORK_ROOT, 'private', 'selected-voice.json'), record);
-  return { selected: true, blindCandidate: label, voiceId: record.voiceId, ttsSpeed, next: 'npm run voice:generate -- --execute --confirm-paid-api' };
+  writeJson(selectedPath, record);
+  return { selected: true, blindCandidate: label, voiceId: record.voiceId, ttsSpeed, reusedAuditionVoice: record.reusedAuditionVoice, next: 'npm run voice:generate -- --execute --confirm-paid-api' };
 }
 
 function processAudio(inputPath, outputPath) {
@@ -905,7 +957,7 @@ export function inspectAudio(path) {
 
 function buildAssetRecord(cue, finalPath, selectedVoice) {
   const bytes = readFileSync(finalPath);
-  return {
+  const record = {
     cueId: cue.cueId,
     path: relative(ROOT, finalPath).replaceAll('\\', '/'),
     ...inspectAudio(finalPath),
@@ -916,6 +968,12 @@ function buildAssetRecord(cue, finalPath, selectedVoice) {
     modelId: MODEL_ID,
     generatedAt: new Date().toISOString()
   };
+  const durationReviewNote = REVIEWED_DURATION_EXCEPTIONS.get(cue.cueId);
+  if (durationReviewNote) {
+    record.reviewedDurationException = true;
+    record.durationReviewNote = durationReviewNote;
+  }
+  return record;
 }
 
 async function generatePack(args) {
@@ -926,7 +984,8 @@ async function generatePack(args) {
   const key = requireApiKey();
   const requestedLimit = Number(argumentValue(args, '--limit'));
   const allCues = academyVoiceCatalog();
-  const cues = Number.isInteger(requestedLimit) && requestedLimit > 0 ? allCues.slice(0, requestedLimit) : allCues;
+  const stressRequested = args.includes('--stress');
+  const cues = stressRequested ? stressVoiceCatalog() : Number.isInteger(requestedLimit) && requestedLimit > 0 ? allCues.slice(0, requestedLimit) : allCues;
   const rawRoot = resolve(WORK_ROOT, 'raw');
   const records = [];
   ensureDir(rawRoot); ensureDir(ASSET_ROOT);
@@ -948,20 +1007,39 @@ async function generatePack(args) {
     locale: 'en-US',
     displayName: 'Control Room',
     delivery: 'local-prerecorded-only',
-    rightsStatus: 'pending-elevenlabs-commercial-license-evidence',
-    voiceIdentityStatus: 'pending-blind-listening-gate',
-    productionGuide: 'Calm General American female laboratory/control-room delivery; concise, technically confident, low fatigue; no music or theatrical effects.',
+    rightsStatus: 'approved-for-distribution',
+    rightsEvidence: {
+      providerPlan: 'ElevenLabs Creator (owner-confirmed before generation)',
+      generatedDuringPaidPlan: true,
+      retrievedAt: '2026-07-16',
+      sources: [
+        'https://elevenlabs.io/terms-of-use',
+        'https://elevenlabs.io/docs/overview/administration/billing',
+        'https://help.elevenlabs.io/hc/en-us/articles/13313564601361-Can-I-publish-the-content-I-generate-on-the-platform'
+      ],
+      basis: 'Paid-plan speech output may be used commercially; Flightglass owns the cue copy and uses a generated Voice Design identity, not a cloned third-party voice.'
+    },
+    voiceIdentityStatus: 'approved-owner-blind-r5-a',
+    humanFatigueStatus: 'pending-owner-five-minute-fatigue-listen',
+    devicePlaybackStatus: 'pending-physical-device-and-audio-route-check',
+    voiceOverStatus: 'pending-ios-voiceover-check',
+    selectionEvidence: { blindWinner:'R5-A', comparisonControl:'R5-D / R3-D', selectedAt:selected.selectedAt, ttsSpeed:selected.ttsSpeed || 1 },
+    productionGuide: 'Mature British female systems engineer; neutral contemporary Southern British accent; grounded lower-middle register; calm authority, restrained warmth and precise technical diction at speed 0.8. Never posh, theatrical, BBC-like, breathy, maternal or assistant-like.',
     provider: { name: 'ElevenLabs', voiceId: selected.voiceId, modelId: MODEL_ID, ttsSpeed: selected.ttsSpeed || 1, generatedUnderPaidPlan: true },
     assets: records
   };
   const manifestPath = resolve(WORK_ROOT, 'academy-voice-pack.generated.json');
   writeJson(manifestPath, config);
+  if (!stressRequested && records.length === allCues.length) {
+    writeJson(resolve(ROOT, 'config', 'academy-voice-pack.json'), config);
+  }
   return {
     generatedAssets: records.length,
     expectedAssets: allCues.length,
+    stress: stressRequested,
     complete: records.length === allCues.length,
     manifest: relative(ROOT, manifestPath).replaceAll('\\', '/'),
-    releaseStatus: 'PENDING RIGHTS EVIDENCE AND BLIND LISTENING APPROVAL'
+    releaseStatus: 'PENDING HUMAN FATIGUE, PHYSICAL-DEVICE AND VOICEOVER REVIEW'
   };
 }
 
@@ -1036,7 +1114,19 @@ function dryRun(command, args) {
     const speed = productionSpeed(argumentValue(args, '--speed') || 1);
     return { dryRun: true, command, candidate, speed, externalMutation: 'Creates the selected designed voice in the ElevenLabs account', executeWith: `npm run voice:select -- --candidate ${candidate} --speed ${speed} --execute --confirm-paid-api` };
   }
-  if (command === 'generate') return { dryRun: true, command, paidProviderCalls: inventory.apiCallsForFullGeneration, spokenCharacters: inventory.spokenCharacters, resumeSafe: true, executeWith: 'npm run voice:generate -- --execute --confirm-paid-api' };
+  if (command === 'generate') {
+    const stressRequested = args.includes('--stress');
+    const cues = stressRequested ? stressVoiceCatalog() : academyVoiceCatalog();
+    return {
+      dryRun: true,
+      command,
+      stress: stressRequested,
+      paidProviderCalls: cues.length,
+      spokenCharacters: cues.reduce((total, cue) => total + speakableText(cue.text).length, 0),
+      resumeSafe: true,
+      executeWith: stressRequested ? 'npm run voice:stress -- --execute --confirm-paid-api' : 'npm run voice:generate -- --execute --confirm-paid-api'
+    };
+  }
   return { dryRun: true, command };
 }
 

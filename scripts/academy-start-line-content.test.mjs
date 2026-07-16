@@ -31,7 +31,7 @@ test('six local voice cues have stable semantic targets and remain within 12–2
     const words=cue.text.trim().split(/\s+/).length;
     assert.ok(words>=12 && words<=24,`${cue.cueId}: ${words}`);
     assert.ok(cue.beats.length>=1);
-    assert.equal(cue.asset,null);
+    assert.match(cue.asset,/^assets\/audio\/academy\/control-room-en-us-v1\/start-line\/[a-z0-9-]+\.m4a$/);
   }
 });
 

@@ -14,8 +14,23 @@ Provider credentials and raw provider artifacts must never enter Git.
 - `eleven_multilingual_v2` TTS with deterministic best-effort cue seeds.
 - Processed shipping assets: AAC-LC `.m4a`, mono, 48 kHz, 80 kbps, about
   -18 LUFS and at or below -1 dBTP.
-- Captions stay the source of truth. Spoken `rpm` is expanded to `R P M` only
-  in the provider request.
+- Captions stay the source of truth. Spoken `Flightglass` and `rpm` are expanded
+  to `Flight glass` and `R P M` only in the provider request.
+
+## Completed production candidate - 2026-07-16
+
+- Blind R5-A won against the anonymous R3-D control and is selected at speed
+  `0.8`.
+- All 102 local masters are generated, hashed and bound into the runtime.
+- Full-pack transcription QA and technical audio inspection pass; see
+  `ACADEMY-VOICE-QA.md`.
+- The generated full manifest is promoted to
+  `config/academy-voice-pack.json`; stress-only runs never promote a partial
+  manifest.
+- Commercial-use evidence is recorded from the owner-confirmed Creator plan and
+  current ElevenLabs terms.
+- Strict release verification remains fail-closed on the five-minute fatigue,
+  physical-device/audio-route and iOS VoiceOver gates.
 
 ## Credential setup — owner action
 
@@ -152,16 +167,15 @@ npm run voice:generate -- --execute --confirm-paid-api
 ```
 
 Raw MP3 files stay ignored under `.voice-production/`. Processed assets are
-written under `assets/audio/academy/control-room-en-us-v1/`. A generated pack
-manifest remains in the ignored production directory with rights and listening
-statuses fail-closed.
+written under `assets/audio/academy/control-room-en-us-v1/`. A complete run
+also promotes the generated manifest to `config/academy-voice-pack.json`;
+stress-only or limited runs never replace the canonical config.
 
 ## Acceptance and rights evidence
 
-Generation is not release acceptance. Before copying the generated manifest to
-`config/academy-voice-pack.json`:
+Generation is not release acceptance. Before approving a release candidate:
 
-1. save the paid-plan invoice privately;
+1. retain the paid-plan account/invoice record privately;
 2. record the ElevenLabs commercial-use terms URL and retrieval date;
 3. record voice ID, model ID, generation dates and file hashes;
 4. preserve the blind listening verdict and provenance reveal;
@@ -170,5 +184,6 @@ Generation is not release acceptance. Before copying the generated manifest to
 7. run `npm run voice:verify:release`, `npm run copy-web` and the full Academy
    gates.
 
-Do not set `rightsStatus` to `approved-for-distribution` or call the pack
-Voice-ready until those checks and the owner-controlled rights record exist.
+`rightsStatus` may be approved when paid-plan generation and current provider
+terms are evidenced. Human fatigue, device playback and VoiceOver retain their
+own fail-closed statuses and must never be inferred from automated audio QA.

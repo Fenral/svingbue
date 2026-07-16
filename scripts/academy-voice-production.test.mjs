@@ -8,6 +8,7 @@ import {
   AUDITION_LINES,
   BRITISH_SYSTEMS_ENGINEER_DIRECTION,
   PACE_REFINEMENT_DIRECTION,
+  STRESS_CUE_IDS,
   VOICE_DIRECTIONS,
   academyVoiceCatalog,
   academyVoiceInventory,
@@ -22,9 +23,12 @@ import {
   main,
   paidExecutionRequested,
   productionSpeed,
+  reusableDesignedVoice,
   safeCueStem,
   selectionProvenanceFile,
+  selectionMatches,
   speakableText,
+  stressVoiceCatalog,
   stableCueSeed
 } from './academy-voice-production.mjs';
 
@@ -138,6 +142,7 @@ test('TTS request preserves caption truth while expanding spoken rpm', () => {
   assert.doesNotMatch(request.text, /\brpm\b/i);
   assert.match(request.text, /R P M/);
   assert.equal(speakableText(cue.text), request.text);
+  assert.equal(speakableText("Flightglass's model reports rpm."), "Flight glass's model reports R P M.");
   assert.equal(request.model_id, 'eleven_multilingual_v2');
   assert.equal(request.seed, stableCueSeed(cue.cueId));
   assert.ok(Number.isInteger(request.seed));
@@ -164,6 +169,35 @@ test('TTS pace preview and production selection share one bounded speed control'
   const selection = await main(['select', '--candidate', 'R3-D', '--speed', '0.8']);
   assert.equal(selection.speed, 0.8);
   assert.match(selection.executeWith, /--candidate R3-D --speed 0\.8/);
+});
+
+test('stress catalog covers brand, rpm, degrees, decimals and technical boundaries', () => {
+  const cues = stressVoiceCatalog();
+  assert.equal(cues.length, 8);
+  assert.deepEqual(cues.map(cue => cue.cueId), STRESS_CUE_IDS);
+  const text = cues.map(cue => cue.text).join(' ');
+  assert.match(text, /Flightglass/i);
+  assert.match(text, /rpm/i);
+  assert.match(text, /degrees?/i);
+  assert.match(text, /seven point four/i);
+  assert.match(text, /thirteen point two eight/i);
+});
+
+test('final selection is resume-safe only for the same blind winner and speed', () => {
+  const existing = { blindCandidate: 'R5-A', ttsSpeed: 0.8, voiceId: 'voice-final' };
+  assert.equal(selectionMatches(existing, { candidate: 'r5-a', speed: '0.80' }), true);
+  assert.equal(selectionMatches(existing, { candidate: 'R5-B', speed: 0.8 }), false);
+  assert.equal(selectionMatches(existing, { candidate: 'R5-A', speed: 1 }), false);
+});
+
+test('a British blind winner reuses its already-created audition voice exactly', () => {
+  const progress = { baseVoices: [{ variant: 1, voiceId: 'voice-r5-a', voiceName: 'British 1' }] };
+  assert.deepEqual(
+    reusableDesignedVoice(progress, { sourceDirection: 'britishSystemsEngineer', variant: 1 }),
+    { voiceId: 'voice-r5-a', voiceName: 'British 1' }
+  );
+  assert.equal(reusableDesignedVoice(progress, { sourceDirection: 'britishSystemsEngineer', variant: 2 }), null);
+  assert.equal(reusableDesignedVoice(progress, { sourceDirection: 'performanceScientist', variant: 1 }), null);
 });
 
 test('FFmpeg contract targets local mono AAC-LC at 48 kHz without a shell', () => {
