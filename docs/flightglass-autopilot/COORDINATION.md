@@ -13,7 +13,7 @@ wait.
 
 | Agent | Branch | Working on | Since |
 |-------|--------|-----------|-------|
-| _None_ | — | — | — |
+| Codex | `agent/academy-codex` | Finalize R5-A Academy Voice: selection, 102 licensed assets, runtime binding, pack/config/verifier, transcription QA and packaging | 2026-07-16 |
 
 ## Queue / free to take
 
