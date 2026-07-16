@@ -178,6 +178,20 @@ let baseUrl;
 const contexts = new Set();
 const pages = new Set();
 
+async function closeTrackedBrowserResources() {
+  const trackedPages = [...pages];
+  pages.clear();
+  for (const page of trackedPages) {
+    if (!page.isClosed()) await page.close().catch(() => {});
+  }
+
+  const trackedContexts = [...contexts];
+  contexts.clear();
+  for (const context of trackedContexts) {
+    await context.close().catch(() => {});
+  }
+}
+
 function contentType(file) {
   return {
     '.html': 'text/html; charset=utf-8',
@@ -1239,6 +1253,8 @@ test('browser contract has only executable and specifically named cases', () => 
   const source = readFileSync(fileURLToPath(import.meta.url), 'utf8');
   const skippedSyntax = new RegExp('\\btest\\s*\\.\\s*skip\\b|\\.\\s*skip\\s*\\(');
   assert.doesNotMatch(source, skippedSyntax);
+  assert.match(source, /test\.afterEach\(closeTrackedBrowserResources\)/,
+    'Each browser test must release its tracked pages and contexts before the next case');
 
   const names = [...source.matchAll(/\btest\(\s*(?:'([^']+)'|"([^"]+)"|`([^`]+)`)/g)]
     .map(match => match[1] || match[2] || match[3]);
@@ -1656,15 +1672,10 @@ test.before(async () => {
   }
 });
 
+test.afterEach(closeTrackedBrowserResources);
+
 test.after(async () => {
-  for (const page of pages) {
-    if (!page.isClosed()) await page.close().catch(() => {});
-  }
-  pages.clear();
-  for (const context of contexts) {
-    await context.close().catch(() => {});
-  }
-  contexts.clear();
+  await closeTrackedBrowserResources();
   if (browser) await browser.close().catch(() => {});
   await closeServer(server);
 });
