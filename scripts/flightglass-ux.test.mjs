@@ -40,6 +40,16 @@ test('manifest maps every surface to existing files and target viewports', () =>
   assert.ok(manifest.surfaces.every((surface) => surface.references.length >= 1));
 });
 
+test('Academy overview audit targets the shipping outcome Home', () => {
+  const manifest = loadManifest(manifestPath);
+  const overview = manifest.surfaces.find((surface) => surface.id === 'academy-overview');
+  assert.deepEqual(overview.requiredSelectors, [
+    '#app',
+    '[data-academy-home]',
+    '.academy-home__hero'
+  ]);
+});
+
 test('Backspin reference lesson targets 96 before Academy rollout', () => {
   const manifest = loadManifest(manifestPath);
   const lesson = manifest.surfaces.find((surface) => surface.id === 'academy-lesson');

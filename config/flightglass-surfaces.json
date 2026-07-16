@@ -108,7 +108,7 @@
       "route": "academy.html",
       "sourceType": "shipping-web",
       "viewportIds": ["portrait-wide", "portrait-compact"],
-      "requiredSelectors": ["#app", ".hdr", ".path-intro"],
+      "requiredSelectors": ["#app", "[data-academy-home]", ".academy-home__hero"],
       "references": ["academy.html", "docs/academy-path-verdict.md", "docs/academy-polish-spec.md"],
       "primaryJob": "Know current progress, the recommended next lesson and why it is worth opening."
     },
