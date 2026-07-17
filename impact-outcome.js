@@ -1,25 +1,26 @@
 /**
- * IMPACT · OUTCOME SELECTOR — STUB (Økt B).
+ * IMPACT · OUTCOME SELECTOR — ekte motorbinding (Økt E).
  *
- * FLATEN er kontrakt (docs/systemkontrakt.md §3.3 / §8): `selectOutcome(state)`
- * er det eneste stedet UI-koden henter avledede tall fra, og det eneste stedet
- * yards→meter noensinne skjer. Økt E bytter INNMATEN i denne filen mot den
- * ekte motoren (`solveFlight` i ./impact-flight.js) uten å endre signaturen
- * eller `Outcome`-formen. Ingen annen fil skal kalle `solveFlight` eller
- * multiplisere med YD2M.
+ * Kontrakt (docs/systemkontrakt.md §3.3 / §8 / A7): `selectOutcome(state)` er
+ * det ENESTE stedet som kaller solveFlight, og det eneste stedet yards→meter
+ * noensinne skjer. Ingen annen fil kaller solveFlight eller multipliserer med
+ * YD2M. Rendering, chips, annotasjoner og hero leser samme frosne `Outcome`.
  *
- * Innmaten under er mock-fysikk portert fra design/mocks/impact-kamera.html
- * (linje 211–231) KUN som plassholder, uttrykt direkte i verdensmeter og i
- * repoets Z-up-konvensjon (+X nedslag, +Y høyre, +Z høyde — §1.4). Den er
- * merket og grep-bar: K5-gaten (Økt E/F) skal finne null `MOCK_STUB`-treff
- * i produksjonskode når motorbindingen er gjort.
+ * Ingen ny fysikk her: alle 12 outcome-verdier er 1:1-felter fra solveFlight
+ * (§2.3), og banegeometrien er motorens egen trajectorySamples skalert til
+ * verdensmeter med den eneste lovlige skaleringen (§2.4):
+ *   x = d·carry_m · y = pts.x·offline_m · z = h·apex_m   (Z-up, §1.4)
+ *
+ * Ekstremverdi-policy (§4, A8): input klemmes aldri utover sliderens eget
+ * område; motorens interne klemmer (§2.5) står urørt. Én invariant:
+ * physical.inDomain = (spinLoft > 0) — negativ spin loft er det eneste stedet
+ * motoren rapporterer feil fortegnsbetydning (abs() gjør topspin til backspin).
+ * Predikatet utvides ikke.
  */
 
-const MOCK_STUB = true; // K5-grep-markør: Økt E sletter stubben og denne linjen.
+import { solveFlight, trajectorySamples } from './impact-flight.js';
 
-const RAD = Math.PI / 180;
-const M2YD = 1 / 0.9144; // kun for å fylle raw-speilet i stubben
-const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+const YD2M = 0.9144; // eneste yards→meter-konvertering i hele UI-koden (§1.5)
 
 // Liten LRU (ikke én-slot): tegneløkken leser live + inntil 3 pins per frame,
 // og en én-slot-memo ville trashe mellom dem. 8 slots dekker det med margin.
@@ -28,7 +29,7 @@ const MEMO_MAX = 8;
 
 /**
  * state → Outcome (frosset form, §3.3):
- *   raw  — motorens felt uendret (yards/mph); stubben speiler metertallene.
+ *   raw  — solveFlight(...) uendret (yards/mph), for breakdown-forklaringer.
  *   m    — meter, konvertert ÉN gang: carry, total, apex, curve, side.
  *   deg  — launchDir, spinAxis, launchAng, spinLoft, landAng.
  *   misc — backspin (rpm), ballSpeed (mph), smash.
@@ -42,50 +43,52 @@ export function selectOutcome(state) {
   const hit = memo.get(key);
   if (hit) { memo.delete(key); memo.set(key, hit); return hit; }
 
-  const p = state;
-  const sf = (p.speed || 130) / 130;
-  const launchDir = 0.8 * p.face + 0.2 * p.path;
-  const curve = 5.1 * (p.face - p.path) * sf;
-  const apex = clamp((8 + 0.8 * p.dynLoft + 0.9 * p.attack) * Math.sqrt(sf), 4, 60);
-  const carry = clamp((212 - 0.25 * Math.abs(p.face - p.path) - Math.abs(p.attack - 3) * 0.8) * sf, 15, 245);
-  const side = carry * Math.tan(launchDir * RAD) + curve;
-  const total = carry + 5;
-  const launchAng = Math.max(0.5, 0.72 * p.dynLoft - 0.05 * p.attack);
-  const spinLoft = p.dynLoft - p.attack;
-  const smash = clamp(1.39 - 0.002 * Math.abs(p.face - p.path) - 0.003 * Math.abs(p.attack - 3), 1.2, 1.47);
-  const ballSpeed = (p.speed || 130) * smash;
-  const backspin = Math.round(1.85 * Math.max(2, Math.abs(spinLoft)) * ballSpeed);
-  const spinAxis = clamp(1.5 * (p.face - p.path), -38, 38);
-  const landAng = clamp(32 + apex * 0.45, 32, 60);
+  // §2.2-signaturen — merk feltnavnene: state.face→faceAngle, state.path→clubPath.
+  const raw = solveFlight({
+    clubPath: state.path,
+    faceAngle: state.face,
+    attackAngle: state.attack,
+    dynamicLoft: state.dynLoft,
+    clubSpeed: state.speed,
+  });
 
-  // Banegeometri i verdensmeter (§2.4-skaleringen, her direkte i meter):
-  // x = nedslag, y = sideveis (startlinje + t²-kurve), z = høyde.
-  const N = 64;
-  const path = new Array(N);
-  const tanDir = Math.tan(launchDir * RAD);
-  for (let i = 0; i < N; i++) {
-    const t = i / (N - 1);
-    path[i] = Object.freeze({
-      x: carry * t,
-      y: carry * t * tanDir + curve * t * t,
-      z: apex * 4 * t * (1 - t),
-    });
-  }
+  const carryM = raw.carry * YD2M;
+  const offlineM = raw.offline * YD2M;
+  const apexM = raw.apex * YD2M;
+
+  // §2.4: normaliserte samples → verdensmeter (Z-up: +X nedslag, +Y høyre, +Z høyde)
+  const samples = trajectorySamples(raw);
+  const path = samples.map(p => Object.freeze({
+    x: p.d * carryM,
+    y: p.x * offlineM,
+    z: p.h * apexM,
+  }));
 
   const outcome = Object.freeze({
-    raw: Object.freeze({
-      // speiler solveFlight-feltene stubben kan fylle (yards/mph)
-      startDirection: launchDir, spinAxis, curve: curve * M2YD, offline: side * M2YD,
-      launchAngle: launchAng, spinLoft, backspin, landingAngle: landAng,
-      smash, ballSpeed, carry: carry * M2YD, total: total * M2YD,
+    raw: Object.freeze(raw),
+    m: Object.freeze({
+      carry: carryM,
+      total: raw.total * YD2M,
+      apex: apexM,
+      curve: raw.curve * YD2M,
+      side: offlineM,
     }),
-    m: Object.freeze({ carry, total, apex, curve, side }),
-    deg: Object.freeze({ launchDir, spinAxis, launchAng, spinLoft, landAng }),
-    misc: Object.freeze({ backspin, ballSpeed, smash }),
+    deg: Object.freeze({
+      launchDir: raw.startDirection,
+      spinAxis: raw.spinAxis,
+      launchAng: raw.launchAngle,
+      spinLoft: raw.spinLoft,
+      landAng: raw.landingAngle,
+    }),
+    misc: Object.freeze({
+      backspin: raw.backspin,
+      ballSpeed: raw.ballSpeed,
+      smash: raw.smash,
+    }),
     path: Object.freeze(path),
     physical: Object.freeze({
-      inDomain: spinLoft > 0,
-      reason: spinLoft > 0 ? null : 'spin-loft',
+      inDomain: raw.spinLoft > 0,
+      reason: raw.spinLoft > 0 ? null : 'spin-loft',
     }),
   });
 
