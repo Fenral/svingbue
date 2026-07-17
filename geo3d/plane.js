@@ -242,4 +242,3 @@ export function createPlane(state) {
 
   return { group, planeMesh, gridLines, numberMesh, update, shimmer, aimHold, aimRelease, aimPulse };
 }
-
