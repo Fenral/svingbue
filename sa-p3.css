@@ -135,6 +135,22 @@
   --measure:#EEC07A;
   --q-measure:var(--measure);
 
+  /* ── flight-scene dusk (normativ kilde: design/mocks/impact-kamera.html
+       :root + body-background + drawGrid-fog). Egen rolle — ikke gjenbruk
+       av --scene-bg, som eies av de andre skjermene. ─────────────────── */
+  --dusk-horizon:#3B2A55;
+  --dusk-sky-0:#0E0A18;
+  --dusk-sky-1:#120D1E;
+  --dusk-sky-2:#241536;
+  --dusk-sky-3:#17102A;
+  --dusk-sky-4:#0F0B1C;
+  --dusk-fog:#604C86;
+  --grid-lav:#A89CD6;
+  --dusk-scene-bg:
+    radial-gradient(120% 55% at 50% 58%, var(--dusk-horizon) 0%, transparent 60%),
+    linear-gradient(180deg, var(--dusk-sky-0) 0%, var(--dusk-sky-1) 34%,
+      var(--dusk-sky-2) 58%, var(--dusk-sky-3) 74%, var(--dusk-sky-4) 100%);
+
   /* ── WARM-LIGHT GOLD (order §1.2, 2026-07-11) — annotations, targets, XP,
        progression. A duller, warmer gold than --warn so "reward/progression"
        and "caution status" never share a hex again. --warn #FFD056 is now

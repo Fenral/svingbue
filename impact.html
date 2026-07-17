@@ -24,7 +24,7 @@
   *{box-sizing:border-box;margin:0;padding:0}
   html,body{height:100%;overflow:hidden;overscroll-behavior:none}
   body{
-    background:radial-gradient(130% 120% at 50% -10%, color-mix(in srgb, var(--secondary) 12%, var(--bg)), var(--bg));
+    background:var(--dusk-scene-bg);
     color:var(--ink);
     font-family:var(--font-ui);
     -webkit-tap-highlight-color:transparent;
@@ -368,6 +368,8 @@ const COL = {
   gold: tokenRGB('--gold'),
   accent: tokenRGB('--accent'),
   measure: tokenRGB('--q-measure'),
+  grid: tokenRGB('--grid-lav'),
+  fog: tokenRGB('--dusk-fog'),
 };
 const rgba = (c, a) => `rgba(${c[0]},${c[1]},${c[2]},${a})`;
 
@@ -388,16 +390,27 @@ function line3(a, b) {
 function drawGrid(s) {
   const topA = clamp(s - 1, 0, 1);
   const sideA = clamp(1 - Math.abs(s - 1), 0, 1);
+  const perspA = clamp(1 - s, 0, 1);
+  // tåkebånd langs horisonten — finnes kun i perspektiv (mock drawGrid)
+  if (perspA > 0.02) {
+    const hy = H * 0.60;
+    const g = ctx.createLinearGradient(0, hy - 46, 0, hy + 56);
+    g.addColorStop(0, rgba(COL.fog, 0));
+    g.addColorStop(0.55, rgba(COL.fog, 0.28 * perspA));
+    g.addColorStop(1, rgba(COL.fog, 0));
+    ctx.fillStyle = g;
+    ctx.fillRect(0, hy - 46, W, 102);
+  }
   ctx.lineWidth = 1;
   // nedslagslinjer på tvers (50 m-intervaller)
   for (const x of [50, 100, 150, 200]) {
-    ctx.strokeStyle = rgba(COL.ghost, 0.10 + 0.14 * topA);
+    ctx.strokeStyle = rgba(COL.grid, 0.10 + 0.14 * topA);
     line3([x, -150, 0], [x, 150, 0]);
   }
   // sideveis-guider ±50/±100 (mest synlig i TOP)
   if (topA > 0.05) {
     for (const y of [-100, -50, 50, 100]) {
-      ctx.strokeStyle = rgba(COL.ghost, 0.09 * topA);
+      ctx.strokeStyle = rgba(COL.grid, 0.09 * topA);
       line3([0, y, 0], [225, y, 0]);
     }
   }
@@ -405,14 +418,14 @@ function drawGrid(s) {
   if (sideA > 0.05 && s > 0.15) {
     ctx.setLineDash([2, 5]);
     for (const z of [20, 40]) {
-      ctx.strokeStyle = rgba(COL.ghost, 0.11 * sideA);
+      ctx.strokeStyle = rgba(COL.grid, 0.11 * sideA);
       line3([0, 0, z], [225, 0, z]);
     }
     ctx.setLineDash([]);
   }
   // target-linjen — består alltid (verdensanker x≈228)
   ctx.setLineDash([4, 7]);
-  ctx.strokeStyle = rgba(COL.ghost, 0.32);
+  ctx.strokeStyle = rgba(COL.grid, 0.32);
   line3([0, 0, 0], [228, 0, 0]);
   ctx.setLineDash([]);
   // ballen
