@@ -13,7 +13,6 @@ wait.
 
 | Agent | Branch | Working on | Since |
 |-------|--------|-----------|-------|
-| Codex | `agent/academy-codex` | Academy analysis pack only: `scripts/build-academy-analysis-pack.mjs`, `docs/academy-analysis/**`, `.gitignore` and local `outputs/academy-analysis/**`; no shipping/runtime files | 2026-07-17 |
 
 ## Queue / free to take
 
@@ -30,6 +29,15 @@ wait.
   pair before build.
 
 ## Done / handed off
+
+- Academy complete analysis pack — `agent/academy-codex`; one tracked module
+  description and 15 visual contact sheets cover Academy Home plus all 84
+  canonical experience surfaces. A deterministic generator creates 86 raw
+  viewport captures, a 139-file source snapshot and one self-contained local
+  HTML report. Counts, active routes, hashes, image dimensions, embedded
+  assets/source and secret absence are verified; no shipping/runtime file was
+  changed. The existing pairwise, native-platform and physical-device/human
+  release holds remain unchanged.
 
 - Academy deliberate Voice challenge round 7 - `agent/academy-codex`; three
   British female laboratory voices (`B-A..B-C`) and three dark male voices

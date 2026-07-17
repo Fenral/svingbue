@@ -53,3 +53,8 @@ build/
 # `npm run shots` (scripts/store-screenshots.mjs). Kept OUT of git so they
 # never bloat CI checkouts; regenerate locally before each store upload.
 store-assets/
+
+# Regeneratable Academy analysis bundle: full-size captures, the all-source
+# text snapshot and the self-contained HTML report. Curated contact sheets live
+# under docs/academy-analysis/screenshots/ and are intentionally tracked.
+outputs/academy-analysis/
