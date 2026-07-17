@@ -378,6 +378,9 @@ const COL = {
   fog: tokenRGB('--dusk-fog'),
 };
 const rgba = (c, a) => `rgba(${c[0]},${c[1]},${c[2]},${a})`;
+// grid-referansetall tegnes i canvas (scenen er aria-hidden; DOM-poolen er
+// forbeholdt måle-etiketter med kollisjonskaskade). Font fra typetokenet.
+const GRID_FONT = `500 10px ${rootStyle.getPropertyValue('--font-display').trim() || "'Space Grotesk',sans-serif"}`;
 
 /* ══ tegneløkke ══
    Verden er meter, Z-up: +X nedslag, +Y høyre, +Z høyde (§1.4). Alle punkter
@@ -408,17 +411,29 @@ function drawGrid(s) {
     ctx.fillRect(0, hy - 46, W, 102);
   }
   ctx.lineWidth = 1;
-  // nedslagslinjer på tvers (50 m-intervaller)
+  // nedslagslinjer på tvers (50 m-intervaller) + lengdereferanser (mock drawGrid)
+  ctx.font = GRID_FONT;
   for (const x of [50, 100, 150, 200]) {
     ctx.strokeStyle = rgba(COL.grid, 0.10 + 0.14 * topA);
     line3([x, -150, 0], [x, 150, 0]);
+    const lp = P(x, 112, 0);
+    if (lp) {
+      ctx.fillStyle = rgba(COL.grid, 0.35 + 0.3 * topA);
+      ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
+      ctx.fillText(String(x), lp.x + 4, lp.y - 2);
+    }
   }
-  // sideveis-guider ±50/±100 (mest synlig i TOP)
+  // sideveis-guider ±50/±100 + breddereferanser (mest synlig i TOP)
   if (topA > 0.05) {
     for (const y of [-100, -50, 50, 100]) {
       ctx.strokeStyle = rgba(COL.grid, 0.09 * topA);
       line3([0, y, 0], [225, y, 0]);
     }
+    const l = P(12, -100, 0), r = P(12, 100, 0);
+    ctx.fillStyle = rgba(COL.grid, 0.5 * topA);
+    ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+    if (l) ctx.fillText('100 L', l.x, l.y);
+    if (r) ctx.fillText('100 R', r.x, r.y);
   }
   // høydeguider 20/40 m (SIDE)
   if (sideA > 0.05 && s > 0.15) {
@@ -883,7 +898,15 @@ function frame(now) {
     if (Math.abs(state.station - stationTarget) < 0.002) state.station = stationTarget;
   }
   if (api.capture && api.trace.length < 4000) api.trace.push({ t: now, station: state.station });
-  basis = buildBasis(rigAt(state.station), { w: W, h: H });
+  // Aspekt-lås mot mocken (§5.5-tuning): mockens ortho-gridskala er bredde-
+  // avhengig (projTop x = W/360 per m), riggens er høydeavhengig. STATIONS-
+  // verdiene er tunet ved aspekt ≈0.4647 (mobil portrett); i bredere vinduer
+  // skaleres ortho-xStretch opp så anisotropien følger mockens W/H. Persp
+  // (orthoK=0) er isotrop i mocken og røres ikke; blend via orthoK holder
+  // reisen kontinuerlig.
+  const rig0 = rigAt(state.station);
+  const aspectFix = 1 + ((W / H) / 0.4647 - 1) * rig0.orthoK;
+  basis = buildBasis({ ...rig0, xStretch: (rig0.xStretch ?? 1) * aspectFix }, { w: W, h: H });
   ctx.clearRect(0, 0, W, H);
   drawGrid(state.station);
   for (const pin of state.pins) drawTraj(pin.outcome, 'ghost');
