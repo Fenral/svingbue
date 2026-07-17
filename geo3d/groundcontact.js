@@ -36,7 +36,7 @@
  * gc3d instance or duplicating this closed form.
  */
 import * as THREE from '../vendor/three/build/three.module.js';
-import { lpWorld, arcPosition, deg2rad } from '../swing-parameters-and-impact.js';
+import { lpWorld, arcPosition, deg2rad, thetaAtImpact } from '../swing-parameters-and-impact.js';
 
 const SOIL = 0x8a5a2b; // clearly distinct from the pink (0xF472B6) lpx bracket
 const STRIP_OPACITY = 0.35;
@@ -201,4 +201,18 @@ export function groundCrossingTheta0(state) {
   const cosTheta0 = 1 + lp.z / (r * sinPhi);
   if (cosTheta0 < -1 || cosTheta0 > 1) return null;
   return Math.acos(cosTheta0);
+}
+
+/**
+ * EIERORDRE 2026-07-17 — «køllebladet skal hvile DER det treffer».
+ * Svingens hvile-/sluttpunkt: med reell bakkekryssing (Duff/Fat) står
+ * bladet i bakkenivå FØR ballen (theta = −θ0); ellers ved ball-x
+ * (thetaAtImpact) — kontakthøyden synes på bladet, Whiff henger over
+ * ballen. Fallback ved numerisk null (lp.z < 0 uten reell kryssing) er
+ * thetaAtImpact. Kjent artefakt: lite theta-hopp ved Fat→Pure-grensen
+ * (h→0) i størrelsesorden face-offset — bevisst uten utjevning.
+ */
+export function restTheta(state) {
+  const theta0 = groundCrossingTheta0(state);
+  return theta0 != null ? -theta0 : thetaAtImpact(state);
 }

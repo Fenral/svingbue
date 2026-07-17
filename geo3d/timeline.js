@@ -12,7 +12,9 @@
  * always reflected immediately.
  *
  * Phases (labels reported by getPhase()):
- *   'address'  → p = restP (idle / start / settle target)
+ *   'address'  → p = restP (idle / start / settle target — the CONTACT pose
+ *                per eierordre 2026-07-17: ground crossing on Duff/Fat,
+ *                ball-x otherwise; see groundcontact.restTheta)
  *   'windup'   → address → p=0 (top of backswing), ~1.2s power2.inOut
  *   'down'     → p: 0 → 0.42, ~0.9s power1.in
  *   'impact'   → p: 0.42 → 0.58, ~2.55s linear (slow-mo through the strike)
@@ -49,16 +51,15 @@ import * as THREE from '../vendor/three/build/three.module.js';
 import { thetaAtImpact, strikeQuality, lpWorld, arcPosition, SWEEP_RAD, BALL_RADIUS_M } from '../swing-parameters-and-impact.js';
 import { hashSeed, createFx } from './fx.js';
 import { createFaceZoom, APPROACH_P_DELTA } from './facezoom.js';
-import { groundCrossingTheta0 } from './groundcontact.js';
+import { groundCrossingTheta0, restTheta } from './groundcontact.js';
 import { createGhosts } from './ghosts.js';
 import saHaptics from '../sa-haptics.js';
 
-const REST_BEHIND = deg2radLocal(5);
-function deg2radLocal(d) { return (d * Math.PI) / 180; }
-
 const pAtTheta = th => Math.max(0, Math.min(1, (th + SWEEP_RAD) / (2 * SWEEP_RAD)));
 const thetaAtP = p => -SWEEP_RAD + 2 * SWEEP_RAD * p;
-const restP = state => pAtTheta(thetaAtImpact(state) - REST_BEHIND);
+// rest = contact pose (eierordre 2026-07-17): settle/loop land WHERE the
+// club strikes — ground crossing on Duff/Fat, ball-x otherwise.
+const restP = state => pAtTheta(restTheta(state));
 
 // ── GROUND-STRIKE-BEFORE-BALL ────────────────────────────────────────────
 // how far below the floor plane (z=0) the clubhead is allowed to render
@@ -196,9 +197,9 @@ export function createTimeline3d({ state, sa3d, arc3d, club3d, getReduced, contr
   // ── club/arc placement at a given p (shared by tween onUpdate + reduced-motion snap) ──
   // `inkP` optionally overrides the arc ink progress (defaults to p): during
   // windup->finish the arc inks in with the clubhead (inkP===p), but during
-  // settle the clubhead returns to address while the arc STAYS fully drawn
-  // (mirrors the SVG's "revealed" behavior — once a swing has run, the full
-  // arc + glass plane stay shown; only the clubhead resets to rest).
+  // settle the clubhead returns to the contact rest pose while the arc STAYS
+  // fully drawn (mirrors the SVG's "revealed" behavior — once a swing has
+  // run, the full arc + glass plane stay shown; only the clubhead resets).
   function placeAt(p, { sampleTrail = false, inkP = p } = {}) {
     const theta = thetaAtP(p);
     const { basis } = club3d.update(theta, state);

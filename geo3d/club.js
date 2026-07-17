@@ -71,14 +71,17 @@
 import * as THREE from '../vendor/three/build/three.module.js';
 import { GLTFLoader } from '../vendor/three/examples/jsm/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from '../vendor/three/examples/jsm/libs/meshopt_decoder.module.js';
-import { arcPosition, shaftPivot, tangentAt, thetaAtImpact, deg2rad } from '../swing-parameters-and-impact.js';
+import { arcPosition, shaftPivot, tangentAt, deg2rad } from '../swing-parameters-and-impact.js';
+import { restTheta } from './groundcontact.js';
 
 const GLB_URL = new URL('../assets/club7.glb', import.meta.url).href;
 
-// address pose: clubhead sits just behind the ball (matches geometry.html's REST_BEHIND)
-const REST_BEHIND = deg2rad(5);
+// rest pose (eierordre 2026-07-17): the clubhead rests WHERE it strikes —
+// ground crossing before the ball on Duff/Fat, ball-x otherwise. Rule lives
+// in groundcontact.restTheta(); the export keeps its historical name so
+// insetview/geometry.html callers stay untouched.
 export function addressTheta(state) {
-  return thetaAtImpact(state) - REST_BEHIND;
+  return restTheta(state);
 }
 
 // ── materials (assigned by node/mesh name — the GLB carries none) ─────────
