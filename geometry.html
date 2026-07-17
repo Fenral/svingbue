@@ -353,7 +353,7 @@ addEventListener('unhandledrejection', function(e){
   .cell:active{transform:scale(.97)}
   .cell:focus-visible{outline:2px solid var(--secondary);outline-offset:2px}
   .cell .cl{display:block;font-size:8px;letter-spacing:.13em;color:var(--muted);white-space:nowrap}
-  .cell .cv{display:block;font-size:12.5px;font-weight:700;margin-top:1px;color:var(--muted);
+  .cell .cv{display:block;font-size:14px;font-weight:700;margin-top:1px;color:var(--muted);
     font-variant-numeric:tabular-nums;white-space:nowrap;transition:color .2s}
   .cell.on{background:#241d3d;border-color:var(--cc);box-shadow:0 0 14px color-mix(in srgb,var(--cc) 20%,transparent)}
   .cell.on .cv{color:var(--cc)}
@@ -368,8 +368,15 @@ addEventListener('unhandledrejection', function(e){
   .cell.rail{animation:rail .5s}
   @keyframes rail{35%,70%{border-color:var(--focal-warm);box-shadow:0 0 16px color-mix(in srgb,var(--focal-warm) 40%,transparent)}}
 
-  #tickStrip{display:block;width:100%;height:12px;margin-top:9px}
-  #sliderRow{display:flex;align-items:center;margin:3px 0 2px}
+  /* EIERORDRE 2026-07-18: tick-stripen er fjernet — én midtstrek (nullpunkt /
+     midten av tallene) + pure-sonen flyttet inn i selve slider-sporet. */
+  #trackRefs{position:absolute;left:12px;right:12px;top:0;bottom:0;pointer-events:none}
+  #midTick{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+    width:2px;height:15px;border-radius:1px;background:rgba(255,255,255,.28)}
+  #pureBand{position:absolute;top:50%;transform:translateY(-50%);height:9px;
+    border-radius:999px;background:var(--zone-pure);opacity:.22}
+  #pureBand[hidden]{display:none}
+  #sliderRow{display:flex;align-items:center;margin:6px 0 2px;position:relative}
   #slider{
     -webkit-appearance:none;appearance:none;flex:1;width:100%;height:44px;margin:0;
     background:transparent;cursor:pointer;display:block;border:0;border-radius:0;
@@ -501,8 +508,10 @@ addEventListener('unhandledrejection', function(e){
       <button class="cell" data-c="low" aria-pressed="true"><span class="cl">LOW POINT X</span><span class="cv" id="tvLow"></span></button>
       <button class="cell" data-c="arc" aria-pressed="false"><span class="cl">ARC HEIGHT</span><span class="cv" id="tvArc"></span></button>
     </div>
-    <svg id="tickStrip" aria-hidden="true"></svg>
-    <div id="sliderRow"><input type="range" id="slider" aria-label="Low point X, ahead or behind the ball"></div>
+    <div id="sliderRow">
+      <div id="trackRefs" aria-hidden="true"><div id="pureBand" hidden></div><div id="midTick"></div></div>
+      <input type="range" id="slider" aria-label="Low point X, ahead or behind the ball">
+    </div>
   </div>
 
   <div class="rotate">
@@ -572,8 +581,8 @@ try {
     if (Number.isFinite(shared.swingDirection)) state.swingDirection = cl(shared.swingDirection, -15, 15);
     if (Number.isFinite(shared.lowPointX))      state.lowPoint.x     = shared.lowPointX;
     if (Number.isFinite(shared.lowPointZ))      state.lowPoint.z     = cl(shared.lowPointZ, -0.05, 0.05);
-    const shownLow = clampUiLow(uiLowCm(state));
-    if (shownLow.railed) state.lowPoint.x = lowXForUiLow(shownLow.uiLow, state);
+    // EIERORDRE 2026-07-18: ingen stance-omskriving ved rail — den delte
+    // stancen bevares eksakt; visningen viser sann uiLow også forbi ±15.
   }
 } catch (e) { /* storage unavailable / bad JSON → keep defaults */ }
 
@@ -1373,26 +1382,18 @@ function updateSliderFill() {
     `linear-gradient(90deg, var(--lens) 0 ${pct.toFixed(2)}%, ${TRACK_BASE} ${pct.toFixed(2)}% 100%)`);
 }
 
-// ── tickstrip: major ticks, 0-line in lens colour, pure zone on LOW X ──────
-function drawTickStrip() {
-  const c = LENS[lens], svg = $('tickStrip');
-  const w = svg.getBoundingClientRect().width || 300, h = 12;
-  svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
-  const pad = 11;
-  const X = v => pad + (v - c.min) / (c.max - c.min) * (w - 2 * pad);
-  let html = '';
-  if (lens === 'low') {
-    // pure zone (krav 8) — bound to the MOTOR constants via the clubContext
-    // lookup (+2..+15 for iron — kontrakt §4: motor supersedes the mock's +2..+10)
-    const [z1, z2] = CLUB.pureZoneCm;
-    html += `<rect x="${X(z1)}" y="3" width="${X(z2) - X(z1)}" height="8" rx="4" fill="var(--zone-pure)" opacity=".18"/>`;
-  }
-  for (let v = Math.ceil(c.min / c.major) * c.major; v <= c.max; v += c.major) {
-    const zero = Math.abs(v) < 1e-9 && c.min < 0;
-    html += `<line x1="${X(v)}" y1="${zero ? 1 : 4}" x2="${X(v)}" y2="${h - 1}"
-      stroke="${zero ? 'var(--lens)' : 'rgba(255,255,255,.18)'}" stroke-width="${zero ? 2 : 1.2}"/>`;
-  }
-  svg.innerHTML = html;
+// ── track-referanser (eierordre 2026-07-18): tick-stripen er erstattet av én
+// midtstrek (statisk CSS — 50 % = 0 for dir/low/arc, 60° for plane) + pure-
+// sonen tegnet i selve slider-sporet i low-linsen (krav 8 bevart — fortsatt
+// bundet til MOTOR-konstantene via CLUB.pureZoneCm, +2..+15 for jern).
+function updateTrackRefs() {
+  const c = LENS[lens], band = $('pureBand');
+  if (lens !== 'low') { band.hidden = true; return; }
+  const [z1, z2] = CLUB.pureZoneCm;
+  const f = v => (v - c.min) / (c.max - c.min) * 100;
+  band.style.left = f(z1).toFixed(2) + '%';
+  band.style.width = (f(z2) - f(z1)).toFixed(2) + '%';
+  band.hidden = false;
 }
 
 // ── lens switch: slider range/accent, cell states, chip dimming (krav 6) ───
@@ -1419,7 +1420,7 @@ function applyLens(next) {
     $('chip' + k[0].toUpperCase() + k.slice(1)).classList.toggle('off', !c.affects.includes(k));
   });
   updateSliderFill();
-  drawTickStrip();
+  updateTrackRefs();
   snapped = Math.abs(+slider.value) < 1e-9;
 }
 function cellValueText() {
@@ -1438,8 +1439,12 @@ document.querySelectorAll('.cell').forEach(b => b.addEventListener('click', () =
 function reflectTow(uiLowBefore) {
   const raw = targetUiLow();
   if (Math.abs(raw - uiLowBefore) < 1e-6) return; // plane drag with dir=0 → no coupling
-  const { uiLow, railed } = clampUiLow(raw);
-  if (railed) T.lowX = lowXForUiLow(uiLow, tState());
+  // EIERORDRE 2026-07-18: stance-omskrivingen ved rail er FJERNET — den ga
+  // hysterese (målt: low −10 → dir-rail-roundtrip → low −0). Cellen viser nå
+  // den SANNE verdien også forbi ±15 (uiLow ≡ effectiveLpx holder overalt);
+  // slideren forblir sette-instrument ±15, og rail-pulsen betyr «utenfor
+  // slider-område». Full reversibilitet: stance røres aldri av dir/plane.
+  const { railed } = clampUiLow(raw);
   const lc = document.querySelector('.cell[data-c="low"]');
   if (!reduce && lc) {
     const cls = railed ? 'rail' : 'towed';
@@ -1530,7 +1535,7 @@ slider.addEventListener('change', () => { if (timeline3d) timeline3d.armImpactFx
 // initial lens + values from state; tickstrip is width-dependent
 applyLens('low');
 renderReadout();
-addEventListener('resize', () => { drawTickStrip(); updateSliderFill(); });
+addEventListener('resize', () => { updateSliderFill(); });
 writeSwingState();   // seed shared state so Impact reflects the current swing immediately
 
 // ── controls ──────────────────────────────────────────────────────────────
