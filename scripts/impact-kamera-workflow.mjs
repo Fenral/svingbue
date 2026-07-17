@@ -19,6 +19,7 @@ export const meta = {
 // - Dommeren (F) får aldri buildernes kontekst, mål eller score. Egen agent =
 //   fersk kontekst per konstruksjon.
 
+const WORKTREE = 'C:/Users/SkotvoldSivertSende/OneDrive - IdrettsKontor/Dokumenter/Golfapp/svingbue-impact-kamera';
 const KONTRAKT = 'docs/systemkontrakt.md';
 const ORDRE = 'design/orders/impact-kamera.md';
 const MOCK = 'design/mocks/impact-kamera.html';
@@ -53,6 +54,11 @@ const OKT_SCHEMA = {
 };
 
 const felles = `
+ARBEIDSKATALOG (absolutt, bruk den i ALLE fil- og shellkall — cd dit først):
+  ${WORKTREE}
+Dette er en dedikert git-worktree på gren agent/impact-kamera. Ikke jobb i noen
+annen svingbue-mappe; søskenmappene tilhører andre økter.
+
 Repo: svingbue (statisk web-app, ingen bundler). Les FØRST, i denne rekkefølgen:
   1. ${KONTRAKT}  — systemflatene. Bindende. Avvik fra en flate her er en eskaleringsutløser.
   2. ${ORDRE}     — din økts avsnitt + §2 (låste designbeslutninger) + §5 (evidenskrav).
@@ -156,7 +162,13 @@ ordren §2. Følg dem bokstavelig.
 
 Les ALLE tall fra selectOutcome(state) i impact-outcome.js. Kall aldri solveFlight
 direkte. Multipliser aldri med YD2M. Avvik fra en flate i ${KONTRAKT} er en
-eskaleringsutløser — ikke tilpass flaten til koden din.`,
+eskaleringsutløser — ikke tilpass flaten til koden din.
+
+A11y: dagens impact.html-kontroller har etablerte mønstre — aria-pressed på
+toggles, :focus-visible på alt interaktivt, sr-only hjelpetekster, tilstand
+aldri båret av farge alene (jf. "off-state is NOT colour-only"). Porten fra
+mocken skal BEVARE disse mønstrene, ikke mockens (mocken har ingen). Slidere
+er ekte <input type=range> med label, ikke div-er.`,
 });
 
 if (resultater.C) resultater.D = await kjorOkt({

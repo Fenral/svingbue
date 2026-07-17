@@ -211,6 +211,21 @@
   .sr-only{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;
     clip:rect(0 0 0 0);white-space:nowrap;border:0}
 
+  /* ══ ANNOTASJONSLAGET — etiketter i DOM, geometri i canvas (§5.4/Økt D) ══
+     Måle-etiketter i ravfamilien (ordre §3, --q-measure — A10). Laget er
+     aria-hidden: #fCarryLive forblir eneste annonseringskanal (§5.4, uendret
+     kontrakt) — disse er supplerende visuell detalj, ikke ny data. */
+  .annoLabels{position:absolute;inset:0;pointer-events:none;z-index:4}
+  .annoLabel{position:absolute;top:0;left:0;transform:translate(-50%,-50%);
+    padding:2px 9px;border-radius:8px;font-size:10.5px;font-weight:600;
+    white-space:nowrap;font-variant-numeric:tabular-nums;
+    background:color-mix(in srgb, var(--surface) 82%, transparent);
+    border:1px solid color-mix(in srgb, var(--q-measure) 30%, transparent);
+    color:var(--q-measure)}
+  .annoLabel.hot{font-weight:700;
+    box-shadow:0 0 8px color-mix(in srgb, var(--q-measure) 55%, transparent)}
+  .annoLabel[hidden]{display:none}
+
   @media (prefers-reduced-motion:reduce){
     .stations button,.panewrap,.ogexp .chev,.pinfab{transition:none}
   }
@@ -239,6 +254,10 @@
            DOM-laget (Økt D), aldri canvas. -->
       <canvas id="scene" aria-hidden="true" role="img"
         aria-label="Ball-flight scene seen from a travelling camera: top-down direction plane, side-on launch plane, and a perspective flight view behind the ball."></canvas>
+
+      <!-- Annotasjonsetiketter (Økt D) — DOM, ikke canvas (§5.4). Samme
+           a11y-kontrakt som scenen: aria-hidden, ren visuell detalj. -->
+      <div class="annoLabels" id="annoLabels" aria-hidden="true"></div>
 
       <!-- LEFT HERO STACK — stort tall = CARRY (§6, A9). Element-navnene
            #fCarryNum/#fCarryLive/.flightCarry er arvet og nå riktige.
@@ -291,6 +310,7 @@
 <script type="module">
 import { rigAt, buildBasis, project } from './impact-camera.js';
 import { selectOutcome } from './impact-outcome.js';
+import { buildAnnotations, placeLabels, statsFlip, cometPoint, MEASURE_KEEPOUT } from './impact-annotate.js';
 
 /* ══ state — docs/systemkontrakt.md §3.1. Parametrene er eneste input-
    sannhet; `station` er kamera, aldri parameter (§3.4): scrub re-solver
@@ -347,6 +367,7 @@ const COL = {
   ghost: tokenRGB('--ghost'),
   gold: tokenRGB('--gold'),
   accent: tokenRGB('--accent'),
+  measure: tokenRGB('--q-measure'),
 };
 const rgba = (c, a) => `rgba(${c[0]},${c[1]},${c[2]},${a})`;
 
@@ -446,6 +467,126 @@ function drawTraj(outcome, mode) {
   }
 }
 
+/* ══ ANNOTASJONSLAGET (Økt D, ordre §3) — impact-annotate.js gjør ren
+   geometri/kaskade; her tegnes primitivene: linjer/buer/bånd i canvas,
+   etikett-tekst i DOM (§5.4, samme mønster som geo3d/lowpoint.js#placeLabel). ══ */
+function drawAnnotationPrimitives(prims) {
+  for (const prim of prims) {
+    switch (prim.kind) {
+      case 'band': {
+        if (prim.points.length < 3) break;
+        const pts = prim.points;
+        ctx.beginPath();
+        ctx.moveTo(pts[0].x, pts[0].y);
+        for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
+        ctx.closePath();
+        const mid = pts[Math.floor(pts.length / 2)];
+        const g = ctx.createLinearGradient(pts[0].x, pts[0].y, mid.x, mid.y);
+        g.addColorStop(0, rgba(COL.measure, prim.alphaFrom));
+        g.addColorStop(1, rgba(COL.measure, prim.alphaTo));
+        ctx.fillStyle = g; ctx.fill();
+        break;
+      }
+      case 'tick':
+      case 'line': {
+        const [a, b] = prim.points;
+        ctx.save();
+        if (prim.dashed) ctx.setLineDash([5, 6]);
+        ctx.strokeStyle = rgba(COL.measure, prim.alpha);
+        ctx.lineWidth = prim.hot ? 1.6 : 1;
+        ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+        ctx.restore();
+        break;
+      }
+      case 'arc': {
+        ctx.save();
+        if (prim.hot) { ctx.shadowColor = rgba(COL.measure, 1); ctx.shadowBlur = 8; }
+        ctx.strokeStyle = rgba(COL.measure, prim.hot ? prim.alpha * 0.85 : prim.alpha * 0.5);
+        ctx.lineWidth = prim.hot ? 1.6 : 1;
+        ctx.beginPath();
+        prim.points.forEach((q, i) => { if (i) ctx.lineTo(q.x, q.y); else ctx.moveTo(q.x, q.y); });
+        ctx.stroke();
+        if (prim.tick) {
+          ctx.beginPath(); ctx.moveTo(prim.tick[0].x, prim.tick[0].y); ctx.lineTo(prim.tick[1].x, prim.tick[1].y); ctx.stroke();
+        }
+        ctx.shadowBlur = 0;
+        ctx.restore();
+        break;
+      }
+      case 'dimline': {
+        const [a, b] = prim.points;
+        ctx.save();
+        if (prim.hot) { ctx.shadowColor = rgba(COL.measure, 1); ctx.shadowBlur = 9; }
+        ctx.strokeStyle = rgba(COL.measure, prim.alpha);
+        ctx.lineWidth = prim.hot ? 2 : 1.2;
+        ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+        const ang = Math.atan2(b.y - a.y, b.x - a.x) + Math.PI / 2, t = 5;
+        for (const p of [a, b]) {
+          ctx.beginPath();
+          ctx.moveTo(p.x - Math.cos(ang) * t, p.y - Math.sin(ang) * t);
+          ctx.lineTo(p.x + Math.cos(ang) * t, p.y + Math.sin(ang) * t);
+          ctx.stroke();
+        }
+        ctx.shadowBlur = 0;
+        ctx.restore();
+        break;
+      }
+      case 'apex': {
+        const dot = prim.points[0];
+        ctx.beginPath(); ctx.arc(dot.x, dot.y, 3.4, 0, TAU);
+        ctx.fillStyle = rgba(COL.measure, 1); ctx.fill();
+        break;
+      }
+      case 'target': case 'label': default: break; // ren DOM-etikett, ingen canvas-geometri
+    }
+  }
+}
+
+// DOM-etikett-pool — gjenbrukte noder (unngår innerHTML-churn per frame, §5.4/K6).
+const annoLabelsEl = document.getElementById('annoLabels');
+const annoPool = [];
+function renderAnnotationLabels(placed) {
+  let n = 0;
+  for (const prim of placed) {
+    if (!prim.label || !prim.labelPos) continue;
+    let el = annoPool[n];
+    if (!el) { el = document.createElement('div'); el.className = 'annoLabel'; annoLabelsEl.appendChild(el); annoPool[n] = el; }
+    el.hidden = false;
+    el.textContent = prim.label;
+    el.style.transform = `translate(${prim.labelPos.x}px,${prim.labelPos.y}px) translate(-50%,-50%)`;
+    el.style.opacity = prim.alpha != null ? String(clamp(prim.alpha, 0, 1)) : '1';
+    el.classList.toggle('hot', !!prim.hot);
+    n++;
+  }
+  for (let i = n; i < annoPool.length; i++) annoPool[i].hidden = true;
+}
+
+function drawComet(worldPt, basis) {
+  const p = project(worldPt, basis);
+  if (!p) return;
+  const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, 16);
+  g.addColorStop(0, rgba(COL.gold, 0.95));
+  g.addColorStop(0.35, rgba(COL.accent, 0.5));
+  g.addColorStop(1, rgba(COL.accent, 0));
+  ctx.fillStyle = g;
+  ctx.beginPath(); ctx.arc(p.x, p.y, 16, 0, TAU); ctx.fill();
+  ctx.beginPath(); ctx.arc(p.x, p.y, 2.6, 0, TAU);
+  ctx.fillStyle = rgba(COL.ink, 1); ctx.fill();
+}
+
+// ── hot-state (ordre §3 "Hot-state") — hvilken kontroll som nettopp ble
+// rørt. Transient UI-interaksjon, lever her (ikke i outcome/state); matet
+// inn i buildAnnotations som 4. valgfrie parameter (se impact-annotate.js
+// toppkommentar). Sliderne (face/path/attack/dynLoft) setter/rydder på
+// pointerdown/up; speed pulser 700 ms etter stepper/scrub (ordre §3).
+let hotKey = null;
+let hotTimer = null;
+function pulseHot(key, ms = 700) {
+  hotKey = key;
+  clearTimeout(hotTimer);
+  hotTimer = setTimeout(() => { if (hotKey === key) hotKey = null; }, ms);
+}
+
 /* ══ kamera-animasjon: scrub + snap + segmenthopp + oppstartsreise ══ */
 let stationTarget = 2;   // oppstart: land i TOP …
 let scrubbing = false;
@@ -497,6 +638,12 @@ function buildSlider(container, key) {
     state[key] = clamp(Math.round(parseFloat(input.value) * 10) / 10, d.min, d.max);
     sync();
   });
+  // hot-state (ordre §3): rørt så lenge sliderdraget varer, ikke tidsbasert
+  // slik speed er — face/path/attack/dynLoft er en direkte holdt kontroll.
+  input.addEventListener('pointerdown', () => { hotKey = key; });
+  const clearHot = () => { if (hotKey === key) hotKey = null; };
+  input.addEventListener('pointerup', clearHot);
+  input.addEventListener('pointercancel', clearHot);
   sync();
 }
 
@@ -590,6 +737,7 @@ function setSpeed(v) {
   spVal.textContent = state.speed + ' mph';
   spVal.setAttribute('aria-valuenow', String(state.speed));
   spVal.setAttribute('aria-valuetext', state.speed + ' mph');
+  pulseHot('speed'); // ordre §3: speed → kurve-sjikt, 700 ms etter stepper/scrub
 }
 function bindHold(btn, dir) {
   let t1 = null, t2 = null, n = 0;
@@ -684,12 +832,10 @@ function updateStats(outcome) {
   fCarryLive.textContent =
     `Carry ${carry} metres, ${Math.abs(side)} metres ${side >= 0 ? 'right' : 'left'}.`;
 
-  // dataene viker for skuddet: hysteresebåndet er obligatorisk (ordre §3)
-  if (!statsRight) {
-    if (state.station > 1.1 && outcome.m.side < -28) statsRight = true;
-  } else {
-    if (state.station < 0.9 || outcome.m.side > -14) statsRight = false;
-  }
+  // dataene viker for skuddet: hysteresebåndet er obligatorisk (ordre §3
+  // "Stats-flip") — én kilde i impact-annotate.js, samme funksjon som S2
+  // testes mot, ikke en duplisert kopi av regelen her.
+  statsRight = statsFlip(statsRight, state.station, outcome.m.side);
   fCarryStack.classList.toggle('right', statsRight);
 
   if (g) {
@@ -725,6 +871,19 @@ function frame(now) {
   const liveOutcome = selectOutcome(state);
   drawTraj(liveOutcome, 'active');
   updateStats(liveOutcome);
+
+  // annotasjonslaget (ordre §3, Økt D): buildAnnotations kjører hver frame —
+  // den er ikke bak lastHud-vakten, for den avhenger kontinuerlig av
+  // state.station under scrub/reise, ikke bare av utfallstallene.
+  const keepOut = statsRight ? null : MEASURE_KEEPOUT;
+  const placed = placeLabels(buildAnnotations(liveOutcome, state.station, basis, hotKey), keepOut, { w: W, h: H });
+  drawAnnotationPrimitives(placed);
+  renderAnnotationLabels(placed);
+  if (!reduceMotion) {
+    const cp = cometPoint(liveOutcome, now);
+    if (cp) drawComet(cp, basis);
+  }
+
   if (activePaneStation === 0 && liveOutcome !== lastChipsOutcome) {
     renderMetricChips(liveOutcome);
     lastChipsOutcome = liveOutcome;
