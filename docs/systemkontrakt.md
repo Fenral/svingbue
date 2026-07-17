@@ -31,6 +31,19 @@ Ordrens «én scene, tre kamerastasjoner» er derfor en **sammenslåing av tre
 eksisterende visninger**, ikke en ny skjerm. De tre SVG-ene er det kamerasystemet
 erstatter.
 
+**Status etter Økt B (2026-07-17):** sammenslåingen er utført. `impact.html` er
+bygget om til én kamerastyrt canvas-scene (`#scene`, tegneløkke mot
+`impact-camera.js`) med stasjonssegment (`#stseg`), scrub-gest, oppstartsreise
+og carry-hero; de tre SVG-ene er fjernet. Som del av beslutning B1 (§9) ble
+følgende samtidig og bevisst revet fra gammel `impact.html`: DUAL-LENS-layouten
+(to alltid-synlige linser, gammel fil linje 116–119/745–746), Play-flight-
+overlayet med GSAP-partikkel-koreografi og ambient lyd, og ghost-lab-legenden.
+Kapasitetene består i ny form der ordren plasserer dem: ghost-sammenligning →
+Pin-pill maks 3 (Økt C, ordre §2), komet-animasjonen → ordre §3 (Økt D),
+stort-tall-heroen → CARRY per §6 (levert i Økt B). Hele den gamle filen ligger
+som tidsstemplet kopi i `.sa-backups/`. Linjenumre i §1.1/§5.4/§6 refererer den
+gamle filen og er historisk evidens.
+
 ### 1.2 Renderer-presedens i repoet
 
 To mønstre eksisterer allerede:
@@ -409,15 +422,25 @@ ikke har).
 
 ```js
 export const STATIONS = {
-  flight: { pos, look, fov, orthoK: 0 },   // perspektiv, bak/over ballen
-  side:   { pos, look, fov, orthoK: 1 },   // ortho, ser langs +Y
-  top:    { pos, look, fov, orthoK: 1 },   // ortho, ser ned langs −Z
+  flight: { pos, look, fov, orthoK: 0, xStretch, up },  // perspektiv, bak/over ballen
+  side:   { pos, look, fov, orthoK: 1, xStretch, up },  // ortho, ser langs −Y (fra +Y-siden)
+  top:    { pos, look, fov, orthoK: 1, xStretch, up },  // ortho, ser ned langs −Z
 };
 
-export function rigAt(station)                  // skalar 0..2 → {pos, look, fov, orthoK}
+export function rigAt(station)                  // skalar 0..2 → {pos, look, fov, orthoK, xStretch, up}
 export function buildBasis(rig, vbox)           // → {rig, fwd, right, upVec, focal, refDist, vbox}
 export function project(p, basis)               // → {x, y, depth} | null
 ```
+
+Riggen bærer to felt til (Økt B, se B2 i §9): `up` — skjerm-opp-referanse per
+stasjon, blendet i `rigAt`, fordi TOPs kartorientering (nedslag opp, høyre mot
+høyre) krever en kontinuerlig 90°-rull på SIDE→TOP-benet; og `xStretch` —
+anisotrop skjerm-x-skala (samme knott `lerpCam` allerede lerper i svingriggen;
+mockens SIDE/TOP-innramminger er bevisst anisotrope à la TrackMan; lengder måler
+fortsatt sant per akse). Golf-semantikken låser speilingen: +Y (høyre for
+RH-spiller) skal rendre mot skjerm-høyre i FLIGHT og TOP. Med Z-up og +X nedslag
+følger det at basisen bygges `right = up × fwd` og at SIDE-kameraet står på
++Y-siden og ser langs −Y — ellers rendrer en fade som drar mot venstre.
 
 `rigAt` interpolerer parvis mellom `flight→side` (station 0..1) og `side→top`
 (station 1..2), med samme lerp-form som `lerpCam` og en smoothstep på t.
@@ -602,19 +625,21 @@ fil, og K5-grepet har én fil å være grønn i.
 | A10 | Måle-token | Nytt `--measure:#EEC07A` + `--q-measure` i `sa-p3.css` | `#eec07a` finnes ikke i repoet (grep: 0 treff); `--launch:#E3C468` er nær, men er parameterfarge, ikke målerolle. | `sa-p3.css:100,123–127` |
 | A11 | Annotasjonslaget | Egen ren modul `impact-annotate.js`, returnerer primitiver | Kaskade + stats-flip krever enhetstest uten nettleser. Canvas-tegnende kode kan ikke testes slik. | §7 |
 | A12 | Fysikk urørt | `impact-flight.js` skrivebeskyttet; alt nytt additivt | `CLAUDE.md` krever failing regression test + eksplisitt autorisasjon for fysikkendring. Ingen av de 12 verdiene mangler. | `CLAUDE.md`; §2.3 |
+| B1 | DUAL-LENS vs én scene | Én-scene-konseptet ERSTATTER DUAL-LENS-laget. Revet med vilje: to-linse-layout, Play-flight-overlay m/GSAP-FX og ambient lyd, ghost-lab-legende. | Ordren (2026-07-17) er nyere enn DUAL-LENS-redesignet og er beviselig skrevet mot dagens UI: §2 navngir «dagens 3D-visning som viser TOTAL stort» og gjeninnfører nettopp det segmenterte stasjonsvalget DUAL-LENS fjernet. Kapasitetene gjenoppstår der ordren plasserer dem: Pin/ghosts maks 3 (Økt C), komet (Økt D), carry-hero (§6, levert Økt B). Gammel fil bevart i `.sa-backups/`. | ordre §1-linje + §2; gammel `impact.html:116–119,745–746,3843–3855`; §1.1-status |
+| B2 | Kamerabasis: speiling, rull, anisotropi | LH-basis `right = up × fwd`; per-stasjon `up` blendet i `rigAt` (90°-rull SIDE→TOP); `xStretch` per stasjon; SIDE-kamera på +Y-siden (ser langs −Y); orbit-bulge 0.55 på flight↔side-benet | +Y=høyre MÅ rendre skjerm-høyre (fade skal kurve høyre på skjermen; mockens projPersp/projTop gjør det). TOPs kartorientering krever kontinuerlig rull, ikke terskel-flipp. Mockens SIDE/TOP-skalaer er anisotrope; presedens: `lerpCam` lerper allerede `xStretch`. Bulgen holder hele skuddet i bildet midtveis i reisen. | `scripts/impact-camera.test.mjs` («golf-semantic screen orientation», «rolls continuously»); `design/evidence/impact-kamera-okt-b/` (video + skalar-trace); `swing-parameters-and-impact.js:44` |
+| B3 | Kamera-easing | Stasjonsglidning er tidsbasert (eksponentiell, τ=110 ms → ~0,5 s til ro), ikke per-frame-lerp | En droppet frame skal koste bilder, aldri strekke kamerareisen; målt 733/500 ms rAF-stall ved førstelast i headless gjorde per-frame-lerp til en reise på ~1,4 s. | skalar-trace i `design/evidence/impact-kamera-okt-b/scalar-log.json` |
 
 ### Åpne punkter (ikke blokkerende, eies av senere økter)
 
-1. **Konkrete kameraposer** per stasjon er ikke fastsatt. Mockens
-   `projPersp` (`camY 3.2, camZ −15, f = H*0.95`), `projSide` (230 m over
-   `W*0.84`) og `projTop` (360 m over `W`, 244 m over `H*0.70`) gir målestokken
-   som riggen skal treffe. Tuning = Økt B.
+1. ~~Konkrete kameraposer~~ **Løst i Økt B:** poser/fov/xStretch/anker står i
+   `impact-camera.js` `STATIONS`, kalibrert mot mockens målestokk (`projPersp`
+   `camY 3.2, camZ −15, f = H*0.95` → flight `pos(−15,0,3.2), fov 55°`; osv.).
+   Retuning er fortsatt fri implementering (§5.5).
 2. **`prefers-reduced-motion`** finnes allerede i repoet (`docs/showcase-spec.md:26`
-   bruker snap-uten-glide). Kamerareisen ved oppstart og scrub-snap bør arve
-   samme mønster. Ikke spesifisert her fordi det er atferd, ikke systemflate.
-3. **Gren/arbeidsflate.** Denne worktreen står på `codex/risk-based-quality-gates`,
-   mens `CLAUDE.md` sier at autonom WIP skal ligge på `agent/travel-sync`, og det
-   finnes flere aktive worktrees for samme repo. Avklares før Økt B skriver kode.
+   bruker snap-uten-glide). Implementert i Økt B som snap-uten-reise for oppstart
+   og scrub-snap; komet-delen eies av Økt D.
+3. ~~Gren/arbeidsflate~~ **Løst:** Økt B–F kjører i dedikert worktree på gren
+   `agent/impact-kamera`; søsken-worktrees tilhører andre økter.
 
 ---
 
