@@ -13,6 +13,7 @@ wait.
 
 | Agent | Branch | Working on | Since |
 |-------|--------|-----------|-------|
+| Codex | `agent/academy-codex` | Academy deliberate Voice challenge round 7: `package.json`, `scripts/academy-voice-production.mjs`, its tests, and Voice production/status/handoff docs only; shipping R5-A assets excluded | 2026-07-17 |
 
 ## Queue / free to take
 
