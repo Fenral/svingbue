@@ -109,10 +109,12 @@
   --font-display:'Space Grotesk','Inter',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
   --font-mono:'IBM Plex Mono',ui-monospace,"SF Mono","JetBrains Mono",Menlo,monospace;
 
-  /* ── launch param (SYS-02 / out-03) — desaturated gold tuned into the
-       ultraviolet world; ≥4.5:1 on the lens bg #0D0A18 (measured ~11.5:1) and
-       clearly duller/greener than --warn #FFD056 so "estimated gold" ≠ "launch". */
-  --launch:#E3C468;
+  /* ── launch param (SYS-02 / out-03) — RE-TUNED 2026-07-17 (flagg 1, eier):
+       strike claimed the gold family (#e3b05c, H≈78°), so launch leaves gold
+       for citron (H 105° — ΔH 27° vs --strike, 17° vs --warn, 22° vs --gold).
+       Contrast re-measured on the sRGB render (#c7c274): 10.61:1 on the lens
+       bg #0D0A18, 10.95:1 on --bg — still clearly duller/greener than --warn. */
+  --launch:oklch(80% 0.10 105);
 
   /* ── ghost reference-trace grey (SYS-04 / out-17) — violet-leaning neutral,
        replaces the teal-era #9FB2C8. Reserved for reference TRACE STROKES only,
