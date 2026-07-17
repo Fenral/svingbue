@@ -17,9 +17,9 @@ landskap) og 932×430 (Pro Max landskap). Vedlegg i `.screenshots-p1/`.
 | 6 | Linse-dimming: uberørte chips 25 %, berørte 100 % | ✅ | `p1-lens-*.png` ×4 + målt: plane dimmer strike; arc dimmer attack+path; dir/low dimmer ingen |
 | 7 | 0-detent snapper på dir/low/arc | ✅ | `video/p1-choreography.webm` + målt: dir 0.3→0, 0.4→0.4 (vindu 0.35/0.9/0.3; plane ingen detent) |
 | 8 | Pure-sone synlig på LOW X-strip (jern) | ✅ | `p1-pure-zone.png` — grønn 18 % (--zone-pure), **+2..+15 fra motor-konstantene** (avvik fra mockens +2..+10, se avvik 1) |
-| 9 | Rail-puls ved tauing-clamp | ✅ | `video/p1-choreography.webm` + `p1-rail-pulse.png` + målt sekvens: towed-puls −11→−13, rail-klasse + uiLow pinnet −15 ved dir ≥6 |
+| 9 | Rail-puls ved tauing-clamp | ✅ | `video/p1-choreography.webm` + `p1-rail-pulse.png` (re-tatt uten onboarding-overlay: dir +7.8, LOW pinnet −15, rail-puls) + målt: towed-puls under kobling, rail-klasse + uiLow pinnet −15 ved dir ≥5 |
 | 10 | 60 fps under kontinuerlig slider-drag, fysisk enhet | ⏳ GJENSTÅR | Device-evidens (Instruments-trace) — ØKT 3-pakken; kan ikke produseres lokalt |
-| 11 | Verdier ruller mykt, ingen hopp ved fortegnsskifte | ✅ | `video/p1-choreography.webm` (LOW X +10→−10) + målt monoton rulling etter dt≥0-fiks; tabular-nums + min-bredder mot layout-hopp |
+| 11 | Verdier ruller mykt, ingen hopp ved fortegnsskifte | ✅ | `video/p1-choreography.webm` (full amplitude LOW X +10→−10 i sluttsegmentet) + målt monoton rulling etter dt≥0-fiks (90 rAF-samples, 0 baklengs-steg); tabular-nums + min-bredder mot layout-hopp |
 | 12 | Gamle scene-chips fjernet | ✅ | Screenshot-diff: `p1-*-low.png` vs dagens app — #lp3dLabel/#lpy3dLabel («y +1.6 cm», «N cm behind») og sd-lp x/y-header borte; celleverdier overtar |
 
 ## Kritiske avvik: ingen funnet lokalt
@@ -58,6 +58,17 @@ landskap) og 932×430 (Pro Max landskap). Vedlegg i `.screenshots-p1/`.
 - `node --test scripts/home-night-ladder.test.mjs` → 4/4.
 - Kontrast-revalidering av tokens mot faktisk sRGB-render: alle ≥7:1
   (per-token-annotasjoner i sa-p3.css; --launch målt 10.61:1 på Impact).
+
+## Re-tatt etter ØKT 3-dom (2026-07-17)
+
+- `video/p1-choreography.webm` re-tatt: 36 s (ordre-krav ≤60 s), uten
+  onboarding-overlay, headless Edge 932×430. Viser i rekkefølge: linsebytte ×4
+  (med synlig chip-dimming), LOW-stance −10 → direction-drag med tauing til
+  rail (pinnet −15), detent-snap gjennom 0 på dir, og full-amplitude
+  fortegnsskifte LOW X +10→−10.
+- `p1-rail-pulse.png` re-tatt uten coach-mark-overlay (dommens funn).
+- ØKT 3-dommen (12-kravs sjekkliste) gjaldt kandidat `34ff169`; disse to
+  vedleggene er de eneste endringene etter dommen.
 
 ## Gjenstår (device-avhengig / ØKT 3)
 
