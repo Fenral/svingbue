@@ -152,15 +152,17 @@ Ingen OKLCH i dag. Mock-palett → repo-roller:
 | `--pink` (attack) | `#f470b8` | `--attack: #F472B6` | Oppdater verdi til mock, myntet som `oklch()`. Nesten identisk allerede. |
 | `--blue` (path) | `#5bc8f5` | `--path: #6FC6FF` | Oppdater verdi til mock (OKLCH). |
 | `--violet` (plane) | `#9c8df5` | `--plane: #93A4F2` | Oppdater verdi til mock (OKLCH). |
-| `--gold` (strike) | `#e3b05c` | **Kollisjon** — se flagg under | Avvent flagg-avklaring. |
+| `--gold` (strike) | `#e3b05c` | `--launch: #E3C468` (hue-kollisjon, avgjort — se flagg 1) | Strike-token myntes med mock-gullet (OKLCH). `--launch` re-tunes til målbart annen tone i EGEN commit med kontrast-revalidering på Impact-skjermen. |
 | `--orange` (varm-fokal) | `#ff8a4c` | Ingen | Mynt ny token (f.eks. `--focal-warm`). Håndhevelse: nøyaktig ÉN forekomst per skjerm (kontakt-tick/glød), aldri dekorativ. |
 | `--green` (pure-sone) | `#3fd68c` | `#22C55E`/`#4ADE80` finnes i motorens verdikt-farger | Mynt UI-token for sonen (18 % opasitet på strip); motorens interne verdikt-hex røres ikke. |
 | `--bg`, `--ink`, `--dim`, `--line` | div. | `--scene-bg`, `--plate-solid` m.fl. | Gjenbruk eksisterende surface-tokens der rollen matcher; mynt kun det som mangler. |
 
-**Flagg 1 — gold-kollisjon:** Mockens STRIKE-gull `#e3b05c` er nesten samme
-hue som repoets `--launch: #E3C468` (SYS-11 binder gull til launch angle).
-Å gi strike gull bryter «én hue = én mening» med mindre launch re-tunes eller
-strike-gull skilles målbart. Eierbeslutning — ikke ØKT 2-improvisasjon.
+**Flagg 1 — gold-kollisjon (AVGJORT, eier 2026-07-17):** Mockens STRIKE-gull
+`#e3b05c` er nesten samme hue som repoets `--launch: #E3C468` (SYS-11 binder
+gull til launch angle). Beslutning: **strike tar mock-gullet; `--launch`
+re-tunes** til en målbart annen tone. Launch-re-tuningen gjøres i egen commit
+(rører Impact-skjermen) med kontrast-revalidering mot faktisk render, og
+SYS-11-tabellen i `sa-p3.css` oppdateres tilsvarende.
 
 **Flagg 2 — loft (bestilt av ordren):** `--loft: #B9A0FF` FINNES
 (`sa-p3.css:80`). Separasjonen plane/loft er allerede håndhevet:
@@ -196,5 +198,5 @@ Stopp og rapporter (ikke improviser) hvis noe av dette viser seg nødvendig:
 1. Endring i motor-output (annet enn konstant-eksporten i §2).
 2. Avvik fra §3.1-kontrollplanen (f.eks. dobbel tauing «for å matche mocken»).
 3. Ny toleranse/domene i test 1 utover de to opsjonene i §4.
-4. Gold/strike-tokenvalg (flagg 1) — eierbeslutning.
+4. Avvik fra gold/strike-beslutningen i flagg 1 (avgjort av eier 2026-07-17).
 5. Enhver ny avhengighet.
