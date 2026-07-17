@@ -13,6 +13,7 @@ wait.
 
 | Agent | Branch | Working on | Since |
 |-------|--------|-----------|-------|
+| Claude Code | `agent/impact-kamera` | Impact-kamera (design/orders/impact-kamera.md): Økt A ferdig (docs/systemkontrakt.md), Økt B–F via scripts/impact-kamera-workflow.mjs. Files: impact.html, impact-camera.js, impact-outcome.js, impact-annotate.js, sa-p3.css | 2026-07-17 |
 
 ## Queue / free to take
 

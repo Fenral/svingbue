@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>StrikeArc · Impact · kamera-mock</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg0:#120d1e; --bg1:#1e1533; --horizon:#3b2a55;
+  --panel:rgba(23,17,38,.82); --panel-line:rgba(168,150,220,.16);
+  --ink:#ece7f6; --muted:#9d92b8; --faint:#6f6590;
+  --purple:#a48cff; --gold:#e8b45a; --warm:#ff9a3d;
+  --face:#ff5a6e; --path:#5cb8ff; --attack:#ff6fb0; --loft:#b49bff; --launch:#eec07a;
+  --ghost:rgba(170,158,214,.5);
+  --r:16px;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;overscroll-behavior:none}
+body{
+  font-family:"Space Grotesk",system-ui,-apple-system,sans-serif;
+  color:var(--ink);
+  background:
+    radial-gradient(120% 55% at 50% 58%, var(--horizon) 0%, transparent 60%),
+    linear-gradient(180deg,#0e0a18 0%, var(--bg0) 34%, #241536 58%, #17102a 74%, #0f0b1c 100%);
+  user-select:none;-webkit-user-select:none;
+}
+#scene{position:fixed;inset:0;touch-action:none;display:block}
+
+/* ---------- top bar ---------- */
+.topbar{position:fixed;left:0;right:0;top:0;z-index:30;
+  padding:calc(10px + env(safe-area-inset-top)) 14px 0;
+  display:flex;flex-direction:column;gap:7px;pointer-events:none}
+.speedctl{pointer-events:auto;display:flex;align-items:center;gap:2px;
+  background:var(--panel);border:1px solid rgba(255,154,61,.35);border-radius:999px;
+  padding:3px;margin:0 auto;width:max-content;
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+.speedctl button{appearance:none;border:0;cursor:pointer;font:inherit;
+  width:30px;height:30px;border-radius:50%;
+  color:var(--warm);background:rgba(255,154,61,.12);font-size:17px;font-weight:700;
+  display:flex;align-items:center;justify-content:center;transition:background .15s}
+.speedctl button:active{background:rgba(255,154,61,.3)}
+.speedctl span{min-width:76px;text-align:center;font-size:13px;font-weight:700;
+  color:var(--warm);font-variant-numeric:tabular-nums;cursor:ew-resize;touch-action:none}
+
+/* ---------- shot stats ---------- */
+.stats{position:fixed;left:16px;top:calc(70px + env(safe-area-inset-top));z-index:20;pointer-events:none}
+.stats.right{left:auto;right:16px;text-align:right}
+.stats.right .delta{margin-left:auto}
+.stats .total{font-size:44px;font-weight:700;line-height:1;letter-spacing:-.02em;
+  text-shadow:0 0 26px rgba(232,180,90,.25)}
+.stats .total small{font-size:17px;font-weight:500;color:var(--muted);margin-left:2px}
+.stats .cap{font-size:10px;letter-spacing:.24em;color:var(--faint);margin-top:3px}
+.stats .side{font-size:21px;font-weight:700;color:var(--warm);margin-top:9px}
+.stats .side small{font-size:12px;font-weight:500;margin-left:2px}
+.delta{margin-top:11px;font-size:11.5px;color:var(--muted);line-height:1.55;max-width:190px}
+.delta b{color:var(--ink);font-weight:500}
+.delta .gold{color:var(--gold)}
+
+/* ---------- shared chips ---------- */
+.readouts{display:flex;gap:8px;flex-wrap:wrap}
+.chip{border-radius:12px;padding:8px 11px;min-width:74px;
+  background:rgba(20,15,34,.55)}
+.chip.read{border:1px dashed rgba(232,180,90,.35)}
+.chip .k{font-size:9px;letter-spacing:.18em;color:var(--faint)}
+.chip .v{font-size:17px;font-weight:700;margin-top:2px;font-variant-numeric:tabular-nums}
+.chip .v em{font-style:normal;font-size:11px;font-weight:500;color:var(--muted)}
+.h-purple{font-size:11px;letter-spacing:.26em;color:var(--purple);font-weight:700}
+.h-gold{font-size:11px;letter-spacing:.26em;color:var(--gold);font-weight:700}
+
+.pinbtn{appearance:none;border:0;cursor:pointer;font:inherit;font-size:13px;font-weight:700;
+  color:#241503;background:linear-gradient(180deg,#f0c470,#dfa243);
+  border-radius:999px;padding:10px 18px;box-shadow:0 4px 18px rgba(232,180,90,.28);
+  transition:transform .15s}
+.pinbtn:active{transform:scale(.96)}
+.pinfab{position:fixed;right:14px;top:calc(14px + env(safe-area-inset-top));z-index:30;
+  appearance:none;cursor:pointer;font:inherit;font-size:12.5px;font-weight:700;
+  color:var(--gold);background:var(--panel);border:1px solid rgba(232,180,90,.4);
+  border-radius:999px;padding:9px 15px;
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);transition:transform .15s}
+.pinfab:active{transform:scale(.95)}
+
+/* ---------- sliders ---------- */
+.sl{margin-top:13px}
+.sl .head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:9px}
+.sl .name{display:flex;align-items:center;gap:7px;font-size:11px;letter-spacing:.14em;color:var(--muted);font-weight:500}
+.sl .name i{width:9px;height:9px;border-radius:3px;background:var(--c)}
+.sl .val{font-size:16px;font-weight:700;font-variant-numeric:tabular-nums}
+.sl .track{position:relative;height:34px;touch-action:none;cursor:pointer}
+.sl .rail{position:absolute;left:0;right:0;top:15px;height:4px;border-radius:2px;background:rgba(160,150,200,.18)}
+.sl .zero{position:absolute;top:9px;width:2px;height:16px;background:rgba(200,190,230,.3);border-radius:1px}
+.sl .fill{position:absolute;top:15px;height:4px;border-radius:2px;background:var(--c)}
+.sl .knob{position:absolute;top:4px;width:26px;height:26px;border-radius:50%;
+  background:#170f26;border:3.5px solid var(--c);margin-left:-13px;
+  box-shadow:0 0 0 5px color-mix(in srgb,var(--c) 16%, transparent),0 3px 10px rgba(0,0,0,.5)}
+
+/* ---------- bottom cards ---------- */
+.card{position:fixed;left:10px;right:10px;z-index:25;
+  bottom:calc(10px + env(safe-area-inset-bottom));
+  background:var(--panel);border:1px solid var(--panel-line);border-radius:22px;
+  backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+  padding:14px 18px 16px;
+  transition:transform .45s cubic-bezier(.22,1,.36,1),opacity .3s}
+.hidden{display:none!important}
+
+/* concept 2 */
+#ui2 .grab{width:44px;height:5px;border-radius:3px;background:rgba(190,180,225,.35);
+  margin:-2px auto 10px;cursor:pointer}
+#ui2 .panewrap{overflow:hidden;max-height:360px;
+  transition:max-height .45s cubic-bezier(.22,1,.36,1),opacity .35s}
+#ui2.collapsed .panewrap{max-height:0;opacity:0}
+#ui2 .stations{display:flex;gap:4px;background:rgba(20,15,34,.6);border:1px solid var(--panel-line);
+  border-radius:999px;padding:4px;width:max-content;margin:0 auto 12px}
+#ui2 .stations button{appearance:none;border:0;background:transparent;color:var(--muted);
+  font:inherit;font-size:11px;font-weight:700;letter-spacing:.16em;
+  padding:7px 15px;border-radius:999px;cursor:pointer;transition:.25s}
+#ui2 .stations button.on{background:rgba(164,140,255,.18);color:var(--purple)}
+#ui2 .stations button[data-s="0"].on{background:rgba(232,180,90,.15);color:var(--gold)}
+#ui2 .stdiv{width:1px;align-self:stretch;margin:5px 3px;background:rgba(168,150,220,.25)}
+#ui2 .panehead{display:flex;justify-content:space-between;align-items:baseline}
+#ui2 .hint{font-size:10.5px;color:var(--faint)}
+#ui2 .pane{min-height:118px}
+#ui2 .ogrid{padding-top:2px}
+#ui2 .ogroup{appearance:none;border:0;background:transparent;cursor:pointer;font:inherit;
+  display:flex;align-items:center;gap:6px;margin:13px 0 7px;padding:0}
+#ui2 .ogrid .ogroup:first-child{margin-top:4px}
+#ui2 .ogroup .glab{font-size:9.5px;letter-spacing:.2em;color:var(--faint);font-weight:700}
+#ui2 .ogroup .garr{font-size:12px;color:var(--purple);line-height:1;opacity:.85}
+#ui2 .ogroup.static{cursor:default}
+#ui2 .ogrid .readouts .chip{flex:1;min-width:0;padding:7px 8px}
+#ui2 .ogrid .chip .k{font-size:8px;letter-spacing:.12em;white-space:nowrap}
+#ui2 .ogrid .chip .v{font-size:14px}
+#ui2 .ogrid .chip .v em{font-size:9.5px}
+#ui2 #ogMini{margin-top:8px}
+#ui2 #ogMini .chip{flex:1;min-width:0;padding:8px 9px}
+#ui2 #ogMini .chip .k{font-size:8.5px;letter-spacing:.13em;white-space:nowrap}
+#ui2 #ogMini .chip .v{font-size:15px}
+#ui2 .ogexp{appearance:none;border:0;background:transparent;cursor:pointer;font:inherit;
+  display:flex;align-items:center;gap:6px;margin:9px auto 0;padding:4px 12px;
+  font-size:9.5px;letter-spacing:.2em;font-weight:700;color:var(--muted)}
+#ui2 .ogexp .chev{transition:transform .3s;font-size:11px}
+#ui2 .ogexp.open .chev{transform:rotate(180deg)}
+
+/* toast */
+#toast{position:fixed;left:50%;transform:translateX(-50%);z-index:40;
+  top:calc(150px + env(safe-area-inset-top));
+  background:var(--panel);border:1px solid var(--panel-line);border-radius:999px;
+  padding:9px 17px;font-size:12px;color:var(--ink);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  opacity:0;transition:opacity .4s;pointer-events:none;white-space:nowrap}
+#toast.show{opacity:1}
+
+@media (prefers-reduced-motion: reduce){
+  *{transition-duration:.01ms!important}
+}
+</style>
+</head>
+<body>
+<canvas id="scene"></canvas>
+
+<div class="topbar">
+  <div class="speedctl">
+    <button id="spMinus" aria-label="Senk hastighet">−</button>
+    <span id="spVal">130 mph</span>
+    <button id="spPlus" aria-label="Øk hastighet">+</button>
+  </div>
+</div>
+
+<button class="pinfab" id="pinFab">⊙ Pin</button>
+
+<div class="stats">
+  <div class="total"><span id="stTotal">211</span><small>m</small></div>
+  <div class="cap">CARRY</div>
+  <div class="side"><span id="stSide">147 m R</span></div>
+  <div class="delta" id="stDelta"></div>
+</div>
+
+<!-- ═══ Concept 2: stations ═══ -->
+<div class="card" id="ui2">
+  <div class="grab" id="c2grab"></div>
+  <div class="stations" id="stseg">
+    <button data-s="2">TOP</button>
+    <button data-s="1">SIDE</button>
+    <span class="stdiv"></span>
+    <button data-s="0" class="on">FLIGHT</button>
+  </div>
+  <div class="panewrap">
+    <div class="panehead">
+      <span class="h-gold" id="c2title">OUTCOME · READ</span>
+      <span class="hint">drag scene vertically</span>
+    </div>
+    <div class="pane" id="c2pane"></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+"use strict";
+/* ═════════ constants ═════════ */
+const RAD=Math.PI/180, TAU=Math.PI*2;
+const COL={gold:"#e8b45a",warm:"#ff9a3d",ghost:"rgba(170,158,214,",grid:"rgba(168,156,214,",
+  face:"#ff5a6e",path:"#5cb8ff",attack:"#ff6fb0",loft:"#b49bff",ink:"#ece7f6",muted:"#9d92b8"};
+const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
+const lerp=(a,b,k)=>a+(b-a)*k;
+const smooth=t=>t*t*(3-2*t);
+const reduceMotion=matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/* ═════════ physics (forenklet d-plane, kalibrert mot ekte skjermbilder) ═════════ */
+function flight(p){
+  const sf=(p.speed||130)/130;
+  const dir=0.8*p.face+0.2*p.path;
+  const curve=5.1*(p.face-p.path)*sf;
+  const apex=clamp((8+0.8*p.loft+0.9*p.attack)*Math.sqrt(sf),4,60);
+  const carry=clamp((212-0.25*Math.abs(p.face-p.path)-Math.abs(p.attack-3)*0.8)*sf,15,245);
+  const side=carry*Math.tan(dir*RAD)+curve;
+  const launchAng=Math.max(0.5,0.72*p.loft-0.05*p.attack);
+  const dfp=Math.abs(p.face-p.path);
+  const smash=clamp(1.39-0.002*dfp-0.003*Math.abs(p.attack-3),1.2,1.47);
+  const ballSpeed=(p.speed||130)*smash;
+  const spinLoft=Math.max(2,p.loft-p.attack);
+  const backspin=Math.round(1.85*spinLoft*ballSpeed);
+  const spinAxis=clamp(1.5*(p.face-p.path),-80,80);
+  const N=72, pts=new Array(N);
+  for(let i=0;i<N;i++){
+    const t=i/(N-1), z=carry*t;
+    pts[i]={x:z*Math.tan(dir*RAD)+curve*t*t, y:apex*4*t*(1-t), z};
+  }
+  return {dir,curve,apex,carry,total:carry+5,side,launchAng,ballSpeed,smash,spinLoft,backspin,spinAxis,pts,params:{...p}};
+}
+
+/* ═════════ state ═════════ */
+const state={
+  concept:2,
+  target:{face:2.0,path:0.0,attack:3.0,loft:24,speed:130},
+  smoothp:{face:2.0,path:0.0,attack:3.0,loft:24,speed:130},
+  station:0, stationTarget:0,
+  ghosts:[]
+};
+state.ghosts.push(flight({face:-3.0,path:1.2,attack:2.5,loft:24,speed:130}));
+
+/* ═════════ canvas & projections ═════════ */
+const cv=document.getElementById("scene"), ctx=cv.getContext("2d");
+let W=0,H=0,DPR=1;
+function resize(){
+  DPR=Math.min(devicePixelRatio||1,2);
+  W=innerWidth;H=innerHeight;
+  cv.width=W*DPR;cv.height=H*DPR;
+  cv.style.width=W+"px";cv.style.height=H+"px";
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+}
+addEventListener("resize",resize);resize();
+
+function projPersp(P){
+  const camY=3.2, camZ=-15, f=H*0.95;
+  const z=Math.max(P.z-camZ,2);
+  return {x:W/2+P.x/z*f, y:H*0.60-(P.y-camY)/z*f};
+}
+function projSide(P){
+  return {x:W*0.10+P.z*(W*0.84/230), y:H*0.62-P.y*(H*0.42/55)};
+}
+function projTop(P){
+  return {x:W/2+P.x*(W/360), y:H*0.78-P.z*(H*0.70/244)};
+}
+function project(P){
+  const s=state.station;
+  if(s<=0.001)return projPersp(P);
+  if(s>=1.999)return projTop(P);
+  if(s<1){const a=projPersp(P),b=projSide(P),k=smooth(s);return{x:lerp(a.x,b.x,k),y:lerp(a.y,b.y,k)};}
+  const a=projSide(P),b=projTop(P),k=smooth(s-1);return{x:lerp(a.x,b.x,k),y:lerp(a.y,b.y,k)};
+}
+
+/* ═════════ drawing helpers ═════════ */
+function path3d(pts){
+  ctx.beginPath();
+  let p=project(pts[0]);ctx.moveTo(p.x,p.y);
+  for(let i=1;i<pts.length;i++){p=project(pts[i]);ctx.lineTo(p.x,p.y);}
+}
+let labelRects=[];
+function placeLabel(x,y,w,h){
+  for(let k=0;k<3;k++){
+    let moved=false;
+    for(const r of labelRects){
+      if(x-w/2<r.x+r.w && x+w/2>r.x && y-h/2<r.y+r.h && y+h/2>r.y){
+        y=(y<=r.y+r.h/2)?r.y-h/2-3:r.y+r.h+h/2+3;
+        moved=true;
+      }
+    }
+    if(!moved)break;
+  }
+  labelRects.push({x:x-w/2,y:y-h/2,w,h});
+  return y;
+}
+function chipLabel(x,y,txt,dashed){
+  ctx.font="600 10.5px 'Space Grotesk'";
+  const w=ctx.measureText(txt).width+18, h=21, r=8;
+  y=placeLabel(x,y,w,h);
+  ctx.beginPath();ctx.roundRect(x-w/2,y-h/2,w,h,r);
+  ctx.fillStyle="rgba(20,15,34,.78)";ctx.fill();
+  if(dashed){ctx.setLineDash([3,3]);ctx.strokeStyle="rgba(232,180,90,.4)";}
+  else{ctx.setLineDash([]);ctx.strokeStyle="rgba(168,150,220,.25)";}
+  ctx.lineWidth=1;ctx.stroke();ctx.setLineDash([]);
+  ctx.fillStyle=COL.ink;ctx.textAlign="center";ctx.textBaseline="middle";
+  ctx.fillText(txt,x,y+0.5);
+}
+
+function drawGrid(){
+  const s=state.station;
+  const perspA=clamp(1-s,0,1), sideA=clamp(1-Math.abs(s-1),0,1), topA=clamp(s-1,0,1);
+  // fog band (persp only)
+  if(perspA>0.02){
+    const hy=H*0.60;
+    const g=ctx.createLinearGradient(0,hy-46,0,hy+56);
+    g.addColorStop(0,"rgba(84,66,120,0)");
+    g.addColorStop(.55,`rgba(96,76,134,${0.28*perspA})`);
+    g.addColorStop(1,"rgba(84,66,120,0)");
+    ctx.fillStyle=g;ctx.fillRect(0,hy-46,W,102);
+  }
+  ctx.lineWidth=1;
+  // downrange cross-lines + labels
+  for(const z of [50,100,150,200]){
+    const a=project({x:-150,y:0,z}), b=project({x:150,y:0,z});
+    ctx.strokeStyle=COL.grid+(0.10+0.14*topA)+")";
+    ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();
+    const lp=project({x:112,y:0,z});
+    ctx.font="500 10px 'Space Grotesk'";
+    ctx.fillStyle=COL.grid+(0.35+0.3*topA)+")";
+    ctx.textAlign="left";ctx.textBaseline="bottom";
+    ctx.fillText(z+"",lp.x+4,lp.y-2);
+  }
+  // lateral guides ±50/±100 (mest synlig i topp)
+  if(topA>0.05){
+    for(const x of [-100,-50,50,100]){
+      const a=project({x,y:0,z:0}), b=project({x,y:0,z:225});
+      ctx.strokeStyle=COL.grid+(0.09*topA)+")";
+      ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();
+    }
+    const l=project({x:-100,y:0,z:12}), r=project({x:100,y:0,z:12});
+    ctx.fillStyle=COL.grid+(0.5*topA)+")";
+    ctx.font="500 10px 'Space Grotesk'";ctx.textAlign="center";
+    ctx.fillText("100 L",l.x,l.y);ctx.fillText("100 R",r.x,r.y);
+  }
+  // height guides (side)
+  if(sideA>0.05 && s>0.15){
+    for(const y of [20,40]){
+      const a=project({x:0,y,z:0}), b=project({x:0,y,z:225});
+      ctx.strokeStyle=COL.grid+(0.11*sideA)+")";
+      ctx.setLineDash([2,5]);
+      ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle=COL.grid+(0.45*sideA)+")";
+      ctx.font="500 10px 'Space Grotesk'";ctx.textAlign="left";
+      ctx.fillText(y+" m",a.x+2,a.y-4);
+    }
+  }
+  // target line (dashed, sentrum)
+  const t0=project({x:0,y:0,z:0}), t1=project({x:0,y:0,z:228});
+  ctx.setLineDash([4,7]);
+  ctx.strokeStyle=COL.grid+"0.32)";
+  ctx.beginPath();ctx.moveTo(t0.x,t0.y);ctx.lineTo(t1.x,t1.y);ctx.stroke();
+  ctx.setLineDash([]);
+  const tl=project({x:0,y:0,z:228});
+  ctx.font="600 10px 'Space Grotesk'";ctx.letterSpacing="3px";
+  ctx.textAlign="center";
+  // i topp: TARGET legger seg rett over målestakken; finnes ikke plass, viker den
+  const topBlend=smooth(clamp(state.station-1,0,1));
+  const oy=project({x:0,y:0,z:(liveF?liveF.carry:210)+12}).y;
+  const desired=Math.max(112,oy-16);
+  const tAlpha=lerp(1,clamp((oy-118)/18,0,1),topBlend);
+  if(tAlpha>0.05){
+    ctx.fillStyle=COL.grid+(0.55*tAlpha)+")";
+    const tPin=lerp(tl.y-8,desired,topBlend);
+    const tly=placeLabel(tl.x,tPin,64,14);
+    ctx.fillText("TARGET",tl.x,tly);
+  }
+  ctx.letterSpacing="0px";
+}
+
+function drawTraj(F,mode){
+  // mode: "ghost" | "active"
+  if(mode==="ghost"){
+    path3d(F.pts);
+    ctx.strokeStyle=COL.ghost+"0.55)";
+    ctx.lineWidth=1.6;ctx.stroke();
+    const land=project(F.pts[F.pts.length-1]);
+    ctx.beginPath();ctx.arc(land.x,land.y,3.2,0,TAU);
+    ctx.fillStyle=COL.ghost+"0.8)";ctx.fill();
+    return;
+  }
+  // glow pass
+  path3d(F.pts);
+  ctx.strokeStyle="rgba(255,154,61,.16)";
+  ctx.lineWidth=9;ctx.lineCap="round";ctx.stroke();
+  // core with gradient
+  const a=project(F.pts[0]), b=project(F.pts[F.pts.length-1]);
+  const g=ctx.createLinearGradient(a.x,a.y,b.x,b.y);
+  g.addColorStop(0,"#fdf3e0");g.addColorStop(.5,COL.gold);g.addColorStop(1,COL.warm);
+  path3d(F.pts);
+  ctx.strokeStyle=g;ctx.lineWidth=2.6;ctx.stroke();
+  // landing ring
+  const land=project(F.pts[F.pts.length-1]);
+  ctx.beginPath();ctx.arc(land.x,land.y,6,0,TAU);
+  ctx.strokeStyle=COL.warm;ctx.lineWidth=1.6;ctx.stroke();
+  ctx.beginPath();ctx.arc(land.x,land.y,2.4,0,TAU);
+  ctx.fillStyle="#fff";ctx.fill();
+  // apex på banens visuelle topp (skjermrom, perspektivkorrekt)
+  if(state.station<1.4){
+    let ap=null,apMin=1e9;
+    for(let i=4;i<F.pts.length-4;i++){
+      const q=project(F.pts[i]);
+      if(q.y<apMin){apMin=q.y;ap=q;}
+    }
+    ctx.beginPath();ctx.arc(ap.x,ap.y,3.4,0,TAU);
+    ctx.fillStyle=COL.gold;ctx.fill();
+    if(state.station<1.35) smallLabel(ap.x,ap.y-26,"Apex "+Math.round(F.apex)+" m","#eec07a",false);
+  }
+  // landing sidechip (erstattes av dimensjonslinje i topp-stasjonen)
+  if(state.station<=0.55){
+    const sideTxt=Math.abs(Math.round(F.side))+" m "+(F.side>=0?"R":"L");
+    chipLabel(land.x,land.y+22,sideTxt,true);
+  }
+}
+
+function drawComet(F,now){
+  if(reduceMotion)return;
+  const cyc=(now/2900)%1.3;
+  if(cyc>1)return;
+  const t=smooth(cyc);
+  const i=Math.min(F.pts.length-1,Math.floor(t*(F.pts.length-1)));
+  const p=project(F.pts[i]);
+  const g=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,16);
+  g.addColorStop(0,"rgba(255,214,150,.95)");
+  g.addColorStop(.35,"rgba(255,154,61,.5)");
+  g.addColorStop(1,"rgba(255,154,61,0)");
+  ctx.fillStyle=g;
+  ctx.beginPath();ctx.arc(p.x,p.y,16,0,TAU);ctx.fill();
+  ctx.beginPath();ctx.arc(p.x,p.y,2.6,0,TAU);
+  ctx.fillStyle="#fff";ctx.fill();
+}
+
+/* konsept 2: utfall som målsatt tegning i planet der de oppstår */
+let activeSliderKey=null;
+function hexA(hex,a){const n=parseInt(hex.slice(1),16);return "rgba("+(n>>16&255)+","+(n>>8&255)+","+(n&255)+","+a+")";}
+function smallLabel(x,y,txt,color,hot){
+  ctx.font=(hot?"700 11px":"600 10.5px")+" 'Space Grotesk'";
+  const w=ctx.measureText(txt).width+14,h=19;
+  y=placeLabel(x,y,w,h);
+  ctx.beginPath();ctx.roundRect(x-w/2,y-h/2,w,h,7);
+  ctx.fillStyle="rgba(18,13,30,.82)";ctx.fill();
+  ctx.fillStyle=color;ctx.textAlign="center";ctx.textBaseline="middle";
+  ctx.fillText(txt,x,y+0.5);
+}
+function dimLine(A,B,label,color,alpha,hot,labelDy=-15){
+  if(alpha<0.03)return;
+  ctx.save();ctx.globalAlpha=alpha;
+  if(hot){ctx.shadowColor=color;ctx.shadowBlur=9;}
+  ctx.strokeStyle=color;ctx.lineWidth=hot?2:1.2;
+  ctx.beginPath();ctx.moveTo(A.x,A.y);ctx.lineTo(B.x,B.y);ctx.stroke();
+  const ang=Math.atan2(B.y-A.y,B.x-A.x)+Math.PI/2,t=5;
+  for(const p of [A,B]){
+    ctx.beginPath();
+    ctx.moveTo(p.x-Math.cos(ang)*t,p.y-Math.sin(ang)*t);
+    ctx.lineTo(p.x+Math.cos(ang)*t,p.y+Math.sin(ang)*t);
+    ctx.stroke();
+  }
+  ctx.shadowBlur=0;
+  const span=Math.hypot(B.x-A.x,B.y-A.y);
+  ctx.font="600 10.5px 'Space Grotesk'";
+  const lw=ctx.measureText(label).width+14;
+  const midX=(A.x+B.x)/2, midY=(A.y+B.y)/2+labelDy;
+  if(span<74){
+    // for trange mål: etikett ved ytre ende (teknisk tegning-konvensjon)
+    const dx=Math.sign(B.x-A.x)||1;
+    smallLabel(B.x+dx*(lw/2+10),B.y,label,color,hot);
+  }else if(!statsRight && midX-lw/2<246 && midY>88 && midY<356){
+    // midtpunktet treffer statistikkblokken: flytt til indre (høyre) ende av målet
+    const R=A.x>=B.x?A:B;
+    smallLabel(R.x+lw/2+10,R.y,label,color,hot);
+  }else{
+    smallLabel(midX,midY,label,color,hot);
+  }
+  ctx.restore();
+}
+function hairArc(center,gen,angDeg,label,color,alpha,hot){
+  if(alpha<0.03||Math.abs(angDeg)<0.3)return;
+  ctx.save();ctx.globalAlpha=alpha;
+  if(hot){ctx.shadowColor=color;ctx.shadowBlur=8;}
+  ctx.strokeStyle=hexA(color,hot?0.85:0.5);
+  ctx.lineWidth=hot?1.6:1;
+  ctx.beginPath();
+  const steps=18;
+  for(let i=0;i<=steps;i++){
+    const q=project(gen(angDeg*i/steps*RAD,1));
+    if(i)ctx.lineTo(q.x,q.y);else ctx.moveTo(q.x,q.y);
+  }
+  ctx.stroke();
+  // liten perpendikulær tick der buen møter bakken
+  const t0=project(gen(0,0.955)),t1=project(gen(0,1.045));
+  ctx.beginPath();ctx.moveTo(t0.x,t0.y);ctx.lineTo(t1.x,t1.y);ctx.stroke();
+  ctx.shadowBlur=0;
+  if(label){
+    const lp=project(gen(angDeg*0.5*RAD,1.3));
+    smallLabel(lp.x,lp.y,label,color,hot);
+  }
+  ctx.restore();
+}
+function drawOutcomeAnnotations(F){
+  const s=state.station;
+  const topA=smooth(clamp((s-1.25)/0.75,0,1));
+  const sideA=smooth(clamp(1-Math.abs(s-1)*1.7,0,1));
+  const hotDir=activeSliderKey==="face"||activeSliderKey==="path";
+  const hotCurve=hotDir||activeSliderKey==="speed";
+  const hotLaunch=activeSliderKey==="attack"||activeSliderKey==="loft";
+
+  /* TOPP · retningsplanet */
+  if(topA>0.03){
+    const straightX=F.carry*Math.tan(F.dir*RAD);
+    // kurve-sjikt: flaten mellom startlinjen og faktisk bane
+    ctx.save();
+    ctx.beginPath();
+    let q=project({x:0,y:0,z:0});ctx.moveTo(q.x,q.y);
+    for(let i=1;i<F.pts.length;i++){
+      q=project({x:F.pts[i].x,y:0,z:F.pts[i].z});ctx.lineTo(q.x,q.y);
+    }
+    for(let i=F.pts.length-1;i>=0;i--){
+      const z=F.pts[i].z;
+      q=project({x:z*Math.tan(F.dir*RAD),y:0,z});ctx.lineTo(q.x,q.y);
+    }
+    ctx.closePath();
+    const g0=project({x:0,y:0,z:0}), g1=project({x:F.side,y:0,z:F.carry});
+    const grad=ctx.createLinearGradient(g0.x,g0.y,g1.x,g1.y);
+    grad.addColorStop(0,hexA("#e8b45a",0.02*topA));
+    grad.addColorStop(1,hexA("#e8b45a",(hotCurve?0.34:0.20)*topA));
+    ctx.fillStyle=grad;ctx.fill();
+    ctx.restore();
+    // avviks-ticks: kurven vokser med t² — spinn virker over tid
+    ctx.save();ctx.globalAlpha=topA*(hotCurve?0.95:0.6);
+    ctx.strokeStyle="#e8b45a";ctx.lineWidth=1;
+    for(const t of [0.35,0.6,0.8]){
+      const i=Math.round(t*(F.pts.length-1));
+      const z=F.pts[i].z;
+      const a=project({x:z*Math.tan(F.dir*RAD),y:0,z});
+      const b=project({x:F.pts[i].x,y:0,z});
+      ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();
+    }
+    ctx.restore();
+    // startlinje (rett referanse)
+    ctx.save();ctx.globalAlpha=topA*0.75;
+    ctx.setLineDash([5,6]);
+    ctx.strokeStyle=hexA("#eec07a",0.75);ctx.lineWidth=1.2;
+    const s0=project({x:0,y:0,z:0}),s1=project({x:straightX,y:0,z:F.carry});
+    ctx.beginPath();ctx.moveTo(s0.x,s0.y);ctx.lineTo(s1.x,s1.y);ctx.stroke();
+    ctx.setLineDash([]);ctx.restore();
+    // launch dir: vinkelvifte + tydelig etikett langs startlinjen
+    const sg=Math.sign(F.dir)||1;
+    hairArc({x:0,y:0,z:0},
+      (a,m)=>({x:Math.sin(a)*26*m*sg,y:0,z:Math.cos(a)*26*m}),
+      Math.abs(F.dir),"","#eec07a",topA,hotDir);
+    if(topA>0.1){
+      const lp=project({x:0.52*straightX,y:0,z:0.52*F.carry});
+      ctx.save();ctx.globalAlpha=topA;
+      smallLabel(lp.x,lp.y,"Launch dir "+fmtDeg(F.dir),"#eec07a",hotDir);
+      ctx.restore();
+    }
+    if(Math.abs(F.curve)>=3)
+      dimLine(project({x:straightX,y:0,z:F.carry}),project({x:F.side,y:0,z:F.carry}),
+        Math.abs(Math.round(F.curve))+" m curve","#e8b45a",topA,hotCurve);
+    dimLine(project({x:0,y:0,z:F.carry+12}),project({x:F.side,y:0,z:F.carry+12}),
+      Math.abs(Math.round(F.side))+" m "+(F.side>=0?"R":"L"),"#ff9a3d",topA,false);
+  }
+
+  /* SIDE · launchplanet */
+  if(sideA>0.03){
+    hairArc({x:0,y:0,z:0},
+      (a,m)=>({x:0,y:Math.sin(a)*24*m,z:Math.cos(a)*24*m}),
+      F.launchAng,"Launch "+F.launchAng.toFixed(1)+"°","#eec07a",sideA,hotLaunch);
+    const p1=F.pts[F.pts.length-2],p2=F.pts[F.pts.length-1];
+    const landAng=Math.atan2(p1.y-p2.y,p2.z-p1.z)/RAD;
+    hairArc({x:p2.x,y:0,z:p2.z},
+      (a,m)=>({x:p2.x,y:Math.sin(a)*18*m,z:p2.z-Math.cos(a)*18*m}),
+      landAng,"Land "+Math.round(landAng)+"°","#eec07a",sideA*0.95,hotLaunch);
+  }
+}
+
+/* ═════════ render loop ═════════ */
+let liveF=flight(state.target);
+function frame(now){
+  // smooth params → morph
+  const k=reduceMotion?1:0.16;
+  for(const key of ["face","path","attack","loft","speed"]){
+    state.smoothp[key]=lerp(state.smoothp[key],state.target[key],k);
+  }
+  // smooth camera station
+  state.station=lerp(state.station,state.stationTarget,reduceMotion?1:0.14);
+  if(Math.abs(state.station-state.stationTarget)<0.002)state.station=state.stationTarget;
+
+  liveF=flight(state.smoothp);
+  labelRects.length=0;
+  ctx.clearRect(0,0,W,H);
+  drawGrid();
+  for(const g of state.ghosts)drawTraj(g,"ghost");
+  drawTraj(liveF,"active");
+  drawOutcomeAnnotations(liveF);
+  drawComet(liveF,now);
+
+  updateStats();
+  requestAnimationFrame(frame);
+}
+
+/* ═════════ HUD updates ═════════ */
+const fmtDeg=v=>(v>=0?"+":"−")+Math.abs(v).toFixed(1)+"°";
+const el=id=>document.getElementById(id);
+let lastHud="";
+let statsRight=false;
+function updateStats(){
+  const F=flight(state.target);
+  // dataene viker for skuddet: flytt til høyre når venstrefeltet tas i bruk (med hysterese)
+  if(!statsRight){
+    if(state.station>1.1 && F.side<-28) statsRight=true;
+  }else{
+    if(state.station<0.9 || F.side>-14) statsRight=false;
+  }
+  document.querySelector(".stats").classList.toggle("right",statsRight);
+  const g=state.ghosts[state.ghosts.length-1];
+  let deltaHtml="";
+  if(g){
+    const dt=Math.round(F.carry-g.carry);
+    const dc=Math.round(Math.abs(F.curve)-Math.abs(g.curve));
+    deltaHtml=`<b>Δ vs previous pin</b><br>${dt>=0?"+":"−"}${Math.abs(dt)} m carry · <span class="gold">→ ${Math.abs(dc)} m ${dc>=0?"more":"less"} curve</span>`;
+  }
+  const hud=[Math.round(F.carry),Math.round(F.side),F.dir.toFixed(1),Math.round(F.curve),Math.round(F.apex),F.launchAng.toFixed(1),state.target.face,state.target.path,state.target.attack,state.target.loft,deltaHtml].join("|");
+  if(hud===lastHud)return;
+  lastHud=hud;
+  el("stTotal").textContent=Math.round(F.carry);
+  el("stSide").textContent=Math.abs(Math.round(F.side))+" m "+(F.side>=0?"R":"L");
+  el("stDelta").innerHTML=deltaHtml;
+  refreshReadouts(F);
+}
+
+/* ═════════ slider factory ═════════ */
+const SLDEF={
+  face:{name:"FACE",color:"var(--face)",min:-15,max:15,zero:0},
+  path:{name:"PATH",color:"var(--path)",min:-15,max:15,zero:0},
+  attack:{name:"ATTACK",color:"var(--attack)",min:-15,max:15,zero:0},
+  loft:{name:"DYN LOFT",color:"var(--loft)",min:0,max:50,zero:0}
+};
+function fmtSl(key,v){
+  if(key==="loft")return v.toFixed(1)+"°";
+  return fmtDeg(v);
+}
+const sliders=[];
+function buildSlider(container,key){
+  const d=SLDEF[key];
+  const root=document.createElement("div");
+  root.className="sl";root.style.setProperty("--c",d.color);
+  root.innerHTML=`<div class="head"><span class="name"><i></i>${d.name}</span><span class="val"></span></div>
+  <div class="track"><div class="rail"></div><div class="zero"></div><div class="fill"></div><div class="knob"></div></div>`;
+  container.appendChild(root);
+  const track=root.querySelector(".track"), fill=root.querySelector(".fill"),
+        knob=root.querySelector(".knob"), val=root.querySelector(".val"),
+        zeroEl=root.querySelector(".zero");
+  const inst={key,root,update(){
+    const v=state.target[key];
+    const pct=(v-d.min)/(d.max-d.min)*100;
+    const zpct=(d.zero-d.min)/(d.max-d.min)*100;
+    zeroEl.style.left=zpct+"%";
+    fill.style.left=Math.min(pct,zpct)+"%";
+    fill.style.width=Math.abs(pct-zpct)+"%";
+    knob.style.left=pct+"%";
+    val.textContent=fmtSl(key,v);
+  }};
+  function setFromX(clientX){
+    const r=track.getBoundingClientRect();
+    const p=clamp((clientX-r.left)/r.width,0,1);
+    state.target[key]=Math.round((d.min+p*(d.max-d.min))*10)/10;
+    sliders.forEach(s=>s.key===key&&s.update());
+  }
+  track.addEventListener("pointerdown",e=>{
+    e.stopPropagation();track.setPointerCapture(e.pointerId);setFromX(e.clientX);
+    activeSliderKey=key;
+    const mv=ev=>setFromX(ev.clientX);
+    const up=()=>{activeSliderKey=null;track.removeEventListener("pointermove",mv);track.removeEventListener("pointerup",up);};
+    track.addEventListener("pointermove",mv);
+    track.addEventListener("pointerup",up);
+  });
+  sliders.push(inst);inst.update();
+  return inst;
+}
+
+/* ═════════ readouts ═════════ */
+function chipHTML(k,v,em){
+  return `<div class="chip read"><div class="k">${k}</div><div class="v">${v}${em?`<em> ${em}</em>`:""}</div></div>`;
+}
+function refreshReadouts(F){
+  const mini=el("ogMini");
+  if(!mini)return;
+  const p1=F.pts[F.pts.length-2],p2=F.pts[F.pts.length-1];
+  const landAng=Math.round(Math.atan2(p1.y-p2.y,p2.z-p1.z)/RAD);
+  const axis=(F.spinAxis>=0?"+":"−")+Math.abs(Math.round(F.spinAxis))+"°";
+  mini.innerHTML=
+    chipHTML("TOTAL",Math.round(F.total),"m")+
+    chipHTML("APEX",Math.round(F.apex),"m")+
+    chipHTML("CURVE",Math.abs(Math.round(F.curve)),"m")+
+    chipHTML("BALL SPEED",Math.round(F.ballSpeed),"mph");
+  const gd=el("ogDir");
+  if(!gd)return;
+  gd.innerHTML=
+    chipHTML("LAUNCH DIR",fmtDeg(F.dir))+
+    chipHTML("SPIN AXIS",axis)+
+    chipHTML("CURVE",Math.abs(Math.round(F.curve)),"m")+
+    chipHTML("SIDE",Math.abs(Math.round(F.side)),"m "+(F.side>=0?"R":"L"));
+  el("ogLaunch").innerHTML=
+    chipHTML("LAUNCH ANG",F.launchAng.toFixed(1)+"°")+
+    chipHTML("SPIN LOFT",F.spinLoft.toFixed(1)+"°")+
+    chipHTML("BACKSPIN",F.backspin,"rpm")+
+    chipHTML("LAND ANG",landAng+"°");
+  el("ogDist").innerHTML=
+    chipHTML("SMASH",F.smash.toFixed(2))+
+    chipHTML("BALL SPEED",Math.round(F.ballSpeed),"mph")+
+    chipHTML("CARRY",Math.round(F.carry),"m")+
+    chipHTML("TOTAL",Math.round(F.total),"m");
+}
+
+/* ═════════ concept 2 UI ═════════ */
+let flightExpanded=false;
+const PANES={
+  0:`<div class="readouts" id="ogMini"></div>
+    <button class="ogexp" id="ogExp"><span>ALL METRICS</span><span class="chev">▾</span></button>
+    <div class="ogrid hidden" id="ogFull">
+      <button class="ogroup" data-goto="2"><span class="glab">DIRECTION · TOP</span><span class="garr">→</span></button>
+      <div class="readouts" id="ogDir"></div>
+      <button class="ogroup" data-goto="1"><span class="glab">LAUNCH · SIDE</span><span class="garr">→</span></button>
+      <div class="readouts" id="ogLaunch"></div>
+      <div class="ogroup static"><span class="glab">DISTANCE</span></div>
+      <div class="readouts" id="ogDist"></div>
+    </div>`,
+  1:`<div id="c2slidersSide"></div>`,
+  2:`<div id="c2slidersTop"></div>`
+};
+const PANETITLES={0:"OUTCOME · READ",1:"INPUT · LAUNCH PLANE",2:"INPUT · DIRECTION PLANE"};
+function setStation(s,animate=true){
+  state.stationTarget=s;
+  if(!animate)state.station=s;
+  document.querySelectorAll("#stseg button").forEach(b=>b.classList.toggle("on",+b.dataset.s===s));
+  el("c2title").textContent=PANETITLES[s];
+  el("c2title").className=s===0?"h-gold":"h-purple";
+  const pane=el("c2pane");
+  pane.innerHTML=PANES[s];
+  // fjern slider-instanser som ikke lenger er i DOM
+  for(let i=sliders.length-1;i>=0;i--){
+    if(!document.body.contains(sliders[i].root))sliders.splice(i,1);
+  }
+  if(s===1){buildSlider(el("c2slidersSide"),"loft");buildSlider(el("c2slidersSide"),"attack");}
+  if(s===2){buildSlider(el("c2slidersTop"),"face");buildSlider(el("c2slidersTop"),"path");}
+  pane.querySelectorAll(".ogroup[data-goto]").forEach(b=>{
+    b.addEventListener("click",()=>setStation(+b.dataset.goto));
+  });
+  if(s===0){
+    const ex=el("ogExp"),full=el("ogFull");
+    const apply=()=>{full.classList.toggle("hidden",!flightExpanded);ex.classList.toggle("open",flightExpanded);};
+    ex.addEventListener("click",()=>{flightExpanded=!flightExpanded;apply();});
+    apply();
+  }
+  lastHud="";
+}
+document.querySelectorAll("#stseg button").forEach(b=>{
+  b.addEventListener("click",()=>{
+    el("ui2").classList.remove("collapsed");
+    setStation(+b.dataset.s);
+  });
+});
+el("c2grab").addEventListener("click",()=>{
+  el("ui2").classList.toggle("collapsed");
+});
+
+/* vertikal pan i scenen = kamerascrub (kun konsept 2) */
+let pan=null;
+cv.addEventListener("pointerdown",e=>{
+  pan={y0:e.clientY,s0:state.stationTarget};
+  cv.setPointerCapture(e.pointerId);
+});
+cv.addEventListener("pointermove",e=>{
+  if(!pan)return;
+  const ds=(pan.y0-e.clientY)*0.0055;
+  state.stationTarget=clamp(pan.s0+ds,0,2);
+  state.station=state.stationTarget; // følg fingeren direkte
+});
+cv.addEventListener("pointerup",e=>{
+  if(!pan)return;
+  const snapped=Math.round(state.stationTarget);
+  pan=null;
+  setStation(snapped);
+});
+
+/* ═════════ pin & toast ═════════ */
+let toastT=null;
+function toast(msg){
+  const t=el("toast");t.textContent=msg;t.classList.add("show");
+  clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove("show"),2600);
+}
+function pin(){
+  state.ghosts.push(flight(state.target));
+  if(state.ghosts.length>3)state.ghosts.shift();
+  lastHud="";
+  toast("Pinned — shape the next shot against it.");
+}
+
+/* ═════════ global speed-stepper ═════════ */
+let spT=null;
+function pulseSpeed(){
+  activeSliderKey="speed";
+  clearTimeout(spT);
+  spT=setTimeout(()=>{if(activeSliderKey==="speed")activeSliderKey=null;},700);
+}
+function stepSpeed(d){
+  state.target.speed=clamp(state.target.speed+d,30,150);
+  el("spVal").textContent=Math.round(state.target.speed)+" mph";
+  pulseSpeed();
+}
+function bindHold(btn,dir){
+  let t1=null,t2=null,n=0;
+  const end=()=>{clearTimeout(t1);clearInterval(t2);t1=t2=null;};
+  btn.addEventListener("pointerdown",e=>{
+    e.stopPropagation();btn.setPointerCapture(e.pointerId);
+    n=0;stepSpeed(dir);
+    t1=setTimeout(()=>{t2=setInterval(()=>{n++;stepSpeed(dir*(n>10?5:1));},90);},400);
+  });
+  btn.addEventListener("pointerup",end);
+  btn.addEventListener("pointercancel",end);
+  btn.addEventListener("lostpointercapture",end);
+}
+bindHold(el("spMinus"),-1);
+bindHold(el("spPlus"),1);
+// horisontal scrub på selve tallet: ±1 mph per 6 px
+(()=>{
+  const v=el("spVal");let sx=null,sv=0;
+  v.addEventListener("pointerdown",e=>{
+    e.stopPropagation();v.setPointerCapture(e.pointerId);
+    sx=e.clientX;sv=state.target.speed;
+  });
+  v.addEventListener("pointermove",e=>{
+    if(sx===null)return;
+    const nv=clamp(Math.round(sv+(e.clientX-sx)/6),30,150);
+    if(nv!==state.target.speed){
+      state.target.speed=nv;
+      el("spVal").textContent=nv+" mph";
+      pulseSpeed();
+    }
+  });
+  const end=()=>{sx=null;};
+  v.addEventListener("pointerup",end);
+  v.addEventListener("pointercancel",end);
+})();
+el("pinFab").addEventListener("click",()=>pin());
+
+setStation(2);
+
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
