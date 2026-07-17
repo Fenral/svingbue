@@ -13,6 +13,7 @@ wait.
 
 | Agent | Branch | Working on | Since |
 |-------|--------|-----------|-------|
+| Codex | `agent/academy-codex` | Academy analysis pack only: `scripts/build-academy-analysis-pack.mjs`, `docs/academy-analysis/**`, `.gitignore` and local `outputs/academy-analysis/**`; no shipping/runtime files | 2026-07-17 |
 
 ## Queue / free to take
 
