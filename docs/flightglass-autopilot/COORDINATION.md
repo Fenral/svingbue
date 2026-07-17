@@ -13,7 +13,6 @@ wait.
 
 | Agent | Branch | Working on | Since |
 |-------|--------|-----------|-------|
-| Codex | `agent/academy-codex` | Academy deliberate Voice challenge round 7: `package.json`, `scripts/academy-voice-production.mjs`, its tests, and Voice production/status/handoff docs only; shipping R5-A assets excluded | 2026-07-17 |
 
 ## Queue / free to take
 
@@ -30,6 +29,14 @@ wait.
   pair before build.
 
 ## Done / handed off
+
+- Academy deliberate Voice challenge round 7 - `agent/academy-codex`; three
+  British female laboratory voices (`B-A..B-C`) and three dark male voices
+  (`D-A..D-C`) are locally blind-reviewable at 161.7-162.5 wpm with explicit
+  sentence pauses. All six pass semantic transcription, pause and technical
+  audio gates. Six paid Voice Design calls produced 18 private previews, no
+  persistent voices and no shipping change; R5-A, F-C and all 102 canonical
+  assets remain unchanged pending an owner verdict.
 
 - Faster mixed-gender Academy Voice challenge - `agent/academy-codex`; six
   Voice Design calls produced 18 private raw previews and six blind finalists

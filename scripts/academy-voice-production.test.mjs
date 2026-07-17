@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -7,6 +8,7 @@ import {
   ALTERNATIVE_DIRECTIONS,
   AUDITION_LINES,
   BRITISH_SYSTEMS_ENGINEER_DIRECTION,
+  DELIBERATE_VOICE_DIRECTIONS,
   FASTER_MIXED_GENDER_DIRECTIONS,
   PACE_REFINEMENT_DIRECTION,
   STRESS_CUE_IDS,
@@ -17,10 +19,12 @@ import {
   createAuditionRequests,
   createAlternativeRequests,
   createBritishVoiceDesignRequest,
+  createDeliberateVoiceRequests,
   createFasterMixedGenderRequests,
   createPaceRefinementRequest,
   createRefinementRequests,
   createTtsRequest,
+  deliberateProgressMatchesRequest,
   loadElevenLabsApiKey,
   main,
   paidExecutionRequested,
@@ -127,6 +131,51 @@ test('faster mixed-gender round compares three distinct women and three distinct
   assert.equal(dryRun.maleCandidates, 3);
   assert.equal(dryRun.previewVariants, 18);
   assert.equal(dryRun.paidProviderCalls, 6);
+});
+
+test('deliberate round compares three British women and three dark men with explicit sentence pauses', async () => {
+  const requests = createDeliberateVoiceRequests();
+  assert.equal(requests.length, 6);
+  assert.deepEqual(requests.map(request => request.group), [
+    'britishLabFemale','britishLabFemale','britishLabFemale',
+    'darkMale','darkMale','darkMale'
+  ]);
+  assert.equal(Object.keys(DELIBERATE_VOICE_DIRECTIONS.britishLabFemale).length, 3);
+  assert.equal(Object.keys(DELIBERATE_VOICE_DIRECTIONS.darkMale).length, 3);
+  assert.equal(new Set(requests.map(request => request.body.text)).size, 1);
+  assert.equal((requests[0].body.text.match(/\n\n/g) || []).length, 5);
+  assert.doesNotMatch(requests[0].body.text, /<break\b/i);
+  assert.equal(
+    requests[0].body.text.replaceAll('\n\n', ' '),
+    AUDITION_LINES.join(' ')
+  );
+  assert.equal(new Set(requests.map(request => request.body.voice_description)).size, 6);
+  assert.equal(requests.every(request => /158|160|162|164/.test(request.body.voice_description)), true);
+  assert.equal(requests.every(request => /pause|reset/i.test(request.body.voice_description)), true);
+  assert.equal(requests.every(request => request.body.auto_generate_text === false), true);
+  assert.equal(requests.some(request => 'xi-api-key' in request.body), false);
+  const dryRun = await main(['deliberate-audition']);
+  assert.equal(dryRun.candidateCount, 6);
+  assert.equal(dryRun.britishLabFemaleCandidates, 3);
+  assert.equal(dryRun.darkMaleCandidates, 3);
+  assert.equal(dryRun.previewVariants, 18);
+  assert.equal(dryRun.targetWpm, 162);
+  assert.equal(dryRun.sentencePauseMs, 240);
+  assert.equal(dryRun.paidProviderCalls, 6);
+});
+
+test('deliberate round never reprocesses paid previews made from different copy', () => {
+  const request = createDeliberateVoiceRequests()[0];
+  const auditionTextSha256 = createHash('sha256').update(request.body.text).digest('hex');
+  const candidates = [1,2,3].map(variant => ({
+    group:request.group,
+    direction:request.direction,
+    variant,
+    auditionTextSha256
+  }));
+  assert.equal(deliberateProgressMatchesRequest(candidates, request), true);
+  assert.equal(deliberateProgressMatchesRequest(candidates.map(candidate => ({ ...candidate, auditionTextSha256:'stale' })), request), false);
+  assert.equal(deliberateProgressMatchesRequest(candidates.slice(0, 2), request), false);
 });
 
 test('mixed-gender pace selection keeps the variant nearest the faster target', () => {
@@ -246,6 +295,10 @@ test('FFmpeg contract targets local mono AAC-LC at 48 kHz without a shell', () =
   assert.match(args[args.indexOf('-af') + 1], /loudnorm=I=-18:TP=-1/);
   assert.equal(args.at(-1), 'final output.m4a');
   assert.match(buildFfmpegArgs('in.mp3','out.m4a',{tempo:0.88})[args.indexOf('-af') + 1], /atempo=0\.8800/);
+  const pauseSafe = buildFfmpegArgs('in.mp3','out.m4a',{tempo:0.9,preserveInternalSilence:true});
+  const pauseSafeFilter = pauseSafe[pauseSafe.indexOf('-af') + 1];
+  assert.match(pauseSafeFilter, /areverse/);
+  assert.doesNotMatch(pauseSafeFilter, /stop_periods=-1/);
   assert.throws(() => buildFfmpegArgs('in.mp3','out.m4a',{tempo:0.4}));
 });
 

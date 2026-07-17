@@ -18,6 +18,7 @@
     "voice:pace-preview": "node scripts/academy-voice-production.mjs pace-preview",
     "voice:british-audition": "node scripts/academy-voice-production.mjs british-audition",
     "voice:mixed-audition": "node scripts/academy-voice-production.mjs mixed-audition",
+    "voice:deliberate-audition": "node scripts/academy-voice-production.mjs deliberate-audition",
     "voice:select": "node scripts/academy-voice-production.mjs select",
     "voice:stress": "node scripts/academy-voice-production.mjs generate --stress",
     "voice:generate": "node scripts/academy-voice-production.mjs generate",

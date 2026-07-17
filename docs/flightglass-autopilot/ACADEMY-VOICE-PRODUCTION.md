@@ -1,6 +1,6 @@
 # Academy Control Room production runbook
 
-Updated: 2026-07-16
+Updated: 2026-07-17
 
 This runbook produces the `control-room-en-us-v1` pack with ElevenLabs at build
 time. The shipping application remains offline and never calls ElevenLabs.
@@ -51,6 +51,36 @@ as `F-A` to `F-C` and `M-A` to `M-C`; direction provenance and QA overrides stay
 ignored and private. The command creates no persistent ElevenLabs voice. A new
 shipping identity must not be selected until the owner records a blind verdict.
 
+## Deliberate British-lab / dark-male challenge - 2026-07-17
+
+The owner found F-C promising but too fast and without enough separation between
+sentences. `voice:deliberate-audition` creates a second non-shipping challenge
+at 162 words per minute:
+
+```powershell
+npm run voice:deliberate-audition
+npm run voice:deliberate-audition -- --execute --confirm-paid-api
+```
+
+Six paid Voice Design calls produced 18 ignored raw previews: three British
+female laboratory directions and three dark male directions. The command uses
+plain paragraph-separated preview copy; it never sends SSML break markup to
+Voice Design, and it refuses to reprocess stored paid previews when their copy
+hash differs from the current request.
+
+The completed local round selected one pronunciation-approved raw variant per
+direction. Provider-spoken markup from the initial attempt was removed locally
+from word-timestamp boundaries without regenerating or creating persistent
+voices. Five 240 ms PCM pauses were inserted, then every finalist received one
+final AAC encode. All six blind files pass `small.en` semantic transcription,
+contain at least five measured pauses of 180 ms or longer, run at 161.7-162.5
+words per minute, start/end at 60/117-120 ms, measure -18.70 to -17.89 LUFS and
+peak no higher than -1.65 dBTP.
+
+The ignored blind page groups the British laboratory women as `B-A` to `B-C`
+and the dark men as `D-A` to `D-C`. R5-A, F-C and all 102 shipping assets remain
+unchanged until the owner records a blind verdict.
+
 ## Credential setup — owner action
 
 1. Create a paid ElevenLabs Creator subscription and a restricted API key with
@@ -75,6 +105,7 @@ npm run voice:refine -- --finalists B,E
 npm run voice:pace-refine -- --candidate R3-D
 npm run voice:pace-preview -- --candidate R3-D --speed 0.8
 npm run voice:british-audition -- --speed 0.8
+npm run voice:deliberate-audition
 npm run voice:generate
 ```
 
