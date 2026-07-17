@@ -27,6 +27,12 @@
     background:var(--dusk-scene-bg);
     color:var(--ink);
     font-family:var(--font-ui);
+  }
+  /* sa-depth setter sin egen body-bakgrunn med høyere spesifisitet enn body{}
+     — denne siden eier dusk-scenen (mock-normativ), så den vinner her.
+     Grain-laget (body.sa-depth::after) beholdes: det dreper banding i gradienten. */
+  body.sa-depth{
+    background:var(--dusk-scene-bg);
     -webkit-tap-highlight-color:transparent;
     user-select:none;-webkit-user-select:none;
   }
