@@ -71,12 +71,9 @@
   .flightCarry .offline{font-size:21px;font-weight:700;color:var(--accent);margin-top:9px;font-variant-numeric:tabular-nums}
   .flightCarry .offline .side{font-size:12px;font-weight:500;margin-left:2px}
 
-  /* ══ STASJONSSEGMENT — TOP · SIDE │ FLIGHT (ordre §2) ══ */
-  .stations{position:absolute;left:50%;transform:translateX(-50%);
-    bottom:calc(14px + env(safe-area-inset-bottom));z-index:6;
-    display:flex;gap:4px;align-items:stretch;
-    background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:4px;
-    backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+  /* ══ STASJONSSEGMENT — TOP · SIDE │ FLIGHT (ordre §2) ══
+     Nå nested i .card (§C nedenfor); ikke lenger selv-posisjonert. */
+  .stations{display:flex;gap:4px;align-items:stretch;width:max-content;margin:0 auto 12px}
   .stations button{appearance:none;border:0;background:transparent;color:var(--muted);
     font:inherit;font-size:11px;font-weight:700;letter-spacing:.16em;
     padding:9px 16px;border-radius:999px;cursor:pointer;position:relative;
@@ -89,11 +86,133 @@
     background:color-mix(in srgb, var(--gold) 15%, transparent);color:var(--gold)}
   .stations .stdiv{width:1px;align-self:stretch;margin:5px 3px;background:var(--line-strong)}
 
+  /* ══ GLOBAL SPEED STEPPER — synlig i alle stasjoner (ordre §2) ══
+     Farge: --q-launch ("speed/launch varm-rav"-familien), IKKE --accent —
+     --accent er reservert til warm-light-regelens ene oransje fokal
+     (aktiv bane + komet, tegnet i canvas). */
+  .speedctl{position:absolute;left:50%;top:calc(10px + env(safe-area-inset-top));
+    transform:translateX(-50%);z-index:6;
+    display:flex;align-items:center;gap:2px;
+    background:var(--panel);border:1px solid color-mix(in srgb, var(--q-launch) 35%, transparent);
+    border-radius:999px;padding:3px;
+    backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+  .speedctl button{appearance:none;border:0;cursor:pointer;font:inherit;position:relative;
+    width:30px;height:30px;border-radius:50%;
+    color:var(--q-launch);background:color-mix(in srgb, var(--q-launch) 12%, transparent);
+    font-size:17px;font-weight:700;line-height:1;
+    display:flex;align-items:center;justify-content:center;transition:background .15s}
+  .speedctl button::after{content:"";position:absolute;inset:-7px;border-radius:50%} /* ≥44px hit */
+  .speedctl button:active{background:color-mix(in srgb, var(--q-launch) 30%, transparent)}
+  .speedctl button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+  .speedctl .val{min-width:76px;text-align:center;font-size:13px;font-weight:700;
+    color:var(--q-launch);font-variant-numeric:tabular-nums;cursor:ew-resize;touch-action:none;
+    border-radius:8px}
+  .speedctl .val:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+
+  /* ══ PIN PILL — topp høyre, alle stasjoner (ordre §2) ══ */
+  .pinfab{position:absolute;right:14px;top:calc(14px + env(safe-area-inset-top));z-index:6;
+    appearance:none;cursor:pointer;font:inherit;font-size:12.5px;font-weight:700;
+    color:var(--gold);background:var(--panel);border:1px solid color-mix(in srgb, var(--gold) 40%, transparent);
+    border-radius:999px;padding:9px 15px;
+    backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);transition:transform .15s}
+  .pinfab:active{transform:scale(.95)}
+  .pinfab:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+
+  /* ══ STATS-HERO — flip mot høyre når skuddet trenger venstrefeltet ══
+     (§C: mekanisk port av mockens .stats.right; hysterese-logikken lever i
+     JS, se updateStats). Farge på Δ-linjen: gull (output-familien). */
+  .flightCarry.right{left:auto;right:16px;text-align:right}
+  .flightCarry.right .offline{margin-left:auto}
+  .flightCarry .delta{margin-top:11px;font-size:11.5px;color:var(--muted);line-height:1.55;
+    max-width:190px}
+  .flightCarry .delta b{color:var(--ink);font-weight:500}
+  .flightCarry .delta .gold{color:var(--gold)}
+
+  /* ══ STASJONSKORT — kollaps-grabber + paneler (ordre §2) ══ */
+  .card{position:absolute;left:10px;right:10px;z-index:6;
+    bottom:calc(10px + env(safe-area-inset-bottom));
+    background:var(--panel);border:1px solid var(--line);border-radius:22px;
+    backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+    padding:14px 18px 16px;pointer-events:auto}
+  .card .grab{appearance:none;border:0;background:transparent;display:block;
+    width:100%;padding:6px 0 10px;cursor:pointer}
+  .card .grab::before{content:"";display:block;width:44px;height:5px;border-radius:3px;
+    margin:0 auto;background:var(--line-strong)}
+  .card .grab:focus-visible{outline:2px solid var(--ink);outline-offset:2px;border-radius:8px}
+  .panewrap{overflow:hidden;max-height:420px;
+    transition:max-height .45s var(--ease),opacity .3s}
+  .card.collapsed .panewrap{max-height:0;opacity:0}
+  .panehead{display:flex;justify-content:space-between;align-items:baseline}
+  .panehead .h-title{font-size:11px;letter-spacing:.26em;font-weight:700}
+  .panehead .h-title.gold{color:var(--gold)}
+  .panehead .h-title.purple{color:var(--secondary)}
+  .panehead .hint{font-size:10.5px;color:var(--muted-2)}
+  .pane{min-height:118px;padding-top:12px}
+
+  /* ══ SLIDERE — ekte <input type=range>, ikke div (a11y-krav) ══ */
+  .sl{margin-top:13px}
+  .sl:first-child{margin-top:0}
+  .sl .head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:9px}
+  .sl .name{display:flex;align-items:center;gap:7px;font-size:11px;letter-spacing:.14em;
+    color:var(--muted);font-weight:500}
+  .sl .name i{width:9px;height:9px;border-radius:3px;background:var(--c)}
+  .sl .val{font-size:16px;font-weight:700;font-variant-numeric:tabular-nums}
+  .sl input[type="range"]{-webkit-appearance:none;appearance:none;width:100%;height:34px;
+    margin:0;background:transparent;touch-action:none;cursor:pointer}
+  .sl input[type="range"]:focus-visible{outline:2px solid var(--ink);outline-offset:2px;border-radius:8px}
+  .sl input[type="range"]::-webkit-slider-runnable-track{height:4px;border-radius:2px;
+    background:color-mix(in srgb, var(--muted) 22%, transparent)}
+  .sl input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;
+    width:26px;height:26px;border-radius:50%;margin-top:-11px;
+    background:var(--plate-solid);border:3.5px solid var(--c);
+    box-shadow:0 0 0 5px color-mix(in srgb, var(--c) 16%, transparent),0 3px 10px color-mix(in srgb, var(--bg) 60%, transparent)}
+  .sl input[type="range"]::-moz-range-track{height:4px;border-radius:2px;
+    background:color-mix(in srgb, var(--muted) 22%, transparent)}
+  .sl input[type="range"]::-moz-range-thumb{width:19px;height:19px;border-radius:50%;border:3.5px solid var(--c);
+    background:var(--plate-solid);
+    box-shadow:0 0 0 5px color-mix(in srgb, var(--c) 16%, transparent),0 3px 10px color-mix(in srgb, var(--bg) 60%, transparent)}
+
+  /* ══ READOUT-CHIPS — dashed = avlesning, ingen unntak (ordre §2) ══ */
+  .readouts{display:flex;gap:8px;flex-wrap:wrap}
+  .chip{border-radius:12px;padding:8px 11px;min-width:74px;flex:1;
+    background:color-mix(in srgb, var(--surface) 62%, transparent)}
+  .chip.read{border:1px dashed color-mix(in srgb, var(--gold) 40%, transparent)}
+  .chip .k{font-size:9px;letter-spacing:.18em;color:var(--muted-2);white-space:nowrap}
+  .chip .v{font-size:15px;font-weight:700;margin-top:2px;font-variant-numeric:tabular-nums}
+  .chip .v em{font-style:normal;font-size:10px;font-weight:500;color:var(--muted)}
+  /* mini-rad og utfoldet grid trenger mindre typografi enn en generisk chip
+     for å unngå avkutting ved fire-i-rad på smale skjermer (mock-presedens) */
+  #ogMini .chip{flex:1;min-width:0;padding:8px 9px}
+  #ogMini .chip .k{font-size:8.5px;letter-spacing:.13em}
+  #ogMini .chip .v{font-size:15px}
+  .ogrid .readouts .chip{flex:1;min-width:0;padding:7px 8px}
+  .ogrid .chip .k{font-size:8px;letter-spacing:.12em}
+  .ogrid .chip .v{font-size:14px}
+  .ogrid .chip .v em{font-size:9.5px}
+
+  /* ══ ALL METRICS — utfold/fold, gruppehopp ══ */
+  .ogexp{appearance:none;border:0;background:transparent;cursor:pointer;font:inherit;
+    display:flex;align-items:center;gap:6px;margin:9px auto 0;padding:6px 12px;
+    font-size:9.5px;letter-spacing:.2em;font-weight:700;color:var(--muted)}
+  .ogexp:focus-visible{outline:2px solid var(--ink);outline-offset:2px;border-radius:8px}
+  .ogexp .chev{transition:transform .3s;font-size:11px}
+  .ogexp[aria-pressed="true"] .chev{transform:rotate(180deg)}
+  .ogrid[hidden]{display:none}
+  .ogrid{padding-top:2px}
+  .ogroup{appearance:none;border:0;background:transparent;cursor:pointer;font:inherit;
+    display:flex;align-items:center;gap:6px;margin:13px 0 7px;padding:2px 0;width:100%}
+  .ogrid .ogroup:first-child{margin-top:4px}
+  .ogroup .glab{font-size:9.5px;letter-spacing:.2em;color:var(--muted-2);font-weight:700}
+  .ogroup:not(.static) .glab{color:var(--secondary)}
+  .ogroup .garr{font-size:12px;color:var(--secondary);line-height:1;opacity:.85}
+  .ogroup.static{cursor:default}
+  .ogroup:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+
   .sr-only{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;
     clip:rect(0 0 0 0);white-space:nowrap;border:0}
 
   @media (prefers-reduced-motion:reduce){
-    .stations button{transition:none}
+    .stations button,.panewrap,.ogexp .chev,.pinfab{transition:none}
   }
 </style>
 </head>
@@ -122,21 +241,49 @@
         aria-label="Ball-flight scene seen from a travelling camera: top-down direction plane, side-on launch plane, and a perspective flight view behind the ball."></canvas>
 
       <!-- LEFT HERO STACK — stort tall = CARRY (§6, A9). Element-navnene
-           #fCarryNum/#fCarryLive/.flightCarry er arvet og nå riktige. -->
-      <div class="flightCarry" aria-hidden="true">
+           #fCarryNum/#fCarryLive/.flightCarry er arvet og nå riktige.
+           .right-flip (mekanisk port av mockens .stats.right, §3
+           "Stats-flip") styres i JS med hysterese. -->
+      <div class="flightCarry" id="fCarryStack" aria-hidden="true">
         <div class="num"><span id="fCarryNum">0</span><span class="u">m</span></div>
         <div class="lab">Carry</div>
         <div class="offline"><span id="fHeroOffNum">0</span> m<span class="side" id="fHeroOffSide">R</span></div>
+        <div class="delta" id="fDelta"></div>
       </div>
       <div class="sr-only" id="fCarryLive" aria-live="polite" aria-atomic="true"></div>
 
-      <!-- Stasjonssegment: TOP · SIDE │ FLIGHT (ordre §2 — rekkefølgen er
-           bevisst motsatt av stasjonsskalaren 0=FLIGHT/1=SIDE/2=TOP, §3.2). -->
-      <div class="stations" id="stseg" role="group" aria-label="Camera station">
-        <button type="button" data-s="2" aria-pressed="false">TOP</button>
-        <button type="button" data-s="1" aria-pressed="false">SIDE</button>
-        <span class="stdiv" aria-hidden="true"></span>
-        <button type="button" data-s="0" aria-pressed="false">FLIGHT</button>
+      <!-- Global speed-stepper — synlig i alle stasjoner (ordre §2). -->
+      <div class="speedctl">
+        <button type="button" id="spMinus" aria-label="Decrease club speed">−</button>
+        <span class="val" id="spVal" tabindex="0" role="slider" aria-label="Club speed"
+          aria-valuemin="30" aria-valuemax="150" aria-valuenow="130" aria-valuetext="130 mph">130 mph</span>
+        <button type="button" id="spPlus" aria-label="Increase club speed">+</button>
+      </div>
+
+      <!-- Pin pill — topp høyre, alle stasjoner (ordre §2). -->
+      <button type="button" class="pinfab" id="pinFab">⊙ Pin</button>
+
+      <!-- ══ STASJONSKORT — kollaps-grabber + stasjonssegment + panel ══
+           Stasjonssegment: TOP · SIDE │ FLIGHT (ordre §2 — rekkefølgen er
+           bevisst motsatt av stasjonsskalaren 0=FLIGHT/1=SIDE/2=TOP, §3.2).
+           Stasjonsknappene ligger UTENFOR .panewrap slik at de forblir
+           synlige når kortet er kollapset (ordre §2). -->
+      <div class="card" id="panel">
+        <button type="button" class="grab" id="grab" aria-pressed="false"
+          aria-label="Collapse or expand the station panel"></button>
+        <div class="stations" id="stseg" role="group" aria-label="Camera station">
+          <button type="button" data-s="2" aria-pressed="false">TOP</button>
+          <button type="button" data-s="1" aria-pressed="false">SIDE</button>
+          <span class="stdiv" aria-hidden="true"></span>
+          <button type="button" data-s="0" aria-pressed="false">FLIGHT</button>
+        </div>
+        <div class="panewrap">
+          <div class="panehead">
+            <span class="h-title" id="paneTitle">OUTCOME · READ</span>
+            <span class="hint">drag scene vertically</span>
+          </div>
+          <div class="pane" id="pane"></div>
+        </div>
       </div>
     </main>
   </div>
@@ -315,8 +462,177 @@ function setStation(s, animate = true) {
   stationTarget = clamp(s, 0, 2);
   if (!animate || reduceMotion) state.station = stationTarget;
   syncSeg();
+  const snapped = Math.round(stationTarget);
+  if (snapped !== activePaneStation) renderPane(snapped);
 }
 for (const b of segButtons) b.addEventListener('click', () => setStation(+b.dataset.s));
+
+/* ══ PANELER — mekanisk port fra mocken (ordre §2, "DU KJØRER: C · Paneler").
+   Pane-innholdet bytter når MÅL-stasjonen (avrundet) endrer seg, ikke under
+   selve scrub-glidningen — samme kobling som segmentknappene (setStation).
+   Slidere er ekte <input type=range> med <label for>, ikke div-er (a11y). */
+const fmtDeg = v => (v >= 0 ? '+' : '−') + Math.abs(v).toFixed(1) + '°';
+
+const SLDEF = {
+  face:    { name: 'FACE',     token: '--q-face',   min: -15, max: 15, step: 0.1, fmt: fmtDeg },
+  path:    { name: 'PATH',     token: '--q-path',   min: -15, max: 15, step: 0.1, fmt: fmtDeg },
+  attack:  { name: 'ATTACK',   token: '--q-attack', min: -15, max: 15, step: 0.1, fmt: fmtDeg },
+  dynLoft: { name: 'DYN LOFT', token: '--q-loft',   min: 0,   max: 50, step: 0.1, fmt: v => v.toFixed(1) + '°' },
+};
+function buildSlider(container, key) {
+  const d = SLDEF[key];
+  const id = `sl-${key}`;
+  const wrap = document.createElement('div');
+  wrap.className = 'sl';
+  wrap.style.setProperty('--c', `var(${d.token})`);
+  wrap.innerHTML =
+    `<div class="head"><label class="name" for="${id}"><i aria-hidden="true"></i>${d.name}</label>` +
+    `<span class="val" id="${id}-val"></span></div>` +
+    `<input type="range" id="${id}" min="${d.min}" max="${d.max}" step="${d.step}" value="${state[key]}">`;
+  container.appendChild(wrap);
+  const input = wrap.querySelector('input');
+  const val = wrap.querySelector('.val');
+  const sync = () => { val.textContent = d.fmt(state[key]); };
+  input.addEventListener('input', () => {
+    state[key] = clamp(Math.round(parseFloat(input.value) * 10) / 10, d.min, d.max);
+    sync();
+  });
+  sync();
+}
+
+const chipHTML = (k, v, em) =>
+  `<div class="chip read"><div class="k">${k}</div><div class="v">${v}${em ? ` <em>${em}</em>` : ''}</div></div>`;
+function renderMetricChips(outcome) {
+  const mini = document.getElementById('ogMini');
+  if (!mini) return;
+  mini.innerHTML =
+    chipHTML('TOTAL', Math.round(outcome.m.total), 'm') +
+    chipHTML('APEX', Math.round(outcome.m.apex), 'm') +
+    chipHTML('CURVE', Math.abs(Math.round(outcome.m.curve)), 'm') +
+    chipHTML('BALL SPEED', Math.round(outcome.misc.ballSpeed), 'mph');
+  const axis = (outcome.deg.spinAxis >= 0 ? '+' : '−') + Math.abs(Math.round(outcome.deg.spinAxis)) + '°';
+  document.getElementById('ogDir').innerHTML =
+    chipHTML('LAUNCH DIR', fmtDeg(outcome.deg.launchDir)) +
+    chipHTML('SPIN AXIS', axis) +
+    chipHTML('CURVE', Math.abs(Math.round(outcome.m.curve)), 'm') +
+    chipHTML('SIDE', Math.abs(Math.round(outcome.m.side)), 'm ' + (outcome.m.side >= 0 ? 'R' : 'L'));
+  document.getElementById('ogLaunch').innerHTML =
+    chipHTML('LAUNCH ANG', outcome.deg.launchAng.toFixed(1) + '°') +
+    chipHTML('SPIN LOFT', outcome.deg.spinLoft.toFixed(1) + '°') +
+    chipHTML('BACKSPIN', Math.round(outcome.misc.backspin), 'rpm') +
+    chipHTML('LAND ANG', Math.round(outcome.deg.landAng) + '°');
+  document.getElementById('ogDist').innerHTML =
+    chipHTML('SMASH', outcome.misc.smash.toFixed(2)) +
+    chipHTML('BALL SPEED', Math.round(outcome.misc.ballSpeed), 'mph') +
+    chipHTML('CARRY', Math.round(outcome.m.carry), 'm') +
+    chipHTML('TOTAL', Math.round(outcome.m.total), 'm');
+}
+
+const PANE_HTML = {
+  0: `<div class="readouts" id="ogMini"></div>
+    <button type="button" class="ogexp" id="ogExp" aria-pressed="false"><span>ALL METRICS</span><span class="chev" aria-hidden="true">▾</span></button>
+    <div class="ogrid" id="ogFull" hidden>
+      <button type="button" class="ogroup" data-goto="2"><span class="glab">DIRECTION · TOP</span><span class="garr" aria-hidden="true">→</span></button>
+      <div class="readouts" id="ogDir"></div>
+      <button type="button" class="ogroup" data-goto="1"><span class="glab">LAUNCH · SIDE</span><span class="garr" aria-hidden="true">→</span></button>
+      <div class="readouts" id="ogLaunch"></div>
+      <div class="ogroup static"><span class="glab">DISTANCE</span></div>
+      <div class="readouts" id="ogDist"></div>
+    </div>`,
+  1: `<div id="slSide"></div>`,
+  2: `<div id="slTop"></div>`,
+};
+const PANE_TITLES = { 0: ['OUTCOME · READ', 'gold'], 1: ['INPUT · LAUNCH PLANE', 'purple'], 2: ['INPUT · DIRECTION PLANE', 'purple'] };
+
+const paneTitleEl = document.getElementById('paneTitle');
+const paneEl = document.getElementById('pane');
+let allMetricsOpen = false;
+let activePaneStation = null;
+let lastChipsOutcome = null;
+function renderPane(s) {
+  activePaneStation = s;
+  const [title, cls] = PANE_TITLES[s];
+  paneTitleEl.textContent = title;
+  paneTitleEl.className = 'h-title ' + cls;
+  paneEl.innerHTML = PANE_HTML[s];
+  if (s === 1) { buildSlider(document.getElementById('slSide'), 'dynLoft'); buildSlider(document.getElementById('slSide'), 'attack'); }
+  if (s === 2) { buildSlider(document.getElementById('slTop'), 'face'); buildSlider(document.getElementById('slTop'), 'path'); }
+  if (s === 0) {
+    allMetricsOpen = false;
+    const exp = document.getElementById('ogExp');
+    const full = document.getElementById('ogFull');
+    exp.addEventListener('click', () => {
+      allMetricsOpen = !allMetricsOpen;
+      exp.setAttribute('aria-pressed', String(allMetricsOpen));
+      full.hidden = !allMetricsOpen;
+    });
+    paneEl.querySelectorAll('.ogroup[data-goto]').forEach(b => {
+      b.addEventListener('click', () => setStation(+b.dataset.goto));
+    });
+    lastChipsOutcome = null;
+    renderMetricChips(selectOutcome(state));
+    lastChipsOutcome = selectOutcome(state);
+  }
+}
+
+/* ══ kollaps-grabber — stasjonsknappene forblir synlige kollapset (ordre §2) ══ */
+const panelEl = document.getElementById('panel');
+const grabBtn = document.getElementById('grab');
+grabBtn.addEventListener('click', () => {
+  state.collapsed = panelEl.classList.toggle('collapsed');
+  grabBtn.setAttribute('aria-pressed', String(state.collapsed));
+});
+
+/* ══ global speed-stepper — synlig i alle stasjoner (ordre §2, S4) ══ */
+const spVal = document.getElementById('spVal');
+function setSpeed(v) {
+  state.speed = clamp(Math.round(v), 30, 150);
+  spVal.textContent = state.speed + ' mph';
+  spVal.setAttribute('aria-valuenow', String(state.speed));
+  spVal.setAttribute('aria-valuetext', state.speed + ' mph');
+}
+function bindHold(btn, dir) {
+  let t1 = null, t2 = null, n = 0;
+  const end = () => { clearTimeout(t1); clearInterval(t2); t1 = t2 = null; };
+  btn.addEventListener('pointerdown', e => {
+    e.stopPropagation(); btn.setPointerCapture(e.pointerId);
+    n = 0; setSpeed(state.speed + dir);
+    t1 = setTimeout(() => {
+      t2 = setInterval(() => { n++; setSpeed(state.speed + dir * (n > 10 ? 5 : 1)); }, 90);
+    }, 400);
+  });
+  btn.addEventListener('pointerup', end);
+  btn.addEventListener('pointercancel', end);
+  btn.addEventListener('lostpointercapture', end);
+}
+bindHold(document.getElementById('spMinus'), -1);
+bindHold(document.getElementById('spPlus'), 1);
+// horisontal scrub på tallet: ±1 mph per 6 px (ordre §2, S4)
+(() => {
+  let sx = null, sv = 0;
+  spVal.addEventListener('pointerdown', e => {
+    e.stopPropagation(); spVal.setPointerCapture(e.pointerId);
+    sx = e.clientX; sv = state.speed;
+  });
+  spVal.addEventListener('pointermove', e => {
+    if (sx === null) return;
+    setSpeed(sv + Math.round((e.clientX - sx) / 6));
+  });
+  const end = () => { sx = null; };
+  spVal.addEventListener('pointerup', end);
+  spVal.addEventListener('pointercancel', end);
+  spVal.addEventListener('keydown', e => {
+    if (e.key === 'ArrowUp' || e.key === 'ArrowRight') { setSpeed(state.speed + 1); e.preventDefault(); }
+    if (e.key === 'ArrowDown' || e.key === 'ArrowLeft') { setSpeed(state.speed - 1); e.preventDefault(); }
+  });
+})();
+
+/* ══ Pin pill — maks 3 ghosts, eldste ut (ordre §2, S7) ══ */
+document.getElementById('pinFab').addEventListener('click', () => {
+  const params = { face: state.face, path: state.path, attack: state.attack, dynLoft: state.dynLoft, speed: state.speed };
+  state.pins.push({ params, outcome: selectOutcome(params) });
+  if (state.pins.length > 3) state.pins.shift();
+});
 
 // vertikal drag i scenen = kontinuerlig skalar; slipp = snap til nærmeste
 let pan = null;
@@ -340,20 +656,51 @@ function endPan() {
 cv.addEventListener('pointerup', endPan);
 cv.addEventListener('pointercancel', endPan);
 
-/* ══ stats-hero + live-region (a11y-kontrakten) ══ */
+/* ══ stats-hero + live-region (a11y-kontrakten) + stats-flip (ordre §3, S2) ══
+   Δ-mot-forrige-pin lever her også (ordre §2): ren lesing av state.pins,
+   ingen tegning. lastHud-vakten er samme mønster som mocken — hopp over
+   DOM-skriving når verken tallene, stasjonen eller pin-listen har endret seg. */
+const fCarryStack = document.getElementById('fCarryStack');
 const fCarryNum = document.getElementById('fCarryNum');
 const fHeroOffNum = document.getElementById('fHeroOffNum');
 const fHeroOffSide = document.getElementById('fHeroOffSide');
 const fCarryLive = document.getElementById('fCarryLive');
+const fDelta = document.getElementById('fDelta');
+let statsRight = false;
+let lastHud = '';
 function updateStats(outcome) {
   const carry = Math.round(outcome.m.carry);
   const side = Math.round(outcome.m.side);
+  const g = state.pins[state.pins.length - 1];
+  const hud = [carry, side, state.station.toFixed(3), state.pins.length,
+    g ? g.outcome.m.carry : '', g ? g.outcome.m.curve : ''].join('|');
+  if (hud === lastHud) return;
+  lastHud = hud;
+
   const sideDir = side >= 0 ? 'R' : 'L';
   fCarryNum.textContent = carry;
   fHeroOffNum.textContent = Math.abs(side);
   fHeroOffSide.textContent = sideDir;
   fCarryLive.textContent =
     `Carry ${carry} metres, ${Math.abs(side)} metres ${side >= 0 ? 'right' : 'left'}.`;
+
+  // dataene viker for skuddet: hysteresebåndet er obligatorisk (ordre §3)
+  if (!statsRight) {
+    if (state.station > 1.1 && outcome.m.side < -28) statsRight = true;
+  } else {
+    if (state.station < 0.9 || outcome.m.side > -14) statsRight = false;
+  }
+  fCarryStack.classList.toggle('right', statsRight);
+
+  if (g) {
+    const dt = Math.round(outcome.m.carry - g.outcome.m.carry);
+    const dc = Math.round(Math.abs(outcome.m.curve) - Math.abs(g.outcome.m.curve));
+    fDelta.innerHTML =
+      `<b>Δ vs previous pin</b><br>${dt >= 0 ? '+' : '−'}${Math.abs(dt)} m carry · ` +
+      `<span class="gold">→ ${Math.abs(dc)} m ${dc >= 0 ? 'more' : 'less'} curve</span>`;
+  } else {
+    fDelta.innerHTML = '';
+  }
 }
 
 /* ══ render-løkke ══
@@ -375,7 +722,13 @@ function frame(now) {
   ctx.clearRect(0, 0, W, H);
   drawGrid(state.station);
   for (const pin of state.pins) drawTraj(pin.outcome, 'ghost');
-  drawTraj(selectOutcome(state), 'active');
+  const liveOutcome = selectOutcome(state);
+  drawTraj(liveOutcome, 'active');
+  updateStats(liveOutcome);
+  if (activePaneStation === 0 && liveOutcome !== lastChipsOutcome) {
+    renderMetricChips(liveOutcome);
+    lastChipsOutcome = liveOutcome;
+  }
   requestAnimationFrame(frame);
 }
 
@@ -384,6 +737,7 @@ function frame(now) {
 const api = { state, setStation, get stationTarget() { return stationTarget; }, capture: false, trace: [] };
 window.__impact = api;
 
+renderPane(Math.round(stationTarget));
 updateStats(selectOutcome(state));
 syncSeg();
 requestAnimationFrame(frame);

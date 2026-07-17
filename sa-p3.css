@@ -129,6 +129,12 @@
   --q-depth:var(--depth);     /* strike depth                                  */
   --q-ball:var(--ink);        /* ball marker — neutral, NOT a param hue        */
 
+  /* ── measure-label amber (docs/systemkontrakt.md §1.6 / A10) — Impact-
+       kamera annotation layer (impact-annotate.js). Own role, distinct from
+       --launch (a parameter hue): dimension lines/angle-arc labels only. */
+  --measure:#EEC07A;
+  --q-measure:var(--measure);
+
   /* ── WARM-LIGHT GOLD (order §1.2, 2026-07-11) — annotations, targets, XP,
        progression. A duller, warmer gold than --warn so "reward/progression"
        and "caution status" never share a hex again. --warn #FFD056 is now
