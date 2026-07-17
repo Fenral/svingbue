@@ -88,6 +88,25 @@ Tolkning: proxyen verken består eller stryker krav 10 (A-serie-GPU ≫ denne
 iGPU-en), men flagger at drag-pathen er den tunge. Instruments-fokus:
 GPU-tid per frame under drag, spesielt inset-passet.
 
+## Krav 10 — device-protokoll (in-app fps-måler, valgt av eier 2026-07-17)
+
+Dokumentert avvik fra ordrens «Instruments-trace»: eieren har ingen Mac;
+intensjonen (60 fps under kontinuerlig drag, fysisk enhet) bevises med en
+rAF-basert måler i appen. Måleren viser det brukeren faktisk opplever
+(main-thread frame-kadens); GPU/CPU-nedbryting (Instruments) hentes kun
+hvis målingen stryker.
+
+Måler i geometry.html (av som standard, null fotavtrykk for brukere):
+- Aktivering på device: **7 raske trykk på chips-raden** (ATTACK/PATH/STRIKE)
+  → haptisk kvittering + overlay oppe til venstre. Persisterer
+  (`localStorage sa_fps`). Samme 7 trykk slår av. Web: `?fps=1`.
+- Prosedyre: aktiver → velg en linse → dra slideren kontinuerlig frem og
+  tilbake i ~10 s → slipp. Overlayet fryser `DRAG Nf: X fps  p95 Y ms
+  >16.7ms Z%` — ta screenshot. Gjenta gjerne per linse (low + dir er tyngst:
+  tauing + inset).
+- Bestått-kriterium (krav 10): drag-snitt ≥ ~58 fps og p95 ≤ 20 ms på
+  målenheten. Referanse desktop-iGPU: 27–30 fps (se proxy-seksjonen).
+
 ## Gjenstår (device-avhengig / ØKT 3)
 
 - Krav 10: Instruments-trace på fysisk enhet (60 fps under drag).

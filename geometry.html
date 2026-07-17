@@ -205,6 +205,13 @@ addEventListener('unhandledrejection', function(e){
   .dchip.zero{animation:zeroFlash .5s}
   @keyframes zeroFlash{40%{background:rgba(255,255,255,.15)}}
 
+  /* krav 10 device-evidens: fps-måler (debug, av som standard) */
+  .fpsMeter{position:fixed;top:calc(max(8px,env(safe-area-inset-top)) + 46px);
+    left:max(10px,env(safe-area-inset-left));z-index:6;pointer-events:none;
+    font:11px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;color:#fff;
+    background:rgba(10,8,20,.82);border:1px solid rgba(255,255,255,.25);
+    border-radius:8px;padding:6px 9px;white-space:pre}
+
   /* freemium "N free shots left" nudge pill — discreet, top-centre, clear of
      the hud-chips row above it. Shown only in the tail (1-2) of the free
      window (saShots.shouldNudge()); a plain visible pill, not aria-live, so
@@ -1977,6 +1984,74 @@ window.__coachDebug = {
   get armed() { return coachArmed; },
   get active() { return !!activeCoach; },
 };
+
+// ── krav 10 device-evidens: fps-måler (debug, av som standard) ────────────
+// Aktivering uten adressefelt (WKWebView): 7 raske trykk på chips-raden
+// (inert flate i dag), eller ?fps=1 / localStorage sa_fps='1'. Overlayet er
+// pointer-events:none + aria-hidden — ingen ny live-region (a11y-guardrail).
+// Under slider-drag samles rAF-intervaller; ved slipp fryses oppsummeringen
+// (snitt / p95 / % frames > 16.7 ms) på skjermen for screenshot-evidens.
+(function fpsMeter() {
+  let on = new URLSearchParams(location.search).has('fps') ||
+    localStorage.getItem('sa_fps') === '1';
+  let el = null, raf = 0, last = null, live = [], drag = null, summary = '';
+  const q95 = a => { const s = [...a].sort((x, y) => x - y); return s[Math.floor(s.length * 0.95)]; };
+  const stats = a => {
+    const mean = a.reduce((s, x) => s + x, 0) / a.length;
+    return { fps: 1000 / mean, mean, p95: q95(a), slow: 100 * a.filter(x => x > 16.8).length / a.length };
+  };
+  function loop(now) {
+    if (last !== null) {
+      const dt = now - last;
+      live.push(dt); if (live.length > 60) live.shift();
+      if (drag) drag.push(dt);
+    }
+    last = now;
+    if (el && live.length > 5) {
+      const s = stats(live);
+      el.textContent = `fps ${s.fps.toFixed(0)}  frame ${s.mean.toFixed(1)} ms` + (summary ? '\n' + summary : '');
+    }
+    raf = requestAnimationFrame(loop);
+  }
+  function start() {
+    if (el) return;
+    el = document.createElement('div');
+    el.className = 'fpsMeter'; el.setAttribute('aria-hidden', 'true');
+    el.textContent = 'fps —';
+    document.body.appendChild(el);
+    last = null; live = [];
+    raf = requestAnimationFrame(loop);
+  }
+  function stop() {
+    if (raf) cancelAnimationFrame(raf); raf = 0;
+    if (el) el.remove(); el = null; drag = null; summary = '';
+  }
+  const sliderEl = document.querySelector('#controlBar input[type=range]');
+  sliderEl.addEventListener('pointerdown', () => { if (el) { drag = []; } });
+  const endDrag = () => {
+    if (!el || !drag) return;
+    if (drag.length > 10) {
+      const s = stats(drag);
+      summary = `DRAG ${drag.length}f: ${s.fps.toFixed(0)} fps  p95 ${s.p95.toFixed(1)} ms  >16.7ms ${s.slow.toFixed(0)}%`;
+    }
+    drag = null;
+  };
+  sliderEl.addEventListener('pointerup', endDrag);
+  sliderEl.addEventListener('pointercancel', endDrag);
+  // 7 raske trykk på chips-raden toggler og persisterer
+  let taps = 0, tapT = 0;
+  $('chipsRow').addEventListener('pointerdown', () => {
+    taps++; clearTimeout(tapT); tapT = setTimeout(() => { taps = 0; }, 700);
+    if (taps >= 7) {
+      taps = 0; on = !on;
+      try { localStorage.setItem('sa_fps', on ? '1' : '0'); } catch (e) {}
+      on ? start() : stop();
+      saHaptics.tick('fps');
+    }
+  });
+  if (on) start();
+  window.__fpsMeter = { get on() { return !!el; }, get summary() { return summary; } };
+})();
 </script>
 </body>
 </html>
