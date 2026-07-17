@@ -70,8 +70,28 @@ landskap) og 932×430 (Pro Max landskap). Vedlegg i `.screenshots-p1/`.
 - ØKT 3-dommen (12-kravs sjekkliste) gjaldt kandidat `34ff169`; disse to
   vedleggene er de eneste endringene etter dommen.
 
+## Desktop-proxy for krav 10 (2026-07-17 — IKKE device-evidens)
+
+Målt i headless Edge på Intel iGPU (Meteor Lake, D3D11), produkt-viewport
+932×430, canvas 932×430@1x, rAF-intervaller over 5 s:
+
+- **Idle (swing-loop):** 16.7 ms snitt / 16.9 ms p95 → **59.7 fps**, 0.7 %
+  frames > 20 ms. Loopen holder 60 fps.
+- **Kontinuerlig drag (syntetisk 60 Hz input, LOW-linse):** 33.2 ms snitt /
+  66.7 ms p95 → **~30 fps**, 65.6 % frames > 20 ms.
+- Input-håndteringen (controller + motor + DOM-readout) koster **0.18 ms**
+  per event — differansen ligger i GL-arbeidet per dirty frame (hovedscene +
+  mikroskop-inset = to render-pass).
+- DPR er cappet på 2 (`geo3d/scene.js:307`), dirty-flag-loop.
+
+Tolkning: proxyen verken består eller stryker krav 10 (A-serie-GPU ≫ denne
+iGPU-en), men flagger at drag-pathen er den tunge. Instruments-fokus:
+GPU-tid per frame under drag, spesielt inset-passet.
+
 ## Gjenstår (device-avhengig / ØKT 3)
 
 - Krav 10: Instruments-trace på fysisk enhet (60 fps under drag).
 - Fysisk haptikk-verifikasjon (P1 beholder eksisterende haptikk-grammatikk).
 - WKWebView-røyk (Codemagic-build) — chromium/webkit-spot er nærmeste proxy.
+  Full endringsgate re-kjørt 2026-07-17 mot base origin/main på `517d7ef`:
+  **PASS, nivå C, 8 kontroller** (inkl. chromium-spot + webkit-spot).
