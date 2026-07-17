@@ -244,10 +244,6 @@ addEventListener('unhandledrejection', function(e){
   .modnav a.home{width:44px;padding:0;font-size:17px}
   .modnav a:hover{background:rgba(255,255,255,.08);color:var(--ink)}
   .modnav a:focus-visible{outline:2px solid var(--secondary);outline-offset:2px}
-  /* active tab is chrome → violet secondary (ember stays reserved for the live arc/ball) */
-  .modnav a[aria-current="page"]{
-    color:var(--secondary);border-color:var(--secondary-line);background:var(--secondary-soft);
-  }
 
   .controls{position:fixed;top:max(10px,env(safe-area-inset-top));right:max(12px,env(safe-area-inset-right));z-index:4;display:flex;gap:8px}
   /* «View in 2D» — anchor twin of the control buttons (ØKT 2a §2.3) */
@@ -439,10 +435,11 @@ addEventListener('unhandledrejection', function(e){
        readout is drag-driven and the verdict is replay-driven (disjoint). -->
   <p id="sceneData" class="sr-only" aria-live="polite" aria-atomic="true">Swing arc loading.</p>
 
+  <!-- EIERORDRE 2026-07-17: Geometry/Impact-fanene er fjernet — skjermbytte
+       kommer tilbake i et senere nav-design («ikke de eneste funksjonene»).
+       Hjem-logoen står igjen som eneste vei ut. -->
   <nav class="modnav" aria-label="Modules">
     <a class="home" href="./index.html" aria-label="Home"><svg width="22" height="22" viewBox="0 0 52 52" fill="none" aria-hidden="true"><path d="M11 45 C 16 26, 24 18, 35 15 M21 39 L 30 24 L 43 45" stroke="currentColor" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="37" cy="15" r="5.2" fill="currentColor"/></svg></a>
-    <a class="tab" href="./geometry.html" aria-current="page">Geometry</a>
-    <a class="tab" href="./impact.html">Impact</a>
   </nav>
 
   <div class="controls">
@@ -544,7 +541,7 @@ import { createLowpoint } from './geo3d/lowpoint.js';
 // delivery arrow (createDelivery) are UNWIRED from this scene (modules kept on
 // disk). Only the pure ground-crossing solve is still imported — it feeds the
 // panel's turf sentence.
-import { groundCrossingTheta0 } from './geo3d/groundcontact.js';
+import { groundCrossingTheta0, restTheta } from './geo3d/groundcontact.js';
 import { createClub } from './geo3d/club.js';
 import { createTimeline3d } from './geo3d/timeline.js';
 import { createInsetView } from './geo3d/insetview.js';
@@ -1652,17 +1649,13 @@ window.__sa = Object.assign(window.__sa || {}, {
     },
     view: () => (sa3d ? sa3d.rig : null),
     invalidate: () => sa3d && sa3d.invalidate(),
-    // ØKT 2.3 — quiet-ring verification hook: aiming-layer fade state + the
-    // live aim marker. OWNER ORDER 2026-07-12 (#1/#2): sector + numeral are
-    // drag-time only — aimVisible/aimOpacity/numeralVisible assert the rest
-    // state is EMPTY (quiet ticks only).
+    // Aim-numeral verification hook — EIERORDRE 2026-07-17: gradereferansene
+    // (tick-ring, tallkrans, sektor) er fjernet; kun det ene aktive gradtallet
+    // finnes, fortsatt drag-tids-gated (OWNER ORDER 2026-07-12 #2):
+    // numeralVisible/-Opacity asserter at hviletilstanden er tom.
     ring3d: () => (plane3d ? {
-      numbersOpacity: +plane3d.numbersMesh.material.opacity.toFixed(3),
-      numbersVisible: plane3d.numbersMesh.visible,
-      aimDeg: plane3d.aimSector.userData.deg,
+      aimDeg: plane3d.numberMesh.userData.deg,
       aimText: plane3d.numberMesh.userData.text,
-      aimVisible: plane3d.aimSector.visible,
-      aimOpacity: +plane3d.aimSector.material.opacity.toFixed(3),
       numeralVisible: plane3d.numberMesh.visible,
       numeralOpacity: +plane3d.numberMesh.material.opacity.toFixed(3),
     } : null),
@@ -1713,6 +1706,10 @@ window.__sa = Object.assign(window.__sa || {}, {
       headZ: () => (club3d ? club3d.group.position.z : null),
       divotActiveCount: () => (timeline3d ? timeline3d.fx.divot.activeCount : null),
     },
+    // REST-POSE verification hook (eierordre 2026-07-17: club rests WHERE it
+    // strikes) — theta + world point so headless rigs can assert
+    // club().position ≈ restPose().world per band after rebuild3d.
+    restPose: () => ({ theta: restTheta(state), world: arcPosition(restTheta(state), state) }),
     // STRIKE-DETAIL inset verification hooks (2026-07-03)
     inset: {
       rect: () => (inset3d ? inset3d.getRect() : null),
