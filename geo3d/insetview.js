@@ -42,7 +42,7 @@
  * further offset math is needed at the call site.
  */
 import * as THREE from '../vendor/three/build/three.module.js';
-import { BALL_RADIUS_M, deg2rad, lpWorld } from '../swing-parameters-and-impact.js';
+import { BALL_RADIUS_M, deg2rad, lpWorld, thetaAtImpact } from '../swing-parameters-and-impact.js';
 import { clubBasisAt, addressTheta } from './club.js';
 
 // Tuned by headless screenshot iteration (see task report) — wider stand-off
@@ -92,32 +92,44 @@ export function createInsetView({ hideNodes } = {}) {
   /** Recompute the inset camera's pose from the current swing state. Cheap
    * pure-math call (no scene traversal) — safe to call on every rebuild3d(). */
   function updatePose(state) {
-    const theta = addressTheta(state);
-    const basis = clubBasisAt(theta, state);
+    // Camera ANGLE basis stays at the pre-2026-07-17 near-ball address angle
+    // (thetaAtImpact − 5°): at the contact rest pose a deep Duff puts the
+    // head at the turf crossing where the face normal pitches steeply and the
+    // derived camera dives under the ground plane. The AIM and stand-off use
+    // the ACTUAL rest-pose head (addressTheta → restTheta) so the resting
+    // club stays framed.
+    const camBasis = clubBasisAt(thetaAtImpact(state) - deg2rad(5), state);
+    const basis = clubBasisAt(addressTheta(state), state);
     // canonical GLB face axis is local -Z (CHIRALITY fix — see club.js file
     // header); basis.Z is the world dir of local +Z, so the face normal is
     // its negation.
-    const faceN = new THREE.Vector3(-basis.Z.x, -basis.Z.y, -basis.Z.z).normalize();
+    const faceN = new THREE.Vector3(-camBasis.Z.x, -camBasis.Z.y, -camBasis.Z.z).normalize();
     // ORDRE 2 P2 §8 — adaptive stand-off: the low point can sit up to ~±20 cm
     // from the ball (plus the swing-direction coupling), and the permanent
     // panel's viewport is TALLER (narrower horizontal fov) than the old card.
     // Dolly back proportionally to the ball↔low-point ground span so the whole
     // cluster stays in frame at the range extremes; at the default swing the
     // span is small and the framing matches the original DIST_M.
+    // Cluster span = the widest ground-plane offset among low point AND the
+    // rest-pose head (eierordre 2026-07-17: on a deep Duff the head rests at
+    // the turf crossing, up to ~50 cm before the ball — lp alone undershoots
+    // and the ball fell out of frame).
     const lpSpanPre = Math.hypot(lpWorld(state).x, lpWorld(state).y);
-    const dist = DIST_M + Math.max(0, lpSpanPre - 0.10) * 1.35;
+    const headSpanPre = Math.hypot(basis.head.x, basis.head.y);
+    const dist = DIST_M + Math.max(0, Math.max(lpSpanPre, headSpanPre) - 0.10) * 2.2;
     const offset = faceN.clone().applyAxisAngle(_worldUp, deg2rad(AZIMUTH_DEG)).multiplyScalar(dist);
 
-    // Aim at the centroid of ball + low point + the club's address-pose head
-    // position (NOT just ball/low-point) — the club sits a real ~10cm BEHIND
-    // the ball at address (REST_BEHIND in club.js), so folding its position
-    // into the aim keeps the whole club+ball+low-point cluster centred
-    // instead of pushing the club toward a frame edge.
+    // Aim at the centroid of ball + low point + the club's rest-pose head
+    // position (NOT just ball/low-point). The rest pose is the CONTACT pose
+    // (eierordre 2026-07-17, groundcontact.restTheta via addressTheta):
+    // ground crossing on Duff/Fat, ball-x otherwise — folding the head into
+    // the aim keeps the club+ball+low-point cluster centred.
     const ballWorld = new THREE.Vector3(0, 0, BALL_RADIUS_M);
-    const lp = lpWorld(state);
-    const lpWorldV = new THREE.Vector3(lp.x, lp.y, lp.z);
     const headWorld = new THREE.Vector3(basis.head.x, basis.head.y, basis.head.z);
-    const aim = ballWorld.clone().add(lpWorldV).add(headWorld).multiplyScalar(1 / 3);
+    // Midpoint of the two things the panel must show (ball + resting head) —
+    // the low point always lies between them, so a 3-way centroid only drags
+    // the aim off-centre and pushes the ball to the frame edge on deep Duffs.
+    const aim = ballWorld.clone().add(headWorld).multiplyScalar(0.5);
 
     const camPos = aim.clone().add(offset).add(new THREE.Vector3(0, 0, UP_M));
     camera.position.copy(camPos);

@@ -38,16 +38,23 @@ addEventListener('unhandledrejection', function(e){
     --bg:#07060C; --bg-top:#140E24;                    /* violet-shifted scene grade */
     --panel:rgba(17,13,28,.72); --line:rgba(255,255,255,.30);  /* line ≥3:1 */
     /* etched-instrument brass (deviation-by-promotion) + SYS-11 param hues */
-    --launch:#E3C468; --plane:#93A4F2; --depth:#C98AE6;
-    --q-path:#6FC6FF; --q-attack:#F472B6; --celebrate:#FF5CE1;
+    /* tokens: geometry-palett (P1, kontrakt §7) — mirrors sa-p3.css @ HEAD:
+       mock values minted as OKLCH; --strike claims the mock gold (flagg 1),
+       --launch re-tuned to citron in its own sa-p3.css commit. */
+    --launch:oklch(80% 0.10 105); --plane:oklch(70.06% 0.1494 288.55); --depth:#C98AE6;
+    --strike:oklch(78.73% 0.1178 78.12);      /* mock #e3b05c — 9.90:1 on plate */
+    --focal-warm:oklch(75.14% 0.1610 46.76);  /* mock #ff8a4c — ONE per screen, never decorative */
+    --zone-pure:oklch(77.99% 0.1648 157.13);  /* mock #3fd68c — tickstrip zone @18% */
+    --q-path:oklch(78.68% 0.1179 228.25); --q-attack:oklch(72.34% 0.1793 348.62);
+    --q-plane:var(--plane); --q-strike:var(--strike); --celebrate:#FF5CE1;
     /* ORDRE 2 P2 — verdict/status trio + measure gold (sa-p3.css tokens,
        mirrored locally like the rest of this block). --gold = measures/
        annotations; --warn/--bad = negative states (never ember). */
     --gold:#D9B36A; --good:#58E6A8; --warn:#FFD056; --bad:#FF7B8A;
     --line-strong:rgba(255,255,255,.30);
-    /* ORDRE 2 P2 §4 — the permanent microscope panel's width (left pane);
+    /* GEOMETRY P1 (ordre §Layoutsoner) — mikropanel 27 % | scene 73 %;
        the 3D scene region starts at exactly this x (scene.js setMainRegionLeft). */
-    --sd-w:clamp(250px,35vw,360px);
+    --sd-w:27vw;
     --radius-pill:999px; --radius-card:16px; --radius-control:12px;
     --blur-surface:10px; --blur-overlay:18px;
     /* type roles (showcase deviation): serif display = Fraunces; data = mono */
@@ -70,19 +77,10 @@ addEventListener('unhandledrejection', function(e){
   .stage{position:fixed;inset:0;overflow:hidden}
   /* 3D scene canvas — the default (and only) Geometry scene */
   #scene3d{position:fixed;inset:0;width:100%;height:100%;z-index:0}
-  /* THE GOLD MEASURES (ORDRE 2 P2 §6 + owner order 2026-07-12 #4) — live
-     measured-bracket labels for the 3D lowpoint: x (ahead/behind, #lp3dLabel)
-     and y (height at the valley, #lpy3dLabel — same plate class). Gold =
-     measure; flips to --warn on negative states (behind / below ground —
-     §7, never ember). Positioned via JS (geo3d/lowpoint.js placeLabel). */
-  .lp3d-label{
-    position:fixed;z-index:2;pointer-events:none;white-space:nowrap;
-    font-size:12px;font-weight:500;letter-spacing:.01em;color:var(--gold);
-    background:rgba(10,7,18,.72);border:1px solid rgba(217,179,106,.38);border-radius:8px;
-    padding:3px 9px;font-family:var(--font-mono);font-variant-numeric:tabular-nums;
-  }
-  .lp3d-label.is-neg{color:var(--warn);border-color:rgba(255,208,86,.4)}
-  .lp3d-label[hidden]{display:none}
+  /* GEOMETRY P1 (krav 12) — the old floating scene chips (#lp3dLabel «N cm
+     ahead/behind» + #lpy3dLabel «y +1.6 cm») are REMOVED: their job is
+     carried by the LOW POINT X / ARC HEIGHT cell values. Canvas law
+     (ordre §Layoutsoner): nothing overlays the scene zone. */
   .gc3d-label{
     position:fixed;z-index:2;pointer-events:none;white-space:nowrap;
     font-size:12px;font-weight:500;letter-spacing:.01em;color:var(--ink);
@@ -177,37 +175,42 @@ addEventListener('unhandledrejection', function(e){
   .facezoom-hint.is-visible{opacity:1;transform:translateX(-50%) translateY(0)}
   @media (prefers-reduced-motion:reduce){.facezoom-hint{transition:none}}
 
-  /* OWNER ORDER 2026-07-12 (#3) — ATTACK / PATH promoted from the quiet mono
-     stack to a proper OUTCOME CHIP in the app's shared chip grammar (sa-p3.css
-     .sa-chip--outcome, mirrored locally like the rest of this page's tokens —
-     this page does not link sa-p3.css): dashed border = readout, param dot +
-     uppercase label + mono value per row, attack (pink --q-attack) over path
-     (blue --q-path) exactly like the 2D Strike Window's impact cluster.
-     Values are larger than the old stack (15px vs 13.5px). Still a readout —
-     pointer-events:none, live every drag frame via renderReadout(). */
-  .scene-metrics{
-    position:fixed;left:calc(var(--sd-w) + 16px);top:max(12px,env(safe-area-inset-top));z-index:3;
-    pointer-events:none;
+  /* GEOMETRY P1 (ordre §Layoutsoner sone 1) — CHIPS-RAD: three dashed outcome
+     chips ATTACK (pink) / PATH (blue) / STRIKE (gold) across the top of the
+     scene zone. Dashed 1.5px = readout grammar, tabular-nums, min-widths so a
+     sign flip never causes a layout hop (krav 3/11). Lens-dimming (krav 6):
+     untouched chips 25 %, touched 100 % via .off. Values live via
+     renderReadout(); announced through the single #sceneData live region. */
+  #chipsRow{
+    position:fixed;left:calc(var(--sd-w) + 14px);top:max(8px,env(safe-area-inset-top));z-index:3;
+    display:flex;gap:8px;align-items:center;pointer-events:none;
   }
-  .sa-chip{
-    display:flex;align-items:center;gap:8px;padding:0 12px;min-height:44px;
-    border-radius:var(--radius-control);border:1px solid var(--line-strong);
-    background:rgba(8,5,14,.86); /* --plate (sa-p3.css), mirrored */
-    color:var(--ink);white-space:nowrap;
-    font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-size:13px;font-weight:600;
+  .dchip{
+    border:1.5px dashed;border-radius:10px;height:33px;padding:0 11px;
+    background:rgba(10,7,18,.6);
+    font-family:var(--font-mono);font-variant-numeric:tabular-nums;
+    display:flex;align-items:center;gap:7px;transition:opacity .3s,transform .3s;
   }
-  .sa-chip--outcome{border-style:dashed}
-  .sa-chip.chip-cluster{flex-direction:column;align-items:stretch;gap:5px;padding:8px 12px;justify-content:center}
-  .sa-chip__dot{width:8px;height:8px;border-radius:50%;background:var(--pc,var(--secondary));flex:0 0 auto}
-  .sa-chip__k{
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; /* --font-ui role */
-    font-size:10px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);
-  }
-  .crow{display:flex;align-items:center;gap:7px}
-  .crow .sa-chip__k{width:44px}
-  .cval{margin-left:auto;font-size:15px;font-weight:600;padding-left:10px}
-  .cval--atk{color:var(--q-attack)}
-  .cval--path{color:var(--q-path)}
+  .dchip .lbl{font-size:8.5px;letter-spacing:.16em;color:var(--muted)}
+  .dchip .val{font-size:14px;font-weight:700;white-space:nowrap}
+  .dchip.pink{border-color:color-mix(in srgb,var(--q-attack) 35%,transparent);min-width:98px}
+  .dchip.pink .val{color:var(--q-attack)}
+  .dchip.blue{border-color:color-mix(in srgb,var(--q-path) 35%,transparent);min-width:90px}
+  .dchip.blue .val{color:var(--q-path)}
+  .dchip.gold{border-color:color-mix(in srgb,var(--q-strike) 35%,transparent);min-width:112px}
+  .dchip.gold .val{color:var(--q-strike)}
+  .dchip.off{opacity:.25;transform:scale(.92)}
+  .dchip.ping{animation:ping .4s}
+  @keyframes ping{35%{transform:scale(1.07)}}
+  .dchip.zero{animation:zeroFlash .5s}
+  @keyframes zeroFlash{40%{background:rgba(255,255,255,.15)}}
+
+  /* krav 10 device-evidens: fps-måler (debug, av som standard) */
+  .fpsMeter{position:fixed;top:calc(max(8px,env(safe-area-inset-top)) + 46px);
+    left:max(10px,env(safe-area-inset-left));z-index:6;pointer-events:none;
+    font:11px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;color:#fff;
+    background:rgba(10,8,20,.82);border:1px solid rgba(255,255,255,.25);
+    border-radius:8px;padding:6px 9px;white-space:pre}
 
   /* freemium "N free shots left" nudge pill — discreet, top-centre, clear of
      the hud-chips row above it. Shown only in the tail (1-2) of the free
@@ -241,10 +244,6 @@ addEventListener('unhandledrejection', function(e){
   .modnav a.home{width:44px;padding:0;font-size:17px}
   .modnav a:hover{background:rgba(255,255,255,.08);color:var(--ink)}
   .modnav a:focus-visible{outline:2px solid var(--secondary);outline-offset:2px}
-  /* active tab is chrome → violet secondary (ember stays reserved for the live arc/ball) */
-  .modnav a[aria-current="page"]{
-    color:var(--secondary);border-color:var(--secondary-line);background:var(--secondary-soft);
-  }
 
   .controls{position:fixed;top:max(10px,env(safe-area-inset-top));right:max(12px,env(safe-area-inset-right));z-index:4;display:flex;gap:8px}
   /* «View in 2D» — anchor twin of the control buttons (ØKT 2a §2.3) */
@@ -298,17 +297,12 @@ addEventListener('unhandledrejection', function(e){
        the panel reads as ONE pane with the GL viewport strip between plates */
     background:linear-gradient(180deg, rgba(19,14,31,.98), rgba(15,11,25,.95));
   }
-  .strike-detail .ttl{display:block;font-family:var(--font-serif);font-variation-settings:'opsz' 28,'wght' 560,'SOFT' 40,'WONK' 0;font-size:10.5px;font-weight:560;letter-spacing:.08em;color:var(--muted);text-transform:uppercase}
-  /* §5 — FIXED mono low-point x/y readout in GOLD: the panel header truth.
-     ALWAYS visible, ALWAYS gold (it is a measure, not a verdict). */
-  .sd-lp{
-    display:flex;align-items:baseline;gap:6px;margin-top:4px;white-space:nowrap;
-    font-family:var(--font-mono);font-variant-numeric:tabular-nums;
-    color:var(--gold);font-size:19px;font-weight:600;letter-spacing:-.01em;
-  }
-  .sd-lp .ax{font-size:10.5px;font-weight:500;opacity:.72;text-transform:uppercase}
-  .sd-lp .unit{font-size:10.5px;font-weight:500;opacity:.72}
-  .sd-lp .dot{opacity:.4;margin:0 2px}
+  /* GEOMETRY P1 (ordre §Layoutsoner, mikropanel): eyebrow «Club» (serif,
+     letterspaced) — the club toggle is HIDDEN in P1 (kontrakt §6: driver
+     behind the clubContext flag; only the flag-hiding is removed when the
+     asset lands). The old gold x/y readout (#sdLpX/#sdLpY, «y +1.6 cm») is
+     REMOVED per kontrakt §8 — the cell values carry those numbers now. */
+  .strike-detail .ttl{display:block;font-family:var(--font-serif);font-variation-settings:'opsz' 28,'wght' 560,'SOFT' 40,'WONK' 0;font-size:10.5px;font-weight:560;letter-spacing:.24em;color:var(--muted);text-transform:uppercase}
   .strike-detail .chip{
     display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:700;
     padding:2px 8px;border-radius:999px;white-space:nowrap;align-self:flex-start;
@@ -328,120 +322,86 @@ addEventListener('unhandledrejection', function(e){
     padding:10px 14px max(10px,env(safe-area-inset-bottom)) max(14px,env(safe-area-inset-left));
     background:linear-gradient(0deg, rgba(13,10,22,.98), rgba(15,11,25,.95));
   }
-  .strike-detail .foot{font-size:11px;color:var(--muted);line-height:1.35;margin:0}
+  .strike-detail .foot{font-size:11px;color:var(--muted);line-height:1.35;margin:0;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden} /* maks 2 linjer (ordre §Layoutsoner) */
   .strike-detail .foot b{color:var(--ink)}
   /* §7 — negative-state values (behind / deep-dig words) → verdict amber, never ember */
   .strike-detail .foot .neg{color:var(--warn)}
   .strike-detail .foot .sd-turf{color:#c9a878;font-weight:700}
 
-  /* tune rail — slim bottom-docked strip over the SCENE region only (ORDRE 2
-     P2 §4 — it must never cover the permanent panel), ONE row of all 4
-     sliders side-by-side. */
-  .tune{
+  /* ── GEOMETRY P1 KONTROLLBAR (ordre §Layoutsoner sone 3) — PERMANENT
+     bottom bar over the SCENE region only (never covers the panel):
+     segmentkontroll → tickstrip → slider. No hint text. The bar carries the
+     active lens hue on --lens (set by applyLens); slider accent follows. */
+  #controlBar{
     position:fixed;left:var(--sd-w);right:0;bottom:0;z-index:3;
-    padding:8px max(12px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left));
-    background:var(--panel);-webkit-backdrop-filter:blur(var(--blur-surface));backdrop-filter:blur(var(--blur-surface));
-    border-top:1px solid var(--line);
+    --lens:var(--q-attack);
+    padding:7px max(14px,env(safe-area-inset-right)) max(11px,env(safe-area-inset-bottom)) max(14px,env(safe-area-inset-left));
+    background:rgba(9,6,16,.94);border-top:1px solid var(--line);
     box-shadow:inset 0 1px 0 rgba(255,255,255,.06), 0 -14px 40px -22px rgba(0,0,0,.8);
-    display:flex;gap:10px;align-items:flex-start;
-    max-height:80px;
-    transform:translateY(0);opacity:1;
-    transition:transform .2s ease,opacity .2s ease;
   }
-  .tune[hidden]{display:none}
-  /* FIX M — pre-open/post-close resting transform for the 200ms slide-up
-     (kept as a separate class from [hidden] so the transform can transition;
-     [hidden] itself is display:none and can't animate). */
-  .tune.tune-closed{transform:translateY(100%);opacity:0;pointer-events:none}
-  @media (prefers-reduced-motion:reduce){.tune{transition:none}}
-  .tune h2{display:none} /* rail is self-explanatory via compact labels; heading dropped to save vertical space */
-  /* §7 — each row carries its SYS-11 param hue on --rng (inline style on the
-     .row, inherited by both the value text and the slider): values are never
-     ember — orange stays reserved for action/truth. */
-  .row{flex:1;min-width:0;margin:0;--rng:var(--secondary)}
-  .row .top{display:flex;justify-content:space-between;gap:6px;font-size:10.5px;margin-bottom:2px;
-    text-transform:uppercase;letter-spacing:.04em;color:var(--muted);font-weight:700;white-space:nowrap;overflow:hidden}
-  .row .top label{overflow:hidden;text-overflow:ellipsis}
-  .row .top .val{color:var(--rng,var(--accent));font-variant-numeric:tabular-nums;font-weight:700;flex:none}
-  .row.dimmed{opacity:.4;transition:opacity .15s ease}
-  @media (prefers-reduced-motion:reduce){.row.dimmed{transition:none}}
+  #seg{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+  .cell{
+    display:block; /* undo the flex round-button default */
+    font-family:var(--font-mono);text-align:center;padding:3px 3px 4px;border-radius:10px;
+    border:1.5px solid rgba(255,255,255,.14);background:rgba(20,14,33,.9);cursor:pointer;
+    transition:all .2s;min-width:0;min-height:34px;
+    -webkit-tap-highlight-color:transparent;color:var(--muted);
+    width:auto;height:auto;font-size:inherit;line-height:inherit; /* undo the round control-button defaults above */
+  }
+  .cell:hover{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.22)}
+  .cell:active{transform:scale(.97)}
+  .cell:focus-visible{outline:2px solid var(--secondary);outline-offset:2px}
+  .cell .cl{display:block;font-size:8px;letter-spacing:.13em;color:var(--muted);white-space:nowrap}
+  .cell .cv{display:block;font-size:14px;font-weight:700;margin-top:1px;color:var(--muted);
+    font-variant-numeric:tabular-nums;white-space:nowrap;transition:color .2s}
+  .cell.on{background:#241d3d;border-color:var(--cc);box-shadow:0 0 14px color-mix(in srgb,var(--cc) 20%,transparent)}
+  .cell.on .cv{color:var(--cc)}
+  .cell[data-c="plane"]{--cc:var(--q-plane)}
+  .cell[data-c="dir"]{--cc:var(--q-path)}
+  .cell[data-c="low"]{--cc:var(--q-attack)}
+  .cell[data-c="arc"]{--cc:var(--q-strike)}
+  /* ringeffekt-pulser (ordre §Ringeffekt): tauing → pink «towed»; clamp hit →
+     «rail» in --focal-warm (the screen's single transient warm focal). */
+  .cell.towed{animation:towed .5s}
+  @keyframes towed{40%{border-color:var(--q-attack);border-style:dashed;box-shadow:0 0 14px color-mix(in srgb,var(--q-attack) 40%,transparent)}}
+  .cell.rail{animation:rail .5s}
+  @keyframes rail{35%,70%{border-color:var(--focal-warm);box-shadow:0 0 16px color-mix(in srgb,var(--focal-warm) 40%,transparent)}}
 
-  /* ── premium custom range slider ──────────────────────────────────────── */
-  .slider{
-    /* --rng (per-param hue) inherits from the .row — see §7 note above */
-    --p:50%;                        /* thumb position (computed on input) */
-    --o:50%;                        /* fill origin: centre for signed, 0 for left-fill */
-    --th:7%;                        /* half thumb width as % of track (for tick clamping) */
-    position:relative;height:44px;display:flex;align-items:center;  /* ≥44px hit area */
+  /* EIERORDRE 2026-07-18: tick-stripen er fjernet — én midtstrek (nullpunkt /
+     midten av tallene) + pure-sonen flyttet inn i selve slider-sporet. */
+  #trackRefs{position:absolute;left:12px;right:12px;top:0;bottom:0;pointer-events:none}
+  #midTick{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+    width:2px;height:15px;border-radius:1px;background:rgba(255,255,255,.28)}
+  #pureBand{position:absolute;top:50%;transform:translateY(-50%);height:9px;
+    border-radius:999px;background:var(--zone-pure);opacity:.22}
+  #pureBand[hidden]{display:none}
+  #sliderRow{display:flex;align-items:center;margin:6px 0 2px;position:relative}
+  #slider{
+    -webkit-appearance:none;appearance:none;flex:1;width:100%;height:44px;margin:0;
+    background:transparent;cursor:pointer;display:block;border:0;border-radius:0;
   }
-  .slider input[type=range]{
-    -webkit-appearance:none;appearance:none;width:100%;height:44px;margin:0;
-    background:transparent;cursor:pointer;display:block;
-  }
-  /* track (webkit) */
-  .slider input[type=range]::-webkit-slider-runnable-track{
+  #slider::-webkit-slider-runnable-track{
     height:5px;border-radius:999px;
-    background:var(--track-bg, rgba(255,255,255,.14));
+    background:var(--track-bg, rgba(255,255,255,.14)); /* accent fill min→thumb, set by updateSliderFill */
   }
-  .slider input[type=range]::-moz-range-track{
-    height:5px;border-radius:999px;background:rgba(255,255,255,.14);
+  #slider::-moz-range-track{height:5px;border-radius:999px;background:rgba(255,255,255,.14)}
+  #slider::-moz-range-progress{height:5px;border-radius:999px;background:var(--lens)}
+  #slider::-webkit-slider-thumb{
+    -webkit-appearance:none;appearance:none;width:23px;height:23px;border-radius:50%;
+    margin-top:-9px;background:var(--lens);border:3px solid #0d0918;
+    box-shadow:0 0 12px var(--lens);transition:transform .12s ease;
   }
-  .slider input[type=range]::-moz-range-progress{height:5px;border-radius:999px;background:var(--rng)}
-  /* thumb (webkit) */
-  .slider input[type=range]::-webkit-slider-thumb{
-    -webkit-appearance:none;appearance:none;width:20px;height:20px;border-radius:50%;
-    margin-top:-7.5px;background:var(--rng);
-    border:2px solid rgba(10,14,18,.9);
-    box-shadow:0 0 0 1.5px var(--rng), 0 4px 10px -2px rgba(0,0,0,.7);
-    transition:transform .12s ease, box-shadow .12s ease;
+  #slider::-moz-range-thumb{
+    width:23px;height:23px;border-radius:50%;background:var(--lens);
+    border:3px solid #0d0918;box-shadow:0 0 12px var(--lens);transition:transform .12s ease;
   }
-  .slider input[type=range]::-moz-range-thumb{
-    width:20px;height:20px;border-radius:50%;background:var(--rng);
-    border:2px solid rgba(10,14,18,.9);
-    box-shadow:0 0 0 1.5px var(--rng), 0 4px 10px -2px rgba(0,0,0,.7);
-    transition:transform .12s ease, box-shadow .12s ease;
-  }
-  /* grow on drag */
-  .slider input[type=range]:active::-webkit-slider-thumb{transform:scale(1.25)}
-  .slider input[type=range]:active::-moz-range-thumb{transform:scale(1.25)}
-  .slider input[type=range]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 3px var(--rng), 0 4px 10px -2px rgba(0,0,0,.7)}
-  .slider input[type=range]:focus-visible::-moz-range-thumb{box-shadow:0 0 0 3px var(--rng), 0 4px 10px -2px rgba(0,0,0,.7)}
-  .slider input[type=range]:focus{outline:none}
-  .slider input[type=range]:focus-visible{outline:none}
-  /* centre tick (signed sliders) + faint precision ticks (cm sliders) — drawn
-     as an overlay line beneath the thumb, non-interactive */
-  .slider .ticks{
-    position:absolute;left:0;right:0;top:50%;height:14px;transform:translateY(-50%);
-    pointer-events:none;z-index:0;
-  }
-  .slider[data-origin="center"] .ticks::before{ /* centre tick at the 0 origin (signed only) */
-    content:"";position:absolute;top:50%;left:var(--o);transform:translate(-50%,-50%);
-    width:2px;height:11px;border-radius:1px;background:rgba(255,255,255,.45);
-  }
-  .slider[data-ticks="cm"] .ticks{               /* CapCut-style faint precision ticks */
-    background-image:repeating-linear-gradient(90deg,
-      rgba(255,255,255,.16) 0, rgba(255,255,255,.16) 1px,
-      transparent 1px, transparent calc((100% - 2px)/10));
-    background-position:0 50%;background-size:100% 7px;background-repeat:no-repeat;
-  }
-  /* value bubble above the thumb */
-  .slider .bubble{
-    position:absolute;bottom:calc(100% - 6px);left:var(--p);transform:translateX(-50%) translateY(4px);
-    background:var(--rng);color:#06121a;font-size:11px;font-weight:700;line-height:1;
-    font-variant-numeric:tabular-nums;white-space:nowrap;
-    padding:4px 7px;border-radius:7px;box-shadow:0 4px 12px -3px rgba(0,0,0,.7);
-    opacity:0;pointer-events:none;transition:opacity .15s ease, transform .15s ease;z-index:2;
-  }
-  .slider .bubble::after{
-    content:"";position:absolute;top:100%;left:50%;transform:translateX(-50%);
-    border:4px solid transparent;border-top-color:var(--rng);
-  }
-  .slider.show-bubble .bubble{opacity:1;transform:translateX(-50%) translateY(0)}
-  @media (prefers-reduced-motion:reduce){
-    .slider input[type=range]:active::-webkit-slider-thumb{transform:none}
-    .slider input[type=range]:active::-moz-range-thumb{transform:none}
-    .slider .bubble{transition:none}
-  }
+  #slider:active::-webkit-slider-thumb{transform:scale(1.2)}
+  #slider:active::-moz-range-thumb{transform:scale(1.2)}
+  #slider:focus{outline:none}
+  #slider:focus-visible{outline:none}
+  #slider:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 3px var(--ink), 0 0 12px var(--lens)}
+  #slider:focus-visible::-moz-range-thumb{box-shadow:0 0 0 3px var(--ink), 0 0 12px var(--lens)}
 
   /* rotate hint */
   .rotate{position:fixed;inset:0;z-index:9;display:none;flex-direction:column;align-items:center;justify-content:center;
@@ -459,10 +419,8 @@ addEventListener('unhandledrejection', function(e){
     <canvas id="scene3d" aria-hidden="true"></canvas>
   </div>
 
-  <div class="lp3d-label" id="lp3dLabel" hidden aria-hidden="true"></div>
-  <!-- OWNER ORDER 2026-07-12 (#4) — the SECOND gold measure: low-point HEIGHT
-       (y) at the arc valley, same plate grammar as the x measure above. -->
-  <div class="lp3d-label" id="lpy3dLabel" hidden aria-hidden="true"></div>
+  <!-- GEOMETRY P1 (krav 12): the two floating low-point scene chips
+       (#lp3dLabel / #lpy3dLabel) are removed — cell values carry the numbers. -->
   <div class="gc3d-label" id="gc3dLabel" hidden aria-hidden="true"></div>
   <div class="pose-name" id="poseName" aria-hidden="true"></div>
 
@@ -484,21 +442,19 @@ addEventListener('unhandledrejection', function(e){
        readout is drag-driven and the verdict is replay-driven (disjoint). -->
   <p id="sceneData" class="sr-only" aria-live="polite" aria-atomic="true">Swing arc loading.</p>
 
+  <!-- EIERORDRE 2026-07-17: Geometry/Impact-fanene er fjernet — skjermbytte
+       kommer tilbake i et senere nav-design («ikke de eneste funksjonene»).
+       Hjem-logoen står igjen som eneste vei ut. -->
   <nav class="modnav" aria-label="Modules">
     <a class="home" href="./index.html" aria-label="Home"><svg width="22" height="22" viewBox="0 0 52 52" fill="none" aria-hidden="true"><path d="M11 45 C 16 26, 24 18, 35 15 M21 39 L 30 24 L 43 45" stroke="currentColor" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="37" cy="15" r="5.2" fill="currentColor"/></svg></a>
-    <a class="tab" href="./geometry.html" aria-current="page">Geometry</a>
-    <a class="tab" href="./impact.html">Impact</a>
   </nav>
 
   <div class="controls">
     <button id="viewBtn" aria-pressed="false" aria-label="Switch perspective: front or down-the-line" title="Front / Down-the-line">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a1 1 0 0 1 1-1h9a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><path d="M14 10l5.4-3.1a1 1 0 0 1 1.5.87v8.46a1 1 0 0 1-1.5.87L14 14z"/></svg>
     </button>
-    <button id="tuneBtn" aria-pressed="false" aria-label="Show/hide parameters" title="Parameters">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="4" y1="7" x2="20" y2="7"/><circle cx="9" cy="7" r="2.4" fill="var(--panel)"/><line x1="4" y1="17" x2="20" y2="17"/><circle cx="15" cy="17" r="2.4" fill="var(--panel)"/></svg>
-    </button>
-    <!-- ORDRE 2 P2 §4 — the strike toggle was removed: the strike detail is a
-         PERMANENT panel now, not a dismissible overlay. -->
+    <!-- GEOMETRY P1: the tune toggle is gone — the control bar is PERMANENT
+         (ordre §Layoutsoner sone 3), like the strike panel before it. -->
     <button id="hit" aria-label="Hit – play the swing" title="Hit">
       <svg viewBox="0 0 24 24" fill="currentColor" stroke="none" aria-hidden="true"><path d="M8 5.5v13a1 1 0 0 0 1.5.87l11-6.5a1 1 0 0 0 0-1.74l-11-6.5A1 1 0 0 0 8 5.5z"/></svg>
     </button>
@@ -513,15 +469,14 @@ addEventListener('unhandledrejection', function(e){
   </div>
 
 
-  <!-- OWNER ORDER 2026-07-12 (#3) — ATTACK / PATH as ONE outcome chip in the
-       shared chip grammar (mirrors the 2D window's impact cluster: dashed
-       readout, dot + label + mono value, attack over path). Stays with the
-       SCENE side (the geometry); live every drag frame via renderReadout(). -->
-  <div class="scene-metrics" aria-hidden="true">
-    <div class="sa-chip sa-chip--outcome chip-cluster" id="chipImpact3d">
-      <span class="crow" id="chipAtk"><span class="sa-chip__dot" style="--pc:var(--q-attack)"></span><span class="sa-chip__k">Attack</span><span class="cval cval--atk" id="chipAtkTx">—</span></span>
-      <span class="crow" id="chipPath"><span class="sa-chip__dot" style="--pc:var(--q-path)"></span><span class="sa-chip__k">Path</span><span class="cval cval--path" id="chipPathTx">—</span></span>
-    </div>
+  <!-- GEOMETRY P1 (ordre §Layoutsoner sone 1) — CHIPS-RAD: ATTACK / PATH /
+       STRIKE dashed outcome chips across the top of the scene zone. Values =
+       motor output exactly (krav 4), live via renderReadout(); announced
+       through the single #sceneData live region (aria-hidden here). -->
+  <div id="chipsRow" aria-hidden="true">
+    <div class="dchip pink" id="chipAttack"><span class="lbl">ATTACK</span><span class="val" id="chipAtkTx">—</span></div>
+    <div class="dchip blue" id="chipPath"><span class="lbl">PATH</span><span class="val" id="chipPathTx">—</span></div>
+    <div class="dchip gold" id="chipStrike"><span class="lbl">STRIKE</span><span class="val" id="chipStrikeTx">—</span></div>
   </div>
 
   <!-- THE MICROSCOPE (ORDRE 2 P2 §4/§5) — permanent left panel: low point in
@@ -530,12 +485,10 @@ addEventListener('unhandledrejection', function(e){
        Header: FIXED gold mono low-point x/y readout — always visible. -->
   <div class="strike-detail" id="strikeDetail" role="group" aria-label="Strike detail">
     <div class="sd-head">
-      <span class="ttl" id="sdTtl">Low point</span>
-      <p class="sd-lp" id="sdLpVals">
-        <span class="ax">x</span><b id="sdLpX">+4</b><span class="unit">cm</span>
-        <span class="dot" aria-hidden="true">·</span>
-        <span class="ax">y</span><b id="sdLpY">+1.6</b><span class="unit">cm</span>
-      </p>
+      <!-- GEOMETRY P1: eyebrow «Club». The JERN/DRIVER toggle is NOT rendered
+           in P1 (kontrakt §6 — clubContext flag; asset lands in a parallel
+           track). The old gold x/y readout is removed (kontrakt §8). -->
+      <span class="ttl" id="sdTtl">Club</span>
     </div>
     <div class="viewport" id="sdViewport">
       <svg id="sdAnnot" viewBox="0 0 340 196" aria-hidden="true"></svg>
@@ -546,40 +499,18 @@ addEventListener('unhandledrejection', function(e){
     </div>
   </div>
 
-  <div class="tune" id="tune" hidden>
-    <h2>Parameters</h2>
-    <div class="row" id="row_plane" style="--rng:#93A4F2">
-      <div class="top"><label for="s_plane">Plane</label><span class="val" id="v_plane"></span></div>
-      <div class="slider" data-origin="left">
-        <div class="ticks" aria-hidden="true"></div>
-        <input type="range" id="s_plane" min="45" max="70" step="1" aria-label="Plane angle">
-        <span class="bubble" id="b_plane" aria-hidden="true"></span>
-      </div>
+  <!-- GEOMETRY P1 KONTROLLBAR (ordre §Layoutsoner sone 3, permanent):
+       segmentkontroll → tickstrip → slider. No hint text. -->
+  <div id="controlBar">
+    <div id="seg">
+      <button class="cell" data-c="plane" aria-pressed="false"><span class="cl">PLANE</span><span class="cv" id="tvPlane"></span></button>
+      <button class="cell" data-c="dir" aria-pressed="false"><span class="cl">DIRECTION</span><span class="cv" id="tvDir"></span></button>
+      <button class="cell" data-c="low" aria-pressed="true"><span class="cl">LOW POINT X</span><span class="cv" id="tvLow"></span></button>
+      <button class="cell" data-c="arc" aria-pressed="false"><span class="cl">ARC HEIGHT</span><span class="cv" id="tvArc"></span></button>
     </div>
-    <div class="row" id="row_dir" style="--rng:#6FC6FF">
-      <div class="top"><label for="s_dir">Direction</label><span class="val" id="v_dir"></span></div>
-      <div class="slider" data-origin="center">
-        <div class="ticks" aria-hidden="true"></div>
-        <input type="range" id="s_dir" min="-8" max="8" step="0.5" aria-label="Swing direction">
-        <span class="bubble" id="b_dir" aria-hidden="true"></span>
-      </div>
-    </div>
-    <div class="row" id="row_lpx" style="--rng:#F472B6">
-      <div class="top"><label for="s_lpx">Low pt</label><span class="val" id="v_lpx"></span></div>
-      <div class="slider" data-origin="center" data-ticks="cm">
-        <div class="ticks" aria-hidden="true"></div>
-        <!-- ORDRE 2 P2 §8 — ±20 cm SYMMETRIC (metres in the value domain) -->
-        <input type="range" id="s_lpx" min="-0.20" max="0.20" step="0.005" aria-label="Low point, ahead or behind the ball">
-        <span class="bubble" id="b_lpx" aria-hidden="true"></span>
-      </div>
-    </div>
-    <div class="row" id="row_lpz" style="--rng:#C98AE6">
-      <div class="top"><label for="s_lpz">Depth</label><span class="val" id="v_lpz"></span></div>
-      <div class="slider" data-origin="center" data-ticks="cm">
-        <div class="ticks" aria-hidden="true"></div>
-        <input type="range" id="s_lpz" min="-0.20" max="0.20" step="0.002" aria-label="Strike depth, fat or thin">
-        <span class="bubble" id="b_lpz" aria-hidden="true"></span>
-      </div>
+    <div id="sliderRow">
+      <div id="trackRefs" aria-hidden="true"><div id="pureBand" hidden></div><div id="midTick"></div></div>
+      <input type="range" id="slider" aria-label="Low point X, ahead or behind the ball">
     </div>
   </div>
 
@@ -602,6 +533,13 @@ import {
   strikeQuality, deriveImpact, clubBallContact, BALL_RADIUS_M,
   lpWorld, effectiveLpx,
 } from './swing-parameters-and-impact.js';
+// GEOMETRY P1 — controller plane (kontrakt §3): uiLow ≡ effectiveLpx-semantikk,
+// rail-clamp, 0-detent, clubContext-oppslag, tidsbasert fjær-alpha. The
+// direction→low-point coupling lives in the MOTOR; this only mirrors/inverts.
+import {
+  uiLowCm, lowXForUiLow, clampUiLow, detentSnap, DETENT, CLUBS,
+  springAlpha, UI_LOW_MAX_CM,
+} from './geometry-controller.js';
 import saHaptics from './sa-haptics.js';
 window.saHaptics = saHaptics;   // expose for non-module scripts / tests
 import { createScene } from './geo3d/scene.js';
@@ -612,7 +550,7 @@ import { createLowpoint } from './geo3d/lowpoint.js';
 // delivery arrow (createDelivery) are UNWIRED from this scene (modules kept on
 // disk). Only the pure ground-crossing solve is still imported — it feeds the
 // panel's turf sentence.
-import { groundCrossingTheta0 } from './geo3d/groundcontact.js';
+import { groundCrossingTheta0, restTheta } from './geo3d/groundcontact.js';
 import { createClub } from './geo3d/club.js';
 import { createTimeline3d } from './geo3d/timeline.js';
 import { createInsetView } from './geo3d/insetview.js';
@@ -636,10 +574,15 @@ try {
   const shared = JSON.parse(localStorage.getItem('sa.geo.shared') || 'null');
   if (shared) {
     const cl = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
-    if (Number.isFinite(shared.planeAngle))     state.planeAngle     = cl(shared.planeAngle, 45, 70);
-    if (Number.isFinite(shared.swingDirection)) state.swingDirection = cl(shared.swingDirection, -8, 8);
-    if (Number.isFinite(shared.lowPointX))      state.lowPoint.x     = cl(shared.lowPointX, -0.20, 0.20); // ORDRE 2 P2 §8 — ±20 cm symmetric
-    if (Number.isFinite(shared.lowPointZ))      state.lowPoint.z     = cl(shared.lowPointZ, -0.20, 0.20);
+    // GEOMETRY P1 ranges (ordre §Segmentkontroll): plane 45–75, dir ±15,
+    // uiLow ±15 cm (clamped in the UI domain — the stance lowPoint.x may
+    // legitimately exceed ±15 cm when swingDirection ≠ 0), arc ±5 cm.
+    if (Number.isFinite(shared.planeAngle))     state.planeAngle     = cl(shared.planeAngle, 45, 75);
+    if (Number.isFinite(shared.swingDirection)) state.swingDirection = cl(shared.swingDirection, -15, 15);
+    if (Number.isFinite(shared.lowPointX))      state.lowPoint.x     = shared.lowPointX;
+    if (Number.isFinite(shared.lowPointZ))      state.lowPoint.z     = cl(shared.lowPointZ, -0.05, 0.05);
+    // EIERORDRE 2026-07-18: ingen stance-omskriving ved rail — den delte
+    // stancen bevares eksakt; visningen viser sann uiLow også forbi ±15.
   }
 } catch (e) { /* storage unavailable / bad JSON → keep defaults */ }
 
@@ -681,7 +624,10 @@ function init3d() {
   updateSceneRegion(); // ORDRE 2 P2 §4 — main camera renders right of the panel from frame one
   arc3d = createArc(state);
   plane3d = createPlane(state);
-  lp3d = createLowpoint(state, $('lp3dLabel'), $('lpy3dLabel'));
+  // GEOMETRY P1 (krav 12): no DOM labels — the floating «N cm ahead/behind» /
+  // «y +1.6 cm» scene chips are gone; cell values carry the numbers. The 3D
+  // bracket geometry itself stays (scene content, not an overlay chip).
+  lp3d = createLowpoint(state, null, null);
   club3d = createClub(state);
   ballTick = makeBallTick();
   sa3d.scene.add(arc3d.group, plane3d.group, lp3d.group, club3d.group, ballTick);
@@ -729,7 +675,7 @@ function init3d() {
       arc3d.group, plane3d.group, lp3d.group,
       sa3d.targetLine, timeline3d ? timeline3d.fx.trail.mesh : null,
     ].filter(Boolean),
-    faceZoomHideLabels: [$('lp3dLabel'), $('lpy3dLabel'), $('gc3dLabel')],
+    faceZoomHideLabels: [$('gc3dLabel')], // P1: the lp scene chips are removed
     // GROUND-STRIKE-BEFORE-BALL — "turf first" cue reuses the existing FIX J
     // turf label (gc3dLabel) for a brief emphasis pulse at the moment the
     // early ground-strike FX fires (see timeline.js pulseGroundStrikeLabel()).
@@ -737,6 +683,7 @@ function init3d() {
     facezoomEnabled: FACEZOOM_ENABLED,   // parked unless the ?facezoom=1 dev flag is set
   });
 
+  applyRailOffset(); // P1: control bar is permanent — camera makes room from frame one
   rebuild3d();
   sa3d.invalidate();
 
@@ -909,7 +856,12 @@ function updateStrikeDetail(stateRef) {
   // footer caption + optional turf line (FIX J — only when the low point
   // dips below ground, i.e. Fat/Duff). §7 — the band word carries its verdict
   // token; a "behind" low point is a negative state → --warn, never ember.
+  // GEOMETRY P1 — verdict sentence in the mock's grammar (max 2 lines, CSS
+  // line-clamp): band — low point N cm ahead/behind, arc ±N.N cm, strike
+  // N mm high/low. All numbers straight from the motor (uiLow/clubBallContact).
   const cmText = cmVal === 0 ? 'at the ball' : (cmVal > 0 ? `${cmVal} cm ahead` : `${Math.abs(cmVal)} cm behind`);
+  const arcCm = stateRef.lowPoint.z * 100;
+  const arcText = (arcCm >= 0 ? '+' : '−') + Math.abs(arcCm).toFixed(1) + ' cm';
   const mmText = Math.abs(mmVal) < 1.5 ? 'centered' : (mmVal > 0 ? `${mmVal} mm high` : `${Math.abs(mmVal)} mm low`);
   const theta0 = groundCrossingTheta0(stateRef);
   let turfText = null;
@@ -918,7 +870,7 @@ function updateStrikeDetail(stateRef) {
     const turfCm = Math.round(entry.x * 100);
     turfText = turfCm <= 0 ? `turf ${Math.abs(turfCm)} cm before ball` : `turf ${turfCm} cm after ball`;
   }
-  $('sdFoot').innerHTML = `<b style="color:${tok.txt}">${sq.band}</b> — low point <b${cmVal < 0 ? ' class="neg"' : ''}>${cmText}</b>, strike <b>${mmText}</b> on the face.`
+  $('sdFoot').innerHTML = `<b style="color:${tok.txt}">${sq.band}</b> — low point <b${cmVal < 0 ? ' class="neg"' : ''}>${cmText}</b>, arc <b>${arcText}</b>${sq.band === 'Whiff' ? '' : `, strike <b>${mmText}</b>`}.`
     + (turfText ? ` <span class="sd-turf">${turfText}</span>` : '');
 
   // a11y [a11y-lead]: the group keeps a STATIC aria-label ("Strike detail");
@@ -1002,34 +954,45 @@ function updateStrikeDetail(stateRef) {
 }
 
 const els = {
-  chipAtkTx: $('chipAtkTx'), chipPathTx: $('chipPathTx'),
-  sdLpX: $('sdLpX'), sdLpY: $('sdLpY'),
+  chipAtkTx: $('chipAtkTx'), chipPathTx: $('chipPathTx'), chipStrikeTx: $('chipStrikeTx'),
+  tvPlane: $('tvPlane'), tvDir: $('tvDir'), tvLow: $('tvLow'), tvArc: $('tvArc'),
 };
+const sgn = (v, dec) => (v >= 0 ? '+' : '−') + Math.abs(v).toFixed(dec);
 
 // ── strike readout ──────────────────────────────────────────────────────
-// The visible strike verdict lives in the microscope panel (#sdChip band/pct
-// + #sdFoot sentence + the ballTick ring / mm callout) and the scene-side
-// ATTACK/PATH chips. renderReadout() keeps ONLY those VISIBLE marks in sync
-// — it runs every animation frame while a slider drags, so it must stay cheap
-// and silent. The verbose sr-only #sceneData sentence is emitted separately by
-// announceSceneData(), debounced to drag-end (a11y M1: atomic × every frame
-// was flooding the screen reader with dozens of full sentences per drag).
+// GEOMETRY P1: the visible readout = the chips-rad (ATTACK/PATH/STRIKE, motor
+// output exactly — krav 4) + the four cell values + the microscope panel
+// (#sdChip/#sdFoot). renderReadout() runs every smoothing frame while values
+// chase their targets, so it must stay cheap and silent. The verbose sr-only
+// #sceneData sentence is emitted separately by announceSceneData(), debounced
+// to drag-end (a11y M1). Sign flips flash the chip (krav 11 — values roll
+// smoothly through 0 via the spring; the flash marks the crossing).
+let lastSign = { attack: null, path: null, strike: null };
 function renderReadout() {
   const di = deriveImpact(state);
-  // scene-side outcome chip (live with the sliders) — OWNER ORDER 2026-07-12
-  // (#3): the chip rows carry their own dot+label spans now, so only the mono
-  // VALUE is written here (U+2212 minus, tabular-nums via .sa-chip).
-  const fmtSigned = v => (v >= 0 ? '+' : '−') + Math.abs(v).toFixed(1) + '°';
-  els.chipAtkTx.textContent = fmtSigned(di.attackAngle);
-  els.chipPathTx.textContent = fmtSigned(di.clubPath);
-  // ORDRE 2 P2 §5 — the panel header's FIXED gold low-point readout:
-  // x = EFFECTIVE low point (slider + swing-dir coupling — the same number the
-  // scene bracket measures), y = low-point height (the Depth slider). Same
-  // frame as the scene: this runs in the identical rAF as rebuild3d().
-  const xCm = effectiveLpx(state) * 100;
-  const yCm = state.lowPoint.z * 100;
-  els.sdLpX.textContent = (xCm >= 0 ? '+' : '−') + Math.abs(xCm).toFixed(0);
-  els.sdLpY.textContent = (yCm >= 0 ? '+' : '−') + Math.abs(yCm).toFixed(1);
+  const sq = strikeQuality(state);
+  const ct = clubBallContact(state);
+  els.chipAtkTx.textContent = sgn(di.attackAngle, 1) + '°';
+  els.chipPathTx.textContent = sgn(di.clubPath, 1) + '°';
+  const mmVal = ct.offset * 1000;
+  els.chipStrikeTx.textContent = sq.band === 'Whiff'
+    ? '—'
+    : Math.abs(mmVal).toFixed(0) + ' mm ' + (mmVal >= 0 ? 'high' : 'low');
+  // cell values (LOW POINT X = uiLow ≡ effectiveLpx — kontrakt §3.1)
+  els.tvPlane.textContent = state.planeAngle.toFixed(0) + '°';
+  els.tvDir.textContent = sgn(state.swingDirection, 1) + '°';
+  els.tvLow.textContent = sgn(uiLowCm(state), 0) + ' cm';
+  els.tvArc.textContent = sgn(state.lowPoint.z * 100, 1) + ' cm';
+  // zero-flash on sign change (mock choreography)
+  const signs = { attack: Math.sign(di.attackAngle), path: Math.sign(di.clubPath), strike: sq.band === 'Whiff' ? 0 : Math.sign(mmVal) };
+  const chipEls = { attack: $('chipAttack'), path: $('chipPath'), strike: $('chipStrike') };
+  for (const k of ['attack', 'path', 'strike']) {
+    if (lastSign[k] !== null && signs[k] !== lastSign[k] && signs[k] !== 0 && !reduce) {
+      const c = chipEls[k];
+      c.classList.remove('zero'); void c.offsetWidth; c.classList.add('zero');
+    }
+    lastSign[k] = signs[k];
+  }
 }
 
 // sr-only #sceneData — THE single polite live region for this view (a11y
@@ -1039,9 +1002,9 @@ function renderReadout() {
 function announceSceneData() {
   const sq = strikeQuality(state);
   const di = deriveImpact(state);
-  const lpx = state.lowPoint.x;
-  const lpDesc = Math.abs(lpx) < 0.001 ? 'at the ball'
-    : (Math.abs(lpx * 100).toFixed(0) + ' cm ' + (lpx >= 0 ? 'ahead of the ball' : 'behind the ball'));
+  const lpx = uiLowCm(state); // uiLow — the same number the LOW POINT X cell shows (kontrakt §3.1)
+  const lpDesc = Math.abs(lpx) < 0.1 ? 'at the ball'
+    : (Math.abs(lpx).toFixed(0) + ' cm ' + (lpx >= 0 ? 'ahead of the ball' : 'behind the ball'));
   $('sceneData').textContent =
     `Strike ${sq.band}, ${sq.pct}%. Plane angle ${state.planeAngle} degrees. ` +
     `Attack angle ${di.attackAngle.toFixed(1)} degrees ${di.attackAngle >= 0 ? 'up' : 'down'}. ` +
@@ -1049,13 +1012,13 @@ function announceSceneData() {
 }
 
 // ── init ──────────────────────────────────────────────────────────────────
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 renderReadout();
 announceSceneData();
-const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 // ── fade the control surfaces during play for a clean ball-strike view ────
 // The HUD chips stay visible during play (matches the old in-canvas chips).
-const CONTROL_SEL = '.controls, .tune, .modnav, .strike-detail';
+const CONTROL_SEL = '.controls, #controlBar, #chipsRow, .modnav, .strike-detail';
 let insetSuppressed = false; // Pass-1 (Fable): GL inset follows the chrome fade
 function controlsVisible(show) {
   insetSuppressed = !show;
@@ -1105,31 +1068,15 @@ function animate3dView(toView) {
   });
 }
 
-// ── FIX M — camera makes room: tween the rig's targetOffset.z when the tune
-// rail opens/closes, so the scene (arc/ball/lowpoint bracket/turf label)
-// composes fully above the rail instead of being covered by it. Runs AFTER
-// the pose math inside applyRig() (targetOffset is additive to rig.tz), so it
-// composes with the FACE<->DTL orbit tween (animate3dView) without fighting —
-// both tweens can be in flight at once and applyRig() always reads the latest
-// of both. Calibrated by eye against the two required breakpoints/views.
-const RAIL_OFFSET_Z = -0.5; // metres the look-at target drops when the rail is open — camera stays put but tilts up, pushing scene content higher on screen (calibrated against 900x470/740x416, FACE/DTL — verified via Playwright: ball + lowpoint-bracket screen bbox clears the rail rect with margin in all four combinations)
-let railOffsetTween3d = null;
-function animateRailOffset(open) {
+// ── GEOMETRY P1 — the control bar is PERMANENT, so the camera-makes-room
+// offset (old FIX M tween) is applied once at init: the look-at target drops
+// so the scene (arc/ball/contact) composes fully above the bar (krav 2).
+const RAIL_OFFSET_Z = -0.5; // metres the look-at target drops (FIX M calibration kept)
+function applyRailOffset() {
   if (!sa3d) return;
-  const target = open ? RAIL_OFFSET_Z : 0;
-  if (reduceMotion3d) {
-    sa3d.setTargetOffset({ z: target });
-    sa3d.applyRig();
-    sa3d.invalidate();
-    return;
-  }
-  if (railOffsetTween3d) railOffsetTween3d.kill();
-  sa3d.startTicking();
-  railOffsetTween3d = gsap.to(sa3d.targetOffset, {
-    z: target, duration: 0.35, ease: 'power2.out',
-    onUpdate: () => { sa3d.applyRig(); lp3d && lp3d.placeLabel(sa3d.camera, $('scene3d')); if (gc3d) gc3d.update(state, sa3d.camera, $('scene3d')); },
-    onComplete: () => { railOffsetTween3d = null; sa3d.stopTicking(); },
-  });
+  sa3d.setTargetOffset({ z: RAIL_OFFSET_Z });
+  sa3d.applyRig();
+  sa3d.invalidate();
 }
 
 // ── §2.3 Free orbit + idle telescope drift ────────────────────────────────
@@ -1321,7 +1268,8 @@ function initCameraGestures() {
     if (timeline3d) timeline3d.setDocHidden(document.hidden); // battery — pause loop while hidden
     if (document.hidden) stopDrift(); else noteActivity();
   });
-  ['s_plane', 's_dir', 's_lpx', 's_lpz'].forEach(id => { const el = $(id); if (el) el.addEventListener('input', noteActivity); });
+  const lensSlider = $('slider');
+  if (lensSlider) lensSlider.addEventListener('input', noteActivity);
   noteActivity();
 
   // test/verify hooks
@@ -1355,206 +1303,242 @@ function writeSwingState() {
   } catch (e) { /* storage unavailable → ignore */ }
 }
 
-// ── sliders (rAF-throttled) ───────────────────────────────────────────────
-let pending = false;
+// ── GEOMETRY P1 — lens control plane (kontrakt §3) ────────────────────────
+// clubContext flag (kontrakt §6): P1 always 'iron'; ALL club-dependent logic
+// reads the CLUBS lookup — when the driver asset lands, only the toggle's
+// flag-hiding is removed.
+const clubContext = 'iron';
+const CLUB = CLUBS[clubContext];
+
+const LENS = {
+  plane: { min: 45, max: 75, step: 1, major: 5, token: 'var(--q-plane)', label: 'Plane angle', affects: ['attack', 'path'] },
+  dir: { min: -15, max: 15, step: 0.1, major: 5, token: 'var(--q-path)', label: 'Swing direction', affects: ['attack', 'path', 'strike'] },
+  low: { min: -15, max: 15, step: 0.5, major: 5, token: 'var(--q-attack)', label: 'Low point X, ahead or behind the ball', affects: ['attack', 'path', 'strike'] },
+  arc: { min: -5, max: 5, step: 0.1, major: 1, token: 'var(--q-strike)', label: 'Arc height', affects: ['strike'] },
+};
+let lens = 'low';
+
+// Targets vs displayed (kontrakt §5): the slider writes the TARGET immediately
+// (input mapping uses raw values — smoothing sits between target and display,
+// never between UI and motor input). The displayed values V chase T with the
+// time-based spring (τ=84 ms; 120 Hz-safe), and the shared `state` object the
+// 3D modules hold is refreshed from V each smoothing frame. lowX is the
+// STANCE (motor input, metres) — it stands still under direction-drag; the
+// shown uiLow is towed by the motor itself (effectiveLpx).
+const T = { plane: state.planeAngle, dir: state.swingDirection, lowX: state.lowPoint.x, arc: state.lowPoint.z * 100 };
+const V = { ...T };
+const tState = () => ({ radius: state.radius, planeAngle: T.plane, swingDirection: T.dir, lowPoint: { x: T.lowX, y: 0, z: T.arc / 100 } });
+const targetUiLow = () => uiLowCm(tState());
+
+function applyV() {
+  state.planeAngle = V.plane;
+  state.swingDirection = V.dir;
+  state.lowPoint.x = V.lowX;
+  state.lowPoint.z = V.arc / 100;
+}
+
+let springRaf = 0, springLastT = 0;
+function springStep(t) {
+  // dt clamped to [0,100]: the first rAF timestamp can precede the
+  // performance.now() taken in startSpring (frame-start timestamps) — a
+  // negative dt would flip alpha's sign and kick V backwards one frame.
+  const a = reduce ? 1 : springAlpha(Math.max(0, Math.min(t - springLastT, 100)));
+  springLastT = t;
+  let done = true;
+  for (const k of ['plane', 'dir', 'lowX', 'arc']) {
+    const dv = T[k] - V[k];
+    const eps = k === 'lowX' ? 0.0002 : 0.02;
+    if (Math.abs(dv) > eps) { V[k] += dv * a; done = false; } else { V[k] = T[k]; }
+  }
+  applyV();
+  renderReadout();
+  rebuild3d();
+  if (done) { springRaf = 0; writeSwingState(); }
+  else springRaf = requestAnimationFrame(springStep);
+}
+function startSpring() {
+  if (springRaf) return;
+  springLastT = performance.now();
+  springRaf = requestAnimationFrame(springStep);
+}
+
 let sceneDataTimer = 0;
 function applyLive() {
   // §2.4 — a slider change is a "next input": clear the held verdict plaque.
   if (timeline3d && timeline3d.faceZoom && !timeline3d.isPlaying()) timeline3d.faceZoom.hideVerdict();
   // a11y M1 — the verbose sr-only #sceneData sentence is debounced to drag-end
   // (fires ~350ms after the LAST input), so screen readers get one clean
-  // announcement per change, not one per animation frame. VISIBLE marks (HUD
-  // chips + 3D inset) still update every frame via renderReadout() below.
+  // announcement per change. VISIBLE marks update every smoothing frame.
   clearTimeout(sceneDataTimer);
   sceneDataTimer = setTimeout(announceSceneData, 350);
-  if (pending) return; pending = true;
-  requestAnimationFrame(() => { pending = false; renderReadout(); writeSwingState(); rebuild3d(); });
+  startSpring();
 }
-// ── premium slider visuals: centre-origin fill, thumb-aware position, bubble ─
+// ── slider visuals: accent fill from min to thumb (ordre §Segmentkontroll) ──
 const TRACK_BASE = 'rgba(255,255,255,.14)';
-const THUMB_W = 20;
-function styleSlider(el) {
-  const box = el.closest('.slider'); if (!box) return;
-  const min = +el.min, max = +el.max, val = +el.value;
-  const span = (max - min) || 1;
-  const pct = (val - min) / span;                       // 0..1 of the value range
-  const w = el.clientWidth || box.clientWidth || 200;
-  const inset = w > 0 ? (THUMB_W / w) : 0.1;             // thumb half-width fraction at each end
-  const posFrac = pct * (1 - inset) + inset / 2;         // thumb-centre fraction (accounts for inset)
-  const posPct = +(posFrac * 100).toFixed(2);
-  const centered = box.dataset.origin === 'center';
-  // origin: value 0 for signed sliders, left edge for plane
-  const oFrac0 = centered ? (0 - min) / span : 0;
-  const oFrac = centered ? (oFrac0 * (1 - inset) + inset / 2) : 0;
-  const oPct = +(oFrac * 100).toFixed(2);
-  let bg;
-  if (centered) {
-    const lo = Math.min(posPct, oPct), hi = Math.max(posPct, oPct);
-    bg = `linear-gradient(90deg, ${TRACK_BASE} 0 ${lo}%, var(--rng) ${lo}% ${hi}%, ${TRACK_BASE} ${hi}% 100%)`;
-  } else {
-    bg = `linear-gradient(90deg, var(--rng) 0 ${posPct}%, ${TRACK_BASE} ${posPct}% 100%)`;
-  }
-  el.style.setProperty('--track-bg', bg);
-  box.style.setProperty('--p', posPct + '%');
-  box.style.setProperty('--o', oPct + '%');
+const slider = $('slider');
+function updateSliderFill() {
+  const pct = 100 * (slider.value - slider.min) / ((slider.max - slider.min) || 1);
+  slider.style.setProperty('--track-bg',
+    `linear-gradient(90deg, var(--lens) 0 ${pct.toFixed(2)}%, ${TRACK_BASE} ${pct.toFixed(2)}% 100%)`);
 }
-// STAGE 4 — haptics: pointerdown→selectionStart, whole-degree (plane/dir) or
-// whole-cm (lpx/lpz) crossings→tick(key), pointerup→selectionEnd. Also detects
-// a strikeQuality band CHANGE vs the previous input event on this slider and
-// fires sa.band(key) instead (which suppresses the coincident tick).
-const HAPTIC_GRAIN = { s_plane: v => Math.round(v), s_dir: v => Math.round(v),
-  s_lpx: v => Math.round(v * 100), s_lpz: v => Math.round(v * 100) };
-function wireSliderHaptics(el, hapticKey) {
+
+// ── track-referanser (eierordre 2026-07-18): tick-stripen er erstattet av én
+// midtstrek (statisk CSS — 50 % = 0 for dir/low/arc, 60° for plane) + pure-
+// sonen tegnet i selve slider-sporet i low-linsen (krav 8 bevart — fortsatt
+// bundet til MOTOR-konstantene via CLUB.pureZoneCm, +2..+15 for jern).
+function updateTrackRefs() {
+  const c = LENS[lens], band = $('pureBand');
+  if (lens !== 'low') { band.hidden = true; return; }
+  const [z1, z2] = CLUB.pureZoneCm;
+  const f = v => (v - c.min) / (c.max - c.min) * 100;
+  band.style.left = f(z1).toFixed(2) + '%';
+  band.style.width = (f(z2) - f(z1)).toFixed(2) + '%';
+  band.hidden = false;
+}
+
+// ── lens switch: slider range/accent, cell states, chip dimming (krav 6) ───
+function lensSliderValue() {
+  if (lens === 'plane') return T.plane;
+  if (lens === 'dir') return T.dir;
+  if (lens === 'arc') return T.arc;
+  return clampUiLow(targetUiLow()).uiLow;
+}
+function applyLens(next) {
+  lens = next;
+  const c = LENS[lens];
+  $('controlBar').style.setProperty('--lens', c.token);
+  slider.min = c.min; slider.max = c.max; slider.step = c.step;
+  slider.value = lensSliderValue();
+  slider.setAttribute('aria-label', c.label);
+  slider.setAttribute('aria-valuetext', cellValueText());
+  document.querySelectorAll('.cell').forEach(b => {
+    const on = b.dataset.c === lens;
+    b.classList.toggle('on', on);
+    b.setAttribute('aria-pressed', String(on));
+  });
+  ['attack', 'path', 'strike'].forEach(k => {
+    $('chip' + k[0].toUpperCase() + k.slice(1)).classList.toggle('off', !c.affects.includes(k));
+  });
+  updateSliderFill();
+  updateTrackRefs();
+  snapped = Math.abs(+slider.value) < 1e-9;
+}
+function cellValueText() {
+  if (lens === 'plane') return T.plane.toFixed(0) + '°';
+  if (lens === 'dir') return sgn(T.dir, 1) + '°';
+  if (lens === 'arc') return sgn(T.arc, 1) + ' cm';
+  return sgn(clampUiLow(targetUiLow()).uiLow, 0) + ' cm';
+}
+document.querySelectorAll('.cell').forEach(b => b.addEventListener('click', () => applyLens(b.dataset.c)));
+
+// ── ringeffekt (ordre §Ringeffekt, kontrakt §3.1): under direction/plane drag
+// the STANCE (T.lowX) holds and the motor itself tows the shown uiLow; the
+// controller only reflects the coupling (pulse) and clamps at ±15 (rail —
+// stance recomputed so effectiveLpx sits exactly on the rail). No towing
+// formula here — double-towing is an escalation condition, not a feature.
+function reflectTow(uiLowBefore) {
+  const raw = targetUiLow();
+  if (Math.abs(raw - uiLowBefore) < 1e-6) return; // plane drag with dir=0 → no coupling
+  // EIERORDRE 2026-07-18: stance-omskrivingen ved rail er FJERNET — den ga
+  // hysterese (målt: low −10 → dir-rail-roundtrip → low −0). Cellen viser nå
+  // den SANNE verdien også forbi ±15 (uiLow ≡ effectiveLpx holder overalt);
+  // slideren forblir sette-instrument ±15, og rail-pulsen betyr «utenfor
+  // slider-område». Full reversibilitet: stance røres aldri av dir/plane.
+  const { railed } = clampUiLow(raw);
+  const lc = document.querySelector('.cell[data-c="low"]');
+  if (!reduce && lc) {
+    const cls = railed ? 'rail' : 'towed';
+    lc.classList.remove('rail', 'towed'); void lc.offsetWidth; lc.classList.add(cls);
+  }
+}
+
+// ── slider input: detent-snap → target write → tow reflection → pings ──────
+let lastPing = 0, snapped = false;
+slider.addEventListener('input', () => {
+  let v = parseFloat(slider.value);
+  const win = DETENT[lens] || 0;
+  const snappedV = detentSnap(v, win);
+  if (snappedV !== v) {
+    v = snappedV; slider.value = v;
+    if (!snapped) { snapped = true; saHaptics.tick(lens); } // krav 7 — one tick at the detent
+  } else if (win > 0) snapped = false;
+  const uiLowBefore = targetUiLow();
+  if (lens === 'plane') T.plane = v;
+  else if (lens === 'dir') T.dir = v;
+  else if (lens === 'arc') T.arc = v;
+  else T.lowX = lowXForUiLow(v, tState()); // invers av effectiveLpx (kontrakt §3.1)
+  if (lens === 'dir' || lens === 'plane') reflectTow(uiLowBefore);
+  slider.setAttribute('aria-valuetext', cellValueText());
+  updateSliderFill();
+  // chip ping on the affected outcomes, throttled (mock: 260 ms)
+  const now = performance.now();
+  if (now - lastPing > 260 && !reduce) {
+    lastPing = now;
+    LENS[lens].affects.forEach(k => {
+      const chip = $('chip' + k[0].toUpperCase() + k.slice(1));
+      chip.classList.remove('ping'); void chip.offsetWidth; chip.classList.add('ping');
+    });
+  }
+  applyLive();
+});
+
+// STAGE 4 — haptics on the single lens slider: whole-unit crossings (degree
+// or cm — every lens uses whole units) → tick, strikeQuality band change →
+// band (suppresses the coincident tick). Same grammar as before P1.
+(function wireSliderHaptics() {
   let lastGrain = null, lastBand = null;
-  const grain = HAPTIC_GRAIN[el.id];
-  el.addEventListener('pointerdown', () => {
-    lastGrain = grain(+el.value);
-    lastBand = strikeQuality(state).band;
+  slider.addEventListener('pointerdown', () => {
+    lastGrain = Math.round(+slider.value);
+    lastBand = strikeQuality(tState()).band;
     saHaptics.selectionStart();
   });
-  el.addEventListener('input', () => {
-    const g = grain(+el.value);
+  slider.addEventListener('input', () => {
+    const g = Math.round(+slider.value);
     if (lastGrain === null) lastGrain = g;
-    const band = strikeQuality(state).band;
+    const band = strikeQuality(tState()).band;
     if (lastBand === null) lastBand = band;
     if (band !== lastBand) {
-      lastBand = band;
-      lastGrain = g;
-      saHaptics.band(hapticKey);          // band change beats the coincident tick
+      lastBand = band; lastGrain = g;
+      saHaptics.band(lens);
     } else if (g !== lastGrain) {
       lastGrain = g;
-      saHaptics.tick(hapticKey);
+      saHaptics.tick(lens);
     }
   });
   const end = () => saHaptics.selectionEnd();
-  el.addEventListener('pointerup', end);
-  el.addEventListener('pointercancel', end);
-}
-
-function bind(id, get, fmt) {
-  const el = $(id), out = $('v_' + id.slice(2));
-  const box = el.closest('.slider');
-  const bubble = box ? box.querySelector('.bubble') : null;
-  const sync = () => {
-    const txt = fmt(+el.value);
-    out.textContent = txt; el.setAttribute('aria-valuetext', txt);
-    if (bubble) bubble.textContent = txt;
-    styleSlider(el);
-  };
-  el.addEventListener('input', () => { get(+el.value); sync(); applyLive(); });
-  // value bubble: show on drag / keyboard focus, fade out shortly after release
-  if (box) {
-    let bubbleT = null;
-    const showBubble = () => { clearTimeout(bubbleT); box.classList.add('show-bubble'); };
-    const hideBubble = () => { bubbleT = setTimeout(() => box.classList.remove('show-bubble'), 650); };
-    el.addEventListener('pointerdown', showBubble);
-    el.addEventListener('focus', showBubble);
-    el.addEventListener('input', showBubble);
-    el.addEventListener('pointerup', hideBubble);
-    el.addEventListener('pointercancel', hideBubble);
-    el.addEventListener('blur', () => box.classList.remove('show-bubble'));
-  }
-  wireSliderHaptics(el, id);
-  return sync;
-}
-const cm = v => (v * 100).toFixed(0) + ' cm';
-const syncers = [
-  bind('s_plane', v => state.planeAngle = v, v => v.toFixed(0) + '°'),
-  bind('s_dir', v => state.swingDirection = v, v => (v > 0 ? '+' : '') + v.toFixed(1) + '° ' + (Math.abs(v) < 0.1 ? '' : v > 0 ? 'in-out' : 'out-in')),
-  bind('s_lpx', v => state.lowPoint.x = v, v => Math.abs(v * 100).toFixed(0) + ' cm ' + (v >= 0 ? 'ahead' : 'behind')),
-  bind('s_lpz', v => state.lowPoint.z = v, v => v >= 0 ? (v * 100).toFixed(0) + ' cm above' : Math.abs(v * 100).toFixed(0) + ' cm below'),
-];
+  slider.addEventListener('pointerup', end);
+  slider.addEventListener('pointercancel', end);
+})();
 
 // ── 3D: ghost arc (frozen snapshot on drag start) + shimmer on change ────────
-// FIX M — focus dimming: while dragging one slider's row, the other three
-// rows fade to ~40% opacity (150ms; reduced-motion: no fade — CSS transition
-// on .row.dimmed is already suppressed by the prefers-reduced-motion rule
-// above), active row stays 100%. Restored on release/cancel. Piggybacks on
-// this same pointerdown/up/cancel wiring (the one driving ghost-arc + haptics)
-// per the fix spec, rather than adding a second listener set.
-const ROW_IDS = { s_plane: 'row_plane', s_dir: 'row_dir', s_lpx: 'row_lpx', s_lpz: 'row_lpz' };
-function setRowsDimmed(activeId, dimmed) {
-  Object.entries(ROW_IDS).forEach(([sliderId, rowId]) => {
-    if (sliderId === activeId) return;
-    const row = $(rowId);
-    if (row) row.classList.toggle('dimmed', dimmed);
-  });
-}
-['s_plane', 's_dir', 's_lpx', 's_lpz'].forEach(id => {
-  const el = $(id);
-  el.addEventListener('pointerdown', () => {
-    if (!arc3d) return;
-    arc3d.snapshotGhost();
-    sa3d.invalidate();
-    if (id === 's_plane' && plane3d) plane3d.aimHold(window.gsap, reduceMotion3d);
-    setRowsDimmed(id, true);
-  });
-  el.addEventListener('pointerup', () => {
-    if (!arc3d) return;
-    arc3d.fadeGhost(window.gsap, reduceMotion3d);
-    if (id === 's_plane' && plane3d) plane3d.aimRelease(window.gsap, reduceMotion3d);
-    setRowsDimmed(id, false);
-  });
-  el.addEventListener('pointercancel', () => {
-    if (!arc3d) return;
-    arc3d.fadeGhost(window.gsap, reduceMotion3d);
-    if (id === 's_plane' && plane3d) plane3d.aimRelease(window.gsap, reduceMotion3d);
-    setRowsDimmed(id, false);
-  });
-  // ØKT 2.3 — aiming numerals on the armillary ring: keyboard/AT adjustments
-  // fire `input` without any pointerdown, so pulse the fade-in from here too
-  // (pulse is a no-op while a pointer drag already holds the numerals up).
-  if (id === 's_plane') el.addEventListener('input', () => { if (plane3d) plane3d.aimPulse(window.gsap, reduceMotion3d); });
-  // FX-on-change (RE-HERO): a settle with a CHANGED value arms ONE band-correct
-  // impact response on the loop's next impact pass. The native `change` event
-  // fires on release / keyboard-commit only when the value actually changed —
-  // exactly the "settle detection" the spec asks for.
-  el.addEventListener('change', () => { if (timeline3d) timeline3d.armImpactFx(); });
+// ── 3D: ghost arc (frozen snapshot on drag start) + plane aiming numerals ──
+slider.addEventListener('pointerdown', () => {
+  if (!arc3d) return;
+  arc3d.snapshotGhost();
+  sa3d.invalidate();
+  if (lens === 'plane' && plane3d) plane3d.aimHold(window.gsap, reduceMotion3d);
 });
-// set slider positions from state
-$('s_plane').value = state.planeAngle;
-$('s_dir').value = state.swingDirection; $('s_lpx').value = state.lowPoint.x; $('s_lpz').value = state.lowPoint.z;
-syncers.forEach(s => s());
-// re-run the visual fill/position computation for all sliders (width-dependent)
-function restyleSliders() { ['s_plane', 's_dir', 's_lpx', 's_lpz'].forEach(id => styleSlider($(id))); }
-addEventListener('resize', restyleSliders);
+const releaseGhost = () => {
+  if (!arc3d) return;
+  arc3d.fadeGhost(window.gsap, reduceMotion3d);
+  if (plane3d) plane3d.aimRelease(window.gsap, reduceMotion3d);
+};
+slider.addEventListener('pointerup', releaseGhost);
+slider.addEventListener('pointercancel', releaseGhost);
+// ØKT 2.3 — aiming numerals: keyboard/AT adjustments fire `input` without any
+// pointerdown, so pulse the fade-in from here too.
+slider.addEventListener('input', () => { if (lens === 'plane' && plane3d) plane3d.aimPulse(window.gsap, reduceMotion3d); });
+// FX-on-change (RE-HERO): a settle with a CHANGED value arms ONE band-correct
+// impact response on the loop's next impact pass.
+slider.addEventListener('change', () => { if (timeline3d) timeline3d.armImpactFx(); });
+
+// initial lens + values from state; tickstrip is width-dependent
+applyLens('low');
+renderReadout();
+addEventListener('resize', () => { updateSliderFill(); });
 writeSwingState();   // seed shared state so Impact reflects the current swing immediately
 
 // ── controls ──────────────────────────────────────────────────────────────
-// FIX M — tune rail open/close: 200ms slide-up (CSS transform/opacity),
-// reduced-motion instant. Runs alongside (not instead of) the 0.35s camera
-// target-offset tween (animateRailOffset) so the scene composes above the
-// rail by the time it's fully open.
-let tuneCloseTimer = null;
-$('tuneBtn').addEventListener('click', () => {
-  const t = $('tune');
-  const open = t.hasAttribute('hidden');
-  $('tuneBtn').setAttribute('aria-pressed', String(open));
-  clearTimeout(tuneCloseTimer);
-  if (open) {
-    t.removeAttribute('hidden');
-    t.classList.add('tune-closed');           // start off-screen (no flash)
-    // force layout so the browser registers the closed transform before we
-    // remove it — otherwise the browser may coalesce both class changes into
-    // one style recalc and skip the transition entirely.
-    void t.offsetHeight;
-    if (reduceMotion3d) {
-      t.classList.remove('tune-closed');
-    } else {
-      requestAnimationFrame(() => t.classList.remove('tune-closed'));
-    }
-    requestAnimationFrame(restyleSliders); // panel was display:none → 0 width
-    animateRailOffset(true);
-  } else {
-    t.classList.add('tune-closed');
-    animateRailOffset(false);
-    if (reduceMotion3d) {
-      t.setAttribute('hidden', '');
-    } else {
-      tuneCloseTimer = setTimeout(() => t.setAttribute('hidden', ''), 220);
-    }
-  }
-});
 $('viewBtn').addEventListener('click', () => {
   const to = state.view === 'face' ? 'dtl' : 'face';
   $('viewBtn').setAttribute('aria-pressed', String(to === 'dtl'));
@@ -1670,17 +1654,13 @@ window.__sa = Object.assign(window.__sa || {}, {
     },
     view: () => (sa3d ? sa3d.rig : null),
     invalidate: () => sa3d && sa3d.invalidate(),
-    // ØKT 2.3 — quiet-ring verification hook: aiming-layer fade state + the
-    // live aim marker. OWNER ORDER 2026-07-12 (#1/#2): sector + numeral are
-    // drag-time only — aimVisible/aimOpacity/numeralVisible assert the rest
-    // state is EMPTY (quiet ticks only).
+    // Aim-numeral verification hook — EIERORDRE 2026-07-17: gradereferansene
+    // (tick-ring, tallkrans, sektor) er fjernet; kun det ene aktive gradtallet
+    // finnes, fortsatt drag-tids-gated (OWNER ORDER 2026-07-12 #2):
+    // numeralVisible/-Opacity asserter at hviletilstanden er tom.
     ring3d: () => (plane3d ? {
-      numbersOpacity: +plane3d.numbersMesh.material.opacity.toFixed(3),
-      numbersVisible: plane3d.numbersMesh.visible,
-      aimDeg: plane3d.aimSector.userData.deg,
+      aimDeg: plane3d.numberMesh.userData.deg,
       aimText: plane3d.numberMesh.userData.text,
-      aimVisible: plane3d.aimSector.visible,
-      aimOpacity: +plane3d.aimSector.material.opacity.toFixed(3),
       numeralVisible: plane3d.numberMesh.visible,
       numeralOpacity: +plane3d.numberMesh.material.opacity.toFixed(3),
     } : null),
@@ -1731,6 +1711,10 @@ window.__sa = Object.assign(window.__sa || {}, {
       headZ: () => (club3d ? club3d.group.position.z : null),
       divotActiveCount: () => (timeline3d ? timeline3d.fx.divot.activeCount : null),
     },
+    // REST-POSE verification hook (eierordre 2026-07-17: club rests WHERE it
+    // strikes) — theta + world point so headless rigs can assert
+    // club().position ≈ restPose().world per band after rebuild3d.
+    restPose: () => ({ theta: restTheta(state), world: arcPosition(restTheta(state), state) }),
     // STRIKE-DETAIL inset verification hooks (2026-07-03)
     inset: {
       rect: () => (inset3d ? inset3d.getRect() : null),
@@ -1896,7 +1880,7 @@ window.__sa = Object.assign(window.__sa || {}, {
 //   once landscape + scene-ready are true again.
 const COACH_STEPS = [
   { selector: '#viewBtn', title: 'Tilt the view', body: 'Switch between front-on and down-the-line to see the swing plane lean back.' },
-  { selector: '#tuneBtn', title: 'Adjust the swing', body: 'Open Parameters to change plane angle, swing direction and low point (ahead or behind the ball).' },
+  { selector: '#seg',     title: 'Adjust the swing', body: 'Pick a parameter — plane angle, swing direction, low point or arc height — and drag the slider.' },
   { selector: '#hit',     title: 'Watch the strike', body: 'Press play to run the swing in slow motion and read the path & attack angle at impact.' },
 ];
 const COACH_SETTLE_MS = 600;
@@ -2002,6 +1986,74 @@ window.__coachDebug = {
   get armed() { return coachArmed; },
   get active() { return !!activeCoach; },
 };
+
+// ── krav 10 device-evidens: fps-måler (debug, av som standard) ────────────
+// Aktivering uten adressefelt (WKWebView): 7 raske trykk på chips-raden
+// (inert flate i dag), eller ?fps=1 / localStorage sa_fps='1'. Overlayet er
+// pointer-events:none + aria-hidden — ingen ny live-region (a11y-guardrail).
+// Under slider-drag samles rAF-intervaller; ved slipp fryses oppsummeringen
+// (snitt / p95 / % frames > 16.7 ms) på skjermen for screenshot-evidens.
+(function fpsMeter() {
+  let on = new URLSearchParams(location.search).has('fps') ||
+    localStorage.getItem('sa_fps') === '1';
+  let el = null, raf = 0, last = null, live = [], drag = null, summary = '';
+  const q95 = a => { const s = [...a].sort((x, y) => x - y); return s[Math.floor(s.length * 0.95)]; };
+  const stats = a => {
+    const mean = a.reduce((s, x) => s + x, 0) / a.length;
+    return { fps: 1000 / mean, mean, p95: q95(a), slow: 100 * a.filter(x => x > 16.8).length / a.length };
+  };
+  function loop(now) {
+    if (last !== null) {
+      const dt = now - last;
+      live.push(dt); if (live.length > 60) live.shift();
+      if (drag) drag.push(dt);
+    }
+    last = now;
+    if (el && live.length > 5) {
+      const s = stats(live);
+      el.textContent = `fps ${s.fps.toFixed(0)}  frame ${s.mean.toFixed(1)} ms` + (summary ? '\n' + summary : '');
+    }
+    raf = requestAnimationFrame(loop);
+  }
+  function start() {
+    if (el) return;
+    el = document.createElement('div');
+    el.className = 'fpsMeter'; el.setAttribute('aria-hidden', 'true');
+    el.textContent = 'fps —';
+    document.body.appendChild(el);
+    last = null; live = [];
+    raf = requestAnimationFrame(loop);
+  }
+  function stop() {
+    if (raf) cancelAnimationFrame(raf); raf = 0;
+    if (el) el.remove(); el = null; drag = null; summary = '';
+  }
+  const sliderEl = document.querySelector('#controlBar input[type=range]');
+  sliderEl.addEventListener('pointerdown', () => { if (el) { drag = []; } });
+  const endDrag = () => {
+    if (!el || !drag) return;
+    if (drag.length > 10) {
+      const s = stats(drag);
+      summary = `DRAG ${drag.length}f: ${s.fps.toFixed(0)} fps  p95 ${s.p95.toFixed(1)} ms  >16.7ms ${s.slow.toFixed(0)}%`;
+    }
+    drag = null;
+  };
+  sliderEl.addEventListener('pointerup', endDrag);
+  sliderEl.addEventListener('pointercancel', endDrag);
+  // 7 raske trykk på chips-raden toggler og persisterer
+  let taps = 0, tapT = 0;
+  $('chipsRow').addEventListener('pointerdown', () => {
+    taps++; clearTimeout(tapT); tapT = setTimeout(() => { taps = 0; }, 700);
+    if (taps >= 7) {
+      taps = 0; on = !on;
+      try { localStorage.setItem('sa_fps', on ? '1' : '0'); } catch (e) {}
+      on ? start() : stop();
+      saHaptics.tick('fps');
+    }
+  });
+  if (on) start();
+  window.__fpsMeter = { get on() { return !!el; }, get summary() { return summary; } };
+})();
 </script>
 </body>
 </html>

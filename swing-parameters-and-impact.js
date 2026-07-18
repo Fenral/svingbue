@@ -184,9 +184,11 @@ export function clubBallContact(state) {
 // Height ceiling for Pure is 1.0r (ball centre) rather than 0.6r: at the steep
 // plane angles used here an ideal centred low-point already lands h ≈ 0.8r, so
 // 1.0r keeps the "ball first, below equator" intent while matching the geometry.
-const LP_AHEAD_MIN = 0.02;
-const LP_AHEAD_MAX = 0.15;
-const LP_IDEAL = 0.105; // centre of the ideal +0.08..+0.13 window
+// Exported (geometry P1, systemkontrakt §2): the tickstrip pure zone binds to
+// these — the ONLY sanctioned way UI learns the Pure window. Values unchanged.
+export const LP_AHEAD_MIN = 0.02;
+export const LP_AHEAD_MAX = 0.15;
+export const LP_IDEAL = 0.105; // centre of the ideal +0.08..+0.13 window
 
 // STAGE 5 — per-band TEXT colour (distinct from `color`, which drives dots/fills
 // and stays untouched). Tuned for >=4.5:1 contrast on #0A0E12.

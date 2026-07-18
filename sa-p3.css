@@ -74,10 +74,25 @@
   --bad:#FF7B8A;
 
   /* ── data params (labelled chips/traces only; never bare status dots) ─── */
+  /* tokens: geometry-palett (2026-07-17) — mock design/mocks/geometry.html is
+     normative for the VALUES (ordre §2); minted as oklch() from the mock hex
+     (in-gamut → no sRGB clipping). Contrast re-measured on the clipped render:
+     vs --plate-solid #0D0A18 / --bg #07060C. */
   --face:#FF5C6B;
-  --path:#6FC6FF;
-  --attack:#F472B6;   /* pink — owner override 2026-07-11 (supersedes the mint mapping) */
+  --path:oklch(78.68% 0.1179 228.25);    /* mock #5bc8f5 — 10.27:1 / 10.60:1 */
+  --attack:oklch(72.34% 0.1793 348.62);  /* mock #f470b8 —  7.32:1 /  7.55:1 (pink, owner override 2026-07-11 holds) */
   --loft:#B9A0FF;
+  /* strike quality/height (gold) — NEW quantity token (geometry P1). Takes the
+     mock gold per flagg 1-beslutningen (eier 2026-07-17): strike claims
+     #e3b05c; --launch re-tunes away in its own commit. */
+  --strike:oklch(78.73% 0.1178 78.12);   /* mock #e3b05c —  9.90:1 / 10.22:1 */
+  /* warm focal (geometry P1) — contact-tick/glow ONLY, exactly ONE occurrence
+     per screen, never decorative. Same warm family as --accent (mock #ff8a4c
+     is 1 RGB step from ember #FF8A4D) but a separate named intent. */
+  --focal-warm:oklch(75.14% 0.1610 46.76); /* mock #ff8a4c — 8.37:1 / 8.64:1 */
+  /* pure-zone UI fill (geometry P1) — the tickstrip zone band, rendered at
+     18% opacity. UI token only; the motor's internal verdict hexes untouched. */
+  --zone-pure:oklch(77.99% 0.1648 157.13); /* mock #3fd68c — 10.44:1 / 10.77:1 */
 
   /* ── lines / geometry / motion ───────────────────────────────────────── */
   --line:rgba(255,255,255,.10);
@@ -94,10 +109,12 @@
   --font-display:'Space Grotesk','Inter',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
   --font-mono:'IBM Plex Mono',ui-monospace,"SF Mono","JetBrains Mono",Menlo,monospace;
 
-  /* ── launch param (SYS-02 / out-03) — desaturated gold tuned into the
-       ultraviolet world; ≥4.5:1 on the lens bg #0D0A18 (measured ~11.5:1) and
-       clearly duller/greener than --warn #FFD056 so "estimated gold" ≠ "launch". */
-  --launch:#E3C468;
+  /* ── launch param (SYS-02 / out-03) — RE-TUNED 2026-07-17 (flagg 1, eier):
+       strike claimed the gold family (#e3b05c, H≈78°), so launch leaves gold
+       for citron (H 105° — ΔH 27° vs --strike, 17° vs --warn, 22° vs --gold).
+       Contrast re-measured on the sRGB render (#c7c274): 10.61:1 on the lens
+       bg #0D0A18, 10.95:1 on --bg — still clearly duller/greener than --warn. */
+  --launch:oklch(80% 0.10 105);
 
   /* ── ghost reference-trace grey (SYS-04 / out-17) — violet-leaning neutral,
        replaces the teal-era #9FB2C8. Reserved for reference TRACE STROKES only,
@@ -118,7 +135,7 @@
        rewire map live in the SYS-11 law block below. Two NEW hues give the
        geometry quantities that had no honest home: plane was stealing --loft,
        depth was stealing --face/coral — both now leave those hues. */
-  --plane:#93A4F2;   /* periwinkle — swing plane  (was stealing --loft)   ≥7.2:1 */
+  --plane:oklch(70.06% 0.1494 288.55); /* periwinkle — swing plane; mock #9c8df5 (tokens: geometry-palett) — 7.02:1 / 7.25:1 */
   --depth:#C98AE6;   /* orchid     — strike depth (MUST leave coral --face) ≥7.4:1 */
   --q-face:var(--face);       /* face angle                                    */
   --q-path:var(--path);       /* club-path direction (== geometry swing dir)   */
@@ -127,6 +144,7 @@
   --q-launch:var(--launch);   /* launch angle                                  */
   --q-plane:var(--plane);     /* swing plane                                   */
   --q-depth:var(--depth);     /* strike depth                                  */
+  --q-strike:var(--strike);   /* strike quality/height on the face (geometry)  */
   --q-ball:var(--ink);        /* ball marker — neutral, NOT a param hue        */
 
   /* ── measure-label amber (docs/systemkontrakt.md §1.6 / A10) — Impact-
@@ -260,11 +278,12 @@
      HUE (token)             → PHYSICAL QUANTITY (its one meaning)
      ────────────────────────────────────────────────────────────────────────
      --face   #FF5C6B coral    Face angle
-     --path   #6FC6FF blue     Club-path direction  (geometry "swing dir" = same quantity ✓ documented reuse)
-     --attack #F472B6 pink     Attack angle         (geometry "low point"  = the attack locus  ✓ documented reuse)
+     --path   #5BC8F5 blue     Club-path direction  (geometry "swing dir" = same quantity ✓ documented reuse; value → mock, tokens: geometry-palett)
+     --attack #F470B8 pink     Attack angle         (geometry "low point"  = the attack locus  ✓ documented reuse; value → mock)
      --loft   #B9A0FF lav.     Dynamic loft
-     --launch #E3C468 gold     Launch angle
-     --plane  #93A4F2 peri.    Swing plane          (NEW — was illegally sharing --loft)
+     --launch (see token)      Launch angle         (re-tuned AWAY from strike gold — flagg 1, own commit)
+     --strike #E3B05C gold     Strike quality/height (NEW — claims the mock gold per flagg 1, eier 2026-07-17)
+     --plane  #9C8DF5 peri.    Swing plane          (NEW — was illegally sharing --loft; value → mock)
      --depth  #C98AE6 orchid   Strike depth         (NEW — MUST leave coral --face)
      (ball marker)             Ball position → --ink (neutral; a ball is not a param)
 

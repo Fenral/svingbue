@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>StrikeArc — Geometry v8</title>
+<style>
+  :root{
+    --bg:#161221; --gold:#e3b05c; --gold-dim:#8a6c3a;
+    --pink:#f470b8; --blue:#5bc8f5; --violet:#9c8df5;
+    --orange:#ff8a4c; --green:#3fd68c;
+    --ink:#efeaf7; --dim:#8d84a3; --line:#2a2340;
+    --mono:ui-monospace,'SF Mono','JetBrains Mono',Menlo,monospace;
+    --serif:'Iowan Old Style','Palatino',Georgia,serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,system-ui,sans-serif}
+  body{height:100%}
+  #app{display:grid;grid-template-columns:27% 73%;height:100%;position:relative}
+
+  /* ================= MIKROSKOP ================= */
+  #micro{background:linear-gradient(180deg,#1b1528,#141020);border-right:1px solid var(--line);
+    display:flex;flex-direction:column;padding:10px 14px;position:relative;z-index:2;min-width:0}
+  .eyebrow{font-family:var(--serif);font-size:10px;letter-spacing:.24em;color:var(--dim);text-transform:uppercase}
+  .tgl{display:flex;border:1.5px solid #322a4c;border-radius:999px;overflow:hidden}
+  .tgl button{flex:1;font-family:var(--mono);font-size:9px;letter-spacing:.1em;padding:6px 11px;
+    background:transparent;border:0;color:var(--dim);cursor:pointer;transition:all .2s;white-space:nowrap}
+  .tgl button.on{background:#241d3d;color:var(--gold)}
+  #clubTgl{margin-top:6px}
+  #faceWrap{flex:1;display:flex;align-items:center;justify-content:center;min-height:0;padding:4px 0}
+  #faceSvg{max-height:100%;max-width:100%}
+  #verdict{padding-top:7px;border-top:1px solid var(--line);flex:none}
+  #verdictChip{display:inline-flex;gap:6px;font-family:var(--mono);font-size:11.5px;font-weight:700;
+    padding:2px 10px;border-radius:999px;border:1.5px solid;transition:all .3s}
+  #verdictTxt{font-size:10.5px;line-height:1.4;color:var(--dim);margin-top:5px;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  #verdictTxt b{color:var(--ink)}
+
+  /* ================= SCENE ================= */
+  #scene{display:flex;flex-direction:column;min-width:0;position:relative;
+    background:radial-gradient(120% 90% at 70% 110%,#2c2144 0%,#1a1428 55%,#131020 100%)}
+
+  #chipsRow{display:flex;gap:8px;padding:8px 14px 4px;flex:none;z-index:3;align-items:center}
+  .dchip{border:1.5px dashed;border-radius:10px;height:33px;padding:0 11px;
+    background:rgba(10,7,18,.6);font-family:var(--mono);font-variant-numeric:tabular-nums;
+    display:flex;align-items:center;gap:7px;transition:opacity .3s,transform .3s}
+  .dchip .lbl{font-size:8.5px;letter-spacing:.16em;color:var(--dim)}
+  .dchip .val{font-size:14px;font-weight:700;white-space:nowrap}
+  .dchip.pink{border-color:#f470b859;min-width:98px}.dchip.pink .val{color:var(--pink)}
+  .dchip.blue{border-color:#5bc8f559;min-width:90px}.dchip.blue .val{color:var(--blue)}
+  .dchip.gold{border-color:#e3b05c59;min-width:112px}.dchip.gold .val{color:var(--gold)}
+  .dchip.off{opacity:.25;transform:scale(.92)}
+  .dchip.ping{animation:ping .4s}
+  @keyframes ping{35%{transform:scale(1.07)}}
+  .dchip.zero{animation:zeroFlash .5s}
+  @keyframes zeroFlash{40%{background:rgba(255,255,255,.15)}}
+
+  #canvasWrap{flex:1;position:relative;min-height:0}
+  #sceneSvg{position:absolute;inset:0;width:100%;height:100%}
+  #faceon,#dtl{transition:opacity .45s}
+  #camBtn{position:absolute;right:12px;bottom:10px;z-index:4;
+    font-family:var(--mono);font-size:9px;letter-spacing:.12em;
+    padding:6px 12px;border-radius:999px;border:1.5px solid #322a4c;
+    background:rgba(12,9,20,.7);color:var(--dim);cursor:pointer;transition:all .2s}
+  #camBtn:active{transform:scale(.96)}
+
+  /* ================= KONTROLLBAR ================= */
+  #controlBar{flex:none;z-index:3;padding:7px 14px calc(11px + env(safe-area-inset-bottom));
+    background:rgba(9,6,16,.94);border-top:1px solid var(--line)}
+  #seg{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+  .cell{font-family:var(--mono);text-align:center;padding:3px 3px 4px;border-radius:10px;
+    border:1.5px solid #322a4c;background:#1a1530;cursor:pointer;transition:all .2s;min-width:0}
+  .cell:active{transform:scale(.97)}
+  .cell .cl{font-size:8px;letter-spacing:.13em;color:var(--dim);white-space:nowrap}
+  .cell .cv{font-size:12.5px;font-weight:700;margin-top:1px;color:var(--dim);
+    font-variant-numeric:tabular-nums;white-space:nowrap;transition:color .2s}
+  .cell.on{background:#241d3d}
+  .cell.on[data-c="plane"]{border-color:var(--violet);box-shadow:0 0 14px #9c8df533}
+  .cell.on[data-c="plane"] .cv{color:var(--violet)}
+  .cell.on[data-c="dir"]{border-color:var(--blue);box-shadow:0 0 14px #5bc8f533}
+  .cell.on[data-c="dir"] .cv{color:var(--blue)}
+  .cell.on[data-c="low"]{border-color:var(--pink);box-shadow:0 0 14px #f470b833}
+  .cell.on[data-c="low"] .cv{color:var(--pink)}
+  .cell.on[data-c="arc"]{border-color:var(--gold);box-shadow:0 0 14px #e3b05c33}
+  .cell.on[data-c="arc"] .cv{color:var(--gold)}
+  .cell.towed{animation:towed .5s}
+  @keyframes towed{40%{border-color:var(--pink);border-style:dashed;box-shadow:0 0 14px #f470b866}}
+  .cell.rail{animation:rail .5s}
+  @keyframes rail{35%,70%{border-color:var(--orange);box-shadow:0 0 16px #ff8a4c66}}
+
+  #tickStrip{display:block;width:100%;height:12px;margin-top:9px}
+  #sliderRow{display:flex;align-items:center;margin:3px 0 2px}
+  #slider{flex:1;appearance:none;height:4px;border-radius:2px;background:#332a4e;outline:none}
+  #slider::-webkit-slider-thumb{appearance:none;width:23px;height:23px;border-radius:50%;
+    background:var(--accent,#f470b8);border:3px solid #0d0918;
+    box-shadow:0 0 12px var(--accent,#f470b8);cursor:pointer}
+
+  #threads{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:6}
+
+  @media (prefers-reduced-motion:reduce){
+    .dchip,.cell,#faceon,#dtl{transition:none}
+    .dchip.ping,.dchip.zero,.cell.towed,.cell.rail{animation:none}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- MIKROSKOP -->
+  <div id="micro">
+    <div class="eyebrow">Kølle</div>
+    <div class="tgl" id="clubTgl">
+      <button class="on" data-club="iron">JERN</button>
+      <button data-club="driver">DRIVER</button>
+    </div>
+    <div id="faceWrap">
+      <svg id="faceSvg" viewBox="0 0 300 330">
+        <defs>
+          <linearGradient id="steel" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#d9d6e4"/><stop offset=".5" stop-color="#8f8aa2"/><stop offset="1" stop-color="#55506a"/>
+          </linearGradient>
+        </defs>
+        <path d="M60 110 L200 122 Q216 124 216 142 L216 258 Q216 276 198 278 L84 286 Q52 288 46 252 L42 150 Q40 114 60 110 Z" fill="url(#steel)"/>
+        <g stroke="#3c3752" stroke-width="2" opacity=".8">
+          <line x1="66" y1="142" x2="200" y2="150"/><line x1="66" y1="160" x2="200" y2="168"/>
+          <line x1="66" y1="178" x2="200" y2="186"/><line x1="66" y1="196" x2="200" y2="204"/>
+          <line x1="66" y1="214" x2="200" y2="222"/><line x1="66" y1="232" x2="198" y2="240"/>
+        </g>
+        <rect x="204" y="14" width="26" height="126" rx="10" fill="url(#steel)"/>
+        <line x1="66" y1="195" x2="200" y2="195" stroke="#e3b05c" stroke-width="1" stroke-dasharray="3 5" opacity=".5"/>
+        <g id="strikeDot">
+          <circle cx="133" cy="195" r="9" fill="none" stroke="var(--gold)" stroke-width="2"/>
+          <circle cx="133" cy="195" r="3.5" fill="var(--gold)"/>
+        </g>
+        <text id="strikeLbl" x="150" y="60" font-family="var(--mono)" font-size="14" fill="var(--gold)" text-anchor="middle"></text>
+      </svg>
+    </div>
+    <div id="verdict">
+      <span id="verdictChip">Pure <span id="vPct">84%</span></span>
+      <div id="verdictTxt"></div>
+    </div>
+  </div>
+
+  <!-- SCENE -->
+  <div id="scene">
+    <div id="chipsRow">
+      <div class="dchip pink" id="chipAttack"><span class="lbl">ATTACK</span><span class="val" id="vAttack"></span></div>
+      <div class="dchip blue" id="chipPath"><span class="lbl">PATH</span><span class="val" id="vPath"></span></div>
+      <div class="dchip gold" id="chipStrike"><span class="lbl">STRIKE</span><span class="val" id="vStrike"></span></div>
+    </div>
+
+    <div id="canvasWrap">
+      <svg id="sceneSvg" viewBox="0 0 1000 400" preserveAspectRatio="xMidYMid slice">
+        <defs>
+          <radialGradient id="glow" cx=".5" cy=".5" r=".5">
+            <stop offset="0" stop-color="#ff8a4c" stop-opacity=".9"/><stop offset="1" stop-color="#ff8a4c" stop-opacity="0"/>
+          </radialGradient>
+          <linearGradient id="arcG" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stop-color="#cfc8e6" stop-opacity=".12"/><stop offset=".5" stop-color="#e8e2f6" stop-opacity=".95"/>
+            <stop offset="1" stop-color="#cfc8e6" stop-opacity=".12"/>
+          </linearGradient>
+          <filter id="soft" x="-60%" y="-60%" width="220%" height="220%">
+            <feGaussianBlur stdDeviation="3.2"/>
+          </filter>
+        </defs>
+
+        <!-- ============ FACE-ON ============ -->
+        <g id="faceon">
+          <line x1="0" y1="260" x2="1000" y2="260" stroke="#3a3155" stroke-width="1.5"/>
+          <line x1="0" y1="260" x2="1000" y2="260" stroke="#e3b05c" stroke-width="1" opacity=".16"/>
+          <g id="dirBand" opacity="0">
+            <line x1="350" y1="260" x2="650" y2="260" stroke="var(--blue)" stroke-width="2.5" stroke-dasharray="10 7"/>
+            <path d="M650 260 l-13 -7 v14 z" fill="var(--blue)"/>
+          </g>
+          <path id="divot" d="" fill="rgba(10,7,18,.9)" stroke="var(--green)" stroke-width="2" opacity="0"/>
+          <g id="arcGroup">
+            <!-- ringen face-on: ellipse squashet med sin(plane) — flatere plan legger seg fra oss -->
+            <ellipse id="arc" cx="500" cy="-20" rx="280" ry="280" fill="none"
+              stroke="url(#arcG)" stroke-width="4.5" stroke-linecap="round"/>
+            <g id="ticks" stroke="var(--gold-dim)" stroke-width="1.5"></g>
+          </g>
+          <circle id="contactGlow" cx="500" cy="260" r="38" fill="url(#glow)"/>
+          <g id="needleG">
+            <path id="attackWedge" d="" fill="var(--pink)" opacity=".18"/>
+            <path id="wedgeRim" d="" fill="none" stroke="var(--pink)" stroke-width="1" opacity=".55"/>
+            <path id="needleGlow" d="" fill="var(--pink)" opacity=".45" filter="url(#soft)"/>
+            <path id="needlePath" d="" fill="var(--pink)"/>
+          </g>
+          <path id="tee" d="" fill="#6b6386" opacity="0"/>
+          <circle id="ball" cx="500" cy="244" r="16" fill="#f2eff9"/>
+          <circle id="lowMark" cx="533" cy="260" r="5.5" fill="var(--pink)"/>
+          <text id="lowMarkLbl" x="533" y="279" font-family="var(--mono)" font-size="10.5" fill="var(--pink)"
+            text-anchor="middle" opacity="0" style="transition:opacity .4s">low point</text>
+        </g>
+
+        <!-- ============ DOWN THE LINE ============ -->
+        <g id="dtl" opacity="0">
+          <line x1="0" y1="168" x2="1000" y2="168" stroke="#3a3155" stroke-width="1"/>
+          <line x1="500" y1="330" x2="500" y2="176" stroke="var(--gold)" stroke-width="1.3"
+            stroke-dasharray="4 7" opacity=".55"/>
+          <line x1="500" y1="176" x2="500" y2="158" stroke="#8d84a3" stroke-width="1.5"/>
+          <path d="M500 158 l14 5 -14 5 z" fill="var(--gold)" opacity=".8"/>
+          <g id="dtlRuler" stroke="#453b66" stroke-width="1"></g>
+          <path id="dtlPlaneGlow" d="" fill="var(--violet)" opacity=".3" filter="url(#soft)"/>
+          <path id="dtlPlane" d="" fill="var(--violet)" opacity=".8"/>
+          <path id="dtlPathC" d="" fill="none" stroke="var(--blue)" stroke-width="1.7" stroke-dasharray="6 6"/>
+          <path id="dtlAttC" d="" fill="none" stroke="var(--pink)" stroke-width="1.7" stroke-dasharray="6 6"/>
+          <path id="dtlVecGlow" d="" fill="#e8e2f6" opacity=".4" filter="url(#soft)"/>
+          <path id="dtlVec" d="" fill="#e8e2f6"/>
+          <path id="dtlTee" d="" fill="#6b6386" opacity="0"/>
+          <circle id="dtlBall" cx="500" cy="318" r="13" fill="#f2eff9"/>
+        </g>
+      </svg>
+      <button id="camBtn">⇄ DTL</button>
+    </div>
+
+    <div id="controlBar">
+      <div id="seg">
+        <button class="cell" data-c="plane"><div class="cl">PLANE</div><div class="cv" id="tvPlane"></div></button>
+        <button class="cell" data-c="dir"><div class="cl">DIRECTION</div><div class="cv" id="tvDir"></div></button>
+        <button class="cell on" data-c="low"><div class="cl">LOW POINT X</div><div class="cv" id="tvLow"></div></button>
+        <button class="cell" data-c="arc"><div class="cl">ARC HEIGHT</div><div class="cv" id="tvArc"></div></button>
+      </div>
+      <svg id="tickStrip"></svg>
+      <div id="sliderRow"><input type="range" id="slider"></div>
+    </div>
+  </div>
+
+  <svg id="threads"></svg>
+</div>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const buzz = ms => { try{ navigator.vibrate && navigator.vibrate(ms); }catch(e){} };
+
+  // ---- modell ----
+  const S = { plane:60, dir:0, low:5, arc:0 };
+  const V = { ...S };
+  let club = 'iron', cam = 'face';
+  const teeCm = () => club==='driver' ? 3 : 0;
+  const R_CM = 121, ATT_K = 57.3 / R_CM;
+  const towPerDeg = () => 2.11 * Math.cos(S.plane*Math.PI/180);
+  const derive = st => {
+    const sinP = Math.sin(st.plane*Math.PI/180);
+    const attack = -(st.low * ATT_K * sinP);
+    const path   = st.dir - attack / Math.tan(st.plane*Math.PI/180);
+    const strike = -(st.low * 0.35) + 1.4*(st.arc - teeCm()*0.6);
+    const hBall  = st.arc + (st.low*st.low)/(2*R_CM);
+    const whiff  = hBall > teeCm() + 3.7;
+    return { attack, path, strike, whiff };
+  };
+
+  const CFG = {
+    plane:{ min:45, max:75, step:1,   color:'#9c8df5', snap:0,   major:5, cam:'dtl',
+      hint:'Plane skalerer attack (sin) og tauing (cos). Ved low 0: ingenting skjer.',
+      affects:['attack','path'] },
+    dir:  { min:-15, max:15, step:0.1, color:'#5bc8f5', snap:.35, major:5, cam:'dtl',
+      hint:'Direction roterer ringen — lavpunktet taues med (cos-skalert).',
+      affects:['attack','path','strike'] },
+    low:  { min:-15, max:15, step:0.5, color:'#f470b8', snap:.9,  major:5, cam:'face',
+      hint:'Lowpoint X: 0 er der attack skifter fortegn. Sone = pure for valgt kølle.',
+      affects:['attack','path','strike'] },
+    arc:  { min:-5, max:5,  step:0.1, color:'#e3b05c', snap:.3,  major:1, cam:'face',
+      hint:'Arc height: under 0 graver ringen — divot. Høyt over: whiff.',
+      affects:['strike'] },
+  };
+  let active = 'low';
+  let lastSign = { attack:null, path:null, strike:null };
+  let lastPing = 0, snapped = false, lblTimer = null;
+
+  const R = 280, GY = 260, BX = 500, PX_CM = 6.5;
+  const svgPt = (x,y) => { const p = $('sceneSvg').createSVGPoint(); p.x=x; p.y=y;
+    return p.matrixTransform($('sceneSvg').getScreenCTM()); };
+
+  function arrowD(x1,y1,x2,y2,w){
+    const dx=x2-x1, dy=y2-y1, L=Math.hypot(dx,dy)||1;
+    const ux=dx/L, uy=dy/L, px=-uy, py=ux;
+    const hl=Math.min(15,L*.35), hb=x2-ux*hl, hby=y2-uy*hl;
+    const t=w*.28, h=w*.62;
+    return `M${x1+px*t} ${y1+py*t} L${hb+px*t} ${hby+py*t} L${hb+px*h} ${hby+py*h}
+      L${x2} ${y2} L${hb-px*h} ${hby-py*h} L${hb-px*t} ${hby-py*t}
+      L${x1-px*t} ${y1-py*t} Z`;
+  }
+
+  (function build(){
+    const g = $('ticks');
+    for(let a=-54; a<=54; a+=6){
+      const l = document.createElementNS('http://www.w3.org/2000/svg','line');
+      l.dataset.a=a; g.appendChild(l);
+    }
+    let h='';
+    for(let d=-14; d<=14; d+=2)
+      h += `<line x1="${500+d*9}" y1="326" x2="${500+d*9}" y2="${d===0?318:322}"
+        ${d===0?'stroke="#5bc8f5" stroke-width="1.6"':''}/>`;
+    $('dtlRuler').innerHTML = h;
+  })();
+
+  const f=(v,dec=1)=>(v>=0?'+':'−')+Math.abs(v).toFixed(dec);
+  const pureZone = () => club==='iron' ? [2,10] : [-12,-3];
+
+  function drawTickStrip(){
+    const c = CFG[active], svg = $('tickStrip');
+    const w = svg.getBoundingClientRect().width || 300, h = 12;
+    svg.setAttribute('viewBox',`0 0 ${w} ${h}`);
+    const pad = 11;
+    const X = v => pad + (v - c.min)/(c.max - c.min)*(w - 2*pad);
+    let html = '';
+    if(active==='low'){
+      const [z1,z2] = pureZone();
+      html += `<rect x="${X(z1)}" y="3" width="${X(z2)-X(z1)}" height="8" rx="4"
+        fill="#3fd68c" opacity=".18"/>`;
+    }
+    for(let v = Math.ceil(c.min/c.major)*c.major; v <= c.max; v += c.major){
+      const zero = Math.abs(v) < 1e-9 && c.min < 0;
+      html += `<line x1="${X(v)}" y1="${zero?1:4}" x2="${X(v)}" y2="${h-1}"
+        stroke="${zero ? c.color : '#453b66'}" stroke-width="${zero?2:1.2}"/>`;
+    }
+    svg.innerHTML = html;
+  }
+
+  function render(){
+    const d = derive(V);
+    const sinP = Math.sin(V.plane*Math.PI/180);
+    const ry = R * sinP;                          // face-on: ring legger seg fra oss
+    const lowPx = BX + V.low * PX_CM;
+    const ringBottom = GY - V.arc * PX_CM;
+    const cy = ringBottom - ry;
+    const dx = BX - lowPx;
+    const th = Math.asin(Math.max(-1,Math.min(1,dx/R)));
+    const cyContact = cy + ry*Math.cos(th);
+
+    // ---------- FACE-ON ----------
+    $('arc').setAttribute('cx', lowPx); $('arc').setAttribute('cy', cy);
+    $('arc').setAttribute('ry', ry);
+    const k = sinP, contactDeg = th*180/Math.PI;
+    [...$('ticks').children].forEach(t=>{
+      const a = parseFloat(t.dataset.a), rad = a*Math.PI/180;
+      t.setAttribute('x1', lowPx + Math.sin(rad)*(R-2));
+      t.setAttribute('y1', cy + Math.cos(rad)*(R-2)*k);
+      t.setAttribute('x2', lowPx + Math.sin(rad)*(R+11));
+      t.setAttribute('y2', cy + Math.cos(rad)*(R+11)*k);
+      const hot = Math.abs(a - contactDeg) < 3.2;
+      t.setAttribute('stroke', hot ? 'var(--orange)' : 'var(--gold-dim)');
+      t.setAttribute('stroke-width', hot ? 3 : 1.5);
+    });
+    $('needleG').setAttribute('transform', `translate(${BX} ${cyContact}) rotate(${-d.attack})`);
+    $('needleG').style.opacity = d.whiff ? .25 : 1;
+    $('needlePath').setAttribute('d', arrowD(-110,0,112,0,7));
+    $('needleGlow').setAttribute('d', arrowD(-110,0,112,0,7));
+    $('contactGlow').setAttribute('cy', cyContact);
+    $('contactGlow').style.opacity = d.whiff ? .2 : 1;
+    const wr = 92, aRad = d.attack*Math.PI/180, sweep = d.attack>0?0:1;
+    $('attackWedge').setAttribute('d',
+      `M0 0 L${wr} 0 A${wr} ${wr} 0 0 ${sweep} ${wr*Math.cos(aRad)} ${-wr*Math.sin(aRad)} Z`);
+    $('wedgeRim').setAttribute('d',
+      `M${wr} 0 A${wr} ${wr} 0 0 ${sweep} ${wr*Math.cos(aRad)} ${-wr*Math.sin(aRad)}`);
+    $('lowMark').setAttribute('cx', lowPx); $('lowMark').setAttribute('cy', ringBottom);
+    $('lowMarkLbl').setAttribute('x', lowPx); $('lowMarkLbl').setAttribute('y', ringBottom+19);
+    $('dirBand').setAttribute('transform', `rotate(${-V.dir*3} ${BX} ${GY})`);
+
+    const teePx = teeCm()*PX_CM;
+    $('ball').setAttribute('cy', GY - teePx - 16);
+    $('tee').setAttribute('d', `M${BX-6} ${GY} L${BX+6} ${GY} L${BX+3.5} ${GY-teePx} L${BX-3.5} ${GY-teePx} Z`);
+    $('tee').style.opacity = teePx > 0 ? .9 : 0;
+
+    let fat = false;
+    if(V.arc < -0.05){
+      const dpx = -V.arc * PX_CM;
+      const half = R * Math.sqrt(Math.max(0, 1 - ((ry-dpx)/ry)**2));
+      const x1 = lowPx - half, x2 = lowPx + half;
+      fat = x1 < BX - 12;
+      $('divot').setAttribute('d', `M${x1} ${GY} A${R} ${ry} 0 0 0 ${x2} ${GY} Z`);
+      $('divot').setAttribute('stroke', fat ? 'var(--orange)' : 'var(--green)');
+      $('divot').style.opacity = 1;
+    } else $('divot').style.opacity = 0;
+
+    // ---------- DTL (høyrehendt: plan faller mot venstre når det flates) ----------
+    const bY = 318 - teeCm()*4, EX_L = 9, EX_V = 7, REC = 88;
+    $('dtlBall').setAttribute('cy', bY);
+    $('dtlTee').setAttribute('d', `M494 330 L506 330 L503.5 ${bY+13} L496.5 ${bY+13} Z`);
+    $('dtlTee').style.opacity = club==='driver' ? .9 : 0;
+    const vx = 500 + d.path*EX_L, vy = bY - REC - d.attack*EX_V;
+    $('dtlVec').setAttribute('d', arrowD(500,bY,vx,vy,8));
+    $('dtlVecGlow').setAttribute('d', arrowD(500,bY,vx,vy,8));
+    $('dtlVec').style.opacity = $('dtlVecGlow').style.opacity = d.whiff ? .2 : 1;
+    $('dtlPathC').setAttribute('d', `M500 ${bY} L${vx} ${bY-REC}`);
+    $('dtlAttC').setAttribute('d', `M${vx} ${bY-REC} L${vx} ${vy}`);
+    const pr=250, pRad=V.plane*Math.PI/180;
+    $('dtlPlane').setAttribute('d',
+      arrowD(500,330, 500 - pr*Math.cos(pRad), 330 - pr*Math.sin(pRad), 4));
+    $('dtlPlaneGlow').setAttribute('d',
+      arrowD(500,330, 500 - pr*Math.cos(pRad), 330 - pr*Math.sin(pRad), 4));
+
+    // ---------- readouts ----------
+    $('vAttack').textContent = f(d.attack)+'°';
+    $('vPath').textContent   = f(d.path)+'°';
+    const mm = Math.abs(d.strike).toFixed(0);
+    $('vStrike').textContent = d.whiff ? '—' : mm+' mm '+(d.strike>=0?'høy':'lav');
+    $('strikeLbl').textContent = d.whiff ? 'ingen kontakt' : $('vStrike').textContent;
+    $('tvPlane').textContent = V.plane.toFixed(0)+'°';
+    $('tvDir').textContent = f(V.dir,1)+'°';
+    $('tvLow').textContent = f(V.low,0)+' cm';
+    $('tvArc').textContent = f(V.arc,1)+' cm';
+
+    const sy = 195 - Math.max(-11,Math.min(11,d.strike))*8;
+    $('strikeDot').setAttribute('transform',`translate(0 ${sy-195})`);
+    $('strikeDot').style.opacity = d.whiff ? .2 : 1;
+
+    ['attack','path','strike'].forEach(kk=>{
+      const sign = Math.sign(d[kk]);
+      if(lastSign[kk]!==null && sign!==lastSign[kk] && sign!==0){
+        const chip = $('chip'+kk[0].toUpperCase()+kk.slice(1));
+        if(!reduce){ chip.classList.remove('zero'); void chip.offsetWidth; chip.classList.add('zero'); }
+        buzz(10);
+      }
+      lastSign[kk]=sign;
+    });
+
+    const vc = $('verdictChip'), vt = $('verdictTxt');
+    const [z1,z2] = pureZone();
+    let name,col,pct,extra='';
+    if(d.whiff){ name='Whiff'; col='var(--dim)'; pct=0; extra=' Køllen passerer over ballen.'; }
+    else if(fat){ name='Fat'; col='var(--orange)'; pct=Math.round(55+V.arc*6);
+      extra=' Divot starter før ballen.'; }
+    else if(V.low>=z1 && V.low<=z2 && Math.abs(d.strike)<7){
+      name='Pure'; col='var(--green)';
+      pct=Math.round(88-Math.abs(V.low-(z1+z2)/2)*2.5-Math.abs(d.strike));
+      if(V.arc<-0.05) extra=' Divot etter ballen — riktig.'; }
+    else if(d.strike>=6 || (club==='iron' && V.low<=-3) || (club==='driver' && V.low>=4)){
+      name='Thin'; col='var(--gold)'; pct=Math.round(62-Math.abs(d.strike)*1.5); }
+    else { name='Nøytral'; col='var(--dim)'; pct=68; }
+    vc.firstChild.textContent = name+' ';
+    vc.style.borderColor = col; vc.style.color = col;
+    $('vPct').textContent = Math.max(0,pct)+'%';
+    vt.innerHTML = `<b>${name}</b> — low point <b>${Math.abs(V.low).toFixed(0)} cm ${V.low>=0?'foran':'bak'}</b>, arc <b>${f(V.arc,1)} cm</b>${d.whiff?'':`, treff <b>${mm} mm ${d.strike>=0?'høyt':'lavt'}</b>`}.${extra}`;
+
+    drawThreads(cyContact, ringBottom, lowPx, bY);
+  }
+
+  function setCam(c){
+    cam = c;
+    $('faceon').style.opacity = cam==='face' ? 1 : 0;
+    $('dtl').style.opacity    = cam==='dtl'  ? 1 : 0;
+    $('camBtn').textContent = '⇄ ' + (cam==='face' ? 'DTL' : 'FACE-ON');
+  }
+
+  function applyLens(){
+    const c = CFG[active];
+    document.documentElement.style.setProperty('--accent', c.color);
+    $('slider').min=c.min; $('slider').max=c.max; $('slider').step=c.step;
+    $('slider').value = S[active];
+    updateSliderFill(); drawTickStrip();
+    document.querySelectorAll('.cell').forEach(t=>t.classList.toggle('on', t.dataset.c===active));
+    setCam(c.cam);
+    $('dirBand').style.opacity = active==='dir' ? .9 : 0;
+    ['attack','path','strike'].forEach(k=>{
+      $('chip'+k[0].toUpperCase()+k.slice(1)).classList.toggle('off', !CFG[active].affects.includes(k));
+    });
+    snapped = Math.abs(S[active]) < 1e-9;
+    render();
+  }
+
+  function updateSliderFill(){
+    const s = $('slider');
+    const pct = 100*(s.value - s.min)/(s.max - s.min);
+    s.style.background =
+      `linear-gradient(to right, ${CFG[active].color} ${pct}%, #332a4e ${pct}%)`;
+  }
+
+  // ---- tråder ----
+  let dashOff = 0, dragging = false;
+  function drawThreads(cyContact, ringBottom, lowPx, bY){
+    const tsvg = $('threads');
+    const box = tsvg.getBoundingClientRect();
+    tsvg.setAttribute('viewBox',`0 0 ${box.width} ${box.height}`);
+    const cellTop = c => { const r = document.querySelector(`.cell[data-c="${c}"]`).getBoundingClientRect();
+      return [r.left + r.width/2 - box.left, r.top - box.top]; };
+    const chipBot = el => { const r = $(el).getBoundingClientRect();
+      return [r.left + r.width/2 - box.left, r.bottom - box.top]; };
+    const cp = cam==='face' ? svgPt(BX, cyContact) : svgPt(500, bY);
+    const cx2 = cp.x - box.left, cy2 = cp.y - box.top;
+    const q = (x1,y1,x2,y2,bend=0.25) => {
+      const mx=(x1+x2)/2, my=(y1+y2)/2 - Math.abs(x2-x1)*bend;
+      return `M${x1} ${y1} Q${mx} ${my} ${x2} ${y2}`;
+    };
+    const dot = (x,y,c) => `<circle cx="${x}" cy="${y}" r="3" fill="${c}"/>`;
+    let html = '';
+    const [kx,ky] = cellTop(active);
+    let tx=cx2, ty=cy2;
+    if(cam==='face' && (active==='dir'||active==='arc')){
+      const p=svgPt(lowPx, ringBottom); tx=p.x-box.left; ty=p.y-box.top;
+    } else if(cam==='dtl' && active==='plane'){
+      const pRad=S.plane*Math.PI/180;
+      const p=svgPt(500 - 150*Math.cos(pRad), 330 - 150*Math.sin(pRad));
+      tx=p.x-box.left; ty=p.y-box.top;
+    }
+    html += `<path d="${q(kx,ky,tx,ty,0.12)}" fill="none"
+      stroke="${CFG[active].color}" stroke-width="2.4" opacity=".85"/>`
+      + dot(kx,ky,CFG[active].color) + dot(tx,ty,CFG[active].color);
+    if(active==='dir'){
+      const [dx1,dy1] = cellTop('dir'), [dx2,dy2] = cellTop('low');
+      html += `<path d="M${dx1} ${dy1} Q${(dx1+dx2)/2} ${dy1-22} ${dx2} ${dy2}"
+        fill="none" stroke="#f470b8" stroke-width="1.6" stroke-dasharray="5 6"
+        stroke-dashoffset="${dashOff}" opacity=".8"/>`;
+    }
+    const col = { attack:'#f470b8', path:'#5bc8f5', strike:'#e3b05c' };
+    CFG[active].affects.forEach((k,i)=>{
+      const [ax,ay] = chipBot('chip'+k[0].toUpperCase()+k.slice(1));
+      html += `<path d="${q(cx2,cy2,ax,ay,0.18)}" fill="none" stroke="${col[k]}"
+        stroke-width="${i===0?1.8:1.4}" stroke-dasharray="6 7"
+        stroke-dashoffset="${dashOff}" opacity="${i===0?.75:.35}"/>`;
+    });
+    if(CFG[active].affects.includes('strike') && cam==='face'){
+      const m = $('strikeDot').getBoundingClientRect();
+      html += `<path d="${q(cx2,cy2, m.left+m.width/2-box.left, m.top+m.height/2-box.top, 0.08)}"
+        fill="none" stroke="#e3b05c" stroke-width="1.5" stroke-dasharray="4 8"
+        stroke-dashoffset="${dashOff}" opacity=".45"/>`;
+    }
+    tsvg.innerHTML = html;
+  }
+
+  // ---- fjærglatting ----
+  (function loop(){
+    let moved = false;
+    for(const k in S){
+      const dv = S[k] - V[k];
+      if(Math.abs(dv) > 0.002){ V[k] += dv * (reduce ? 1 : 0.18); moved = true; }
+      else V[k] = S[k];
+    }
+    if(moved || dragging){ if(dragging) dashOff -= 1.6; render(); }
+    requestAnimationFrame(loop);
+  })();
+
+  // ---- events ----
+  document.querySelectorAll('.cell').forEach(t=>t.onclick=()=>{ active=t.dataset.c; applyLens(); });
+  document.querySelectorAll('#clubTgl button').forEach(b=>b.onclick=()=>{
+    club = b.dataset.club;
+    document.querySelectorAll('#clubTgl button').forEach(x=>x.classList.toggle('on', x===b));
+    drawTickStrip(); render();
+  });
+  $('camBtn').onclick = ()=>{ setCam(cam==='face' ? 'dtl' : 'face'); render(); };
+
+  let prevDir = S.dir;
+  $('slider').addEventListener('input', e=>{
+    let v = parseFloat(e.target.value);
+    const c = CFG[active];
+    if(c.snap > 0){
+      if(Math.abs(v) <= c.snap){
+        v = 0; e.target.value = 0;
+        if(!snapped){ snapped = true; buzz(8); }
+      } else snapped = false;
+    }
+    if(active==='dir'){
+      const dD = v - prevDir; prevDir = v;
+      const raw = S.low - towPerDeg() * dD;
+      const clamped = Math.max(-15, Math.min(15, raw));
+      const lc = document.querySelector('.cell[data-c="low"]');
+      if(!reduce){
+        const cls = raw !== clamped ? 'rail' : 'towed';
+        lc.classList.remove('rail','towed'); void lc.offsetWidth; lc.classList.add(cls);
+      }
+      if(raw !== clamped) buzz(15);
+      S.low = clamped;
+    }
+    S[active] = v;
+    if(cam==='face' && (active==='low' || active==='dir')){
+      $('lowMarkLbl').style.opacity = .9;
+      clearTimeout(lblTimer);
+      lblTimer = setTimeout(()=>$('lowMarkLbl').style.opacity = 0, 900);
+    }
+    updateSliderFill();
+    const now = performance.now();
+    if(now - lastPing > 260){
+      lastPing = now;
+      CFG[active].affects.forEach(k=>{
+        const chip = $('chip'+k[0].toUpperCase()+k.slice(1));
+        if(!reduce){ chip.classList.remove('ping'); void chip.offsetWidth; chip.classList.add('ping'); }
+      });
+    }
+  });
+  $('slider').addEventListener('pointerdown', ()=>{ dragging=true; if(active==='dir') prevDir=S.dir; });
+  addEventListener('pointerup', ()=>dragging=false);
+  addEventListener('resize', ()=>{ drawTickStrip(); render(); });
+
+  applyLens();
+})();
+</script>
+</body>
+</html>

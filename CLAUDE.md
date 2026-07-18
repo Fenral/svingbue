@@ -44,6 +44,20 @@ Stop only under the five conditions in the master plan's autonomy protocol.
 Do not stop for taste preferences, minor copy choices, normal test failures or
 decisions between recent mocks when a primary reference is already named.
 
+## Design source of truth (per-screen specs)
+
+- Kilde-spec per skjerm: `design/mocks/<skjerm>.html` @ HEAD. Én fil, aldri
+  versjonssuffiks. Duplikater slettes. Der en per-skjerm-spec finnes i
+  `design/mocks/`, slår den master-planen og `docs/mocks-normative/` for den
+  skjermen.
+- Fullførte ordrer → `design/orders/done/` ved merge.
+- `docs/systemkontrakt-<skjerm>.md` inneholder KUN verifiserbar
+  systemvirkelighet (motor-API, state-modell, filstier). Scope/krav/planer
+  hører i ordrer. Overlapp slettes. Skrives kun av arkitekturpass.
+  (`docs/systemkontrakt.md` uten suffiks er impact-kamera-kontrakten fra før
+  denne konvensjonen; den migreres til suffiks-navn ved neste arkitekturpass
+  på den skjermen.)
+
 ## Locked boundaries
 
 - Never change `no.strikearc.app`.
