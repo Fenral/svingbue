@@ -70,7 +70,10 @@ const CLUBS = {
     smash: 1.33,  // ESTIMATE (7-iron typical ball/club speed ratio)
     spinK: 1.8,   // ESTIMATE (effective backspin rpm per °·mph)
   },
-  // TODO DRIVER (when 3D model ready): { smash: ~1.48, spinK: ~0.6 (low spin) }
+  driver: {
+    smash: 1.48,  // ref:TrackMan (typical driver)
+    spinK: 0.93,  // engine-derived — IKKE TODO-ens 0.6
+  },
 };
 const DEFAULT_CLUB = '7iron';
 

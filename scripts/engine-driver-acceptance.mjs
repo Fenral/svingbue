@@ -1,4 +1,4 @@
-import { carryYd } from './flight-core.mjs';
+import { carryYd } from '../driver-flight.mjs';
 const k = { cd0:0.275, cd2:0.686, cl1:2.2, clmax:0.49, tau:24.167 };
 const sOptT = v => -0.160373*v*v + 26.838228*v + 1655.45;
 const aOptT = v => 0.000772*v*v - 0.313676*v + 36.3045;
