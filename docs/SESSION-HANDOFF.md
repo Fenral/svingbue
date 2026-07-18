@@ -1,6 +1,6 @@
 # Flightglass session handoff
 
-Updated: 2026-07-16
+Updated: 2026-07-17
 
 ## Repository checkpoint
 
@@ -39,6 +39,21 @@ Development verification and the 36-test Voice suite pass; root/`www` audio
 hash parity is 102/102. Commercial-use evidence is recorded from the owner-
 confirmed ElevenLabs Creator plan and current official terms. See
 `docs/flightglass-autopilot/ACADEMY-VOICE-QA.md`.
+
+A new ignored, non-shipping deliberate audition is ready at
+`.voice-production/control-room-en-us-v1/deliberate-voice-round-7/blind/`.
+It compares three British female laboratory voices (`B-A..B-C`) and three dark
+male voices (`D-A..D-C`) at 161.7-162.5 words per minute with five explicit
+sentence pauses. Six paid Voice Design calls produced 18 private previews and
+no persistent provider voices. All six finalists pass `small.en` semantic
+transcription, pause-count and technical audio gates. Initial provider-spoken
+break markup was removed locally from word-timestamp boundaries and replaced
+with 240 ms PCM pauses; this required no additional paid call. The committed
+tool now sends only paragraph-separated copy and refuses stale-copy
+reprocessing. R5-A, F-C, the canonical manifest and all 102 shipping assets are
+unchanged. Exact next action: owner blind-listens to the six labels and records
+one or two preferred labels before provenance is revealed or any shipping voice
+is replaced.
 
 The Academy acceptance continuation hardened three browser-test readiness
 boundaries only; no product source changed. Flight Height waits for the profile

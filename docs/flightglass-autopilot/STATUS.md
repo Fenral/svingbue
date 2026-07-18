@@ -1,6 +1,6 @@
 # Flightglass autonomous execution status
 
-Updated: 2026-07-16
+Updated: 2026-07-17
 
 Release authorization: granted for GitHub, Vercel and configured Apple/Google
 publication after all Phase 8 gates pass. See `RELEASE-AUTHORIZATION.md`.
@@ -78,6 +78,26 @@ five-minute fatigue listen, physical-device/offline/audio-route behavior, and
 iOS VoiceOver behavior. The absent `ios/` and `android/` projects also prevent
 native archive/device verification. Full evidence and provider-rights sources
 are in `ACADEMY-VOICE-QA.md`.
+
+A faster mixed-gender challenge is ready for owner listening but is not a
+shipping change. It contains three female and three male blind candidates on
+identical copy, all transcription-approved and pace-normalized to 176.3-177.3
+words per minute. R5-A and the canonical 102-file manifest remain unchanged
+until an owner verdict is recorded.
+
+A second deliberate Voice challenge is now ready for owner listening and is
+also not a shipping change. It contains three British female laboratory voices
+(`B-A..B-C`) and three dark male voices (`D-A..D-C`) on identical copy. Six paid
+Voice Design calls produced 18 ignored raw previews and no persistent provider
+voices. All six final blind files pass local `small.en` semantic transcription,
+at least five measured sentence-pause gates, 161.7-162.5 words-per-minute pace,
+60 ms leading silence, 117-120 ms trailing silence, -18.70 to -17.89 LUFS and a
+true peak no higher than -1.65 dBTP. The provider-spoken break markup discovered
+during QA was removed locally from word-timestamp boundaries and replaced with
+five 240 ms PCM pauses without additional paid calls. The committed tool now
+uses plain paragraph boundaries and refuses stale-copy reprocessing. R5-A, F-C,
+the canonical manifest and all 102 shipping assets remain byte-unchanged until
+an owner verdict is recorded.
 
 | Phase | State | Evidence |
 |---|---|---|

@@ -31,6 +31,29 @@ wait.
 
 ## Done / handed off
 
+- Academy complete analysis pack — `agent/academy-codex`; one tracked module
+  description and 15 visual contact sheets cover Academy Home plus all 84
+  canonical experience surfaces. A deterministic generator creates 86 raw
+  viewport captures, a 139-file source snapshot and one self-contained local
+  HTML report. Counts, active routes, hashes, image dimensions, embedded
+  assets/source and secret absence are verified; no shipping/runtime file was
+  changed. The existing pairwise, native-platform and physical-device/human
+  release holds remain unchanged.
+
+- Academy deliberate Voice challenge round 7 - `agent/academy-codex`; three
+  British female laboratory voices (`B-A..B-C`) and three dark male voices
+  (`D-A..D-C`) are locally blind-reviewable at 161.7-162.5 wpm with explicit
+  sentence pauses. All six pass semantic transcription, pause and technical
+  audio gates. Six paid Voice Design calls produced 18 private previews, no
+  persistent voices and no shipping change; R5-A, F-C and all 102 canonical
+  assets remain unchanged pending an owner verdict.
+
+- Faster mixed-gender Academy Voice challenge - `agent/academy-codex`; six
+  Voice Design calls produced 18 private raw previews and six blind finalists
+  (`F-A..F-C`, `M-A..M-C`). All finalists are transcription-approved,
+  normalized to 176.3-177.3 wpm and locally reviewable. The selected R5-A voice
+  and all 102 shipping assets remain unchanged pending an owner verdict.
+
 - Academy R5-A Voice production completion - `agent/academy-codex`; the owner-
   selected British female systems-engineer identity is fixed at speed 0.8, all
   102 licensed local masters are generated and runtime-bound, full technical/
