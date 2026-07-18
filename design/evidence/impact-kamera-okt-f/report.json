@@ -1,0 +1,121 @@
+{
+  "consoleErrors": [],
+  "results": {
+    "startup": {
+      "n": 96,
+      "first": {
+        "t": 2387.6,
+        "s": 0
+      },
+      "last": {
+        "t": 4220.4,
+        "s": 2
+      },
+      "min": 0,
+      "max": 2
+    },
+    "k2": {
+      "n": 93,
+      "first": 2,
+      "last": 0,
+      "crossedSide": true,
+      "maxJump": 0.28171105074490743,
+      "sample": [
+        2,
+        2,
+        2,
+        1.718,
+        0.938,
+        0.512,
+        0.279,
+        0.152,
+        0.083,
+        0.045,
+        0.025,
+        0.014,
+        0.007,
+        0.004,
+        0.002,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    "k1": {
+      "during": 1.4849999999999999,
+      "settled": 1,
+      "target": 1,
+      "maxJump": 0.06793595296027233,
+      "n": 162
+    },
+    "k3": {
+      "total": 16,
+      "allDashedRead": true,
+      "solidChips": 0,
+      "labels": [
+        "TOTAL",
+        "APEX",
+        "CURVE",
+        "BALL SPEED",
+        "LAUNCH DIR",
+        "SPIN AXIS",
+        "CURVE",
+        "SIDE",
+        "LAUNCH ANG",
+        "SPIN LOFT",
+        "BACKSPIN",
+        "LAND ANG",
+        "SMASH",
+        "BALL SPEED",
+        "CARRY",
+        "TOTAL"
+      ]
+    },
+    "s4": {
+      "initial": 130,
+      "afterTap": 131,
+      "afterHold": 150,
+      "clampHigh": 150,
+      "afterScrub": 140
+    },
+    "s7": {
+      "pins": 3,
+      "delta": "Δ vs previous pin+0 m carry · → 0 m more curve"
+    },
+    "s6": {
+      "target": 2,
+      "station": 2
+    },
+    "s8": [
+      {
+        "station": 2,
+        "segVisibleCollapsed": true
+      },
+      {
+        "station": 1,
+        "segVisibleCollapsed": true
+      },
+      {
+        "station": 0,
+        "segVisibleCollapsed": true
+      }
+    ],
+    "s9": {
+      "landedInstantly": true,
+      "snapNoTravel": true,
+      "sceneStatic": true
+    },
+    "fpsDesktop": {
+      "frames": 176,
+      "avgMs": 17.14,
+      "p95Ms": 17,
+      "fpsAvg": 58.3
+    }
+  }
+}
