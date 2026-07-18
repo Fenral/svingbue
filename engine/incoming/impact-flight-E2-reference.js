@@ -29,7 +29,7 @@ export const deg2rad = d => (d * Math.PI) / 180;
 export const rad2deg = r => (r * 180) / Math.PI;
 export const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 
-// ── Fitted / sourced constants ────────────────────────────────────────────
+// ── Fitted / sourced constants ──────────────────────────────────────────────
 
 // SOURCED (direction split): start direction ≈ faceW*face + (1−faceW)*path,
 // with faceW ≈ 0.75 at a mid-iron dynamic loft. Research-correct refinement:
@@ -55,11 +55,11 @@ const LAUNCH_ATTACK_W = 0.25; // SOURCED (small attack term)
 // Real spin axis depends on spin loft, gear effect and club; flag as ESTIMATE.
 // The axis is also CLAMPED to ±AXIS_MAX: a physical spin-axis tilt never reaches
 // the steep angles the ±20° sliders would otherwise produce (face−path can be
-// ±40° → an unclamped 1.5× gain is ±60°, which is non-physical for a struck ball).
+// ±40° — an unclamped 1.5× gain is ±60°, which is non-physical for a struck ball).
 const SPIN_AXIS_GAIN = 1.5; // ESTIMATE (calibrated)
 const AXIS_MAX = 38;        // ESTIMATE (deg ceiling for a realistic spin-axis tilt)
 
-// ── CLUB-SPECIFIC presets ──────────────────────────────────────────────────
+// ── CLUB-SPECIFIC presets ───────────────────────────────────────────────────
 // Genuinely club-specific calibration (smash factor + backspin spin coefficient)
 // lives here so a new club is just one more preset entry. The 7-iron values are
 // the lab-feel calibration verified by the sweep harness. `state.club` selects
@@ -148,7 +148,7 @@ export function solveFlight(input) {
   // ESTIMATE: carry as a power curve with a soft high-end cap (remodel fix F).
   // The old single-exponential saturated far too hard: 53 mph ball carried
   // 119 yd and 173 mph only 186 yd. This fit is anchored to launch-monitor
-  // data (LPGA 7i: 104 mph ball → ~145 yd; PGA: ~120 → ~175 yd) and stays
+  // data (LPGA 7i: 104 mph ball ≈ ~145 yd; PGA: ~120 ≈ ~175 yd) and stays
   // near-linear through the human range before drag bends the top over:
   // 53 mph → ~52 yd, 172.6 mph → ~216 yd.
   const carry = 0.232 * Math.pow(ballSpeed, 1.389) / (1 + Math.pow(ballSpeed / 210, 6)); // ESTIMATE (remodel fix F)
@@ -161,7 +161,7 @@ export function solveFlight(input) {
 
   // ESTIMATE: landing/descent angle from spin loft + launch + apex. The apex
   // term gives the missing speed coupling — a taller flight (faster ball)
-  // descends steeper — and keeps apex↔landing consistent.
+  // descends steeper — and keeps apex→landing consistent.
   // (speed→landing coupling via apex, audit fix B)
   const landingApexTerm = (apex - 30) * 1.0; // ESTIMATE (audit fix B decomposition)
   const landingAngle = clamp(
@@ -186,7 +186,7 @@ export function solveFlight(input) {
   // (offline includes start direction, audit fix A)
   const offline = carry * Math.sin(deg2rad(startDirection)) + curve; // ESTIMATE
 
-  // ── Added SkyTrak-style output fields (all ESTIMATE) ───────────────────────
+  // ── Added SkyTrak-style output fields (all ESTIMATE) ────────────────────────
   // ESTIMATE: total = carry + roll. Roll is small and tied to descent: a steeper
   // landing angle rolls out less. Computed AFTER landingAngle. The roll fraction
   // is clamped to a small window (1.2%–5.5% of carry). Flagged ESTIMATE.
@@ -300,7 +300,7 @@ export function trajectorySamples(flight, n = 48) {
   // apex fraction along carry: a descending iron peaks past the midpoint.
   const apexAt = 0.52; // ESTIMATE
   // start fraction of the lateral: the linear (launch-direction) share of offline.
-  // Exact via the engine's own identity offline = start + curve → sf = 1 − curve/offline.
+  // Exact via the engine's own identity offline = start + curve ⇒ sf = 1 − curve/offline.
   // null → degenerate |offline|≈0 (start and curve cancel; see below).
   let sf = null;
   if (flight && isFinite(flight.offline) && Math.abs(flight.offline) > 1e-6 && isFinite(flight.curve)) {
