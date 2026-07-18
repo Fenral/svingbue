@@ -19,10 +19,22 @@
  *   - Spin loft = dynamic loft - attack angle.
  *   - Launch angle tracks dynamic loft strongly, attack angle weakly.
  *   - Curvature (side spin / spin axis) is driven by face-to-path difference.
+ * ENGINE-DERIVED (grounded in the D-plane relationship, not fitted; WO-E-MOTOR
+ *   §E2, 2026-07-18):
+ *   - The spin-axis gain scales ~1/spinLoft (axis ≈ atan(sidespin/backspin)),
+ *     anchored so the tuned 7-iron reference axis is unchanged. Low-loft
+ *     clubs (driver) tilt more per degree of face-to-path than a 7-iron.
+ *   - Driver carry (./driver-flight.mjs, solveDriverCarry) is a real
+ *     drag+Magnus 2D integrator, calibrated against TrackMan optimal
+ *     launch/spin — not a fitted curve. Known gap: emergent spin locus sits
+ *     +178 rpm high at 125 mph ball speed (flat where TrackMan tilts down);
+ *     8/9 reference speeds inside tolerance. Closing the 125 mph case needs
+ *     published Cd/Cl(Re, spin) golf-ball tables, not parameter fudging.
  * ESTIMATE relationships (fitted/illustrative constants — NOT measured by us):
- *   - The exact blend weights, the spin-axis gain, the smash factor,
- *     and the tour reference table for carry/apex/landing are illustrative
+ *   - The exact blend weights and the smash factor are illustrative
  *     approximations chosen to feel realistic for a mid-iron, not lab-calibrated.
+ *   - The 7-iron carry/apex/landing tour-reference table (this file's
+ *     `solveFlight`) is likewise a fitted curve — NOT the driver path above.
  */
 
 export const deg2rad = d => (d * Math.PI) / 180;
@@ -70,7 +82,10 @@ const CLUBS = {
     smash: 1.33,  // ESTIMATE (7-iron typical ball/club speed ratio)
     spinK: 1.8,   // ESTIMATE (effective backspin rpm per °·mph)
   },
-  // TODO DRIVER (when 3D model ready): { smash: ~1.48, spinK: ~0.6 (low spin) }
+  driver: {
+    smash: 1.48,  // ref:TrackMan (typical driver)
+    spinK: 0.93,  // engine-derived — IKKE TODO-ens 0.6
+  },
 };
 const DEFAULT_CLUB = '7iron';
 
@@ -132,7 +147,12 @@ export function solveFlight(input) {
   // ±40° face-to-path corner can't drive a non-physical tilt. + = tilt right
   // (slice/fade for RH).
   const faceToPath = faceAngle - clubPath;
-  const spinAxis = clamp(SPIN_AXIS_GAIN * faceToPath, -AXIS_MAX, AXIS_MAX); // ESTIMATE
+  // engine-derived · ref:D-plane: axis ≈ atan(sidespin/backspin) ⇒ tilt per degree
+  // of face-to-path scales ~1/spinLoft. Anchored at spinLoft 33 so the tuned
+  // 7-iron reference axis is preserved exactly; low-loft clubs (driver) tilt more.
+  const AXIS_REF_SPINLOFT = 33; // engine-derived (anchor)
+  const axisGain = SPIN_AXIS_GAIN * (AXIS_REF_SPINLOFT / Math.max(8, spinLoft)); // engine-derived · ref:D-plane
+  const spinAxis = clamp(axisGain * faceToPath, -AXIS_MAX, AXIS_MAX);
 
   // ESTIMATE: ball speed via a spin-loft-responsive smash factor (audit fix D).
   // Higher spin loft = more glancing strike = less energy transfer = lower smash.
