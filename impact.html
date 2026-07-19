@@ -254,7 +254,9 @@
   .scene{background:var(--bg)}
   .range-photo,.scene-shade{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
   .range-photo{z-index:0;object-fit:cover;object-position:50% 54%;filter:saturate(.78) contrast(1.08) brightness(.58);transform:scale(1.02)}
-  .scene-shade{z-index:1;background:linear-gradient(180deg,color-mix(in srgb,var(--bg) 78%,transparent) 0%,transparent 30%,transparent 62%,color-mix(in srgb,var(--bg) 78%,transparent) 100%)}
+  .scene-shade{z-index:1;background:
+    linear-gradient(180deg,color-mix(in srgb,var(--bg) 78%,transparent) 0%,transparent 30%,transparent 62%,color-mix(in srgb,var(--bg) 78%,transparent) 100%),
+    radial-gradient(ellipse at 50% 48%,color-mix(in srgb,var(--secondary) 6%,transparent),color-mix(in srgb,var(--bg) 42%,transparent) 76%)}
   .scene canvas{z-index:2}
   .scene[data-view="top"] .range-photo{opacity:.2;filter:saturate(.25) brightness(.34)}
   .scene[data-view="side"] .range-photo{opacity:.36;filter:saturate(.5) brightness(.4)}

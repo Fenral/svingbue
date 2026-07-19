@@ -56,6 +56,8 @@ test('portrait Impact keeps the model, one control and full-width chips together
 
     const shell = page.locator('[data-impact-layout="portrait-range"]');
     await shell.waitFor();
+    const sceneLighting = await page.locator('.scene-shade').evaluate(element => getComputedStyle(element).backgroundImage);
+    assert.match(sceneLighting, /radial-gradient/, 'the approved violet range light remains behind the trajectory');
     assert.equal(await page.locator('.impact-control').count(), 1);
     assert.equal(await page.locator('.control-helper').count(), 0);
 
