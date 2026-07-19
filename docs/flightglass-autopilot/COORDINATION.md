@@ -13,7 +13,7 @@ wait.
 
 | Agent | Branch | Working on | Since |
 |-------|--------|-----------|-------|
-| Claude Code | `agent/impact-kamera` | Impact-kamera (design/orders/impact-kamera.md): Økt A ferdig (docs/systemkontrakt.md), Økt B–F via scripts/impact-kamera-workflow.mjs. Files: impact.html, impact-camera.js, impact-outcome.js, impact-annotate.js, sa-p3.css | 2026-07-17 |
+| - | - | - | - |
 
 ## Queue / free to take
 
@@ -30,6 +30,20 @@ wait.
   pair before build.
 
 ## Done / handed off
+
+- Owner-approved portrait Range/Impact - Codex on `agent/impact-portrait`;
+  shipping UI, normative mock, exact Flight/Top/Side parameter policy,
+  one-active-slider dock, full-width chips, grounded Flight grid, annotation
+  clamping, route-level portrait orientation and focused contracts are complete.
+  Protected physics outputs are unchanged; Level C is 8/8 green and the visual
+  verdict is PASS / ready for owner review. Handed off 2026-07-19 for draft-PR
+  review; not merged or deployed.
+
+- Impact camera workflow — Claude Code; the previously claimed
+  `agent/impact-kamera` work is present on `main` through the shipped Impact
+  commits ending at `a7d0d2f`. The coordination claim was released on
+  2026-07-19 after confirming there was no matching local/remote branch or
+  additional Git worktree.
 
 - Academy complete analysis pack — `agent/academy-codex`; one tracked module
   description and 15 visual contact sheets cover Academy Home plus all 84

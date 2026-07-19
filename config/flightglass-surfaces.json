@@ -29,9 +29,9 @@
       "targetScore": 90,
       "route": "impact.html",
       "sourceType": "shipping",
-      "viewportIds": ["landscape-wide", "landscape-compact"],
-      "requiredSelectors": ["#stage", "#panelDir", "#playFlight"],
-      "references": ["impact-focus-mock.html", "range-08-final-mock.html"],
+      "viewportIds": ["portrait-wide", "portrait-compact"],
+      "requiredSelectors": ["[data-impact-layout=\"portrait-range\"]", "#stage", "#impactControl", "#parameterStrip"],
+      "references": ["design/mocks/impact-kamera.html", "impact-focus-mock.html", "range-08-final-mock.html"],
       "primaryJob": "Change one impact input and see the resulting ball flight immediately."
     },
     {

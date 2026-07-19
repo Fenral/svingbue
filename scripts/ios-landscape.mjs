@@ -8,12 +8,11 @@
 // `npx cap add ios` and before `npx cap sync ios`.
 //
 // What it does:
-//   1. Sets UISupportedInterfaceOrientations (iPhone) to landscape-left +
-//      landscape-right ONLY (removes portrait/upside-down).
-//   2. Sets UISupportedInterfaceOrientations~ipad (iPad) the same way, so
-//      the app stays landscape-only even if later run on iPad.
+//   1. Advertises portrait and landscape on iPhone so each shipping route can
+//      request its intended orientation through sa-orientation.js.
+//   2. Sets UISupportedInterfaceOrientations~ipad (iPad) to the same set.
 //   3. Sets UIRequiresFullScreen to true (no Slide Over / Split View on
-//      iPad, which would otherwise fight the landscape-only layout).
+//      iPad, which would otherwise fight route-level orientation locks).
 //   4. Sets CFBundleDisplayName to "Flightglass" (the name shown under the
 //      home-screen icon; separate from CFBundleName).
 //
@@ -56,7 +55,9 @@ if (!existsSync(PLIST_PATH)) {
 let plist = readFileSync(PLIST_PATH, 'utf8');
 const original = plist;
 
-const LANDSCAPE_ONLY_ARRAY = [
+const SUPPORTED_ORIENTATIONS = [
+  'UIInterfaceOrientationPortrait',
+  'UIInterfaceOrientationPortraitUpsideDown',
   'UIInterfaceOrientationLandscapeLeft',
   'UIInterfaceOrientationLandscapeRight',
 ];
@@ -130,13 +131,13 @@ function insertKeyBeforeRootDictClose(xml, snippet) {
   return xml.slice(0, dictCloseIdx) + snippet + '\n' + xml.slice(dictCloseIdx);
 }
 
-// 1. iPhone orientations — landscape only.
-plist = setArrayKey(plist, 'UISupportedInterfaceOrientations', LANDSCAPE_ONLY_ARRAY);
-log('set UISupportedInterfaceOrientations -> landscape-left + landscape-right only');
+// 1. iPhone orientations — route-level policy chooses from this supported set.
+plist = setArrayKey(plist, 'UISupportedInterfaceOrientations', SUPPORTED_ORIENTATIONS);
+log('set UISupportedInterfaceOrientations -> portrait + landscape');
 
-// 2. iPad orientations — landscape only (separate key Capacitor generates by default).
-plist = setArrayKey(plist, 'UISupportedInterfaceOrientations~ipad', LANDSCAPE_ONLY_ARRAY);
-log('set UISupportedInterfaceOrientations~ipad -> landscape-left + landscape-right only');
+// 2. iPad orientations — same supported set.
+plist = setArrayKey(plist, 'UISupportedInterfaceOrientations~ipad', SUPPORTED_ORIENTATIONS);
+log('set UISupportedInterfaceOrientations~ipad -> portrait + landscape');
 
 // 3. Full screen on iPad — prevents Slide Over/Split View fighting the layout.
 plist = setBoolKey(plist, 'UIRequiresFullScreen', true);
