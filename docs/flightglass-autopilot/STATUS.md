@@ -25,8 +25,8 @@ native web package. Evidence:
 `outputs/flightglass-gates/2026-07-19T16-52-12-208Z--level-C.json`.
 Independent visual re-judgment is PASS / ready for owner review after the
 Flight grid was grounded as a perspective plane on the range and Side labels
-were clamped inside the stage. The draft pull request is the only remaining
-branch-publication step.
+were clamped inside the stage. Draft PR #2 is open for owner review; it is not
+merged or deployed.
 
 Release authorization: granted for GitHub, Vercel and configured Apple/Google
 publication after all Phase 8 gates pass. See `RELEASE-AUTHORIZATION.md`.

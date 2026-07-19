@@ -21,9 +21,9 @@ Updated: 2026-07-19
 - Final Level C change gate: 8/8 PASS with zero critical Chromium/WebKit
   findings; evidence is
   `outputs/flightglass-gates/2026-07-19T16-52-12-208Z--level-C.json`.
-- Exact next action: commit only the intended files (never the owner's
-  `.gitignore` edit), push `agent/impact-portrait`, and open a draft PR. Do not
-  merge or deploy without a new owner instruction.
+- Branch `agent/impact-portrait` is pushed and draft PR #2 is open:
+  `https://github.com/Fenral/svingbue/pull/2`. Exact next action is owner review.
+  Do not merge or deploy without a new owner instruction.
 
 ## Repository checkpoint
 
