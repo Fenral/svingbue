@@ -6,11 +6,9 @@
 // committed; see .gitignore). Mirrors scripts/ios-landscape.mjs.
 //
 // What it does:
-//   Sets android:screenOrientation="sensorLandscape" on the .MainActivity
-//   <activity> element — both landscape rotations allowed, portrait never,
-//   regardless of the device's rotation-lock setting. This is the Android
-//   equivalent of the iOS UISupportedInterfaceOrientations landscape-only
-//   patch.
+//   Sets android:screenOrientation="fullSensor" on the .MainActivity so the
+//   active shipping route can request portrait or landscape through
+//   sa-orientation.js.
 //
 // Idempotent: re-running when the attribute is already correct produces no
 // diff and does not rewrite the file. If the attribute exists with a
@@ -52,7 +50,7 @@ if (!mainTag) {
   process.exit(1);
 }
 
-const ORIENTATION = 'sensorLandscape';
+const ORIENTATION = 'fullSensor';
 let newTag;
 if (/android:screenOrientation="[^"]*"/.test(mainTag)) {
   newTag = mainTag.replace(

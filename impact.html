@@ -232,28 +232,102 @@
     box-shadow:0 0 8px color-mix(in srgb, var(--q-measure) 55%, transparent)}
   .annoLabel[hidden]{display:none}
 
+  /* ══ OWNER-APPROVED PORTRAIT RANGE (2026-07-19) ══ */
+  .app{background:var(--bg)}
+  .appbar{
+    flex:0 0 calc(58px + env(safe-area-inset-top));position:relative;z-index:10;
+    display:flex;align-items:flex-end;padding:env(safe-area-inset-top) 10px 0;
+    border-bottom:1px solid var(--line);background:color-mix(in srgb,var(--bg) 92%,transparent)
+  }
+  .appbar__button{
+    appearance:none;width:44px;height:44px;border:0;border-radius:12px;
+    display:grid;place-items:center;color:var(--muted);background:transparent;
+    text-decoration:none;cursor:pointer
+  }
+  .appbar__button:last-child{margin-left:auto}
+  .appbar__button:focus-visible,.lens button:focus-visible,.parameter-chip:focus-visible,
+  .nudge:focus-visible,.impact-control:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+  .appbar__title{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);text-align:center;pointer-events:none}
+  .appbar__title strong{display:block;font-family:var(--font-display);font-size:15px;line-height:1;font-weight:600}
+  .appbar__title span{display:block;margin-top:5px;color:var(--muted-2);font-size:9px;font-weight:700;letter-spacing:.18em;text-transform:uppercase}
+
+  .scene{background:var(--bg)}
+  .range-photo,.scene-shade{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+  .range-photo{z-index:0;object-fit:cover;object-position:50% 54%;filter:saturate(.78) contrast(1.08) brightness(.58);transform:scale(1.02)}
+  .scene-shade{z-index:1;background:linear-gradient(180deg,color-mix(in srgb,var(--bg) 78%,transparent) 0%,transparent 30%,transparent 62%,color-mix(in srgb,var(--bg) 78%,transparent) 100%)}
+  .scene canvas{z-index:2}
+  .scene[data-view="top"] .range-photo{opacity:.2;filter:saturate(.25) brightness(.34)}
+  .scene[data-view="side"] .range-photo{opacity:.36;filter:saturate(.5) brightness(.4)}
+
+  .lens{
+    position:absolute;z-index:8;left:50%;bottom:12px;transform:translateX(-50%);
+    display:flex;align-items:center;padding:3px;border:1px solid var(--line);
+    background:color-mix(in srgb,var(--surface) 80%,transparent);backdrop-filter:blur(14px);
+    border-radius:12px
+  }
+  .lens button{
+    appearance:none;position:relative;min-width:70px;height:38px;border:0;border-radius:9px;
+    color:var(--muted);background:transparent;font:700 10px/1 var(--font-ui);letter-spacing:.12em;cursor:pointer
+  }
+  .lens button::after,.parameter-chip::after{content:"";position:absolute;inset:-3px 0}
+  .lens button[aria-pressed="true"]{color:var(--ink);background:var(--secondary-soft)}
+  .lens button[data-s="0"][aria-pressed="true"]{color:var(--accent);background:color-mix(in srgb,var(--accent) 16%,transparent)}
+
+  .control-dock{
+    position:relative;z-index:12;flex:0 0 calc(172px + env(safe-area-inset-bottom));
+    padding:14px 16px max(12px,env(safe-area-inset-bottom));
+    border-top:1px solid color-mix(in srgb,var(--accent) 38%,transparent);
+    background:color-mix(in srgb,var(--surface) 94%,var(--bg));
+    box-shadow:0 -16px 42px color-mix(in srgb,var(--bg) 58%,transparent)
+  }
+  .control-dock::before{content:"";position:absolute;left:16px;top:-1px;width:108px;height:1px;background:var(--accent)}
+  .active-row{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:12px}
+  .active-eyebrow{font-size:9px;font-weight:700;letter-spacing:.16em;color:var(--secondary);text-transform:uppercase}
+  .active-name{margin-top:5px;font-family:var(--font-display);font-size:17px;line-height:1.1;font-weight:600}
+  .active-value{font:500 20px/1 var(--font-mono);color:var(--accent);font-variant-numeric:tabular-nums}
+  .control-row{display:grid;grid-template-columns:32px minmax(0,1fr) 32px;align-items:center;gap:8px;margin-top:11px}
+  .nudge{appearance:none;position:relative;width:32px;height:32px;border:1px solid var(--line);border-radius:9px;background:color-mix(in srgb,var(--ink) 4%,transparent);color:var(--muted);font-size:17px;cursor:pointer}
+  .nudge::after{content:"";position:absolute;inset:-6px}
+  .impact-control{-webkit-appearance:none;appearance:none;width:100%;height:32px;margin:0;background:transparent;cursor:ew-resize;--fill:50%}
+  .impact-control::-webkit-slider-runnable-track{height:3px;border-radius:2px;background:linear-gradient(90deg,var(--accent) var(--fill),color-mix(in srgb,var(--ink) 18%,transparent) var(--fill))}
+  .impact-control::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:20px;height:20px;margin-top:-8.5px;border:3px solid var(--accent);border-radius:50%;background:var(--ink);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 13%,transparent)}
+  .impact-control::-moz-range-track{height:3px;background:color-mix(in srgb,var(--ink) 18%,transparent)}
+  .impact-control::-moz-range-progress{height:3px;background:var(--accent)}
+  .impact-control::-moz-range-thumb{width:16px;height:16px;border:3px solid var(--accent);border-radius:50%;background:var(--ink)}
+  .parameters{display:grid;grid-template-columns:repeat(var(--parameter-count),minmax(0,1fr));gap:7px;width:100%;margin-top:10px}
+  .parameter-chip{appearance:none;position:relative;min-width:0;width:100%;height:44px;padding:0 4px;border:1px solid var(--line);border-radius:9px;background:color-mix(in srgb,var(--ink) 2.5%,transparent);color:var(--muted);font-size:10px;font-weight:700;white-space:nowrap;cursor:pointer}
+  .parameter-chip[aria-pressed="true"]{border-color:color-mix(in srgb,var(--secondary) 50%,transparent);background:var(--secondary-soft);color:var(--ink)}
+
+  @media (max-width:375px),(max-height:820px){
+    .appbar{flex-basis:calc(52px + env(safe-area-inset-top))}
+    .appbar__title{bottom:8px}
+    .control-dock{flex-basis:calc(158px + env(safe-area-inset-bottom));padding-top:10px}
+    .flightCarry{top:12px;left:15px}.flightCarry .num{font-size:42px}
+    .lens{bottom:9px}.parameters{gap:6px;margin-top:7px}
+    .parameter-chip{height:44px;font-size:9.5px}.control-row{margin-top:8px}
+  }
+
   @media (prefers-reduced-motion:reduce){
     .stations button,.panewrap,.ogexp .chev,.pinfab{transition:none}
   }
 </style>
 </head>
 <body class="sa-depth">
-  <div class="app">
-
-    <!-- ══ TOP STRIP ══ -->
-    <div class="topstrip">
-      <div class="ts-left">
-        <span class="ts-title">See the Shot</span>
-        <nav class="modnav" aria-label="Modules">
-          <a class="home" href="./index.html" aria-label="Home"><svg width="20" height="20" viewBox="0 0 52 52" fill="none" aria-hidden="true"><path d="M11 45 C 16 26, 24 18, 35 15 M21 39 L 30 24 L 43 45" stroke="currentColor" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="37" cy="15" r="5.2" fill="currentColor"/></svg></a>
-          <a class="tab" href="./geometry.html">Geometry</a>
-          <a class="tab" href="#" aria-current="page">Impact</a>
-        </nav>
-      </div>
-    </div>
+  <div class="app impact-shell" data-impact-layout="portrait-range">
+    <header class="appbar">
+      <a class="appbar__button" href="./index.html" aria-label="Back to Home">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M12.5 4.5 7 10l5.5 5.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </a>
+      <div class="appbar__title"><strong>Impact</strong><span>Live range</span></div>
+      <button class="appbar__button" type="button" aria-label="More options">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><circle cx="4" cy="10" r="1.35"/><circle cx="10" cy="10" r="1.35"/><circle cx="16" cy="10" r="1.35"/></svg>
+      </button>
+    </header>
 
     <!-- ══ SCENE — én scene, tre kamerastasjoner ══ -->
-    <main class="scene" id="stage">
+    <main class="scene" id="stage" data-view="flight">
+      <img class="range-photo" src="./assets/range-night-3d-11.png" alt="" aria-hidden="true" />
+      <div class="scene-shade" aria-hidden="true"></div>
       <!-- Kontrakt (docs/systemkontrakt.md §5.4): scenen er aria-hidden (den
            oppdateres hver frame); role="img"+aria-label beholdes på canvas;
            #fCarryLive under er den ENESTE live-regionen. Etiketter hører til
@@ -277,46 +351,43 @@
       </div>
       <div class="sr-only" id="fCarryLive" aria-live="polite" aria-atomic="true"></div>
 
-      <!-- Global speed-stepper — synlig i alle stasjoner (ordre §2). -->
-      <div class="speedctl">
-        <button type="button" id="spMinus" aria-label="Decrease club speed">−</button>
-        <span class="val" id="spVal" tabindex="0" role="slider" aria-label="Club speed"
-          aria-valuemin="30" aria-valuemax="150" aria-valuenow="130" aria-valuetext="130 mph">130 mph</span>
-        <button type="button" id="spPlus" aria-label="Increase club speed">+</button>
-      </div>
-
       <!-- Pin pill — topp høyre, alle stasjoner (ordre §2). -->
       <button type="button" class="pinfab" id="pinFab">⊙ Pin</button>
 
-      <!-- ══ STASJONSKORT — kollaps-grabber + stasjonssegment + panel ══
-           Stasjonssegment: TOP · SIDE │ FLIGHT (ordre §2 — rekkefølgen er
-           bevisst motsatt av stasjonsskalaren 0=FLIGHT/1=SIDE/2=TOP, §3.2).
-           Stasjonsknappene ligger UTENFOR .panewrap slik at de forblir
-           synlige når kortet er kollapset (ordre §2). -->
-      <div class="card" id="panel">
-        <button type="button" class="grab" id="grab" aria-pressed="false"
-          aria-label="Collapse or expand the station panel"></button>
-        <div class="stations" id="stseg" role="group" aria-label="Camera station">
-          <button type="button" data-s="2" aria-pressed="false">TOP</button>
-          <button type="button" data-s="1" aria-pressed="false">SIDE</button>
-          <span class="stdiv" aria-hidden="true"></span>
-          <button type="button" data-s="0" aria-pressed="false">FLIGHT</button>
-        </div>
-        <div class="panewrap">
-          <div class="panehead">
-            <span class="h-title" id="paneTitle">OUTCOME · READ</span>
-            <span class="hint">drag scene vertically</span>
-          </div>
-          <div class="pane" id="pane"></div>
-        </div>
-      </div>
+      <nav class="lens" id="stseg" aria-label="Shot perspective">
+        <button type="button" data-s="0" aria-label="Flight view" aria-pressed="true">FLIGHT</button>
+        <button type="button" data-s="2" aria-label="Top view" aria-pressed="false">TOP</button>
+        <button type="button" data-s="1" aria-label="Side view" aria-pressed="false">SIDE</button>
+      </nav>
     </main>
+
+    <section class="control-dock" id="panel" aria-labelledby="activeInput">
+      <div class="active-row">
+        <div>
+          <div class="active-eyebrow">Active input · changes live</div>
+          <div class="active-name" id="activeInput">Face angle</div>
+        </div>
+        <output class="active-value" id="activeValue" for="impactControl">+2.0°</output>
+      </div>
+      <div class="control-row">
+        <button class="nudge" id="controlMinus" type="button" aria-label="Decrease active input">−</button>
+        <input class="impact-control" id="impactControl" type="range" aria-label="Face angle" />
+        <button class="nudge" id="controlPlus" type="button" aria-label="Increase active input">+</button>
+      </div>
+      <div class="parameters" id="parameterStrip" role="group" aria-label="Choose active input"></div>
+    </section>
   </div>
 
 <script type="module">
 import { rigAt, buildBasis, project } from './impact-camera.js';
 import { selectOutcome } from './impact-outcome.js';
 import { buildAnnotations, placeLabels, statsFlip, cometPoint, MEASURE_KEEPOUT } from './impact-annotate.js';
+import {
+  PERSPECTIVE_GRID_LANES,
+  chooseActiveParameter, formatParameterValue, parameterDefinition,
+  parametersForStation, stationName,
+} from './impact-controls.js';
+import { createOrientationController } from './sa-orientation.js';
 
 /* ══ state — docs/systemkontrakt.md §3.1. Parametrene er eneste input-
    sannhet; `station` er kamera, aldri parameter (§3.4): scrub re-solver
@@ -325,9 +396,10 @@ const state = {
   face: 2.0, path: 0.0, attack: 3.0, dynLoft: 24, speed: 130,
   station: 0,            // kontinuerlig 0=FLIGHT · 1=SIDE · 2=TOP (§3.2)
   pins: [],              // maks 3, eldste ut
-  allMetrics: false,
-  collapsed: false,
+  activeParameter: 'face',
 };
+
+createOrientationController().install('portrait').catch(() => {});
 
 // én forhåndspinnet ghost (ordre §2, default-oppsettet)
 const seedParams = { face: -3.0, path: 1.2, attack: 2.5, dynLoft: 24, speed: 130 };
@@ -411,10 +483,20 @@ function drawGrid(s) {
     ctx.fillRect(0, hy - 46, W, 102);
   }
   ctx.lineWidth = 1;
+  // Longitudinal Flight lanes converge into the range and make the grid read
+  // as a plane laid on turf, instead of a stack of horizon bands.
+  if (perspA > 0.02) {
+    ctx.save();
+    ctx.globalCompositeOperation = 'screen';
+    ctx.lineWidth = 1.15;
+    ctx.strokeStyle = rgba(COL.grid, 0.18 * perspA);
+    for (const y of PERSPECTIVE_GRID_LANES) line3([0, 0, 0], [225, y, 0]);
+    ctx.restore();
+  }
   // nedslagslinjer på tvers (50 m-intervaller) + lengdereferanser (mock drawGrid)
   ctx.font = GRID_FONT;
   for (const x of [50, 100, 150, 200]) {
-    ctx.strokeStyle = rgba(COL.grid, 0.10 + 0.14 * topA);
+    ctx.strokeStyle = rgba(COL.grid, 0.10 + 0.09 * perspA + 0.14 * topA);
     line3([x, -150, 0], [x, 150, 0]);
     const lp = P(x, 112, 0);
     if (lp) {
@@ -486,12 +568,8 @@ function drawTraj(outcome, mode) {
   ctx.lineWidth = 9; ctx.lineCap = 'round'; ctx.stroke();
   const a = project(pts[0], basis), b = project(pts[pts.length - 1], basis);
   if (a && b) {
-    const g = ctx.createLinearGradient(a.x, a.y, b.x, b.y);
-    g.addColorStop(0, rgba(COL.ink, 0.95));
-    g.addColorStop(0.5, rgba(COL.gold, 1));
-    g.addColorStop(1, rgba(COL.accent, 1));
     tracePath(pts);
-    ctx.strokeStyle = g; ctx.lineWidth = 2.6; ctx.stroke();
+    ctx.strokeStyle = rgba(COL.accent, 1); ctx.lineWidth = 2.8; ctx.stroke();
   }
   if (b) {
     ctx.beginPath(); ctx.arc(b.x, b.y, 6, 0, TAU);
@@ -587,7 +665,11 @@ function renderAnnotationLabels(placed) {
     if (!el) { el = document.createElement('div'); el.className = 'annoLabel'; annoLabelsEl.appendChild(el); annoPool[n] = el; }
     el.hidden = false;
     el.textContent = prim.label;
-    el.style.transform = `translate(${prim.labelPos.x}px,${prim.labelPos.y}px) translate(-50%,-50%)`;
+    const halfWidth = el.offsetWidth / 2;
+    const halfHeight = el.offsetHeight / 2;
+    const labelX = clamp(prim.labelPos.x, halfWidth + 4, W - halfWidth - 4);
+    const labelY = clamp(prim.labelPos.y, halfHeight + 4, H - halfHeight - 4);
+    el.style.transform = `translate(${labelX}px,${labelY}px) translate(-50%,-50%)`;
     el.style.opacity = prim.alpha != null ? String(clamp(prim.alpha, 0, 1)) : '1';
     el.classList.toggle('hot', !!prim.hot);
     n++;
@@ -622,11 +704,9 @@ function pulseHot(key, ms = 700) {
 }
 
 /* ══ kamera-animasjon: scrub + snap + segmenthopp + oppstartsreise ══ */
-let stationTarget = 2;   // oppstart: land i TOP …
+let stationTarget = 0;   // portrait Range opens on the full ball flight
 let scrubbing = false;
-if (reduceMotion) state.station = 2;   // … uten reise ved redusert bevegelse
-// ellers starter state.station på 0 (bak ballen) og rAF-løkken kjører reisen
-// dit på ~0,5 s (tidsbasert easing, se TAU_S i render-løkken).
+if (reduceMotion) state.station = 0;
 
 const segButtons = [...document.querySelectorAll('#stseg button')];
 function syncSeg() {
@@ -638,176 +718,77 @@ function setStation(s, animate = true) {
   if (!animate || reduceMotion) state.station = stationTarget;
   syncSeg();
   const snapped = Math.round(stationTarget);
-  if (snapped !== activePaneStation) renderPane(snapped);
+  if (snapped !== activeDockStation) renderControlDock(snapped);
 }
 for (const b of segButtons) b.addEventListener('click', () => setStation(+b.dataset.s));
 
-/* ══ PANELER — mekanisk port fra mocken (ordre §2, "DU KJØRER: C · Paneler").
-   Pane-innholdet bytter når MÅL-stasjonen (avrundet) endrer seg, ikke under
-   selve scrub-glidningen — samme kobling som segmentknappene (setStation).
-   Slidere er ekte <input type=range> med <label for>, ikke div-er (a11y). */
-const fmtDeg = v => (v >= 0 ? '+' : '−') + Math.abs(v).toFixed(1) + '°';
+/* ══ PORTRAIT CONTROL DOCK — én aktiv slider, eksakt parameterkart ══ */
+const controlEl = document.getElementById('impactControl');
+const activeInputEl = document.getElementById('activeInput');
+const activeValueEl = document.getElementById('activeValue');
+const parameterStripEl = document.getElementById('parameterStrip');
+let activeDockStation = null;
 
-const SLDEF = {
-  face:    { name: 'FACE',     token: '--q-face',   min: -15, max: 15, step: 0.1, fmt: fmtDeg },
-  path:    { name: 'PATH',     token: '--q-path',   min: -15, max: 15, step: 0.1, fmt: fmtDeg },
-  attack:  { name: 'ATTACK',   token: '--q-attack', min: -15, max: 15, step: 0.1, fmt: fmtDeg },
-  dynLoft: { name: 'DYN LOFT', token: '--q-loft',   min: 0,   max: 50, step: 0.1, fmt: v => v.toFixed(1) + '°' },
-};
-function buildSlider(container, key) {
-  const d = SLDEF[key];
-  const id = `sl-${key}`;
-  const wrap = document.createElement('div');
-  wrap.className = 'sl';
-  wrap.style.setProperty('--c', `var(${d.token})`);
-  wrap.innerHTML =
-    `<div class="head"><label class="name" for="${id}"><i aria-hidden="true"></i>${d.name}</label>` +
-    `<span class="val" id="${id}-val"></span></div>` +
-    `<input type="range" id="${id}" min="${d.min}" max="${d.max}" step="${d.step}" value="${state[key]}">`;
-  container.appendChild(wrap);
-  const input = wrap.querySelector('input');
-  const val = wrap.querySelector('.val');
-  const sync = () => { val.textContent = d.fmt(state[key]); };
-  input.addEventListener('input', () => {
-    state[key] = clamp(Math.round(parseFloat(input.value) * 10) / 10, d.min, d.max);
-    sync();
-  });
-  // hot-state (ordre §3): rørt så lenge sliderdraget varer, ikke tidsbasert
-  // slik speed er — face/path/attack/dynLoft er en direkte holdt kontroll.
-  input.addEventListener('pointerdown', () => { hotKey = key; });
-  const clearHot = () => { if (hotKey === key) hotKey = null; };
-  input.addEventListener('pointerup', clearHot);
-  input.addEventListener('pointercancel', clearHot);
-  sync();
+function syncActiveControl() {
+  const key = state.activeParameter;
+  const definition = parameterDefinition(key);
+  const value = state[key];
+  controlEl.min = definition.min;
+  controlEl.max = definition.max;
+  controlEl.step = definition.step;
+  controlEl.value = value;
+  controlEl.setAttribute('aria-label', definition.label);
+  controlEl.setAttribute('aria-valuetext', formatParameterValue(key, value));
+  activeInputEl.textContent = definition.label;
+  activeValueEl.textContent = formatParameterValue(key, value);
+  const fill = ((value - definition.min) / (definition.max - definition.min)) * 100;
+  controlEl.style.setProperty('--fill', `${fill}%`);
 }
 
-const chipHTML = (k, v, em) =>
-  `<div class="chip read"><div class="k">${k}</div><div class="v">${v}${em ? ` <em>${em}</em>` : ''}</div></div>`;
-function renderMetricChips(outcome) {
-  const mini = document.getElementById('ogMini');
-  if (!mini) return;
-  mini.innerHTML =
-    chipHTML('TOTAL', Math.round(outcome.m.total), 'm') +
-    chipHTML('APEX', Math.round(outcome.m.apex), 'm') +
-    chipHTML('CURVE', Math.abs(Math.round(outcome.m.curve)), 'm') +
-    chipHTML('BALL SPEED', Math.round(outcome.misc.ballSpeed), 'mph');
-  const axis = (outcome.deg.spinAxis >= 0 ? '+' : '−') + Math.abs(Math.round(outcome.deg.spinAxis)) + '°';
-  document.getElementById('ogDir').innerHTML =
-    chipHTML('LAUNCH DIR', fmtDeg(outcome.deg.launchDir)) +
-    chipHTML('SPIN AXIS', axis) +
-    chipHTML('CURVE', Math.abs(Math.round(outcome.m.curve)), 'm') +
-    chipHTML('SIDE', Math.abs(Math.round(outcome.m.side)), 'm ' + (outcome.m.side >= 0 ? 'R' : 'L'));
-  document.getElementById('ogLaunch').innerHTML =
-    chipHTML('LAUNCH ANG', outcome.deg.launchAng.toFixed(1) + '°') +
-    chipHTML('SPIN LOFT', outcome.deg.spinLoft.toFixed(1) + '°') +
-    chipHTML('BACKSPIN', Math.round(outcome.misc.backspin), 'rpm') +
-    chipHTML('LAND ANG', Math.round(outcome.deg.landAng) + '°');
-  document.getElementById('ogDist').innerHTML =
-    chipHTML('SMASH', outcome.misc.smash.toFixed(2)) +
-    chipHTML('BALL SPEED', Math.round(outcome.misc.ballSpeed), 'mph') +
-    chipHTML('CARRY', Math.round(outcome.m.carry), 'm') +
-    chipHTML('TOTAL', Math.round(outcome.m.total), 'm');
+function setActiveValue(next) {
+  const key = state.activeParameter;
+  const definition = parameterDefinition(key);
+  const factor = definition.step < 1 ? 10 : 1;
+  state[key] = clamp(Math.round(clamp(Number(next), definition.min, definition.max) * factor) / factor,
+    definition.min, definition.max);
+  syncActiveControl();
 }
 
-const PANE_HTML = {
-  0: `<div class="readouts" id="ogMini"></div>
-    <button type="button" class="ogexp" id="ogExp" aria-pressed="false"><span>ALL METRICS</span><span class="chev" aria-hidden="true">▾</span></button>
-    <div class="ogrid" id="ogFull" hidden>
-      <button type="button" class="ogroup" data-goto="2"><span class="glab">DIRECTION · TOP</span><span class="garr" aria-hidden="true">→</span></button>
-      <div class="readouts" id="ogDir"></div>
-      <button type="button" class="ogroup" data-goto="1"><span class="glab">LAUNCH · SIDE</span><span class="garr" aria-hidden="true">→</span></button>
-      <div class="readouts" id="ogLaunch"></div>
-      <div class="ogroup static"><span class="glab">DISTANCE</span></div>
-      <div class="readouts" id="ogDist"></div>
-    </div>`,
-  1: `<div id="slSide"></div>`,
-  2: `<div id="slTop"></div>`,
-};
-const PANE_TITLES = { 0: ['OUTCOME · READ', 'gold'], 1: ['INPUT · LAUNCH PLANE', 'purple'], 2: ['INPUT · DIRECTION PLANE', 'purple'] };
-
-const paneTitleEl = document.getElementById('paneTitle');
-const paneEl = document.getElementById('pane');
-let allMetricsOpen = false;
-let activePaneStation = null;
-let lastChipsOutcome = null;
-function renderPane(s) {
-  activePaneStation = s;
-  const [title, cls] = PANE_TITLES[s];
-  paneTitleEl.textContent = title;
-  paneTitleEl.className = 'h-title ' + cls;
-  paneEl.innerHTML = PANE_HTML[s];
-  if (s === 1) { buildSlider(document.getElementById('slSide'), 'dynLoft'); buildSlider(document.getElementById('slSide'), 'attack'); }
-  if (s === 2) { buildSlider(document.getElementById('slTop'), 'face'); buildSlider(document.getElementById('slTop'), 'path'); }
-  if (s === 0) {
-    allMetricsOpen = false;
-    const exp = document.getElementById('ogExp');
-    const full = document.getElementById('ogFull');
-    exp.addEventListener('click', () => {
-      allMetricsOpen = !allMetricsOpen;
-      exp.setAttribute('aria-pressed', String(allMetricsOpen));
-      full.hidden = !allMetricsOpen;
+function renderControlDock(station) {
+  activeDockStation = station;
+  const view = stationName(station);
+  stage.dataset.view = view;
+  state.activeParameter = chooseActiveParameter(view, state.activeParameter);
+  const allowed = parametersForStation(station);
+  parameterStripEl.style.setProperty('--parameter-count', allowed.length);
+  parameterStripEl.replaceChildren(...allowed.map(key => {
+    const definition = parameterDefinition(key);
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'parameter-chip';
+    button.textContent = definition.chip;
+    button.setAttribute('aria-label', `${definition.chip} parameter`);
+    button.setAttribute('aria-pressed', String(key === state.activeParameter));
+    button.addEventListener('click', () => {
+      state.activeParameter = key;
+      renderControlDock(station);
     });
-    paneEl.querySelectorAll('.ogroup[data-goto]').forEach(b => {
-      b.addEventListener('click', () => setStation(+b.dataset.goto));
-    });
-    lastChipsOutcome = null;
-    renderMetricChips(selectOutcome(state));
-    lastChipsOutcome = selectOutcome(state);
-  }
+    return button;
+  }));
+  syncActiveControl();
 }
 
-/* ══ kollaps-grabber — stasjonsknappene forblir synlige kollapset (ordre §2) ══ */
-const panelEl = document.getElementById('panel');
-const grabBtn = document.getElementById('grab');
-grabBtn.addEventListener('click', () => {
-  state.collapsed = panelEl.classList.toggle('collapsed');
-  grabBtn.setAttribute('aria-pressed', String(state.collapsed));
+controlEl.addEventListener('input', () => setActiveValue(controlEl.valueAsNumber));
+controlEl.addEventListener('pointerdown', () => { hotKey = state.activeParameter; });
+for (const event of ['pointerup', 'pointercancel']) {
+  controlEl.addEventListener(event, () => { if (hotKey === state.activeParameter) hotKey = null; });
+}
+document.getElementById('controlMinus').addEventListener('click', () => {
+  controlEl.stepDown(); setActiveValue(controlEl.valueAsNumber); pulseHot(state.activeParameter);
 });
-
-/* ══ global speed-stepper — synlig i alle stasjoner (ordre §2, S4) ══ */
-const spVal = document.getElementById('spVal');
-function setSpeed(v) {
-  state.speed = clamp(Math.round(v), 30, 150);
-  spVal.textContent = state.speed + ' mph';
-  spVal.setAttribute('aria-valuenow', String(state.speed));
-  spVal.setAttribute('aria-valuetext', state.speed + ' mph');
-  pulseHot('speed'); // ordre §3: speed → kurve-sjikt, 700 ms etter stepper/scrub
-}
-function bindHold(btn, dir) {
-  let t1 = null, t2 = null, n = 0;
-  const end = () => { clearTimeout(t1); clearInterval(t2); t1 = t2 = null; };
-  btn.addEventListener('pointerdown', e => {
-    e.stopPropagation(); btn.setPointerCapture(e.pointerId);
-    n = 0; setSpeed(state.speed + dir);
-    t1 = setTimeout(() => {
-      t2 = setInterval(() => { n++; setSpeed(state.speed + dir * (n > 10 ? 5 : 1)); }, 90);
-    }, 400);
-  });
-  btn.addEventListener('pointerup', end);
-  btn.addEventListener('pointercancel', end);
-  btn.addEventListener('lostpointercapture', end);
-}
-bindHold(document.getElementById('spMinus'), -1);
-bindHold(document.getElementById('spPlus'), 1);
-// horisontal scrub på tallet: ±1 mph per 6 px (ordre §2, S4)
-(() => {
-  let sx = null, sv = 0;
-  spVal.addEventListener('pointerdown', e => {
-    e.stopPropagation(); spVal.setPointerCapture(e.pointerId);
-    sx = e.clientX; sv = state.speed;
-  });
-  spVal.addEventListener('pointermove', e => {
-    if (sx === null) return;
-    setSpeed(sv + Math.round((e.clientX - sx) / 6));
-  });
-  const end = () => { sx = null; };
-  spVal.addEventListener('pointerup', end);
-  spVal.addEventListener('pointercancel', end);
-  spVal.addEventListener('keydown', e => {
-    if (e.key === 'ArrowUp' || e.key === 'ArrowRight') { setSpeed(state.speed + 1); e.preventDefault(); }
-    if (e.key === 'ArrowDown' || e.key === 'ArrowLeft') { setSpeed(state.speed - 1); e.preventDefault(); }
-  });
-})();
+document.getElementById('controlPlus').addEventListener('click', () => {
+  controlEl.stepUp(); setActiveValue(controlEl.valueAsNumber); pulseHot(state.activeParameter);
+});
 
 /* ══ Pin pill — maks 3 ghosts, eldste ut (ordre §2, S7) ══ */
 document.getElementById('pinFab').addEventListener('click', () => {
@@ -926,10 +907,6 @@ function frame(now) {
     if (cp) drawComet(cp, basis);
   }
 
-  if (activePaneStation === 0 && liveOutcome !== lastChipsOutcome) {
-    renderMetricChips(liveOutcome);
-    lastChipsOutcome = liveOutcome;
-  }
   requestAnimationFrame(frame);
 }
 
@@ -938,7 +915,7 @@ function frame(now) {
 const api = { state, setStation, get stationTarget() { return stationTarget; }, capture: false, trace: [] };
 window.__impact = api;
 
-renderPane(Math.round(stationTarget));
+renderControlDock(Math.round(stationTarget));
 updateStats(selectOutcome(state));
 syncSeg();
 requestAnimationFrame(frame);
