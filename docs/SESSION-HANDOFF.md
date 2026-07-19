@@ -1,6 +1,39 @@
 # Flightglass session handoff
 
-Updated: 2026-07-19
+Updated: 2026-07-20
+
+## Current Night Optics first-contact handoff
+
+- Working branch: `agent/first-contact-night-optics`; isolated worktree:
+  `.worktrees/first-contact-night-optics`.
+- Owner-approved spec:
+  `docs/superpowers/specs/2026-07-20-flightglass-first-contact-design.md`.
+- Freshly reviewed implementation plan:
+  `docs/superpowers/plans/2026-07-20-flightglass-first-contact-implementation.md`.
+- Pre-change source is
+  `02aad61382e6c31c103867ea993ce8f650758881`. No shipping source has changed at
+  this checkpoint.
+- Fresh start gate: `npm run claude:ready` PASS, exit 0 in 540.9 seconds.
+  Focused Home baseline: eight viewport/motion captures, zero critical findings.
+- Scope owns new `first-contact*` state/orchestration/scene/audio/flight source,
+  the production Home replacement, focused tests, and later native/package
+  contracts. `impact-flight.js` is read-only. Do not make broad Impact edits.
+- The landing skip opens useful Fundamentals Home. Only First Flight's skip may
+  hand its exact simulated shot to Range. The Range consumer must wait for and
+  record the exact reviewed PR #2 / `agent/impact-portrait` commit; if it cannot
+  integrate narrowly, leave that interface gate open rather than overwrite it.
+- Five focus choices now continue to truthful existing Academy instruments:
+  Start Line, Speed Transfer, Flight Height & Descent, Delivered Loft & Launch,
+  and Shape. Tests must follow each through a real model change and persistence
+  before any account, permission, or paywall.
+- Device/native performance, behavioral cohorts and human comprehension remain
+  unobserved release evidence. Optional generated atmosphere is kept only after
+  a reproducible blind win; the coded UI, physics and procedural sonic mark are
+  complete without it.
+
+Exact next action: create the phase rollback backup, extract Task 1 into the
+SDD workspace, write the failing `first-contact-entry-state` test, observe RED,
+then implement only the guarded state model and run its focused regressions.
 
 ## Current Impact handoff
 

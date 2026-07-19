@@ -13,7 +13,7 @@ wait.
 
 | Agent | Branch | Working on | Since |
 |-------|--------|-----------|-------|
-| - | - | - | - |
+| Codex | `agent/first-contact-night-optics` | Owner-approved Night Optics first contact, solver-backed First Flight, and specimen-based Home. Owns `index.html`, scoped `first-contact*` source/tests, first-contact launch/package resources and evidence docs. `impact-flight.js` is read-only; no broad Impact edits. | 2026-07-20 |
 
 ## Queue / free to take
 

@@ -1,6 +1,40 @@
 # Flightglass autonomous execution status
 
-Updated: 2026-07-19
+Updated: 2026-07-20
+
+## Night Optics first-contact planning checkpoint
+
+The owner approved the complete Flightglass First Contact direction on
+2026-07-20. The normative specification is
+`docs/superpowers/specs/2026-07-20-flightglass-first-contact-design.md`; the
+reviewed TDD implementation plan is
+`docs/superpowers/plans/2026-07-20-flightglass-first-contact-implementation.md`.
+Work is isolated on `agent/first-contact-night-optics` from immutable pre-change
+source `02aad61382e6c31c103867ea993ce8f650758881` and is claimed in
+`COORDINATION.md`.
+
+The plan passed three critical reviews after correcting the landing skip route,
+side-crossing result language, real downstream focus consumption, the mandatory
+free experiment, route-wide package reachability, native pre-paint background,
+conditional media, canonical two-gated sound, and behavioral/native evidence
+boundaries. A truth-alignment amendment maps the five focus choices to existing
+Academy instruments instead of claiming unbuilt `Find the launch window` or
+`Read one shot in 20 seconds` consumers.
+
+Fresh pre-implementation gates:
+
+- `npm run claude:ready`: PASS, exit 0, 540.9 seconds; no failures. Existing
+  `MODULE_TYPELESS_PACKAGE_JSON` warnings remain non-blocking.
+- focused Home baseline audit, all four manifest viewports in normal and
+  reduced motion: 8/8 captures, zero critical findings, exit 0 in 17.2 seconds.
+- protected Impact physics remains read-only; no production or shipping source
+  has changed in this checkpoint.
+
+Native safe zones, physical-device p50/p90, audio routes, human comprehension,
+clean-install cohorts and their confidence intervals remain explicitly
+`UNOBSERVED`. Optional Higgsfield media is post-implementation atmosphere only
+and cannot block the procedural experience. The exact next action is Task 1:
+create the guarded `fg.*` state model with a failing focused test before source.
 
 ## Impact portrait implementation checkpoint
 

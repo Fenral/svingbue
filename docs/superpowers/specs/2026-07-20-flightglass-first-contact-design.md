@@ -343,10 +343,12 @@ An explicit **Change focus** action on Home offers:
 | Choice | Home track | Next experiment |
 |---|---|---|
 | Straighten ball flight | Curve Control | Start direction versus curve |
-| Add carry | Energy Transfer | Find the launch window |
+| Add carry | Energy Transfer | Build the same ball speed two ways |
 | Control height | Flight Windows | Dynamic loft and apex |
-| Read launch numbers | Data Decoder | Read one shot in 20 seconds |
+| Read launch numbers | Data Decoder | Delivered loft into launch |
 | Keep exploring | Fundamentals | Why shots start and curve |
+
+These labels resolve to existing, truthful Academy instruments: Start Line, Speed Transfer, Flight Height & Descent, Delivered Loft & Launch, and Shape respectively. The earlier phrases **Find the launch window** and **Read one shot in 20 seconds** are not shipped as if those consumers already exist; they require separate future instruments. Each continuation begins at the destination's honest Mission state, then lets the learner enter its existing interactive model. Focus may also set a narrow Range view/parameter emphasis only after the current Impact consumer implements and verifies that handoff contract.
 
 Fundamentals is the default, so no choice is mandatory. A chosen focus must change all three of:
 
