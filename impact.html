@@ -60,7 +60,7 @@
 
   /* stats-hero (venstre topp) — §6: stort tall = CARRY. Visuelt lag er
      aria-hidden; #fCarryLive er ENESTE live-region (arvet a11y-kontrakt). */
-  .flightCarry{position:absolute;left:16px;top:14px;z-index:5;pointer-events:none}
+  .flightCarry{position:absolute;left:16px;top:92px;z-index:5;pointer-events:none}
   .flightCarry .num{font-size:44px;font-weight:700;line-height:1;letter-spacing:-.02em;
     font-variant-numeric:tabular-nums;color:var(--ink);
     text-shadow:0 0 26px color-mix(in srgb, var(--gold) 25%, transparent)}
@@ -88,9 +88,15 @@
      Farge: --q-launch ("speed/launch varm-rav"-familien), IKKE --accent —
      --accent er reservert til warm-light-regelens ene oransje fokal
      (aktiv bane + komet, tegnet i canvas). */
-  .speedctl{position:absolute;left:50%;top:calc(10px + env(safe-area-inset-top));
-    transform:translateX(-50%);z-index:6;
-    display:flex;align-items:center;gap:2px;
+  /* top control row — Back lives in .topstrip above; this holds the global
+     speed VALUE + the Lock shot ACTION. A flex row so they can never overlap
+     on narrow phones (was: centered speed + right-pinned pill → collision at
+     ≤390px). Kept inside the scene so it keeps the notch/safe-area offset the
+     topstrip itself does not apply. */
+  .toprow{position:absolute;left:0;right:0;top:calc(8px + env(safe-area-inset-top));z-index:6;
+    display:flex;align-items:center;gap:10px;padding:0 14px;pointer-events:none}
+  .toprow > *{pointer-events:auto}
+  .speedctl{margin:0 auto;display:flex;align-items:center;gap:2px;
     background:var(--panel);border:1px solid color-mix(in srgb, var(--q-launch) 35%, transparent);
     border-radius:999px;padding:3px;
     backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
@@ -106,13 +112,16 @@
     color:var(--q-launch);font-variant-numeric:tabular-nums;cursor:ew-resize;touch-action:none;
     border-radius:8px}
   .speedctl .val:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+  /* number carries the weight; unit stays small so the pill width barely grows */
+  .speedctl .spnum{font-size:16px;font-weight:700;color:var(--q-launch)}
+  .speedctl .spu{font-size:11px;font-weight:500;color:color-mix(in srgb, var(--q-launch) 72%, var(--muted));margin-left:0}
 
   /* ══ PIN PILL — topp høyre, alle stasjoner (ordre §2) ══ */
-  .pinfab{position:absolute;right:14px;top:calc(14px + env(safe-area-inset-top));z-index:6;
-    appearance:none;cursor:pointer;font:inherit;font-size:12.5px;font-weight:700;
-    color:var(--gold);background:var(--panel);border:1px solid color-mix(in srgb, var(--gold) 40%, transparent);
+  /* filled gold ACTION — distinct from the outlined amber speed VALUE next to it */
+  .pinfab{flex:0 0 auto;appearance:none;cursor:pointer;font:inherit;font-size:12.5px;font-weight:700;
+    color:var(--bg);background:var(--gold);border:1px solid var(--gold);
     border-radius:999px;padding:9px 15px;
-    backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);transition:transform .15s}
+    box-shadow:0 3px 12px color-mix(in srgb, var(--gold) 30%, transparent);transition:transform .15s}
   .pinfab:active{transform:scale(.95)}
   .pinfab:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 
@@ -260,16 +269,17 @@
       </div>
       <div class="sr-only" id="fCarryLive" aria-live="polite" aria-atomic="true"></div>
 
-      <!-- Global speed-stepper — synlig i alle stasjoner (ordre §2). -->
+      <!-- Top control row — global speed value + Lock shot action (ordre §2). -->
+      <div class="toprow">
       <div class="speedctl">
         <button type="button" id="spMinus" aria-label="Decrease club speed">−</button>
         <span class="val" id="spVal" tabindex="0" role="slider" aria-label="Club speed"
-          aria-valuemin="30" aria-valuemax="150" aria-valuenow="130" aria-valuetext="130 mph">130 mph</span>
+          aria-valuemin="30" aria-valuemax="150" aria-valuenow="130" aria-valuetext="130 mph"><span class="spnum" id="spNum">130</span> <span class="spu">mph</span></span>
         <button type="button" id="spPlus" aria-label="Increase club speed">+</button>
       </div>
 
-      <!-- Pin pill — topp høyre, alle stasjoner (ordre §2). -->
       <button type="button" class="pinfab" id="pinFab">⊙ Lock shot</button>
+      </div><!-- /toprow -->
 
       <!-- ══ STASJONSKORT — kollaps-grabber + stasjonssegment + panel ══
            Stasjonssegment: TOP · SIDE │ FLIGHT (ordre §2 — rekkefølgen er
@@ -749,9 +759,10 @@ grabBtn.addEventListener('click', () => {
 
 /* ══ global speed-stepper — synlig i alle stasjoner (ordre §2, S4) ══ */
 const spVal = document.getElementById('spVal');
+const spNum = document.getElementById('spNum');
 function setSpeed(v) {
   state.speed = clamp(Math.round(v), 30, 150);
-  spVal.textContent = state.speed + ' mph';
+  spNum.textContent = state.speed;
   spVal.setAttribute('aria-valuenow', String(state.speed));
   spVal.setAttribute('aria-valuetext', state.speed + ' mph');
   pulseHot('speed'); // ordre §3: speed → kurve-sjikt, 700 ms etter stepper/scrub

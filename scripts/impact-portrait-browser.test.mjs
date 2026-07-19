@@ -77,6 +77,40 @@ test('the save control reads "Lock shot", not "Pin"', { timeout: 60_000 }, async
   await page.close();
 });
 
+test('the speed value enlarges the number, keeps mph small, and steps live', { timeout: 60_000 }, async () => {
+  const { page } = await open();
+  await page.locator('#stage').waitFor();
+  const num = page.locator('#spNum');
+  await num.waitFor();
+  assert.match(await num.textContent(), /^\d+$/, 'the number span holds just the digits');
+  const [numPx, unitPx] = await page.evaluate(() => [
+    parseFloat(getComputedStyle(document.querySelector('.speedctl .spnum')).fontSize),
+    parseFloat(getComputedStyle(document.querySelector('.speedctl .spu')).fontSize),
+  ]);
+  assert.ok(numPx > unitPx, `number (${numPx}px) is larger than the mph unit (${unitPx}px)`);
+  // the stepper updates the visible number and the accessible value together
+  const before = Number(await num.textContent());
+  await page.locator('#spPlus').click();
+  const after = Number(await num.textContent());
+  assert.equal(after, before + 1, 'plus increments the number');
+  assert.equal(await page.locator('#spVal').getAttribute('aria-valuetext'), `${after} mph`, 'aria-valuetext tracks the number');
+  await page.close();
+});
+
+test('the speed control and Lock shot never overlap across phone widths', { timeout: 60_000 }, async () => {
+  for (const width of [430, 414, 393, 390, 375, 360]) {
+    const { page } = await open({ width, height: 812 });
+    await page.locator('#stage').waitFor();
+    const gap = await page.evaluate(() => {
+      const sp = document.querySelector('.speedctl').getBoundingClientRect();
+      const pin = document.querySelector('.pinfab').getBoundingClientRect();
+      return Math.round(pin.left - sp.right);
+    });
+    assert.ok(gap >= 4, `speed↔Lock gap at ${width}px is ${gap}px (need ≥4)`);
+    await page.close();
+  }
+});
+
 test('collapse is available: the grab handle toggles the pane', { timeout: 60_000 }, async () => {
   const { page } = await open();
   await page.locator('#stage').waitFor();
