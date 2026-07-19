@@ -95,26 +95,6 @@ export function buildAnnotations(outcome, station, basis, hotKey = null) {
   const tanDir = Math.tan(launchDir * RAD);
   const path = outcome.path;
 
-  // ── TARGET (ordre §3 "TARGET") — uavhengig av TOP/SIDE-gatene, blender
-  // kontinuerlig fra s=1 og oppover, alltid beregnet. ──
-  {
-    const tl = P(228, 0, 0);
-    const oyPt = P(carry + 12, 0, 0);
-    if (tl && oyPt) {
-      const topBlend = smoothstep(clamp(s - 1, 0, 1));
-      const oy = oyPt.y;
-      const desired = Math.max(112, oy - 16);
-      const tAlpha = lerpN(1, clamp((oy - 118) / 18, 0, 1), topBlend);
-      const tPin = lerpN(tl.y - 8, desired, topBlend);
-      if (tAlpha > 0.05) {
-        primitives.push({
-          kind: 'target', points: [], tone: 'measure', alpha: tAlpha,
-          label: 'TARGET', labelAnchor: { x: tl.x, y: tPin },
-        });
-      }
-    }
-  }
-
   // ── Apex (ordre §3 SIDE "Apex = gulldot på banens visuelle topp") ──
   if (s < 1.4) {
     let best = null, bestY = Infinity;
@@ -203,13 +183,15 @@ export function buildAnnotations(outcome, station, basis, hotKey = null) {
   // ── SIDE · launchplanet (ordre §3 SIDE, bell rundt skalar 1) ──
   const sideA = smoothstep(clamp(1 - Math.abs(s - 1) * 1.7, 0, 1));
   if (sideA > 0.03) {
+    // SIDE: launch/land angle as a clean labelled chip. buildArc still supplies
+    // the anchor placement and the <0.3° guard; we render only the label — no
+    // arc stroke rising into the chip (eier-ønske), full word «angle».
     const launchArc = buildArc(basis,
       (a, m) => ({ x: Math.cos(a) * 24 * m, y: 0, z: Math.sin(a) * 24 * m }),
       launchAng);
     if (launchArc) primitives.push({
-      kind: 'arc', points: launchArc.points, tick: launchArc.tick,
-      tone: 'measure', alpha: sideA, hot: hotLaunch,
-      label: `Launch ${launchAng.toFixed(1)}°`, labelAnchor: launchArc.labelAnchor,
+      kind: 'label', tone: 'measure', alpha: sideA, hot: hotLaunch,
+      label: `Launch angle ${launchAng.toFixed(1)}°`, labelAnchor: launchArc.labelAnchor,
     });
 
     const p2 = path[path.length - 1];
@@ -217,9 +199,8 @@ export function buildAnnotations(outcome, station, basis, hotKey = null) {
       (a, m) => ({ x: p2.x - Math.cos(a) * 18 * m, y: p2.y, z: Math.sin(a) * 18 * m }),
       landAng);
     if (landArc) primitives.push({
-      kind: 'arc', points: landArc.points, tick: landArc.tick,
-      tone: 'measure', alpha: sideA * 0.95, hot: hotLaunch,
-      label: `Land ${Math.round(landAng)}°`, labelAnchor: landArc.labelAnchor,
+      kind: 'label', tone: 'measure', alpha: sideA * 0.95, hot: hotLaunch,
+      label: `Land angle ${Math.round(landAng)}°`, labelAnchor: landArc.labelAnchor,
     });
   }
 
@@ -235,8 +216,8 @@ function lerpN(a, b, t) { return a + (b - a) * t; }
  * blokken står til venstre (regel 2 kan da slå inn), ellers `null`/`undefined`
  * (statsRight === true → regel 2 gjelder aldri, jf. ordre "OG stats står til
  * venstre"). Fast tegnerekkefølge er den rekkefølgen `primitives` allerede
- * står i (buildAnnotations returnerer target → apex → TOP → SIDE, dvs.
- * "grid → bane-etiketter → mål-etiketter" — ordre §3).
+ * står i (buildAnnotations returnerer apex → TOP → SIDE, dvs.
+ * "grid → bane-etiketter" — ordre §3).
  */
 export function placeLabels(primitives, keepOut, vbox) {
   const rects = [];

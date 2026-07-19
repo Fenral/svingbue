@@ -153,6 +153,21 @@ test('project: orthoK=1 is exactly orthographic — depth never changes screen p
   approxEqual(a.y, b.y, 1e-6, 'orthographic y must be depth-independent');
 });
 
+test('project: the fit-to-shot fov-widen keeps orthoK=1 exactly orthographic', () => {
+  // frameForShot (impact.html) zooms by widening fov: fov' = 2·atan(tan(fov/2)/k).
+  // That rescales focal, never zDiv, so TOP/SIDE must stay depth-independent at any fov.
+  const k = 0.7;
+  const wideFov = 2 * Math.atan(Math.tan(STATIONS.side.fov / 2) / k);
+  const basis = buildBasis({ ...STATIONS.side, fov: wideFov }, VBOX);
+  const near = { x: STATIONS.side.look.x + 30, y: 0, z: STATIONS.side.look.z + 14 };
+  const far = { x: STATIONS.side.look.x + 30, y: -100, z: STATIONS.side.look.z + 14 };
+  const a = project(near, basis);
+  const b = project(far, basis);
+  assert.notEqual(a.depth, b.depth, 'genuinely different depth along view axis');
+  approxEqual(a.x, b.x, 1e-6, 'orthographic x stays depth-independent after fov-widen');
+  approxEqual(a.y, b.y, 1e-6, 'orthographic y stays depth-independent after fov-widen');
+});
+
 test('buildBasis: right/upVec stay orthonormal at TOP (rig up-reference, no NaN/zero vector)', () => {
   const basis = buildBasis(STATIONS.top, VBOX);
   const lenRight = Math.hypot(basis.right.x, basis.right.y, basis.right.z);

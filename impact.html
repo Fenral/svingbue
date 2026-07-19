@@ -310,6 +310,7 @@
 import { rigAt, buildBasis, project } from './impact-camera.js';
 import { selectOutcome } from './impact-outcome.js';
 import { buildAnnotations, placeLabels, statsFlip, cometPoint, MEASURE_KEEPOUT } from './impact-annotate.js';
+import { fitZoom, gridStops } from './impact-framing.js';
 
 /* ══ state — docs/systemkontrakt.md §3.1. Parametrene er eneste input-
    sannhet; `station` er kamera, aldri parameter (§3.4): scrub re-solver
@@ -369,6 +370,7 @@ const COL = {
   measure: tokenRGB('--q-measure'),
   grid: tokenRGB('--grid-lav'),
   fog: tokenRGB('--dusk-fog'),
+  ground: tokenRGB('--dusk-ground'),
 };
 const rgba = (c, a) => `rgba(${c[0]},${c[1]},${c[2]},${a})`;
 // grid-referansetall tegnes i canvas (scenen er aria-hidden; DOM-poolen er
@@ -389,13 +391,23 @@ function line3(a, b) {
   ctx.beginPath(); ctx.moveTo(pa.x, pa.y); ctx.lineTo(pb.x, pb.y); ctx.stroke();
 }
 
-function drawGrid(s) {
+function drawGrid(s, extent) {
   const topA = clamp(s - 1, 0, 1);
   const sideA = clamp(1 - Math.abs(s - 1), 0, 1);
   const perspA = clamp(1 - s, 0, 1);
   // tåkebånd langs horisonten — finnes kun i perspektiv (mock drawGrid)
   if (perspA > 0.02) {
     const hy = H * 0.60;
+    // subtilt bakke-/gress-skjær under horisonten — gir FLIGHT en ekte range-
+    // flate uten å røre kameraet (eier-valg). Bakest lag; holder seg i dusk-
+    // paletten (--dusk-ground). Ramper opp i det synlige båndet før dokken.
+    const gr = ctx.createLinearGradient(0, hy, 0, H);
+    gr.addColorStop(0, rgba(COL.ground, 0));
+    gr.addColorStop(0.4, rgba(COL.ground, 0.5 * perspA));
+    gr.addColorStop(1, rgba(COL.ground, 0.5 * perspA));
+    ctx.fillStyle = gr;
+    ctx.fillRect(0, hy, W, H - hy);
+    // tåkebånd langs horisonten — finnes kun i perspektiv (mock drawGrid)
     const g = ctx.createLinearGradient(0, hy - 46, 0, hy + 56);
     g.addColorStop(0, rgba(COL.fog, 0));
     g.addColorStop(0.55, rgba(COL.fog, 0.28 * perspA));
@@ -404,24 +416,40 @@ function drawGrid(s) {
     ctx.fillRect(0, hy - 46, W, 102);
   }
   ctx.lineWidth = 1;
-  // nedslagslinjer på tvers (50 m-intervaller) + lengdereferanser (mock drawGrid)
   ctx.font = GRID_FONT;
-  for (const x of [50, 100, 150, 200]) {
-    ctx.strokeStyle = rgba(COL.grid, 0.10 + 0.14 * topA);
-    line3([x, -150, 0], [x, 150, 0]);
-    const lp = P(x, 112, 0);
+  // 50 m-stopp generert til slagets lengde (impact-framing.gridStops) — utvider
+  // seg (…200,250,300) på lange slag i stedet for et fast 50/100/150/200-nett.
+  const stops = gridStops(extent);
+  const reach = stops[stops.length - 1];
+  // FLIGHT tegnes som en ekte range: en smal korridor (rails + senterlinje) som
+  // trekker seg mot horisonten, så lengde OG bredde leses riktig. TOP beholder
+  // det brede feltet; SIDE bruker bare bakke-etikettene.
+  const flightGrid = perspA > topA;
+  const crossHalf = flightGrid ? 32 : 150;      // tverr-linje-halvbredde (korridor vs felt)
+  const railA = Math.max(topA, perspA);
+  if (railA > 0.03) {
+    for (const y of (flightGrid ? [-32, -16, 16, 32] : [-100, -50, 50, 100])) {
+      ctx.strokeStyle = rgba(COL.grid, (flightGrid ? 0.14 : 0.08) * railA);
+      line3([0, y, 0], [reach, y, 0]);
+    }
+    if (perspA > 0.05) { // senterakse — gir korridoren dybde i FLIGHT
+      ctx.strokeStyle = rgba(COL.grid, 0.22 * perspA);
+      line3([0, 0, 0], [reach, 0, 0]);
+    }
+  }
+  // downrange tverr-linjer (50 m) + distanse-etiketter
+  for (const x of stops) {
+    ctx.strokeStyle = rgba(COL.grid, 0.10 + 0.14 * topA + 0.09 * perspA);
+    line3([x, -crossHalf, 0], [x, crossHalf, 0]);
+    const lp = P(x, flightGrid ? crossHalf : 112, 0);
     if (lp) {
       ctx.fillStyle = rgba(COL.grid, 0.35 + 0.3 * topA);
       ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
       ctx.fillText(String(x), lp.x + 4, lp.y - 2);
     }
   }
-  // sideveis-guider ±50/±100 + breddereferanser (mest synlig i TOP)
+  // breddereferanser (TOP «100 L/R»)
   if (topA > 0.05) {
-    for (const y of [-100, -50, 50, 100]) {
-      ctx.strokeStyle = rgba(COL.grid, 0.09 * topA);
-      line3([0, y, 0], [225, y, 0]);
-    }
     const l = P(12, -100, 0), r = P(12, 100, 0);
     ctx.fillStyle = rgba(COL.grid, 0.5 * topA);
     ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
@@ -433,7 +461,7 @@ function drawGrid(s) {
     ctx.setLineDash([2, 5]);
     for (const z of [20, 40]) {
       ctx.strokeStyle = rgba(COL.grid, 0.11 * sideA);
-      line3([0, 0, z], [225, 0, z]);
+      line3([0, 0, z], [reach, 0, z]);
     }
     ctx.setLineDash([]);
   }
@@ -564,7 +592,7 @@ function drawAnnotationPrimitives(prims) {
         ctx.fillStyle = rgba(COL.measure, 1); ctx.fill();
         break;
       }
-      case 'target': case 'label': default: break; // ren DOM-etikett, ingen canvas-geometri
+      case 'label': default: break; // ren DOM-etikett, ingen canvas-geometri
     }
   }
 }
@@ -872,6 +900,27 @@ function updateStats(outcome) {
    koste bilder, aldri strekke reisen. */
 const TAU_S = 0.11;
 let lastT = 0;
+// Shot-adaptive framing (pure zoom/grid math lives in impact-framing.js).
+// Centres pos+look on the shot midpoint for the orthographic stations only —
+// scaling the shift by orthoK leaves the perspective FLIGHT rig behind the ball
+// and blends the recentring through a station transition. Translating pos+look
+// together preserves refDist, and the fit-zoom widens fov (changes only focal),
+// so TOP/SIDE stay exactly orthographic. STATIONS/rigAt untouched (§5.5).
+const FIT = { ref: 112, min: 0.62, max: 1.40 };
+function frameForShot(rig, outcome, aspectFix) {
+  const carry = Math.max(outcome.m.carry, 1);
+  const apex = outcome.m.apex || 0;
+  const side = Math.abs(outcome.m.side || 0);
+  const mid = carry / 2;
+  const dx = (mid - rig.look.x) * rig.orthoK;              // recentre TOP/SIDE only
+  const look = { x: rig.look.x + dx, y: rig.look.y, z: rig.look.z };
+  const pos = { x: rig.pos.x + dx, y: rig.pos.y, z: rig.pos.z };
+  const maxDist = Math.max(mid, apex, side + 8);           // half-extent to fit
+  const k = fitZoom(maxDist, FIT);
+  const fov = 2 * Math.atan(Math.tan(rig.fov / 2) / k);    // widen fov → zoom out
+  return { rig: { ...rig, pos, look, fov, xStretch: (rig.xStretch ?? 1) * aspectFix }, extent: carry };
+}
+
 function frame(now) {
   const dt = Math.min((now - lastT) / 1000 || 0, 0.25);
   lastT = now;
@@ -889,11 +938,14 @@ function frame(now) {
   // reisen kontinuerlig.
   const rig0 = rigAt(state.station);
   const aspectFix = 1 + ((W / H) / 0.4647 - 1) * rig0.orthoK;
-  basis = buildBasis({ ...rig0, xStretch: (rig0.xStretch ?? 1) * aspectFix }, { w: W, h: H });
-  ctx.clearRect(0, 0, W, H);
-  drawGrid(state.station);
-  for (const pin of state.pins) drawTraj(pin.outcome, 'ghost');
+  // Shot-adaptive framing: know the shot first, then centre + zoom the rig to
+  // fit it. selectOutcome is memoised, so pulling it above the basis is free.
   const liveOutcome = selectOutcome(state);
+  const framed = frameForShot(rig0, liveOutcome, aspectFix);
+  basis = buildBasis(framed.rig, { w: W, h: H });
+  ctx.clearRect(0, 0, W, H);
+  drawGrid(state.station, framed.extent);
+  for (const pin of state.pins) drawTraj(pin.outcome, 'ghost');
   drawTraj(liveOutcome, 'active');
   updateStats(liveOutcome);
 

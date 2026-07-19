@@ -164,6 +164,7 @@
   --dusk-sky-4:#0F0B1C;
   --dusk-fog:#604C86;
   --grid-lav:#A89CD6;
+  --dusk-ground:#1B2A20;   /* FLIGHT range-flate — dempet gress i skygge mot dusk-himmelen */
   --dusk-scene-bg:
     radial-gradient(120% 55% at 50% 58%, var(--dusk-horizon) 0%, transparent 60%),
     linear-gradient(180deg, var(--dusk-sky-0) 0%, var(--dusk-sky-1) 34%,

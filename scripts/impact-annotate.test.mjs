@@ -75,7 +75,7 @@ test('S1 · normaltilfelle: span ≥ 74 px, midtpunkt utenfor keep-out → midtp
 test('S1 · kollisjonsregister: overlappende etiketter nudges vertikalt vekk, maks 3 iterasjoner, deterministisk', () => {
   const prims = [
     { kind: 'apex', points: [{ x: 300, y: 200 }], label: 'Apex 30 m', labelAnchor: { x: 300, y: 200 } },
-    { kind: 'target', points: [], label: 'TARGET', labelAnchor: { x: 300, y: 201 } }, // nær-identisk anker
+    { kind: 'label', points: [], label: 'Land 44°', labelAnchor: { x: 300, y: 201 } }, // nær-identisk anker
   ];
   const out1 = placeLabels(prims, null, VBOX);
   const out2 = placeLabels(prims, null, VBOX); // samme input igjen — stateless per kall (ingen jitter)
@@ -165,16 +165,18 @@ test('buildAnnotations · TOP-elementer er fraværende under skalar ~1.25, til s
   assert.ok(byKind(atTop, 'arc').some(a => a.label === null), 'retningsbuen (uten etikett) til stede i TOP');
 });
 
-test('buildAnnotations · SIDE-elementer (launch/land-buer) er til stede rundt skalar 1, fraværende ved 0 og 2', () => {
+test('buildAnnotations · SIDE launch/land-vinkler er rene merkede chips (ingen bue-strek) rundt skalar 1, fraværende ved 0 og 2', () => {
   const atFlight = annotationsAt(0);
   const atSide = annotationsAt(1);
   const atTop = annotationsAt(2);
-  const sideArcs = a => byKind(a, 'arc').filter(x => typeof x.label === 'string');
-  assert.equal(sideArcs(atFlight).length, 0);
-  assert.equal(sideArcs(atTop).length, 0);
-  assert.ok(sideArcs(atSide).length >= 1, 'Launch/Land-buer til stede ved SIDE');
-  assert.ok(sideArcs(atSide).some(a => a.label.startsWith('Launch ')));
-  assert.ok(sideArcs(atSide).some(a => a.label.startsWith('Land ')));
+  const angleChips = a => byKind(a, 'label').filter(x => /^(Launch|Land) angle /.test(x.label || ''));
+  assert.equal(angleChips(atFlight).length, 0);
+  assert.equal(angleChips(atTop).length, 0);
+  assert.ok(angleChips(atSide).length >= 2, 'Launch angle + Land angle-chips til stede ved SIDE');
+  assert.ok(angleChips(atSide).some(a => a.label.startsWith('Launch angle ')), 'fullt ord «Launch angle»');
+  assert.ok(angleChips(atSide).some(a => a.label.startsWith('Land angle ')), 'fullt ord «Land angle»');
+  // ingen bue-strek som går opp i chippen (eier-ønske)
+  assert.equal(byKind(atSide, 'arc').filter(x => /^(Launch|Land) /.test(x.label || '')).length, 0, 'ingen launch/land-bue');
 });
 
 test('buildAnnotations · kurvemål skjules når |curve| < 3 m', () => {
@@ -203,42 +205,6 @@ test('buildAnnotations · apex-dot til stede for skalar < 1.4, fraværende ved 1
   assert.equal(apexAt135.label, null, 'apex-etikett skal være borte ved 1.35 (label-grense < 1.35)');
 });
 
-test('buildAnnotations · TARGET-etikett er alltid til stede (alpha=1) utenfor TOP (topBlend=0)', () => {
-  for (const s of [0, 0.5, 1]) {
-    const target = byKind(annotationsAt(s), 'target')[0];
-    assert.ok(target, `TARGET mangler ved skalar ${s}`);
-    assert.equal(target.label, 'TARGET');
-    assert.equal(target.alpha, 1);
-  }
-});
-
-// NB (Økt E, motorbinding): motorens carry er IKKE monoton i klubbfart på
-// toppen (drag-saturering i impact-flight.js: 150 mph klubb → kortere carry
-// enn 120 mph). Fade-regelen (§3) er en funksjon av CARRY (piksel-klaring),
-// så fixturene parametriseres på faktisk carry, ikke på speed.
-test('buildAnnotations · TARGET fader i TOP for lang carry, forblir synlig for kort carry (§3 "fader ut ... lang carry")', () => {
-  const shortShot = { face: 0, path: 0, attack: 3, dynLoft: 24, speed: 30 };  // kort carry (~37 m)
-  const longShot = { face: 0, path: 0, attack: 3, dynLoft: 24, speed: 120 }; // motorens lengste carry (~207 m)
-  const shortTarget = byKind(annotationsAt(2, shortShot), 'target')[0];
-  const longTargets = byKind(annotationsAt(2, longShot), 'target');
-  assert.ok(shortTarget, 'kort carry: TARGET skal være synlig i TOP');
-  assert.ok(shortTarget.alpha > 0.5);
-  assert.equal(longTargets.length, 0, 'lang carry: TARGET skal være helt faded (alpha ≤ 0.05) i TOP');
-});
-
-test('buildAnnotations · TARGET-alpha er monoton i CARRY ved fast TOP-skalar (lengre skudd → mer fade)', () => {
-  const shots = [30, 60, 90, 120, 150].map(speed => {
-    const params = { face: 0, path: 0, attack: 3, dynLoft: 24, speed };
-    const carry = selectOutcome(params).m.carry;
-    const t = byKind(annotationsAt(2, params), 'target')[0];
-    return { carry, alpha: t ? t.alpha : 0 };
-  }).sort((a, b) => a.carry - b.carry); // §3-regelen er i carry; speed→carry er ikke monoton i motoren
-  for (let i = 1; i < shots.length; i++) {
-    assert.ok(shots[i].alpha <= shots[i - 1].alpha + 1e-9,
-      `alpha skal ikke øke med lengre carry: ${shots.map(s => `${s.carry.toFixed(0)}m→${s.alpha.toFixed(2)}`)}`);
-  }
-});
-
 test('buildAnnotations · hot-state: face-drag setter retningsbue+kurvemål hot, ikke launch/land-buer', () => {
   const cold = annotationsAt(2, { ...DEFAULTS, face: 8, path: -2 }, null);
   const hot = annotationsAt(2, { ...DEFAULTS, face: 8, path: -2 }, 'face');
@@ -251,7 +217,9 @@ test('buildAnnotations · hot-state: face-drag setter retningsbue+kurvemål hot,
   assert.equal(curveDimCold.hot, false);
   assert.equal(curveDimHot.hot, true);
   const sideHot = annotationsAt(1, DEFAULTS, 'face');
-  assert.ok(byKind(sideHot, 'arc').every(a => a.label === null || a.hot === false), 'face er ikke en launch/land-driver');
+  const sideChips = byKind(sideHot, 'label').filter(a => /^(Launch|Land) angle /.test(a.label || ''));
+  assert.ok(sideChips.length >= 1, 'launch/land-chips finnes ved SIDE');
+  assert.ok(sideChips.every(c => c.hot === false), 'face er ikke en launch/land-driver');
 });
 
 test('buildAnnotations · null primitives-array-krasj: extreme men gyldige input gir ingen kast', () => {
