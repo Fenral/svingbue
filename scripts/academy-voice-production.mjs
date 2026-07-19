@@ -34,8 +34,11 @@ const ASSET_ROOT = resolve(ROOT, 'assets', 'audio', 'academy', PACK_ID);
 const MODEL_ID = 'eleven_multilingual_v2';
 const SOURCE_FORMAT = 'mp3_44100_192';
 const REVIEWED_DURATION_EXCEPTIONS = new Map([
-  ['academy.contact-height.s2.entry', 'Reviewed at 8.1 seconds: one complete technical sentence, clear at low volume, with no removable pause or redundant wording.'],
-  ['academy.plane-coupling.s0.entry', 'Reviewed at 8.1 seconds: the model-boundary warning remains intact and the explicit Flight glass pronunciation is clear.']
+  ['academy.contact-height.s2.entry', 'Reviewed at 9.3 seconds (4A voice): one complete technical sentence, clear at low volume, with no removable pause or redundant wording.'],
+  ['academy.plane-coupling.s0.entry', 'Reviewed at 9.6 seconds (4A voice): the model-boundary warning remains intact and the explicit Flight glass pronunciation is clear.'],
+  ['academy.low-point.s2.entry', 'Reviewed at 8.4 seconds (4A voice): one complete technical sentence at the veteran-teacher pace, no removable pause.'],
+  ['academy.delivered-launch.s2.entry', 'Reviewed at 8.2 seconds (4A voice): one complete technical sentence at the veteran-teacher pace, no removable pause.'],
+  ['academy.flight-height.s2.entry', 'Reviewed at 8.1 seconds (4A voice): one complete technical sentence at the veteran-teacher pace, no removable pause.']
 ]);
 
 const CUE_SETS = [
@@ -154,7 +157,11 @@ export function speakableText(text) {
   return String(text)
     .replace(/\bFlightglass\b/g, 'Flight glass')
     .replace(/\bflightglass\b/g, 'flight glass')
-    .replace(/\brpm\b/gi, 'R P M');
+    .replace(/\brpm\b/gi, 'R P M')
+    // Insert a paragraph break between sentences so TTS takes a real pause.
+    // Only on sentence-ending punctuation followed by whitespace + more text
+    // (never on decimals like "8.1" or a trailing full stop).
+    .replace(/([.!?])[ \t]+(?=\S)/g, '$1\n\n');
 }
 
 export function academyVoiceInventory() {
@@ -1355,6 +1362,46 @@ function processAudio(inputPath, outputPath, options) {
   run('ffmpeg', buildFfmpegArgs(inputPath, outputPath, options));
 }
 
+// Deliberate inter-sentence pause: each sentence is synthesized separately and
+// concatenated with a fixed gap of silence. Single-sentence cues are unchanged.
+const SENTENCE_GAP_SECONDS = 0.6;
+const SENTENCE_TRIM_FILTER = 'silenceremove=start_periods=1:start_duration=0.02:start_threshold=-50dB,areverse,silenceremove=start_periods=1:start_duration=0.02:start_threshold=-50dB,areverse';
+
+function cueSentences(cue) {
+  return speakableText(cue.text).split(/\n{2,}/).map(part => part.trim()).filter(Boolean);
+}
+
+async function synthesizeCueAudio(cue, finalPath, { key, speed, voiceId, rawRoot }) {
+  const sentences = cueSentences(cue);
+  if (sentences.length <= 1) {
+    const rawPath = resolve(rawRoot, `${cue.stem}.mp3`);
+    if (!existsSync(rawPath)) {
+      const audio = await providerRequest(`/v1/text-to-speech/${encodeURIComponent(voiceId)}?output_format=${SOURCE_FORMAT}`, { key, body: createTtsRequest(cue, { speed }), audio: true });
+      writeFileSync(rawPath, audio);
+    }
+    processAudio(rawPath, finalPath);
+    return;
+  }
+  const silenceWav = resolve(rawRoot, `_gap-${SENTENCE_GAP_SECONDS}.wav`);
+  if (!existsSync(silenceWav)) run('ffmpeg', ['-y', '-f', 'lavfi', '-i', 'anullsrc=r=48000:cl=mono', '-t', String(SENTENCE_GAP_SECONDS), silenceWav]);
+  const listLines = [];
+  for (const [i, sentence] of sentences.entries()) {
+    const partRaw = resolve(rawRoot, `${cue.stem}-s${i}.mp3`);
+    if (!existsSync(partRaw)) {
+      const audio = await providerRequest(`/v1/text-to-speech/${encodeURIComponent(voiceId)}?output_format=${SOURCE_FORMAT}`, { key, body: createTtsRequest({ cueId: `${cue.cueId}#${i}`, text: sentence }, { speed }), audio: true });
+      writeFileSync(partRaw, audio);
+    }
+    const partWav = resolve(rawRoot, `${cue.stem}-s${i}.wav`);
+    run('ffmpeg', ['-y', '-i', partRaw, '-af', SENTENCE_TRIM_FILTER, '-ac', '1', '-ar', '48000', partWav]);
+    listLines.push(`file '${partWav.replaceAll('\\', '/')}'`);
+    if (i < sentences.length - 1) listLines.push(`file '${silenceWav.replaceAll('\\', '/')}'`);
+  }
+  const listFile = resolve(rawRoot, `${cue.stem}.concat.txt`);
+  writeFileSync(listFile, listLines.join('\n'));
+  ensureDir(dirname(finalPath));
+  run('ffmpeg', ['-y', '-f', 'concat', '-safe', '0', '-i', listFile, '-af', 'loudnorm=I=-18:TP=-1:LRA=7,adelay=60:all=1,apad=pad_dur=0.12', '-ac', '1', '-ar', '48000', '-c:a', 'aac', '-profile:a', 'aac_low', '-b:a', '80k', '-movflags', '+faststart', finalPath]);
+}
+
 export function inspectAudio(path) {
   const probe = run('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'json', path]);
   const durationSeconds = Number(JSON.parse(probe.stdout).format.duration);
@@ -1412,14 +1459,9 @@ async function generatePack(args) {
   const records = [];
   ensureDir(rawRoot); ensureDir(ASSET_ROOT);
   for (const [index, cue] of cues.entries()) {
-    const rawPath = resolve(rawRoot, `${cue.stem}.mp3`);
     const finalPath = resolve(ASSET_ROOT, cue.relativeAssetPath);
     if (!existsSync(finalPath) || args.includes('--reprocess')) {
-      if (!existsSync(rawPath)) {
-        const audio = await providerRequest(`/v1/text-to-speech/${encodeURIComponent(selected.voiceId)}?output_format=${SOURCE_FORMAT}`, { key, body: createTtsRequest(cue, { speed: selected.ttsSpeed || 1 }), audio: true });
-        writeFileSync(rawPath, audio);
-      }
-      processAudio(rawPath, finalPath);
+      await synthesizeCueAudio(cue, finalPath, { key, speed: selected.ttsSpeed || 1, voiceId: selected.voiceId, rawRoot });
     }
     records.push(buildAssetRecord(cue, finalPath, selected));
     writeJson(resolve(WORK_ROOT, 'generation-progress.json'), { generated: index + 1, requested: cues.length, totalPackCues: allCues.length, lastCueId: cue.cueId });
@@ -1441,12 +1483,12 @@ async function generatePack(args) {
       ],
       basis: 'Paid-plan speech output may be used commercially; Flightglass owns the cue copy and uses a generated Voice Design identity, not a cloned third-party voice.'
     },
-    voiceIdentityStatus: 'approved-owner-blind-r5-a',
+    voiceIdentityStatus: 'approved-owner-us2-the-analyst',
     humanFatigueStatus: 'pending-owner-five-minute-fatigue-listen',
     devicePlaybackStatus: 'pending-physical-device-and-audio-route-check',
     voiceOverStatus: 'pending-ios-voiceover-check',
-    selectionEvidence: { blindWinner:'R5-A', comparisonControl:'R5-D / R3-D', selectedAt:selected.selectedAt, ttsSpeed:selected.ttsSpeed || 1 },
-    productionGuide: 'Mature British female systems engineer; neutral contemporary Southern British accent; grounded lower-middle register; calm authority, restrained warmth and precise technical diction at speed 0.8. Never posh, theatrical, BBC-like, breathy, maternal or assistant-like.',
+    selectionEvidence: { blindWinner:'US-2', comparisonControl:'full 50-voice shortlist', selectedAt:selected.selectedAt, ttsSpeed:selected.ttsSpeed || 1 },
+    productionGuide: 'Mature American male color-analyst (former-pro-in-the-booth); neutral General American; dark baritone; conversational expert authority that explains rather than hypes; dry warmth, 138-146 wpm with deliberate inter-sentence pauses. Never play-by-play, motivational, gravelly or broadcaster-slick.',
     provider: { name: 'ElevenLabs', voiceId: selected.voiceId, modelId: MODEL_ID, ttsSpeed: selected.ttsSpeed || 1, generatedUnderPaidPlan: true },
     assets: records
   };
