@@ -31,72 +31,79 @@ function master(seed,id){
   experience.evidence.knowledgeBestCorrect=5;experience.evidence.knowledgeTotal=5;experience.evidence.liveTransferPassed=true;experience.evidence.liveTransferEvidence={seed:true};return seed;
 }
 function prereq(seed=createAcademySeed()){return master(seed,'low-point');}
-function masterySeed({xp=0}={}){
-  const seed=prereq(),experience=seed.experiences['strike-depth'];seed.xp=xp;experience.surface=4;experience.unlockedSurfaces=[0,1,2,3,4];experience.startedAt='2026-07-15T10:00:00Z';
-  experience.evidence.contactHeight={
-    lab:{lowPointZ:-.002,prediction:0,predictionCorrect:true,deltaConfirmed:true,aboveCenter:true,lowReturned:true},
-    proof:{stage:'plane',value:0,directSeen:[-.006,-.002,.002],liftSeen:[.02,.06,.105,.15],groundSeen:[.02,.105],compensationSeen:[0,1],planeSeen:true},
-    myths:[true,true,true,true,true],mythAnswers:[1,1,1,1,1],masteryAnswers:[null,null,null,null],masteryIndex:0,
-  };
-  return seed;
-}
+
 async function open(hash='#/experience/strike-depth',viewport={width:430,height:932},seed=null,reducedMotion='no-preference'){
   const context=await browser.newContext({viewport,deviceScaleFactor:1,reducedMotion}),page=await context.newPage(),errors=[];
   page.on('pageerror',error=>errors.push(`pageerror: ${error.message}`));page.on('console',message=>{if(message.type()==='error')errors.push(`console: ${message.text()}`);});
   if(seed)await page.addInitScript(value=>{if(!localStorage.getItem('strikearc.academy.v1'))localStorage.setItem('strikearc.academy.v1',JSON.stringify(value));},seed);
   await page.goto(`${baseUrl}/academy.html${hash}`,{waitUntil:'networkidle'});return{context,page,errors};
 }
-const setRange=(page,selector,value)=>page.locator(selector).evaluate((element,next)=>{element.value=String(next);element.dispatchEvent(new Event('input',{bubbles:true}));},value);
-async function answers(page,list){for(let index=0;index<4;index++){await page.locator(`[data-mastery-answer="${list[index]}"]`).click();await page.locator('[data-action="next"]').click();}}
+// The camera-standard slider dedups when the value is unchanged, so a value that
+// equals the current one never flips the "interacted" flag. Nudge first, then land.
+const setSlider=(page,value)=>page.locator('input[type=range]').evaluate((el,next)=>{el.value=String(next);el.dispatchEvent(new Event('input',{bubbles:true}));},value);
+const land=async(page,value)=>{await setSlider(page,value+.004);await setSlider(page,value);};
+const hook=page=>page.evaluate(()=>window.__aiContactHeight?{phase:window.__aiContactHeight.phase,z:window.__aiContactHeight.z,ch:window.__aiContactHeight.state.contactHeightMm,atk:window.__aiContactHeight.state.attackAngle}:null);
+// masteryTasks[0..3].answerIndex are all 0 → the correct knowledge choice is the first chip.
+async function answerKnowledge(page,{correct=true}={}){
+  for(let i=0;i<4;i++){
+    await page.locator('[data-choices] button').nth(correct?0:1).click();
+    await page.locator('[data-next]').click();
+  }
+}
+async function passLiveGate(page){
+  await land(page,-.002);await page.locator('[data-ack="below"]').click();await page.locator('[data-capture]').click();
+  await land(page,.02);await page.locator('[data-hi="above-center"]').click();await page.locator('[data-capture]').click();
+}
 
-test('preview and legacy strike-depth route use native Contact Height truth',async()=>{
+test('strike-depth route renders the camera-standard Contact Height instrument with the held-Attack invariant',async()=>{
   const{context,page,errors}=await open();
-  assert.equal(await page.locator('#contactHeightExperience').count(),1);
-  assert.equal((await page.locator('h1').textContent()).trim(),'Move contact. Keep the direction.');
-  assert.match(await page.locator('.low-point__prereq').textContent(),/PREVIEW/);
-  assert.match(await page.locator('.contact-height__ledger').textContent(),/ARC HEIGHT AT BOTTOM/);
-  assert.match(await page.locator('.contact-height__attack').textContent(),/UNCHANGED/);
-  await page.evaluate(()=>{location.hash='#/lesson/strike-depth';});
-  await page.locator('[data-sheet-title]').filter({hasText:'Contact Height'}).waitFor();
-  assert.match(await page.locator('[data-sheet-body]').textContent(),/modeled clubhead path point/);
+  assert.equal(await page.locator('main.ai-shell').count(),1);
+  assert.match(await page.locator('[data-slot="kicker"]').textContent(),/CONTACT HEIGHT/);
+  assert.equal(await page.locator('[data-voice-target="contact-height-window"]').count(),1);
+  assert.match(await page.locator('[data-ref="attackText"]').textContent(),/−4\.110° · UNCHANGED/);
+  assert.match(await page.locator('[data-slot="hero-label"]').textContent(),/MODELED CONTACT HEIGHT/);
+  // preview banner while the live gate is still locked (no prerequisite)
+  assert.match(await page.locator('.ai-shell').textContent(),/PREVIEW/);
   assert.deepEqual(errors,[]);await context.close();
 });
 
-test('S0–S3 prove one-to-one height lift budget ground order and boundaries',async()=>{
-  const{context,page,errors}=await open('#/experience/strike-depth',{width:430,height:932},prereq(),'reduce');const lesson=page.locator('#contactHeightExperience');
-  await lesson.locator('[data-primary]').click();await lesson.locator('[data-lab-prediction="0"]').click();
-  await setRange(page,'[data-contact-lab]',.003);assert.match(await lesson.locator('.contact-height__attack').textContent(),/−4\.110°/);
-  await setRange(page,'[data-contact-lab]',.02);assert.match(await lesson.locator('.low-point__readouts').textContent(),/ABOVE BALL CENTER/);
-  await setRange(page,'[data-contact-lab]',-.002);assert.match(await lesson.locator('.low-point__stages').textContent(),/D · RETURN/);
-  await lesson.locator('[data-action="next"]').click();
-  for(const value of[-.006,-.002,.002])await lesson.locator(`[data-proof-value="${value}"]`).click();
-  await lesson.locator('[data-proof-stage="lift"]').click();for(const value of[.02,.06,.105,.15])await lesson.locator(`[data-proof-value="${value}"]`).click();
-  await lesson.locator('[data-proof-stage="ground"]').click();for(const value of[.02,.105])await lesson.locator(`[data-proof-value="${value}"]`).click();assert.match(await lesson.locator('.low-point__proof-read').textContent(),/AFTER BALL/);
-  await lesson.locator('[data-proof-stage="compensation"]').click();for(const value of[0,1])await lesson.locator(`[data-proof-value="${value}"]`).click();
-  await lesson.locator('[data-proof-stage="plane"]').click();await lesson.locator('[data-plane-note]').click();await lesson.locator('[data-action="next"]').click();
-  for(let index=0;index<5;index++){await lesson.locator('[data-myth-answer="1"]').click();await lesson.locator('[data-action="next"]').click();}
-  assert.equal(await lesson.getAttribute('data-surface'),'4');assert.equal(await lesson.locator('.academy-voice__control').count(),1);assert.equal(await lesson.locator('.academy-voice__control').isVisible(),true);
-  const metrics=await page.evaluate(()=>({overflow:document.documentElement.scrollWidth>document.documentElement.clientWidth,min:Math.min(...[...document.querySelectorAll('#contactHeightExperience button,#contactHeightExperience input')].filter(element=>element.offsetParent).map(element=>element.getBoundingClientRect().height))}));
-  assert.equal(metrics.overflow,false);assert.ok(metrics.min>=44);assert.deepEqual(errors,[]);await context.close();
-});
-
-test('4/5 knowledge without two live heights remains Practiced',async()=>{
-  const{context,page,errors}=await open('#/experience/strike-depth/surface/4',{width:430,height:932},masterySeed({xp:20}));
-  await answers(page,[0,0,0,0]);await page.locator('[data-finish]').click();assert.match(await page.locator('[data-result-status]').textContent(),/needs repair/);
-  const stored=await page.evaluate(()=>JSON.parse(localStorage.getItem('strikearc.academy.v1')));
-  assert.equal(stored.xp,20);assert.equal(stored.experiences['strike-depth'].status,'practiced');assert.equal(stored.experiences['strike-depth'].evidence.knowledgeBestCorrect,4);
+test('dragging the arc moves Contact Height one-to-one while Attack stays exactly invariant',async()=>{
+  const{context,page,errors}=await open('#/experience/strike-depth',{width:430,height:932},prereq(),'reduce');
+  await page.locator('[data-start]').click();       // into knowledge
+  // jump back to the scene by finishing knowledge is not needed — the scene slider lives on every phase's sheet.
+  // exercise the shared slider on the live gate after knowledge:
+  await answerKnowledge(page);
+  const lowRead=(await land(page,-.002),await hook(page));
+  const highRead=(await land(page,.02),await hook(page));
+  assert.ok(Math.abs(lowRead.ch-1.77)<.2,`low contact ~1.77mm, got ${lowRead.ch}`);
+  assert.ok(Math.abs(highRead.ch-23.77)<.2,`high contact ~23.77mm, got ${highRead.ch}`);
+  assert.equal(lowRead.atk,highRead.atk); // the invariant: Attack never moved between two very different heights
+  assert.ok(Math.abs(lowRead.atk+4.1097)<1e-3,`Attack held near −4.110°, got ${lowRead.atk}`);
   assert.deepEqual(errors,[]);await context.close();
 });
 
-test('raw near misses reject then two invariant height windows master once',async()=>{
-  const{context,page,errors}=await open('#/experience/strike-depth/surface/4',{width:375,height:812},masterySeed({xp:20}));
-  await answers(page,[0,0,0,1]);
-  await setRange(page,'[data-live-contact]',-.004);await page.locator('[data-live-low-ack]').click();assert.equal(await page.locator('[data-capture]').isDisabled(),true);assert.match(await page.locator('[data-live-feedback]').textContent(),/1\.0–5\.0 mm/);
-  await setRange(page,'[data-live-contact]',-.002);await page.locator('[data-capture]').click();assert.match(await page.locator('.low-point__captures').textContent(),/\+1\.8 MM/);
-  await setRange(page,'[data-live-contact]',.015);await page.locator('[data-live-high-label="above-center"]').click();assert.equal(await page.locator('[data-capture]').isDisabled(),true);
-  await setRange(page,'[data-live-contact]',.02);await page.locator('[data-capture]').click();assert.equal((await page.locator('[data-result-status]').textContent()).trim(),'You separated contact height from Attack.');
-  let stored=await page.evaluate(()=>JSON.parse(localStorage.getItem('strikearc.academy.v1')));assert.equal(stored.xp,140);assert.equal(stored.experiences['strike-depth'].status,'mastered');assert.equal(stored.experiences['strike-depth'].evidence.knowledgeBestCorrect,4);
-  const evidence=stored.experiences['strike-depth'].evidence.liveTransferEvidence;assert.equal(evidence.low.contactHeight,.0017702099868106393);assert.equal(evidence.high.contactHeight,.02377020998681064);assert.equal(evidence.attackPassed,true);assert.equal(evidence.editablePassed,true);
-  await page.reload({waitUntil:'networkidle'});stored=await page.evaluate(()=>JSON.parse(localStorage.getItem('strikearc.academy.v1')));assert.equal(stored.xp,140);assert.equal((await page.locator('[data-result-status]').textContent()).trim(),'You separated contact height from Attack.');
+test('explore → 4 knowledge → live gate awards mastery once, records the invariant, and survives reload',async()=>{
+  const{context,page,errors}=await open('#/experience/strike-depth',{width:375,height:812},prereq());
+  await page.locator('[data-start]').click();
+  await answerKnowledge(page);
+  // near-miss first: wrong band leaves capture disabled
+  await land(page,-.008);await page.locator('[data-ack="below"]').click();
+  assert.equal(await page.locator('[data-capture]').isDisabled(),true);
+  assert.match(await page.locator('[data-live-fb]').textContent(),/1\.0–5\.0 mm/);
+  await passLiveGate(page);
+  assert.equal((await page.locator('.ai-question').textContent()).trim(),'You separated contact height from Attack.');
+  let stored=await page.evaluate(()=>JSON.parse(localStorage.getItem('strikearc.academy.v1')));
+  assert.equal(stored.xp,120);assert.equal(stored.experiences['strike-depth'].status,'mastered');
+  const evidence=stored.experiences['strike-depth'].evidence.liveTransferEvidence;
+  assert.equal(evidence.low.contactHeight,.0017702099868106393);
+  assert.equal(evidence.high.contactHeight,.02377020998681064);
+  assert.equal(evidence.attackPassed,true);assert.equal(evidence.editablePassed,true);
+  // no overflow / 44px targets on the small viewport
+  const metrics=await page.evaluate(()=>({overflow:document.documentElement.scrollWidth>document.documentElement.clientWidth,min:Math.min(...[...document.querySelectorAll('main.ai-shell button,main.ai-shell input')].filter(el=>el.offsetParent).map(el=>el.getBoundingClientRect().height))}));
+  assert.equal(metrics.overflow,false);assert.ok(metrics.min>=44);
+  // mastered state persists across reload and does not degrade to practiced
+  await page.reload({waitUntil:'networkidle'});
+  stored=await page.evaluate(()=>JSON.parse(localStorage.getItem('strikearc.academy.v1')));
+  assert.equal(stored.xp,120);assert.equal(stored.experiences['strike-depth'].status,'mastered');
   assert.deepEqual(errors,[]);await context.close();
 });

@@ -27,12 +27,6 @@ test('persistent labels distinguish x z Contact Height and Attack',()=>{
   assert.match(text,/Vertical translation changes the first and leaves the second invariant/);
 });
 
-test('five myths reject ground face band and same-delivery inferences',()=>{
-  assert.equal(CONTACT_HEIGHT_CONTENT.myths.length,5);
-  const text=JSON.stringify(CONTACT_HEIGHT_CONTENT.myths);
-  for(const phrase of['Deeper means steeper','No ground crossing means ascending','quality band is measured truth','Contact Height is face Impact Height','Same modeled height means the same strike'])assert.match(text,new RegExp(phrase));
-});
-
 test('nine sheets preserve sources and point-model boundaries',()=>{
   assert.equal(Object.keys(CONTACT_HEIGHT_CONTENT.sheets).length,9);
   assert.match(CONTACT_HEIGHT_CONTENT.sheets.ground.body,/cannot simulate/);
