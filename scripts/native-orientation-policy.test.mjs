@@ -26,4 +26,3 @@ test('native documentation records portrait Impact and progressive web fallback'
   assert.match(nativeDoc, /route-level/i);
   assert.match(nativeDoc, /sa-orientation\.js/);
 });
-

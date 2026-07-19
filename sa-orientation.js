@@ -69,4 +69,3 @@ export function createOrientationController(environment = browserEnvironment()) 
 function freezeController(controller) {
   return Object.freeze(controller);
 }
-

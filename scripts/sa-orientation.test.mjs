@@ -62,4 +62,3 @@ test('install releases the route lock on pagehide and cleanup removes the listen
   cleanup();
   assert.deepEqual(removed, [['pagehide', pagehide]]);
 });
-
