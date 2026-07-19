@@ -1,6 +1,32 @@
 # Flightglass autonomous execution status
 
-Updated: 2026-07-17
+Updated: 2026-07-19
+
+## Impact portrait implementation checkpoint
+
+The owner-approved portrait Range/Impact direction is implemented on
+`agent/impact-portrait` as a reversible review branch. The shipping surface now
+opens in Flight, keeps the established dark-violet palette, uses the approved
+sharp orange only for the active trajectory, and presents exactly one live
+slider above a full-width parameter strip. The parameter policy is exact:
+Flight exposes Face, Path, Dynamic Loft, Attack and Speed; Top exposes Face,
+Path and Speed; Side exposes Dynamic Loft, Attack and Speed. Helper copy below
+the slider has been removed.
+
+Both 375x812 and 430x932 production captures have zero horizontal overflow.
+The chips split their entire available width evenly at a 44 px touch height,
+the active Speed value survives lens changes, every annotation remains inside
+the stage, and the projected landing point remains inside the range surface.
+The protected flight solver and physics mapping are unchanged. Focused Impact,
+orientation and browser contracts pass 59/59. The final Level C change gate
+passes 8/8, including 14/14 risk-gate contracts, 4/4 Home contracts, eight
+Chromium and eight WebKit runtime cases with zero critical findings, and the
+native web package. Evidence:
+`outputs/flightglass-gates/2026-07-19T16-52-12-208Z--level-C.json`.
+Independent visual re-judgment is PASS / ready for owner review after the
+Flight grid was grounded as a perspective plane on the range and Side labels
+were clamped inside the stage. The draft pull request is the only remaining
+branch-publication step.
 
 Release authorization: granted for GitHub, Vercel and configured Apple/Google
 publication after all Phase 8 gates pass. See `RELEASE-AUTHORIZATION.md`.

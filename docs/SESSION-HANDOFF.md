@@ -1,6 +1,29 @@
 # Flightglass session handoff
 
-Updated: 2026-07-17
+Updated: 2026-07-19
+
+## Current Impact handoff
+
+- Working branch: `agent/impact-portrait` from current `origin/main`.
+- Owner-approved UI is implemented in `impact.html`; the normative source mock
+  is `design/mocks/impact-kamera.html`.
+- One live slider is shown at a time. The full-width chip matrix is Flight
+  5 / Top 3 / Side 3, with Speed shared across perspectives and no helper text
+  below the slider.
+- Impact requests portrait at route level while the native shells advertise
+  both orientations; unsupported web orientation locking fails open.
+- Fresh focused evidence: 59/59 Impact, annotation, orientation and browser
+  contracts pass. Six production captures live in
+  `outputs/impact-portrait-review/` at 375x812 and 430x932.
+- The licensed Contact Height cue copy was restored to the words spoken by the
+  existing 102-file voice pack; the full start gate subsequently passed
+  503/503.
+- Final Level C change gate: 8/8 PASS with zero critical Chromium/WebKit
+  findings; evidence is
+  `outputs/flightglass-gates/2026-07-19T16-52-12-208Z--level-C.json`.
+- Exact next action: commit only the intended files (never the owner's
+  `.gitignore` edit), push `agent/impact-portrait`, and open a draft PR. Do not
+  merge or deploy without a new owner instruction.
 
 ## Repository checkpoint
 
