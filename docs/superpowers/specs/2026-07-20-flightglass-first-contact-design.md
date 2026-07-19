@@ -2,7 +2,7 @@
 
 **Date:** 2026-07-20
 
-**Status:** Cross-discipline review passed; awaiting owner approval
+**Status:** Owner-approved 2026-07-20; implementation authorized
 
 **Scope:** Native launch handoff, first-run onboarding, and production Home
 
@@ -511,7 +511,7 @@ The existing `sa-firstrun.js` storage/focus helpers may be reused, but its stale
 - Home and First Flight work completely offline.
 - Procedural frame zero renders without waiting for Higgsfield media.
 - Release builds expose named milestones for WebView frame zero, semantic controls ready, first accepted causal change, and overture settled; native test logs also timestamp OS launch and WebView presentation.
-- The normative hardware/OS set lives in the version-controlled `docs/qa/first-contact-device-matrix.json`. Before any performance baseline or feature implementation, it must contain exact observed values—manufacturer, model, hardware identifier, OS version/build, Android System WebView package/version where applicable, and capture date—for `slowest_ios`, `current_ios`, `slowest_android`, and `current_android`. Wildcards such as `latest`, model families, and missing WebView versions invalidate the run.
+- The normative hardware/OS set lives in the version-controlled `docs/qa/first-contact-device-matrix.json`. Before any physical performance baseline or release-candidate claim, it must contain exact observed values—manufacturer, model, hardware identifier, OS version/build, Android System WebView package/version where applicable, and capture date—for `slowest_ios`, `current_ios`, `slowest_android`, and `current_android`. Wildcards such as `latest`, model families, and missing WebView versions invalidate the run. Local feature implementation may proceed without connected devices, but it cannot claim native/performance completion.
 - On the matrix's named slowest-supported iPhone and Android reference devices, ten clean cold starts record p50/p90. WebView frame zero to semantic controls ready is p90 ≤400 ms; accepted input to visible response is p90 ≤100 ms; ball touch to First Flight ready is ≤1.5 seconds.
 - The same evidence stores a pre-change baseline. No launch milestone may regress by more than 100 ms or 10%, whichever is smaller, without an explicit owner-reviewed tradeoff. Browser Long Tasks data is diagnostic only and is not used as proof for WKWebView.
 - Optional video is lazy-mounted and disposable.
