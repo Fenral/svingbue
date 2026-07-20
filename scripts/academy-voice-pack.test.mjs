@@ -11,12 +11,17 @@ test('development pack verifies every local licensed Academy master',()=>{
   assert.equal(report.pass,true);assert.equal(report.cueCount,102);assert.equal(report.assetCount,102);assert.equal(report.captionOnly.length,0);assert.equal(report.rightsStatus,'approved-for-distribution');
 });
 
-test('release pack fails closed on remaining human fatigue, device and VoiceOver gates',()=>{
+test('release pack fails closed on the remaining device and VoiceOver gates',()=>{
   const report=verifyAcademyVoicePack({config,mode:'release'});
   assert.equal(report.pass,false);assert.equal(report.missing.length,0);assert.equal(report.hashMismatches.length,0);
-  assert.ok(report.errors.includes('fatigue-listen-not-approved'));
   assert.ok(report.errors.includes('device-playback-not-approved'));
   assert.ok(report.errors.includes('voiceover-not-approved'));
+  // Owner approved the fatigue listen and the US-2 voice identity on 2026-07-20;
+  // both must stay out of the release errors (the identity check is pinned to the
+  // shipped voice, so a pack/verifier mismatch fails this test rather than silently
+  // blocking release).
+  assert.ok(!report.errors.includes('fatigue-listen-not-approved'));
+  assert.ok(!report.errors.includes('voice-identity-not-approved'));
   assert.ok(!report.errors.includes('rights-not-approved'));
 });
 

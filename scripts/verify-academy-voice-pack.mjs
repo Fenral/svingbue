@@ -55,7 +55,7 @@ export function verifyAcademyVoicePack({ root=ROOT, config, cues=[...ACADEMY_HOM
   if(mode==='release'){
     if(config?.rightsStatus!=='approved-for-distribution')errors.push('rights-not-approved');
     if(typeof config?.rightsEvidence?.basis!=='string'||!Array.isArray(config?.rightsEvidence?.sources)||config.rightsEvidence.sources.length<2)errors.push('rights-evidence-incomplete');
-    if(config?.voiceIdentityStatus!=='approved-owner-blind-r5-a')errors.push('voice-identity-not-approved');
+    if(config?.voiceIdentityStatus!=='approved-owner-us2-the-analyst')errors.push('voice-identity-not-approved');
     if(config?.humanFatigueStatus!=='approved-owner-five-minute-fatigue-listen')errors.push('fatigue-listen-not-approved');
     if(config?.devicePlaybackStatus!=='approved-physical-device-and-audio-route-check')errors.push('device-playback-not-approved');
     if(config?.voiceOverStatus!=='approved-ios-voiceover-check')errors.push('voiceover-not-approved');

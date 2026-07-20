@@ -62,3 +62,6 @@ outputs/academy-analysis/
 
 # Local git worktrees (isolated agent workspaces)
 .worktrees/
+
+# Superpowers plugin local runtime state (ports, pids, local server tokens)
+.superpowers/

@@ -1484,7 +1484,7 @@ async function generatePack(args) {
       basis: 'Paid-plan speech output may be used commercially; Flightglass owns the cue copy and uses a generated Voice Design identity, not a cloned third-party voice.'
     },
     voiceIdentityStatus: 'approved-owner-us2-the-analyst',
-    humanFatigueStatus: 'pending-owner-five-minute-fatigue-listen',
+    humanFatigueStatus: 'approved-owner-five-minute-fatigue-listen',
     devicePlaybackStatus: 'pending-physical-device-and-audio-route-check',
     voiceOverStatus: 'pending-ios-voiceover-check',
     selectionEvidence: { blindWinner:'US-2', comparisonControl:'full 50-voice shortlist', selectedAt:selected.selectedAt, ttsSpeed:selected.ttsSpeed || 1 },
