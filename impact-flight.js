@@ -43,6 +43,7 @@ import {
   PREMIUM_TOUR_CLASS_AERO,
   YARD_TO_M,
   centeredImpactGeometry,
+  centeredImpactSpin,
   premiumTourDragCoefficient,
   premiumTourLiftCoefficient,
   simulateFlight,
@@ -82,12 +83,16 @@ const LAUNCH_ATTACK_W = 0.25; // SOURCED (small attack term)
 // preset; the retained longitudinal carry/apex fit below is still shared.
 const CLUBS = {
   '7iron': {
-    smash: 1.33,  // ESTIMATE (7-iron typical ball/club speed ratio)
-    spinK: 1.8,   // ESTIMATE (effective total-spin rpm per °·mph)
+    smash: 1.33,    // ESTIMATE (7-iron typical ball/club speed ratio)
+    // CALIBRATION on the CALCULATED rolling-at-separation spin (centeredImpactSpin),
+    // not a fitted rpm-per-degree slope. Anchored so a neutral 7-iron reproduces its
+    // measured reference backspin (6793.9 rpm) within ±150. The driver shares the very
+    // same value: its spin falls out of the physics, it is not separately tuned.
+    spinCal: 1.065,
   },
   driver: {
-    smash: 1.48,  // ref:TrackMan (typical driver)
-    spinK: 0.93,  // engine-derived — IKKE TODO-ens 0.6
+    smash: 1.48,    // ref:TrackMan (typical driver)
+    spinCal: 1.065, // identical physical calibration to the 7-iron — no driver-only fudge
   },
 };
 const DEFAULT_CLUB = '7iron';
@@ -113,13 +118,11 @@ function finiteInput(input, key, fallback = 0) {
 }
 
 const MIN_PROJECTABLE_DOWNRANGE_M = 1;
-const MIN_TOTAL_SPIN_RPM = 1500;
+// Only a sanity ceiling remains. The historical 1500-rpm floor is gone: it existed
+// to prop up the fitted spinLoft·ballSpeed·k magnitude, and for a driver it BOUND —
+// pinning total spin at an unphysical 1500 rpm and starving the curve. Calculated
+// rolling-at-separation spin needs no floor.
 const MAX_TOTAL_SPIN_RPM = 9000;
-// ESTIMATE/compatibility: the historical 1500-rpm lower clamp is blended from
-// zero over the first degree of true spin loft. This keeps ordinary calibrated
-// shots byte-compatible while preventing an infinitesimal nonzero D-plane from
-// discontinuously manufacturing 1500 rpm of almost pure curve spin.
-const SPIN_FLOOR_FULL_AT_DEG = 1;
 
 /**
  * Run one fixed-coefficient RK4 flight, then project its terminal lateral
@@ -247,15 +250,20 @@ export function solveFlight(input) {
   // bounded TOTAL spin from true 3-D spin loft. The exact velocity-cross-normal axis carries its
   // orientation; backspin and curve-spin are projections of that one vector.
   // This avoids a singular division when the D-plane axis is nearly vertical.
-  const SPIN_RPM_K = preset.spinK;
-  const spinRpmRaw = Math.abs(spinLoft) * ballSpeed * SPIN_RPM_K;
-  const spinFloorU = clamp(spinLoft / SPIN_FLOOR_FULL_AT_DEG, 0, 1);
-  const spinFloorBlend = spinFloorU * spinFloorU * (3 - 2 * spinFloorU);
-  const spinFloorAppliedRpm = MIN_TOTAL_SPIN_RPM * spinFloorBlend;
-  const empiricalTotalSpinRpm = geometry.spinAxisDefined && ballSpeed > 0
-    ? clamp(Math.max(spinRpmRaw, spinFloorAppliedRpm), 0, MAX_TOTAL_SPIN_RPM)
+  // CALCULATED impact spin (rolling at separation, Penner) via centeredImpactSpin,
+  // scaled by the club's single exposed calibration. This replaces the fitted
+  // spinLoft·ballSpeed·k magnitude and its 1500-rpm floor. Axis and launch
+  // orientation below are untouched — only the MAGNITUDE is now model-derived, so
+  // the displayed backspin and the curve's spin vector can no longer disagree.
+  const calculatedSpin = centeredImpactSpin(
+    { clubSpeed, attackAngle, clubPath, dynamicLoft, faceAngle },
+    { spinCalibration: preset.spinCal },
+  );
+  const spinRpmRaw = calculatedSpin.totalSpinRpm;
+  const calculatedTotalSpinRpm = geometry.spinAxisDefined && ballSpeed > 0
+    ? clamp(spinRpmRaw, 0, MAX_TOTAL_SPIN_RPM)
     : 0;
-  const spin = spinVectorFromTotalSpin(geometry, empiricalTotalSpinRpm, {
+  const spin = spinVectorFromTotalSpin(geometry, calculatedTotalSpinRpm, {
     launchElevationDeg: launchAngle,
     launchAzimuthDeg: startDirection,
   });
@@ -362,13 +370,12 @@ export function solveFlight(input) {
     // Every outcome-chip explainer in the UI sources its constants from HERE,
     // so the popover maths can never drift from the model.
     smashPresetCap: preset.smash, // ESTIMATE club-specific cap input
-    spinK: SPIN_RPM_K,            // ESTIMATE total-spin rpm per °·mph
-    spinRpmRaw,
-    minTotalSpinRpm: MIN_TOTAL_SPIN_RPM,
+    // CALIBRATION on the calculated rolling-at-separation spin. The fitted
+    // spinK slope, the 1500-rpm floor and its blend are gone — only a sanity
+    // ceiling remains, so the driver is no longer pinned at an unphysical floor.
+    spinCalibration: preset.spinCal,
+    spinRpmRaw,                   // calculated total spin before the sanity clamp
     maxTotalSpinRpm: MAX_TOTAL_SPIN_RPM,
-    spinFloorFullAtDeg: SPIN_FLOOR_FULL_AT_DEG,
-    spinFloorBlend,
-    spinFloorAppliedRpm,
     apexMax: APEX_MAX,            // ESTIMATE apex yd ceiling
     apexTau: APEX_TAU,            // ESTIMATE apex ball-speed scale
     rollFrac,                     // ESTIMATE descent-tied roll fraction

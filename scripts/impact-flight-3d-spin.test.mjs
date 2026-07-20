@@ -78,7 +78,7 @@ test('neutral 7-iron preserves every existing distance/speed/spin output exactly
     carry: 172.40005029370806,
     apex: 33.03598955407673,
     landingAngle: 54.34598955407673,
-    backspin: 7099.487999999999,
+    backspin: 7001.610243089312,
     curve: 0,
     offline: 0,
     rollFrac: 0.025981015668884905,
@@ -107,7 +107,8 @@ test('neutral low-loft driver preserves the old downstream fit exactly', () => {
     carry: 216.0879726651804,
     apex: 20.787301931572312,
     landingAngle: 32,
-    backspin: 1500,
+    // Var 1500 — det gamle gulvet, ikke fysikk. Nå beregnet rulling-ved-separasjon.
+    backspin: 1827.807384868386,
     curve: 0,
     offline: 0,
     rollFrac: 0.055,
@@ -132,7 +133,11 @@ test('solveFlight feeds exact 3-D spin loft into the existing downstream consume
 
   // Existing formulas remain live, but consume true 3-D spin loft.
   close(flight.smashEff, Math.max(1.15, Math.min(1.42, 1.46 - 0.004 * flight.spinLoft)), 1e-12);
-  close(flight.spinRpmRaw, Math.abs(flight.spinLoft) * flight.ballSpeed * flight.spinK, 1e-9);
+  // spinRpmRaw er nå den BEREGNEDE spinnen (rulling ved separasjon), ikke den
+  // fittede spinLoft·ballSpeed·k. Under sanity-klemma er rå og total identiske.
+  assert.ok(flight.spinRpmRaw > 0);
+  close(flight.spinRpmRaw, flight.totalSpinRpm, 1e-9);
+  assert.equal(flight.spinK, undefined, 'den fittede slope-konstanten er borte');
 });
 
 test('same face-to-path is more forgiving with loft, including the ~2.4 driver/hybrid axis ratio', () => {
@@ -318,7 +323,7 @@ test('zero club speed cannot produce spin from the empirical minimum clamp', () 
   assert.deepEqual(stopped.spinVectorRadPerSec, [0, 0, 0]);
 });
 
-test('the retained spin floor approaches zero continuously with true spin loft', () => {
+test('spin goes continuously to zero with true spin loft — there is no floor left', () => {
   const zero = solveFlight(base({
     clubSpeed: 100, attackAngle: 10, dynamicLoft: 10, faceAngle: 0,
   }));
@@ -328,5 +333,7 @@ test('the retained spin floor approaches zero continuously with true spin loft',
   assert.equal(zero.totalSpinRpm, 0);
   assert.ok(epsilon.totalSpinRpm < 1e-6, `tiny gap must not trigger 1500 rpm: ${epsilon.totalSpinRpm}`);
   assert.ok(Math.abs(epsilon.curveFromLaunchLineM) < 0.01);
-  assert.ok(epsilon.spinFloorBlend > 0 && epsilon.spinFloorBlend < 1e-12);
+  // Gulvet er fjernet helt, ikke bare blendet ned: feltene finnes ikke lenger.
+  assert.equal(epsilon.spinFloorBlend, undefined);
+  assert.equal(epsilon.minTotalSpinRpm, undefined);
 });
