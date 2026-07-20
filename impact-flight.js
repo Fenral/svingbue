@@ -1,5 +1,5 @@
 /**
- * IMPACT / BALL-FLIGHT — pure ESM math (TrackMan / D-plane model).
+ * IMPACT / BALL-FLIGHT — pure ESM math (centered-strike 3-D D-plane model).
  * No deps. Pure functions. Mirrors the export-style of
  * ./swing-parameters-and-impact.js (named exports, deg/rad helpers).
  *
@@ -13,29 +13,41 @@
  * Sign convention for a right-handed golfer, viewed DOWN THE LINE toward the target:
  *   +offline / +startDirection / +spinAxis  => ball goes/curves RIGHT.
  *
- * SOURCED relationships (well-established in golf launch-monitor literature,
- *   e.g. TrackMan "D-Plane" and "New Ball Flight Laws"):
+ * SOURCED relationships (well-established D-plane / launch-monitor model):
  *   - Start direction is dominated by face angle (~75% face / ~25% path).
- *   - Spin loft = dynamic loft - attack angle.
+ *   - True spin loft is the 3-D angle between club velocity and face normal.
  *   - Launch angle tracks dynamic loft strongly, attack angle weakly.
- *   - Curvature (side spin / spin axis) is driven by face-to-path difference.
- * ENGINE-DERIVED (grounded in the D-plane relationship, not fitted; WO-E-MOTOR
- *   §E2, 2026-07-18):
- *   - The spin-axis gain scales ~1/spinLoft (axis ≈ atan(sidespin/backspin)),
- *     anchored so the tuned 7-iron reference axis is unchanged. Low-loft
- *     clubs (driver) tilt more per degree of face-to-path than a 7-iron.
+ *   - The centered D-plane spin axis follows v x n. Face/path set its lateral
+ *     sign while loft/attack set how strongly the same gap tilts the axis.
+ * CALCULATED lateral flight:
+ *   - Curve is the RK4 drag/Magnus result from the complete 3-D spin vector.
+ *   - Aerodynamics use a disclosed historical Pro-V1-class bridge, not exact
+ *     current Pro V1/Pro V1x coefficients (those are proprietary).
  *   - Driver carry (./driver-flight.mjs, solveDriverCarry) is a real
  *     drag+Magnus 2D integrator, calibrated against TrackMan optimal
  *     launch/spin — not a fitted curve. Known gap: emergent spin locus sits
  *     +178 rpm high at 125 mph ball speed (flat where TrackMan tilts down);
  *     8/9 reference speeds inside tolerance. Closing the 125 mph case needs
  *     published Cd/Cl(Re, spin) golf-ball tables, not parameter fudging.
- * ESTIMATE relationships (fitted/illustrative constants — NOT measured by us):
+ * RETAINED ESTIMATE relationships (fitted/illustrative — NOT measured by us):
  *   - The exact blend weights and the smash factor are illustrative
  *     approximations chosen to feel realistic for a mid-iron, not lab-calibrated.
  *   - The 7-iron carry/apex/landing tour-reference table (this file's
  *     `solveFlight`) is likewise a fitted curve — NOT the driver path above.
+ * Centered-strike scope guard: solveFlight never calls the optional gear-effect
+ * helper. All core spin and curve come only from delivery geometry.
  */
+
+import {
+  FLIGHTGLASS_CURVE_CARRY_ANCHOR,
+  PREMIUM_TOUR_CLASS_AERO,
+  YARD_TO_M,
+  centeredImpactGeometry,
+  premiumTourDragCoefficient,
+  premiumTourLiftCoefficient,
+  simulateFlight,
+  spinVectorFromTotalSpin,
+} from './flightglass-3d-spin-model.js';
 
 export const deg2rad = d => (d * Math.PI) / 180;
 export const rad2deg = r => (r * 180) / Math.PI;
@@ -62,25 +74,16 @@ const START_FACE_W_MAX = 0.88;    // SOURCED (driver ceiling)
 const LAUNCH_LOFT_W = 0.62; // SOURCED (loft-dominant, calibrated to ~17–18°)
 const LAUNCH_ATTACK_W = 0.25; // SOURCED (small attack term)
 
-// ESTIMATE: spin-axis gain. Spin axis tilt is proportional to (face - path);
-// ~1.5° of axis tilt per 1° of face-to-path gap is a rough illustrative gain.
-// Real spin axis depends on spin loft, gear effect and club; flag as ESTIMATE.
-// The axis is also CLAMPED to ±AXIS_MAX: a physical spin-axis tilt never reaches
-// the steep angles the ±20° sliders would otherwise produce (face−path can be
-// ±40° → an unclamped 1.5× gain is ±60°, which is non-physical for a struck ball).
-const SPIN_AXIS_GAIN = 1.5; // ESTIMATE (calibrated)
-const AXIS_MAX = 38;        // ESTIMATE (deg ceiling for a realistic spin-axis tilt)
-
 // ── CLUB-SPECIFIC presets ──────────────────────────────────────────────────
-// Genuinely club-specific calibration (smash factor + backspin spin coefficient)
+// Genuinely club-specific calibration (smash factor + total-spin coefficient)
 // lives here so a new club is just one more preset entry. The 7-iron values are
 // the lab-feel calibration verified by the sweep harness. `state.club` selects
-// the preset (defaults to '7iron'). Adding a DRIVER later = add one entry +
-// (when the 3D model is ready) make carry/roll respond to its spin/launch.
+// the preset (defaults to '7iron'). Driver impact transfer/spin has its own
+// preset; the retained longitudinal carry/apex fit below is still shared.
 const CLUBS = {
   '7iron': {
     smash: 1.33,  // ESTIMATE (7-iron typical ball/club speed ratio)
-    spinK: 1.8,   // ESTIMATE (effective backspin rpm per °·mph)
+    spinK: 1.8,   // ESTIMATE (effective total-spin rpm per °·mph)
   },
   driver: {
     smash: 1.48,  // ref:TrackMan (typical driver)
@@ -93,23 +96,74 @@ const DEFAULT_CLUB = '7iron';
 // Kept as a back-compat alias of the 7-iron preset. Drivers run ~1.48; wedges lower.
 const SMASH_7I = CLUBS['7iron'].smash; // ESTIMATE (7-iron typical)
 
-// ESTIMATE: side-curve scaling applied to carry*sin(spinAxis) to get offline yards.
-// Real curve depends on total spin and flight time; this is a tuned fudge factor.
-// We use sin() (bounded by 1) rather than tan() (which explodes toward 90°), so the
-// sideways deviation can never run away. With sin the curve term maxes at
-// carry*CURVE_FACTOR, and a hard cap below keeps |offline| < carry always.
-const CURVE_FACTOR = 0.50; // ESTIMATE (calibrated for sin-based curve)
-const OFFLINE_CAP_FRAC = 0.55; // ESTIMATE (|offline| can never exceed 55% of carry)
-
 // ESTIMATE — drag-saturated CARRY/APEX model for a 7-iron. Rather than scaling a
 // tour reference linearly with ball speed (which runs away at high speed), carry
 // and apex follow a concave saturating curve carry = MAX·(1 − e^(−ballSpeed/TAU))
 // so they PLATEAU. A 7-iron can never exceed ~190 yd carry at any human speed.
 // TAU tuned so ball 120 mph → ~172 yd carry; TAU2 so ball 120 → ~31 yd apex.
-const CARRY_MAX = 195;     // legacy export only — carry now uses the power-curve fit (remodel fix F)
-const CARRY_TAU = 56;      // legacy export only — see fix F
 const APEX_MAX = 44;       // ESTIMATE (yd ceiling for apex height; raised 38→44 so 130 mph apexes ~35 m, remodel fix H)
 const APEX_TAU = 85;       // ESTIMATE (ball-speed scale for apex, mph; 75→85, remodel fix H)
+
+function finiteInput(input, key, fallback = 0) {
+  const raw = input?.[key];
+  if (raw === undefined || raw === null || raw === '') return fallback;
+  const value = Number(raw);
+  if (!Number.isFinite(value)) throw new TypeError(`${key} must be a finite number`);
+  return value;
+}
+
+const MIN_PROJECTABLE_DOWNRANGE_M = 1;
+const MIN_TOTAL_SPIN_RPM = 1500;
+const MAX_TOTAL_SPIN_RPM = 9000;
+// ESTIMATE/compatibility: the historical 1500-rpm lower clamp is blended from
+// zero over the first degree of true spin loft. This keeps ordinary calibrated
+// shots byte-compatible while preventing an infinitesimal nonzero D-plane from
+// discontinuously manufacturing 1500 rpm of almost pure curve spin.
+const SPIN_FLOOR_FULL_AT_DEG = 1;
+
+/**
+ * Run one fixed-coefficient RK4 flight, then project its terminal lateral
+ * ratio onto the retained Flightglass carry. This is compatibility glue
+ * between the legacy longitudinal fit and the aerodynamic lateral solve:
+ * it does not alter Cd per shot and it is not presented as a ball property.
+ * The raw RK4 carry/curve and the exposed projection scale remain available.
+ */
+function carryProjectedCurveFlight(input, targetCarryM) {
+  const raw = simulateFlight({
+    ...input,
+    dt: FLIGHTGLASS_CURVE_CARRY_ANCHOR.integrationStepSeconds,
+    maxTimeSeconds: 30,
+    liftCoefficient: premiumTourLiftCoefficient,
+    dragCoefficient: (reynolds, spinParameter) =>
+      premiumTourDragCoefficient(reynolds, spinParameter) *
+        FLIGHTGLASS_CURVE_CARRY_ANCHOR.dragScale,
+    aerodynamicModel: {
+      id: `${PREMIUM_TOUR_CLASS_AERO.id}+${FLIGHTGLASS_CURVE_CARRY_ANCHOR.id}`,
+      reynoldsValidity: PREMIUM_TOUR_CLASS_AERO.reynoldsValidity,
+      spinParameterValidity: PREMIUM_TOUR_CLASS_AERO.spinParameterValidity,
+      reverseMagnusPolicy: PREMIUM_TOUR_CLASS_AERO.reverseMagnusPolicy,
+    },
+  });
+  const zeroTarget = targetCarryM <= 1e-12;
+  const curveCarryProjectionDefined = zeroTarget ||
+    raw.downLaunchLineM >= MIN_PROJECTABLE_DOWNRANGE_M;
+  const curveCarryProjectionScale = zeroTarget
+    ? 1
+    : curveCarryProjectionDefined
+      ? targetCarryM / raw.downLaunchLineM
+      : null;
+  const rawCurveFromLaunchLineM = raw.curveFromLaunchLineM;
+  return {
+    ...raw,
+    rawCurveFromLaunchLineM,
+    curveFromLaunchLineM: curveCarryProjectionDefined
+      ? rawCurveFromLaunchLineM * curveCarryProjectionScale
+      : rawCurveFromLaunchLineM,
+    curveCarryProjectionDefined,
+    curveCarryProjectionScale,
+    curveCarryProjectionMinimumDownrangeM: MIN_PROJECTABLE_DOWNRANGE_M,
+  };
+}
 
 /**
  * Full ball-flight solve from the 5 club inputs.
@@ -117,11 +171,12 @@ const APEX_TAU = 85;       // ESTIMATE (ball-speed scale for apex, mph; 75→85,
  * fields noted inline). Angles in degrees, distances in yards, speeds in mph.
  */
 export function solveFlight(input) {
-  const clubPath = +input.clubPath || 0;
-  const faceAngle = +input.faceAngle || 0;
-  const attackAngle = +input.attackAngle || 0;
-  const dynamicLoft = +input.dynamicLoft || 0;
-  const clubSpeed = +input.clubSpeed || 0;
+  const clubPath = finiteInput(input, 'clubPath');
+  const faceAngle = finiteInput(input, 'faceAngle');
+  const attackAngle = finiteInput(input, 'attackAngle');
+  const dynamicLoft = finiteInput(input, 'dynamicLoft');
+  const clubSpeed = finiteInput(input, 'clubSpeed');
+  if (clubSpeed < 0) throw new RangeError('clubSpeed cannot be negative');
 
   // Club-specific preset (smash + spin coefficient). Defaults to 7-iron.
   const club = CLUBS[input.club] ? input.club : DEFAULT_CLUB;
@@ -137,22 +192,20 @@ export function solveFlight(input) {
 
   // SOURCED: spin loft is the angle between club path (3D) and face;
   // the standard simplification is dynamicLoft - attackAngle.
-  const spinLoft = dynamicLoft - attackAngle;
+  const geometry = centeredImpactGeometry({
+    clubSpeed, attackAngle, clubPath, dynamicLoft, faceAngle,
+  });
+  const spinLoft = geometry.spinLoft3DDeg;
 
   // SOURCED: launch angle blend (dynamic-loft-dominant, small attack term).
   // The ball launches lower than dynamic loft; attack only nudges it.
   const launchAngle = LAUNCH_LOFT_W * dynamicLoft + LAUNCH_ATTACK_W * attackAngle;
 
-  // ESTIMATE: spin axis ≈ gain * (face - path), clamped to ±AXIS_MAX so the steep
-  // ±40° face-to-path corner can't drive a non-physical tilt. + = tilt right
-  // (slice/fade for RH).
+  // FIRST PRINCIPLES: + means a D-plane orientation that curves right for RH.
   const faceToPath = faceAngle - clubPath;
-  // engine-derived · ref:D-plane: axis ≈ atan(sidespin/backspin) ⇒ tilt per degree
-  // of face-to-path scales ~1/spinLoft. Anchored at spinLoft 33 so the tuned
-  // 7-iron reference axis is preserved exactly; low-loft clubs (driver) tilt more.
-  const AXIS_REF_SPINLOFT = 33; // engine-derived (anchor)
-  const axisGain = SPIN_AXIS_GAIN * (AXIS_REF_SPINLOFT / Math.max(8, spinLoft)); // engine-derived · ref:D-plane
-  const spinAxis = clamp(axisGain * faceToPath, -AXIS_MAX, AXIS_MAX);
+  // Exact world-horizontal D-plane tilt comes from the full v x n axis;
+  // no fitted gain or axis clamp remains.
+  const spinAxis = geometry.dPlaneTiltRightDeg;
 
   // ESTIMATE: ball speed via a spin-loft-responsive smash factor (audit fix D).
   // Higher spin loft = more glancing strike = less energy transfer = lower smash.
@@ -184,38 +237,59 @@ export function solveFlight(input) {
     32, 60
   ); // ESTIMATE
 
-  // ESTIMATE: curve = the spin-axis-derived sideways BEND only (remodel fix G).
-  // Quadratic in carry — the industry approximation (lateral deflection grows
-  // with flight time², so long shots bend disproportionately more): a 216 yd
-  // bomb at the same axis tilt curves ~2× a 175 yd shot. Capped at ±60% of
-  // carry so extreme tilts stay on screen. + = bends right (for RH golfer).
-  const curve = clamp(
-    (carry * carry * spinAxis) / 12000,
-    -0.6 * carry, 0.6 * carry
-  ); // ESTIMATE (bend only, remodel fix G)
+  // ESTIMATE: total = carry + descent-tied roll.
+  const rollFrac = clamp(0.04 - (landingAngle - 45) * 0.0015, 0.012, 0.055);
+  const total = carry + carry * rollFrac;
+
+  // CURVE: full spin vector plus aerodynamic integration; no carry² divisor,
+  // axis gain, or arbitrary lateral cap remains.
+  // RETAINED EMPIRICAL IMPACT SPIN: the calibrated relationship now supplies
+  // bounded TOTAL spin from true 3-D spin loft. The exact velocity-cross-normal axis carries its
+  // orientation; backspin and curve-spin are projections of that one vector.
+  // This avoids a singular division when the D-plane axis is nearly vertical.
+  const SPIN_RPM_K = preset.spinK;
+  const spinRpmRaw = Math.abs(spinLoft) * ballSpeed * SPIN_RPM_K;
+  const spinFloorU = clamp(spinLoft / SPIN_FLOOR_FULL_AT_DEG, 0, 1);
+  const spinFloorBlend = spinFloorU * spinFloorU * (3 - 2 * spinFloorU);
+  const spinFloorAppliedRpm = MIN_TOTAL_SPIN_RPM * spinFloorBlend;
+  const empiricalTotalSpinRpm = geometry.spinAxisDefined && ballSpeed > 0
+    ? clamp(Math.max(spinRpmRaw, spinFloorAppliedRpm), 0, MAX_TOTAL_SPIN_RPM)
+    : 0;
+  const spin = spinVectorFromTotalSpin(geometry, empiricalTotalSpinRpm, {
+    launchElevationDeg: launchAngle,
+    launchAzimuthDeg: startDirection,
+  });
+  const signedBackspinRpm = spin.backSpinRpm;
+  const backspin = Math.abs(signedBackspinRpm);
+
+  // CALCULATED: deterministic RK4 drag/Magnus flight. The retained longitudinal
+  // carry stays authoritative; only launch-line-relative curve comes from this
+  // solve. Raw RK4 carry/curve and the carry-projection diagnostics are returned
+  // for auditability.
+  const curveFlight = carryProjectedCurveFlight({
+    ballSpeedMph: ballSpeed,
+    launchElevationDeg: launchAngle,
+    launchAzimuthDeg: startDirection,
+    spinVectorRadPerSec: spin.spinVectorRadPerSec,
+  }, carry * YARD_TO_M);
+  const curveFromLaunchLineM = faceToPath === 0
+    ? 0
+    : curveFlight.curveFromLaunchLineM;
+  const curve = curveFromLaunchLineM / YARD_TO_M;
+  const curveFlightCarryYd = curveFlight.downLaunchLineM / YARD_TO_M;
 
   // ESTIMATE: offline = total lateral displacement from the TARGET line =
   // start-line displacement (carry·sin(startDirection)) + the bend above.
   // A pure push/pull now shows a non-zero offline even with zero curve.
   // + = ball finishes right of the target line (for RH golfer).
   // (offline includes start direction, audit fix A)
-  const offline = carry * Math.sin(deg2rad(startDirection)) + curve; // ESTIMATE
+  const offline = carry * Math.sin(deg2rad(startDirection)) + curve;
 
   // ── Added SkyTrak-style output fields (all ESTIMATE) ───────────────────────
-  // ESTIMATE: total = carry + roll. Roll is small and tied to descent: a steeper
-  // landing angle rolls out less. Computed AFTER landingAngle. The roll fraction
-  // is clamped to a small window (1.2%–5.5% of carry). Flagged ESTIMATE.
-  const rollFrac = clamp(0.04 - (landingAngle - 45) * 0.0015, 0.012, 0.055);
-  const total = carry + carry * rollFrac; // ESTIMATE (carry + small descent-tied roll)
-
-  // ESTIMATE: backspin in rpm. Real backspin depends on spin loft, ball speed,
-  // friction and the ball. We approximate it as a base spin scaled by spin loft
-  // and ball speed: rpm ≈ spinLoft(°) · ballSpeed(mph) · k. The effective constant
-  // (≈1.8) puts a default 7-iron (spinLoft≈33°, ballSpeed≈120mph) near ~7100 rpm.
-  // Clamped to a sane window. Flagged ESTIMATE.
-  const SPIN_RPM_K = preset.spinK; // ESTIMATE (effective rpm per °·mph)
-  const backspin = clamp(Math.abs(spinLoft) * ballSpeed * SPIN_RPM_K, 1500, 9000); // ESTIMATE
-
+  // ESTIMATE: total spin is spinLoft(°) · ballSpeed(mph) · k, clamped to a
+  // declared window. Reported backspin is the flight-relative projection of
+  // that vector. At neutral face/path the projection is exactly one, preserving
+  // the calibrated default 7-iron near 7100 rpm.
   // ESTIMATE: smash factor = ball speed / club speed. With the spin-loft-
   // responsive smash above (audit fix D) this now equals smashEff, so the
   // panel ratio tracks the delivered spin loft. Flagged ESTIMATE.
@@ -223,21 +297,57 @@ export function solveFlight(input) {
 
   return {
     // echoed inputs
-    clubPath, faceAngle, attackAngle, dynamicLoft, clubSpeed,
+    clubPath, faceAngle, attackAngle, dynamicLoft, clubSpeed, club,
     // derived
     startDirection,   // SOURCED blend
-    spinLoft,         // SOURCED
+    spinLoft,         // CALCULATED true 3-D included angle
+    spinLoft3DDeg: geometry.spinLoft3DDeg,
+    signedVerticalSpinLoftDeg: geometry.signedVerticalSpinLoftDeg,
     launchAngle,      // SOURCED blend
-    spinAxis,         // ESTIMATE
+    spinAxis,         // CALCULATED D-plane right tilt
     ballSpeed,        // ESTIMATE (fixed smash)
     carry,            // ESTIMATE (scaled tour ref)
     apex,             // ESTIMATE (scaled tour ref)
     landingAngle,     // ESTIMATE
     offline,          // ESTIMATE
     // added panel fields
-    total,            // ESTIMATE (carry + ~10% roll)
-    curve,            // ESTIMATE (spin-axis-derived bend only, audit fix A)
-    backspin,         // ESTIMATE (spinLoft·ballSpeed model, rpm)
+    total,            // ESTIMATE (carry + descent-tied roll)
+    curve,            // CALCULATED RK4 bend from launch line, yards
+    curveFromLaunchLineM,
+    rawCurveFromLaunchLineM: curveFlight.rawCurveFromLaunchLineM,
+    curveFlightCarryYd,
+    curveFlightTimeSeconds: curveFlight.flightTimeSeconds,
+    curveCarryProjectionDefined: curveFlight.curveCarryProjectionDefined,
+    curveCarryProjectionScale: curveFlight.curveCarryProjectionScale,
+    curveCarryProjectionMinimumDownrangeM:
+      curveFlight.curveCarryProjectionMinimumDownrangeM,
+    backspin,         // ESTIMATE (projection of empirical total-spin vector, rpm)
+    signedBackspinRpm,
+    totalSpinRpm: spin.totalSpinRpm,
+    rightCurveSpinRpm: spin.rightCurveSpinRpm,
+    spinVectorRadPerSec: [...spin.spinVectorRadPerSec],
+    spinAxisUnit: [...geometry.spinAxisUnit],
+    clubVelocityUnit: [...geometry.clubVelocityUnit],
+    faceNormalUnit: [...geometry.faceNormalUnit],
+    horizontalSpinLoftComponent: geometry.horizontalTangential,
+    verticalSpinLoftComponent: geometry.verticalTangential,
+    centeredStrike: true,
+    gearEffectApplied: false,
+    aerodynamicDiagnostics: curveFlight.aerodynamicDiagnostics,
+    aeroModel: {
+      coefficientSetId: curveFlight.aerodynamicDiagnostics.coefficientSetId,
+      baseCoefficientSetId: PREMIUM_TOUR_CLASS_AERO.id,
+      class: 'historical Pro-V1-class isotropic bridge',
+      exactNamedBall: PREMIUM_TOUR_CLASS_AERO.exactNamedBall,
+      dragCompatibilityScale: FLIGHTGLASS_CURVE_CARRY_ANCHOR.dragScale,
+      referenceAnchorDragScale: FLIGHTGLASS_CURVE_CARRY_ANCHOR.dragScale,
+      carryProjectionScale: curveFlight.curveCarryProjectionScale,
+      carryProjectionDefined: curveFlight.curveCarryProjectionDefined,
+      integrationStepSeconds: FLIGHTGLASS_CURVE_CARRY_ANCHOR.integrationStepSeconds,
+      spinDecayPerSecond: PREMIUM_TOUR_CLASS_AERO.spinDecayPerSecond,
+      disclosure: `${PREMIUM_TOUR_CLASS_AERO.disclosure} ${FLIGHTGLASS_CURVE_CARRY_ANCHOR.disclosure} ` +
+        'Terminal RK4 lateral displacement is projected by its downrange ratio onto the retained Flightglass carry; this is a disclosed compatibility transform, not a measured ball coefficient.',
+    },
     smash,            // ESTIMATE (ballSpeed / clubSpeed == smashEff)
     smashEff,         // ESTIMATE (spinLoft-responsive smash, audit fix D)
     apexLaunchFactor, // ESTIMATE (launch→apex coupling factor, audit fix C)
@@ -251,15 +361,14 @@ export function solveFlight(input) {
     // ── LIVE breakdown constants + intermediates (single source of truth) ──
     // Every outcome-chip explainer in the UI sources its constants from HERE,
     // so the popover maths can never drift from the model.
-    smashConst: preset.smash,     // ESTIMATE fixed smash (1.33 for the 7-iron)
-    spinK: SPIN_RPM_K,            // ESTIMATE backspin rpm per °·mph
-    spinRpmRaw: Math.abs(spinLoft) * ballSpeed * SPIN_RPM_K, // pre-clamp backspin
-    spinAxisGain: SPIN_AXIS_GAIN, // ESTIMATE ×1.5 spin-axis gain (clamped to ±AXIS_MAX)
-    axisMax: AXIS_MAX,            // ESTIMATE ±38° spin-axis clamp
-    curveFactor: CURVE_FACTOR,    // ESTIMATE 0.50 sin-based side-curve scale
-    offlineCapFrac: OFFLINE_CAP_FRAC, // ESTIMATE |offline| ≤ 55% of carry
-    carryMax: CARRY_MAX,          // ESTIMATE yd ceiling
-    carryTau: CARRY_TAU,          // ESTIMATE ball-speed scale
+    smashPresetCap: preset.smash, // ESTIMATE club-specific cap input
+    spinK: SPIN_RPM_K,            // ESTIMATE total-spin rpm per °·mph
+    spinRpmRaw,
+    minTotalSpinRpm: MIN_TOTAL_SPIN_RPM,
+    maxTotalSpinRpm: MAX_TOTAL_SPIN_RPM,
+    spinFloorFullAtDeg: SPIN_FLOOR_FULL_AT_DEG,
+    spinFloorBlend,
+    spinFloorAppliedRpm,
     apexMax: APEX_MAX,            // ESTIMATE apex yd ceiling
     apexTau: APEX_TAU,            // ESTIMATE apex ball-speed scale
     rollFrac,                     // ESTIMATE descent-tied roll fraction
@@ -271,22 +380,17 @@ export function solveFlight(input) {
     landingApexTerm,  // ESTIMATE ((apex−30)·1.0 speed coupling, audit fix B)
     landingRaw: 45 + (spinLoft - 25) * 0.5 + (launchAngle - 14) * 0.6 + landingApexTerm,
     // qualitative shape label (RH golfer)
-    shape: shapeLabel(startDirection, spinAxis),
+    shape: shapeLabel(startDirection, faceToPath),
   };
 }
 
 /**
- * Qualitative ball-shape label (RH golfer) from start direction + spin axis.
+ * Qualitative ball-shape label (RH golfer) from start direction + face-to-path.
  * ESTIMATE thresholds, illustrative only.
  */
-export function shapeLabel(startDirection, spinAxis) {
-  // Key the Straight / Draw-Fade / Hook-Slice thresholds off the underlying
-  // face-to-path gap (in degrees) rather than the spin-axis tilt, so the labels
-  // are GAIN-INDEPENDENT and stay sensible if SPIN_AXIS_GAIN ever changes. We
-  // recover the face-to-path gap from the (possibly clamped) spin axis by dividing
-  // out the gain. A near-zero gap is Straight; a small gap is a mild Fade/Draw;
-  // a large gap (> 6° face-to-path, e.g. a clear miss) is a Slice/Hook.
-  const faceToPath = spinAxis / SPIN_AXIS_GAIN; // gain-independent gap, deg
+export function shapeLabel(startDirection, faceToPath) {
+  // Use the delivered face-to-path gap directly; exact axis tilt is loft- and
+  // attack-dependent and therefore cannot be inverted into a unique gap.
   const gap = Math.abs(faceToPath);
   const STRAIGHT_GAP = 0.75; // < this face-to-path gap reads as Straight
   const BIG_GAP = 6;         // > this gap is a Slice/Hook, not a Fade/Draw
