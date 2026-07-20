@@ -345,17 +345,23 @@ contains documentation only.
   re-synced via `copy-web`.
 - Owner confirmed the voice and the pause length on real cues before the full run.
 - Candidate directions and rationale: `design/voice-direction-candidates.md`.
+- **All voice-pack human gates approved by the owner on 2026-07-20** (fatigue
+  listen, physical-device/audio-route check, iOS VoiceOver), tested against a
+  LAN static server serving the repo root at `academy.html`.
+  `npm run voice:verify:release` now returns `pass: true, errors: []`.
+- Scope note: this clears the **voice pack's** release verifier only. The wider
+  Phase 8 release gates (pairwise-blind evidence for new modules, signed
+  iOS/Android platform projects and store archives, ux:verify / brand:verify)
+  are unchanged and still govern publication.
 
 ## Exact next actions
 
 1. Build provenance-blind visual and pairwise evidence for the new curriculum
    modules if full release acceptance is pursued.
-2. Voice pack is recorded and dev-verified (US-2, 2026-07-20 — see section
-   above): licensed masters, rights evidence and a development verifier pass are
-   in place. Remaining for release: the strict release-mode verifier plus the
-   human gates — owner fatigue listen sign-off, physical-device/audio-route check
-   and iOS VoiceOver check. `humanFatigueStatus`, `devicePlaybackStatus` and
-   `voiceOverStatus` are still `pending-*`, so the release gate stays fail-closed.
+2. Voice pack is DONE (US-2, 2026-07-20 — see section above): licensed masters,
+   rights evidence, all owner human gates approved, and
+   `npm run voice:verify:release` returns `pass: true, errors: []`. No further
+   voice work is required for release; treat this item as closed.
 3. Add and sign owner-controlled iOS/Android platform projects and store archives
    only inside the authorized release workflow.
 4. Run physical-iPhone offline, audio-route and background-interruption checks,

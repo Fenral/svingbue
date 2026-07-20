@@ -11,18 +11,30 @@ test('development pack verifies every local licensed Academy master',()=>{
   assert.equal(report.pass,true);assert.equal(report.cueCount,102);assert.equal(report.assetCount,102);assert.equal(report.captionOnly.length,0);assert.equal(report.rightsStatus,'approved-for-distribution');
 });
 
-test('release pack fails closed on the remaining device and VoiceOver gates',()=>{
+test('release pack passes once every human gate is approved',()=>{
+  // Owner signed off rights, US-2 voice identity, fatigue listen, physical-device
+  // audio-route check and iOS VoiceOver on 2026-07-20.
   const report=verifyAcademyVoicePack({config,mode:'release'});
-  assert.equal(report.pass,false);assert.equal(report.missing.length,0);assert.equal(report.hashMismatches.length,0);
-  assert.ok(report.errors.includes('device-playback-not-approved'));
-  assert.ok(report.errors.includes('voiceover-not-approved'));
-  // Owner approved the fatigue listen and the US-2 voice identity on 2026-07-20;
-  // both must stay out of the release errors (the identity check is pinned to the
-  // shipped voice, so a pack/verifier mismatch fails this test rather than silently
-  // blocking release).
-  assert.ok(!report.errors.includes('fatigue-listen-not-approved'));
-  assert.ok(!report.errors.includes('voice-identity-not-approved'));
-  assert.ok(!report.errors.includes('rights-not-approved'));
+  assert.deepEqual(report.errors,[]);
+  assert.equal(report.missing.length,0);assert.equal(report.hashMismatches.length,0);assert.equal(report.durationOutliers.length,0);
+  assert.equal(report.pass,true);
+});
+
+test('release mode still fails closed when any approval regresses',()=>{
+  // Keeps the fail-closed coverage that the passing test above would otherwise
+  // silently drop: flipping any single gate must block release with its own error.
+  const gates=[
+    ['rightsStatus','rights-not-approved'],
+    ['voiceIdentityStatus','voice-identity-not-approved'],
+    ['humanFatigueStatus','fatigue-listen-not-approved'],
+    ['devicePlaybackStatus','device-playback-not-approved'],
+    ['voiceOverStatus','voiceover-not-approved']
+  ];
+  for(const [key,error] of gates){
+    const report=verifyAcademyVoicePack({config:{...config,[key]:'pending-regression'},mode:'release'});
+    assert.equal(report.pass,false,`${key} must block release`);
+    assert.ok(report.errors.includes(error),`${key} must report ${error}`);
+  }
 });
 
 test('remote, escaping and orphan records never pass',()=>{

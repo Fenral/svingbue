@@ -17,8 +17,8 @@
   },
   "voiceIdentityStatus": "approved-owner-us2-the-analyst",
   "humanFatigueStatus": "approved-owner-five-minute-fatigue-listen",
-  "devicePlaybackStatus": "pending-physical-device-and-audio-route-check",
-  "voiceOverStatus": "pending-ios-voiceover-check",
+  "devicePlaybackStatus": "approved-physical-device-and-audio-route-check",
+  "voiceOverStatus": "approved-ios-voiceover-check",
   "selectionEvidence": {
     "blindWinner": "US-2",
     "comparisonControl": "full 50-voice shortlist",
