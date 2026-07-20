@@ -1,6 +1,6 @@
 # Flightglass session handoff
 
-Updated: 2026-07-17
+Updated: 2026-07-20
 
 ## Repository checkpoint
 
@@ -325,12 +325,37 @@ with no experience above eight signatures, secret/diff checks are clean, and
 `npm run test:academy` passes 59/59 with zero failures/skips. The intended diff
 contains documentation only.
 
+## Academy voice pack — US-2 adopted — 2026-07-20
+
+- Branch: `agent/travel-sync` (local, rebuilt from current `main`; the old remote
+  branch had been idle since 2026-07-15 and was merged in with main's docs kept).
+- Voice: **US-2 "The Analyst"** — dark American male color-analyst, chosen by the
+  owner from a ~50-candidate exploration. Created by ElevenLabs **instant voice
+  cloning from the exact owner-selected clip** (voiceId `pvNZTdzCYPR6ZKyTzNJb`,
+  ttsSpeed 0.95), replacing R5-A. Cloning from the clip is the reliable path —
+  re-running voice-design drifts (one re-lock came out male for a female pick).
+- Deliberate inter-sentence pauses: `speakableText` inserts paragraph breaks at
+  sentence boundaries; `generatePack` synthesizes each sentence separately and
+  concatenates with `SENTENCE_GAP_SECONDS = 0.6` s of silence.
+- All 102 masters regenerated; `config/academy-voice-pack.json` and pack metadata
+  updated (`voiceIdentityStatus: approved-owner-us2-the-analyst`,
+  `selectionEvidence.blindWinner: US-2`).
+- Verification (2026-07-20): `npm run voice:verify` pass=true, 0 duration
+  outliers, 0 hash mismatches; `npm run test:academy-foundation` 244/244; www
+  re-synced via `copy-web`.
+- Owner confirmed the voice and the pause length on real cues before the full run.
+- Candidate directions and rationale: `design/voice-direction-candidates.md`.
+
 ## Exact next actions
 
 1. Build provenance-blind visual and pairwise evidence for the new curriculum
    modules if full release acceptance is pursued.
-2. Obtain licensed final female Control Room recordings, rights evidence, a
-   strict voice-release verifier pass and human listening approval.
+2. Voice pack is recorded and dev-verified (US-2, 2026-07-20 — see section
+   above): licensed masters, rights evidence and a development verifier pass are
+   in place. Remaining for release: the strict release-mode verifier plus the
+   human gates — owner fatigue listen sign-off, physical-device/audio-route check
+   and iOS VoiceOver check. `humanFatigueStatus`, `devicePlaybackStatus` and
+   `voiceOverStatus` are still `pending-*`, so the release gate stays fail-closed.
 3. Add and sign owner-controlled iOS/Android platform projects and store archives
    only inside the authorized release workflow.
 4. Run physical-iPhone offline, audio-route and background-interruption checks,
