@@ -35,9 +35,75 @@ Every task follows the same sequence:
 4. Commit the task atomically.
 5. Produce a diff package from the recorded task base to task head.
 6. Have a fresh reviewer check design-spec compliance, accessibility, failure behavior, and code quality. Fix all Critical and Important findings before continuing.
-7. Append the result, commands, commit, and review verdict to `.superpowers/sdd/progress.md`.
+7. Append the result, commands, commit, review verdict, model route, worktree, and elapsed time to `.superpowers/parallel/progress.md`.
 
 The full `npm test` suite is reserved for final integration because its clean baseline is approximately nine minutes. Focused suites run after each task.
+
+## Acceleration overlay — Sol, Terra, and Luna-class routing
+
+This overlay changes execution speed and ownership, not the approved design or acceptance bar. For Wave 1 it explicitly switches execution from `superpowers:subagent-driven-development` to `superpowers:dispatching-parallel-agents` plus isolated worktrees. The plan retains TDD, diff packages, fresh review, and atomic commits, but it no longer claims the serial SDD workflow while parallel lanes are active.
+
+### Model router
+
+| Work class | Route | Owns | Must not own |
+|---|---|---|---|
+| Consequential architecture and review | **GPT-5.6 Sol · high** | interface contracts, protected physics/Impact boundary, native/package architecture, paid-media decision, cross-lane code/integration review | routine CSS/DOM production, repetitive test runs, mechanical inventories, provenance-blind scoring |
+| Product implementation | **GPT-5.6 Terra · medium** | TDD implementation, scoped UI/controller work, browser integration, bounded refactors, focused debugging | independent final judgment of its own work, paid external actions, protected-physics changes |
+| Mechanical evidence | **GPT-5.6 Luna · low** | file maps, backups, dry-run classification, deterministic test commands, screenshots, asset/byte inventories, `copy-web`, brand/gate reruns | design decisions, code changes, debugging, acceptance scoring |
+
+The current collaboration runtime exposes Sol and Terra as direct subagent overrides but does not expose Luna. When Luna is unavailable, use **Terra · low** as the explicit Luna-class fallback; do not spend Sol on command-only work. A separate local `flightglass-luna` process is not launched from the sandbox because it is not currently available as an unattended collaborator and would weaken branch coordination.
+
+### Concurrency law
+
+- Never allow two writing agents in the same branch or working tree.
+- Parallel implementation is allowed only in separate Git worktrees, from one recorded base, with disjoint ownership and independent commits.
+- Root/Sol owns integration; workers never merge, rebase, push, or edit shared status/coordination files.
+- Maximum active shape is root/Sol plus three workers. Full browser suites do not run concurrently on the same machine; Luna-class verification is queued after each focused worker run to avoid false nondeterminism.
+- A lane is integrated only after RED evidence, GREEN evidence, self-review, a fresh Sol review, and a clean diff package.
+- Locked-manifest and pairwise judgments are delegated to a fresh `fg-dommer` role whose prompt contains only the manifest and opaque artifact paths—never model provenance, target scores, history, or hopes.
+
+### Worktree lanes and waves
+
+#### Wave 0 — orchestration lock
+
+Root/Sol records the integration base, creates the phase rollback backup, writes task briefs, and creates three isolated worktrees:
+
+| Lane | Branch | Owner | Files |
+|---|---|---|---|
+| State | `agent/first-contact-state` | Terra · medium | Task 1 only: `first-contact-state.js`, its focused test, implementer report |
+| Orchestration | `agent/first-contact-orchestrator` | Terra · medium | Task 2 only: `first-contact-orchestrator.js`, its focused test, implementer report |
+| Flight | `agent/first-contact-flight` | Terra · medium | Task 3 only: `first-flight-controller.js`, its focused test, implementer report; physics imports read-only |
+
+The three contracts use injected adapters and do not import one another during Wave 1, so their RED/GREEN loops are genuinely independent.
+
+#### Wave 1 — three-way core build
+
+Run Tasks 1, 2, and 3 concurrently in the isolated worktrees above. Luna-class runners execute each lane's exact focused commands after the worker reports GREEN. Sol reviews all three diffs independently, then integrates in dependency order **state → orchestration → flight** and reruns the combined focused suite plus `test:engine`.
+
+#### Wave 2 — one UI integration lane
+
+Tasks 4, 5, and 6 share `index.html`, feature CSS, scene rendering, bootstrap, and the same browser contract. They remain sequential in one Terra worktree because parallel editing would cost more conflict resolution than it saves. Luna-class runners handle viewport captures, axe/overflow/target measurements, and Chromium/WebKit commands between milestones. Sol reviews after each task commit, with a mandatory visual review after Task 4 and Task 6.
+
+#### Wave 3 — handoff plus native tooling, then package convergence
+
+After Wave 2 is integrated:
+
+- **Sol · high lane:** Task 7, because it touches the named Impact handoff boundary and real downstream consumers. It may implement the producer contract first, but it cannot claim the Impact consumer until the exact reviewed PR #2 commit is recorded.
+- **Terra · medium lane:** Task 8A only—native launch resources, synthetic native fixtures, platform verifier, and CI post-generation checks. It must not yet finalize the route-wide manifest, `copy-web`, `test:first-contact`, or package inventory.
+
+These lanes are isolated and may run concurrently because Task 7 owns handoff/focus consumers while Task 8A owns native tooling only. Root integrates Task 7 first, then Task 8A.
+
+Task 8B then runs serially on the integrated tree. Terra finalizes the route-wide manifest, `copy-web`, package tests, `test:first-contact`, final inventory, and byte comparison with every Task 7 module/route present. Luna-class runners own asset inventories, generated-fixture commands, and byte reports. Sol reviews the convergence diff and root runs the risk-selected change gate.
+
+Task 9 begins only after Task 8B's conditional manifest contract is integrated. Terra implements the procedural sonic mark; Sol owns the paid/generative keep-remove decision; Luna-class runners inspect codecs, checksums, duration, loudness, and bytes.
+
+#### Wave 4 — convergence
+
+Terra completes Task 10's deterministic harness integration. Luna-class runners execute the full Chromium/WebKit, accessibility, visual, performance, package, brand, and `claude:ready` command matrix sequentially. Fresh Sol reviewers perform whole-branch code/spec review. A separate fresh `fg-dommer` receives only `config/evidence/instrument-laws.json` and opaque artifact paths for locked-manifest and pairwise-blind judgments. Root fixes integration findings and publishes the reviewed branch checkpoint.
+
+### Expected acceleration
+
+The safe parallel gain is concentrated in Wave 1 and Task 7/8A. Planning units put the original critical path at roughly 15.25 units: Tasks 1–3 = 3.25, Tasks 4–6 = 4.5, Tasks 7–8 = 3.5, Task 9 = 1.5, Task 10/final gates = 2.5. The routed path is about 12.6 units: Wave 1 max-lane plus integration = 1.6, shared UI = 4.5, Task 7/8A plus serial 8B = 2.5, and the remaining serial work = 4.0. That is approximately **17% structural critical-path reduction** before any Terra-vs-Sol latency benefit. Use **15–25% expected wall-clock reduction**, record actual wave timings, and revise the estimate from evidence rather than promise 30–40%.
 
 ## Architecture
 
@@ -377,51 +443,83 @@ npm run test:engine
 
 ## Task 8 — Shipping assets, native launch contract, and package audit
 
+### Task 8A — Native launch tooling (parallel-safe with Task 7)
+
 **Files**
 
-- Create: `config/first-contact-assets.json`
-- Create: `scripts/first-contact-package.test.mjs`
 - Create: `scripts/first-contact-native-launch.test.mjs`
 - Create: `scripts/verify-first-contact-native-launch.mjs`
-- Create: `scripts/verify-first-contact-media.mjs`
 - Create: `docs/qa/first-contact-device-matrix.json`
 - Create/update approved source artwork under: `resources/ios/` and `resources/android/`
-- Update: `scripts/copy-web.mjs`
 - Update: `scripts/build-flightglass-assets.mjs`
 - Update: `scripts/verify-flightglass-brand.mjs`
 - Narrow update: `capacitor.config.ts` — add only root `backgroundColor: '#07060C'`; preserve `appId`, `appName`, `webDir`, schemes, and all other protected/native identifiers
 - Update: `codemagic.yaml`
 - Update: `.github/workflows/android-debug.yml`
-- Update: `package.json`
+
+Task 8A owns only native launch generation/verification and synthetic fixtures. It does not edit `config/first-contact-assets.json`, `scripts/copy-web.mjs`, `package.json`, or package/media tests while Task 7 is in flight.
 
 **RED**
 
-Prove:
+Prove with synthetic generated-native fixtures that:
 
-- a route-wide shipping manifest/reachability inventory names every packaged asset, including every First Contact startup dependency, optional media group, poster, and audio dependency;
-- package-copy output contains every referenced asset, no undeclared file under `www/assets`, and no missing route dependency;
-- the manifest drives individual asset copies or an equivalent fail-closed reachability audit; the existing 55.9 MB wholesale `assets/` copy is not accepted as proof;
-- final asset inventory, per-group bytes, total package bytes, and pre-change comparison are stored as reproducible evidence and fail on unexplained regression;
-- optional media is local, lazy, and never startup-critical;
-- iOS source/CI contract uses an explicit `resources/ios/` centered lockup, Android 12+ uses an explicit `resources/android/` mark-only safe-zone source, and both use `#07060C`;
-- generated-native inspection fails a manual/plugin splash hold, wrong background, wrong platform art, missing asset, undeclared asset, or package budget overrun;
-- `verify-first-contact-native-launch.mjs` is unit-tested against version-controlled synthetic iOS/Android fixtures locally and runs immediately after native asset generation in both CI workflows;
-- the native verifier inspects the iOS WKWebView/window and Android activity/WebView window background that is visible before CSS/HTML paint, and rejects any non-`#07060C`/transparent-to-white bridge independently of the OS-owned splash artwork;
-- the generated iOS and Android projects demonstrably consume `capacitor.config.ts` root `backgroundColor: '#07060C'`, while protected identifier tests prove `no.strikearc.app` and all existing store/product IDs are byte-unchanged;
-- media validation treats zero optional video as valid. When a video group is declared, it rejects non-H.264/AVC, non-SDR/`yuv420p`, audio-bearing video, missing portrait/landscape variants, missing fast-start, per-orientation/total video budget excess, or poster/audio combined bytes above 500 KB;
-- sonic media validation covers 250–500 ms duration, declared codec/channel/sample-rate/loudness bounds, and absence of orphan candidates;
-- `docs/qa/first-contact-device-matrix.json` has explicit placeholders clearly marked unobserved and cannot be treated as physical-device evidence.
+- iOS uses the explicit centered lockup, Android 12+ uses a mark-only safe-zone source, and both use `#07060C`;
+- generated-native inspection fails a manual/plugin splash hold, wrong background, wrong platform art, missing asset, or unsafe Android mark;
+- the verifier inspects the iOS WKWebView/window and Android activity/WebView window background visible before CSS/HTML paint and rejects any non-`#07060C`/transparent-to-white bridge independently of the OS splash;
+- generated iOS and Android projects consume root `backgroundColor: '#07060C'`, while protected identifier tests keep `no.strikearc.app` and all store/product IDs unchanged;
+- `docs/qa/first-contact-device-matrix.json` placeholders are explicitly unobserved and cannot be treated as physical-device evidence.
 
 Run and observe failure:
 
 ```powershell
-node --test scripts/first-contact-package.test.mjs scripts/first-contact-native-launch.test.mjs
+node --test scripts/first-contact-native-launch.test.mjs
 npm run brand:verify
 ```
 
 **GREEN**
 
-Add separate launch-source recipes and post-generation checks. Replace recursive wholesale asset copying with manifest-driven/reachability-verified copying while preserving every asset required by existing routes. Add conditional optional-media groups, `test:first-contact`, and focused First Contact browser coverage in the Chromium/WebKit UX commands without duplicating expensive unit runs.
+Add separate launch-source recipes, the production verifier, synthetic fixtures, and post-generation calls in both CI workflows. Run:
+
+```powershell
+node --test scripts/first-contact-native-launch.test.mjs
+npm run brand:verify
+```
+
+Remove generated `ios/` and `android/` output from the working tree before commit.
+
+**Commit:** `build: verify first-contact native launch`
+
+### Task 8B — Route-wide manifest and package convergence (after Task 7 and 8A integrate)
+
+**Files**
+
+- Create: `config/first-contact-assets.json`
+- Create: `scripts/first-contact-package.test.mjs`
+- Create: `scripts/verify-first-contact-media.mjs`
+- Update: `scripts/copy-web.mjs`
+- Update: `package.json`
+
+**RED**
+
+Prove on the integrated Task 7 tree that:
+
+- a route-wide manifest/reachability inventory names every packaged asset, including all handoff/focus modules, startup dependencies, optional media groups, posters, and audio;
+- package output contains every referenced asset, no undeclared file under `www/assets`, and no missing route dependency;
+- the manifest drives individual asset copies or an equivalent fail-closed reachability audit; the existing 55.9 MB wholesale `assets/` copy is not accepted as proof;
+- final inventory, per-group bytes, total package bytes, and pre-change comparison fail on unexplained regression;
+- optional media is local, lazy, and never startup-critical;
+- zero optional video is valid; a declared group must have compliant H.264/AVC SDR `yuv420p` portrait/landscape variants, fast-start, no audio stream, and pass per-file/1.5 MB video plus 500 KB poster/audio budgets;
+- sonic assets satisfy 250–500 ms duration, declared codec/channel/sample-rate/loudness bounds, and no orphan candidates.
+
+Run and observe failure:
+
+```powershell
+node --test scripts/first-contact-package.test.mjs
+```
+
+**GREEN**
+
+Replace recursive wholesale copying with manifest-driven/reachability-verified copying while preserving every existing route asset. Add conditional media groups, `test:first-contact`, and focused First Contact coverage in Chromium/WebKit UX commands without duplicating expensive unit runs.
 
 Verify:
 
@@ -434,7 +532,7 @@ npm run brand:verify
 
 Remove generated `www/`, `ios/`, and `android/` output from the working tree before commit.
 
-**Commit:** `build: enforce first-contact launch and asset contracts`
+**Commit:** `build: enforce first-contact package manifest`
 
 ## Task 9 — Canonical two-gated sonic mark and optional Higgsfield atmosphere
 

@@ -31,9 +31,23 @@ Updated: 2026-07-20
   a reproducible blind win; the coded UI, physics and procedural sonic mark are
   complete without it.
 
-Exact next action: create the phase rollback backup, extract Task 1 into the
-SDD workspace, write the failing `first-contact-entry-state` test, observe RED,
-then implement only the guarded state model and run its focused regressions.
+Execution router: Sol/high decides and reviews, Terra/medium builds, and
+Luna/low runs mechanical evidence. The current collaborator does not expose a
+Luna override, so Terra/low is the explicit Luna-class fallback rather than
+spending Sol on command-only work.
+
+Wave 1 explicitly uses the parallel-agents + isolated-worktrees workflow, not
+the serial SDD dispatcher. TDD, atomic lane commits, diff packages and fresh
+reviews remain mandatory. Plan arithmetic estimates 15–25% wall-clock savings;
+record real wave timings. Task 8 is split: native tooling may overlap Task 7,
+but the final manifest/package convergence runs only after Task 7 integrates.
+
+Exact next action: create the phase rollback backup and a recorded integration
+base, then create the isolated `first-contact-state`,
+`first-contact-orchestrator`, and `first-contact-flight` worktrees. Dispatch
+Tasks 1–3 to separate Terra workers with disjoint ownership, RED/GREEN evidence,
+and no merge/push authority. Sol reviews and integrates state → orchestration →
+flight before the shared UI lane starts.
 
 ## Current Impact handoff
 

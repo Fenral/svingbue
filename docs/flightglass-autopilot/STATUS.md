@@ -33,8 +33,22 @@ Fresh pre-implementation gates:
 Native safe zones, physical-device p50/p90, audio routes, human comprehension,
 clean-install cohorts and their confidence intervals remain explicitly
 `UNOBSERVED`. Optional Higgsfield media is post-implementation atmosphere only
-and cannot block the procedural experience. The exact next action is Task 1:
-create the guarded `fg.*` state model with a failing focused test before source.
+and cannot block the procedural experience.
+
+Execution was re-routed on 2026-07-20 for lower wall-clock time. Sol/high now
+owns only architecture, protected/native boundaries, external-spend decisions
+and independent judgment; Terra/medium owns production code; Luna/low owns
+mechanical evidence. Because this collaboration runtime exposes only Sol and
+Terra overrides, Terra/low is the recorded Luna-class fallback. Tasks 1–3 may
+run concurrently only in three isolated worktrees with disjoint files. Tasks
+4–6 remain one sequential UI lane; Task 7 and Task 8A may run in parallel only
+after Wave 2, with Task 8A restricted to native tooling until Task 7 integrates. The
+plan's critical-path arithmetic estimates a 15–25% wall-clock reduction and
+requires actual wave timings to replace that estimate. Every existing gate and
+human/device hold remains unchanged. The exact next action is Wave 0: record the
+integration base, create the rollback backup, reserve three worker branches in
+`COORDINATION.md`, then dispatch the isolated State, Orchestration and Flight
+lanes.
 
 ## Impact portrait implementation checkpoint
 

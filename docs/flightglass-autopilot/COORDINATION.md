@@ -13,7 +13,10 @@ wait.
 
 | Agent | Branch | Working on | Since |
 |-------|--------|-----------|-------|
-| Codex | `agent/first-contact-night-optics` | Owner-approved Night Optics first contact, solver-backed First Flight, and specimen-based Home. Owns `index.html`, scoped `first-contact*` source/tests, first-contact launch/package resources and evidence docs. `impact-flight.js` is read-only; no broad Impact edits. | 2026-07-20 |
+| Codex / Sol integrator | `agent/first-contact-night-optics` | Owns integration, shared UI Tasks 4–6, shared status/coordination, cross-lane review and final evidence. `impact-flight.js` is read-only; no broad Impact edits. | 2026-07-20 |
+| Terra State lane (reserved) | `agent/first-contact-state` | Task 1 only: `first-contact-state.js`, `scripts/first-contact-entry-state.test.mjs`, ignored lane report. No shared docs or merge/push authority. | 2026-07-20 |
+| Terra Orchestration lane (reserved) | `agent/first-contact-orchestrator` | Task 2 only: `first-contact-orchestrator.js`, `scripts/first-contact-orchestrator.test.mjs`, ignored lane report. No shared docs or merge/push authority. | 2026-07-20 |
+| Terra Flight lane (reserved) | `agent/first-contact-flight` | Task 3 only: `first-flight-controller.js`, `scripts/first-flight-controller.test.mjs`, ignored lane report. `impact-flight.js` and controls/haptics are read-only. No shared docs or merge/push authority. | 2026-07-20 |
 
 ## Queue / free to take
 
