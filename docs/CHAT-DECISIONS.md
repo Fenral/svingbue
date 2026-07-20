@@ -1,6 +1,6 @@
 # Flightglass durable chat decisions
 
-Updated: 2026-07-13
+Updated: 2026-07-20
 
 This document preserves the decisions and material recommendations from the
 long-running product, brand and Academy conversation. It is a handoff, not a
@@ -25,22 +25,50 @@ approval, it is marked `PENDING` and must not be treated as locked.
 
 ## Brand and identity
 
-- `LOCKED` Identity direction: **Trajectory Aperture**.
+- `SUPERSEDED 2026-07-20` Owner reconfirmed the identity earlier on 2026-07-20:
+  retain the existing full-colour Trajectory Aperture and its deterministic SVG
+  geometry; the explored split-ball/glass-plane/backspin direction was not
+  adopted. Later the same day, in a subsequent session, the owner was shown a
+  rendered Higgsfield/Recraft board matching that same explored direction,
+  was told it conflicted with this entry, and explicitly overrode it twice
+  (once to adopt the image, once more after being shown the specific
+  split-ball/glass-plane match) choosing to adopt it. Trajectory Aperture is
+  retired; **Glass Plane** is now production. This entry is kept, not deleted,
+  as an honest record of the reversal.
+- `LOCKED` Identity direction: **Glass Plane** (as of 2026-07-20).
 - `LOCKED` Brand promise: **See why it flew.**
 - `LOCKED` Architecture: Flightglass Range, Academy and Lab.
-- `LOCKED` Symbol grammar: calibrated aperture, one restrained trajectory,
-  one measured intersection.
-- `LOCKED` Wordmark: lowercase, one color, optically customized.
+- `LOCKED` Symbol grammar: one split disc, one glass seam dividing it corner to
+  corner, one measured intersection point near the seam. Implemented as a
+  parametric generator (`glassPlaneMark()` in
+  `scripts/build-flightglass-assets.mjs`: one circle, one chord fill, one
+  seam stroke, one dot — no filters or gradients), not a traced image, per the
+  deterministic-vector rule below. The Higgsfield/Recraft reference board
+  (`App Icon` / `Symbol` / `Wordmark` composition) was used as the concept
+  reference for this redraw, not as source geometry.
+- `LOCKED` Wordmark: lowercase, optically customized, per-letter color accents
+  on the two letters that carry the palette (revised 2026-07-20 from a strict
+  one-color rule). "flightglass" is Glass except the second **g** (Ember) and
+  the final **s** (Violet), matching the Higgsfield/Recraft reference board.
+  Implemented via a `colorOverrides` map passed to `outlinedWord()` in
+  `scripts/build-flightglass-assets.mjs`, keyed by glyph-run index (note: the
+  font ligates "fl" into one glyph, so glyph index is character position minus
+  one from that point on — verified by dumping `font.layout()` output, not by
+  eye).
 - `LOCKED` Master artwork must be deterministic vector. Image generation may
   explore the world around the identity but must not define the logo geometry.
 - `LOCKED` Palette evolution, not an unexplained replacement: Ink `#07060C`,
-  Glass `#F5F2ED`, Ember `#FF8A4D`; Violet `#9D8BFF` remains secondary for
-  models/learning and must not compete with Ember.
+  Glass `#F5F2ED`, Ember `#FF8A4D`. Violet `#9D8BFF` is promoted from secondary
+  to a primary mark color as of 2026-07-20 (it is now one of the two split
+  halves in Glass Plane) — this revises the earlier "must not compete with
+  Ember" constraint, which was written for the retired Trajectory Aperture
+  mark.
 - `LOCKED` Existing design-system decisions may change only when the benefit is
   explicit and evidence-backed. Do not discard the old system merely to make
   the work look new.
 - `PENDING RELEASE` Trademark/confusing-similarity clearance, domain checks and
-  store-name confirmation remain required before public identity release.
+  store-name confirmation remain required before public identity release. This
+  now applies to the Glass Plane mark, which has not been separately cleared.
 
 The original concept pages are preserved under
 `docs/concepts/flightglass/`. Production SVG assets under `assets/` remain the

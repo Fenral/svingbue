@@ -1,8 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180" role="img" aria-label="Flightglass">
   <g fill="none" stroke-linecap="round" stroke-linejoin="round">
-    <circle cx="90" cy="90" r="54" stroke="#F5F2ED" stroke-width="10"
-      stroke-dasharray="277 63" transform="rotate(-24 90 90)"/>
-    <path d="M34 116 C55 113 67 103 78 86 C91 66 108 57 146 55"
-      stroke="#FF8A4D" stroke-width="8"/>
-
+    <circle cx="90" cy="90" r="54" fill="#9D8BFF"/>
+    <path d="M52,129 A54,54 0 0,0 139,68 L52,129 Z" fill="#FF8A4D"/>
+    <path d="M52,129 L139,68" stroke="#F5F2ED" stroke-width="11" stroke-linecap="butt"/>
+    
   </g></svg>

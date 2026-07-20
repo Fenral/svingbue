@@ -12,6 +12,7 @@ const FONT = join(ROOT, 'vendor', 'fonts', 'SpaceGrotesk-Medium.woff2');
 const INK = '#07060C';
 const GLASS = '#F5F2ED';
 const TRACE = '#FF8A4D';
+const VIOLET = '#9D8BFF';
 
 mkdirSync(ASSETS, { recursive: true });
 mkdirSync(RESOURCES, { recursive: true });
@@ -19,27 +20,26 @@ mkdirSync(RESOURCES, { recursive: true });
 const svg = (viewBox, body, label = 'Flightglass') =>
   `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox}" role="img" aria-label="${label}">${body}</svg>\n`;
 
-function trajectoryAperture({
-  ring = GLASS,
-  trace = TRACE,
+function glassPlaneMark({
+  a = TRACE,
+  b = VIOLET,
+  seam = GLASS,
   field = INK,
   point = true,
   micro = false
 } = {}) {
-  const ringWidth = micro ? 10 : 8;
-  const traceWidth = micro ? 8 : 6;
+  const seamWidth = micro ? 11 : 8;
 
   return `
   <g fill="none" stroke-linecap="round" stroke-linejoin="round">
-    <circle cx="90" cy="90" r="54" stroke="${ring}" stroke-width="${ringWidth}"
-      stroke-dasharray="277 63" transform="rotate(-24 90 90)"/>
-    <path d="M34 116 C55 113 67 103 78 86 C91 66 108 57 146 55"
-      stroke="${trace}" stroke-width="${traceWidth}"/>
-    ${point && !micro ? `<circle cx="83" cy="79" r="4.2" fill="${field}" stroke="${ring}" stroke-width="3"/>` : ''}
+    <circle cx="90" cy="90" r="54" fill="${b}"/>
+    <path d="M52,129 A54,54 0 0,0 139,68 L52,129 Z" fill="${a}"/>
+    <path d="M52,129 L139,68" stroke="${seam}" stroke-width="${seamWidth}" stroke-linecap="butt"/>
+    ${point && !micro ? `<circle cx="83" cy="108" r="4.2" fill="${field}" stroke="${seam}" stroke-width="3"/>` : ''}
   </g>`;
 }
 
-function outlinedWord(text, emSize = 40) {
+function outlinedWord(text, emSize = 40, colorOverrides = {}) {
   const font = fontkit.openSync(FONT);
   const run = font.layout(text);
   const scale = emSize / font.unitsPerEm;
@@ -51,7 +51,8 @@ function outlinedWord(text, emSize = 40) {
     const x = cursor + position.xOffset + (index === 6 ? 7 : 0);
     const y = position.yOffset;
     cursor += position.xAdvance + tracking;
-    return `<path d="${glyph.path.toSVG()}" transform="translate(${x.toFixed(2)} ${y.toFixed(2)})"/>`;
+    const fillAttr = colorOverrides[index] ? ` fill="${colorOverrides[index]}"` : '';
+    return `<path d="${glyph.path.toSVG()}" transform="translate(${x.toFixed(2)} ${y.toFixed(2)})"${fillAttr}/>`;
   }).join('');
 
   return {
@@ -60,27 +61,27 @@ function outlinedWord(text, emSize = 40) {
   };
 }
 
-const word = outlinedWord('flightglass');
+const word = outlinedWord('flightglass', 40, { 5: TRACE, 9: VIOLET });
 const lockupWidth = 72 + word.width;
 
 writeFileSync(
   join(ASSETS, 'logo.svg'),
-  svg('0 0 180 180', trajectoryAperture())
+  svg('0 0 180 180', glassPlaneMark())
 );
 
 writeFileSync(
   join(ASSETS, 'flightglass-symbol-light.svg'),
-  svg('0 0 180 180', trajectoryAperture({ ring: GLASS, trace: GLASS, field: INK }))
+  svg('0 0 180 180', glassPlaneMark({ a: GLASS, b: GLASS, seam: GLASS, field: INK }))
 );
 
 writeFileSync(
   join(ASSETS, 'flightglass-symbol-dark.svg'),
-  svg('0 0 180 180', trajectoryAperture({ ring: INK, trace: INK, field: GLASS }))
+  svg('0 0 180 180', glassPlaneMark({ a: INK, b: INK, seam: INK, field: GLASS }))
 );
 
 writeFileSync(
   join(ASSETS, 'flightglass-mark-micro.svg'),
-  svg('0 0 180 180', trajectoryAperture({ micro: true }), 'Flightglass')
+  svg('0 0 180 180', glassPlaneMark({ micro: true }), 'Flightglass')
 );
 
 writeFileSync(
@@ -92,7 +93,7 @@ writeFileSync(
 writeFileSync(
   join(ASSETS, 'flightglass-lockup.svg'),
   svg(`0 0 ${lockupWidth.toFixed(2)} 56`, `
-  <g transform="translate(-12 -12) scale(.44444444)">${trajectoryAperture()}</g>
+  <g transform="translate(-12 -12) scale(.44444444)">${glassPlaneMark()}</g>
   <g fill="${GLASS}" transform="translate(72 40)">${word.group}</g>`)
 );
 
@@ -100,7 +101,7 @@ writeFileSync(
   join(RESOURCES, 'icon.svg'),
   svg('0 0 1024 1024', `
   <rect width="1024" height="1024" fill="${INK}"/>
-  <g transform="translate(-46 -46) scale(6.2)">${trajectoryAperture()}</g>`)
+  <g transform="translate(-46 -46) scale(6.2)">${glassPlaneMark()}</g>`)
 );
 
 const splashWordScale = 3.2;
@@ -109,7 +110,7 @@ writeFileSync(
   join(RESOURCES, 'splash.svg'),
   svg('0 0 2732 2732', `
   <rect width="2732" height="2732" fill="${INK}"/>
-  <g transform="translate(848.5 622.5) scale(5.75)">${trajectoryAperture()}</g>
+  <g transform="translate(848.5 622.5) scale(5.75)">${glassPlaneMark()}</g>
   <g fill="${GLASS}" transform="translate(${splashWordX.toFixed(2)} 1650) scale(${splashWordScale})">${word.group}</g>`)
 );
 
