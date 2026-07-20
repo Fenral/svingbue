@@ -14,15 +14,31 @@ test('Shape adapter mirrors five protected-engine fixtures without duplicating t
   }
 });
 
-test('central straight, right and left fixtures share raw Launch Direction and Carry',()=>{
+test('central straight, right and left fixtures share raw Launch Direction; curving costs a little Carry',()=>{
   const states=fixtures.slice(0,3).map(([,faceAngle,clubPath,clubSpeed])=>solveShapeState({faceAngle,clubPath,clubSpeed}));
-  assert.ok(states.every(state=>Math.abs(state.launchDirection-1)<1e-12));assert.ok(states.every(state=>Math.abs(state.carry-states[0].carry)<1e-12));
-  assert.deepEqual(states.map(state=>state.spinAxis),[0,6,-6]);assert.deepEqual(states.map(state=>Math.sign(state.curve)),[0,1,-1]);
+  assert.ok(states.every(state=>Math.abs(state.launchDirection-1)<1e-12));
+  // 3-D spin loft: face-to-path-glipa legger seg på spinn-loften, så kurving koster
+  // litt lengde. Den gamle fittede modellen ga alle tre eksakt lik carry; nå deler de
+  // to speilede formene carry eksakt, mens det rette slaget bærer marginalt lenger.
+  assert.ok(Math.abs(states[1].carry-states[2].carry)<1e-12,'speilede former deler carry eksakt');
+  assert.ok(states[0].carry>states[1].carry,'rett slag bærer lenger enn kurvet');
+  assert.ok(states[0].carry-states[1].carry<0.5,'men forskjellen er marginal');
+  // 3-D-motoren gir den geometrisk eksakte tilten (6.3219) der den gamle fittede
+  // gainen ga akkurat 6. Invarianten er den samme: null i midten, speilet ut.
+  const axis=states.map(state=>state.spinAxis);
+  assert.ok(Math.abs(axis[0])<1e-12,'matched har null spin axis');
+  assert.ok(Math.abs(axis[1]-6.3218865915)<1e-9,'right spin axis');
+  assert.ok(Math.abs(axis[2]+6.3218865915)<1e-9,'left speiler right');
+  assert.deepEqual(states.map(state=>Math.sign(state.curve)),[0,1,-1]);
 });
 
 test('speed amplifies Curve while launch Spin Axis remains unchanged',()=>{
   const states=[70,90,110].map(clubSpeed=>solveShapeState({faceAngle:2,clubPath:-2,clubSpeed}));
-  assert.deepEqual(states.map(state=>state.spinAxis),[6,6,6]);assert.ok(states[0].curve<states[1].curve&&states[1].curve<states[2].curve);
+  // Poenget i leksjonen: fart forsterker Curve, men rører ikke Spin Axis.
+  const axis=states.map(state=>state.spinAxis);
+  assert.ok(axis.every(v=>Math.abs(v-axis[0])<1e-12),'spin axis er uendret av fart');
+  assert.ok(Math.abs(axis[0]-6.3218865915)<1e-9,'spin axis magnitude');
+  assert.ok(states[0].curve<states[1].curve&&states[1].curve<states[2].curve);
 });
 
 test('two-shape transfer accepts the verified learner-built left then right pair',()=>{
