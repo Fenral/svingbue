@@ -66,31 +66,31 @@ const protectedNeutralKeys = [
   'offline', 'rollFrac', 'roll', 'total',
 ];
 
-test('neutral 7-iron preserves every existing distance/speed/spin output exactly', () => {
+test('neutral five-field reference pins the recalibrated longitudinal outputs', () => {
   const flight = solveFlight(base({}));
   assert.deepEqual(pick(flight, protectedNeutralKeys), {
     startDirection: 0,
     spinLoft: 33,
-    launchAngle: 17.85,
-    ballSpeed: 119.51999999999998,
-    smash: 1.3279999999999998,
-    smashEff: 1.3279999999999998,
-    carry: 172.40005029370806,
-    apex: 33.03598955407673,
-    landingAngle: 54.34598955407673,
-    backspin: 7001.610243089312,
+    launchAngle: 15.382746047638626,
+    ballSpeed: 122.56069767495934,
+    smash: 1.3617855297217705,
+    smashEff: 1.3617855297217705,
+    carry: 173.99911891890417,
+    apex: 31.02114110454145,
+    landingAngle: 50.789928102248574,
+    backspin: 6623.095880188069,
     curve: 0,
     offline: 0,
-    rollFrac: 0.025981015668884905,
-    roll: 4.479128407997375,
-    total: 176.87917870170543,
+    rollFrac: 0.03131510784662714,
+    roll: 5.4488011741635844,
+    total: 179.44792009306775,
   });
   assert.equal(flight.spinLoft3DDeg, 33);
   assert.equal(flight.signedVerticalSpinLoftDeg, 33);
   assert.equal(flight.spinAxis, 0);
 });
 
-test('neutral low-loft driver preserves the old downstream fit exactly', () => {
+test('neutral low-loft delivery pins the recalibrated five-field fit exactly', () => {
   const flight = solveFlight(base({
     club: 'driver',
     clubSpeed: 105,
@@ -100,27 +100,26 @@ test('neutral low-loft driver preserves the old downstream fit exactly', () => {
   assert.deepEqual(pick(flight, protectedNeutralKeys), {
     startDirection: 0,
     spinLoft: 7,
-    launchAngle: 6.08,
-    ballSpeed: 150.35999999999999,
-    smash: 1.432,
-    smashEff: 1.432,
-    carry: 216.0879726651804,
-    apex: 20.787301931572312,
+    launchAngle: 9.302289642461583,
+    ballSpeed: 159.30592724943727,
+    smash: 1.5171993071374978,
+    smashEff: 1.5171993071374978,
+    carry: 241.12516867203772,
+    apex: 31.4161628586604,
     landingAngle: 32,
-    // Var 1500 — det gamle gulvet, ikke fysikk. Nå beregnet rulling-ved-separasjon.
-    backspin: 1827.807384868386,
+    backspin: 1390.1680432083479,
     curve: 0,
     offline: 0,
     rollFrac: 0.055,
-    roll: 11.884838496584921,
-    total: 227.97281116176532,
+    roll: 13.261884276962075,
+    total: 254.38705294899978,
   });
   assert.equal(flight.spinLoft3DDeg, 7);
   assert.equal(flight.signedVerticalSpinLoftDeg, 7);
   assert.equal(flight.spinAxis, 0);
 });
 
-test('solveFlight feeds exact 3-D spin loft into the existing downstream consumers', () => {
+test('3-D spin loft drives smash while vertical spin loft alone selects bag calibration', () => {
   const input = base({ attackAngle: -3, clubPath: -2, dynamicLoft: 30, faceAngle: 2 });
   const expected = expectedDPlane(input);
   const flight = solveFlight(input);
@@ -131,8 +130,13 @@ test('solveFlight feeds exact 3-D spin loft into the existing downstream consume
   close(flight.spinAxis, expected.dPlaneTiltRightDeg, 1e-12);
   assert.ok(flight.spinLoft > flight.signedVerticalSpinLoftDeg);
 
-  // Existing formulas remain live, but consume true 3-D spin loft.
-  close(flight.smashEff, Math.max(1.15, Math.min(1.42, 1.46 - 0.004 * flight.spinLoft)), 1e-12);
+  const smashRaw = flight.smashModelIntercept +
+    flight.smashSpinLoftLinear * flight.spinLoft +
+    flight.smashSpinLoftQuadratic * flight.spinLoft ** 2;
+  close(flight.smashEff, Math.max(flight.smashMinimum, Math.min(flight.smashMaximum, smashRaw)), 1e-12);
+  const neutral = solveFlight(base({ attackAngle: -3, dynamicLoft: 30 }));
+  close(flight.spinCalibration, neutral.spinCalibration, 1e-12,
+    'face/path must not apply across-bag spin calibration twice');
   // spinRpmRaw er nå den BEREGNEDE spinnen (rulling ved separasjon), ikke den
   // fittede spinLoft·ballSpeed·k. Under sanity-klemma er rå og total identiske.
   assert.ok(flight.spinRpmRaw > 0);

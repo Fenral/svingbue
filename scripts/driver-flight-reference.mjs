@@ -1,4 +1,7 @@
 import { carryYd } from '../driver-flight.mjs';
+
+// REFERENCE-ONLY: this is an orphan driver optimum-window study. It does not
+// call shipping solveFlight and must never be described as shipping acceptance.
 const k = { cd0:0.275, cd2:0.686, cl1:2.2, clmax:0.49, tau:24.167 };
 const sOptT = v => -0.160373*v*v + 26.838228*v + 1655.45;
 const aOptT = v => 0.000772*v*v - 0.313676*v + 36.3045;
@@ -18,7 +21,7 @@ function windowOpt(ballMph){
   }
   return { a: wa / W, s: ws / W, c: max, sLo, sHi };
 }
-console.log('--- ACCEPTANCE · plateau-centroid ---');
+console.log('--- REFERENCE ONLY · orphan driver-flight plateau-centroid ---');
 let pass = 0;
 const rows = [];
 for (let v = 85; v <= 125; v += 5){
