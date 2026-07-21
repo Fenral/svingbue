@@ -35,6 +35,22 @@ test('the zoom range actually covers the current engine envelope', () => {
     'the required zoom must be inside the clamp, not truncated by it');
 });
 
+/* Hybrid-innramming (eierens valg): en fast "hjemme"-ramme for hele det normale
+   slag-spennet, fit-to-shot zoomer KUN ut for ekstremene. Låst her som
+   fitZoom(max(maxDist, HOME)) — måten frameForShot i impact.html bruker den på. */
+test('home-clamped zoom holds one stable frame across the bag, only extremes zoom out', () => {
+  const HOME = 150;
+  const z = md => fitZoom(Math.max(md, HOME));
+  // kile (~62), jern (~92) og en realistisk driver (~140) ligger alle under HOME,
+  // så de deler NØYAKTIG samme målestokk — ingen skifter når du drar i sliderne.
+  assert.equal(z(62), z(140), 'wedge and driver share the home frame');
+  assert.equal(z(92), z(140), 'iron and driver share the home frame');
+  assert.equal(z(150), z(62), 'the whole normal range is one flat zoom');
+  // bare ekte ekstremer (maxDist > HOME) zoomer lenger ut.
+  assert.ok(z(250) < z(140), 'a 358 m / 242 m offline extreme zooms out');
+  assert.ok(z(250) > 0.40, 'and still clears the min clamp');
+});
+
 test('gridStops grows in whole steps and always leaves a scale', () => {
   assert.deepEqual(gridStops(180), [50, 100, 150, 200]);
   assert.deepEqual(gridStops(281), [50, 100, 150, 200, 250, 300]);

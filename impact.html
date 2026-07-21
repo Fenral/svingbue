@@ -397,7 +397,60 @@ function line3(a, b) {
   ctx.beginPath(); ctx.moveTo(pa.x, pa.y); ctx.lineTo(pb.x, pb.y); ctx.stroke();
 }
 
-function drawGrid(s, extent = 200, halfWidth = 0) {
+// Avrundet rektangel-sti (canvas har ingen innebygd før roundRect bredt støttes).
+function chipPath(x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+// C — flat 2D distansestripe, tegnet i skjermpiksler nederst på scenen.
+// Bevisst UTENFOR 3D-projeksjonen: en lineær linjal 0→siste stopp, med en
+// prikk der ballen lander og en hul markør ved apex sin nedslagsposisjon.
+function drawDistanceStrip(stops, extent, a) {
+  const maxD = stops[stops.length - 1];
+  // Legg stripa like OVER dokken, ellers okkluderer bunnpanelet den. Dokken
+  // (#panel) er et DOM-overlegg; vi finner toppkanten relativt til scenen.
+  const panel = document.getElementById('panel');
+  let y = H - 46;
+  if (panel && typeof stage !== 'undefined') {
+    const st = stage.getBoundingClientRect(), pr = panel.getBoundingClientRect();
+    y = Math.min(y, pr.top - st.top - 34);
+  }
+  const x0 = 24, x1 = W - 24, ww = x1 - x0;
+  const px = d => x0 + (Math.max(0, Math.min(d, maxD)) / maxD) * ww;
+  ctx.font = GRID_FONT;
+  chipPath(x0 - 8, y - 16, ww + 16, 40, 10);
+  ctx.fillStyle = rgba(COL.fog, 0.5 * a);
+  ctx.fill();
+  ctx.strokeStyle = rgba(COL.grid, 0.14 * a); ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(x0, y); ctx.lineTo(x1, y); ctx.stroke();
+  ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+  for (const d of [0, ...stops]) {
+    const gx = px(d);
+    ctx.strokeStyle = rgba(COL.grid, 0.3 * a);
+    ctx.beginPath(); ctx.moveTo(gx, y - 4); ctx.lineTo(gx, y + 4); ctx.stroke();
+    ctx.fillStyle = rgba(COL.grid, 0.55 * a);
+    ctx.fillText(d === maxD ? d + ' m' : String(d), gx, y + 7);
+  }
+  // apex sin nedslagsposisjon (≈ halvveis) — hul markør, egen etikett.
+  const ax = px(extent / 2);
+  ctx.strokeStyle = rgba(COL.gold, 0.8 * a); ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.arc(ax, y, 3.5, 0, TAU); ctx.stroke();
+  // landing — fylt aksent-prikk + tall.
+  const lx = px(extent);
+  ctx.fillStyle = rgba(COL.accent, 0.95 * a);
+  ctx.beginPath(); ctx.arc(lx, y, 4.5, 0, TAU); ctx.fill();
+  ctx.fillStyle = rgba(COL.accent, 0.95 * a);
+  ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+  ctx.fillText(Math.round(extent) + '', lx, y - 8);
+}
+
+function drawGrid(s, extent = 200, halfWidth = 0, sideSigned = 0) {
   const topA = clamp(s - 1, 0, 1);
   const sideA = clamp(1 - Math.abs(s - 1), 0, 1);
   const perspA = clamp(1 - s, 0, 1);
@@ -451,30 +504,53 @@ function drawGrid(s, extent = 200, halfWidth = 0) {
     if (l) ctx.fillText(edge + ' L', l.x, l.y);
     if (r) ctx.fillText(edge + ' R', r.x, r.y);
   }
-  // Lengdereferanser i FLIGHT: i perspektiv står tallene langs SENTERLINJEN.
-  // Dybden komprimeres kraftig mot horisonten, så 250 og 300 m havner få
-  // piksler fra hverandre — uten avstandsvakt blir de en uleselig stabel.
-  // Vi går NEDENFRA og opp (nærmest kamera først) og hopper over enhver
-  // etikett som ikke får minst LABEL_GAP piksler for seg selv.
+  // Lengdereferanse i FLIGHT — tre kandidater eieren skal velge mellom.
+  // Dybden komprimeres kraftig mot horisonten, så en naiv rad distansetall
+  // langs senterlinjen stables til en uleselig grøt; derfor disse tre.
   if (perspA > 0.05) {
-    const LABEL_GAP = 22;
-    ctx.fillStyle = rgba(COL.grid, 0.42 * perspA);
-    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
-    let lastY = Infinity;
-    for (let i = stops.length - 1; i >= 0; i--) {
-      const cp = P(stops[i], 0, 0);
-      if (!cp) continue;
-      if (lastY - cp.y < LABEL_GAP) continue;
-      ctx.fillText(stops[i] + ' m', cp.x, cp.y + 3);
-      lastY = cp.y;
+    if (flightRef === 'gates') {
+      // B — distanseporter: en lav vertikal port ved hver stopp, tallet på
+      // toppen der perspektivet gir loddrett luft mellom nære og fjerne porter.
+      ctx.font = GRID_FONT;
+      for (const x of stops) {
+        ctx.strokeStyle = rgba(COL.grid, 0.16 * perspA);
+        line3([x, 0, 0], [x, 0, 16]);
+        const tp = P(x, 0, 16);
+        if (tp) {
+          ctx.fillStyle = rgba(COL.grid, 0.55 * perspA);
+          ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+          ctx.fillText(x + ' m', tp.x, tp.y - 3);
+        }
+      }
+    } else if (flightRef === 'strip') {
+      // C — flat 2D distansestripe nederst, helt utenfor 3D-perspektivet,
+      // så dybdekomprimeringen ikke rører lesbarheten.
+      drawDistanceStrip(stops, extent, perspA);
+    } else {
+      // A (standard) — ingen egen lengde-etikett inne i scenen. Lengden bor i
+      // hero-tallet øverst (281 m CARRY), og høyden leses av høydestigen.
+      // FLIGHT holdes ren: én utfallsbue, én høydeskala, ett tall.
     }
   }
-  // høydeguider 20/40 m (SIDE)
-  if (sideA > 0.05 && s > 0.15) {
+  // Høydeguider (20/40/60 m). Vises i SIDE, og — for variant A — også i
+  // FLIGHT, som er den lesbare aksen der: høyde går rett opp på skjermen.
+  // Dette er høydestigen; sammen med landingstallet over dekker den både
+  // høyde og lengde uten å slåss mot dybdekomprimeringen.
+  const heightA = Math.max(sideA, flightRef === 'ladder' ? 0.7 * perspA : 0);
+  if (heightA > 0.05) {
     ctx.setLineDash([2, 5]);
+    ctx.font = GRID_FONT;
     for (const z of [20, 40, 60]) {
-      ctx.strokeStyle = rgba(COL.grid, 0.11 * sideA);
+      ctx.strokeStyle = rgba(COL.grid, 0.11 * heightA);
       line3([0, 0, z], [reach, 0, z]);
+      // Tallet festet ved det nære enden av linja (x liten), der den er
+      // lavest og lengst fra horisonten — lesbart i begge stasjoner.
+      const hp = P(4, 0, z);
+      if (hp) {
+        ctx.fillStyle = rgba(COL.grid, 0.5 * heightA);
+        ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
+        ctx.fillText(z + ' m', hp.x + 3, hp.y - 2);
+      }
     }
     ctx.setLineDash([]);
   }
@@ -945,14 +1021,28 @@ function frameForShot(rig, outcome, aspectFix) {
   const look = { x: rig.look.x + dx, y: rig.look.y, z: rig.look.z };
   const pos = { x: rig.pos.x + dx, y: rig.pos.y, z: rig.pos.z };
   const maxDist = Math.max(mid, apex, side + 8);   // halv-utstrekning som må få plass
-  const k = fitZoom(maxDist);
+  // Hybrid-innramming: en FAST «hjemme»-ramme for hele det normale slag-spennet,
+  // fit-to-shot zoomer KUN ut når slaget faktisk går utenfor den. HOME_FIT er den
+  // halve utstrekningen hjemme-rammen så vidt rommer — kile (~62), jern (~92) og
+  // en realistisk driver (~141) ligger alle under, så de deler nøyaktig samme
+  // stabile målestokk (ingen «bakken flytter seg» når du drar i sliderne). Bare
+  // de bratte 300–386 m-ekstremene (maxDist > HOME_FIT) trigger utzoom.
+  const HOME_FIT = 150;
+  const k = fitZoom(Math.max(maxDist, HOME_FIT));
   const zoomed = dollyRig({ ...rig, pos, look }, k);
   return {
     rig: { ...zoomed, xStretch: (rig.xStretch ?? 1) * aspectFix },
     extent: carry,
     halfWidth: side,
+    sideSigned: outcome.m.side || 0,
   };
 }
+
+// FLIGHT-lengdereferanse: tre kandidater eieren skal velge mellom.
+//   'ladder' (A) — høydestige + ett landingstall (standard-anbefaling)
+//   'gates'  (B) — vertikale distanseporter inne i scenen
+//   'strip'  (C) — flat 2D distansestripe nederst
+let flightRef = 'strip';
 
 function frame(now) {
   const dt = Math.min((now - lastT) / 1000 || 0, 0.25);
@@ -977,7 +1067,7 @@ function frame(now) {
   const framed = frameForShot(rig0, liveOutcome, aspectFix);
   basis = buildBasis(framed.rig, { w: W, h: H });
   ctx.clearRect(0, 0, W, H);
-  drawGrid(state.station, framed.extent, framed.halfWidth);
+  drawGrid(state.station, framed.extent, framed.halfWidth, framed.sideSigned);
   for (const pin of state.pins) drawTraj(pin.outcome, 'ghost');
   drawTraj(liveOutcome, 'active');
   updateStats(liveOutcome);
@@ -1003,7 +1093,8 @@ function frame(now) {
 
 // instrumenteringskrok for evidens (K1/K6: logget skalarverdi per frame når
 // `capture` er på) og for senere økter/dommer
-const api = { state, setStation, get stationTarget() { return stationTarget; }, capture: false, trace: [] };
+const api = { state, setStation, get stationTarget() { return stationTarget; },
+  setFlightRef(m) { flightRef = m; }, get flightRef() { return flightRef; }, capture: false, trace: [] };
 window.__impact = api;
 
 renderPane(Math.round(stationTarget));
