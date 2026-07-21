@@ -75,6 +75,8 @@
   .vbtn.active{color:var(--ink);border-color:rgba(157,139,255,.55);background:rgba(17,13,28,.92)}
   .vbtn.pulse::before{content:"";position:absolute;inset:-3px;border-radius:15px;
     border:2px solid var(--secondary);animation:ringPulse .55s var(--ease) 1;pointer-events:none}
+  .clubs{position:absolute;bottom:8px;right:8px;display:flex;gap:6px;z-index:5}
+  .clubs .vbtn{font-size:11px;padding:0 12px}
   @keyframes ringPulse{0%{opacity:.9;transform:scale(.96)}100%{opacity:0;transform:scale(1.12)}}
 
   /* miniskjerm: zoomed contact-zone inset (pattern: impact-inset-mock.html, P3-toned) */
@@ -195,11 +197,15 @@
       <button class="vbtn active" id="btnFace">FACE ON</button>
       <button class="vbtn" id="btnDtl">DOWN THE LINE</button>
     </div>
+    <div class="clubs">
+      <button class="vbtn active" id="btnIron">IRON</button>
+      <button class="vbtn" id="btnDriver">DRIVER</button>
+    </div>
   </div>
 
   <div class="controls">
     <div class="chips">
-      <button class="chip" data-p="plane"><span class="cl">SWING PLANE</span><span class="cv" id="cvPlane">55°</span></button>
+      <button class="chip" data-p="plane"><span class="cl">SWING PLANE</span><span class="cv" id="cvPlane">60°</span></button>
       <button class="chip" data-p="dir"><span class="cl">SWING DIRECTION</span><span class="cv" id="cvDir">0.0°</span></button>
       <button class="chip active" data-p="low"><span class="cl">BALL POSITION</span><span class="cv" id="cvLow">0.0 cm</span></button>
       <button class="chip" data-p="arc"><span class="cl">ARC HEIGHT</span><span class="cv" id="cvArc">−0.2 cm</span></button>
@@ -308,7 +314,7 @@ function project(p, b){
 
 /* ============================================================ STATE */
 const PARAMS = {
-  plane: { min:30,  max:80, step:0.5, def:55,   bipolar:false, hue:'var(--plane)',
+  plane: { min:30,  max:80, step:0.5, def:60,   bipolar:false, hue:'var(--plane)',
            fmt:v=>fmtNum(v,0)+'°' },
   dir:   { min:-12, max:12, step:0.1, def:0,    bipolar:true,  hue:'var(--secondary)',
            fmt:v=>fmtNum(v,1)+'°' },
@@ -322,7 +328,13 @@ const PARAMS = {
            fmt:v=>fmtSigned(v,1)+' cm' },
 };
 const LP_STANCE = 10.5;                       // cm foran stance-senter
-const state = { view:'face', sel:'low', plane:55, dir:0, low:0, arc:-0.2 };
+/* club presets: plane auto-set on switch (freely adjustable afterwards).
+ * Driver = ball on a tee. MOCK STAND-IN: final driver physics (strike vs
+ * teed ball, expected up-strike) must come from the production engine. */
+const PLANE_PRESET = { iron: 60, driver: 50 };
+const TEE_H = 0.030;                          // tee height, metres
+const state = { view:'face', sel:'low', plane:60, dir:0, low:0, arc:-0.2, club:'iron' };
+const ballLift = () => state.club === 'driver' ? TEE_H : 0;
 function engineState(){
   return { radius:RADIUS, planeAngle:state.plane, swingDirection:state.dir,
            lowPoint:{ x:(LP_STANCE - state.low)/100, y:0, z:state.arc/100 } };
@@ -354,13 +366,22 @@ let prevOut = null, pulseTimer = 0;
 function updateOutcomes(){
   const s = engineState();
   const imp = deriveImpact(s), ct = clubBallContact(s), q = strikeQuality(s);
-  const out = { attack: imp.attackAngle, path: imp.clubPath, strike: ct.offset };
+  /* strike measured against the (possibly teed) ball centre */
+  const offEff = ct.clubZ - (ballLift() + BALL_R);
+  const out = { attack: imp.attackAngle, path: imp.clubPath, strike: offEff };
   $('vAttack').textContent = fmtNum(out.attack, 1) + '°';
   $('vPath').textContent = fmtNum(out.path, 1) + '°';
   /* strike lives in the inset eyebrow */
-  const qEl = $('insetQual'); qEl.textContent = q.band.toUpperCase(); qEl.style.color = q.col;
-  const mm = Math.round(Math.abs(ct.offset * 1000));
-  $('insetMm').textContent = (ct.offset < 0 ? MINUS : '+') + mm + ' mm';
+  let band = q.band, col = q.col;
+  if (state.club === 'driver' && ct.clubZ >= -0.025){
+    /* mock stand-in driver bands vs the teed ball */
+    if (Math.abs(offEff) <= 0.008){ band = 'Pure'; col = 'var(--good)'; }
+    else if (offEff > 0.008){ band = 'High'; col = 'var(--warn)'; }
+    else { band = 'Low'; col = 'var(--warn)'; }
+  }
+  const qEl = $('insetQual'); qEl.textContent = band.toUpperCase(); qEl.style.color = col;
+  const mm = Math.round(Math.abs(offEff * 1000));
+  $('insetMm').textContent = (offEff < 0 ? MINUS : '+') + mm + ' mm';
 
   if (prevOut){
     const changed = {
@@ -441,9 +462,21 @@ function updateChipValues(){
 }
 $('resetBtn').addEventListener('click', () => {
   for (const k in PARAMS) state[k] = PARAMS[k].def;
+  state.plane = PLANE_PRESET[state.club];
   range.value = state[state.sel];
   updateChipValues(); layoutSlider(); updateOutcomes(); kick();
 });
+function setClub(c){
+  state.club = c;
+  state.plane = PLANE_PRESET[c];              // auto-preset; freely adjustable after
+  $('btnIron').classList.toggle('active', c === 'iron');
+  $('btnDriver').classList.toggle('active', c === 'driver');
+  if (state.sel === 'plane') range.value = state.plane;
+  vecFlashAt = performance.now();
+  updateChipValues(); layoutSlider(); updateOutcomes(); kick();
+}
+$('btnIron').addEventListener('click', () => setClub('iron'));
+$('btnDriver').addEventListener('click', () => setClub('driver'));
 $('btnFace').addEventListener('click', () => setView('face'));
 $('btnDtl').addEventListener('click', () => setView('dtl'));
 function setView(v){
@@ -500,7 +533,16 @@ function litSegment(pts, hue, fa){
     ctx.stroke();
   };
   ctx.globalAlpha = 0.38 * fa; ctx.strokeStyle = hue; ctx.lineWidth = 11; strokePts();
-  ctx.globalAlpha = fa; ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 4; strokePts();
+  /* white-hot core with a soft tapering tip */
+  const cut = Math.max(2, Math.floor(pts.length * 0.72));
+  const main = pts.slice(0, cut + 1), tail = pts.slice(cut);
+  const strokeSub = arr => {
+    ctx.beginPath();
+    arr.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y));
+    ctx.stroke();
+  };
+  ctx.globalAlpha = fa; ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 4; strokeSub(main);
+  ctx.globalAlpha = 0.7 * fa; ctx.lineWidth = 2; strokeSub(tail);
   if (!REDUCED){
     const u = cometU();
     const i = Math.min(pts.length - 1, Math.max(0, Math.round(u * (pts.length - 1))));
@@ -602,8 +644,17 @@ function drawInset(){
     ictx.stroke(); ictx.restore();
   }
 
-  /* ball (outline so the arc reads through the contact) + ember halo */
-  const br = BALL_R * sc, bx2 = X(0), by2 = gy - br;
+  /* ball (outline so the arc reads through the contact) + ember halo.
+     Driver: ball on the tee. */
+  const liftI = ballLift();
+  const br = BALL_R * sc, bx2 = X(0), by2 = Y(liftI) - br;
+  if (liftI > 0){
+    ictx.save();
+    ictx.strokeStyle = 'rgba(210,205,225,.6)'; ictx.lineCap = 'round';
+    ictx.lineWidth = 2.5;
+    ictx.beginPath(); ictx.moveTo(bx2, gy); ictx.lineTo(bx2, by2 + br * 0.9); ictx.stroke();
+    ictx.restore();
+  }
   {
     const gr2 = br * 1.9;
     const halo2 = ictx.createRadialGradient(bx2, by2, br * 0.4, bx2, by2, gr2);
@@ -620,8 +671,8 @@ function drawInset(){
   ictx.strokeStyle = 'rgba(245,242,255,.9)'; ictx.lineWidth = 1.5; ictx.stroke();
 
   /* strike height: warm tick where the arc meets the ball + mm bracket */
-  const czI = clamp(ct.clubZ, 0, 2 * BALL_R);
-  const sy = gy - czI * sc;
+  const czI = clamp(ct.clubZ, liftI, liftI + 2 * BALL_R);
+  const sy = Y(czI);
   ictx.strokeStyle = WARM; ictx.lineWidth = 2;
   ictx.beginPath(); ictx.moveTo(bx2 - br - 5, sy); ictx.lineTo(bx2 + br + 5, sy); ictx.stroke();
   /* bracket: ball centre ↔ contact height, to the right of the ball */
@@ -713,7 +764,7 @@ const CSS = n => getComputedStyle(document.documentElement).getPropertyValue(n).
 function faceMap(){
   const winM = W >= 700 ? 1.15 : 0.95;
   const scale = W / winM;                       // px per metre
-  const bx = W * 0.52, gy = H * 0.65;           // scene sits right of the mini screen
+  const bx = W * 0.52, gy = H * 0.71;           // scene sits right of the mini screen
   const K = 2.2;                                // vertical compression: arc reads as a U, like DTL
   const EXAG = 6, CAP = 0.042;                  // below-ground exaggeration (on top of K)
   const zMap = z => z >= 0 ? z * K : -CAP * Math.tanh(-z * EXAG / CAP) * (K * 0.55);
@@ -810,11 +861,12 @@ function drawFace(t){
                               y: M.Y(lp.z + a * u.z + b2 * m.z) });
     const quad = [pt2(-0.95, -0.04), pt2(0.95, -0.04), pt2(0.95, 1.0), pt2(-0.95, 1.0)];
     ctx.save();
-    const topY = Math.min(quad[2].y, quad[3].y);
-    const grad = ctx.createLinearGradient(0, topY, 0, gy);
-    const aG = heroP ? 0.20 : 0.10;
-    grad.addColorStop(0, 'rgba(147,164,242,0)');
-    grad.addColorStop(0.75, 'rgba(147,164,242,' + aG * 0.7 + ')');
+    /* gradient spans the VISIBLE canvas band (0→gy), not the off-canvas
+       quad top — otherwise only the near-transparent part shows */
+    const grad = ctx.createLinearGradient(0, 0, 0, gy);
+    const aG = heroP ? 0.30 : 0.16;
+    grad.addColorStop(0, 'rgba(147,164,242,' + aG * 0.25 + ')');
+    grad.addColorStop(0.7, 'rgba(147,164,242,' + aG * 0.7 + ')');
     grad.addColorStop(1, 'rgba(147,164,242,' + aG + ')');
     ctx.beginPath();
     quad.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y));
@@ -824,7 +876,7 @@ function drawFace(t){
     for (const bf of [0.30, 0.65]){
       const b2 = -0.04 + bf * 1.04;
       const ra = pt2(-0.95, b2), rb = pt2(0.95, b2);
-      ctx.strokeStyle = 'rgba(147,164,242,' + (heroP ? 0.12 : 0.06) + ')';
+      ctx.strokeStyle = 'rgba(147,164,242,' + (heroP ? 0.16 : 0.10) + ')';
       ctx.beginPath(); ctx.moveTo(ra.x, ra.y); ctx.lineTo(rb.x, rb.y); ctx.stroke();
     }
     ctx.restore();
@@ -834,8 +886,17 @@ function drawFace(t){
   strokeArc(s, M, 'rgba(255,255,255,.16)', 9);
   strokeArc(s, M, 'rgba(255,255,255,.92)', 3);
 
-  /* --- ball (live object → ember-comet glow, impact.html drawComet language) --- */
-  const bx = M.bx, by = gy - ballR;
+  /* --- ball (live object → ember-comet glow); driver = ball on a tee --- */
+  const bx = M.bx, by = M.Y(ballLift()) - ballR;
+  if (state.club === 'driver'){
+    ctx.save();
+    ctx.strokeStyle = 'rgba(210,205,225,.65)'; ctx.lineCap = 'round';
+    ctx.lineWidth = 3.5;
+    ctx.beginPath(); ctx.moveTo(bx, gy); ctx.lineTo(bx, by + ballR * 0.9); ctx.stroke();
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(bx - 5, by + ballR * 0.92); ctx.lineTo(bx + 5, by + ballR * 0.92); ctx.stroke();
+    ctx.restore();
+  }
   {
     const gr = ballR * 2.1;
     const halo = ctx.createRadialGradient(bx, by, ballR * 0.4, bx, by, gr);
@@ -852,7 +913,7 @@ function drawFace(t){
   ctx.strokeStyle = 'rgba(255,175,120,.4)'; ctx.lineWidth = 1; ctx.stroke();
 
   /* (no strike tick on the main canvas — strike detail lives in the inset) */
-  const cz = clamp(ct.clubZ, 0, 2 * BALL_R);
+  const cz = clamp(ct.clubZ, ballLift(), ballLift() + 2 * BALL_R);
 
   /* --- underground gold: the arc segment the club spends below ground
      (entry→low→exit), impact-kamera gold, no text — fades with the flash --- */
@@ -878,20 +939,30 @@ function drawFace(t){
     ctx.restore();
   }
 
-  /* --- CLUB ATTACK: the arc itself lit up through the ball (transient).
-     No arrow, no wedge — the segment IS the arc at impact; a small light
-     pulse travels downstream through the strike. --- */
+  /* --- CLUB ATTACK: springs OUT of the arc exactly at the strike point —
+     a lit arc segment upstream that peels off as a straight tangent ray
+     past the ball; the light pulse rides the whole way out. --- */
   if (fa > 0.01){
     const segPts = [];
-    for (let i = 0; i <= 26; i++){
-      const th = thImp - 0.14 + (0.20 * i) / 26;
+    for (let i = 0; i <= 16; i++){
+      const th = thImp - 0.16 + (0.16 * i) / 16;
       const p = arcPosition(th, s);
       segPts.push({ x: M.X(p.x), y: M.Y(p.z) });
+    }
+    const tv = tangentAt(thImp, s);
+    const zK = tv.z * M.K;
+    const len2 = Math.hypot(tv.x, zK) || 1;
+    const dx = tv.x / len2, dz = zK / len2;
+    const p0 = segPts[segPts.length - 1];
+    const Lout = W >= 700 ? 88 : 66;
+    for (let i = 1; i <= 10; i++){
+      const d = (Lout * i) / 10;
+      segPts.push({ x: p0.x + dx * d, y: p0.y - dz * d });
     }
     litSegment(segPts, A.attack, fa);
     const pe = segPts[segPts.length - 1];
     label('CLUB ATTACK ' + fmtNum(imp.attackAngle, 1) + '°',
-          Math.min(pe.x + 14, W - 150), pe.y - 16, A.attack, W >= 700 ? 11 : 10, 'left', false, fa);
+          Math.min(pe.x + 12, W - 150), pe.y - 12, A.attack, W >= 700 ? 11 : 10, 'left', false, fa);
   }
 
   /* --- low point: single plain marker (numbers/sequence live in the inset variant's inset) --- */
@@ -950,7 +1021,7 @@ function strokeArc(s, M, style, width){
 function dtlCam(){
   /* stands slightly on the trail side of the line, hip height — gives an
      asymmetric, more spatial DTL and pushes the scene toward the right */
-  return { pos:{ x:-2.35, y:0.5, z:1.0 }, look:{ x:2.3, y:-0.12, z:0.14 },
+  return { pos:{ x:-2.2, y:0.9, z:1.0 }, look:{ x:2.3, y:-0.25, z:0.14 },
            fov: d2r(H < 220 ? 36 : 32), xStretch: 1.1 };
 }
 const DTL_SWEEP = d2r(60);                    // longer arc into the perspective
@@ -1010,7 +1081,7 @@ function drawDtl(t){
       ctx.beginPath();
       poly.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y));
       ctx.closePath();
-      ctx.fillStyle = 'rgba(147,164,242,' + (heroG ? 0.26 : 0.14) + ')';
+      ctx.fillStyle = 'rgba(147,164,242,' + (heroG ? 0.24 : 0.10) + ')';
       ctx.fill();
       /* faint inner rungs instead of an outline */
       ctx.lineWidth = 1;
@@ -1083,12 +1154,17 @@ function drawDtl(t){
     }
   }
 
-  /* ball */
+  /* ball (driver: on the tee) */
   {
-    const b = P({ x: 0, y: 0, z: BALL_R });
+    const lift = ballLift();
+    const b = P({ x: 0, y: 0, z: lift + BALL_R });
     const gnd = P({ x: 0, y: 0, z: 0 });
-    if (b && gnd){
-      const r = Math.max(6, (gnd.y - b.y) * 1.0);
+    const bb = P({ x: 0, y: 0, z: lift });
+    if (b && gnd && bb){
+      if (lift > 0){
+        coreLine(gnd.x, gnd.y, bb.x, bb.y, 'rgba(210,205,225,.6)', 2.5);
+      }
+      const r = Math.max(6, (gnd.y - b.y) * 0.55);
       const grad = ctx.createRadialGradient(b.x - r*0.3, b.y - r*0.35, r*0.15, b.x, b.y, r);
       grad.addColorStop(0, '#ffffff'); grad.addColorStop(1, '#b9b2c4');
       ctx.beginPath(); ctx.arc(b.x, b.y, r, 0, Math.PI * 2);
@@ -1125,20 +1201,30 @@ function drawDtl(t){
     }
   }
 
-  /* CLUB PATH: the arc itself lit up through the ball (transient) */
+  /* CLUB PATH: springs OUT of the arc at the strike point — lit arc segment
+     upstream, straight tangent ray out past the ball */
   if (fa > 0.01){
     const thImp = thetaAtImpact(s);
     const segPts = [];
-    for (let i = 0; i <= 26; i++){
-      const th = thImp - 0.14 + (0.20 * i) / 26;
+    for (let i = 0; i <= 16; i++){
+      const th = thImp - 0.16 + (0.16 * i) / 16;
       const p = P(arcPosition(th, s));
+      if (p) segPts.push(p);
+    }
+    const tv = tangentAt(thImp, s);
+    const n = Math.hypot(tv.x, tv.y, tv.z) || 1;
+    const dir3 = { x: tv.x / n, y: tv.y / n, z: tv.z / n };
+    const imp3 = arcPosition(thImp, s);
+    for (let i = 1; i <= 10; i++){
+      const d = (0.75 * i) / 10;
+      const p = P({ x: imp3.x + dir3.x * d, y: imp3.y + dir3.y * d, z: imp3.z + dir3.z * d });
       if (p) segPts.push(p);
     }
     litSegment(segPts, A.path, fa);
     if (segPts.length){
       const pe = segPts[segPts.length - 1];
       label('CLUB PATH ' + fmtNum(deriveImpact(s).clubPath, 1) + '°',
-            clamp(pe.x + 14, 8, W - 130), clamp(pe.y - 4, 14, H - 10), A.path, 11, 'left', false, fa);
+            clamp(pe.x + 12, 8, W - 130), clamp(pe.y - 6, 14, H - 10), A.path, 11, 'left', false, fa);
     }
   }
 
