@@ -98,10 +98,10 @@
   .inset::after{content:"";position:absolute;left:10px;right:10px;top:24px;height:2px;
     border-radius:2px;background:var(--gold);opacity:0;transition:opacity .3s var(--ease)}
   .inset.hit::after{opacity:1}
-  #insetCv{display:block;width:100%;height:72px}
+  #insetCv{display:block;width:100%;height:100px}
   .inset .eyebrow > span:first-child{margin-right:8px}
   .inset .eyebrow .ez{display:none}   /* compact inset → short title always */
-  @media (max-width:620px){ #insetCv{height:58px}
+  @media (max-width:620px){ #insetCv{height:76px}
     .inset .eyebrow{font-size:9px;padding:5px 8px 2px} }
 
   /* ---------- controls ---------- */
@@ -484,6 +484,37 @@ function flashAlpha(){
   const dt = performance.now() - vecFlashAt;
   return dt < 900 ? 1 : clamp(1 - (dt - 900) / 700, 0, 1);
 }
+const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+function cometU(){                            // eased 0..1 pulse position along the segment
+  const u = clamp((performance.now() - vecFlashAt) / 1200, 0, 1);
+  return u < 0.5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2;
+}
+/* outcome segment: the arc itself, lit up through the ball — white-hot core
+ * over a token-hued glow, with a small light pulse travelling downstream */
+function litSegment(pts, hue, fa){
+  if (pts.length < 2 || fa <= 0.01) return;
+  ctx.save(); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  const strokePts = () => {
+    ctx.beginPath();
+    pts.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y));
+    ctx.stroke();
+  };
+  ctx.globalAlpha = 0.38 * fa; ctx.strokeStyle = hue; ctx.lineWidth = 11; strokePts();
+  ctx.globalAlpha = fa; ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 4; strokePts();
+  if (!REDUCED){
+    const u = cometU();
+    const i = Math.min(pts.length - 1, Math.max(0, Math.round(u * (pts.length - 1))));
+    const c = pts[i];
+    const g = ctx.createRadialGradient(c.x, c.y, 0, c.x, c.y, 11);
+    g.addColorStop(0, 'rgba(255,255,255,' + 0.95 * fa + ')');
+    g.addColorStop(0.45, hue);
+    g.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.globalAlpha = fa;
+    ctx.beginPath(); ctx.arc(c.x, c.y, 11, 0, Math.PI * 2);
+    ctx.fillStyle = g; ctx.fill();
+  }
+  ctx.restore();
+}
 
 /* scene clip: everything in the main canvas is drawn OUTSIDE the inset
  * rect (+6 px margin), so the arc/glass can never collide with it */
@@ -686,8 +717,14 @@ function faceMap(){
   const K = 2.2;                                // vertical compression: arc reads as a U, like DTL
   const EXAG = 6, CAP = 0.042;                  // below-ground exaggeration (on top of K)
   const zMap = z => z >= 0 ? z * K : -CAP * Math.tanh(-z * EXAG / CAP) * (K * 0.55);
+  /* progressive horizontal compression: the contact zone (±0.28 m around
+     the ball) stays true-scale; the outer arms compress to 0.62× so the
+     arc reads as a tighter U */
+  const XC = 0.28, KX = 0.62;
+  const xComp = xm => Math.abs(xm) <= XC ? xm
+    : Math.sign(xm) * (XC + (Math.abs(xm) - XC) * KX);
   return { scale, bx, gy, K,
-    X: xm => bx + xm * scale,
+    X: xm => bx + xComp(xm) * scale,
     Y: zm => gy - zMap(zm) * scale };
 }
 function drawFace(t){
@@ -763,10 +800,10 @@ function drawFace(t){
     }
   }
 
-  /* --- glass (swing plane) behind the arc: same quad source as the DTL ribbon,
-     projected to face-on (x, z·K). Fill only, no border, faint inner rungs. --- */
+  /* --- glass (swing plane + direction) behind the arc: same quad source as
+     the DTL ribbon, projected to face-on (x, z·K). Fill only, no border. --- */
   {
-    const heroP = state.sel === 'plane';
+    const heroP = state.sel === 'plane' || state.sel === 'dir';
     const { u, m } = planeBasis(s.planeAngle, s.swingDirection);
     const lp = lpWorld(s);
     const pt2 = (a, b2) => ({ x: M.X(lp.x + a * u.x + b2 * m.x),
@@ -841,32 +878,20 @@ function drawFace(t){
     ctx.restore();
   }
 
-  /* --- attack tangent: transient — appears on parameter change, fades out.
-     Drawn with the same vertical compression K as the arc so it lies ON the arc;
-     the label shows the TRUE engine value. --- */
+  /* --- CLUB ATTACK: the arc itself lit up through the ball (transient).
+     No arrow, no wedge — the segment IS the arc at impact; a small light
+     pulse travels downstream through the strike. --- */
   if (fa > 0.01){
-    const tv = tangentAt(thImp, s);                       // motion direction (downstream)
-    const zK = tv.z * M.K;
-    const len2 = Math.hypot(tv.x, zK) || 1;
-    const dx = tv.x / len2, dz = zK / len2;               // face-on components (+z up, ×K)
-    const px2 = M.X(0), py2 = M.Y(cz);                    // impact point on the ball
-    const Lin = W >= 700 ? 150 : 110, Lout = W >= 700 ? 55 : 42;
-    const prog = 0.35 + 0.65 * t;                         // draw-in toward the ball
-    const sx2 = px2 - dx * Lin * prog, sy2 = py2 + dz * Lin * prog;   // upstream start
-    const ex = px2 + dx * Lout, ey = py2 - dz * Lout;                 // downstream tip
-    coreLine(sx2, sy2, ex, ey, A.attack, 3, 'rgba(244,112,184,.18)', fa);
-    arrowHead(ex, ey, Math.atan2(-dz, dx), 9, A.attack, fa);
-    /* angle wedge between tangent and a dashed horizontal reference */
-    ctx.save(); ctx.globalAlpha = fa;
-    ctx.setLineDash([4, 4]); ctx.strokeStyle = 'rgba(245,242,255,.4)'; ctx.lineWidth = 1.5;
-    ctx.beginPath(); ctx.moveTo(px2 - 60, py2); ctx.lineTo(px2 + 66, py2); ctx.stroke();
-    ctx.setLineDash([]);
-    const angT = Math.atan2(-dz, dx);                     // screen angle of motion
-    ctx.strokeStyle = A.attack; ctx.lineWidth = 2; ctx.globalAlpha = 0.9 * fa;
-    ctx.beginPath(); ctx.arc(px2, py2, 28, 0, angT, angT < 0); ctx.stroke();
-    ctx.restore();
+    const segPts = [];
+    for (let i = 0; i <= 26; i++){
+      const th = thImp - 0.14 + (0.20 * i) / 26;
+      const p = arcPosition(th, s);
+      segPts.push({ x: M.X(p.x), y: M.Y(p.z) });
+    }
+    litSegment(segPts, A.attack, fa);
+    const pe = segPts[segPts.length - 1];
     label('CLUB ATTACK ' + fmtNum(imp.attackAngle, 1) + '°',
-          Math.min(ex + 12, W - 150), ey - 16, A.attack, W >= 700 ? 11 : 10, 'left', false, fa);
+          Math.min(pe.x + 14, W - 150), pe.y - 16, A.attack, W >= 700 ? 11 : 10, 'left', false, fa);
   }
 
   /* --- low point: single plain marker (numbers/sequence live in the inset variant's inset) --- */
@@ -886,16 +911,7 @@ function drawFace(t){
 
   /* (no path arrow in Face On — path is DTL's transient vector) */
 
-  /* --- hero: swing direction (foreshortened ground arrow at the ball) --- */
-  if (state.sel === 'dir'){
-    const a = d2r(state.dir);
-    const L = 120;
-    const x2 = bx + Math.cos(a) * L, y2 = gy + 10 - Math.sin(a) * 26;
-    coreLine(bx - Math.cos(a) * L * 0.45, gy + 10 + Math.sin(a) * 12, x2, y2,
-             A.sec, 3, 'rgba(157,139,255,.2)', 1);
-    arrowHead(x2, y2, Math.atan2(y2 - (gy + 10), x2 - bx), 9, A.sec, 1);
-    label('SWING DIRECTION ' + fmtNum(state.dir, 1) + '°', bx + 30, gy + 34, A.sec, 11, 'left');
-  }
+  /* (swing direction has no arrow/text — the glass is its illustration) */
 
   /* --- hero: arc height (vertical bracket ground ↔ arc bottom, left of low point) --- */
   if (state.sel === 'arc'){
@@ -910,9 +926,7 @@ function drawFace(t){
           Math.abs(yB - yA) > 16 ? (yA + yB) / 2 : yA - 18, A.depth, 11, 'right', true);
   }
 
-  /* --- hero: plane label --- */
-  if (state.sel === 'plane')
-    label('SWING PLANE ' + fmtNum(state.plane, 0) + '°', W * 0.72, gy - 90, A.plane, 11, 'left');
+  /* (swing plane has no label — the glass is its illustration) */
 
   ctx.restore();                              // close the inset punch-out clip
 }
@@ -934,9 +948,12 @@ function strokeArc(s, M, style, width){
 
 /* ============================================================ DOWN THE LINE */
 function dtlCam(){
-  return { pos:{ x:-2.55, y:0, z:0.85 }, look:{ x:1.9, y:0, z:0.34 },
-           fov: d2r(H < 220 ? 36 : 32), xStretch: 1.25 };
+  /* stands slightly on the trail side of the line, hip height — gives an
+     asymmetric, more spatial DTL and pushes the scene toward the right */
+  return { pos:{ x:-2.35, y:0.5, z:1.0 }, look:{ x:2.3, y:-0.12, z:0.14 },
+           fov: d2r(H < 220 ? 36 : 32), xStretch: 1.1 };
 }
+const DTL_SWEEP = d2r(60);                    // longer arc into the perspective
 function drawDtl(t){
   const s = engineState();
   const B = buildCamera(dtlCam(), W, H);
@@ -978,67 +995,55 @@ function drawDtl(t){
     }
   }
 
-  /* swing-plane ribbon (hero when plane selected) */
+  /* swing-plane glass: the ONLY illustration of plane + direction.
+     Extended along u into the perspective; fill only, no border. */
   {
-    const alpha = state.sel === 'plane' ? 1 : 0.35;
+    const heroG = state.sel === 'plane' || state.sel === 'dir';
+    const alpha = heroG ? 1 : 0.45;
     const { u, m } = planeBasis(s.planeAngle, s.swingDirection);
     const lp = lpWorld(s);
     const pt = (a, b2) => ({ x: lp.x + a*u.x + b2*m.x, y: lp.y + a*u.y + b2*m.y, z: lp.z + a*u.z + b2*m.z });
-    const poly = [pt(-0.95, -0.04), pt(0.95, -0.04), pt(0.95, 1.0), pt(-0.95, 1.0)]
+    const poly = [pt(-1.05, -0.04), pt(1.5, -0.04), pt(1.5, 1.0), pt(-1.05, 1.0)]
       .map(P);
     if (poly.every(Boolean)){
       ctx.save(); ctx.globalAlpha = alpha;
       ctx.beginPath();
       poly.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y));
       ctx.closePath();
-      ctx.fillStyle = 'rgba(147,164,242,.14)'; ctx.fill();   // glass: fill only, no border
+      ctx.fillStyle = 'rgba(147,164,242,' + (heroG ? 0.26 : 0.14) + ')';
+      ctx.fill();
       /* faint inner rungs instead of an outline */
       ctx.lineWidth = 1;
       for (const bf of [0.30, 0.65]){
         const b2 = -0.04 + bf * 1.04;
-        const ra = P(pt(-0.95, b2)), rb = P(pt(0.95, b2));
+        const ra = P(pt(-1.05, b2)), rb = P(pt(1.5, b2));
         if (ra && rb){
-          ctx.strokeStyle = 'rgba(147,164,242,.07)';
+          ctx.strokeStyle = 'rgba(147,164,242,' + (heroG ? 0.11 : 0.07) + ')';
           ctx.beginPath(); ctx.moveTo(ra.x, ra.y); ctx.lineTo(rb.x, rb.y); ctx.stroke();
         }
       }
       ctx.restore();
-      if (state.sel === 'plane'){
-        const lab = poly[3];
-        label('SWING PLANE ' + fmtNum(state.plane, 0) + '°',
-              clamp(lab.x, 8, W - 130), clamp(lab.y + 16, 14, H - 14), A.plane, 11, 'left');
-      }
     }
   }
 
-  /* swing direction: solid ray ON the ground from the ball */
-  {
-    const alpha = state.sel === 'dir' ? 1 : 0.45;
-    const psi = d2r(-s.swingDirection);
-    const dirV = { x: Math.cos(psi), y: Math.sin(psi), z: 0 };
-    const a = P({ x: -0.5 * dirV.x, y: -0.5 * dirV.y, z: 0 });
-    const b = P({ x: 6 * dirV.x, y: 6 * dirV.y, z: 0 });
-    if (a && b){
-      coreLine(a.x, a.y, b.x, b.y, A.sec, state.sel === 'dir' ? 3 : 2.5,
-               'rgba(157,139,255,.18)', alpha);
-      arrowHead(b.x, b.y, Math.atan2(b.y - a.y, b.x - a.x), 9, A.sec, alpha);
-      if (state.sel === 'dir')
-        label('SWING DIRECTION ' + fmtNum(state.dir, 1) + '°',
-              clamp(b.x, 60, W - 60), clamp(b.y - 14, 14, H - 14), A.sec, 11, 'center');
-    }
-  }
-
-  /* swing arc (white, 3 px core) */
+  /* swing arc (white core) — lights up while a change is fresh */
   {
     ctx.save();
     ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-    for (const pass of [ ['rgba(255,255,255,.14)', 9], ['rgba(255,255,255,.95)', 3] ]){
+    const passes = [ ['rgba(255,255,255,.14)', 9, 1] ];
+    if (fa > 0.01){
+      passes.unshift(['rgba(147,164,242,.12)', 20, fa]);   // violet light wash
+      passes.push(['rgba(255,255,255,.30)', 6, fa]);       // hot inner glow
+    }
+    passes.push(['rgba(255,255,255,.95)', 3, 1]);
+    for (const pass of passes){
+      ctx.globalAlpha = pass[2];
       ctx.strokeStyle = pass[0]; ctx.lineWidth = pass[1];
       ctx.beginPath();
       let started = false;
-      const N = 120;
+      const N = 130;
       for (let i = 0; i <= N; i++){
-        const th = -SWEEP_RAD + (2 * SWEEP_RAD * i) / N;
+        const th = -DTL_SWEEP + (2 * DTL_SWEEP * i) / N;
         const p = P(arcPosition(th, s));
         if (!p){ started = false; continue; }
         if (!started){ ctx.moveTo(p.x, p.y); started = true; } else ctx.lineTo(p.x, p.y);
@@ -1059,7 +1064,7 @@ function drawDtl(t){
       ctx.restore();
       if (state.sel === 'low')
         label('LOW POINT ' + fmtSigned(effectiveLpx(s) * 100, 1) + ' cm',
-              lp.x + 16, lp.y - 4, A.gold, 11, 'left');
+              lp.x - 14, lp.y + 16, A.gold, 11, 'right');
     }
   }
 
@@ -1120,23 +1125,20 @@ function drawDtl(t){
     }
   }
 
-  /* CLUB PATH: transient — appears on parameter change, fades out */
+  /* CLUB PATH: the arc itself lit up through the ball (transient) */
   if (fa > 0.01){
     const thImp = thetaAtImpact(s);
-    const tv = tangentAt(thImp, s);
-    const n = Math.hypot(tv.x, tv.y, tv.z) || 1;
-    const dir3 = { x: tv.x / n, y: tv.y / n, z: tv.z / n };
-    const impact3 = { x: 0, y: 0, z: clubBallContact(s).clubZ };
-    const prog = 0.35 + 0.65 * t;
-    const back = 0.85 * prog, fwdL = 0.6;
-    const pA = P({ x: impact3.x - dir3.x * back, y: impact3.y - dir3.y * back, z: impact3.z - dir3.z * back });
-    const pB = P({ x: impact3.x + dir3.x * fwdL, y: impact3.y + dir3.y * fwdL, z: impact3.z + dir3.z * fwdL });
-    if (pA && pB){
-      coreLine(pA.x, pA.y, pB.x, pB.y, A.path, 3, 'rgba(91,200,245,.2)', fa);
-      arrowHead(pB.x, pB.y, Math.atan2(pB.y - pA.y, pB.x - pA.x), 9, A.path, fa);
-      const mx = pA.x + (pB.x - pA.x) * 0.3, myy = pA.y + (pB.y - pA.y) * 0.3;
+    const segPts = [];
+    for (let i = 0; i <= 26; i++){
+      const th = thImp - 0.14 + (0.20 * i) / 26;
+      const p = P(arcPosition(th, s));
+      if (p) segPts.push(p);
+    }
+    litSegment(segPts, A.path, fa);
+    if (segPts.length){
+      const pe = segPts[segPts.length - 1];
       label('CLUB PATH ' + fmtNum(deriveImpact(s).clubPath, 1) + '°',
-            clamp(mx + 16, 8, W - 130), clamp(myy + 10, 14, H - 10), A.path, 11, 'left', false, fa);
+            clamp(pe.x + 14, 8, W - 130), clamp(pe.y - 4, 14, H - 10), A.path, 11, 'left', false, fa);
     }
   }
 
