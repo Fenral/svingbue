@@ -315,6 +315,7 @@
 
 <script type="module">
 import { rigAt, buildBasis, project } from './impact-camera.js';
+import { fitZoom, gridStops, lateralStops, dollyRig } from './impact-framing.js';
 import { selectOutcome } from './impact-outcome.js';
 import { buildAnnotations, placeLabels, statsFlip, cometPoint, MEASURE_KEEPOUT } from './impact-annotate.js';
 
@@ -396,10 +397,17 @@ function line3(a, b) {
   ctx.beginPath(); ctx.moveTo(pa.x, pa.y); ctx.lineTo(pb.x, pb.y); ctx.stroke();
 }
 
-function drawGrid(s) {
+function drawGrid(s, extent = 200, halfWidth = 0) {
   const topA = clamp(s - 1, 0, 1);
   const sideA = clamp(1 - Math.abs(s - 1), 0, 1);
   const perspA = clamp(1 - s, 0, 1);
+  // Rutenettet følger slaget i stedet for å være låst til 50/100/150/200.
+  // `span` er hvor langt linjene på tvers må rekke, og `lat` hvilke
+  // breddeguider som trengs for å dekke utfallet.
+  const stops = gridStops(extent);
+  const lat = lateralStops(halfWidth);
+  const span = Math.max(150, Math.abs(lat[0]) + 50);
+  const reach = stops[stops.length - 1] + 25;
   // tåkebånd langs horisonten — finnes kun i perspektiv (mock drawGrid)
   if (perspA > 0.02) {
     const hy = H * 0.60;
@@ -413,41 +421,68 @@ function drawGrid(s) {
   ctx.lineWidth = 1;
   // nedslagslinjer på tvers (50 m-intervaller) + lengdereferanser (mock drawGrid)
   ctx.font = GRID_FONT;
-  for (const x of [50, 100, 150, 200]) {
+  for (const x of stops) {
     ctx.strokeStyle = rgba(COL.grid, 0.10 + 0.14 * topA);
-    line3([x, -150, 0], [x, 150, 0]);
-    const lp = P(x, 112, 0);
+    line3([x, -span, 0], [x, span, 0]);
+    // Etiketten satt like innenfor bredderammen så den følger med når scenen
+    // zoomer ut, i stedet for å bli stående på en fast 112 m-kolonne.
+    const lp = P(x, Math.min(span - 12, 112), 0);
     if (lp) {
       ctx.fillStyle = rgba(COL.grid, 0.35 + 0.3 * topA);
       ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
       ctx.fillText(String(x), lp.x + 4, lp.y - 2);
     }
   }
-  // sideveis-guider ±50/±100 + breddereferanser (mest synlig i TOP)
-  if (topA > 0.05) {
-    for (const y of [-100, -50, 50, 100]) {
-      ctx.strokeStyle = rgba(COL.grid, 0.09 * topA);
-      line3([0, y, 0], [225, y, 0]);
+  // Sideveis-guider + breddereferanser. Disse blendet tidligere til NULL i
+  // FLIGHT (topA=0 der), så den stasjonen sto helt uten målestokk — man kunne
+  // ikke lese av hverken lengde eller bredde. Nå holder de en synlig bunn i
+  // perspektiv og forsterkes mot TOP.
+  const latA = Math.max(0.55 * perspA, topA);
+  if (latA > 0.05) {
+    for (const y of lat) {
+      ctx.strokeStyle = rgba(COL.grid, 0.09 * latA);
+      line3([0, y, 0], [reach, y, 0]);
     }
-    const l = P(12, -100, 0), r = P(12, 100, 0);
-    ctx.fillStyle = rgba(COL.grid, 0.5 * topA);
+    // Merk bare det ytterste paret, ellers blir TOP full av tall.
+    const edge = Math.max(...lat);
+    const l = P(12, -edge, 0), r = P(12, edge, 0);
+    ctx.fillStyle = rgba(COL.grid, 0.5 * latA);
     ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
-    if (l) ctx.fillText('100 L', l.x, l.y);
-    if (r) ctx.fillText('100 R', r.x, r.y);
+    if (l) ctx.fillText(edge + ' L', l.x, l.y);
+    if (r) ctx.fillText(edge + ' R', r.x, r.y);
+  }
+  // Lengdereferanser i FLIGHT: i perspektiv står tallene langs SENTERLINJEN.
+  // Dybden komprimeres kraftig mot horisonten, så 250 og 300 m havner få
+  // piksler fra hverandre — uten avstandsvakt blir de en uleselig stabel.
+  // Vi går NEDENFRA og opp (nærmest kamera først) og hopper over enhver
+  // etikett som ikke får minst LABEL_GAP piksler for seg selv.
+  if (perspA > 0.05) {
+    const LABEL_GAP = 22;
+    ctx.fillStyle = rgba(COL.grid, 0.42 * perspA);
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    let lastY = Infinity;
+    for (let i = stops.length - 1; i >= 0; i--) {
+      const cp = P(stops[i], 0, 0);
+      if (!cp) continue;
+      if (lastY - cp.y < LABEL_GAP) continue;
+      ctx.fillText(stops[i] + ' m', cp.x, cp.y + 3);
+      lastY = cp.y;
+    }
   }
   // høydeguider 20/40 m (SIDE)
   if (sideA > 0.05 && s > 0.15) {
     ctx.setLineDash([2, 5]);
-    for (const z of [20, 40]) {
+    for (const z of [20, 40, 60]) {
       ctx.strokeStyle = rgba(COL.grid, 0.11 * sideA);
-      line3([0, 0, z], [225, 0, z]);
+      line3([0, 0, z], [reach, 0, z]);
     }
     ctx.setLineDash([]);
   }
-  // target-linjen — består alltid (verdensanker x≈228)
+  // target-linjen — består alltid, men strekker seg nå forbi nedslaget i
+  // stedet for å stoppe på det gamle faste ankeret x≈228.
   ctx.setLineDash([4, 7]);
   ctx.strokeStyle = rgba(COL.grid, 0.32);
-  line3([0, 0, 0], [228, 0, 0]);
+  line3([0, 0, 0], [reach, 0, 0]);
   ctx.setLineDash([]);
   // ballen
   const ball = P(0, 0, 0);
@@ -889,6 +924,36 @@ function updateStats(outcome) {
    koste bilder, aldri strekke reisen. */
 const TAU_S = 0.11;
 let lastT = 0;
+/**
+ * Skudd-tilpasset innramming (§5.5: pos/look/fov/refDist er fritt å re-tune).
+ *
+ * To grep, begge kontinuerlige i station-blendingen:
+ *   1) sentrer blikkpunktet nedover banen — men BARE i ortho, skalert med
+ *      orthoK, ellers ville FLIGHT-kameraet gli forbi ballen;
+ *   2) zoom ved å dolly kameraet bakover, som skalerer både ortho og
+ *      perspektiv uten å røre fov (se impact-framing.js for hvorfor fov-
+ *      utvidelse ble forkastet: >100° fisheye ved 386 m).
+ * Eksakt-ortografi (A2) er bevart strukturelt — zDiv = refDist ved orthoK=1
+ * uansett hvilken verdi refDist får.
+ */
+function frameForShot(rig, outcome, aspectFix) {
+  const carry = Math.max(outcome.m.carry, 1);
+  const apex = outcome.m.apex || 0;
+  const side = Math.abs(outcome.m.side || 0);
+  const mid = carry / 2;
+  const dx = (mid - rig.look.x) * rig.orthoK;
+  const look = { x: rig.look.x + dx, y: rig.look.y, z: rig.look.z };
+  const pos = { x: rig.pos.x + dx, y: rig.pos.y, z: rig.pos.z };
+  const maxDist = Math.max(mid, apex, side + 8);   // halv-utstrekning som må få plass
+  const k = fitZoom(maxDist);
+  const zoomed = dollyRig({ ...rig, pos, look }, k);
+  return {
+    rig: { ...zoomed, xStretch: (rig.xStretch ?? 1) * aspectFix },
+    extent: carry,
+    halfWidth: side,
+  };
+}
+
 function frame(now) {
   const dt = Math.min((now - lastT) / 1000 || 0, 0.25);
   lastT = now;
@@ -906,11 +971,14 @@ function frame(now) {
   // reisen kontinuerlig.
   const rig0 = rigAt(state.station);
   const aspectFix = 1 + ((W / H) / 0.4647 - 1) * rig0.orthoK;
-  basis = buildBasis({ ...rig0, xStretch: (rig0.xStretch ?? 1) * aspectFix }, { w: W, h: H });
-  ctx.clearRect(0, 0, W, H);
-  drawGrid(state.station);
-  for (const pin of state.pins) drawTraj(pin.outcome, 'ghost');
+  // Skudd-tilpasset innramming: kjenn slaget FØRST, så sentrer og zoom riggen
+  // rundt det. selectOutcome er memoisert, så å hente den før basis er gratis.
   const liveOutcome = selectOutcome(state);
+  const framed = frameForShot(rig0, liveOutcome, aspectFix);
+  basis = buildBasis(framed.rig, { w: W, h: H });
+  ctx.clearRect(0, 0, W, H);
+  drawGrid(state.station, framed.extent, framed.halfWidth);
+  for (const pin of state.pins) drawTraj(pin.outcome, 'ghost');
   drawTraj(liveOutcome, 'active');
   updateStats(liveOutcome);
 
