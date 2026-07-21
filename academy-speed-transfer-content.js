@@ -9,7 +9,7 @@ export const SPEED_TRANSFER_CONTENT=freeze({
     {id:'lab',eyebrow:'TRANSFER LAB · DEFINITION + MODEL',title:'Build the speed equation.',body:'Name the measured speeds, derive the ratio, then change one input at a time.'},
     {id:'influence',eyebrow:'EQUAL-OUTPUT PROOF · LIVE MODEL',title:'Multiplication, not shares.',body:'Make two different CLUB → RATIO paths meet one Ball Speed ruler.'},
     {id:'boundary',eyebrow:'COLLISION BOUNDARY · NOT MODELED',title:'Know what the ratio cannot see.',body:'Separate a modeled speed ratio from energy, centeredness and equipment diagnosis.'},
-    {id:'mastery',eyebrow:'4 OF 5 + LIVE TRANSFER',title:'Prove the outcome does not reveal the delivery.',body:'Match 130.56 mph twice with two genuinely different, unclamped transfers.'},
+    {id:'mastery',eyebrow:'4 OF 5 + LIVE TRANSFER',title:'Prove the outcome does not reveal the delivery.',body:'Match ~117.95 mph twice with two genuinely different, unclamped transfers.'},
     {id:'result',eyebrow:'SPEED TRANSFER EVIDENCE',title:'Transfer understood.',body:'Measured speed, modeled ratio and Ball Speed are now separate in your evidence.'}
   ],
   lab:[
@@ -23,7 +23,7 @@ export const SPEED_TRANSFER_CONTENT=freeze({
     {id:'multiply',label:'MULTIPLY',copy:'Club Speed and Smash do not own separate shares of Ball Speed. One is multiplied by the other.'},
     {id:'speed',label:'LOCAL SPEED',copy:'+1 mph Club Speed → +1.328 mph Ball Speed · FOR THIS STATE · MODEL'},
     {id:'ratio',label:'LOCAL RATIO',copy:'+1° Spin Loft → −0.004 Smash → −0.36 mph Ball Speed · FOR THIS STATE · MODEL'},
-    {id:'equal',label:'EQUAL OUTPUT',copy:'96 × 1.360 = 130.56 mph · 102 × 1.280 = 130.56 mph'},
+    {id:'equal',label:'EQUAL OUTPUT',copy:'82 × 1.438 = 117.94 mph · 91 × 1.296 = 117.96 mph'},
     {id:'ports',label:'BOUNDARY PORTS',copy:'Impact location, effective mass and face/ball collision are real-world factors this solve does not model.'}
   ],
   myths:[
@@ -31,21 +31,21 @@ export const SPEED_TRANSFER_CONTENT=freeze({
     {claim:'Smash is percent energy transferred.',choices:['True','False'],answerIndex:1,explanation:'False. Smash is Ball Speed divided by Club Speed; it has no percent unit.'},
     {claim:'Low Smash proves an off-center hit.',choices:['True','Not in this model'],answerIndex:1,explanation:'Impact location is not an input to the current Flightglass transfer solve.'},
     {claim:'More Club Speed always creates more Ball Speed.',choices:['Always','Only if the ratio does not fall enough to offset it'],answerIndex:1,explanation:'A lower ratio can offset a faster club. Compare the equal-output pair.'},
-    {claim:'1.42 is a universal physical maximum.',choices:['True','False · current preset bound'],answerIndex:1,explanation:'It is the upper model clamp for the one shipped 7-iron preset.'}
+    {claim:'1.52 is a universal physical maximum.',choices:['True','False · current preset bound'],answerIndex:1,explanation:'It is the upper model clamp for the one shipped 7-iron preset.'}
   ],
   masteryTasks:[
     {kind:'choice',prompt:'Smash Factor is:',choices:['The percentage of energy transferred','Ball Speed divided by Club Speed','Impact distance from face center','Club Speed divided by Ball Speed'],answerIndex:1,evidence:'Ratio definition'},
     {kind:'choice',prompt:'Club Speed is 90 mph and Smash is 1.328. Ball Speed is:',choices:['67.77 mph','91.33 mph','119.52 mph','132.80 mph'],answerIndex:2,evidence:'Product arithmetic'},
     {kind:'choice',prompt:'What changes current Flightglass Smash before a clamp?',choices:['Impact location','Simplified Spin Loft','Face Angle','Wind'],answerIndex:1,evidence:'Model path'},
     {kind:'choice',prompt:'A Flightglass state shows Smash 1.28. What can you conclude?',choices:['The strike was on the toe','Most energy was lost','The model returned a 1.28 speed ratio','The golfer needs a different shaft'],answerIndex:2,evidence:'Inference boundary'},
-    {kind:'live-transfer',mandatory:true,prompt:'Save two unclamped states at 130.46–130.66 mph, at least 5 mph, 15° Spin Loft and 0.06 Smash apart; compare them and state the inference limit.'}
+    {kind:'live-transfer',mandatory:true,prompt:'Save two unclamped states at 117.85–118.05 mph, at least 5 mph, 15° Spin Loft and 0.06 Smash apart; compare them and state the inference limit.'}
   ],
   sheets:{
     clubSpeed:{title:'Club Speed',tags:['DEFINITION','MEASURED INPUT'],body:'Linear speed of the clubhead geometric center immediately before first contact. It is a scalar speed—not energy, effort or technique.'},
     smash:{title:'Smash Factor',tags:['DEFINITION','MODEL OUTPUT'],body:'Ball Speed divided by Club Speed. Current Flightglass changes it through simplified Spin Loft and clamps it for one 7-iron preset. It is not centeredness.'},
     ballSpeed:{title:'Ball Speed',tags:['DEFINITION','PRIMARY OUTCOME'],body:'Speed immediately after impact. The displayed identity is Club Speed × Smash. It does not reveal which delivery created it.'},
     influence:{title:'What changes the outcome',tags:['MULTIPLICATIVE','FOR THIS STATE'],body:'Club Speed is the scale; modeled Smash is the multiplier; simplified Spin Loft modifies Smash. Dynamic Loft and Attack are components of that gap, not extra shares.'},
-    equal:{title:'Equal output',tags:['LIVE PROOF','INFERENCE LIMIT'],body:'96 mph at 25° and 102 mph at 45° both return 130.56 mph. Ball Speed alone cannot identify the delivery.'},
+    equal:{title:'Equal output',tags:['LIVE PROOF','INFERENCE LIMIT'],body:'82 mph at 22° and 91 mph at 41° both return ~117.95 mph. Ball Speed alone cannot identify the delivery.'},
     limits:{title:'Model limits',tags:['ONE 7-IRON PRESET','NOT MODELED'],body:'Impact location, effective mass, face flexibility, shaft dynamics, friction, ball construction and measured collision efficiency are outside this solve.'},
     sources:{title:'Sources',tags:['DEFINITION SOURCES'],body:'TrackMan Club Speed, Smash Factor, Ball Speed and Smash Index definitions. Exact response and clamps are Flightglass model claims.'}
   }
