@@ -190,9 +190,13 @@ motorutvidelse trengs:
 | Total | `total` | yd | ESTIMATE (`carry + carry*rollFrac`) |
 
 I tillegg returneres `shape` (kvalitativ etikett), `faceToPath`, samt
-breakdown-konstanter (`startFaceW`, `launchLoftW`, `spinAxisGain`, `rollFrac`,
-`landingApexTerm`, …) som eksisterende chip-forklaringer allerede bruker som
-eneste sannhetskilde.
+breakdown-konstanter (`startFaceW`, `launchLoftW`, `rollFrac`, `landingApexTerm`,
+…) som eksisterende chip-forklaringer allerede bruker som eneste sannhetskilde.
+
+**Merk (3-D-spinnmotoren):** `spinAxisGain` finnes ikke lenger. Spinnaksen er nå
+den eksakte D-plan-tilten fra `v × n`, ikke en fittet gain, så det er ingen
+gain-konstant å eksponere. Kalibreringen som *finnes* er `spinCalibration`
+(= `preset.spinCal`), som skalerer den beregnede Penner-magnituden.
 
 ### 2.4 Banegeometri
 
@@ -219,9 +223,15 @@ skrives for å erstatte den.
 
 ### 2.5 Motorens egne klemmer (eksisterende, dokumentert, ikke rør)
 
-`solveFlight` klemmer allerede internt: `spinAxis` ±38°, `smashEff` [1.15, 1.42],
-`backspin` [1500, 9000], `landingAngle` [32, 60], `offline` ≤ 55 % av carry
-(`OFFLINE_CAP_FRAC`), `curve` ≤ 60 % av carry.
+`solveFlight` klemmer allerede internt: `smashEff` [1.15, 1.42],
+`landingAngle` [32, 60], og total spinn ≤ 9000 rpm (`MAX_TOTAL_SPIN_RPM`).
+
+**Merk (3-D-spinnmotoren):** tre klemmer som sto her er borte og må ikke
+gjeninnføres. `spinAxis` har ingen ±38°-klemme — tilten er eksakt geometri.
+`backspin` har **intet 1500-gulv**; spinnet går kontinuerlig mot null med
+spinn-loften, og bare taket på 9000 står igjen. `OFFLINE_CAP_FRAC` (55 %) og
+carry-klemmen på `curve` (60 %) finnes ikke i koden: `offline` er
+`carry·sin(startDirection) + curve` uten tak (`impact-flight.js:294`).
 
 **Hard grense:** `CLAUDE.md` sier
 > Do not change golf physics output without a failing regression test and
@@ -326,16 +336,24 @@ motoratferd, ikke som skjult klemming.
 ```js
 // impact-outcome.js
 physical = {
-  inDomain: outcome.raw.spinLoft > 0,
-  reason: outcome.raw.spinLoft > 0 ? null : 'spin-loft'
+  inDomain: outcome.raw.signedVerticalSpinLoftDeg > 0,
+  reason: outcome.raw.signedVerticalSpinLoftDeg > 0 ? null : 'spin-loft'
 }
 ```
 
-**Hvorfor akkurat `spinLoft > 0`:** `spinLoft = dynamicLoft − attackAngle`
-(`impact-flight.js:125`). Hjørnet dyn loft 0 / attack +15 gir spinLoft = −15°.
-Motoren regner backspin som `Math.abs(spinLoft) * ballSpeed * spinK`
-(`impact-flight.js:197`) — `abs()` gjør at negativ spin loft rapporteres som
-**backspin** når fysikken gir **topspin**. Det er den eneste kombinasjonen der
+**Hvorfor akkurat `signedVerticalSpinLoftDeg > 0`:** hjørnet dyn loft 0 /
+attack +15 gir signert vertikal spinn-loft = −15°. Motoren rapporterer
+`backspin` som absoluttprojeksjonen av spinnvektoren, så negativ spinn-loft
+rapporteres som **backspin** når fysikken gir **topspin**.
+
+> **Fortegnskilden er byttet (3-D-spinnmotoren).** `raw.spinLoft` er nå den
+> IKKE-NEGATIVE prinsipale inkluderte vinkelen mellom hastighet og face-normal,
+> så det gamle predikatet `spinLoft > 0` kunne aldri bli usant og voktet
+> ingenting. Fortegnet lever i `signedVerticalSpinLoftDeg`
+> (= `dynamicLoft − attackAngle`), som motoren eksponerer nettopp for dette.
+> Terskelen er uendret — bare bæreren. Se `impact-outcome.js`.
+
+Det er den eneste kombinasjonen der
 motoren returnerer et tall med feil fortegnsbetydning, altså det eneste stedet
 et stille clamp ville lære brukeren noe usant. Alle andre ekstremer
 (f.eks. spinLoft 65° ved loft 50 / attack −15) er fysisk mulige flopp-skudd der
