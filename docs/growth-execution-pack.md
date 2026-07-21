@@ -8,6 +8,17 @@ code or protected physics is changed by this document.*
 
 Prepared 2026-07-21.
 
+> **⚠️ v1.1 corrections applied (see `docs/growth-strategy-addendum.md`).** After a
+> deep-research + red-team pass, three sequencing changes override the original
+> runbook below: (1) **build shareable shot-cards FIRST** (Days 1–30) — the free
+> aha should output a watermarked card, because the emitted artifact is the viral
+> mechanism; (2) **add a micro-creator seed** (~$1.5–2k to one golfer who slices)
+> as the **first paid dollar**, Day 31–60, ahead of scaling self-produced volume;
+> (3) treat **store-live as ~60–90 days out** (platform bringup + Phase 8 gates +
+> device passes + App Store review + a 2–3-week pre-launch TestFlight seeding
+> window) and **gate paid spend on "store-live with reviews," not a calendar
+> date.** The runbook below has been updated to match.
+
 ---
 
 ## Part 1 — The critical path to the first install (unblock Q6 #1)
@@ -120,8 +131,9 @@ Assumes the native app ships around Day 30–45. Phase the paid spend to *after*
 the store page + seeded reviews exist.
 
 ### Days 1–30 — Build the machine (pre-launch)
-- [ ] Native critical path Part 1 steps 1–4 (get to TestFlight).
-- [ ] Film the 12 scripts against the **live web app** in one batch session.
+- [ ] **Build shareable shot-cards FIRST** — make the free aha output a watermarked, repost-worthy card (render existing Canvas → image/video). This is the distribution engine; everything else feeds off it.
+- [ ] Native critical path Part 1 steps 1–4 (get to TestFlight). *(Assume store-live is ~60–90 days out, not Day 30 — gate paid spend on "store-live with reviews.")*
+- [ ] Film the 12 scripts against the **live web app** in one batch session — a *bridge* until the user-generated shot-card loop is live.
 - [ ] Run clips through Submagic/OpusClip for captions + polish.
 - [ ] Set up the scheduler (Metricool free or Postiz self-host); queue 3 weeks of posts.
 - [ ] Stand up link-in-bio + email capture; convert existing IG followers to a waitlist.
@@ -132,16 +144,16 @@ the store page + seeded reviews exist.
 - [ ] Pass Phase 8 gates on the packaged build; human device sign-off.
 - [ ] Submit to App Store + Play; ensure seeded reviews land at launch.
 - [ ] Turn on Apple Custom Product Pages + Google Play Store Listing Experiments (free A/B).
-- [ ] Start Apple Search Ads long-tail, $5–10/day, on "why do I slice"-class terms *(needs owner OK — exceeds the 100 NOK autonomous cap)*.
-- [ ] Post the 3 forum/Reddit value explainers (not the app — the physics).
+- [ ] **First paid dollar: seed ONE golf micro-creator who slices** (~$1.5–2k, 50–300k followers) to show the engine diagnosing their own slice (Hook→conflict→product→payoff). Judge on cost-per-install; expect a normal, not viral, result.
+- [ ] Start Apple Search Ads long-tail, $5–10/day, on "why do I slice"-class terms for high-*intent capture* (not discovery) *(needs owner OK — exceeds the 100 NOK autonomous cap)*.
+- [ ] Post the 3 forum/Reddit value explainers (problem-first, answer with an engine shot-card — not the app link).
 - [ ] Instrument analytics: "Aha Shot" activation event, paywall funnel, W1/W4 retention.
 - [ ] Wire RevenueCat review-prompt after the aha; add OneSignal push for a first seasonal nudge.
 
 ### Days 61–90 — Optimize (learn + compound)
-- [ ] Read watch-through data; double down on the 2–3 winning hooks, cut the rest.
-- [ ] Build **shot-cards** (retention feature #1) so users start generating content — the flywheel becomes self-feeding.
-- [ ] Add Superwall (or RevenueCat Paywalls v2) and run the first price/paywall A/B (399 vs 449; layout A vs B).
-- [ ] Ship the first retention lever beyond the aha (Diagnose reverse mode if not already live).
+- [ ] Read watch-through data **weekly** (not monthly); double down on the 2–3 winning hooks, cut the rest.
+- [ ] Ship **Diagnose reverse mode** (retention build #2, after shot-cards) — the recurring "consult after every range session" loop.
+- [ ] Add Superwall (or RevenueCat Paywalls v2) and run the first **plan-architecture** A/B — annual-first / lifetime-forward, monthly de-emphasized, price tested *downward* toward the $8–15/mo band (**not** a price increase).
 - [ ] Review the North-Star: Weekly Activated Returners. Decide subscription-vs-lifetime emphasis from the W4 retention signal.
 
 > **Målbilde at Day 90:** store live with reviews; a self-running content queue;
