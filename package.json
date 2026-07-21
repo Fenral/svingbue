@@ -4,10 +4,10 @@
   "version": "1.0.0",
   "description": "Flightglass native packaging scaffold — Capacitor wrapper around the static web app for iOS/TestFlight builds via Codemagic.",
   "scripts": {
-    "test": "npm run test:ux",
+    "test": "npm run test:engine && npm run test:ux",
     "test:home": "node --test scripts/home-night-ladder.test.mjs",
     "test:gate": "node --test scripts/flightglass-change-gate.test.mjs",
-    "test:engine": "node --test scripts/engine-driver-acceptance.test.mjs",
+    "test:engine": "npm run verify:academy-formulas && node --test --test-concurrency=1 scripts/impact-flight-calculated-spin.test.mjs scripts/impact-flight-3d-spin.test.mjs scripts/impact-flight-domain-coherence.test.mjs scripts/flightglass-3d-spin-model.test.mjs scripts/driver-flight-reference.test.mjs scripts/engine-trackman-acceptance.test.mjs scripts/impact-outcome.test.mjs",
     "test:orientation": "node --test scripts/orientation-lock.test.mjs",
     "spot:browser": "node scripts/flightglass-browser-spot.mjs",
     "verify:change": "node scripts/flightglass-change-gate.mjs",
@@ -29,7 +29,7 @@
     "voice:stress": "node scripts/academy-voice-production.mjs generate --stress",
     "voice:generate": "node scripts/academy-voice-production.mjs generate",
     "test:academy": "npm run test:academy-foundation && node --test --test-concurrency=1 scripts/academy-backspin-model.test.mjs scripts/academy-lesson-journey.test.mjs scripts/academy-home-browser.test.mjs scripts/academy-backspin-browser.test.mjs scripts/academy-start-line-browser.test.mjs scripts/academy-shape-browser.test.mjs scripts/academy-carry-side-browser.test.mjs scripts/academy-attack-at-impact-browser.test.mjs scripts/academy-low-point-browser.test.mjs scripts/academy-contact-height-browser.test.mjs scripts/academy-delivered-loft-launch-browser.test.mjs scripts/academy-flight-height-descent-browser.test.mjs scripts/academy-speed-transfer-browser.test.mjs scripts/academy-carry-browser.test.mjs scripts/academy-air-density-browser.test.mjs scripts/academy-wind-browser.test.mjs scripts/academy-plane-coupling-browser.test.mjs",
-    "test:ux": "node --test --test-concurrency=1 scripts/evidence-lock.test.mjs scripts/orientation-lock.test.mjs scripts/flightglass-ux.test.mjs scripts/engine-driver-acceptance.test.mjs scripts/home-night-ladder.test.mjs scripts/academy-backspin-model.test.mjs scripts/academy-lesson-journey.test.mjs scripts/academy-home-browser.test.mjs scripts/academy-backspin-browser.test.mjs scripts/academy-start-line-browser.test.mjs scripts/academy-shape-browser.test.mjs scripts/academy-carry-side-browser.test.mjs scripts/academy-attack-at-impact-browser.test.mjs scripts/academy-low-point-browser.test.mjs scripts/academy-contact-height-browser.test.mjs scripts/academy-delivered-loft-launch-browser.test.mjs scripts/academy-flight-height-descent-browser.test.mjs scripts/academy-speed-transfer-browser.test.mjs scripts/academy-carry-browser.test.mjs scripts/academy-air-density-browser.test.mjs scripts/academy-wind-browser.test.mjs scripts/academy-plane-coupling-browser.test.mjs && npm run test:academy-foundation && npm run test:webkit",
+    "test:ux": "node --test --test-concurrency=1 scripts/evidence-lock.test.mjs scripts/orientation-lock.test.mjs scripts/flightglass-ux.test.mjs scripts/driver-flight-reference.test.mjs scripts/home-night-ladder.test.mjs scripts/academy-backspin-model.test.mjs scripts/academy-lesson-journey.test.mjs scripts/academy-home-browser.test.mjs scripts/academy-backspin-browser.test.mjs scripts/academy-start-line-browser.test.mjs scripts/academy-shape-browser.test.mjs scripts/academy-carry-side-browser.test.mjs scripts/academy-attack-at-impact-browser.test.mjs scripts/academy-low-point-browser.test.mjs scripts/academy-contact-height-browser.test.mjs scripts/academy-delivered-loft-launch-browser.test.mjs scripts/academy-flight-height-descent-browser.test.mjs scripts/academy-speed-transfer-browser.test.mjs scripts/academy-carry-browser.test.mjs scripts/academy-air-density-browser.test.mjs scripts/academy-wind-browser.test.mjs scripts/academy-plane-coupling-browser.test.mjs && npm run test:academy-foundation && npm run test:webkit",
     "test:webkit": "node scripts/academy-home-browser.test.mjs --project=webkit && node scripts/academy-backspin-browser.test.mjs --project=webkit && node scripts/academy-start-line-browser.test.mjs --project=webkit && node scripts/academy-shape-browser.test.mjs --project=webkit && node scripts/academy-carry-side-browser.test.mjs --project=webkit && node scripts/academy-attack-at-impact-browser.test.mjs --project=webkit && node scripts/academy-low-point-browser.test.mjs --project=webkit && node scripts/academy-contact-height-browser.test.mjs --project=webkit && node scripts/academy-delivered-loft-launch-browser.test.mjs --project=webkit && node scripts/academy-flight-height-descent-browser.test.mjs --project=webkit && node scripts/academy-speed-transfer-browser.test.mjs --project=webkit && node scripts/academy-carry-browser.test.mjs --project=webkit && node scripts/academy-air-density-browser.test.mjs --project=webkit && node scripts/academy-wind-browser.test.mjs --project=webkit && node scripts/academy-plane-coupling-browser.test.mjs --project=webkit",
     "test:perf": "node --test --test-concurrency=1 scripts/flightglass-perf.test.mjs",
     "test:visreg": "node --test --test-concurrency=1 scripts/flightglass-visreg.test.mjs",
@@ -43,7 +43,8 @@
     "copy-web": "node scripts/copy-web.mjs",
     "shots": "node scripts/store-screenshots.mjs",
     "sync": "cap sync ios",
-    "sync:android": "cap sync android"
+    "sync:android": "cap sync android",
+    "verify:academy-formulas": "node scripts/verify-academy-formulas.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^7.6.7",

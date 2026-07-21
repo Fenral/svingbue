@@ -8,7 +8,17 @@ export const INITIAL_BACKSPIN_STATE = Object.freeze({
   ballSpeed: 120
 });
 
-export const BACKSPIN_LIMITS = Object.freeze({ min:1500, max:9000 });
+/* Motoren har ETT bånd igjen: taket på 9000 rpm. Det gamle 1500-gulvet er
+   slettet sammen med den fittede spinn-magnituden — spinnet går nå kontinuerlig
+   mot null med spinn-loften (Penner). `min` er derfor bevisst borte: det finnes
+   ingen nedre klemme å eksponere, og en `min` her ville få leksjonen til å
+   påstå en klemme som ikke skjer. */
+export const BACKSPIN_LIMITS = Object.freeze({ max:9000 });
+
+/* Ikke en grense — en undervisningsterskel. Under denne verdien kaller
+   leksjonen eksplisitt ut at displayet FORTSATT følger modellen, fordi det er
+   nettopp her den gamle motoren frøs på 1500. Kontrasten mot taket er poenget. */
+export const LOW_SPIN_NOTE_RPM = 1500;
 export const BACKSPIN_PARAMS = Object.freeze({
   dynamicLoft: Object.freeze({ label:'Dynamic loft', min:10, max:48, step:1, unit:'\u00B0' }),
   attackAngle: Object.freeze({ label:'Attack angle', min:-8, max:6, step:1, unit:'\u00B0' }),
@@ -31,8 +41,20 @@ function normalizeBackspinState(state) {
 
 export function backspinEngineInput(state) {
   const { dynamicLoft, attackAngle, ballSpeed } = normalizeBackspinState(state);
-  const spinLoft = dynamicLoft - attackAngle;
-  const smashEff = clamp(1.46 - 0.004 * spinLoft, 1.15, 1.42);
+  // Smash is a function of 3-D spin loft (geometry) only — with face and path
+  // held square it does not depend on club speed — so one probe solve yields the
+  // exact live smash needed to hold the requested ball speed. This replaces the
+  // deleted linear smash inverse (1.46 - 0.004*spinLoft), which no longer matches
+  // the recalibrated quadratic and left the lesson feeding the wrong ball speed.
+  const probe = solveFlight({
+    club: '7iron',
+    clubPath: 0,
+    faceAngle: 0,
+    dynamicLoft,
+    attackAngle,
+    clubSpeed: 100
+  });
+  const smashEff = probe.smashEff;
   return {
     club: '7iron',
     clubPath: 0,
@@ -49,16 +71,19 @@ export function solveBackspinState(state) {
   const rawRpm = Math.round(flight.spinRpmRaw);
   const required = [rpm, rawRpm, flight.spinLoft, flight.ballSpeed, flight.carry, flight.apex, flight.landingAngle];
   if (!required.every(Number.isFinite)) throw new RangeError('Backspin model returned a non-finite value');
+  // 'ceiling' = displayet er faktisk frosset. 'no-floor' = lavspinn, displayet
+  // følger fortsatt modellen — motsatt av hva den gamle motoren gjorde her.
   const displayLimit = rawRpm >= BACKSPIN_LIMITS.max
     ? 'ceiling'
-    : rawRpm <= BACKSPIN_LIMITS.min ? 'floor' : null;
+    : rawRpm <= LOW_SPIN_NOTE_RPM ? 'no-floor' : null;
   return {
     flight,
     rpm,
     rawRpm,
     displayLimit,
     displayCapped: displayLimit === 'ceiling',
-    displayFloored: displayLimit === 'floor',
+    // Ingen `displayFloored` lenger: ingenting gulves. Feltet heter det det er.
+    noFloor: displayLimit === 'no-floor',
     spinLoft: Math.round(flight.spinLoft),
     ballSpeed: Math.round(flight.ballSpeed),
     carryM: Math.round(flight.carry * YD_TO_M),
@@ -129,8 +154,10 @@ export function buildCauseChain(beforeState, afterState, activeKey) {
   const apexDelta = after.apexM - before.apexM;
   const displayLimit = after.displayLimit;
   const inputUnit = activeKey === 'ballSpeed' ? 'mph' : 'degrees';
-  const limitLabel = displayLimit === 'ceiling' ? 'display ceiling' : 'model floor';
-  const limitedDisplay = rpmDelta === 0 && rawRpmDelta !== 0 && displayLimit;
+  // Bare taket kan fryse displayet. Lavspinn ('no-floor') gjør det motsatte —
+  // displayet følger modellen — så det kan aldri gi limitedDisplay.
+  const limitLabel = 'display ceiling';
+  const limitedDisplay = rpmDelta === 0 && rawRpmDelta !== 0 && displayLimit === 'ceiling';
   const backspinVisual = limitedDisplay
     ? 'Backspin display unchanged at ' + after.rpm + ' rpm (' + limitLabel + ')'
     : 'Backspin ' + signedVisual(rpmDelta) + ' rpm';

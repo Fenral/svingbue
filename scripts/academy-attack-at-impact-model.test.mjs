@@ -7,7 +7,7 @@ import {attackFlightState,attackGeometryState,evaluateAttackTransfer} from '../a
 const close=(actual,expected,tolerance=1e-12)=>assert.ok(Math.abs(actual-expected)<=tolerance,`${actual} != ${expected}`);
 
 test('five flight fixtures retain protected-engine raw truth',()=>{
-  const expected=new Map([[-6,[36,17.1,118.43999999999998,170.53717282524318]],[-4,[34,17.6,119.15999999999998,171.78047839101941]],[0,[30,18.6,120.6,174.25003295134613]],[4,[26,19.6,122.03999999999999,176.69500033835328]],[6,[24,20.1,122.75999999999999,177.9075560709316]]]);
+  const expected=new Map([[-6,[36,14.632746047638626,120.43810390211382,169.94463060406997]],[-4,[34,15.132746047638626,121.86486024421572,172.6659169252158]],[0,[30,16.132746047638626,124.57804700596083,177.8865844421674]],[4,[26,17.132746047638626,127.10413253776092,182.8011312373967]],[6,[24,17.632746047638626,128.2970123424316,185.13996712918345]]]);
   for(const[attack,values]of expected){const state=attackFlightState(attack),engine=solveFlight({faceAngle:0,clubPath:0,dynamicLoft:30,attackAngle:attack,clubSpeed:90,club:'7iron'});assert.equal(state.spinLoft,engine.spinLoft);assert.equal(state.launchAngle,engine.launchAngle);assert.equal(state.ballSpeed,engine.ballSpeed);assert.equal(state.carry,engine.carry);close(state.spinLoft,values[0]);close(state.launchAngle,values[1]);close(state.ballSpeed,values[2]);close(state.carry,values[3]);}
 });
 

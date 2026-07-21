@@ -373,9 +373,11 @@ export function attackWord(band) {
 }
 
 /* ── solveTrace: the ember reveal — a REAL solveFlight solve of the rep ─────
-   Driver reps run through the SAME shared physics (impact-flight.js has no
-   driver preset; solveFlight(…,'driver') is byte-identical to '7iron'), so the
-   ember shape is honest and no club field is needed. */
+   Driver reps run through the same shared LONGITUDINAL fit. A driver preset does
+   now exist (own smash cap, spinCal shared with the 7-iron), so 'driver' matches
+   '7iron' only while that cap is not binding — at loft 9 / attack +3 / 120 mph
+   they diverge (smash 1.4200 vs 1.4360). No club field is passed here, so these
+   reps are solved on the 7-iron preset; the ember shape is honest for that. */
 export function solveTrace(rep) {
   const flight = solveFlight(rep);
   return { flight, samples: trajectorySamples(flight, 48) };

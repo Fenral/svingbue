@@ -5,7 +5,10 @@ const SPEED_MIN=70;
 const SPEED_MAX=110;
 const START_TARGET=1;
 const START_TOLERANCE=.1;
-const CURVE_THRESHOLD=10;
+// Rekalibrert til 3-D-spinn-motoren (var 10 mot gammel kurve 14.9 = 0.67).
+// 6.5 mot ny kurve 9.59 bevarer samme forhold OG samme utfall per leveranse:
+// path 2 (5.6) blokkeres, path 4 (9.6) godkjennes, path 4 @70 (4.3) blokkeres.
+const CURVE_THRESHOLD=6.5;
 
 function finite(value,label){const number=Number(value);if(!Number.isFinite(number))throw new TypeError(`${label} must be finite`);return number;}
 function ranged(value,min,max,label){const number=finite(value,label);if(number<min||number>max)throw new RangeError(`${label} is outside the supported range`);return number;}
