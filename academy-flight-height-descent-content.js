@@ -8,7 +8,7 @@ export const FLIGHT_HEIGHT_DESCENT_CONTENT=freeze({
   surfaces:[
     {id:'mission',eyebrow:'LAUNCH, SPIN & DESCENT · 4 OF 4',title:'Same peak. Different return.',body:'Apex tells how high the model climbs. Landing Angle tells how it returns to launch elevation. Build the same peak with two different descents.'},
     {id:'lab',eyebrow:'FLIGHT PROFILE LAB · MODEL',title:'What raises the peak?',body:'Launch Angle and Ball Speed set modeled Apex. Descent also reads Spin Loft and Launch.'},
-    {id:'decomposition',eyebrow:'LANDING RAW · PATH LEDGER',title:'Follow the paths into descent.',body:'Spin Loft enters directly. Launch enters directly and again through Apex. Ball Speed reaches Landing through Apex.'},
+    {id:'decomposition',eyebrow:'LANDING RAW · PATH LEDGER',title:'Follow the paths into descent.',body:'Vertical Spin Loft is the ONLY driver: Landing saturates toward 52.8° as spin loft grows. Launch and Ball Speed shape Apex, not descent.'},
     {id:'boundary',eyebrow:'REAL FLIGHT · MODEL BOUNDARY',title:'A flight profile is not a stopping promise.',body:'Separate fitted height and return angle from real spin, surface, bounce and roll.'},
     {id:'mastery',eyebrow:'4 OF 5 + LIVE PROFILE',title:'Prove you can separate height from descent.',body:'Match the raw Apex band twice, then build materially different unclamped Landing Angles.'},
     {id:'result',eyebrow:'FLIGHT HEIGHT & DESCENT EVIDENCE',title:'You separated peak height from return angle.',body:'Launch, spin and descent evidence is complete.'}
@@ -22,9 +22,9 @@ export const FLIGHT_HEIGHT_DESCENT_CONTENT=freeze({
   decompositionStages:[
     {id:'ledger',label:'BASE LEDGER',copy:'The fit anchor is neutral. Spin Loft and Launch enter directly; Apex is the mediator.'},
     {id:'launch',label:'LAUNCH · TWO PATHS',copy:'Launch changes LandingRaw directly and also changes the Apex mediator. These are paths, not independent shares.'},
-    {id:'speed',label:'BALL SPEED · INDIRECT',copy:'Ball Speed changes Landing through Apex. There is no direct Ball Speed term.'},
+    {id:'speed',label:'BALL SPEED · INDIRECT',copy:'Ball Speed does not reach Landing at all — it shapes Apex and Carry, while descent follows spin loft alone.'},
     {id:'spin',label:'SPIN LOFT · DIRECT',copy:'+1° Spin Loft adds +0.5° LandingRaw directly. Simultaneous Ball Speed/Apex change remains disclosed.'},
-    {id:'clamp',label:'MODEL CLAMP',copy:'Raw 60.608° becomes display 60.000°. The app ceiling is not a physical maximum.'}
+    {id:'clamp',label:'MODEL CLAMP',copy:'Landing saturates toward 52.8° and never reaches it — 52.448° at the steepest lesson delivery. The old 60° ceiling is gone.'}
   ],
   myths:[
     {claim:'Same Apex means same Landing.',choices:['True','False'],answerIndex:1,explanation:'False. The verified pair shares Apex within 0.001 yd and differs 6.63° in Landing.'},
@@ -38,7 +38,7 @@ export const FLIGHT_HEIGHT_DESCENT_CONTENT=freeze({
     {kind:'choice',prompt:'Which values enter current Flightglass Apex?',choices:['Ball Speed and Launch Angle','Backspin rpm and Landing Angle','Spin Axis and Curve'],answerIndex:0,evidence:'Apex inputs'},
     {kind:'choice',prompt:'Which Landing statement is complete?',choices:['Spin Loft and Launch enter directly; Apex also enters as a mediator','Apex alone determines Landing','Backspin rpm is the only Landing input'],answerIndex:0,evidence:'Landing paths'},
     {kind:'choice',prompt:'Landing Angle is 55°. What can the app honestly conclude?',choices:['The modeled trajectory returns at 55° to the horizon at equal elevation','The ball will stop within a known distance','The turf is firm'],answerIndex:0,evidence:'Stopping boundary'},
-    {kind:'live-transfer',mandatory:true,prompt:'Build two Apex 31.3–31.7 yd states: Landing below 50° and above 54°, at least 6° apart.'}
+    {kind:'live-transfer',mandatory:true,prompt:'Build two Apex 31.65–32.05 yd states: Landing below 50° and above 52°, at least 6° apart.'}
   ],
   sheets:{
     apex:{title:'Apex',tags:['≈ REAL WORLD DEFINITION','MODEL OUTPUT'],body:'Maximum vertical height of the modeled trajectory above launch elevation.'},
@@ -57,7 +57,7 @@ const base={packId:ACADEMY_VOICE_PACK_ID,locale:ACADEMY_VOICE_LOCALE,contentVers
 export const FLIGHT_HEIGHT_DESCENT_CUES=defineAcademyCueSet({ownerId:'flight-height-descent',cues:[
   {...base,cueId:'academy.flight-height.s0.entry',surfaceId:'flight-height-s0',job:'orient',trigger:'surface-entry',text:'Apex and descent are related, but one does not determine the other. Build the same peak twice.',beats:[{targetId:'flight-height-profile',atMs:0,emphasis:'outline'}]},
   {...base,cueId:'academy.flight-height.s1.entry',surfaceId:'flight-height-s1',job:'cue',trigger:'surface-entry',text:'Launch and Ball Speed set modeled height. Descent also reads Spin Loft and Launch, so Apex is only one part.',beats:[{targetId:'flight-height-apex-paths',atMs:0,emphasis:'connector'}]},
-  {...base,cueId:'academy.flight-height.s2.entry',surfaceId:'flight-height-s2',job:'cue',trigger:'surface-entry',text:'Spin Loft enters directly. Launch enters directly and through Apex. Ball Speed reaches descent through Apex.',beats:[{targetId:'flight-height-landing-paths',atMs:0,emphasis:'connector'}]},
+  {...base,cueId:'academy.flight-height.s2.entry',surfaceId:'flight-height-s2',job:'cue',trigger:'surface-entry',text:'Vertical Spin Loft enters alone. Launch and Ball Speed change the flight height, never its descent angle.',beats:[{targetId:'flight-height-landing-paths',atMs:0,emphasis:'connector'}]},
   {...base,cueId:'academy.flight-height.s3.entry',surfaceId:'flight-height-s3',job:'consequence',trigger:'surface-entry',text:'Real spin and surface matter. This fitted profile cannot promise where the ball stops after landing.',beats:[{targetId:'flight-height-boundaries',atMs:0,emphasis:'outline'}]},
   {...base,cueId:'academy.flight-height.s4.entry',surfaceId:'flight-height-s4',job:'cue',trigger:'surface-entry',text:'Match the peak twice. Then separate descent through Spin Loft, Launch, and the Apex path.',beats:[{targetId:'flight-height-live',atMs:0,emphasis:'outline'}]},
   {...base,cueId:'academy.flight-height.s5.pass',surfaceId:'flight-height-s5',job:'consequence',trigger:'mastery-first',text:'You matched height and changed descent. The launch, spin, and descent journey is complete.',beats:[{targetId:'flight-height-result',atMs:0,emphasis:'static-label'}]}
