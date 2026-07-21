@@ -3,17 +3,18 @@
 Date: 2026-07-21
 Branch: `engine/physics-3d-spin-recal`
 Worktree: `.worktrees/physics-3d-spin`
-Starting/current committed revision: `716682c20ef2a9c83147b692cc3634c6ec85490a`
+Protected engine commit: `5dae98f942b488e7cfab19b0a96b63631750db38`
 Upstream: `origin/engine/physics-3d-spin-recal`
-Current state: all work described here is uncommitted; no commit, push, merge, deployment or generated-asset mutation has been performed.
+Current state: the protected engine/test/handoff scope is committed and pushed to the named upstream branch. No PR, merge, deployment or generated-asset mutation has been performed.
+The branch tip may include this later documentation-only publication-state correction; the immutable protected physics boundary is the engine commit named above.
 
 ## Owner authorization and Claude's assignment
 
-The owner's instruction on 2026-07-21 is the explicit authorization for Claude/Fable 5 to finish this work: review it, commit and push the engine-only branch, synchronize the mechanically stale Academy contracts on a separate integration branch if that is required for merge, and land the fully verified result through the normal PR/CI route. No second owner approval is required inside the gates below. This authorization does **not** permit a direct or forced push to `main`, a deployment, a physics redesign, relaxed acceptance, or a change to the protected 3-D/aerodynamic module.
+The owner's instruction on 2026-07-21 is the explicit authorization for Claude/Fable 5 to finish this work: verify the published engine-only branch, synchronize the mechanically stale Academy contracts on a separate integration branch if that is required for merge, and land the fully verified result through the normal PR/CI route. No second owner approval is required inside the gates below. This authorization does **not** permit a direct or forced push to `main`, a deployment, a physics redesign, relaxed acceptance, or a change to the protected 3-D/aerodynamic module.
 
-First review the complete uncommitted recalibration and resolve only issues that fit the locked engine-only scope below. Keep `engine/physics-3d-spin-recal` engine-only. If full-green integration requires Academy synchronization, do that only after the engine commit is pushed, on a new integration branch as specified in the landing protocol; never mix it into the protected physics commit.
+First review the published recalibration at the protected engine commit and resolve only issues that fit the locked engine-only scope below. Keep `engine/physics-3d-spin-recal` engine-only. If full-green integration requires Academy synchronization, do that on a new integration branch as specified in the landing protocol; never rewrite or mix it into the protected physics commit.
 
-Write the complete result, including commit hashes, remote refs, test evidence, remaining REDs and the verified merge state, to `handoff/04-claude-fable-5-final-landing-response.md`. This response is the one permitted path that does not yet exist in the incoming dirty-scope table: validate the incoming scope first, then create it and include it explicitly in staged-scope review. Do not leave the answer only in terminal output; the owner reads the repository handoff channel.
+Write the complete result, including commit hashes, remote refs, test evidence, remaining REDs and the verified merge state, to `handoff/04-claude-fable-5-final-landing-response.md`. This response is the one permitted new path after the published scope is validated; include it explicitly in later staged-scope review. Do not leave the answer only in terminal output; the owner reads the repository handoff channel.
 
 ## Fable 5 owns the final technical decision
 
@@ -62,11 +63,11 @@ These are hard constraints, not suggestions:
 4. Do not promote the current raw RK4 longitudinal result or remove the retained Carry projection in this pass. Either change would need independent aero validation and explicit lateral-migration authority.
 5. Any further production correction must begin with a focused failing real-code regression, demonstrate the expected reason for RED, then make the minimum GREEN change.
 6. Preserve all intended work already in this shared worktree. Do not reset, stash, overwrite, amend or revert another agent's changes.
-7. Do not commit or push until the review gates pass. The owner has authorized a normal commit and non-force push of this named engine branch. Merge is authorized only through the separate, full-green integration protocol below; never push directly to `main`.
+7. Do not make any further engine commit or push until the review gates pass. The owner has authorized normal non-force updates to this named engine branch when a RED-first review correction requires one. Merge is authorized only through the separate, full-green integration protocol below; never push directly to `main`.
 
-## Exact current diff scope
+## Exact protected engine commit scope
 
-The expected dirty tree after this handoff is created is exactly:
+Commit `5dae98f942b488e7cfab19b0a96b63631750db38` contains exactly this scope relative to its parent:
 
 | Status | Path | Purpose |
 |---|---|---|
@@ -85,7 +86,7 @@ The expected dirty tree after this handoff is created is exactly:
 
 There must be no Academy, UI, `flightglass-3d-spin-model.js`, source-data or generated-asset diff. The two deletes plus two adds are an intentional provenance rename; do not restore the misleading `engine-driver-acceptance` name.
 
-The final-pass delta within that larger dirty tree is narrower:
+The final-pass delta within that larger committed scope is narrower:
 
 - `impact-flight.js`: define `hasFlight` from positive Carry; apply the already-existing `carryLaunchEfficiency` to both live Apex terms; make those terms sum exactly to shipping Apex; expose `landingDomainTerm` so the Landing ledger remains exact; suppress displayed Landing, rollout fraction and shipping projected Curve when there is no flight. Raw RK4 audit fields remain available.
 - `scripts/impact-flight-domain-coherence.test.mjs`: new real-engine regressions for negative, exact-zero and barely-positive launch.
@@ -247,7 +248,7 @@ No Academy file changed on the engine branch. Handoff 03 explains every incompat
 
 Do not claim a current full `npm test` pass. The last full command was captured before this final domain guard: engine passed `60/60`, then the sequential UX stage failed on the known Academy contracts; Foundation and WebKit were skipped by `&&`. It exited 1 after `692.563 s`, with 14 visible browser tests around 30.76-31.64 seconds. The full command was not repeated after this coefficient-free guard because it takes roughly 11.5 minutes and cannot become green while the engine branch deliberately preserves those stale Academy contracts. Treat that capture as a prior baseline, not fresh evidence.
 
-The engine branch may be committed and pushed with this explicitly documented downstream RED, but it must not be merged directly to `main`. The authorized integration stage must synchronize the stale Academy contracts on a separate branch and produce a fresh full-suite result. Do not invent a waiver or weaken Academy tolerances to satisfy it.
+The engine branch is committed and pushed with this explicitly documented downstream RED, but it must not be merged directly to `main`. The authorized integration stage must synchronize the stale Academy contracts on a separate branch and produce a fresh full-suite result. Do not invent a waiver or weaken Academy tolerances to satisfy it.
 
 ## Known, non-blocking model limits
 
@@ -289,7 +290,7 @@ Review the diff itself, not only the tests:
 3. Confirm raw RK4 audit fields remain returned while shipping no-flight lateral fields are zero.
 4. Confirm the only final-pass exact snapshot movement is the low-loft Apex number above.
 5. Confirm all TrackMan bands and six holdout rows are unchanged.
-6. Confirm the full dirty scope matches the table and no concurrent/unrelated file appeared.
+6. Confirm the published commit scope matches the table, the worktree begins clean, and no concurrent/unrelated file appeared.
 
 The focused Academy command must still exit 1 with exactly 8 passed / 30 failed. A different count is an unexpected change and a stop condition, not a reason to rewrite fixtures.
 
@@ -309,14 +310,14 @@ If an engine defect requires Academy, UI, protected 3-D/aero, a TrackMan band/to
 
 The owner has authorized this complete protocol. No additional approval prompt is required when every gate below is satisfied.
 
-### A. Land the protected engine commit
+### A. Verify the published protected engine commit
 
-1. Recheck HEAD, branch, upstream and dirty scope. Do not reset/stash/rebase shared work to make it look clean.
-2. Stage exactly the paths in the scope table, including both renamed-file deletes and adds, plus the explicitly permitted response file created above. Do not use a workspace-wide blind add if any unexpected file exists.
-3. Run `git diff --cached --name-status` and `git diff --cached --check`. Compare the cached name list exactly with the scope table.
-4. Run the compact gate and `npm run test:engine` against the staged content. Confirm the protected SHA again.
-5. Make one normal, reviewable commit for the cohesive recalibration/test/handoff set using the repository's message convention. The commit message must distinguish `SOURCED`, `ENGINE-DERIVED` and `ESTIMATE/domain guard`; do not amend or rewrite unrelated history.
-6. Push only `engine/physics-3d-spin-recal`, without force. Verify the remote ref and record the commit in the response file.
+1. Fetch `origin`, check out `engine/physics-3d-spin-recal`, and confirm the worktree begins clean. Do not reset/stash/rebase shared work to manufacture that state.
+2. Confirm `5dae98f942b488e7cfab19b0a96b63631750db38` is an ancestor of both local HEAD and `origin/engine/physics-3d-spin-recal`, and that local HEAD equals the upstream tip.
+3. Inspect `git show --name-status --stat 5dae98f942b488e7cfab19b0a96b63631750db38`; compare its paths exactly with the protected scope table above.
+4. Run the compact gate and `npm run test:engine` against the checked-out content. Confirm the protected SHA again and reproduce the focused Academy `8/38` baseline.
+5. Confirm the published commit message distinguishes `SOURCED`, `ENGINE-DERIVED` and `ESTIMATE/domain guard` and that no protected/UI/Academy file is part of it.
+6. Do not amend, squash, rebase or rewrite the protected engine commit. If review proves a real in-scope engine defect, follow the RED-first resolution protocol in a separate normal commit, rerun every gate, and push only this feature branch without force.
 7. Do **not** merge this engine-only branch directly while the documented Academy contracts are RED.
 
 ### B. Build the full-green integration branch
@@ -333,7 +334,7 @@ The owner has authorized this complete protocol. No additional approval prompt i
 
 Stop and report rather than improvising if any of the following is true:
 
-- HEAD, branch or upstream differs from the metadata above before intentional landing work.
+- The named branch does not contain protected engine commit `5dae98f942b488e7cfab19b0a96b63631750db38`, local HEAD differs from its upstream tip, or the initial worktree is unexpectedly dirty.
 - An Academy, UI, generated asset, `flightglass-3d-spin-model.js`, source-data, fixed-band or tolerance diff appears.
 - Protected SHA differs from `A602805F618C1C1489AD7C7CACC67771A92F29D6B0EC4C1CDC8A18107A8B5DF5`.
 - The 47-test compact gate or 62-test engine gate fails.
