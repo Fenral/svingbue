@@ -17,7 +17,7 @@ function engineAt(clubSpeed,spinLoft){
 // the whole spin-loft range.
 
 export const SPEED_TRANSFER_LIMITS=Object.freeze({
-  clubSpeed:[70,115],spinLoft:[5,80],coreSpinLoft:[20,50],ballSpeed:[130.46,130.66],
+  clubSpeed:[70,115],spinLoft:[5,80],coreSpinLoft:[20,50],ballSpeed:[117.85,118.05],
   clubSpeedGap:5,spinLoftGap:15,smashGap:.06,ballSpeedGap:.1,held:HELD
 });
 
@@ -47,8 +47,9 @@ export function evaluateEqualBallSpeedTransfer({
 }={}){
   try{
     const stateA=solveSpeedTransferState(stateAInput),stateB=solveSpeedTransferState(stateBInput);
-    const targetA=stateA.ballSpeed>=130.46&&stateA.ballSpeed<=130.66;
-    const targetB=stateB.ballSpeed>=130.46&&stateB.ballSpeed<=130.66;
+    const [bandLo,bandHi]=SPEED_TRANSFER_LIMITS.ballSpeed;
+    const targetA=stateA.ballSpeed>=bandLo&&stateA.ballSpeed<=bandHi;
+    const targetB=stateB.ballSpeed>=bandLo&&stateB.ballSpeed<=bandHi;
     const clubSpeedGap=Math.abs(stateA.clubSpeed-stateB.clubSpeed),spinLoftGap=Math.abs(stateA.spinLoft-stateB.spinLoft),smashGap=Math.abs(stateA.smash-stateB.smash),ballSpeedGap=Math.abs(stateA.ballSpeed-stateB.ballSpeed);
     const distinct=stateA.signature!==stateB.signature;
     const unclamped=!stateA.modelLimitReached&&!stateB.modelLimitReached;
@@ -62,6 +63,7 @@ export function evaluateEqualBallSpeedTransfer({
 
 export const SPEED_TRANSFER_FIXTURES=Object.freeze({
   primary:Object.freeze([[80,33],[90,33],[100,33],[90,25],[90,45]].map(([clubSpeed,spinLoft])=>Object.freeze({clubSpeed,spinLoft}))),
-  equal:Object.freeze([{clubSpeed:96,spinLoft:25},{clubSpeed:102,spinLoft:45}]),
-  clamps:Object.freeze([{clubSpeed:90,spinLoft:10},{clubSpeed:90,spinLoft:77.5}])
+  /* Eier-godkjent par (handoff/06): lik ballfart ~117.95 via ulik levering. */
+  equal:Object.freeze([{clubSpeed:82,spinLoft:22},{clubSpeed:91,spinLoft:41}]),
+  clamps:Object.freeze([{clubSpeed:90,spinLoft:5},{clubSpeed:90,spinLoft:77.5}])
 });

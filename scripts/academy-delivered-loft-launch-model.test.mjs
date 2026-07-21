@@ -14,37 +14,39 @@ test('base loft-plus-four and attack-plus-four retain protected flight truth',()
 
 test('per-degree sensitivities preserve Launch hierarchy and opposite Spin Loft signs',()=>{
   const base=solveDeliveredLoftLaunchState({dynamicLoft:30,attackAngle:-4}),loft=solveDeliveredLoftLaunchState({dynamicLoft:31,attackAngle:-4}),attack=solveDeliveredLoftLaunchState({dynamicLoft:30,attackAngle:-3});
-  close(loft.launchAngle-base.launchAngle,.62,1e-12);assert.equal(loft.spinLoft-base.spinLoft,1);
+  close(loft.launchAngle-base.launchAngle,0.5641276405281062,1e-9);assert.equal(loft.spinLoft-base.spinLoft,1);
   close(attack.launchAngle-base.launchAngle,.25,1e-12);assert.equal(attack.spinLoft-base.spinLoft,-1);
 });
 
 test('equal-launch pair retains distinct downstream engine outputs',()=>{
-  const low=solveDeliveredLoftLaunchState({dynamicLoft:28,attackAngle:5}),high=solveDeliveredLoftLaunchState({dynamicLoft:32,attackAngle:-5});
-  close(low.launchAngle,18.61,1e-12);close(high.launchAngle,18.59,1e-12);assert.equal(low.spinLoft,23);assert.equal(high.spinLoft,37);
-  close(low.ballSpeed,123.12);close(high.ballSpeed,118.08);close(low.backspin,5023.046266687192);close(high.backspin,7736.636487008601);
-  close(low.carry,178.51,.01);close(high.carry,169.91,.01);close(low.landingAngle,51.17,.01);close(high.landingAngle,57.49,.01);
+  // Eier-godkjent par (handoff/06): lik launch ~16.64, spin-loft-gap 10.
+  const low=solveDeliveredLoftLaunchState({dynamicLoft:30,attackAngle:2}),high=solveDeliveredLoftLaunchState({dynamicLoft:33,attackAngle:-5});
+  close(low.launchAngle,16.632746047638626);close(high.launchAngle,16.647277192460223);assert.equal(low.spinLoft,28);assert.equal(high.spinLoft,38);
+  close(low.ballSpeed,125.864477425604);close(high.ballSpeed,118.96457225252563);close(low.backspin,4834.536848226549);close(high.backspin,8263.041405050224);
+  close(low.carry,180.38286474188666);close(high.carry,167.15153227088757);close(low.landingAngle,49.619984446597776);close(high.landingAngle,51.52944362495104);
 });
 
 test('landing clamp metadata is explicit and never inferred as universal physics',()=>{
-  assert.equal(solveDeliveredLoftLaunchState({dynamicLoft:34,attackAngle:-4}).landingClamp,'ceiling');
+  // Rekalibrert: landing metter mot 52.8 — 60-taket er unåbart, ingen klemme.
+  assert.equal(solveDeliveredLoftLaunchState({dynamicLoft:34,attackAngle:-4}).landingClamp,null);
   assert.equal(solveDeliveredLoftLaunchState({dynamicLoft:30,attackAngle:-4}).landingClamp,null);
 });
 
 test('live evaluator accepts two raw equal-launch states with opposite Attack and a wide Spin Loft gap',()=>{
-  const result=evaluateEqualLaunchTransfer({stateAInput:{dynamicLoft:28,attackAngle:5},stateBInput:{dynamicLoft:32,attackAngle:-5},stateAInteracted:true,stateBInteracted:true});
-  assert.equal(result.passed,true);assert.equal(result.spinLoftGap,14);assert.equal(result.oppositeSigns,true);
+  const result=evaluateEqualLaunchTransfer({stateAInput:{dynamicLoft:30,attackAngle:2},stateBInput:{dynamicLoft:33,attackAngle:-5},stateAInteracted:true,stateBInteracted:true});
+  assert.equal(result.passed,true);assert.equal(result.spinLoftGap,10);assert.equal(result.oppositeSigns,true);
 });
 
 test('raw edge states pass and rounded out-of-range state fails',()=>{
-  const edgeA={dynamicLoft:28,attackAngle:4.16},edgeB={dynamicLoft:32,attackAngle:-5};
-  assert.equal(solveDeliveredLoftLaunchState(edgeA).launchAngle,18.4);
+  const edgeA={dynamicLoft:28,attackAngle:5.453444040721237},edgeB={dynamicLoft:33,attackAngle:-5};
+  assert.equal(solveDeliveredLoftLaunchState(edgeA).launchAngle,16.44);
   assert.equal(evaluateEqualLaunchTransfer({stateAInput:edgeA,stateBInput:edgeB,stateAInteracted:true,stateBInteracted:true}).passed,true);
-  const rounded={dynamicLoft:28,attackAngle:4.159};assert.ok(solveDeliveredLoftLaunchState(rounded).launchAngle<18.4);
+  const rounded={dynamicLoft:28,attackAngle:5.45};assert.ok(solveDeliveredLoftLaunchState(rounded).launchAngle<16.44);
   assert.equal(evaluateEqualLaunchTransfer({stateAInput:rounded,stateBInput:edgeB,stateAInteracted:true,stateBInteracted:true}).passed,false);
 });
 
 test('gap sign provenance held state and invalid inputs fail independently',()=>{
-  const base={stateAInput:{dynamicLoft:28,attackAngle:5},stateBInput:{dynamicLoft:32,attackAngle:-5},stateAInteracted:true,stateBInteracted:true};
-  for(const patch of[{stateAInput:{dynamicLoft:27,attackAngle:5}},{stateBInput:{dynamicLoft:33,attackAngle:-5}},{stateAInput:{dynamicLoft:30,attackAngle:0}},{stateBInput:{dynamicLoft:30,attackAngle:0}},{stateAInteracted:false},{stateBInteracted:false},{presetInjected:true},{editableFields:['dynamicLoft']},{stateAInput:{dynamicLoft:28,attackAngle:5,clubSpeed:91}},{stateBInput:{dynamicLoft:32,attackAngle:-5,faceAngle:1}}])assert.equal(evaluateEqualLaunchTransfer({...base,...patch}).passed,false,JSON.stringify(patch));
+  const base={stateAInput:{dynamicLoft:30,attackAngle:2},stateBInput:{dynamicLoft:33,attackAngle:-5},stateAInteracted:true,stateBInteracted:true};
+  for(const patch of[{stateAInput:{dynamicLoft:27,attackAngle:5}},{stateBInput:{dynamicLoft:34,attackAngle:-5}},{stateAInput:{dynamicLoft:30,attackAngle:0}},{stateBInput:{dynamicLoft:30,attackAngle:0}},{stateAInteracted:false},{stateBInteracted:false},{presetInjected:true},{editableFields:['dynamicLoft']},{stateAInput:{dynamicLoft:28,attackAngle:5,clubSpeed:91}},{stateBInput:{dynamicLoft:32,attackAngle:-5,faceAngle:1}}])assert.equal(evaluateEqualLaunchTransfer({...base,...patch}).passed,false,JSON.stringify(patch));
   for(const value of[NaN,Infinity,60])assert.throws(()=>solveDeliveredLoftLaunchState({dynamicLoft:value}));assert.equal(evaluateEqualLaunchTransfer({}).passed,false);
 });

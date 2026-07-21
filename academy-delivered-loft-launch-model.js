@@ -19,8 +19,11 @@ export function solveDeliveredLoftLaunchState(input={}){
     dynamicLoft:clean(flight.dynamicLoft),attackAngle:clean(flight.attackAngle),launchAngle:clean(flight.launchAngle),
     spinLoft:clean(flight.spinLoft),ballSpeed:flight.ballSpeed,backspin:flight.backspin,carry:flight.carry,
     apex:flight.apex,landingAngle:flight.landingAngle,startDirection:clean(flight.startDirection),
-    loftContribution:clean(.62*flight.dynamicLoft),attackContribution:clean(.25*flight.attackAngle),
-    landingClamp:flight.landingAngle===60?'ceiling':flight.landingAngle===32?'floor':null,
+    /* Loft-bidraget leses som residualet launch − attack-del: motoren er nå
+       kvadratisk i loft, så en flat .62-koeffisient ville dikte opp en modell
+       som ikke finnes. Attack-vekten 0.25 er SOURCED og uendret. */
+    loftContribution:clean(flight.launchAngle-.25*flight.attackAngle),attackContribution:clean(.25*flight.attackAngle),
+    landingClamp:flight.landingRaw>60?'ceiling':flight.landingRaw<32?'floor':null,
     // Kun taket igjen. Det gamle 1500-gulvet er slettet fra motoren, så en
     // `===1500`-gren her kunne aldri bli sann og påsto en klemme som ikke skjer.
     backspinClamp:flight.backspin===9000?'ceiling':null,
@@ -32,8 +35,9 @@ const heldState=state=>state.input.faceAngle===HELD.faceAngle&&state.input.clubP
 export function evaluateEqualLaunchTransfer({stateAInput,stateBInput,stateAInteracted,stateBInteracted,editableFields=['dynamicLoft','attackAngle'],presetInjected=false}={}){
   try{
     const stateA=solveDeliveredLoftLaunchState(stateAInput),stateB=solveDeliveredLoftLaunchState(stateBInput);
-    const stateAPassed=stateA.launchAngle>=18.4&&stateA.launchAngle<=18.8;
-    const stateBPassed=stateB.launchAngle>=18.4&&stateB.launchAngle<=18.8;
+    const [launchLo,launchHi]=DELIVERED_LOFT_LAUNCH_LIMITS.launch;
+    const stateAPassed=stateA.launchAngle>=launchLo&&stateA.launchAngle<=launchHi;
+    const stateBPassed=stateB.launchAngle>=launchLo&&stateB.launchAngle<=launchHi;
     const spinLoftGap=Math.abs(stateA.spinLoft-stateB.spinLoft),gapPassed=spinLoftGap>=10;
     const oppositeSigns=(stateA.attackAngle>0&&stateB.attackAngle<0)||(stateA.attackAngle<0&&stateB.attackAngle>0);
     const distinct=Math.abs(stateA.dynamicLoft-stateB.dynamicLoft)>1e-12||Math.abs(stateA.attackAngle-stateB.attackAngle)>1e-12;
@@ -44,4 +48,6 @@ export function evaluateEqualLaunchTransfer({stateAInput,stateBInput,stateAInter
   }catch(error){return Object.freeze({passed:false,reason:'invalid-input',error:error.message});}
 }
 
-export const DELIVERED_LOFT_LAUNCH_LIMITS=Object.freeze({dynamicLoft:[16,44],attackAngle:[-8,6],launch:[18.4,18.8],spinLoftGap:10,held:HELD});
+/* Launch-båndet re-sentrert på det eier-godkjente paret (16.633/16.647);
+   bredde 0.4 uendret. */
+export const DELIVERED_LOFT_LAUNCH_LIMITS=Object.freeze({dynamicLoft:[16,44],attackAngle:[-8,6],launch:[16.44,16.84],spinLoftGap:10,held:HELD});
