@@ -80,7 +80,7 @@
   /* miniskjerm: zoomed contact-zone inset (pattern: impact-inset-mock.html, P3-toned) */
   .inset{
     position:absolute;top:8px;left:8px;z-index:4;
-    width:min(42%,312px);border-radius:14px;overflow:hidden;
+    width:min(32%,240px);border-radius:14px;overflow:hidden;
     background:linear-gradient(180deg, rgba(13,10,24,.96), rgba(8,5,14,.96));
     border:1px solid rgba(217,179,106,.30);
     box-shadow:0 18px 50px -20px rgba(0,0,0,.85), inset 0 0 0 1px rgba(255,255,255,.02);
@@ -98,11 +98,11 @@
   .inset::after{content:"";position:absolute;left:10px;right:10px;top:24px;height:2px;
     border-radius:2px;background:var(--gold);opacity:0;transition:opacity .3s var(--ease)}
   .inset.hit::after{opacity:1}
-  #insetCv{display:block;width:100%;height:96px}
+  #insetCv{display:block;width:100%;height:72px}
   .inset .eyebrow > span:first-child{margin-right:8px}
-  @media (max-width:620px){ #insetCv{height:78px}
-    .inset .eyebrow{font-size:9px;padding:5px 8px 2px}
-    .inset .eyebrow .ez{display:none} }
+  .inset .eyebrow .ez{display:none}   /* compact inset → short title always */
+  @media (max-width:620px){ #insetCv{height:58px}
+    .inset .eyebrow{font-size:9px;padding:5px 8px 2px} }
 
   /* ---------- controls ---------- */
   .controls{flex:0 0 auto;height:calc(92px + env(safe-area-inset-bottom));
@@ -430,6 +430,7 @@ document.querySelectorAll('.chip').forEach(c =>
   c.addEventListener('click', () => selectParam(c.dataset.p)));
 range.addEventListener('input', () => {
   state[state.sel] = parseFloat(range.value);
+  vecFlashAt = performance.now();
   updateChipValues(); layoutSlider(); updateOutcomes(); crossViewHint(); kick();
 });
 function updateChipValues(){
@@ -449,7 +450,7 @@ function setView(v){
   state.view = v;
   $('btnFace').classList.toggle('active', v === 'face');
   $('btnDtl').classList.toggle('active', v === 'dtl');
-  $('inset').style.display = v === 'face' ? '' : 'none';
+  vecFlashAt = performance.now();          // brief orientation flash on view switch
   kick();
 }
 
@@ -462,7 +463,7 @@ function kick(){
   cancelAnimationFrame(rafId);
   const loop = now => {
     draw(clamp((now - animStart) / 400, 0, 1));
-    if (now - animStart < 420) rafId = requestAnimationFrame(loop);
+    if (now - animStart < 1750) rafId = requestAnimationFrame(loop);
   };
   rafId = requestAnimationFrame(loop);
 }
@@ -472,7 +473,27 @@ let prevOrderKey = '', orderFlashAt = -1e9;
 
 function draw(t){
   ctx.clearRect(0, 0, W, H);
-  if (state.view === 'face'){ drawFace(t); drawInset(); } else drawDtl(t);
+  if (state.view === 'face') drawFace(t); else drawDtl(t);
+  drawInset();                              // the mini screen is permanent, both views
+}
+
+/* transient outcome vectors + underground gold: full for ~900 ms after a
+ * parameter change, then fade out over ~700 ms */
+let vecFlashAt = -1e9;
+function flashAlpha(){
+  const dt = performance.now() - vecFlashAt;
+  return dt < 900 ? 1 : clamp(1 - (dt - 900) / 700, 0, 1);
+}
+
+/* scene clip: everything in the main canvas is drawn OUTSIDE the inset
+ * rect (+6 px margin), so the arc/glass can never collide with it */
+function sceneClipPath(){
+  const r = cv.getBoundingClientRect();
+  const i = document.getElementById('inset').getBoundingClientRect();
+  const p = new Path2D();
+  p.rect(0, 0, W, H);
+  p.rect(i.left - r.left - 6, i.top - r.top - 6, i.width + 12, i.height + 12);
+  return p;
 }
 
 /* ============================================================ MINISKJERM
@@ -609,7 +630,7 @@ function drawInset(){
     if (px > 16 && px < IW - 16){
       ictx.beginPath(); ictx.arc(px, py, 3.2, 0, Math.PI * 2);
       ictx.fillStyle = GOLD; ictx.fill();
-      if (t0g === null || Math.abs(px - X(arcPosition(-t0g, s).x)) > 30)
+      if (t0g !== null && Math.abs(px - X(arcPosition(-t0g, s).x)) > 30)
         iLabel('LOW', px, gy + 16, '#eec07a', 9);
     }
   }
@@ -659,10 +680,10 @@ const CSS = n => getComputedStyle(document.documentElement).getPropertyValue(n).
  * ball at 40 % width. Below-ground z is exaggerated (soft-capped) so shallow
  * divots stay visible. */
 function faceMap(){
-  const winM = W >= 700 ? 0.95 : 0.80;
+  const winM = W >= 700 ? 1.15 : 0.95;
   const scale = W / winM;                       // px per metre
-  const bx = W * (W >= 700 ? 0.40 : 0.45), gy = H * 0.65;   // dodge the inset on small phones
-  const K = 2.4;                                // vertical compression: arc reads as a U, like DTL
+  const bx = W * 0.52, gy = H * 0.65;           // scene sits right of the mini screen
+  const K = 2.2;                                // vertical compression: arc reads as a U, like DTL
   const EXAG = 6, CAP = 0.042;                  // below-ground exaggeration (on top of K)
   const zMap = z => z >= 0 ? z * K : -CAP * Math.tanh(-z * EXAG / CAP) * (K * 0.55);
   return { scale, bx, gy, K,
@@ -681,6 +702,10 @@ function drawFace(t){
               muted: CSS('--muted'), soil: CSS('--soil'), sec: CSS('--secondary'),
               plane: CSS('--plane'), depth: CSS('--depth'), accent: CSS('--accent'),
               warn: CSS('--warn'), pathC: CSS('--path') };
+  const fa = flashAlpha();                    // transient vectors + underground gold
+
+  ctx.save();
+  ctx.clip(sceneClipPath(), 'evenodd');       // never draw under the mini screen
 
   /* --- ground band --- */
   const gy = M.gy;
@@ -738,33 +763,32 @@ function drawFace(t){
     }
   }
 
-  /* --- glass (swing plane) behind the arc: soft periwinkle band, no border --- */
+  /* --- glass (swing plane) behind the arc: same quad source as the DTL ribbon,
+     projected to face-on (x, z·K). Fill only, no border, faint inner rungs. --- */
   {
     const heroP = state.sel === 'plane';
-    const GH = Math.min(H * 0.52, 150);         // glass height above the arc
-    const pts = [];
-    for (let i = 0; i <= 60; i++){
-      const th = -SWEEP_RAD + (2 * SWEEP_RAD * i) / 60;
-      const p = arcPosition(th, s);
-      pts.push({ x: M.X(p.x), y: M.Y(p.z) });
-    }
+    const { u, m } = planeBasis(s.planeAngle, s.swingDirection);
+    const lp = lpWorld(s);
+    const pt2 = (a, b2) => ({ x: M.X(lp.x + a * u.x + b2 * m.x),
+                              y: M.Y(lp.z + a * u.z + b2 * m.z) });
+    const quad = [pt2(-0.95, -0.04), pt2(0.95, -0.04), pt2(0.95, 1.0), pt2(-0.95, 1.0)];
     ctx.save();
-    const grad = ctx.createLinearGradient(0, gy - GH, 0, gy);
-    const aG = heroP ? 0.16 : 0.07;
+    const topY = Math.min(quad[2].y, quad[3].y);
+    const grad = ctx.createLinearGradient(0, topY, 0, gy);
+    const aG = heroP ? 0.20 : 0.10;
     grad.addColorStop(0, 'rgba(147,164,242,0)');
+    grad.addColorStop(0.75, 'rgba(147,164,242,' + aG * 0.7 + ')');
     grad.addColorStop(1, 'rgba(147,164,242,' + aG + ')');
     ctx.beginPath();
-    pts.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y));
-    for (let i = pts.length - 1; i >= 0; i--) ctx.lineTo(pts[i].x, pts[i].y - GH);
+    quad.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y));
     ctx.closePath();
     ctx.fillStyle = grad; ctx.fill();
-    /* faint grid rungs parallel to the arc (geo3d/plane.js RUNG_FRACS spirit) */
     ctx.lineWidth = 1;
-    for (const f of [0.30, 0.62, 0.92]){
-      ctx.strokeStyle = 'rgba(147,164,242,' + (heroP ? 0.14 : 0.06) * (1 - f * 0.5) + ')';
-      ctx.beginPath();
-      pts.forEach((p, i) => i ? ctx.lineTo(p.x, p.y - GH * f) : ctx.moveTo(p.x, p.y - GH * f));
-      ctx.stroke();
+    for (const bf of [0.30, 0.65]){
+      const b2 = -0.04 + bf * 1.04;
+      const ra = pt2(-0.95, b2), rb = pt2(0.95, b2);
+      ctx.strokeStyle = 'rgba(147,164,242,' + (heroP ? 0.12 : 0.06) + ')';
+      ctx.beginPath(); ctx.moveTo(ra.x, ra.y); ctx.lineTo(rb.x, rb.y); ctx.stroke();
     }
     ctx.restore();
   }
@@ -793,10 +817,34 @@ function drawFace(t){
   /* (no strike tick on the main canvas — strike detail lives in the inset) */
   const cz = clamp(ct.clubZ, 0, 2 * BALL_R);
 
-  /* --- attack tangent: enters BEFORE the ball, through impact, short arrow after.
+  /* --- underground gold: the arc segment the club spends below ground
+     (entry→low→exit), impact-kamera gold, no text — fades with the flash --- */
+  if (t0g !== null && fa > 0.01){
+    ctx.save(); ctx.lineCap = 'round';
+    const ex0 = M.X(arcPosition(-t0g, s).x), ex1 = M.X(arcPosition(t0g, s).x);
+    const seg = pass => {
+      ctx.beginPath();
+      for (let i = 0; i <= 30; i++){
+        const th = -t0g + (2 * t0g * i) / 30;
+        const p = arcPosition(th, s);
+        const x = M.X(p.x), y = M.Y(p.z);
+        if (i) ctx.lineTo(x, y); else ctx.moveTo(x, y);
+      }
+      ctx.lineWidth = pass; ctx.stroke();
+    };
+    ctx.globalAlpha = 0.20 * fa;
+    ctx.strokeStyle = 'rgba(255,154,61,1)'; seg(8);
+    ctx.globalAlpha = fa;
+    const gGold = ctx.createLinearGradient(ex0, 0, ex1, 0);
+    gGold.addColorStop(0, '#fdf3e0'); gGold.addColorStop(0.55, '#e8b45a'); gGold.addColorStop(1, '#ff9a3d');
+    ctx.strokeStyle = gGold; seg(2.6);
+    ctx.restore();
+  }
+
+  /* --- attack tangent: transient — appears on parameter change, fades out.
      Drawn with the same vertical compression K as the arc so it lies ON the arc;
      the label shows the TRUE engine value. --- */
-  {
+  if (fa > 0.01){
     const tv = tangentAt(thImp, s);                       // motion direction (downstream)
     const zK = tv.z * M.K;
     const len2 = Math.hypot(tv.x, zK) || 1;
@@ -806,19 +854,19 @@ function drawFace(t){
     const prog = 0.35 + 0.65 * t;                         // draw-in toward the ball
     const sx2 = px2 - dx * Lin * prog, sy2 = py2 + dz * Lin * prog;   // upstream start
     const ex = px2 + dx * Lout, ey = py2 - dz * Lout;                 // downstream tip
-    coreLine(sx2, sy2, ex, ey, A.attack, 3, 'rgba(244,112,184,.18)', 1);
-    arrowHead(ex, ey, Math.atan2(-dz, dx), 9, A.attack, 1);
+    coreLine(sx2, sy2, ex, ey, A.attack, 3, 'rgba(244,112,184,.18)', fa);
+    arrowHead(ex, ey, Math.atan2(-dz, dx), 9, A.attack, fa);
     /* angle wedge between tangent and a dashed horizontal reference */
-    ctx.save();
+    ctx.save(); ctx.globalAlpha = fa;
     ctx.setLineDash([4, 4]); ctx.strokeStyle = 'rgba(245,242,255,.4)'; ctx.lineWidth = 1.5;
     ctx.beginPath(); ctx.moveTo(px2 - 60, py2); ctx.lineTo(px2 + 66, py2); ctx.stroke();
     ctx.setLineDash([]);
     const angT = Math.atan2(-dz, dx);                     // screen angle of motion
-    ctx.strokeStyle = A.attack; ctx.lineWidth = 2; ctx.globalAlpha = 0.9;
+    ctx.strokeStyle = A.attack; ctx.lineWidth = 2; ctx.globalAlpha = 0.9 * fa;
     ctx.beginPath(); ctx.arc(px2, py2, 28, 0, angT, angT < 0); ctx.stroke();
     ctx.restore();
     label('CLUB ATTACK ' + fmtNum(imp.attackAngle, 1) + '°',
-          Math.min(ex + 12, W - 150), ey - 16, A.attack, W >= 700 ? 11 : 10, 'left', false, 1);
+          Math.min(ex + 12, W - 150), ey - 16, A.attack, W >= 700 ? 11 : 10, 'left', false, fa);
   }
 
   /* --- low point: single plain marker (numbers/sequence live in the inset variant's inset) --- */
@@ -836,18 +884,7 @@ function drawFace(t){
       label(fmtSigned(lpx * 100, 1) + ' cm', x, ly + 13, A.ink, 10, 'center', true, 1);
   }
 
-  /* --- CLUB PATH: foreshortened ground arrow at the ball (depth cue) --- */
-  {
-    const pDeg = imp.clubPath;
-    const Lb = W >= 700 ? 78 : 58, Lf = W >= 700 ? 108 : 80;
-    const skew = Math.sin(d2r(pDeg)) * 3.2;      // + path = in-to-out = away from camera = up
-    const y0 = gy + 9;
-    const x1 = bx - Lb, y1 = y0 + skew * Lb / 10;
-    const x2 = bx + Lf, y2 = y0 - skew * Lf / 10;
-    coreLine(x1, y1, x2, y2, A.pathC, 3, 'rgba(91,200,245,.18)', 1);
-    arrowHead(x2, y2, Math.atan2(y2 - y1, x2 - x1), 9, A.pathC, 1);
-    label('CLUB PATH ' + fmtNum(pDeg, 1) + '°', x2 + 10, y2 + 2, A.pathC, W >= 700 ? 11 : 10, 'left');
-  }
+  /* (no path arrow in Face On — path is DTL's transient vector) */
 
   /* --- hero: swing direction (foreshortened ground arrow at the ball) --- */
   if (state.sel === 'dir'){
@@ -876,6 +913,8 @@ function drawFace(t){
   /* --- hero: plane label --- */
   if (state.sel === 'plane')
     label('SWING PLANE ' + fmtNum(state.plane, 0) + '°', W * 0.72, gy - 90, A.plane, 11, 'left');
+
+  ctx.restore();                              // close the inset punch-out clip
 }
 function strokeArc(s, M, style, width){
   ctx.save();
@@ -905,6 +944,10 @@ function drawDtl(t){
   const A = { path: CSS('--path'), sec: CSS('--secondary'), plane: CSS('--plane'),
               gold: CSS('--gold'), ink: CSS('--ink'), muted: CSS('--muted'),
               accent: CSS('--accent'), depth: CSS('--depth') };
+  const fa = flashAlpha();
+
+  ctx.save();
+  ctx.clip(sceneClipPath(), 'evenodd');       // never draw under the mini screen
 
   /* ground plane wash + subtle grid */
   const horizon = P({ x: 60, y: 0, z: 0 });
@@ -1048,8 +1091,37 @@ function drawDtl(t){
     }
   }
 
-  /* CLUB PATH: short cyan tangent through impact, draw-in toward ball */
+  /* underground gold: same θ-segment as Face On, no text, fades out */
   {
+    const t0g = groundCrossingTheta0(s);
+    if (t0g !== null && fa > 0.01){
+      ctx.save(); ctx.lineCap = 'round';
+      const segPts = [];
+      for (let i = 0; i <= 30; i++){
+        const th = -t0g + (2 * t0g * i) / 30;
+        const p = P(arcPosition(th, s));
+        if (p) segPts.push(p);
+      }
+      if (segPts.length > 1){
+        const seg = wpx => {
+          ctx.beginPath();
+          segPts.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y));
+          ctx.lineWidth = wpx; ctx.stroke();
+        };
+        ctx.globalAlpha = 0.20 * fa;
+        ctx.strokeStyle = 'rgba(255,154,61,1)'; seg(8);
+        ctx.globalAlpha = fa;
+        const gGold = ctx.createLinearGradient(segPts[0].x, segPts[0].y,
+          segPts[segPts.length - 1].x, segPts[segPts.length - 1].y);
+        gGold.addColorStop(0, '#fdf3e0'); gGold.addColorStop(0.55, '#e8b45a'); gGold.addColorStop(1, '#ff9a3d');
+        ctx.strokeStyle = gGold; seg(2.6);
+      }
+      ctx.restore();
+    }
+  }
+
+  /* CLUB PATH: transient — appears on parameter change, fades out */
+  if (fa > 0.01){
     const thImp = thetaAtImpact(s);
     const tv = tangentAt(thImp, s);
     const n = Math.hypot(tv.x, tv.y, tv.z) || 1;
@@ -1060,13 +1132,15 @@ function drawDtl(t){
     const pA = P({ x: impact3.x - dir3.x * back, y: impact3.y - dir3.y * back, z: impact3.z - dir3.z * back });
     const pB = P({ x: impact3.x + dir3.x * fwdL, y: impact3.y + dir3.y * fwdL, z: impact3.z + dir3.z * fwdL });
     if (pA && pB){
-      coreLine(pA.x, pA.y, pB.x, pB.y, A.path, 3, 'rgba(91,200,245,.2)', 1);
-      arrowHead(pB.x, pB.y, Math.atan2(pB.y - pA.y, pB.x - pA.x), 9, A.path, 1);
+      coreLine(pA.x, pA.y, pB.x, pB.y, A.path, 3, 'rgba(91,200,245,.2)', fa);
+      arrowHead(pB.x, pB.y, Math.atan2(pB.y - pA.y, pB.x - pA.x), 9, A.path, fa);
       const mx = pA.x + (pB.x - pA.x) * 0.3, myy = pA.y + (pB.y - pA.y) * 0.3;
       label('CLUB PATH ' + fmtNum(deriveImpact(s).clubPath, 1) + '°',
-            clamp(mx + 16, 8, W - 130), clamp(myy + 10, 14, H - 10), A.path, 11, 'left');
+            clamp(mx + 16, 8, W - 130), clamp(myy + 10, 14, H - 10), A.path, 11, 'left', false, fa);
     }
   }
+
+  ctx.restore();                              // close the inset punch-out clip
 }
 
 /* ============================================================ boot */
@@ -1074,6 +1148,7 @@ updateChipValues();
 selectParam('low');
 updateOutcomes();
 prevOut = null; updateOutcomes();   // seed without pulsing
+vecFlashAt = performance.now();     // one orientation flash on load, then fade
 resize();
 </script>
 </body>
