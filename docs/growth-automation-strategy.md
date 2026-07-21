@@ -29,6 +29,16 @@ strategy is built on making it legible.
 
 ---
 
+> **⚠️ v1.1 — revised by `docs/growth-strategy-addendum.md`.** A later deep-research
+> + adversarial-verification + red-team pass corrected six things in this
+> document. Read the addendum alongside it. The three that most change the plan:
+> (1) **pricing *direction* is reversed** — the risk is *over*-pricing, not
+> under-pricing; go **annual-first / lifetime-forward** and test price *downward*
+> toward the $8–15/mo software band (ignore the "raise annual to 499" line in Q5);
+> (2) **shareable shot-cards are build #1**, not a Day-61 feature; (3) **installs
+> must be *derived* from a reach→install→pay funnel, not assumed.** Verified
+> competitor pricing and corrected retention numbers are in the addendum.
+
 ## TL;DR (read this, skip the rest if busy)
 
 1. **The product is good; the problem is distribution and retention, not the
@@ -313,11 +323,16 @@ gate, per the locked model):
 
 ### The single most important sensitivity
 
-**Conversion and price move revenue more than installs, and they're cheaper to
-move.** Going from 4% → 6% conversion, or nudging annual 399 → 499 (both testable
-in weeks via Superwall A/B), is worth more per unit effort than grinding installs
-from 40k → 60k. **Instrument price and paywall from day one** (Q9 tooling) — it's
-the highest-ROI experiment you have.
+**Conversion and paywall *architecture* move revenue more than installs, and
+they're cheaper to move.** Improving conversion, or restructuring the plan
+ladder, is worth more per unit effort than grinding installs from 40k → 60k.
+**Instrument price and paywall from day one** (Q9 tooling) — it's the highest-ROI
+experiment you have. **⚠️ Direction corrected (addendum §1):** make the first
+paywall test a *plan-architecture* test, not a price *increase*. Verified
+evidence says software-only golf comps cluster at $8–15/mo and one-time-aha
+products die on monthly plans, so go **annual-first / lifetime-forward** and test
+price **downward** toward the perceived band — do **not** raise annual to 499
+until an A/B proves demand is price-insensitive.
 
 ### Reality check (so the numbers stay honest)
 
@@ -366,10 +381,13 @@ The plan only works if the content cadence survives. **Unlock:** the automation
 stack (Q4) exists specifically to make one person's output look like a team's.
 Batch, schedule, automate — or channel #1 silently dies.
 
-### 5. Price left on the table + un-run experiments.
-Underpricing (the old 149 ladder) and never A/B-testing means leaving the easiest
-revenue unclaimed. **Unlock:** ship at 99/399/999, then let Superwall/RevenueCat
-run price and paywall tests continuously.
+### 5. Un-run pricing experiments (but watch the direction).
+Never A/B-testing means leaving revenue on the table — but **⚠️ the direction is
+corrected in addendum §1:** for a no-hardware, one-time-aha teacher, the evidenced
+risk is **over**-pricing, not under-pricing (the $39.99/$99.99 tiers already sit
+above every software-only golf comp). **Unlock:** ship, then let
+Superwall/RevenueCat run continuous plan-*architecture* tests — annual-first,
+lifetime-forward, monthly de-emphasized, price tested downward first.
 
 **What is *not* the blocker:** the engine, the design quality, or the honesty
 positioning. Those are assets. The blockers are all *distribution and
