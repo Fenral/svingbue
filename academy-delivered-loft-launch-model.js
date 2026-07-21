@@ -21,7 +21,9 @@ export function solveDeliveredLoftLaunchState(input={}){
     apex:flight.apex,landingAngle:flight.landingAngle,startDirection:clean(flight.startDirection),
     loftContribution:clean(.62*flight.dynamicLoft),attackContribution:clean(.25*flight.attackAngle),
     landingClamp:flight.landingAngle===60?'ceiling':flight.landingAngle===32?'floor':null,
-    backspinClamp:flight.backspin===9000?'ceiling':flight.backspin===1500?'floor':null,
+    // Kun taket igjen. Det gamle 1500-gulvet er slettet fra motoren, så en
+    // `===1500`-gren her kunne aldri bli sann og påsto en klemme som ikke skjer.
+    backspinClamp:flight.backspin===9000?'ceiling':null,
     input:Object.freeze({dynamicLoft,attackAngle,faceAngle,clubPath,clubSpeed,club}),held:HELD,
   });
 }

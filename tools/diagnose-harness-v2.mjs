@@ -22,9 +22,11 @@
  *
  * ── Engine honesty note (documented, load-bearing) ─────────────────────────
  * impact-flight.js's CLUBS table has ONLY a 7-iron preset; `club:'driver'`
- * falls back to the 7-iron preset (smash 1.33 cap, spinK 1.8, the shared
+ * shares the 7-iron longitudinal fit (smash cap differs; spin is the shared
  * ballSpeed→carry power-curve). VERIFIED: solveFlight(...,'driver') is
- * byte-identical to solveFlight(...,'7iron') for equal inputs. So the DRIVER
+ * identical to solveFlight(...,'7iron') ONLY while the smash cap is not binding.
+ * A driver preset now exists (own smash cap, shared spinCal 1.065): at loft 9 /
+ * attack +3 / 120 mph the two diverge (smash 1.4200 vs 1.4360). So the DRIVER
  * grid is the SAME shared physics driven through DRIVER-realistic INPUT RANGES
  * (low loft, high speed, shallow/ascending attack). Two honest consequences,
  * both reported in the findings and respected by the data layer:
@@ -527,7 +529,7 @@ const output = {
     engine: 'impact-flight.js (solveFlight) — read-only, byte-identical',
     clubs: Object.keys(CLUBS_CFG),
     schema: 'clubs.{club}.{meta,stats,inverseMap}; cluster adds speedHist, carryM{p10,p50,p90}, alsoProduces(9-flight), startLineMix, representative.spinLoft',
-    driverEngineNote: "impact-flight.js has no driver preset; club:'driver' falls back to the 7-iron preset (VERIFIED identical). Driver grid = shared physics through driver-realistic input ranges; bands are percentile-anchored to the driver grid's OWN distribution; absolute driver carry compresses at high speed and is never treated as truth.",
+    driverEngineNote: "impact-flight.js has a driver preset (own smash cap, spinCal shared with the 7-iron), but the LONGITUDINAL carry fit is still the shared 7-iron one. Outputs match '7iron' wherever the smash cap is not binding, and diverge where it is (loft 9 / attack +3 / 120 mph: smash 1.4200 vs 1.4360). Driver grid = largely shared physics through driver-realistic input ranges; bands are percentile-anchored to the driver grid's OWN distribution; absolute driver carry compresses at high speed and is never treated as truth.",
     conditioningModel: 'posterior(cluster) ∝ prior(cluster) × P(answer|cluster); P(answer|cluster) = cluster member fraction in the answered band (speedHist / carry-CDF / startLineMix) or a hard attack-band filter (divot). Renormalize to 100 after each answer.',
     generatedAt: new Date().toISOString(),
   },

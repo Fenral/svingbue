@@ -7,7 +7,7 @@
     "test": "npm run test:engine && npm run test:ux",
     "test:home": "node --test scripts/home-night-ladder.test.mjs",
     "test:gate": "node --test scripts/flightglass-change-gate.test.mjs",
-    "test:engine": "node --test --test-concurrency=1 scripts/impact-flight-calculated-spin.test.mjs scripts/impact-flight-3d-spin.test.mjs scripts/flightglass-3d-spin-model.test.mjs scripts/engine-driver-acceptance.test.mjs scripts/impact-outcome.test.mjs",
+    "test:engine": "npm run verify:academy-formulas && node --test --test-concurrency=1 scripts/impact-flight-calculated-spin.test.mjs scripts/impact-flight-3d-spin.test.mjs scripts/flightglass-3d-spin-model.test.mjs scripts/engine-driver-acceptance.test.mjs scripts/impact-outcome.test.mjs",
     "spot:browser": "node scripts/flightglass-browser-spot.mjs",
     "verify:change": "node scripts/flightglass-change-gate.mjs",
     "test:academy-foundation": "node --test --test-concurrency=1 scripts/academy-curriculum.test.mjs scripts/academy-store.test.mjs scripts/academy-router.test.mjs scripts/academy-recommendation.test.mjs scripts/academy-home-view-model.test.mjs scripts/academy-experience-host.test.mjs scripts/academy-voice-manifest.test.mjs scripts/academy-voice.test.mjs scripts/academy-voice-sync.test.mjs scripts/academy-voice-ui.test.mjs scripts/academy-voice-reference-cues.test.mjs scripts/academy-voice-pack.test.mjs scripts/academy-voice-production.test.mjs scripts/academy-start-line-model.test.mjs scripts/academy-start-line-content.test.mjs scripts/academy-shape-model.test.mjs scripts/academy-shape-content.test.mjs scripts/academy-carry-side-model.test.mjs scripts/academy-carry-side-content.test.mjs scripts/academy-attack-at-impact-model.test.mjs scripts/academy-attack-at-impact-content.test.mjs scripts/academy-low-point-model.test.mjs scripts/academy-low-point-content.test.mjs scripts/academy-contact-height-model.test.mjs scripts/academy-contact-height-content.test.mjs scripts/academy-delivered-loft-launch-model.test.mjs scripts/academy-delivered-loft-launch-content.test.mjs scripts/academy-backspin-content.test.mjs scripts/academy-flight-height-descent-model.test.mjs scripts/academy-flight-height-descent-content.test.mjs scripts/academy-speed-transfer-model.test.mjs scripts/academy-speed-transfer-content.test.mjs scripts/academy-carry-model.test.mjs scripts/academy-carry-content.test.mjs scripts/academy-air-density-model.test.mjs scripts/academy-air-density-content.test.mjs scripts/academy-wind-model.test.mjs scripts/academy-wind-content.test.mjs scripts/academy-plane-coupling-model.test.mjs scripts/academy-plane-coupling-content.test.mjs",
@@ -42,7 +42,8 @@
     "copy-web": "node scripts/copy-web.mjs",
     "shots": "node scripts/store-screenshots.mjs",
     "sync": "cap sync ios",
-    "sync:android": "cap sync android"
+    "sync:android": "cap sync android",
+    "verify:academy-formulas": "node scripts/verify-academy-formulas.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^7.6.7",
