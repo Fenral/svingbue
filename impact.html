@@ -1102,5 +1102,16 @@ updateStats(selectOutcome(state));
 syncSeg();
 requestAnimationFrame(frame);
 </script>
+<!-- Portrait lock (see sa-orientation.js): the native app holds portrait; this
+     is the web fallback shown only on a landscape phone, where the browser
+     cannot be force-rotated. -->
+<style>
+  .rotate{position:fixed;inset:0;z-index:9999;display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:var(--bg,#0a0d13);color:#e8eaed;text-align:center;padding:24px}
+  .rotate .ico{font-size:46px;line-height:1}
+  .rotate p{font-size:15px;max-width:240px;margin:0}
+  @media (orientation:landscape) and (max-height:480px){.rotate{display:flex}}
+</style>
+<div class="rotate"><div class="ico" aria-hidden="true">📱</div><p>Rotate your phone to portrait</p></div>
+<script type="module">import { lockPortrait } from './sa-orientation.js'; lockPortrait();</script>
 </body>
 </html>

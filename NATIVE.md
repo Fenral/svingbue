@@ -44,7 +44,9 @@ the first scripted step of the `ios-testflight` workflow in
 `codemagic.yaml`. The generated `ios/` project is never committed — every
 CI run regenerates it from scratch, then:
 
-1. Patches `ios/App/App/Info.plist` for landscape-only orientation +
+1. Patches `ios/App/App/Info.plist` for portrait-default orientation
+   (portrait + both landscape rotations permitted; the geometry screen
+   rotates to landscape at runtime via `@capacitor/screen-orientation`) +
    display name (`scripts/ios-landscape.mjs`).
 2. Generates app icons/launch images from `resources/icon.png` /
    `resources/splash.png` via `npx @capacitor/assets generate --ios`.
@@ -58,7 +60,7 @@ CI run regenerates it from scratch, then:
 | `package.json` | Capacitor CLI + core/ios/android/app/haptics/screen-orientation deps, `copy-web`/`sync`/`sync:android` scripts |
 | `capacitor.config.ts` | `appId`, `appName`, `webDir: 'www'`, no live-reload server |
 | `scripts/copy-web.mjs` | Assembles `www/` (allowlist HTML + dirs, denylist mocks/tooling) |
-| `scripts/ios-landscape.mjs` | Patches `Info.plist` post-`cap add ios` (landscape-only, full screen, display name) |
+| `scripts/ios-landscape.mjs` | Patches `Info.plist` post-`cap add ios` (portrait-default orientation, full screen, display name) |
 | `resources/icon.svg`, `resources/icon.png` (1024²) | App icon source (cyan swing-arc + ball on near-black field) |
 | `resources/splash.svg`, `resources/splash.png` (2732²) | Launch screen source |
 | `codemagic.yaml` | `ios-testflight` workflow: npm ci → copy-web → cap add ios → plist patch → assets generate → cap sync → pod install → build number → sign → build ipa → publish to TestFlight |
@@ -70,9 +72,10 @@ Mirrors the iOS approach: the `android/` platform dir is **never
 committed** — `.github/workflows/android-debug.yml` regenerates it fresh on
 every push to `main` (`npx cap add android`), then:
 
-1. Patches `android/app/src/main/AndroidManifest.xml` for landscape-only
-   (`android:screenOrientation="sensorLandscape"` on `.MainActivity`) via
-   `scripts/android-landscape.mjs`.
+1. Patches `android/app/src/main/AndroidManifest.xml` for portrait-default
+   orientation (`android:screenOrientation="portrait"` on `.MainActivity`;
+   the geometry screen rotates to landscape at runtime via
+   `@capacitor/screen-orientation`) via `scripts/android-landscape.mjs`.
 2. Generates icons/splash from `resources/` (`--assetPath resources` —
    required because the repo root's `assets/` dir is the tool's default).
 3. Builds an **unsigned debug APK** (`gradlew assembleDebug`) and uploads it

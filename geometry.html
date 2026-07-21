@@ -2055,5 +2055,9 @@ window.__coachDebug = {
   window.__fpsMeter = { get on() { return !!el; }, get summary() { return summary; } };
 })();
 </script>
+<!-- Landscape lock (see sa-orientation.js): geometry is the one landscape
+     screen; the native app rotates to landscape here and back to portrait on
+     the other screens. The .rotate hint above is the web fallback. -->
+<script type="module">import { lockLandscape } from './sa-orientation.js'; lockLandscape();</script>
 </body>
 </html>
