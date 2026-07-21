@@ -1,0 +1,35 @@
+diff --git a/academy-speed-transfer-model.js b/academy-speed-transfer-model.js
+index 04e0826..6d59ce4 100644
+--- a/academy-speed-transfer-model.js
++++ b/academy-speed-transfer-model.js
+@@ -9,14 +9,12 @@ function engineAt(clubSpeed,spinLoft){
+   return solveFlight({clubSpeed,dynamicLoft:spinLoft,attackAngle:HELD.attackAngle,faceAngle:HELD.faceAngle,clubPath:HELD.clubPath,club:HELD.club});
+ }
+ 
+-// Derive the protected model line and bounds from solveFlight itself. The
+-// Academy adapter deliberately owns no duplicate Smash calibration constants.
+-const interiorA=engineAt(100,30).ballSpeed/100;
+-const interiorB=engineAt(100,31).ballSpeed/100;
+-const MODEL_SLOPE=interiorB-interiorA;
+-const MODEL_INTERCEPT=interiorA-MODEL_SLOPE*30;
+-const UPPER_SMASH=engineAt(100,0).ballSpeed/100;
+-const LOWER_SMASH=engineAt(100,100).ballSpeed/100;
++// The protected Smash model is read directly off solveFlight's exposed
++// coefficients — the adapter still owns no duplicate calibration constants. The
++// previous local two-point line assumed Smash was linear in spin loft; the
++// recalibrated Smash is quadratic, so that line threw for every delivery away
++// from the 30° sample. Reading the live quadratic terms tracks the model across
++// the whole spin-loft range.
+ 
+ export const SPEED_TRANSFER_LIMITS=Object.freeze({
+   clubSpeed:[70,115],spinLoft:[5,80],coreSpinLoft:[20,50],ballSpeed:[130.46,130.66],
+@@ -29,7 +27,8 @@ export function solveSpeedTransferState(input={}){
+   const club=input.club??HELD.club;if(club!==HELD.club)throw new RangeError('Only the held 7-iron preset is supported');
+   const flight=engineAt(clubSpeed,spinLoft);
+   const smash=flight.ballSpeed/clubSpeed;
+-  const smashRaw=MODEL_INTERCEPT+MODEL_SLOPE*spinLoft;
++  const UPPER_SMASH=flight.smashMaximum,LOWER_SMASH=flight.smashMinimum;
++  const smashRaw=flight.smashModelIntercept+flight.smashSpinLoftLinear*flight.spinLoft+flight.smashSpinLoftQuadratic*flight.spinLoft**2;
+   const smashClamp=Math.abs(smash-UPPER_SMASH)<=EPSILON&&smashRaw>=UPPER_SMASH-EPSILON?'upper':Math.abs(smash-LOWER_SMASH)<=EPSILON&&smashRaw<=LOWER_SMASH+EPSILON?'lower':null;
+   const expected=Math.max(LOWER_SMASH,Math.min(UPPER_SMASH,smashRaw));
+   if(!Number.isFinite(smash)||Math.abs(smash-expected)>EPSILON||Math.abs(flight.spinLoft-spinLoft)>EPSILON)throw new RangeError('Transfer adapter diverged from protected flight output');
