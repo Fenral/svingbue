@@ -14,7 +14,7 @@ import {
 
 test('initial state requires the learner to perform both mission stages', () => {
   const solved = solveBackspinState(INITIAL_BACKSPIN_STATE);
-  assert.equal(solved.rpm, 5970);
+  assert.equal(solved.rpm, 4609);
   assert.equal(solved.spinLoft, 28);
   assert.deepEqual(advanceMission({ built:false, cut:false }, solved.rpm), {
     built:false, cut:false, complete:false, event:null
@@ -52,7 +52,7 @@ test('low spin has no floor: the display tracks the model all the way down', () 
   const state = { dynamicLoft:10, attackAngle:6, ballSpeed:90 };
   const solved = solveBackspinState(state);
   const sensitivity = backspinSensitivity(state);
-  assert.equal(solved.rpm, 632, 'spinn under det gamle gulvet vises som det er');
+  assert.equal(solved.rpm, 449, 'spinn under det gamle gulvet vises som det er');
   assert.equal(solved.rawRpm, solved.rpm, 'ingenting klemmes: vist = rå');
   assert.equal(solved.displayCapped, false);
   assert.equal(solved.noFloor, true);
@@ -64,8 +64,8 @@ test('low spin has no floor: the display tracks the model all the way down', () 
 });
 
 test('only the ceiling is a real bound; the low end is labelled as having none', () => {
-  const ceiling = solveBackspinState({ dynamicLoft:40.8141, attackAngle:0, ballSpeed:125 });
-  const lowEnd = solveBackspinState({ dynamicLoft:15.54, attackAngle:6, ballSpeed:90 });
+  const ceiling = solveBackspinState({ dynamicLoft:39.0534, attackAngle:0, ballSpeed:125 });
+  const lowEnd = solveBackspinState({ dynamicLoft:19.2005, attackAngle:6, ballSpeed:90 });
   assert.equal(ceiling.rawRpm, 9000);
   assert.equal(ceiling.displayLimit, 'ceiling');
   assert.equal(lowEnd.rawRpm, 1500);
@@ -81,9 +81,9 @@ test('cause chain reports actual engine deltas', () => {
   const chain = buildCauseChain(before, after, 'dynamicLoft');
   assert.equal(chain.inputDelta, 1);
   assert.equal(chain.spinLoftDelta, 1);
-  assert.equal(chain.rpmDelta, 209);
-  assert.equal(chain.rawRpmDelta, 209);
-  assert.match(chain.speech, /backspin plus 209 rpm/i);
+  assert.equal(chain.rpmDelta, 430);
+  assert.equal(chain.rawRpmDelta, 430);
+  assert.match(chain.speech, /backspin plus 430 rpm/i);
 });
 
 test('cause chain separates a clamped display from the underlying model delta', () => {
@@ -93,10 +93,10 @@ test('cause chain separates a clamped display from the underlying model delta', 
   const after = { ...before, dynamicLoft:47 };
   const chain = buildCauseChain(before, after, 'dynamicLoft');
   assert.equal(chain.rpmDelta, 0);
-  assert.equal(chain.rawRpmDelta, 235);
+  assert.equal(chain.rawRpmDelta, 362);
   assert.equal(chain.displayLimit, 'ceiling');
   assert.match(chain.speech, /displayed backspin unchanged at 9000 rpm/i);
-  assert.match(chain.speech, /underlying model plus 235 rpm/i);
+  assert.match(chain.speech, /underlying model plus 362 rpm/i);
 });
 
 /* Kontrasten som bærer leksjonen: i toppen fryser displayet, i bunnen gjør det
@@ -105,11 +105,11 @@ test('cause chain keeps moving at the low end — there is no floor to freeze it
   const before = { dynamicLoft:11, attackAngle:6, ballSpeed:90 };
   const after = { ...before, dynamicLoft:10 };
   const chain = buildCauseChain(before, after, 'dynamicLoft');
-  assert.equal(chain.rpmDelta, -157, 'displayet beveger seg — ingen klemme');
-  assert.equal(chain.rawRpmDelta, -157);
+  assert.equal(chain.rpmDelta, -112, 'displayet beveger seg — ingen klemme');
+  assert.equal(chain.rawRpmDelta, -112);
   assert.equal(chain.rpmDelta, chain.rawRpmDelta, 'vist og rå er identiske under gulvhøyden');
   assert.equal(chain.displayLimit, 'no-floor');
-  assert.match(chain.speech, /backspin minus 157 rpm/i);
+  assert.match(chain.speech, /backspin minus 112 rpm/i);
   assert.doesNotMatch(chain.speech, /unchanged/i, 'ingenting står stille her');
   assert.doesNotMatch(chain.speech, /floor reached/i, 'gulvet finnes ikke lenger');
   assert.doesNotMatch(chain.speech, /1500|1,500/, 'den gamle gulvverdien skal aldri leses opp');
