@@ -56,7 +56,7 @@ jobs:
       - name: Sync web assets + plugins into the Android project
         run: npx cap sync android
 
-      - name: Patch AndroidManifest.xml for landscape-only
+      - name: Patch AndroidManifest.xml for portrait-default orientation
         run: node scripts/android-landscape.mjs
 
       - name: Generate app icons/splash from resources/

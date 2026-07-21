@@ -7,13 +7,19 @@
 // until CI creates it). Run this in the Codemagic pipeline, after
 // `npx cap add ios` and before `npx cap sync ios`.
 //
+// Orientation model (see sa-orientation.js): the app is PORTRAIT by default;
+// geometry is the one landscape screen, flipped at runtime by the
+// @capacitor/screen-orientation plugin. iOS refuses to rotate to an orientation
+// that is absent from UISupportedInterfaceOrientations, so the plist must
+// PERMIT both — portrait (listed first = the launch default) plus both
+// landscape rotations for geometry. (Historically this script locked
+// landscape-only; the filename is kept for CI/brand-verifier continuity.)
+//
 // What it does:
-//   1. Sets UISupportedInterfaceOrientations (iPhone) to landscape-left +
-//      landscape-right ONLY (removes portrait/upside-down).
-//   2. Sets UISupportedInterfaceOrientations~ipad (iPad) the same way, so
-//      the app stays landscape-only even if later run on iPad.
-//   3. Sets UIRequiresFullScreen to true (no Slide Over / Split View on
-//      iPad, which would otherwise fight the landscape-only layout).
+//   1. Sets UISupportedInterfaceOrientations (iPhone) to portrait (default) +
+//      landscape-left + landscape-right.
+//   2. Sets UISupportedInterfaceOrientations~ipad (iPad) the same way.
+//   3. Sets UIRequiresFullScreen to true (no Slide Over / Split View on iPad).
 //   4. Sets CFBundleDisplayName to "Flightglass" (the name shown under the
 //      home-screen icon; separate from CFBundleName).
 //
@@ -30,36 +36,28 @@
 //   - Assumes the plist's root <dict> is the last `</dict>` before
 //     `</plist>` in the file — true for every plist Capacitor/Xcode
 //     generates (a single top-level dict).
+//   - The pure transform is exported as `patchPlist(xml)` for unit tests; the
+//     file-touching CLI runs only when this module is the entry point.
 
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, '..');
 const PLIST_PATH = join(ROOT, 'ios', 'App', 'App', 'Info.plist');
 
-function log(msg) {
-  console.log(`[ios-landscape] ${msg}`);
-}
-
-if (!existsSync(PLIST_PATH)) {
-  console.error(
-    `[ios-landscape] ERROR: ${PLIST_PATH} does not exist.\n` +
-    `This script must run AFTER "npx cap add ios" has generated the iOS\n` +
-    `project (Codemagic mac_mini_m2 build step), not on a Windows dev\n` +
-    `machine where ios/ is never generated locally.`
-  );
-  process.exit(1);
-}
-
-let plist = readFileSync(PLIST_PATH, 'utf8');
-const original = plist;
-
-const LANDSCAPE_ONLY_ARRAY = [
+// Portrait first (the launch default), then both landscape rotations so the
+// runtime plugin can flip the geometry screen to landscape.
+const SUPPORTED_ORIENTATIONS = [
+  'UIInterfaceOrientationPortrait',
   'UIInterfaceOrientationLandscapeLeft',
   'UIInterfaceOrientationLandscapeRight',
 ];
+
+function log(msg) {
+  console.log(`[ios-landscape] ${msg}`);
+}
 
 function buildStringArrayXml(values, indent = '\t') {
   const items = values.map((v) => `${indent}\t<string>${v}</string>`).join('\n');
@@ -67,9 +65,9 @@ function buildStringArrayXml(values, indent = '\t') {
 }
 
 /**
- * Replace the value of an existing <key>keyName</key><array>...</array> (or
- * any single-node value) block, or insert a new <key>/value pair just before
- * the root dict's closing </dict> if the key doesn't exist yet.
+ * Replace the value of an existing <key>keyName</key><array>...</array> block,
+ * or insert a new <key>/value pair just before the root dict's closing </dict>
+ * if the key doesn't exist yet.
  */
 function setArrayKey(xml, keyName, values) {
   const keyRe = new RegExp(
@@ -130,27 +128,49 @@ function insertKeyBeforeRootDictClose(xml, snippet) {
   return xml.slice(0, dictCloseIdx) + snippet + '\n' + xml.slice(dictCloseIdx);
 }
 
-// 1. iPhone orientations — landscape only.
-plist = setArrayKey(plist, 'UISupportedInterfaceOrientations', LANDSCAPE_ONLY_ARRAY);
-log('set UISupportedInterfaceOrientations -> landscape-left + landscape-right only');
-
-// 2. iPad orientations — landscape only (separate key Capacitor generates by default).
-plist = setArrayKey(plist, 'UISupportedInterfaceOrientations~ipad', LANDSCAPE_ONLY_ARRAY);
-log('set UISupportedInterfaceOrientations~ipad -> landscape-left + landscape-right only');
-
-// 3. Full screen on iPad — prevents Slide Over/Split View fighting the layout.
-plist = setBoolKey(plist, 'UIRequiresFullScreen', true);
-log('set UIRequiresFullScreen -> true');
-
-// 4. Display name shown under the home-screen icon.
-plist = setStringKey(plist, 'CFBundleDisplayName', 'Flightglass');
-log('set CFBundleDisplayName -> Flightglass');
-
-if (plist === original) {
-  log('no changes needed (already patched) — plist untouched on disk.');
-} else {
-  writeFileSync(PLIST_PATH, plist, 'utf8');
-  log(`wrote ${PLIST_PATH}`);
+/**
+ * Pure transform: given Info.plist XML, return the patched XML. Exported for
+ * unit tests; the CLI below applies it to the real file on disk.
+ */
+export function patchPlist(xml) {
+  let plist = xml;
+  plist = setArrayKey(plist, 'UISupportedInterfaceOrientations', SUPPORTED_ORIENTATIONS);
+  plist = setArrayKey(plist, 'UISupportedInterfaceOrientations~ipad', SUPPORTED_ORIENTATIONS);
+  plist = setBoolKey(plist, 'UIRequiresFullScreen', true);
+  plist = setStringKey(plist, 'CFBundleDisplayName', 'Flightglass');
+  return plist;
 }
 
-log('done.');
+function runCli() {
+  if (!existsSync(PLIST_PATH)) {
+    console.error(
+      `[ios-landscape] ERROR: ${PLIST_PATH} does not exist.\n` +
+      `This script must run AFTER "npx cap add ios" has generated the iOS\n` +
+      `project (Codemagic mac_mini_m2 build step), not on a Windows dev\n` +
+      `machine where ios/ is never generated locally.`
+    );
+    process.exit(1);
+  }
+
+  const original = readFileSync(PLIST_PATH, 'utf8');
+  const plist = patchPlist(original);
+
+  log('set UISupportedInterfaceOrientations -> portrait (default) + landscape-left + landscape-right');
+  log('set UISupportedInterfaceOrientations~ipad -> portrait (default) + landscape-left + landscape-right');
+  log('set UIRequiresFullScreen -> true');
+  log('set CFBundleDisplayName -> Flightglass');
+
+  if (plist === original) {
+    log('no changes needed (already patched) — plist untouched on disk.');
+  } else {
+    writeFileSync(PLIST_PATH, plist, 'utf8');
+    log(`wrote ${PLIST_PATH}`);
+  }
+
+  log('done.');
+}
+
+// Run the file-touching CLI only when invoked directly (not when imported).
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  runCli();
+}
