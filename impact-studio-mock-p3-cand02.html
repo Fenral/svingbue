@@ -65,18 +65,20 @@
       radial-gradient(120% 55% at 50% 62%, #3B2A55 0%, transparent 60%),
       linear-gradient(180deg, #0E0A18 0%, #120D1E 34%, #241536 58%, #17102A 74%, #0F0B1C 100%)}
   #scene{position:absolute;inset:0;width:100%;height:100%;display:block}
-  .views{position:absolute;top:8px;right:8px;display:flex;gap:6px;z-index:5}
-  .vbtn{
-    height:44px;min-width:44px;padding:0 14px;border-radius:12px;cursor:pointer;
+  /* right rail: two glyph toggles — camera orbit (view) and ball lie (club).
+     State lives in the little drawing, not in paired pill buttons. */
+  .rail{position:absolute;top:8px;right:8px;display:flex;flex-direction:column;gap:6px;z-index:5}
+  .orb{
+    width:58px;min-height:60px;padding:4px 2px 6px;border-radius:14px;cursor:pointer;
     background:var(--plate);border:1px solid var(--line);color:var(--muted);
-    font-family:inherit;font-size:12px;font-weight:700;letter-spacing:.08em;
-    backdrop-filter:blur(3px);position:relative;
+    font-family:inherit;backdrop-filter:blur(3px);position:relative;
+    display:flex;flex-direction:column;align-items:center;gap:1px;
   }
-  .vbtn.active{color:var(--ink);border-color:rgba(157,139,255,.55);background:rgba(17,13,28,.92)}
-  .vbtn.pulse::before{content:"";position:absolute;inset:-3px;border-radius:15px;
+  .orb:active{border-color:var(--line-strong)}
+  .orb svg{width:40px;height:36px;display:block}
+  .orb .cap{font-size:10px;font-weight:700;letter-spacing:.03em;line-height:1;color:var(--ink)}
+  .orb.pulse::before{content:"";position:absolute;inset:-3px;border-radius:17px;
     border:2px solid var(--secondary);animation:ringPulse .55s var(--ease) 1;pointer-events:none}
-  .clubs{position:absolute;bottom:8px;right:8px;display:flex;gap:6px;z-index:5}
-  .clubs .vbtn{font-size:11px;padding:0 12px}
   @keyframes ringPulse{0%{opacity:.9;transform:scale(.96)}100%{opacity:0;transform:scale(1.12)}}
 
   /* miniskjerm: zoomed contact-zone inset (pattern: impact-inset-mock.html, P3-toned) */
@@ -155,7 +157,8 @@
     .card .lab{font-size:10px;letter-spacing:.04em}
     .chip .cl{font-size:10px;letter-spacing:.03em}
     .controls{height:calc(86px + env(safe-area-inset-bottom))}
-    .vbtn{padding:0 10px;font-size:11px}
+    .orb{width:52px;min-height:54px}
+    .orb svg{width:34px;height:30px}
   }
 
   /* portrait gate (pattern: impact-viz-mock.html) */
@@ -193,13 +196,40 @@
         <span class="st"><em id="insetQual">PURE</em>&nbsp;·&nbsp;<span id="insetMm">−20 mm</span></span></div>
       <canvas id="insetCv"></canvas>
     </div>
-    <div class="views">
-      <button class="vbtn active" id="btnFace">FACE ON</button>
-      <button class="vbtn" id="btnDtl">DOWN THE LINE</button>
-    </div>
-    <div class="clubs">
-      <button class="vbtn active" id="btnIron">IRON</button>
-      <button class="vbtn" id="btnDriver">DRIVER</button>
+    <div class="rail">
+      <button class="orb" id="btnView" aria-label="Bytt kameravinkel">
+        <svg viewBox="0 0 44 40" aria-hidden="true">
+          <circle cx="22" cy="22" r="12.5" fill="none" stroke="rgba(157,139,255,.35)"
+                  stroke-width="1.2" stroke-dasharray="2.5 3"/>
+          <line x1="22" y1="22" x2="22" y2="8" stroke="rgba(245,242,255,.45)" stroke-width="1.3"/>
+          <path d="M22 4.5 l-3 5 h6 z" fill="rgba(245,242,255,.55)"/>
+          <circle cx="22" cy="22" r="3" fill="#F5F2FF"/>
+          <g id="camG" style="transform-origin:22px 22px;transform:rotate(-90deg);
+                              transition:transform .35s cubic-bezier(.2,.8,.2,1)">
+            <g transform="translate(22 34.5)">
+              <circle r="4.4" fill="#0D0A18" stroke="#9D8BFF" stroke-width="1.6"/>
+              <circle r="1.6" fill="#9D8BFF"/>
+            </g>
+          </g>
+        </svg>
+        <span class="cap" id="viewCap">FACE ON</span>
+      </button>
+      <button class="orb" id="btnClub" aria-label="Bytt kølle">
+        <svg viewBox="0 0 44 40" aria-hidden="true">
+          <line x1="7" y1="32" x2="37" y2="32" stroke="rgba(200,225,150,.55)" stroke-width="1.4"/>
+          <g id="lieIron" style="transition:opacity .3s">
+            <path d="M14 32 l2 -6 M18 32 l1.4 -5 M27 32 l-1.6 -5.4 M31 32 l-2 -6"
+                  stroke="rgba(130,185,85,.8)" stroke-width="1.4" stroke-linecap="round" fill="none"/>
+            <circle cx="22" cy="27.5" r="4.5" fill="#F5F2FF"/>
+          </g>
+          <g id="lieDriver" style="opacity:0;transition:opacity .3s">
+            <line x1="22" y1="32" x2="22" y2="22.5" stroke="rgba(210,205,225,.85)" stroke-width="2"/>
+            <line x1="19" y1="22.5" x2="25" y2="22.5" stroke="rgba(210,205,225,.85)" stroke-width="1.6"/>
+            <circle cx="22" cy="17.5" r="4.5" fill="#F5F2FF"/>
+          </g>
+        </svg>
+        <span class="cap" id="clubCap">IRON</span>
+      </button>
     </div>
   </div>
 
@@ -411,7 +441,7 @@ let hintTimer = 0;
 function crossViewHint(){
   const other = (state.sel === 'dir' || state.sel === 'plane') ? 'dtl' : 'face';
   if (state.view === other) return;
-  const btn = other === 'dtl' ? $('btnDtl') : $('btnFace');
+  const btn = $('btnView');
   if (btn.classList.contains('pulse')) return;
   btn.classList.add('pulse');
   clearTimeout(hintTimer);
@@ -469,20 +499,20 @@ $('resetBtn').addEventListener('click', () => {
 function setClub(c){
   state.club = c;
   state.plane = PLANE_PRESET[c];              // auto-preset; freely adjustable after
-  $('btnIron').classList.toggle('active', c === 'iron');
-  $('btnDriver').classList.toggle('active', c === 'driver');
+  $('lieIron').style.opacity = c === 'iron' ? '1' : '0';
+  $('lieDriver').style.opacity = c === 'driver' ? '1' : '0';
+  $('clubCap').textContent = c === 'iron' ? 'IRON' : 'DRIVER';
   if (state.sel === 'plane') range.value = state.plane;
   vecFlashAt = performance.now();
   updateChipValues(); layoutSlider(); updateOutcomes(); kick();
 }
-$('btnIron').addEventListener('click', () => setClub('iron'));
-$('btnDriver').addEventListener('click', () => setClub('driver'));
-$('btnFace').addEventListener('click', () => setView('face'));
-$('btnDtl').addEventListener('click', () => setView('dtl'));
+$('btnClub').addEventListener('click', () => setClub(state.club === 'iron' ? 'driver' : 'iron'));
+$('btnView').addEventListener('click', () => setView(state.view === 'face' ? 'dtl' : 'face'));
 function setView(v){
   state.view = v;
-  $('btnFace').classList.toggle('active', v === 'face');
-  $('btnDtl').classList.toggle('active', v === 'dtl');
+  /* camera dot orbits the ball: face-on = beside (3 o'clock), DTL = behind (6 o'clock) */
+  $('camG').style.transform = v === 'face' ? 'rotate(-90deg)' : 'rotate(0deg)';
+  $('viewCap').textContent = v === 'face' ? 'FACE ON' : 'DTL';
   vecFlashAt = performance.now();          // brief orientation flash on view switch
   kick();
 }
@@ -600,11 +630,17 @@ function drawInset(){
   const X = xm => (xm - x0) * sc;
   const Y = zm => gy - (zm >= 0 ? zm : -CAP * Math.tanh(-zm * EXAG / CAP)) * sc;
 
-  /* ground */
-  ictx.fillStyle = 'rgba(20,26,16,.6)';
-  ictx.fillRect(0, gy, IW, IH - gy);
-  ictx.strokeStyle = 'rgba(190,205,150,.45)'; ictx.lineWidth = 1.5;
-  ictx.beginPath(); ictx.moveTo(0, gy); ictx.lineTo(IW, gy); ictx.stroke();
+  /* ground: grass on top, soil underneath */
+  {
+    const soil = ictx.createLinearGradient(0, gy, 0, IH);
+    soil.addColorStop(0, '#3d2b1a'); soil.addColorStop(1, '#1a120c');
+    ictx.fillStyle = soil; ictx.fillRect(0, gy, IW, IH - gy);
+    const grass = ictx.createLinearGradient(0, gy, 0, gy + 5);
+    grass.addColorStop(0, '#3f6b2e'); grass.addColorStop(1, '#2a4a22');
+    ictx.fillStyle = grass; ictx.fillRect(0, gy, IW, 5);
+    ictx.strokeStyle = 'rgba(200,225,150,.5)'; ictx.lineWidth = 1;
+    ictx.beginPath(); ictx.moveTo(0, gy); ictx.lineTo(IW, gy); ictx.stroke();
+  }
 
   /* divot */
   if (t0g !== null){
@@ -617,8 +653,8 @@ function drawInset(){
       ictx.lineTo(X(p.x), Y(p.z));
     }
     ictx.lineTo(X(x.x), gy); ictx.closePath();
-    ictx.fillStyle = 'rgba(150,98,48,.9)'; ictx.fill();
-    ictx.strokeStyle = 'rgba(205,142,78,.9)'; ictx.lineWidth = 1.5; ictx.stroke();
+    ictx.fillStyle = 'rgba(24,15,8,.9)'; ictx.fill();
+    ictx.strokeStyle = 'rgba(205,142,78,.85)'; ictx.lineWidth = 1.5; ictx.stroke();
   }
 
   /* gold arc through the zone (glow pass + warm core, impact-kamera style) */
@@ -795,16 +831,21 @@ function drawFace(t){
   ctx.save();
   ctx.clip(sceneClipPath(), 'evenodd');       // never draw under the mini screen
 
-  /* --- ground band --- */
+  /* --- ground: green grass layer on top, soil underneath --- */
   const gy = M.gy;
-  ctx.fillStyle = 'rgba(20,26,16,.55)';
-  ctx.fillRect(0, gy, W, H - gy);
-  ctx.strokeStyle = 'rgba(190,205,150,.5)'; ctx.lineWidth = 2;
-  ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(W, gy); ctx.stroke();
-  /* grass ticks */
-  ctx.strokeStyle = 'rgba(150,180,90,.35)'; ctx.lineWidth = 1.5;
-  for (let x = 8; x < W; x += 17){
-    ctx.beginPath(); ctx.moveTo(x, gy); ctx.lineTo(x + 2, gy - 5); ctx.stroke();
+  {
+    const soil = ctx.createLinearGradient(0, gy, 0, H);
+    soil.addColorStop(0, '#3d2b1a'); soil.addColorStop(0.5, '#2a1d12'); soil.addColorStop(1, '#1a120c');
+    ctx.fillStyle = soil; ctx.fillRect(0, gy, W, H - gy);
+    const grass = ctx.createLinearGradient(0, gy, 0, gy + 8);
+    grass.addColorStop(0, '#3f6b2e'); grass.addColorStop(1, '#2a4a22');
+    ctx.fillStyle = grass; ctx.fillRect(0, gy, W, 8);
+    ctx.strokeStyle = 'rgba(200,225,150,.55)'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(W, gy); ctx.stroke();
+    ctx.strokeStyle = 'rgba(130,185,85,.7)'; ctx.lineWidth = 1.5;
+    for (let x = 8; x < W; x += 15){
+      ctx.beginPath(); ctx.moveTo(x, gy); ctx.lineTo(x + ((x % 30) ? 2 : -2), gy - 5); ctx.stroke();
+    }
   }
 
   /* --- divot (solid, entry→exit) --- */
@@ -821,9 +862,9 @@ function drawFace(t){
     }
     ctx.lineTo(M.X(exit.x), gy);
     ctx.closePath();
-    ctx.fillStyle = 'rgba(150,98,48,.5)';      /* dimmed: detail lives in the inset */
+    ctx.fillStyle = 'rgba(24,15,8,.85)';       /* cavity cut into the turf */
     ctx.fill();
-    ctx.strokeStyle = 'rgba(205,142,78,.55)'; ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.strokeStyle = 'rgba(205,142,78,.6)'; ctx.lineWidth = 1.5; ctx.stroke();
   }
 
   /* --- footprints: stance is fixed in the world, the ball is fixed on screen —
@@ -845,8 +886,8 @@ function drawFace(t){
       for (const t2 of [[-0.11,'BACK'], [0,'MID'], [0.11,'FWD']]){
         const tx = M.X(stanceC + t2[0]);
         if (Math.abs(tx - M.X(lpx)) < 36) continue;   // dodge the LOW POINT label
-        coreLine(tx, gy + 12, tx, gy + 17, CSS('--ghost'), 1.5, null, 0.5);
-        label(t2[1], tx, gy + 26, CSS('--ghost'), 9, 'center', false, 0.55);
+        coreLine(tx, gy + 12, tx, gy + 17, CSS('--muted'), 1.5, null, 0.75);
+        label(t2[1], tx, gy + 26, CSS('--muted'), 9, 'center', false, 0.8);
       }
     }
   }
@@ -1041,9 +1082,9 @@ function drawDtl(t){
   const horizon = P({ x: 60, y: 0, z: 0 });
   if (horizon){
     const gGrad = ctx.createLinearGradient(0, horizon.y, 0, H);
-    gGrad.addColorStop(0, 'rgba(30,44,26,.0)');
-    gGrad.addColorStop(0.25, 'rgba(30,44,26,.35)');
-    gGrad.addColorStop(1, 'rgba(24,34,20,.55)');
+    gGrad.addColorStop(0, 'rgba(46,74,34,.0)');
+    gGrad.addColorStop(0.25, 'rgba(46,74,34,.4)');
+    gGrad.addColorStop(1, 'rgba(30,50,24,.6)');
     ctx.fillStyle = gGrad; ctx.fillRect(0, horizon.y, W, H - horizon.y);
   }
   ctx.save(); ctx.globalAlpha = 0.5;
