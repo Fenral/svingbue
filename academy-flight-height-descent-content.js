@@ -38,7 +38,7 @@ export const FLIGHT_HEIGHT_DESCENT_CONTENT=freeze({
     {kind:'choice',prompt:'Which values enter current Flightglass Apex?',choices:['Ball Speed and Launch Angle','Backspin rpm and Landing Angle','Spin Axis and Curve'],answerIndex:0,evidence:'Apex inputs'},
     {kind:'choice',prompt:'Which Landing statement is complete?',choices:['Spin Loft and Launch enter directly; Apex also enters as a mediator','Apex alone determines Landing','Backspin rpm is the only Landing input'],answerIndex:0,evidence:'Landing paths'},
     {kind:'choice',prompt:'Landing Angle is 55°. What can the app honestly conclude?',choices:['The modeled trajectory returns at 55° to the horizon at equal elevation','The ball will stop within a known distance','The turf is firm'],answerIndex:0,evidence:'Stopping boundary'},
-    {kind:'live-transfer',mandatory:true,prompt:'Build two Apex 31.3–31.7 yd states: Landing below 50° and above 54°, at least 6° apart.'}
+    {kind:'live-transfer',mandatory:true,prompt:'Build two Apex 31.65–32.05 yd states: Landing below 50° and above 52°, at least 6° apart.'}
   ],
   sheets:{
     apex:{title:'Apex',tags:['≈ REAL WORLD DEFINITION','MODEL OUTPUT'],body:'Maximum vertical height of the modeled trajectory above launch elevation.'},
