@@ -87,14 +87,18 @@ club preset selection).
 
 ### ESTIMATE / compatibility choices
 
-- The retained impact-spin magnitude is
-  `spinLoft3D(deg) * ballSpeed(mph) * K`, where `K = 1.8` for the existing
-  7-iron preset and `K = 0.93` for the existing driver preset. These are
-  effective calibration constants in `rpm/(deg*mph)`, not material constants.
-  Total spin is capped at 9000 rpm. The historical 1500-rpm floor is blended
-  continuously from zero over the first degree of true spin loft, so an
-  infinitesimal face/path error cannot create a discontinuous 1500-rpm
-  sidespin jump. Above one degree, ordinary legacy floor behaviour is retained.
+- ~~The retained impact-spin magnitude is `spinLoft3D(deg) * ballSpeed(mph) * K`,
+  where `K = 1.8` / `K = 0.93`, with a blended 1500-rpm floor.~~
+  **SUPERSEDED by `e7d3133`.** The fitted magnitude, both `spinK` constants and
+  the 1500-rpm floor (and its blend) were all deleted. Total spin is now
+  CALCULATED by `centeredImpactSpin` — Penner rolling-at-separation,
+  `omega = V*sin(theta) / [R*(1 + k*(1 + m_ball/m_head))]` — scaled by one
+  exposed per-club constant `spinCal = 1.065` (identical for 7-iron and driver;
+  there is deliberately no driver-only value). The only remaining bound is a
+  9000 rpm sanity ceiling; spin now goes continuously to zero with spin loft,
+  so no floor blend is needed. `spinCal` was set by anchoring the neutral
+  7-iron on 6793.9 rpm (result 6705.9, −88 rpm). See
+  `scripts/impact-flight-calculated-spin.test.mjs`.
 - The production aerodynamic bridge is not an exact current Pro V1 or Pro V1x
   model. `Cl = 0.4072*S^0.4`; its scale and the Cd bridge pass through the two
   historical patent anchors, while the curve shapes between/outside those

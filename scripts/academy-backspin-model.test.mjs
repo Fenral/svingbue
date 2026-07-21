@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   INITIAL_BACKSPIN_STATE,
   BACKSPIN_PARAMS,
+  BACKSPIN_LIMITS,
   solveBackspinState,
   advanceMission,
   backspinSensitivity,
@@ -13,7 +14,7 @@ import {
 
 test('initial state requires the learner to perform both mission stages', () => {
   const solved = solveBackspinState(INITIAL_BACKSPIN_STATE);
-  assert.equal(solved.rpm, 6048);
+  assert.equal(solved.rpm, 5970);
   assert.equal(solved.spinLoft, 28);
   assert.deepEqual(advanceMission({ built:false, cut:false }, solved.rpm), {
     built:false, cut:false, complete:false, event:null
@@ -43,25 +44,35 @@ test('display clamp never erases underlying sensitivity', () => {
   assert.ok(sensitivity.ballSpeed.rawDelta > 0);
 });
 
-test('the lower model floor is distinct from the upper display cap', () => {
+/* Den gamle motoren klemte lavspinn opp til 1500 rpm, og leksjonen underviste
+   det som en «model floor». Gulvet er slettet: spinnet går kontinuerlig mot
+   null med spinn-loften. Testen pinner den nye sannheten — displayet FØLGER
+   modellen hele veien ned — så et framtidig gulv ikke kan snike seg inn igjen. */
+test('low spin has no floor: the display tracks the model all the way down', () => {
   const state = { dynamicLoft:10, attackAngle:6, ballSpeed:90 };
   const solved = solveBackspinState(state);
   const sensitivity = backspinSensitivity(state);
-  assert.equal(solved.rpm, 1500);
-  assert.equal(solved.rawRpm, 648);
+  assert.equal(solved.rpm, 632, 'spinn under det gamle gulvet vises som det er');
+  assert.equal(solved.rawRpm, solved.rpm, 'ingenting klemmes: vist = rå');
   assert.equal(solved.displayCapped, false);
-  assert.equal(solved.displayFloored, true);
-  assert.equal(solved.displayLimit, 'floor');
+  assert.equal(solved.noFloor, true);
+  assert.equal(solved.displayLimit, 'no-floor');
+  assert.equal(solved.displayFloored, undefined, 'feltet skal være borte, ikke bare usant');
+  // Sensitiviteten er synlig, ikke skjult bak en klemme — motsatt av taket.
+  assert.equal(sensitivity.dynamicLoft.displayDelta, sensitivity.dynamicLoft.rawDelta);
   assert.notEqual(sensitivity.dynamicLoft.rawDelta, 0);
 });
 
-test('exact display bounds remain labelled as limits', () => {
-  const ceiling = solveBackspinState({ dynamicLoft:40, attackAngle:0, ballSpeed:125 });
-  const floor = solveBackspinState({ dynamicLoft:15.25925925925926, attackAngle:6, ballSpeed:90 });
+test('only the ceiling is a real bound; the low end is labelled as having none', () => {
+  const ceiling = solveBackspinState({ dynamicLoft:40.8141, attackAngle:0, ballSpeed:125 });
+  const lowEnd = solveBackspinState({ dynamicLoft:15.54, attackAngle:6, ballSpeed:90 });
   assert.equal(ceiling.rawRpm, 9000);
   assert.equal(ceiling.displayLimit, 'ceiling');
-  assert.equal(floor.rawRpm, 1500);
-  assert.equal(floor.displayLimit, 'floor');
+  assert.equal(lowEnd.rawRpm, 1500);
+  assert.equal(lowEnd.displayLimit, 'no-floor');
+  assert.equal(lowEnd.rpm, lowEnd.rawRpm, 'ved den gamle gulvverdien klemmes ingenting lenger');
+  assert.equal(BACKSPIN_LIMITS.min, undefined, 'det finnes ingen nedre grense å eksponere');
+  assert.equal(BACKSPIN_LIMITS.max, 9000);
 });
 
 test('cause chain reports actual engine deltas', () => {
@@ -70,31 +81,38 @@ test('cause chain reports actual engine deltas', () => {
   const chain = buildCauseChain(before, after, 'dynamicLoft');
   assert.equal(chain.inputDelta, 1);
   assert.equal(chain.spinLoftDelta, 1);
-  assert.equal(chain.rpmDelta, 216);
-  assert.equal(chain.rawRpmDelta, 216);
-  assert.match(chain.speech, /backspin plus 216 rpm/i);
+  assert.equal(chain.rpmDelta, 209);
+  assert.equal(chain.rawRpmDelta, 209);
+  assert.match(chain.speech, /backspin plus 209 rpm/i);
 });
 
 test('cause chain separates a clamped display from the underlying model delta', () => {
-  const before = { dynamicLoft:40, attackAngle:0, ballSpeed:125 };
-  const after = { ...before, dynamicLoft:41 };
+  // Godt innenfor taket i begge ender, så displayet står helt stille (rpmDelta 0)
+  // mens modellen fortsetter å stige. Det er hele poenget med tak-halvdelen.
+  const before = { dynamicLoft:46, attackAngle:-8, ballSpeed:160 };
+  const after = { ...before, dynamicLoft:47 };
   const chain = buildCauseChain(before, after, 'dynamicLoft');
   assert.equal(chain.rpmDelta, 0);
-  assert.equal(chain.rawRpmDelta, 225);
+  assert.equal(chain.rawRpmDelta, 235);
   assert.equal(chain.displayLimit, 'ceiling');
   assert.match(chain.speech, /displayed backspin unchanged at 9000 rpm/i);
-  assert.match(chain.speech, /underlying model plus 225 rpm/i);
+  assert.match(chain.speech, /underlying model plus 235 rpm/i);
 });
 
-test('cause chain also labels an unchanged display at the model floor', () => {
+/* Kontrasten som bærer leksjonen: i toppen fryser displayet, i bunnen gjør det
+   det IKKE. Den gamle motoren frøs begge ender, og leksjonen sa det. */
+test('cause chain keeps moving at the low end — there is no floor to freeze it', () => {
   const before = { dynamicLoft:11, attackAngle:6, ballSpeed:90 };
   const after = { ...before, dynamicLoft:10 };
   const chain = buildCauseChain(before, after, 'dynamicLoft');
-  assert.equal(chain.rpmDelta, 0);
-  assert.equal(chain.rawRpmDelta, -162);
-  assert.equal(chain.displayLimit, 'floor');
-  assert.match(chain.speech, /displayed backspin unchanged at 1500 rpm/i);
-  assert.match(chain.speech, /model floor reached; underlying model minus 162 rpm/i);
+  assert.equal(chain.rpmDelta, -157, 'displayet beveger seg — ingen klemme');
+  assert.equal(chain.rawRpmDelta, -157);
+  assert.equal(chain.rpmDelta, chain.rawRpmDelta, 'vist og rå er identiske under gulvhøyden');
+  assert.equal(chain.displayLimit, 'no-floor');
+  assert.match(chain.speech, /backspin minus 157 rpm/i);
+  assert.doesNotMatch(chain.speech, /unchanged/i, 'ingenting står stille her');
+  assert.doesNotMatch(chain.speech, /floor reached/i, 'gulvet finnes ikke lenger');
+  assert.doesNotMatch(chain.speech, /1500|1,500/, 'den gamle gulvverdien skal aldri leses opp');
 });
 
 test('the current engine holds carry steady at fixed ball speed', () => {

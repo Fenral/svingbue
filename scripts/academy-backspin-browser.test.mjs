@@ -87,8 +87,8 @@ const EXPECTED_MASTERY_TASKS = [
     choices:['Delivery A', 'Delivery B'],
     answerIndex:1,
     outputs:[
-      { side:'left', rpm:6048, spinLoft:28 },
-      { side:'right', rpm:8208, spinLoft:38 }
+      { side:'left', rpm:5970, spinLoft:28 },
+      { side:'right', rpm:8068, spinLoft:38 }
     ]
   },
   {
@@ -98,8 +98,8 @@ const EXPECTED_MASTERY_TASKS = [
     choices:['Change attack to +3\u00b0', 'Change attack to \u22125\u00b0'],
     answerIndex:0,
     outputs:[
-      { side:'left', rpm:5832, spinLoft:27 },
-      { side:'right', rpm:7560, spinLoft:35 }
+      { side:'left', rpm:5756, spinLoft:27 },
+      { side:'right', rpm:7448, spinLoft:35 }
     ]
   },
   {
@@ -137,17 +137,17 @@ const EXPECTED_VERIFIED_EVIDENCE = [
 const MASTERY_TARGET_FIXTURES = Object.freeze({
   highSpin:{
     state:{ dynamicLoft:34, attackAngle:-4, ballSpeed:120 },
-    rpm:8208,
+    rpm:8068,
     landing:60
   },
   shallowLanding:{
     state:{ dynamicLoft:15, attackAngle:-8, ballSpeed:170 },
-    rpm:7038,
+    rpm:6936,
     landing:33.3
   },
   pass:{
     state:{ dynamicLoft:30, attackAngle:-3, ballSpeed:120 },
-    rpm:7128,
+    rpm:7030,
     landing:54.4
   }
 });
@@ -444,7 +444,7 @@ async function completeMissionAndEnterInfluence(page, root) {
   await setBackspinParameter(page, root, 'attackAngle', -3);
   await setBackspinParameter(page, root, 'ballSpeed', 120);
   await page.waitForFunction(() =>
-    document.querySelector('#backspinTruth')?.textContent.replaceAll(',', '').trim() === '6048'
+    document.querySelector('#backspinTruth')?.textContent.replaceAll(',', '').trim() === '5970'
   );
 
   const next = root.locator('.native-lesson__navigation [data-action="next"]');
@@ -1181,7 +1181,7 @@ async function runMotionJourney(reducedMotion) {
   await page.waitForTimeout(350);
   await setBackspinParameter(page, root, 'dynamicLoft', 25);
   await page.waitForFunction(() =>
-    document.querySelector('#backspinTruth')?.textContent.replaceAll(',', '').trim() === '6048'
+    document.querySelector('#backspinTruth')?.textContent.replaceAll(',', '').trim() === '5970'
   );
   await page.waitForTimeout(350);
 
@@ -1803,19 +1803,20 @@ for (const viewport of BACKSPIN_VIEWPORTS) {
     await setBackspinParameter(page, root, 'attackAngle', 6);
     await setBackspinParameter(page, root, 'ballSpeed', 90);
     await page.waitForFunction(() =>
-      document.querySelector('#backspinTruth')?.textContent.replaceAll(',', '').trim() === '1500'
+      document.querySelector('#backspinTruth')?.textContent.replaceAll(',', '').trim() === '632'
     );
-    assert.equal((await root.locator('#backspinTruth').textContent()).trim(), '1,500');
+    assert.equal((await root.locator('#backspinTruth').textContent()).trim(), '632');
     assert.equal(await limit.isVisible(), true);
-    assert.equal((await limit.textContent()).trim(), 'Model floor');
-    const floorLabel = await limit.getAttribute('aria-label');
-    assert.match(floorLabel, /1,500 rpm/i);
-    assert.doesNotMatch(floorLabel, /9,000 rpm/i);
+    assert.equal((await limit.textContent()).trim(), 'No floor');
+    const lowEndLabel = await limit.getAttribute('aria-label');
+    assert.match(lowEndLabel, /no floor/i);
+    assert.doesNotMatch(lowEndLabel, /9,000 rpm/i);
+    assert.doesNotMatch(lowEndLabel, /1,500/, 'den slettede gulvverdien skal aldri annonseres');
     const lowBand = root.getByText('Low-spin delivery', { exact:true });
     const lowBandCount = await lowBand.count();
     const lowBandVisible = lowBandCount === 1 && await lowBand.isVisible();
 
-    assert.equal(initialBandCount, 1, 'Initial 6,048 rpm state needs one Iron spin window label');
+    assert.equal(initialBandCount, 1, 'Initial 5,970 rpm state needs one Iron spin window label');
     assert.equal(initialBandVisible, true, 'Initial Iron spin window label must be visible');
     assert.equal(highBandCount, 1, 'Ceiling state needs one High-spin delivery label');
     assert.equal(highBandVisible, true, 'High-spin delivery label must be visible');
@@ -1969,25 +1970,33 @@ test('Backspin Influence preserves exact sensitivity through near-clamp, ceiling
   const { page, root, runtimeErrors } = await openFreshBackspinPage({ width:375, height:812 });
   await completeMissionAndEnterInfluence(page, root);
 
+  /* Rangert p\u00e5 magnitude. Den gamle fittede motoren ga dynamicLoft og
+     attackAngle n\u00f8yaktig samme tall (\u00b1216), s\u00e5 dynamicLoft l\u00e5 f\u00f8rst p\u00e5
+     stabil sortering. Den beregnede spinnen skiller dem: attack 214 mot
+     loft 213 rpm/grad, s\u00e5 attackAngle rangerer n\u00e5 f\u00f8rst. Ekte motorordning. */
   assert.deepEqual(await influenceContract(root), [
-    { key:'dynamicLoft', text:'+216 rpm / degree' },
-    { key:'attackAngle', text:'\u2212216 rpm / degree' },
-    { key:'ballSpeed', text:'+50 rpm / mph' }
+    { key:'attackAngle', text:'\u2212214 rpm / degree' },
+    { key:'dynamicLoft', text:'+213 rpm / degree' },
+    { key:'ballSpeed', text:'+49 rpm / mph' }
   ]);
   const influenceSurface = root.locator('.native-lesson__surface[data-surface="2"]');
   assert.equal(await influenceSurface.locator('input[type="range"]').count(), 0,
     'Influence must not introduce a second free slider');
 
   await showInfluenceForState(page, root, {
-    dynamicLoft:38,
+    dynamicLoft:39,
     attackAngle:-3,
     ballSpeed:120
-  }, 8856);
+  }, 8877);
   const nearClamp = await influenceContract(root);
+  /* Nær taket, men ikke på det: displayet står på 8 877, mens en ett-graders
+     prøve lander på 9 076 og blir klippet til 9 000. Panelet skal da vise den
+     RÅ følsomheten (+199), ikke den klippede (+123). Med den beregnede spinnen
+     ligger dette hakket ved loft 39 — den gamle fittede motoren traff det på 38. */
   assert.equal(
     nearClamp.find(row => row.key === 'dynamicLoft')?.text,
-    '+216 rpm / degree',
-    'Near the ceiling, sensitivity must use normalized raw +216 rather than clipped +144'
+    '+199 rpm / degree',
+    'Near the ceiling, sensitivity must use the normalized raw delta rather than the clipped one'
   );
   const nearBars = root.locator('#influenceBars');
   const nearNote = root.locator('#influenceLimitNote');
@@ -2035,9 +2044,9 @@ test('Backspin Influence preserves exact sensitivity through near-clamp, ceiling
   assert.equal(await comparison.getAttribute('data-sample-value'), '47',
     'The maximum endpoint must sample the in-range -1 state');
   assert.equal(await comparison.getAttribute('data-sample-direction'), '-1');
-  assert.equal(await comparison.getAttribute('data-normalized-delta'), '288',
+  assert.equal(await comparison.getAttribute('data-normalized-delta'), '231',
     'The in-range -1 sample must be normalized to the equivalent +1 direction');
-  assert.match(await comparison.textContent(), /Equivalent \+1\u00b0 sensitivity:\s*\+288 rpm/i);
+  assert.match(await comparison.textContent(), /Equivalent \+1\u00b0 sensitivity:\s*\+231 rpm/i);
   assert.equal(await influenceSurface.locator('input[type="range"]').count(), 0);
   await root.locator('[data-lie="wet"]').click();
   const navigation = root.locator('.native-lesson__navigation');
@@ -2059,18 +2068,20 @@ test('Backspin Influence preserves exact sensitivity through near-clamp, ceiling
     dynamicLoft:10,
     attackAngle:6,
     ballSpeed:90
-  }, 1500);
-  assert.equal((await truth.textContent()).trim(), '1,500');
+  }, 632);
+  assert.equal((await truth.textContent()).trim(), '632');
   assert.equal(await limit.getAttribute('hidden'), null);
-  assert.equal((await limit.textContent()).trim(), 'Model floor');
-  assert.match(await limit.getAttribute('aria-label'), /1,500 rpm/i);
+  assert.equal((await limit.textContent()).trim(), 'No floor');
+  assert.match(await limit.getAttribute('aria-label'), /no floor/i);
+  assert.doesNotMatch(await limit.getAttribute('aria-label'), /1,500/);
   assert.doesNotMatch(await limit.getAttribute('aria-label'), /9,000 rpm/i);
-  const floorDescription = await bars.getAttribute('aria-description');
-  assert.match(floorDescription, /Underlying model sensitivity.*display floored at 1,500 rpm/i);
-  assert.doesNotMatch(floorDescription, /9,000 rpm/i);
+  const lowEndDescription = await bars.getAttribute('aria-description');
+  assert.match(lowEndDescription, /Underlying model sensitivity.*no lower bound, display tracks the model/i);
+  assert.doesNotMatch(lowEndDescription, /9,000 rpm/i);
+  assert.doesNotMatch(lowEndDescription, /floored|1,500/i, 'ingenting gulves lenger');
   for (const row of await influenceContract(root)) {
     const magnitude = Number(row.text.match(/[\d,]+/)?.[0].replaceAll(',', ''));
-    assert.ok(magnitude > 0, `${row.key} must retain non-zero raw sensitivity at the floor`);
+    assert.ok(magnitude > 0, `${row.key} must retain non-zero raw sensitivity at the low end`);
   }
 
   await page.waitForTimeout(350);
@@ -2109,9 +2120,9 @@ test('Backspin real-world register stays separate, sourced and keyboard accessib
 
   assert.equal(await register.isVisible(), true);
   const wetRegister = (await register.textContent()).replace(/\s+/g, ' ').trim();
-  assert.match(wetRegister, /\u2248 4,838\u20135,141 rpm/);
-  assert.equal(await band.getAttribute('data-low'), '4838');
-  assert.equal(await band.getAttribute('data-high'), '5141');
+  assert.match(wetRegister, /\u2248 4,776\u20135,075 rpm/);
+  assert.equal(await band.getAttribute('data-low'), '4776');
+  assert.equal(await band.getAttribute('data-high'), '5075');
   assert.match(wetRegister, /Wet face \/ ball/);
   assert.match(wetRegister, /Real-world estimate/);
   assert.match(wetRegister, /Andrew Rice, 2013/);
@@ -2142,14 +2153,14 @@ test('Backspin real-world register stays separate, sourced and keyboard accessib
   const echo = root.locator('#realWorldEcho[data-real-world-echo]');
   assert.equal(await echo.isVisible(), true);
   const echoBefore = (await echo.textContent()).replace(/\s+/g, ' ').trim();
-  assert.match(echoBefore, /\u2248 4,838\u20135,141 rpm/);
+  assert.match(echoBefore, /\u2248 4,776\u20135,075 rpm/);
   assert.match(echoBefore, /Andrew Rice, 2013.*not the simulator/i);
   assert.equal((await root.locator('#backspinTruth').textContent()).trim(), truthBefore);
   await setBackspinParameter(page, root, 'dynamicLoft', 26);
-  await page.waitForFunction(() => document.querySelector('#backspinTruth')?.textContent.replaceAll(',', '').trim() === '6264');
-  assert.match((await echo.textContent()).replace(/\s+/g, ' ').trim(), /\u2248 5,011\u20135,324 rpm/);
+  await page.waitForFunction(() => document.querySelector('#backspinTruth')?.textContent.replaceAll(',', '').trim() === '6183');
+  assert.match((await echo.textContent()).replace(/\s+/g, ' ').trim(), /\u2248 4,946\u20135,256 rpm/);
   await setBackspinParameter(page, root, 'dynamicLoft', 25);
-  await page.waitForFunction(() => document.querySelector('#backspinTruth')?.textContent.replaceAll(',', '').trim() === '6048');
+  await page.waitForFunction(() => document.querySelector('#backspinTruth')?.textContent.replaceAll(',', '').trim() === '5970');
   await selectBackspinParameter(root, 'ballSpeed');
   assert.equal(await root.locator('#labRange').inputValue(), inputBefore);
   await root.locator('[data-step="influence"]').click();
@@ -2163,7 +2174,7 @@ test('Backspin real-world register stays separate, sourced and keyboard accessib
   assert.equal(await sheet.evaluate(element => element.scrollTop), 0);
   assert.equal((await sheet.locator('#lessonSheetTitle').textContent()).trim(), 'Wet face / ball');
   const sheetCopy = (await sheet.locator('[data-sheet-body]').textContent()).replace(/\s+/g, ' ').trim();
-  assert.match(sheetCopy, /\u2248 4,838\u20135,141 rpm/);
+  assert.match(sheetCopy, /\u2248 4,776\u20135,075 rpm/);
   assert.match(sheetCopy, /Andrew Rice, "Wedges and Water", 2013/);
   assert.match(sheetCopy, /corroborated by MyGolfSpy Wet Wedge Test, 2022/);
   assert.match(sheetCopy, /not the simulator/i);
@@ -2213,9 +2224,9 @@ test('Backspin real-world register stays separate, sourced and keyboard accessib
   assert.equal(await flyer.evaluate(element => document.activeElement === element), true);
   assert.equal(await hapticCount(page, 'selectionChanged'), hapticsBeforeFlyer + 1);
   const flyerRegister = (await register.textContent()).replace(/\s+/g, ' ').trim();
-  assert.match(flyerRegister, /\u2248 2,117\u20134,234 rpm/);
-  assert.equal(await band.getAttribute('data-low'), '2117');
-  assert.equal(await band.getAttribute('data-high'), '4234');
+  assert.match(flyerRegister, /\u2248 2,090\u20134,179 rpm/);
+  assert.equal(await band.getAttribute('data-low'), '2090');
+  assert.equal(await band.getAttribute('data-high'), '4179');
   assert.match(flyerRegister, /Flyer lie/);
   assert.match(flyerRegister, /Real-world estimate/);
   assert.match(flyerRegister, /USGA \/ Pate, 2020/);
@@ -2267,7 +2278,7 @@ test('Backspin source sheet degrades cleanly when its optional image cannot deco
   assert.equal(await sheet.locator('figcaption').count(), 0);
   assert.equal((await sheet.locator('#lessonSheetTitle').textContent()).trim(), 'Wet face / ball');
   const sheetCopy = (await sheet.locator('[data-sheet-body]').textContent()).replace(/\s+/g, ' ').trim();
-  assert.match(sheetCopy, /\u2248 4,838\u20135,141 rpm/);
+  assert.match(sheetCopy, /\u2248 4,776\u20135,075 rpm/);
   assert.match(sheetCopy, /Andrew Rice, "Wedges and Water", 2013/);
   assert.match(sheetCopy, /not the simulator/i);
   assert.equal(await sheet.locator('[data-sheet-close]').isVisible(), true);
@@ -2315,22 +2326,22 @@ test('Backspin myth predictions reveal exact engine runs and varied supported an
     if (index === 0) {
       assert.deepEqual(
         { rpm:before.rpm, spinLoft:before.spinLoft },
-        { rpm:7128, spinLoft:33 }
+        { rpm:7030, spinLoft:33 }
       );
       assert.deepEqual(
         { rpm:after.rpm, spinLoft:after.spinLoft },
-        { rpm:7776, spinLoft:36 }
+        { rpm:7656, spinLoft:36 }
       );
       assert.match(await experiment.locator('[data-myth-explanation]').textContent(),
         /ground adds no spin.*spin is created while the ball is on the face/i);
     } else if (index === 1) {
       assert.deepEqual(
         { rpm:before.rpm, rawRpm:before.rawRpm, spinLoft:before.spinLoft },
-        { rpm:7128, rawRpm:7128, spinLoft:33 }
+        { rpm:7030, rawRpm:7030, spinLoft:33 }
       );
       assert.deepEqual(
         { rpm:after.rpm, rawRpm:after.rawRpm, spinLoft:after.spinLoft },
-        { rpm:7128, rawRpm:7128, spinLoft:33 }
+        { rpm:7030, rawRpm:7030, spinLoft:33 }
       );
       assert.match(await experiment.locator('[data-myth-explanation]').textContent(),
         /Spin loft remains 33\u00B0.*same backspin/i);
@@ -2344,7 +2355,7 @@ test('Backspin myth predictions reveal exact engine runs and varied supported an
           landing:before.landing,
           displayLimit:before.displayLimit
         },
-        { rpm:7128, rawRpm:7128, carry:158, apex:30, landing:54.4, displayLimit:'none' }
+        { rpm:7030, rawRpm:7030, carry:158, apex:30, landing:54.4, displayLimit:'none' }
       );
       assert.deepEqual(
         {
@@ -2355,16 +2366,16 @@ test('Backspin myth predictions reveal exact engine runs and varied supported an
           landing:after.landing,
           displayLimit:after.displayLimit
         },
-        { rpm:9000, rawRpm:10368, carry:158, apex:40, landing:60, displayLimit:'ceiling' }
+        { rpm:9000, rawRpm:10046, carry:158, apex:40, landing:60, displayLimit:'ceiling' }
       );
       const cappedBackspin = experiment.locator(
         '[data-myth-run="after"] [data-myth-metric="backspin"]'
       );
       assert.equal(await cappedBackspin.getAttribute('data-rpm'), '9000');
-      assert.equal(await cappedBackspin.getAttribute('data-raw-rpm'), '10368');
+      assert.equal(await cappedBackspin.getAttribute('data-raw-rpm'), '10046');
       assert.equal(await cappedBackspin.getAttribute('data-display-limit'), 'ceiling');
       assert.match(await cappedBackspin.textContent(), /9,000 rpm/i);
-      assert.match(await cappedBackspin.textContent(), /Raw 10,368 rpm/i);
+      assert.match(await cappedBackspin.textContent(), /Raw 10,046 rpm/i);
       assert.match(await cappedBackspin.textContent(), /display ceiling/i);
       assert.match(await experiment.locator('[data-myth-explanation]').textContent(),
         /More engine Backspin does not numerically cause more current-engine Carry.*rpm output and flight trajectory partly decoupled/i);
@@ -2411,7 +2422,7 @@ test('wrong myth predictions still complete, persist, reload and remain inspecta
   assert.equal(await experiment.locator('[data-myth-verdict]').getAttribute('data-correct'), 'false');
   assert.deepEqual(
     { rpm:(await mythRunContract(experiment, 'before')).rpm, rpmAfter:(await mythRunContract(experiment, 'after')).rpm },
-    { rpm:7128, rpmAfter:7776 }
+    { rpm:7030, rpmAfter:7656 }
   );
 
   await root.locator('[data-myth-next]').click();
@@ -2691,12 +2702,12 @@ test('Backspin Mastery keeps one stable attempt, submits atomically and upgrades
       assert.equal(await task.locator('[data-mastery-landing]').getAttribute('data-value'), String(fixture.landing));
       const copy = (await feedback.textContent()).replace(/\s+/g, ' ').trim();
       if (index === 0) {
-        assert.match(copy, /8,208 rpm/);
+        assert.match(copy, /8,068 rpm/);
         assert.match(copy, /60(?:\.0)?\u00b0/);
         assert.match(copy, /6,800.*7,400|lower.*spin/i,
           'High-spin failure must name the unmet rpm condition without a slider recipe');
       } else {
-        assert.match(copy, /7,038 rpm/);
+        assert.match(copy, /6,936 rpm/);
         assert.match(copy, /33\.3\u00b0/);
         assert.match(copy, /50\u00b0|landing/i,
           'Shallow-landing failure must name the unmet landing condition');
@@ -2992,7 +3003,7 @@ test('fresh 5/5 mastery earns 190 XP, persists every ability and follows unlocke
       assert.equal(await task.locator('[data-mastery-rpm]').getAttribute('data-value'), String(fixture.rpm));
       assert.equal(await task.locator('[data-mastery-landing]').getAttribute('data-value'), String(fixture.landing));
       const copy = (await feedback.textContent()).replace(/\s+/g, ' ').trim();
-      assert.match(copy, /7,128 rpm/);
+      assert.match(copy, /7,030 rpm/);
       assert.match(copy, /54\.4\u00b0/);
       assert.match(copy, /target|independent|complete/i);
     }

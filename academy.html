@@ -835,7 +835,7 @@
     backspin: {
       ...CONTENT.backspin,
       node:'backspin', tier:'Derived',
-      identity:'backspin ≈ spinLoft × ballSpeed × 1.8',
+      identity:'backspin = totalSpin · cos(spinAxis)',
       next:'carry', nextLabel:'Carry', maxXp:190,
       diagramArchetype:'spin-machine',
       diagramConfig:{
@@ -947,7 +947,7 @@
     'club-path': {
       ...CONTENT['club-path'],
       node:'club-path', tier:'Fundamental',
-      identity:'spinAxis = 1.5 · (faceAngle − clubPath)   →   curve',
+      identity:'clubPath sets the D-plane   →   spinAxis   →   curve',
       next:'attack-angle', nextLabel:'Attack Angle', maxXp:190,
       diagramArchetype:'dplane-topdown',
       diagramConfig:{
@@ -1054,7 +1054,7 @@
     'spin-axis': {
       ...CONTENT['spin-axis'],
       node:'spin-axis', tier:'Derived',
-      identity:'spinAxis = clamp(1.5·(faceAngle − clubPath), ±38°)   →   curve',
+      identity:'spinAxis = tilt of (velocity × faceNormal) from horizontal',
       next:'backspin', nextLabel:'Backspin', maxXp:190,
       diagramArchetype:'dplane-topdown',
       diagramConfig:{
@@ -1123,7 +1123,7 @@
     curve: {
       ...CONTENT.curve,
       node:'curve', tier:'Outcome',
-      identity:'curve = clamp(carry² · spinAxis / 12000, ±0.6·carry)',
+      identity:'curve = integrated flight under drag + Magnus lift',
       next:'offline', nextLabel:'Offline', maxXp:190,
       diagramArchetype:'dplane-topdown',
       diagramConfig:{
@@ -2954,8 +2954,8 @@
         </div>
         <div class="bs-right">
           <div class="formula">
-            <div class="fk">Backspin formula (engine)</div>
-            <div class="fx"><span id="sm-f-sl">33</span> <span class="op">×</span> <span id="sm-f-bs">120</span> <span class="op">×</span> ${cfg.spinK||1.8} <span class="op">=</span> <span id="sm-f-res" style="color:var(--ink)">7,099</span> rpm</div>
+            <div class="fk">Backspin inputs (engine)</div>
+            <div class="fx"><span id="sm-f-sl">33</span><span class="op">°</span> spin loft <span class="op">·</span> <span id="sm-f-bs">120</span> mph <span class="op">→</span> <span id="sm-f-res" style="color:var(--ink)">7,002</span> rpm</div>
             <div class="fnote" id="sm-f-note"></div>
           </div>
           <div>
@@ -2964,7 +2964,7 @@
           </div>
           <div class="meterwrap">
             <div class="meter" id="sm-meter"><div class="band" id="sm-band"></div><div class="fill" id="sm-fill" style="height:0"></div></div>
-            <div class="meterlabels"><span>9,000</span><span class="bandlbl" id="sm-bandlbl">7-iron window</span><span>1,500</span></div>
+            <div class="meterlabels"><span>9,000</span><span class="bandlbl" id="sm-bandlbl">7-iron window</span><span>0</span></div>
           </div>
           <svg class="minitraj" id="sm-traj" viewBox="0 0 300 96" role="img" aria-label="Trajectory preview">
             <line x1="16" y1="86" x2="292" y2="86" stroke="rgba(245,242,255,.10)" stroke-width="1"/>
@@ -3011,10 +3011,10 @@
       el('#sm-f-res').textContent=Math.round(rpmEngine).toLocaleString('en-US');
       const note=el('#sm-f-note'); note.textContent=(clamped?'raw '+Math.round(f.spinRpmRaw).toLocaleString('en-US')+' rpm capped at engine limit. ':'')+(fr?'× 0.6 friction gate → '+rpmShown.toLocaleString('en-US')+' rpm shown.':''); note.style.display=(clamped||fr)?'block':'none';
       setNum(el('#sm-rpm'), rpmShown, {commas:true});
-      const fillPct=clamp((rpmShown-1500)/(9000-1500),0,1)*100; el('#sm-fill').style.height=fillPct.toFixed(1)+'%';
+      const fillPct=clamp(rpmShown/9000,0,1)*100; el('#sm-fill').style.height=fillPct.toFixed(1)+'%';
       el('#sm-meter').classList.toggle('flyer', !!fr);
       const band=BANDS[state.band]||Object.values(BANDS)[0];
-      const bLo=clamp((band.lo-1500)/(9000-1500),0,1), bHi=clamp((band.hi-1500)/(9000-1500),0,1);
+      const bLo=clamp(band.lo/9000,0,1), bHi=clamp(band.hi/9000,0,1);
       el('#sm-band').style.bottom=(bLo*100).toFixed(1)+'%'; el('#sm-band').style.height=((bHi-bLo)*100).toFixed(1)+'%'; el('#sm-bandlbl').textContent=band.name+' window';
       const samples=trajectorySamples(f,40); const xMax=230,yMax=52,gx0=18,gx1=290,gy0=86,gy1=8; let dP='',apexPt=null,maxh=0;
       samples.forEach(s=>{ const X=gx0+(s.d*f.carry/xMax)*(gx1-gx0); const Y=gy0-(s.h*f.apex/yMax)*(gy0-gy1); dP+=(dP===''?'M':'L')+X.toFixed(1)+','+Y.toFixed(1); if(s.h>maxh){maxh=s.h;apexPt={X,Y};} });

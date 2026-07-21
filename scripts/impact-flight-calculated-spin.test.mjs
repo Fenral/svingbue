@@ -42,16 +42,26 @@ test('driver bøyer nå mer enn hybrid ved samme face-to-path', () => {
   const tiltRatio = Math.abs(d.spinAxis) / Math.abs(h.spinAxis);
   const sideRatio = Math.abs(d.rightCurveSpinRpm) / Math.abs(h.rightCurveSpinRpm);
 
-  // Driveren bøyer nå MER enn hybriden; med fittet spinn bøyde den mindre (0.86).
+  // Driveren bøyer nå MER enn hybriden; med fittet spinn bøyde den mindre.
+  // Målt på bc68858 med nøyaktig disse fixturene: 0.9587 (se
+  // outputs/engine-3d-tests/before-after-measurements.log §2).
   assert.ok(curveRatio > 1, `driver skal bøye mer enn hybrid (forhold ${curveRatio.toFixed(2)})`);
-  assert.ok(curveRatio >= 1.3, `kurve-forhold ${curveRatio.toFixed(2)} skal være ≥ 1.3 (var 0.86 med fittet spinn)`);
+  assert.ok(curveRatio >= 1.3, `kurve-forhold ${curveRatio.toFixed(2)} skal være ≥ 1.3 (var 0.9587 med fittet spinn)`);
 
   // MEKANISMEN, pinnet så en framtidig regresjon fanges: kurven drives av
-  // SIDESPINN = total · sin(tilt), ikke av tilt alene. Driverens ~2.5× høyere
-  // tilt kanselleres nesten av dens ~0.43× lavere totalspinn, så sidespinnet er
-  // nesten likt. Resten av kurveforskjellen kommer av lengre flytid.
-  // Derfor er et forhold på 1.8 IKKE oppnåelig uten å blåse opp driverspinnet
-  // til ~3800 rpm (ufysisk) eller innføre en driver-spesifikk fudge.
+  // SIDESPINN (rightCurveSpinRpm ≈ total · sin(tilt)), ikke av tilt alene.
+  // Driverens ~2.5× høyere tilt kanselleres nesten av dens ~0.43× lavere
+  // totalspinn, så sidespinnet er nesten likt (743.2 vs 722.3).
+  //
+  // Resten av kurveforskjellen er IKKE lengre flytid — driveren flyr kortere
+  // (3.804 s mot hybridens 5.987 s). Målt dekomponering av forholdet 1.3573:
+  //   rå RK4-bøy      1.0983  (ekte aerodynamikk)
+  // × carry-projeksjon 1.2358  (KOMPATIBILITETSTRANSFORM, ikke fysikk)
+  // Driverens RK4-flukt bærer bare 163.2 yd og projiseres opp på den beholdte
+  // fittede carryen 206.5 yd (skala 1.2654) mot hybridens 1.024. Mesteparten av
+  // driverens kurvefortrinn utover sidespinn-paritet er altså projeksjonen.
+  // Et forhold på 1.8 er derfor ikke en ren fysikk-knapp: det avhenger av at
+  // carry-projeksjonen ryddes opp. Se outputs/engine-3d-review-package.md §2.3.
   assert.ok(tiltRatio >= 2.3, `tilt-forhold ${tiltRatio.toFixed(2)} er ren D-plan-geometri og uendret av fiksen`);
   assert.ok(Math.abs(sideRatio - 1) < 0.25, `sidespinn-forhold ${sideRatio.toFixed(2)} — tilt og totalspinn kansellerer hverandre`);
   assert.ok(Math.abs(d.offline) < 30, `driver offline ${d.offline.toFixed(1)} yd skal holde seg fysisk`);

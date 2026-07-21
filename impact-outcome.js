@@ -13,9 +13,16 @@
  *
  * Ekstremverdi-policy (§4, A8): input klemmes aldri utover sliderens eget
  * område; motorens interne klemmer (§2.5) står urørt. Én invariant:
- * physical.inDomain = (spinLoft > 0) — negativ spin loft er det eneste stedet
- * motoren rapporterer feil fortegnsbetydning (abs() gjør topspin til backspin).
- * Predikatet utvides ikke.
+ * physical.inDomain = (signedVerticalSpinLoftDeg > 0) — negativ spin loft er
+ * det eneste stedet motoren rapporterer feil fortegnsbetydning (backspin er
+ * absoluttprojeksjonen, så topspin leses som backspin). Predikatet utvides ikke.
+ *
+ * MERK fortegnskilden: `raw.spinLoft` er siden 3-D-motoren den IKKE-NEGATIVE
+ * prinsipale inkluderte vinkelen mellom hastighet og face-normal, så
+ * `spinLoft > 0` kan aldri bli usann og vokter ingenting. Fortegnet lever nå i
+ * `signedVerticalSpinLoftDeg` (= dynamicLoft − attackAngle), som motoren
+ * eksponerer nettopp for dette. Ved nøytral face/path er de to tallene like i
+ * absoluttverdi, så terskelen er uendret — bare fortegnsbæreren er byttet.
  */
 
 import { solveFlight, trajectorySamples } from './impact-flight.js';
@@ -87,8 +94,9 @@ export function selectOutcome(state) {
     }),
     path: Object.freeze(path),
     physical: Object.freeze({
-      inDomain: raw.spinLoft > 0,
-      reason: raw.spinLoft > 0 ? null : 'spin-loft',
+      // Fortegnsbæreren, ikke den ikke-negative 3-D-vinkelen — se filhodet.
+      inDomain: raw.signedVerticalSpinLoftDeg > 0,
+      reason: raw.signedVerticalSpinLoftDeg > 0 ? null : 'spin-loft',
     }),
   });
 

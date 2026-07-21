@@ -293,11 +293,15 @@ export function solveFlight(input) {
   // (offline includes start direction, audit fix A)
   const offline = carry * Math.sin(deg2rad(startDirection)) + curve;
 
-  // ── Added SkyTrak-style output fields (all ESTIMATE) ───────────────────────
-  // ESTIMATE: total spin is spinLoft(°) · ballSpeed(mph) · k, clamped to a
-  // declared window. Reported backspin is the flight-relative projection of
-  // that vector. At neutral face/path the projection is exactly one, preserving
-  // the calibrated default 7-iron near 7100 rpm.
+  // ── Added SkyTrak-style output fields ─────────────────────────────────────
+  // CALCULATED: total spin is the rolling-at-separation magnitude from
+  // centeredImpactSpin (Penner), omega = V·sin(theta)/[R·(1 + k·(1 + m_ball/
+  // m_head))], scaled by the single exposed preset.spinCal and bounded only by
+  // a 9000 rpm sanity ceiling. The old fitted spinLoft·ballSpeed·spinK product
+  // and its 1500-rpm floor are GONE — do not reintroduce either.
+  // Reported backspin is the flight-relative projection of that vector. At
+  // neutral face/path the projection is exactly one, preserving the calibrated
+  // default 7-iron near its anchor.
   // ESTIMATE: smash factor = ball speed / club speed. With the spin-loft-
   // responsive smash above (audit fix D) this now equals smashEff, so the
   // panel ratio tracks the delivered spin loft. Flagged ESTIMATE.
@@ -329,7 +333,7 @@ export function solveFlight(input) {
     curveCarryProjectionScale: curveFlight.curveCarryProjectionScale,
     curveCarryProjectionMinimumDownrangeM:
       curveFlight.curveCarryProjectionMinimumDownrangeM,
-    backspin,         // ESTIMATE (projection of empirical total-spin vector, rpm)
+    backspin,         // CALCULATED (projection of the Penner total-spin vector, rpm)
     signedBackspinRpm,
     totalSpinRpm: spin.totalSpinRpm,
     rightCurveSpinRpm: spin.rightCurveSpinRpm,
