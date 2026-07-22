@@ -339,7 +339,8 @@ function project(p, b){
   const dot=(a,c)=>a.x*c.x+a.y*c.y+a.z*c.z;
   const xC=dot(rel,b.right), yC=dot(rel,b.upVec), zC=dot(rel,b.fwd);
   if (zC <= 0.01) return null;
-  return { x: b.w/2 + (xC/zC)*b.focal*(b.cam.xStretch||1), y: b.h/2 - (yC/zC)*b.focal };
+  return { x: b.w/2 + (xC/zC)*b.focal*(b.cam.xStretch||1), y: b.h/2 - (yC/zC)*b.focal,
+           d: zC };                             /* camera-space depth for taper */
 }
 
 /* ============================================================ STATE */
@@ -561,7 +562,6 @@ const ASSETS = {
   bgDtl:   '../../assets/impact-studio/bg-dtl.png',
   ball:    '../../assets/impact-studio/ball.png',
   glint:   '../../assets/impact-studio/glint.png',
-  soil:    '../../assets/impact-studio/soil.png',
   tee:     '../../assets/impact-studio/tee.png',
 };
 const IMG = {};
@@ -926,35 +926,9 @@ function drawFace(t){
     }
   }
 
-  /* --- divot (solid, entry→exit) --- */
-  let entry = null, exit = null;
-  if (t0g !== null){
-    entry = arcPosition(-t0g, s); exit = arcPosition(t0g, s);
-    const cav = new Path2D();
-    cav.moveTo(M.X(entry.x), gy);
-    const N = 26;
-    for (let i = 0; i <= N; i++){
-      const th = -t0g + (2 * t0g * i) / N;
-      const p = arcPosition(th, s);
-      cav.lineTo(M.X(p.x), M.Y(p.z));
-    }
-    cav.lineTo(M.X(exit.x), gy);
-    cav.closePath();
-    ctx.fillStyle = 'rgba(24,15,8,.85)';       /* cavity cut into the turf */
-    ctx.fill(cav);
-    if (ready('soil')){
-      /* torn-earth texture clipped to the cavity; square draw box anchored at
-         the turf line so the texture never squashes */
-      const x0 = M.X(entry.x), x1 = M.X(exit.x);
-      const wCav = Math.max(60, (x1 - x0) * 1.25);
-      ctx.save(); ctx.clip(cav);
-      ctx.globalAlpha = 0.8;
-      ctx.drawImage(IMG.soil, x0 - (wCav - (x1 - x0)) / 2, gy - 4, wCav, wCav);
-      ctx.restore();
-    }
-    ctx.strokeStyle = 'rgba(205,142,78,.6)'; ctx.lineWidth = 1.5;
-    ctx.stroke(cav);
-  }
+  /* (no permanent divot in the main scene — ground contact is shown only by
+     the transient gold underground segment; the strike detail lives in the
+     inset) */
 
   /* --- footprints: stance is fixed in the world, the ball is fixed on screen —
      so the feet slide when Ball Position changes. Lead foot toward target. --- */
@@ -969,6 +943,20 @@ function drawFace(t){
       ctx.beginPath();
       ctx.ellipse(fx, gy + 4, 23, 7, 0, 0, Math.PI * 2);
       ctx.fillStyle = CSS('--ghost'); ctx.fill();
+      ctx.restore();
+    }
+    /* the swing's low point is FIXED in the stance: a gold baseline between
+       the feet with a notch at LP_STANCE anchors it there — the ball just
+       stands where you put it */
+    {
+      const aB = selBall ? 0.5 : 0.16;
+      const x0a = M.X(stanceC - 0.20), x1a = M.X(stanceC + 0.20);
+      const nx = M.X(stanceC + LP_STANCE / 100);
+      ctx.save(); ctx.globalAlpha = aB;
+      ctx.strokeStyle = 'rgba(217,179,106,.9)'; ctx.lineWidth = 1.2;
+      ctx.beginPath(); ctx.moveTo(x0a, gy + 9); ctx.lineTo(x1a, gy + 9); ctx.stroke();
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(nx, gy + 5); ctx.lineTo(nx, gy + 13); ctx.stroke();
       ctx.restore();
     }
     if (selBall){
@@ -1180,7 +1168,7 @@ function dtlCam(){
   return { pos:{ x:-2.2, y:-0.9, z:1.0 }, look:{ x:2.3, y:0.25, z:0.14 },
            fov: d2r(H < 220 ? 36 : 32), xStretch: 1.1 };
 }
-const DTL_SWEEP = d2r(60);                    // longer arc into the perspective
+const DTL_SWEEP = d2r(78);                    // longer arc into the perspective
 function drawDtl(t){
   const s = engineState();
   const B = buildCamera(dtlCam(), W, H);
@@ -1222,8 +1210,30 @@ function drawDtl(t){
     }
   }
 
+  /* soft contact shadow under the arc's low region — anchors it to the ground */
+  {
+    const lpw = lpWorld(s);
+    const c = P({ x: lpw.x, y: lpw.y, z: 0 });
+    const e1 = P({ x: lpw.x - 0.45, y: lpw.y, z: 0 });
+    const e2 = P({ x: lpw.x + 0.45, y: lpw.y, z: 0 });
+    if (c && e1 && e2){
+      const rx = Math.hypot(e2.x - e1.x, e2.y - e1.y) / 2;
+      const zLift = Math.max(0, s.lowPoint.z);  /* arc high above turf → fainter */
+      const aS = clamp(0.38 - zLift * 7, 0.08, 0.38);
+      const g = ctx.createRadialGradient(c.x, c.y, 0, c.x, c.y, rx);
+      g.addColorStop(0, 'rgba(5,3,10,' + aS + ')');
+      g.addColorStop(1, 'rgba(5,3,10,0)');
+      ctx.save();
+      ctx.translate(c.x, c.y); ctx.scale(1, 0.28); ctx.translate(-c.x, -c.y);
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(c.x, c.y, rx, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+    }
+  }
+
   /* swing-plane glass: the ONLY illustration of plane + direction.
-     Extended along u into the perspective; fill only, no border. */
+     Extended along u into the perspective; density gradient toward the
+     ground edge + rim light along the upper edge — no outline. */
   {
     const heroG = state.sel === 'plane' || state.sel === 'dir';
     const alpha = heroG ? 1 : 0.45;
@@ -1237,7 +1247,14 @@ function drawDtl(t){
       ctx.beginPath();
       poly.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y));
       ctx.closePath();
-      ctx.fillStyle = 'rgba(147,164,242,' + (heroG ? 0.24 : 0.10) + ')';
+      const mb = { x: (poly[0].x + poly[1].x) / 2, y: (poly[0].y + poly[1].y) / 2 };
+      const mt = { x: (poly[3].x + poly[2].x) / 2, y: (poly[3].y + poly[2].y) / 2 };
+      const base = heroG ? 0.26 : 0.11;
+      const gg = ctx.createLinearGradient(mb.x, mb.y, mt.x, mt.y);
+      gg.addColorStop(0, 'rgba(147,164,242,' + base + ')');
+      gg.addColorStop(0.55, 'rgba(147,164,242,' + (base * 0.55).toFixed(3) + ')');
+      gg.addColorStop(1, 'rgba(157,139,255,' + (base * 0.28).toFixed(3) + ')');
+      ctx.fillStyle = gg;
       ctx.fill();
       /* faint inner rungs instead of an outline */
       ctx.lineWidth = 1;
@@ -1249,36 +1266,57 @@ function drawDtl(t){
           ctx.beginPath(); ctx.moveTo(ra.x, ra.y); ctx.lineTo(rb.x, rb.y); ctx.stroke();
         }
       }
+      /* rim light along the upper edge sells the pane as glass */
+      ctx.strokeStyle = 'rgba(190,200,255,' + (heroG ? 0.5 : 0.22) + ')';
+      ctx.lineWidth = 1.5; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(poly[3].x, poly[3].y); ctx.lineTo(poly[2].x, poly[2].y); ctx.stroke();
       ctx.restore();
     }
   }
 
-  /* swing arc (white core) — lights up while a change is fresh */
+  /* swing arc: depth-tapered ribbon — thick and bright near the camera,
+     thin, cooler and fading into the perspective; ends die out instead of
+     cutting. Lights up while a change is fresh / Arc Height selected. */
   {
-    ctx.save();
-    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-    const passes = [ ['rgba(255,255,255,.14)', 9, 1] ];
-    const litA = state.sel === 'arc' ? 1 : fa;             // arc hero when Arc Height selected
-    if (litA > 0.01){
-      passes.unshift(['rgba(147,164,242,.12)', 20, litA]); // violet light wash
-      passes.push(['rgba(255,255,255,.30)', 6, litA]);     // hot inner glow
+    const N = 150;
+    const pts = [];
+    for (let i = 0; i <= N; i++){
+      const th = -DTL_SWEEP + (2 * DTL_SWEEP * i) / N;
+      const p = P(arcPosition(th, s));
+      if (p) pts.push({ x: p.x, y: p.y, d: p.d, u: i / N });
     }
-    passes.push(['rgba(255,255,255,.95)', 3, 1]);
-    for (const pass of passes){
-      ctx.globalAlpha = pass[2];
-      ctx.strokeStyle = pass[0]; ctx.lineWidth = pass[1];
-      ctx.beginPath();
-      let started = false;
-      const N = 130;
-      for (let i = 0; i <= N; i++){
-        const th = -DTL_SWEEP + (2 * DTL_SWEEP * i) / N;
-        const p = P(arcPosition(th, s));
-        if (!p){ started = false; continue; }
-        if (!started){ ctx.moveTo(p.x, p.y); started = true; } else ctx.lineTo(p.x, p.y);
+    if (pts.length > 8){
+      let dMin = Infinity, dMax = -Infinity;
+      for (const p of pts){ if (p.d < dMin) dMin = p.d; if (p.d > dMax) dMax = p.d; }
+      const span = Math.max(0.001, dMax - dMin);
+      const tOf = p => (p.d - dMin) / span;                 /* 0 near → 1 far */
+      const tip = uu => clamp(Math.min(uu, 1 - uu) / 0.12, 0, 1);  /* ends fade out */
+      const litA = state.sel === 'arc' ? 1 : fa;
+      const CH = 16;                                        /* chunked polylines */
+      /* butt caps: chunks share endpoints — round caps would double-stamp
+         the joints and bead the translucent passes */
+      ctx.save(); ctx.lineCap = 'butt'; ctx.lineJoin = 'round';
+      const passes = [];                                    /* [wNear,wFar,aNear,aFar,color,gate] */
+      if (litA > 0.01) passes.push([24, 8, 0.13, 0.03, 'rgba(147,164,242,1)', litA]);
+      passes.push([11, 3.5, 0.15, 0.05, 'rgba(255,255,255,1)', 1]);
+      if (litA > 0.01) passes.push([7, 2.2, 0.32, 0.09, 'rgba(255,255,255,1)', litA]);
+      passes.push([4.2, 1.2, 0.95, 0.30, 'rgba(255,255,255,1)', 1]);
+      for (const [wN, wF, aN, aF, col, gate] of passes){
+        ctx.strokeStyle = col;
+        const per = Math.ceil((pts.length - 1) / CH);
+        for (let c0 = 0; c0 < pts.length - 1; c0 += per){
+          const c1 = Math.min(c0 + per, pts.length - 1);
+          const mid = pts[Math.floor((c0 + c1) / 2)];
+          const t = tOf(mid);
+          ctx.globalAlpha = gate * (aN + (aF - aN) * t) * tip(mid.u);
+          ctx.lineWidth = wN + (wF - wN) * t;
+          ctx.beginPath();
+          for (let i = c0; i <= c1; i++) i === c0 ? ctx.moveTo(pts[i].x, pts[i].y) : ctx.lineTo(pts[i].x, pts[i].y);
+          ctx.stroke();
+        }
       }
-      ctx.stroke();
+      ctx.restore();
     }
-    ctx.restore();
   }
 
   /* low point marker on the arc (hero when low selected) */
