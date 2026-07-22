@@ -1,0 +1,33 @@
+name: Fetch Impact Studio assets
+# Engangsjobb: henter Higgsfield-genererte assets (eierens konto) fra CDN
+# inn i repoet. Slettes når assetene er hentet.
+on:
+  workflow_dispatch:
+  push:
+    branches: [claude/golf-swing-viz-redesign-ctvj75]
+    paths: ['assets/impact-studio/.trigger']
+
+permissions:
+  contents: write
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: claude/golf-swing-viz-redesign-ctvj75
+      - name: Download assets
+        run: |
+          set -e
+          B=https://d8j0ntlcm91z4.cloudfront.net/user_3GdzmhDdgaP9stT4ZuGgLhii3Jg
+          curl -fsSL -o assets/impact-studio/iron-head.png   $B/hf_20260722_101741_f1077c9f-a86a-47c6-a938-8f9696bc0b37.png
+          curl -fsSL -o assets/impact-studio/driver-head.png $B/hf_20260722_101743_c84f71b9-002b-4c2f-b313-942c16ebd423.png
+          ls -la assets/impact-studio
+      - name: Commit
+        run: |
+          git config user.name "impact-studio-assets[bot]"
+          git config user.email "noreply@github.com"
+          git add assets/impact-studio
+          git commit -m "chore: køllehode-sprites (jern + driver) fra Higgsfield-CDN"
+          git push
