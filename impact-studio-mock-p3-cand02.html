@@ -352,7 +352,7 @@ const PARAMS = {
    * Arcens naturlige lavpunkt ligger fast i stance ved LP_STANCE foran
    * stance-senter (Pure-idealet LP_IDEAL=0.105 m fra motoren), så
    * lowPoint.x (motorinput, ball-relativ) = LP_STANCE − b. */
-  low:   { min:-10, max:25, step:0.1, def:0,    bipolar:true,  hue:'var(--accent)',
+  low:   { min:-20, max:20, step:0.1, def:0,    bipolar:true,  hue:'var(--accent)',
            fmt:v=>fmtSigned(v,1)+' cm' },
   arc:   { min:-5,  max:5,  step:0.1, def:-0.2, bipolar:true,  hue:'var(--depth)',
            fmt:v=>fmtSigned(v,1)+' cm' },
@@ -560,8 +560,9 @@ const ASSETS = {
   skyFace: 'assets/impact-studio/sky-face.png',
   bgDtl:   'assets/impact-studio/bg-dtl.png',
   ball:    'assets/impact-studio/ball.png',
-  divot:   'assets/impact-studio/divot.png',
   glint:   'assets/impact-studio/glint.png',
+  soil:    'assets/impact-studio/soil.png',
+  tee:     'assets/impact-studio/tee.png',
 };
 const IMG = {};
 for (const k in ASSETS){
@@ -743,11 +744,17 @@ function drawInset(){
   const liftI = ballLift();
   const br = BALL_R * sc, bx2 = X(0), by2 = Y(liftI) - br;
   if (liftI > 0){
-    ictx.save();
-    ictx.strokeStyle = 'rgba(210,205,225,.6)'; ictx.lineCap = 'round';
-    ictx.lineWidth = 2.5;
-    ictx.beginPath(); ictx.moveTo(bx2, gy); ictx.lineTo(bx2, by2 + br * 0.9); ictx.stroke();
-    ictx.restore();
+    const tTop2 = by2 + br * 0.9, tH2 = gy - tTop2;
+    if (ready('tee') && tH2 > 4){
+      const tW2 = tH2 * (IMG.tee.naturalWidth / IMG.tee.naturalHeight);
+      ictx.drawImage(IMG.tee, bx2 - tW2 / 2, tTop2, tW2, tH2);
+    } else {
+      ictx.save();
+      ictx.strokeStyle = 'rgba(210,205,225,.6)'; ictx.lineCap = 'round';
+      ictx.lineWidth = 2.5;
+      ictx.beginPath(); ictx.moveTo(bx2, gy); ictx.lineTo(bx2, by2 + br * 0.9); ictx.stroke();
+      ictx.restore();
+    }
   }
   {
     const gr2 = br * 1.9;
@@ -923,28 +930,30 @@ function drawFace(t){
   let entry = null, exit = null;
   if (t0g !== null){
     entry = arcPosition(-t0g, s); exit = arcPosition(t0g, s);
-    ctx.beginPath();
-    ctx.moveTo(M.X(entry.x), gy);
+    const cav = new Path2D();
+    cav.moveTo(M.X(entry.x), gy);
     const N = 26;
     for (let i = 0; i <= N; i++){
       const th = -t0g + (2 * t0g * i) / N;
       const p = arcPosition(th, s);
-      ctx.lineTo(M.X(p.x), M.Y(p.z));
+      cav.lineTo(M.X(p.x), M.Y(p.z));
     }
-    ctx.lineTo(M.X(exit.x), gy);
-    ctx.closePath();
+    cav.lineTo(M.X(exit.x), gy);
+    cav.closePath();
     ctx.fillStyle = 'rgba(24,15,8,.85)';       /* cavity cut into the turf */
-    ctx.fill();
-    ctx.strokeStyle = 'rgba(205,142,78,.6)'; ctx.lineWidth = 1.5; ctx.stroke();
-    /* turf-first strike → a torn divot chunk lies at the exit edge */
-    if (ct.clubZ < 0 && ready('divot')){
-      ctx.save();
-      ctx.translate(M.X(exit.x) + 18, gy - 9);
-      ctx.rotate(0.28);
-      ctx.globalAlpha = 0.95;
-      ctx.drawImage(IMG.divot, -19, -19, 38, 38);
+    ctx.fill(cav);
+    if (ready('soil')){
+      /* torn-earth texture clipped to the cavity; square draw box anchored at
+         the turf line so the texture never squashes */
+      const x0 = M.X(entry.x), x1 = M.X(exit.x);
+      const wCav = Math.max(60, (x1 - x0) * 1.25);
+      ctx.save(); ctx.clip(cav);
+      ctx.globalAlpha = 0.8;
+      ctx.drawImage(IMG.soil, x0 - (wCav - (x1 - x0)) / 2, gy - 4, wCav, wCav);
       ctx.restore();
     }
+    ctx.strokeStyle = 'rgba(205,142,78,.6)'; ctx.lineWidth = 1.5;
+    ctx.stroke(cav);
   }
 
   /* --- footprints: stance is fixed in the world, the ball is fixed on screen —
@@ -1015,13 +1024,19 @@ function drawFace(t){
   /* --- ball (live object → ember-comet glow); driver = ball on a tee --- */
   const bx = M.bx, by = M.Y(ballLift()) - ballR;
   if (state.club === 'driver'){
-    ctx.save();
-    ctx.strokeStyle = 'rgba(210,205,225,.65)'; ctx.lineCap = 'round';
-    ctx.lineWidth = 3.5;
-    ctx.beginPath(); ctx.moveTo(bx, gy); ctx.lineTo(bx, by + ballR * 0.9); ctx.stroke();
-    ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.moveTo(bx - 5, by + ballR * 0.92); ctx.lineTo(bx + 5, by + ballR * 0.92); ctx.stroke();
-    ctx.restore();
+    const tTop = by + ballR * 0.9, tH = gy - tTop;
+    if (ready('tee') && tH > 6){
+      const tW = tH * (IMG.tee.naturalWidth / IMG.tee.naturalHeight);
+      ctx.drawImage(IMG.tee, bx - tW / 2, tTop, tW, tH);
+    } else {
+      ctx.save();
+      ctx.strokeStyle = 'rgba(210,205,225,.65)'; ctx.lineCap = 'round';
+      ctx.lineWidth = 3.5;
+      ctx.beginPath(); ctx.moveTo(bx, gy); ctx.lineTo(bx, by + ballR * 0.9); ctx.stroke();
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(bx - 5, by + ballR * 0.92); ctx.lineTo(bx + 5, by + ballR * 0.92); ctx.stroke();
+      ctx.restore();
+    }
   }
   {
     /* hero when Ball Position is selected: the ball itself lights up */
@@ -1276,8 +1291,10 @@ function drawDtl(t){
       ctx.fillStyle = CSS('--gold'); ctx.fill();
       ctx.restore();
       if (state.sel === 'low')
+        /* dodge below the arc tail so the label never crosses arc or ball */
         label('LOW POINT ' + fmtSigned(effectiveLpx(s) * 100, 1) + ' cm',
-              lp.x - 14, lp.y + 16, A.gold, 11, 'right');
+              clamp(lp.x - 10, 150, W - 10), Math.min(lp.y + 32, H - 12),
+              A.gold, 11, 'right');
     }
   }
 

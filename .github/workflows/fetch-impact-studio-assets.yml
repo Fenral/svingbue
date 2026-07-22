@@ -1,6 +1,6 @@
 name: Fetch Impact Studio assets
 # Engangsjobb: henter de Higgsfield-genererte assetene (eierens konto) fra
-# CDN inn i repoet, slik at mocken kan bruke lokale filer. Kjøres manuelt.
+# CDN inn i repoet, slik at mocken kan bruke lokale filer.
 on:
   workflow_dispatch:
   push:
@@ -22,23 +22,23 @@ jobs:
           set -e
           mkdir -p assets/impact-studio
           B=https://d8j0ntlcm91z4.cloudfront.net/user_3GdzmhDdgaP9stT4ZuGgLhii3Jg
-          curl -fsSL -o assets/impact-studio/turf.png     $B/hf_20260722_000301_72dee368-aaf4-471f-93f1-fac03732cbea.png
-          curl -fsSL -o assets/impact-studio/sky-face.png $B/hf_20260722_000316_583262cb-086e-4399-bd5d-504d5d1a8869.png
-          curl -fsSL -o assets/impact-studio/bg-dtl.png   $B/hf_20260722_000319_5a56dcfd-7ca2-46a4-b87f-b76ab3e1d29e.png
-          curl -fsSL -o assets/impact-studio/ball.png     $B/hf_20260722_000448_8e6c4083-2aab-4f3e-b788-97a521437415.png
-          curl -fsSL -o assets/impact-studio/divot.png    $B/hf_20260722_000449_8e002178-5f41-4ae9-a0f4-6c29d4173497.png
-          curl -fsSL -o assets/impact-studio/glint.png    $B/hf_20260722_000332_646fdbdd-5416-4cdd-a65f-384b232ec80b.png
-          curl -fsSL -o assets/impact-studio/turf-min.webp     $B/hf_20260722_000301_72dee368-aaf4-471f-93f1-fac03732cbea_min.webp
-          curl -fsSL -o assets/impact-studio/sky-face-min.webp $B/hf_20260722_000316_583262cb-086e-4399-bd5d-504d5d1a8869_min.webp
-          curl -fsSL -o assets/impact-studio/bg-dtl-min.webp   $B/hf_20260722_000319_5a56dcfd-7ca2-46a4-b87f-b76ab3e1d29e_min.webp
-          curl -fsSL -o assets/impact-studio/ball-min.png      $B/hf_20260722_000448_8e6c4083-2aab-4f3e-b788-97a521437415_min.png
-          curl -fsSL -o assets/impact-studio/divot-min.png     $B/hf_20260722_000449_8e002178-5f41-4ae9-a0f4-6c29d4173497_min.png
-          curl -fsSL -o assets/impact-studio/glint-min.webp    $B/hf_20260722_000332_646fdbdd-5416-4cdd-a65f-384b232ec80b_min.webp
+          # 2K-oppskalert turf + DTL-bakgrunn; nedskaleres til 2048 bredde for repo-vekt
+          curl -fsSL -o /tmp/turf-2k.png   $B/hf_20260722_031345_f29117c7-c517-4645-a86e-8d3b277eb304.png
+          curl -fsSL -o /tmp/bg-dtl-2k.png $B/hf_20260722_031346_aee0c43f-e687-4c7a-a01f-8f8cba7b48d0.png
+          convert /tmp/turf-2k.png   -resize 2048x assets/impact-studio/turf.png
+          convert /tmp/bg-dtl-2k.png -resize 2048x assets/impact-studio/bg-dtl.png
+          # ny jordtekstur (divot-kavitet) + tee-cutout
+          curl -fsSL -o assets/impact-studio/soil.png      $B/hf_20260722_031335_1ec247a2-bf21-4a20-b8b0-5c3d3a201e41.png
+          curl -fsSL -o assets/impact-studio/soil-min.webp $B/hf_20260722_031335_1ec247a2-bf21-4a20-b8b0-5c3d3a201e41_min.webp
+          curl -fsSL -o assets/impact-studio/tee.png       $B/hf_20260722_031609_e325711d-4dc8-4422-8981-87cf3af241b5.png
+          curl -fsSL -o assets/impact-studio/tee-min.png   $B/hf_20260722_031609_e325711d-4dc8-4422-8981-87cf3af241b5_min.png
+          # tørvflak-spriten er fjernet fra designet
+          rm -f assets/impact-studio/divot.png assets/impact-studio/divot-min.png
           ls -la assets/impact-studio
       - name: Commit
         run: |
           git config user.name "impact-studio-assets[bot]"
           git config user.email "noreply@github.com"
-          git add assets/impact-studio
-          git commit -m "chore: hent Impact Studio-assets fra Higgsfield-CDN inn i repoet"
+          git add -A assets/impact-studio
+          git commit -m "chore: 2K turf/bakgrunn + jordtekstur + tee-sprite fra Higgsfield-CDN"
           git push
