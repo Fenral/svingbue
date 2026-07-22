@@ -513,6 +513,7 @@ function setView(v){
   /* camera dot orbits the ball: face-on = beside (3 o'clock), DTL = behind (6 o'clock) */
   $('camG').style.transform = v === 'face' ? 'rotate(-90deg)' : 'rotate(0deg)';
   $('viewCap').textContent = v === 'face' ? 'FACE ON' : 'DTL';
+  $('inset').style.display = v === 'face' ? '' : 'none';
   applyStageBg();
   vecFlashAt = performance.now();          // brief orientation flash on view switch
   kick();
@@ -537,8 +538,8 @@ let prevOrderKey = '', orderFlashAt = -1e9;
 
 function draw(t){
   ctx.clearRect(0, 0, W, H);
-  if (state.view === 'face') drawFace(t); else drawDtl(t);
-  drawInset();                              // the mini screen is permanent, both views
+  if (state.view === 'face'){ drawFace(t); drawInset(); }   // mini screen: Face On only
+  else drawDtl(t);
 }
 
 /* transient outcome vectors + underground gold: full for ~900 ms after a
@@ -578,13 +579,10 @@ function applyStageBg(){
     st.style.background = 'linear-gradient(180deg, rgba(14,10,24,.85) 0%, rgba(36,21,54,.45) 55%, rgba(15,11,28,.9) 100%), url(' + ASSETS.bgDtl + ') center/cover no-repeat #07060C';
   else st.style.background = '';
 }
-function cometU(){                            // eased 0..1 pulse position along the segment
-  const u = clamp((performance.now() - vecFlashAt) / 1200, 0, 1);
-  return u < 0.5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2;
-}
 /* outcome segment: the arc itself, lit up through the ball — white-hot core
- * over a token-hued glow, with a small light pulse travelling downstream */
-function litSegment(pts, hue, fa){
+ * over a token-hued glow. A stream of small arrows leaves the arc at the
+ * strike point along the tangent ray, fading out as they travel. */
+function litSegment(pts, hue, fa, impactIdx){
   if (pts.length < 2 || fa <= 0.01) return;
   ctx.save(); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
   const strokePts = () => {
@@ -603,17 +601,39 @@ function litSegment(pts, hue, fa){
   };
   ctx.globalAlpha = fa; ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 4; strokeSub(main);
   ctx.globalAlpha = 0.7 * fa; ctx.lineWidth = 2; strokeSub(tail);
-  if (!REDUCED){
-    const u = cometU();
-    const i = Math.min(pts.length - 1, Math.max(0, Math.round(u * (pts.length - 1))));
-    const c = pts[i];
-    const g = ctx.createRadialGradient(c.x, c.y, 0, c.x, c.y, 11);
-    g.addColorStop(0, 'rgba(255,255,255,' + 0.95 * fa + ')');
-    g.addColorStop(0.45, hue);
-    g.addColorStop(1, 'rgba(0,0,0,0)');
-    ctx.globalAlpha = fa;
-    ctx.beginPath(); ctx.arc(c.x, c.y, 11, 0, Math.PI * 2);
-    ctx.fillStyle = g; ctx.fill();
+  /* arrow stream out of the strike point */
+  const ray = pts.slice(Math.max(0, Math.min(impactIdx ?? pts.length - 11, pts.length - 2)));
+  if (ray.length > 1){
+    const chevron = (x, y, ang, al) => {
+      ctx.save(); ctx.translate(x, y); ctx.rotate(ang);
+      ctx.globalAlpha = al;
+      ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+      ctx.strokeStyle = hue; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.moveTo(-6, -5.5); ctx.lineTo(2, 0); ctx.lineTo(-6, 5.5); ctx.stroke();
+      ctx.strokeStyle = 'rgba(255,255,255,.85)'; ctx.lineWidth = 1.3;
+      ctx.beginPath(); ctx.moveTo(-5, -4.3); ctx.lineTo(1.6, 0); ctx.lineTo(-5, 4.3); ctx.stroke();
+      ctx.restore();
+    };
+    const at = u => {
+      const fi = clamp(u, 0, 1) * (ray.length - 1);
+      const i0 = Math.min(Math.floor(fi), ray.length - 2), fr = fi - i0;
+      const a = ray[i0], b = ray[i0 + 1];
+      return { x: a.x + (b.x - a.x) * fr, y: a.y + (b.y - a.y) * fr,
+               ang: Math.atan2(b.y - a.y, b.x - a.x) };
+    };
+    if (REDUCED){
+      const c = at(0.55);
+      chevron(c.x, c.y, c.ang, 0.8 * fa);
+    } else {
+      const phase = ((performance.now() - vecFlashAt) / 700) % 1;
+      for (let k = 0; k < 3; k++){
+        const u = (phase + k / 3) % 1;
+        const al = fa * (1 - u) * 0.95;
+        if (al <= 0.03) continue;
+        const c = at(u);
+        chevron(c.x, c.y, c.ang, al);
+      }
+    }
   }
   ctx.restore();
 }
@@ -625,7 +645,8 @@ function sceneClipPath(){
   const i = document.getElementById('inset').getBoundingClientRect();
   const p = new Path2D();
   p.rect(0, 0, W, H);
-  p.rect(i.left - r.left - 6, i.top - r.top - 6, i.width + 12, i.height + 12);
+  if (i.width > 0)                            // inset hidden in DTL → no punch-out
+    p.rect(i.left - r.left - 6, i.top - r.top - 6, i.width + 12, i.height + 12);
   return p;
 }
 
@@ -982,7 +1003,12 @@ function drawFace(t){
     ctx.restore();
   }
 
-  /* --- swing arc (clipped by frame; white core over faint glow) --- */
+  /* --- swing arc (clipped by frame; white core over faint glow).
+     Hero when Arc Height is selected: the arc itself lights up. --- */
+  if (state.sel === 'arc'){
+    strokeArc(s, M, 'rgba(147,164,242,.14)', 18);
+    strokeArc(s, M, 'rgba(255,255,255,.30)', 6);
+  }
   strokeArc(s, M, 'rgba(255,255,255,.16)', 9);
   strokeArc(s, M, 'rgba(255,255,255,.92)', 3);
 
@@ -998,10 +1024,12 @@ function drawFace(t){
     ctx.restore();
   }
   {
-    const gr = ballR * 2.1;
+    /* hero when Ball Position is selected: the ball itself lights up */
+    const heroBall = state.sel === 'low';
+    const gr = ballR * (heroBall ? 2.8 : 2.1);
     const halo = ctx.createRadialGradient(bx, by, ballR * 0.4, bx, by, gr);
-    halo.addColorStop(0, 'rgba(217,179,106,.34)');        // gold core
-    halo.addColorStop(0.5, 'rgba(255,138,77,.16)');       // ember
+    halo.addColorStop(0, 'rgba(217,179,106,' + (heroBall ? 0.5 : 0.34) + ')');
+    halo.addColorStop(0.5, 'rgba(255,138,77,' + (heroBall ? 0.28 : 0.16) + ')');
     halo.addColorStop(1, 'rgba(255,138,77,0)');
     ctx.beginPath(); ctx.arc(bx, by, gr, 0, Math.PI * 2);
     ctx.fillStyle = halo; ctx.fill();
@@ -1053,17 +1081,18 @@ function drawFace(t){
       const p = arcPosition(th, s);
       segPts.push({ x: M.X(p.x), y: M.Y(p.z) });
     }
+    const impactIdx = segPts.length - 1;
     const tv = tangentAt(thImp, s);
     const zK = tv.z * M.K;
     const len2 = Math.hypot(tv.x, zK) || 1;
     const dx = tv.x / len2, dz = zK / len2;
     const p0 = segPts[segPts.length - 1];
-    const Lout = W >= 700 ? 88 : 66;
+    const Lout = W >= 700 ? 104 : 78;
     for (let i = 1; i <= 10; i++){
       const d = (Lout * i) / 10;
       segPts.push({ x: p0.x + dx * d, y: p0.y - dz * d });
     }
-    litSegment(segPts, A.attack, fa);
+    litSegment(segPts, A.attack, fa, impactIdx);
     if (ready('glint') && !REDUCED){           // impact glint, additive
       ctx.save();
       ctx.globalCompositeOperation = 'screen';
@@ -1214,9 +1243,10 @@ function drawDtl(t){
     ctx.save();
     ctx.lineCap = 'round'; ctx.lineJoin = 'round';
     const passes = [ ['rgba(255,255,255,.14)', 9, 1] ];
-    if (fa > 0.01){
-      passes.unshift(['rgba(147,164,242,.12)', 20, fa]);   // violet light wash
-      passes.push(['rgba(255,255,255,.30)', 6, fa]);       // hot inner glow
+    const litA = state.sel === 'arc' ? 1 : fa;             // arc hero when Arc Height selected
+    if (litA > 0.01){
+      passes.unshift(['rgba(147,164,242,.12)', 20, litA]); // violet light wash
+      passes.push(['rgba(255,255,255,.30)', 6, litA]);     // hot inner glow
     }
     passes.push(['rgba(255,255,255,.95)', 3, 1]);
     for (const pass of passes){
@@ -1277,6 +1307,15 @@ function drawDtl(t){
         coreLine(gnd.x, gnd.y, bb.x, bb.y, 'rgba(210,205,225,.6)', 2.5);
       }
       const r = Math.max(6, (gnd.y - b.y) * 0.55);
+      if (state.sel === 'low'){                // ball hero: ember glow
+        const gr = r * 3;
+        const halo = ctx.createRadialGradient(b.x, b.y, r * 0.4, b.x, b.y, gr);
+        halo.addColorStop(0, 'rgba(217,179,106,.4)');
+        halo.addColorStop(0.5, 'rgba(255,138,77,.2)');
+        halo.addColorStop(1, 'rgba(255,138,77,0)');
+        ctx.beginPath(); ctx.arc(b.x, b.y, gr, 0, Math.PI * 2);
+        ctx.fillStyle = halo; ctx.fill();
+      }
       const grad = ctx.createRadialGradient(b.x - r*0.3, b.y - r*0.35, r*0.15, b.x, b.y, r);
       grad.addColorStop(0, '#ffffff'); grad.addColorStop(1, '#b9b2c4');
       ctx.beginPath(); ctx.arc(b.x, b.y, r, 0, Math.PI * 2);
@@ -1323,16 +1362,17 @@ function drawDtl(t){
       const p = P(arcPosition(th, s));
       if (p) segPts.push(p);
     }
+    const impactIdx = segPts.length - 1;
     const tv = tangentAt(thImp, s);
     const n = Math.hypot(tv.x, tv.y, tv.z) || 1;
     const dir3 = { x: tv.x / n, y: tv.y / n, z: tv.z / n };
     const imp3 = arcPosition(thImp, s);
     for (let i = 1; i <= 10; i++){
-      const d = (0.75 * i) / 10;
+      const d = (0.9 * i) / 10;
       const p = P({ x: imp3.x + dir3.x * d, y: imp3.y + dir3.y * d, z: imp3.z + dir3.z * d });
       if (p) segPts.push(p);
     }
-    litSegment(segPts, A.path, fa);
+    litSegment(segPts, A.path, fa, impactIdx);
     const impP = P(arcPosition(thImp, s));
     if (impP && ready('glint') && !REDUCED){   // impact glint, additive
       ctx.save();
