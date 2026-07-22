@@ -43,7 +43,8 @@
      absolutt i baren uavhengig av back-knappen til venstre. ══ */
   .topstrip{
     flex:0 0 auto;position:relative;display:flex;align-items:center;gap:10px;
-    height:40px;padding:0 max(12px,env(safe-area-inset-right)) 0 max(12px,env(safe-area-inset-left));
+    box-sizing:border-box;min-height:calc(40px + env(safe-area-inset-top));
+    padding:env(safe-area-inset-top) max(12px,env(safe-area-inset-right)) 0 max(12px,env(safe-area-inset-left));
     border-bottom:1px solid var(--line);
     background:linear-gradient(180deg, color-mix(in srgb, var(--surface) 66%, transparent), transparent);
   }
@@ -89,7 +90,7 @@
      Farge: --secondary (kjølig lilla, «input»-familien). Flyttet bort fra
      --q-launch/--gold slik at den oransje --accent-banen står som DEN ene
      varme fokal i scenen — mph konkurrerte før med ballbanen. */
-  .speedctl{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:6;
+  .speedctl{position:absolute;left:50%;top:calc(env(safe-area-inset-top) + 20px);transform:translate(-50%,-50%);z-index:6;
     display:flex;align-items:center;gap:2px;
     background:var(--panel);border:1px solid color-mix(in srgb, var(--secondary) 40%, transparent);
     border-radius:999px;padding:3px;
