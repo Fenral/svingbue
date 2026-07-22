@@ -1,0 +1,41 @@
+name: Fetch Impact Studio assets
+# Engangsjobb: henter de Higgsfield-genererte assetene (eierens konto) fra
+# CDN inn i repoet, slik at mocken kan bruke lokale filer. Kjøres manuelt.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: claude/golf-swing-viz-redesign-ctvj75
+      - name: Download assets
+        run: |
+          set -e
+          mkdir -p assets/impact-studio
+          B=https://d8j0ntlcm91z4.cloudfront.net/user_3GdzmhDdgaP9stT4ZuGgLhii3Jg
+          curl -fsSL -o assets/impact-studio/turf.png     $B/hf_20260722_000301_72dee368-aaf4-471f-93f1-fac03732cbea.png
+          curl -fsSL -o assets/impact-studio/sky-face.png $B/hf_20260722_000316_583262cb-086e-4399-bd5d-504d5d1a8869.png
+          curl -fsSL -o assets/impact-studio/bg-dtl.png   $B/hf_20260722_000319_5a56dcfd-7ca2-46a4-b87f-b76ab3e1d29e.png
+          curl -fsSL -o assets/impact-studio/ball.png     $B/hf_20260722_000448_8e6c4083-2aab-4f3e-b788-97a521437415.png
+          curl -fsSL -o assets/impact-studio/divot.png    $B/hf_20260722_000449_8e002178-5f41-4ae9-a0f4-6c29d4173497.png
+          curl -fsSL -o assets/impact-studio/glint.png    $B/hf_20260722_000332_646fdbdd-5416-4cdd-a65f-384b232ec80b.png
+          curl -fsSL -o assets/impact-studio/turf-min.webp     $B/hf_20260722_000301_72dee368-aaf4-471f-93f1-fac03732cbea_min.webp
+          curl -fsSL -o assets/impact-studio/sky-face-min.webp $B/hf_20260722_000316_583262cb-086e-4399-bd5d-504d5d1a8869_min.webp
+          curl -fsSL -o assets/impact-studio/bg-dtl-min.webp   $B/hf_20260722_000319_5a56dcfd-7ca2-46a4-b87f-b76ab3e1d29e_min.webp
+          curl -fsSL -o assets/impact-studio/ball-min.png      $B/hf_20260722_000448_8e6c4083-2aab-4f3e-b788-97a521437415_min.png
+          curl -fsSL -o assets/impact-studio/divot-min.png     $B/hf_20260722_000449_8e002178-5f41-4ae9-a0f4-6c29d4173497_min.png
+          curl -fsSL -o assets/impact-studio/glint-min.webp    $B/hf_20260722_000332_646fdbdd-5416-4cdd-a65f-384b232ec80b_min.webp
+          ls -la assets/impact-studio
+      - name: Commit
+        run: |
+          git config user.name "impact-studio-assets[bot]"
+          git config user.email "noreply@github.com"
+          git add assets/impact-studio
+          git commit -m "chore: hent Impact Studio-assets fra Higgsfield-CDN inn i repoet"
+          git push
