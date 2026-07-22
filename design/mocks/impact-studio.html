@@ -1,0 +1,1540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#07060C" />
+<title>Impact Studio · cand02 · miniskjerm-variant</title>
+<style>
+  /* P3 "Ultraviolet Ember" tokens mirrored locally (source: sa-p3.css) */
+  :root{
+    --bg:#07060C; --surface:#110D1C; --plate:rgba(8,5,14,.86); --plate-solid:#0D0A18;
+    --ink:#F5F2FF; --muted:#A79FC7; --muted-2:#8E85A8;
+    --accent:#FF8A4D; --secondary:#9D8BFF; --gold:#D9B36A; --strike:#e3b05c;
+    --attack:#f470b8; --path:#5bc8f5; --plane:#9c8df5; --depth:#C98AE6;
+    --good:#58E6A8; --warn:#FFD056; --bad:#FF7B8A; --soil:#8a5a2b;
+    --line:rgba(255,255,255,.10); --line-strong:rgba(255,255,255,.30);
+    --font-ui:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --font-mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+    --ease:cubic-bezier(.2,.8,.2,1);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%;overflow:hidden;overscroll-behavior:none}
+  body{
+    background:var(--bg);color:var(--ink);font-family:var(--font-ui);
+    display:flex;flex-direction:column;height:100dvh;user-select:none;-webkit-user-select:none;
+    padding:env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left);
+  }
+
+  /* ---------- outcome strip ---------- */
+  .top{display:flex;gap:8px;align-items:stretch;padding:6px 10px 4px;height:52px;flex:0 0 auto}
+  .card{
+    flex:1 1 0;min-width:0;border-radius:12px;background:var(--surface);
+    display:flex;align-items:center;justify-content:center;gap:10px;
+    position:relative;border:1px solid var(--card-line,var(--line));
+    transition:opacity .25s var(--ease);
+  }
+  .card .col{display:flex;flex-direction:column;align-items:flex-start;gap:1px;min-width:0}
+  .card .lab{display:flex;align-items:center;gap:5px;font-size:10px;font-weight:700;
+    letter-spacing:.07em;color:var(--muted);white-space:nowrap}
+  .card .lab .dot{width:6px;height:6px;border-radius:50%;background:var(--card-hue);flex:0 0 auto}
+  .card .val{font-family:var(--font-mono);font-variant-numeric:tabular-nums;
+    font-size:18px;font-weight:700;color:var(--ink);line-height:1;white-space:nowrap}
+  .card .qual{font-size:10px;font-weight:800;letter-spacing:.08em;line-height:1;margin-top:1px}
+  .card.attack{--card-hue:var(--attack);--card-line:rgba(244,112,184,.22)}
+  .card.path{--card-hue:var(--path);--card-line:rgba(91,200,245,.22)}
+  .card.strike{--card-hue:var(--strike);--card-line:rgba(227,176,92,.22)}
+  .card::after{content:"";position:absolute;left:14%;right:14%;bottom:-1px;height:2px;
+    border-radius:2px;background:var(--card-hue);opacity:0;transition:opacity .3s var(--ease)}
+  .card.hit::after{opacity:1}
+  .card.dim{opacity:.55}
+  .face-glyph{flex:0 0 auto}
+  #resetBtn{
+    flex:0 0 auto;width:44px;border-radius:12px;background:var(--surface);
+    border:1px solid var(--line);color:var(--muted);font-size:17px;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;font-family:inherit;
+  }
+  #resetBtn:active{color:var(--ink);border-color:var(--line-strong)}
+
+  /* ---------- stage ---------- */
+  /* impact-skjermens normative dusk-bakteppe (sa-p3.css --dusk-scene-bg),
+     glodefokus flyttet ned mot kontaktsonen */
+  .stage{position:relative;flex:1 1 auto;min-height:0;margin:0 10px;border-radius:14px;
+    overflow:hidden;border:1px solid var(--line);
+    background:
+      radial-gradient(120% 55% at 50% 62%, #3B2A55 0%, transparent 60%),
+      linear-gradient(180deg, #0E0A18 0%, #120D1E 34%, #241536 58%, #17102A 74%, #0F0B1C 100%)}
+  #scene{position:absolute;inset:0;width:100%;height:100%;display:block}
+  /* right rail: two glyph toggles — camera orbit (view) and ball lie (club).
+     State lives in the little drawing, not in paired pill buttons. */
+  .rail{position:absolute;top:8px;right:8px;display:flex;flex-direction:column;gap:6px;z-index:5}
+  .orb{
+    width:58px;min-height:60px;padding:4px 2px 6px;border-radius:14px;cursor:pointer;
+    background:var(--plate);border:1px solid var(--line);color:var(--muted);
+    font-family:inherit;backdrop-filter:blur(3px);position:relative;
+    display:flex;flex-direction:column;align-items:center;gap:1px;
+  }
+  .orb:active{border-color:var(--line-strong)}
+  .orb svg{width:40px;height:36px;display:block}
+  .orb .cap{font-size:10px;font-weight:700;letter-spacing:.03em;line-height:1;color:var(--ink)}
+  .orb.pulse::before{content:"";position:absolute;inset:-3px;border-radius:17px;
+    border:2px solid var(--secondary);animation:ringPulse .55s var(--ease) 1;pointer-events:none}
+  @keyframes ringPulse{0%{opacity:.9;transform:scale(.96)}100%{opacity:0;transform:scale(1.12)}}
+
+  /* miniskjerm: zoomed contact-zone inset (pattern: impact-inset-mock.html, P3-toned) */
+  .inset{
+    position:absolute;top:8px;left:8px;z-index:4;
+    width:min(32%,240px);border-radius:14px;overflow:hidden;
+    background:linear-gradient(180deg, rgba(13,10,24,.96), rgba(8,5,14,.96));
+    border:1px solid rgba(217,179,106,.30);
+    box-shadow:0 18px 50px -20px rgba(0,0,0,.85), inset 0 0 0 1px rgba(255,255,255,.02);
+    backdrop-filter:blur(3px);
+  }
+  .inset .eyebrow{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:7px 10px 3px;font-size:10px;font-weight:700;letter-spacing:.14em;
+    color:var(--gold);white-space:nowrap;
+  }
+  .inset .eyebrow .st{font-family:var(--font-mono);font-variant-numeric:tabular-nums;
+    letter-spacing:0;color:var(--ink)}
+  .inset .eyebrow .st em{font-style:normal;font-family:var(--font-ui);font-weight:800;
+    letter-spacing:.08em}
+  .inset::after{content:"";position:absolute;left:10px;right:10px;top:24px;height:2px;
+    border-radius:2px;background:var(--gold);opacity:0;transition:opacity .3s var(--ease)}
+  .inset.hit::after{opacity:1}
+  #insetCv{display:block;width:100%;height:100px}
+  .inset .eyebrow > span:first-child{margin-right:8px}
+  .inset .eyebrow .ez{display:none}   /* compact inset → short title always */
+  @media (max-width:620px){ #insetCv{height:76px}
+    .inset .eyebrow{font-size:9px;padding:5px 8px 2px} }
+
+  /* ---------- controls ---------- */
+  .controls{flex:0 0 auto;height:calc(92px + env(safe-area-inset-bottom));
+    padding:6px 10px calc(6px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:6px}
+  .chips{display:flex;gap:8px;height:44px}
+  .chip{
+    flex:1 1 0;min-width:0;border-radius:12px;background:var(--surface);cursor:pointer;
+    border:1px solid var(--line);display:flex;flex-direction:column;align-items:center;
+    justify-content:center;gap:2px;font-family:inherit;color:var(--muted);padding:0 4px;
+  }
+  .chip .cl{font-size:10.5px;font-weight:700;letter-spacing:.05em;white-space:nowrap;
+    max-width:100%;overflow:hidden;text-overflow:ellipsis}
+  .chip .cv{font-family:var(--font-mono);font-variant-numeric:tabular-nums;
+    font-size:14px;font-weight:700;color:var(--ink);line-height:1}
+  .chip.active{border-color:var(--chip-hue);color:var(--ink);
+    box-shadow:inset 0 0 0 1px var(--chip-hue), 0 0 18px -8px var(--chip-hue)}
+  .chip.active .cl{color:var(--chip-hue)}
+  .chip[data-p="plane"]{--chip-hue:var(--plane)}
+  .chip[data-p="dir"]{--chip-hue:var(--secondary)}
+  .chip[data-p="low"]{--chip-hue:var(--accent)}   /* Ball Position: live ball → ember */
+  .chip[data-p="arc"]{--chip-hue:var(--depth)}
+
+  .sliderZone{position:relative;height:36px;display:flex;align-items:center}
+  .track{position:absolute;left:13px;right:13px;top:50%;height:4px;margin-top:-2px;
+    border-radius:2px;background:rgba(255,255,255,.14)}
+  .fill{position:absolute;top:50%;height:4px;margin-top:-2px;border-radius:2px;
+    background:var(--slider-hue,var(--secondary))}
+  .notch{position:absolute;top:50%;width:2px;height:12px;margin-top:-6px;
+    background:var(--line-strong);border-radius:1px;display:none}
+  #range{
+    position:absolute;inset:0;width:100%;appearance:none;-webkit-appearance:none;
+    background:transparent;margin:0;cursor:pointer;
+  }
+  #range::-webkit-slider-runnable-track{height:36px;background:transparent}
+  #range::-webkit-slider-thumb{
+    -webkit-appearance:none;width:26px;height:26px;border-radius:50%;margin-top:5px;
+    background:var(--ink);border:3px solid var(--slider-hue,var(--secondary));
+    box-shadow:0 2px 10px rgba(0,0,0,.6);
+  }
+  #range::-moz-range-track{height:36px;background:transparent}
+  #range::-moz-range-thumb{width:22px;height:22px;border-radius:50%;
+    background:var(--ink);border:3px solid var(--slider-hue,var(--secondary))}
+
+  /* compact phones (568x320) */
+  @media (max-width:620px){
+    .top{height:46px}
+    .card .val{font-size:15px}
+    .card .lab{font-size:10px;letter-spacing:.04em}
+    .chip .cl{font-size:10px;letter-spacing:.03em}
+    .controls{height:calc(86px + env(safe-area-inset-bottom))}
+    .orb{width:52px;min-height:54px}
+    .orb svg{width:34px;height:30px}
+  }
+
+  /* portrait gate (pattern: impact-viz-mock.html) */
+  .rotate{position:fixed;inset:0;z-index:60;display:none;flex-direction:column;align-items:center;
+    justify-content:center;gap:14px;background:var(--bg);text-align:center;padding:24px}
+  .rotate .ico{font-size:46px;animation:tilt 1.8s ease-in-out infinite}
+  .rotate p{font-size:15px;max-width:240px;color:var(--ink)}
+  @keyframes tilt{0%,100%{transform:rotate(-12deg)}50%{transform:rotate(78deg)}}
+  @media (orientation:portrait){.rotate{display:flex}}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+  <div class="top">
+    <div class="card attack" id="cardAttack">
+      <div class="col">
+        <div class="lab"><span class="dot"></span>ATTACK ANGLE</div>
+        <div class="val" id="vAttack">−4.0°</div>
+      </div>
+    </div>
+    <div class="card path" id="cardPath">
+      <div class="col">
+        <div class="lab"><span class="dot"></span>CLUB PATH</div>
+        <div class="val" id="vPath">0.0°</div>
+      </div>
+    </div>
+    <button id="resetBtn" aria-label="Reset">↺</button>
+  </div>
+
+  <div class="stage" id="stage">
+    <canvas id="scene"></canvas>
+    <div class="inset" id="inset">
+      <div class="eyebrow"><span>STRIKE<span class="ez"> · CONTACT ZONE</span></span>
+        <span class="st"><em id="insetQual">PURE</em>&nbsp;·&nbsp;<span id="insetMm">−20 mm</span></span></div>
+      <canvas id="insetCv"></canvas>
+    </div>
+    <div class="rail">
+      <button class="orb" id="btnView" aria-label="Bytt kameravinkel">
+        <svg viewBox="0 0 44 40" aria-hidden="true">
+          <circle cx="22" cy="22" r="12.5" fill="none" stroke="rgba(157,139,255,.35)"
+                  stroke-width="1.2" stroke-dasharray="2.5 3"/>
+          <line x1="22" y1="22" x2="22" y2="8" stroke="rgba(245,242,255,.45)" stroke-width="1.3"/>
+          <path d="M22 4.5 l-3 5 h6 z" fill="rgba(245,242,255,.55)"/>
+          <circle cx="22" cy="22" r="3" fill="#F5F2FF"/>
+          <g id="camG" style="transform-origin:22px 22px;transform:rotate(-90deg);
+                              transition:transform .35s cubic-bezier(.2,.8,.2,1)">
+            <g transform="translate(22 34.5)">
+              <circle r="4.4" fill="#0D0A18" stroke="#9D8BFF" stroke-width="1.6"/>
+              <circle r="1.6" fill="#9D8BFF"/>
+            </g>
+          </g>
+        </svg>
+        <span class="cap" id="viewCap">FACE ON</span>
+      </button>
+      <button class="orb" id="btnClub" aria-label="Bytt kølle">
+        <svg viewBox="0 0 44 40" aria-hidden="true">
+          <line x1="7" y1="32" x2="37" y2="32" stroke="rgba(200,225,150,.55)" stroke-width="1.4"/>
+          <g id="lieIron" style="transition:opacity .3s">
+            <path d="M14 32 l2 -6 M18 32 l1.4 -5 M27 32 l-1.6 -5.4 M31 32 l-2 -6"
+                  stroke="rgba(130,185,85,.8)" stroke-width="1.4" stroke-linecap="round" fill="none"/>
+            <circle cx="22" cy="27.5" r="4.5" fill="#F5F2FF"/>
+          </g>
+          <g id="lieDriver" style="opacity:0;transition:opacity .3s">
+            <line x1="22" y1="32" x2="22" y2="22.5" stroke="rgba(210,205,225,.85)" stroke-width="2"/>
+            <line x1="19" y1="22.5" x2="25" y2="22.5" stroke="rgba(210,205,225,.85)" stroke-width="1.6"/>
+            <circle cx="22" cy="17.5" r="4.5" fill="#F5F2FF"/>
+          </g>
+        </svg>
+        <span class="cap" id="clubCap">IRON</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div class="chips">
+      <button class="chip" data-p="plane"><span class="cl">SWING PLANE</span><span class="cv" id="cvPlane">60°</span></button>
+      <button class="chip" data-p="dir"><span class="cl">SWING DIRECTION</span><span class="cv" id="cvDir">0.0°</span></button>
+      <button class="chip active" data-p="low"><span class="cl">BALL POSITION</span><span class="cv" id="cvLow">0.0 cm</span></button>
+      <button class="chip" data-p="arc"><span class="cl">ARC HEIGHT</span><span class="cv" id="cvArc">−0.2 cm</span></button>
+    </div>
+    <div class="sliderZone">
+      <div class="track"></div>
+      <div class="fill" id="fill"></div>
+      <div class="notch" id="notch"></div>
+      <input type="range" id="range" min="-10" max="25" step="0.1" value="0" />
+    </div>
+  </div>
+
+  <div class="rotate" role="status">
+    <span class="ico" aria-hidden="true">📱</span>
+    <p>Rotate your phone to landscape</p>
+  </div>
+
+<script>
+"use strict";
+/* ============================================================
+ * ENGINE (trimmed inline copy — source of truth:
+ * swing-parameters-and-impact.js @ repo root. Keep in sync.)
+ * Z-up world: +X target line, +Y away from face-on camera, +Z up.
+ * ============================================================ */
+const RADIUS = 1.20, BALL_R = 0.0213;
+const SWEEP_RAD = 48 * Math.PI / 180;
+const d2r = d => d * Math.PI / 180, r2d = r => r * 180 / Math.PI;
+const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+
+function planeBasis(planeAngle, swingDir){
+  const phi = d2r(planeAngle), psi = d2r(-swingDir);
+  return {
+    u: { x: Math.cos(psi), y: Math.sin(psi), z: 0 },
+    m: { x: -Math.sin(psi) * Math.cos(phi), y: Math.cos(psi) * Math.cos(phi), z: Math.sin(phi) },
+  };
+}
+function effectiveLpx(s){
+  const perDeg = s.radius * Math.cos(d2r(s.planeAngle)) * (Math.PI / 180);
+  return s.lowPoint.x - s.swingDirection * perDeg;
+}
+function thetaAtImpact(s){ return Math.asin(clamp(-effectiveLpx(s) / s.radius, -0.999, 0.999)); }
+function lpWorld(s){
+  const psi = d2r(-s.swingDirection), phi = d2r(s.planeAngle);
+  const lpx = effectiveLpx(s), t0 = thetaAtImpact(s);
+  const d = s.radius * (1 - Math.cos(t0)) * Math.cos(phi);
+  return { x: lpx * Math.cos(psi) + d * Math.sin(psi), y: lpx * Math.sin(psi) - d * Math.cos(psi), z: s.lowPoint.z };
+}
+function arcPosition(theta, s){
+  const { u, m } = planeBasis(s.planeAngle, s.swingDirection);
+  const r = s.radius, sT = Math.sin(theta), cT = Math.cos(theta), lp = lpWorld(s);
+  return { x: lp.x + r*sT*u.x + r*(1-cT)*m.x, y: lp.y + r*sT*u.y + r*(1-cT)*m.y, z: lp.z + r*sT*u.z + r*(1-cT)*m.z };
+}
+function tangentAt(theta, s){
+  const { u, m } = planeBasis(s.planeAngle, s.swingDirection);
+  const r = s.radius;
+  return { x: r*Math.cos(theta)*u.x + r*Math.sin(theta)*m.x,
+           y: r*Math.cos(theta)*u.y + r*Math.sin(theta)*m.y,
+           z: r*Math.cos(theta)*u.z + r*Math.sin(theta)*m.z };
+}
+function deriveImpact(s){
+  const t = thetaAtImpact(s), phi = d2r(s.planeAngle);
+  const vhPar = Math.cos(t), vhPerp = -Math.sin(t) * Math.cos(phi), vz = Math.sin(t) * Math.sin(phi);
+  return { attackAngle: r2d(Math.atan2(vz, Math.hypot(vhPar, vhPerp))),
+           clubPath: s.swingDirection + r2d(Math.atan2(vhPerp, vhPar)) };
+}
+function clubBallContact(s){
+  const phi = d2r(s.planeAngle), r = s.radius;
+  const t = Math.asin(clamp(-effectiveLpx(s) / r, -0.999, 0.999));
+  const clubZ = s.lowPoint.z + r * (1 - Math.cos(t)) * Math.sin(phi);
+  return { clubZ, offset: clubZ - BALL_R, theta: t };
+}
+function groundCrossingTheta0(s){
+  // z(theta)=lp.z + r(1-cos theta)·sin(phi) = 0  → real only when lp.z < 0
+  const cosT0 = 1 + s.lowPoint.z / (s.radius * Math.sin(d2r(s.planeAngle)));
+  if (cosT0 >= 1 || cosT0 <= -1) return null;
+  return Math.acos(cosT0);
+}
+const LP_AHEAD_MIN = 0.02, LP_AHEAD_MAX = 0.15;
+function strikeQuality(s){
+  const ct = clubBallContact(s), h = ct.clubZ, xLP = effectiveLpx(s), R = BALL_R;
+  const lpAhead = xLP >= LP_AHEAD_MIN && xLP <= LP_AHEAD_MAX;
+  if (h < -0.025) return { band:'Duff',  col:'var(--bad)' };
+  if (h < 0)      return { band:'Fat',   col:'var(--warn)' };
+  if (h <= 1.0*R) return lpAhead ? { band:'Pure', col:'var(--good)' }
+                  : (xLP < 0 ? { band:'Fat', col:'var(--warn)' } : { band:'Thin', col:'var(--warn)' });
+  if (h <= 1.4*R) return { band:'Thin',  col:'var(--warn)' };
+  return { band:'Whiff', col:'var(--bad)' };
+}
+/* pinhole projection (engine `project`) */
+function buildCamera(cam, w, h){
+  const sub=(a,b)=>({x:a.x-b.x,y:a.y-b.y,z:a.z-b.z});
+  const cross=(a,b)=>({x:a.y*b.z-a.z*b.y,y:a.z*b.x-a.x*b.z,z:a.x*b.y-a.y*b.x});
+  const norm=v=>{const m=Math.hypot(v.x,v.y,v.z)||1;return{x:v.x/m,y:v.y/m,z:v.z/m}};
+  const fwd = norm(sub(cam.look, cam.pos));
+  const right = norm(cross(fwd, {x:0,y:0,z:1}));
+  const upVec = norm(cross(right, fwd));
+  return { cam, fwd, right, upVec, focal: h/2/Math.tan(cam.fov/2), w, h };
+}
+function project(p, b){
+  const rel = { x:p.x-b.cam.pos.x, y:p.y-b.cam.pos.y, z:p.z-b.cam.pos.z };
+  const dot=(a,c)=>a.x*c.x+a.y*c.y+a.z*c.z;
+  const xC=dot(rel,b.right), yC=dot(rel,b.upVec), zC=dot(rel,b.fwd);
+  if (zC <= 0.01) return null;
+  return { x: b.w/2 + (xC/zC)*b.focal*(b.cam.xStretch||1), y: b.h/2 - (yC/zC)*b.focal,
+           d: zC };                             /* camera-space depth for taper */
+}
+
+/* ============================================================ STATE */
+const PARAMS = {
+  plane: { min:30,  max:80, step:0.5, def:60,   bipolar:false, hue:'var(--plane)',
+           fmt:v=>fmtNum(v,0)+'°' },
+  dir:   { min:-12, max:12, step:0.1, def:0,    bipolar:true,  hue:'var(--secondary)',
+           fmt:v=>fmtNum(v,1)+'°' },
+  /* Ball Position i stance: 0 = midt, + = frem (mot target), − = bak.
+   * Arcens naturlige lavpunkt ligger fast i stance ved LP_STANCE foran
+   * stance-senter (Pure-idealet LP_IDEAL=0.105 m fra motoren), så
+   * lowPoint.x (motorinput, ball-relativ) = LP_STANCE − b. */
+  low:   { min:-20, max:20, step:0.1, def:0,    bipolar:true,  hue:'var(--accent)',
+           fmt:v=>fmtSigned(v,1)+' cm' },
+  arc:   { min:-5,  max:5,  step:0.1, def:0,    bipolar:true,  hue:'var(--depth)',
+           fmt:v=>fmtSigned(v,1)+' cm' },
+};
+const LP_STANCE = 10.5;                       // cm foran stance-senter
+/* club presets: plane auto-set on switch (freely adjustable afterwards).
+ * Driver = ball on a tee. MOCK STAND-IN: final driver physics (strike vs
+ * teed ball, expected up-strike) must come from the production engine.
+ *
+ * Arc Height is CLUB-RELATIVE: slider 0 = ideal low-point height for the
+ * selected club; engine input lowPoint.z = arc + ARC_Z0[club]. The arc
+ * traces the SOLE's path (engine model — it drives turf contact), while
+ * the strike readout is referenced to the FACE CENTRE (SWEET above the
+ * sole), so Pure reads ~0 mm = middle of the face. The production engine
+ * gets the same mapping when this spec is implemented. */
+const PLANE_PRESET = { iron: 60, driver: 50 };
+const ARC_Z0 = { iron: -0.2, driver: 1.8 };   // cm — ideal lowPoint.z per club
+const SWEET  = { iron: 0.0213, driver: 0.033 }; // m — face centre above the sole
+/* ghosted clubhead sprite calibration: real-world mm spanned by the trimmed
+   sprite height (head + faded shaft stub) — tuned so the face middle sits
+   SWEET above the sole on screen */
+const HEAD_MM = { iron: 102, driver: 96 };
+/* forward shaft lean at address ("delofting"): iron leans 6° toward target */
+const LEAN = { iron: 6 * Math.PI / 180, driver: 0 };
+const TEE_H = 0.030;                          // tee height, metres
+const state = { view:'face', sel:'low', plane:60, dir:0, low:0, arc:0, club:'iron' };
+const ballLift = () => state.club === 'driver' ? TEE_H : 0;
+function engineState(){
+  return { radius:RADIUS, planeAngle:state.plane, swingDirection:state.dir,
+           lowPoint:{ x:(LP_STANCE - state.low)/100, y:0,
+                      z:(state.arc + ARC_Z0[state.club])/100 } };
+}
+const MINUS = '−';
+function fmtNum(v, dec){ const s = Math.abs(v).toFixed(dec); return (v < -1e-9 ? MINUS : '') + s; }
+function fmtSigned(v, dec){
+  if (Math.abs(v) < 1e-9) return '0.0'.slice(0, dec ? 3 : 1);
+  return (v > 0 ? '+' : MINUS) + Math.abs(v).toFixed(dec);
+}
+
+/* ============================================================ DOM */
+const $ = id => document.getElementById(id);
+const cv = $('scene'), ctx = cv.getContext('2d');
+let DPR = 1, W = 0, H = 0;
+function resize(){
+  DPR = Math.min(devicePixelRatio || 1, 2);
+  const r = cv.getBoundingClientRect();
+  W = Math.round(r.width); H = Math.round(r.height);
+  cv.width = W * DPR; cv.height = H * DPR;
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  if (typeof resizeInset === 'function' && document.getElementById('insetCv')) IW = 0;
+  layoutSlider(); kick();
+}
+addEventListener('resize', resize);
+
+/* outcome feedback: pulse only what changed */
+let prevOut = null, pulseTimer = 0;
+function updateOutcomes(){
+  const s = engineState();
+  const imp = deriveImpact(s), ct = clubBallContact(s), q = strikeQuality(s);
+  /* strike read at the FACE CENTRE: + = ball meets the face above its
+     middle, − = below. Pure ≈ 0 mm for both clubs. */
+  const faceOff = (ballLift() + BALL_R) - (ct.clubZ + SWEET[state.club]);
+  const out = { attack: imp.attackAngle, path: imp.clubPath, strike: faceOff };
+  $('vAttack').textContent = fmtNum(out.attack, 1) + '°';
+  $('vPath').textContent = fmtNum(out.path, 1) + '°';
+  /* strike lives in the inset eyebrow */
+  let band = q.band, col = q.col;
+  if (state.club === 'driver' && ct.clubZ >= -0.025){
+    /* mock stand-in driver bands, centred on the face middle */
+    if (Math.abs(faceOff) <= 0.008){ band = 'Pure'; col = 'var(--good)'; }
+    else if (faceOff > 0.008){ band = 'High'; col = 'var(--warn)'; }
+    else { band = 'Low'; col = 'var(--warn)'; }
+  }
+  const qEl = $('insetQual'); qEl.textContent = band.toUpperCase(); qEl.style.color = col;
+  const mm = Math.round(Math.abs(faceOff * 1000));
+  $('insetMm').textContent = (mm === 0 ? '0' : (faceOff < 0 ? MINUS : '+') + mm) + ' mm';
+
+  if (prevOut){
+    const changed = {
+      attack: Math.abs(out.attack - prevOut.attack) > 0.005,
+      path:   Math.abs(out.path   - prevOut.path)   > 0.005,
+      strike: Math.abs(out.strike - prevOut.strike) > 0.00005,
+    };
+    const any = changed.attack || changed.path || changed.strike;
+    for (const k of ['attack','path']){
+      const el = $('card' + k[0].toUpperCase() + k.slice(1));
+      el.classList.toggle('hit', changed[k]);
+      el.classList.toggle('dim', any && !changed[k]);
+    }
+    $('inset').classList.toggle('hit', changed.strike);
+    clearTimeout(pulseTimer);
+    pulseTimer = setTimeout(() => {
+      for (const k of ['attack','path'])
+        $('card' + k[0].toUpperCase() + k.slice(1)).classList.remove('hit','dim');
+      $('inset').classList.remove('hit');
+    }, 320);
+  }
+  prevOut = out;
+}
+
+/* cross-view hint: the change is clearer in the other perspective */
+let hintTimer = 0;
+function crossViewHint(){
+  const other = (state.sel === 'dir' || state.sel === 'plane') ? 'dtl' : 'face';
+  if (state.view === other) return;
+  const btn = $('btnView');
+  if (btn.classList.contains('pulse')) return;
+  btn.classList.add('pulse');
+  clearTimeout(hintTimer);
+  hintTimer = setTimeout(() => btn.classList.remove('pulse'), 600);
+}
+
+/* ============================================================ SLIDER */
+const range = $('range'), fillEl = $('fill'), notchEl = $('notch');
+function layoutSlider(){
+  const p = PARAMS[state.sel];
+  const zone = range.parentElement.getBoundingClientRect();
+  const inner = zone.width - 26;                // 13px inset each side (thumb radius)
+  const frac = v => (v - p.min) / (p.max - p.min);
+  const px = v => 13 + frac(v) * inner;
+  const vNow = state[state.sel];
+  if (p.bipolar){
+    notchEl.style.display = 'block';
+    notchEl.style.left = (px(0) - 1) + 'px';
+    const a = px(Math.min(0, vNow)), b = px(Math.max(0, vNow));
+    fillEl.style.left = a + 'px'; fillEl.style.width = Math.max(2, b - a) + 'px';
+  } else {
+    notchEl.style.display = 'none';
+    fillEl.style.left = '13px'; fillEl.style.width = Math.max(2, px(vNow) - 13) + 'px';
+  }
+}
+function selectParam(key){
+  state.sel = key;
+  const p = PARAMS[key];
+  document.querySelectorAll('.chip').forEach(c => c.classList.toggle('active', c.dataset.p === key));
+  document.querySelector('.sliderZone').style.setProperty('--slider-hue', p.hue);
+  range.style.setProperty('--slider-hue', p.hue);
+  fillEl.style.background = p.hue;
+  range.min = p.min; range.max = p.max; range.step = p.step; range.value = state[key];
+  layoutSlider(); kick();
+}
+document.querySelectorAll('.chip').forEach(c =>
+  c.addEventListener('click', () => selectParam(c.dataset.p)));
+range.addEventListener('input', () => {
+  state[state.sel] = parseFloat(range.value);
+  vecFlashAt = performance.now();
+  updateChipValues(); layoutSlider(); updateOutcomes(); crossViewHint(); kick();
+});
+function updateChipValues(){
+  $('cvPlane').textContent = PARAMS.plane.fmt(state.plane);
+  $('cvDir').textContent = PARAMS.dir.fmt(state.dir);
+  $('cvLow').textContent = PARAMS.low.fmt(state.low);
+  $('cvArc').textContent = PARAMS.arc.fmt(state.arc);
+}
+$('resetBtn').addEventListener('click', () => {
+  for (const k in PARAMS) state[k] = PARAMS[k].def;
+  state.plane = PLANE_PRESET[state.club];
+  range.value = state[state.sel];
+  updateChipValues(); layoutSlider(); updateOutcomes(); kick();
+});
+function setClub(c){
+  state.club = c;
+  state.plane = PLANE_PRESET[c];              // auto-preset; freely adjustable after
+  state.arc = 0;                              // 0 = ideal height for this club
+  $('lieIron').style.opacity = c === 'iron' ? '1' : '0';
+  $('lieDriver').style.opacity = c === 'driver' ? '1' : '0';
+  $('clubCap').textContent = c === 'iron' ? 'IRON' : 'DRIVER';
+  if (state.sel === 'plane') range.value = state.plane;
+  if (state.sel === 'arc') range.value = state.arc;
+  vecFlashAt = performance.now();
+  updateChipValues(); layoutSlider(); updateOutcomes(); kick();
+}
+$('btnClub').addEventListener('click', () => setClub(state.club === 'iron' ? 'driver' : 'iron'));
+$('btnView').addEventListener('click', () => setView(state.view === 'face' ? 'dtl' : 'face'));
+function setView(v){
+  state.view = v;
+  /* camera dot orbits the ball: face-on = beside (3 o'clock), DTL = behind (6 o'clock) */
+  $('camG').style.transform = v === 'face' ? 'rotate(-90deg)' : 'rotate(0deg)';
+  $('viewCap').textContent = v === 'face' ? 'FACE ON' : 'DTL';
+  $('inset').style.display = v === 'face' ? '' : 'none';
+  applyStageBg();
+  vecFlashAt = performance.now();          // brief orientation flash on view switch
+  kick();
+}
+
+/* ============================================================ RENDER LOOP
+ * Static scene + short one-shot transitions (tangent draw-in, sequence flash).
+ * kick() restarts the 400 ms animation window. */
+let animStart = 0, rafId = 0;
+function kick(){
+  animStart = performance.now();
+  cancelAnimationFrame(rafId);
+  const loop = now => {
+    draw(clamp((now - animStart) / 400, 0, 1));
+    if (now - animStart < 1750) rafId = requestAnimationFrame(loop);
+  };
+  rafId = requestAnimationFrame(loop);
+}
+
+/* sequence-change flash state */
+let prevOrderKey = '', orderFlashAt = -1e9;
+
+function draw(t){
+  ctx.clearRect(0, 0, W, H);
+  if (state.view === 'face'){ drawFace(t); drawInset(); }   // mini screen: Face On only
+  else drawDtl(t);
+}
+
+/* transient outcome vectors + underground gold: full for ~900 ms after a
+ * parameter change, then fade out over ~700 ms */
+let vecFlashAt = -1e9;
+function flashAlpha(){
+  const dt = performance.now() - vecFlashAt;
+  return dt < 900 ? 1 : clamp(1 - (dt - 900) / 700, 0, 1);
+}
+const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ============================================================ HIGGSFIELD-ASSETS
+ * Eier-autorisert unntak fra imagery-defaulten (2026-07-22): genererte
+ * P3-tonede assets lastes fra CDN i runtime. ALT har canvas-fallback —
+ * mocken rendrer fullverdig uten nett/asset. */
+const ASSETS = {
+  turf:    '../../assets/impact-studio/turf.png',
+  skyFace: '../../assets/impact-studio/sky-face.png',
+  bgDtl:   '../../assets/impact-studio/bg-dtl.png',
+  ball:    '../../assets/impact-studio/ball.png',
+  glint:   '../../assets/impact-studio/glint.png',
+  tee:     '../../assets/impact-studio/tee.png',
+  ironHead:   '../../assets/impact-studio/iron-head.png',
+  driverHead: '../../assets/impact-studio/driver-head.png',
+};
+const IMG = {};
+for (const k in ASSETS){
+  const im = new Image();
+  im.onload = () => { applyStageBg(); kick(); };
+  im.src = ASSETS[k];
+  IMG[k] = im;
+}
+const ready = k => IMG[k] && IMG[k].complete && IMG[k].naturalWidth > 0;
+function applyStageBg(){
+  const st = document.getElementById('stage');
+  if (state.view === 'face' && ready('skyFace'))
+    st.style.background = 'linear-gradient(180deg, rgba(14,10,24,.9) 0%, rgba(36,21,54,.5) 55%, rgba(15,11,28,.92) 100%), url(' + ASSETS.skyFace + ') center/cover no-repeat #07060C';
+  else if (state.view === 'dtl' && ready('bgDtl'))
+    st.style.background = 'linear-gradient(180deg, rgba(14,10,24,.85) 0%, rgba(36,21,54,.45) 55%, rgba(15,11,28,.9) 100%), url(' + ASSETS.bgDtl + ') center/cover no-repeat #07060C';
+  else st.style.background = '';
+}
+/* outcome segment: the arc itself, lit up through the ball — white-hot core
+ * over a token-hued glow. A stream of small arrows leaves the arc at the
+ * strike point along the tangent ray, fading out as they travel. */
+function litSegment(pts, hue, fa, impactIdx){
+  if (pts.length < 2 || fa <= 0.01) return;
+  ctx.save(); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  const strokePts = () => {
+    ctx.beginPath();
+    pts.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y));
+    ctx.stroke();
+  };
+  ctx.globalAlpha = 0.38 * fa; ctx.strokeStyle = hue; ctx.lineWidth = 11; strokePts();
+  /* white-hot core with a soft tapering tip */
+  const cut = Math.max(2, Math.floor(pts.length * 0.72));
+  const main = pts.slice(0, cut + 1), tail = pts.slice(cut);
+  const strokeSub = arr => {
+    ctx.beginPath();
+    arr.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y));
+    ctx.stroke();
+  };
+  ctx.globalAlpha = fa; ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 4; strokeSub(main);
+  ctx.globalAlpha = 0.7 * fa; ctx.lineWidth = 2; strokeSub(tail);
+  /* arrow stream out of the strike point */
+  const ray = pts.slice(Math.max(0, Math.min(impactIdx ?? pts.length - 11, pts.length - 2)));
+  if (ray.length > 1){
+    const chevron = (x, y, ang, al) => {
+      ctx.save(); ctx.translate(x, y); ctx.rotate(ang);
+      ctx.globalAlpha = al;
+      ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+      ctx.strokeStyle = hue; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.moveTo(-6, -5.5); ctx.lineTo(2, 0); ctx.lineTo(-6, 5.5); ctx.stroke();
+      ctx.strokeStyle = 'rgba(255,255,255,.85)'; ctx.lineWidth = 1.3;
+      ctx.beginPath(); ctx.moveTo(-5, -4.3); ctx.lineTo(1.6, 0); ctx.lineTo(-5, 4.3); ctx.stroke();
+      ctx.restore();
+    };
+    const at = u => {
+      const fi = clamp(u, 0, 1) * (ray.length - 1);
+      const i0 = Math.min(Math.floor(fi), ray.length - 2), fr = fi - i0;
+      const a = ray[i0], b = ray[i0 + 1];
+      return { x: a.x + (b.x - a.x) * fr, y: a.y + (b.y - a.y) * fr,
+               ang: Math.atan2(b.y - a.y, b.x - a.x) };
+    };
+    if (REDUCED){
+      const c = at(0.55);
+      chevron(c.x, c.y, c.ang, 0.8 * fa);
+    } else {
+      const phase = ((performance.now() - vecFlashAt) / 700) % 1;
+      for (let k = 0; k < 3; k++){
+        const u = (phase + k / 3) % 1;
+        const al = fa * (1 - u) * 0.95;
+        if (al <= 0.03) continue;
+        const c = at(u);
+        chevron(c.x, c.y, c.ang, al);
+      }
+    }
+  }
+  ctx.restore();
+}
+
+/* scene clip: everything in the main canvas is drawn OUTSIDE the inset
+ * rect (+6 px margin), so the arc/glass can never collide with it */
+function sceneClipPath(){
+  const r = cv.getBoundingClientRect();
+  const i = document.getElementById('inset').getBoundingClientRect();
+  const p = new Path2D();
+  p.rect(0, 0, W, H);
+  if (i.width > 0)                            // inset hidden in DTL → no punch-out
+    p.rect(i.left - r.left - 6, i.top - r.top - 6, i.width + 12, i.height + 12);
+  return p;
+}
+
+/* ============================================================ MINISKJERM
+ * Zoomed contact zone (entry→exit) in the impact-camera gold language:
+ * gold arc through the zone, gold tick markers for ENTRY / LOW / EXIT,
+ * arc entering the ball with the strike height marked in mm. */
+const icv = document.getElementById('insetCv'), ictx = icv.getContext('2d');
+let IW = 0, IH = 0;
+function resizeInset(){
+  const r = icv.getBoundingClientRect();
+  IW = Math.round(r.width); IH = Math.round(r.height);
+  icv.width = IW * DPR; icv.height = IH * DPR;
+  ictx.setTransform(DPR, 0, 0, DPR, 0, 0);
+}
+function drawInset(){
+  if (!IW) resizeInset();
+  const s = engineState();
+  const ct = clubBallContact(s), t0g = groundCrossingTheta0(s), lpx = effectiveLpx(s);
+  const GOLD = '#e8b45a', WARM = '#ff9a3d';
+  ictx.clearRect(0, 0, IW, IH);
+
+  /* world window: adaptive — always frames the whole contact zone */
+  let x0 = -0.08, x1 = 0.24;
+  if (t0g !== null){
+    x0 = Math.min(x0, arcPosition(-t0g, s).x - 0.04);
+    x1 = Math.max(x1, arcPosition(t0g, s).x + 0.05);
+  }
+  const sc = IW / (x1 - x0);
+  const gy = IH * 0.66;
+  const EXAG = 6, CAP = 0.035;
+  const X = xm => (xm - x0) * sc;
+  const Y = zm => gy - (zm >= 0 ? zm : -CAP * Math.tanh(-zm * EXAG / CAP)) * sc;
+
+  /* ground: grass on top, soil underneath (Higgsfield turf plate when loaded) */
+  {
+    if (ready('turf')){
+      ictx.drawImage(IMG.turf, 0, 0, IMG.turf.naturalWidth, IMG.turf.naturalHeight,
+                     0, gy - 1, IW, (IH - gy) + 1);
+      ictx.fillStyle = 'rgba(7,6,12,.42)';
+      ictx.fillRect(0, gy - 1, IW, (IH - gy) + 1);
+    }
+    const soil = ictx.createLinearGradient(0, gy, 0, IH);
+    soil.addColorStop(0, 'rgba(61,43,26,' + (ready('turf') ? 0.25 : 1) + ')');
+    soil.addColorStop(1, 'rgba(26,18,12,' + (ready('turf') ? 0.3 : 1) + ')');
+    ictx.fillStyle = soil; ictx.fillRect(0, gy, IW, IH - gy);
+    const grass = ictx.createLinearGradient(0, gy, 0, gy + 5);
+    grass.addColorStop(0, '#3f6b2e'); grass.addColorStop(1, '#2a4a22');
+    ictx.fillStyle = grass; ictx.fillRect(0, gy, IW, 5);
+    ictx.strokeStyle = 'rgba(200,225,150,.5)'; ictx.lineWidth = 1;
+    ictx.beginPath(); ictx.moveTo(0, gy); ictx.lineTo(IW, gy); ictx.stroke();
+  }
+
+  /* divot */
+  if (t0g !== null){
+    const e = arcPosition(-t0g, s), x = arcPosition(t0g, s);
+    ictx.beginPath();
+    ictx.moveTo(X(e.x), gy);
+    for (let i = 0; i <= 22; i++){
+      const th = -t0g + (2 * t0g * i) / 22;
+      const p = arcPosition(th, s);
+      ictx.lineTo(X(p.x), Y(p.z));
+    }
+    ictx.lineTo(X(x.x), gy); ictx.closePath();
+    ictx.fillStyle = 'rgba(24,15,8,.9)'; ictx.fill();
+    ictx.strokeStyle = 'rgba(205,142,78,.85)'; ictx.lineWidth = 1.5; ictx.stroke();
+  }
+
+  /* ghosted clubhead (under the gold arc and the ball — see drawFace) */
+  {
+    const hk = state.club === 'iron' ? 'ironHead' : 'driverHead';
+    if (ready(hk)){
+      const im = IMG[hk];
+      const brH = BALL_R * sc;
+      const hPxI = HEAD_MM[state.club] * (brH / (BALL_R * 1000));
+      const wPxI = hPxI * (im.naturalWidth / im.naturalHeight);
+      const yBI = Y(ct.clubZ), xRI = X(0) - brH * 0.92;
+      ictx.save(); ictx.globalAlpha = 0.5;
+      ictx.translate(xRI, yBI); ictx.rotate(LEAN[state.club]);
+      ictx.drawImage(im, -wPxI, -hPxI, wPxI, hPxI);
+      ictx.restore();
+    }
+  }
+
+  /* gold arc through the zone (glow pass + warm core, impact-kamera style) */
+  const thWin = 0.42;                                     // theta range that covers the window
+  for (const pass of [ ['rgba(255,154,61,.16)', 8], [null, 2.6] ]){
+    ictx.save(); ictx.lineCap = 'round';
+    if (pass[0]) ictx.strokeStyle = pass[0];
+    else {
+      const g = ictx.createLinearGradient(0, 0, IW, 0);
+      g.addColorStop(0, '#fdf3e0'); g.addColorStop(0.55, GOLD); g.addColorStop(1, WARM);
+      ictx.strokeStyle = g;
+    }
+    ictx.lineWidth = pass[1];
+    ictx.beginPath();
+    let st = false;
+    for (let i = 0; i <= 90; i++){
+      const th = -thWin + (2 * thWin * i) / 90;
+      const p = arcPosition(th, s);
+      const px = X(p.x), py = Y(p.z);
+      if (px < -30 || px > IW + 30){ st = false; continue; }
+      if (!st){ ictx.moveTo(px, py); st = true; } else ictx.lineTo(px, py);
+    }
+    ictx.stroke(); ictx.restore();
+  }
+
+  /* ball (outline so the arc reads through the contact) + ember halo.
+     Driver: ball on the tee. */
+  const liftI = ballLift();
+  const br = BALL_R * sc, bx2 = X(0), by2 = Y(liftI) - br;
+  if (liftI > 0){
+    const tTop2 = by2 + br * 0.9, tH2 = gy - tTop2;
+    if (ready('tee') && tH2 > 4){
+      const tW2 = tH2 * (IMG.tee.naturalWidth / IMG.tee.naturalHeight);
+      ictx.drawImage(IMG.tee, bx2 - tW2 / 2, tTop2, tW2, tH2);
+    } else {
+      ictx.save();
+      ictx.strokeStyle = 'rgba(210,205,225,.6)'; ictx.lineCap = 'round';
+      ictx.lineWidth = 2.5;
+      ictx.beginPath(); ictx.moveTo(bx2, gy); ictx.lineTo(bx2, by2 + br * 0.9); ictx.stroke();
+      ictx.restore();
+    }
+  }
+  {
+    const gr2 = br * 1.9;
+    const halo2 = ictx.createRadialGradient(bx2, by2, br * 0.4, bx2, by2, gr2);
+    halo2.addColorStop(0, 'rgba(217,179,106,.28)');
+    halo2.addColorStop(0.5, 'rgba(255,138,77,.13)');
+    halo2.addColorStop(1, 'rgba(255,138,77,0)');
+    ictx.beginPath(); ictx.arc(bx2, by2, gr2, 0, Math.PI * 2);
+    ictx.fillStyle = halo2; ictx.fill();
+  }
+  if (ready('ball')){
+    ictx.drawImage(IMG.ball, bx2 - br - 1, by2 - br - 1, (br + 1) * 2, (br + 1) * 2);
+  } else {
+    ictx.beginPath(); ictx.arc(bx2, by2, br, 0, Math.PI * 2);
+    const bg2 = ictx.createRadialGradient(bx2 - br*0.3, by2 - br*0.35, br*0.15, bx2, by2, br);
+    bg2.addColorStop(0, 'rgba(255,255,255,.9)'); bg2.addColorStop(1, 'rgba(210,203,224,.55)');
+    ictx.fillStyle = bg2; ictx.fill();
+    ictx.strokeStyle = 'rgba(245,242,255,.9)'; ictx.lineWidth = 1.5; ictx.stroke();
+  }
+
+  /* strike-location reference on the ghosted face: ember dot = ball centre
+     against the face; faint notch = face middle (sweet spot) */
+  if (ready(state.club === 'iron' ? 'ironHead' : 'driverHead')){
+    const fxI = bx2 - br * 0.92;
+    const yCtI = by2;
+    const ySwI = by2 - ((ct.clubZ + SWEET[state.club]) - (liftI + BALL_R)) * (br / BALL_R);
+    ictx.save();
+    ictx.strokeStyle = 'rgba(245,242,255,.5)'; ictx.lineWidth = 1.5;
+    ictx.beginPath(); ictx.moveTo(fxI - 7, ySwI); ictx.lineTo(fxI + 1, ySwI); ictx.stroke();
+    ictx.beginPath(); ictx.arc(fxI, yCtI, 2.6, 0, Math.PI * 2);
+    ictx.fillStyle = 'rgba(255,138,77,.95)'; ictx.fill();
+    ictx.strokeStyle = 'rgba(255,255,255,.75)'; ictx.lineWidth = 1; ictx.stroke();
+    ictx.restore();
+  }
+
+  /* strike height: warm tick where the arc meets the ball + mm bracket */
+  /* contact tick = where the FACE CENTRE meets the ball (SWEET above sole) */
+  const czI = clamp(ct.clubZ + SWEET[state.club], liftI, liftI + 2 * BALL_R);
+  const sy = Y(czI);
+  ictx.strokeStyle = WARM; ictx.lineWidth = 2;
+  ictx.beginPath(); ictx.moveTo(bx2 - br - 5, sy); ictx.lineTo(bx2 + br + 5, sy); ictx.stroke();
+  /* bracket: ball centre ↔ contact height, to the right of the ball */
+  const cyy = by2, bxr = bx2 + br + 11;
+  ictx.strokeStyle = 'rgba(232,180,90,.8)'; ictx.lineWidth = 1.5;
+  ictx.beginPath(); ictx.moveTo(bxr, cyy); ictx.lineTo(bxr, sy); ictx.stroke();
+  ictx.beginPath(); ictx.moveTo(bxr - 3.5, cyy); ictx.lineTo(bxr + 3.5, cyy); ictx.stroke();
+  ictx.beginPath(); ictx.moveTo(bxr - 3.5, sy); ictx.lineTo(bxr + 3.5, sy); ictx.stroke();
+
+  /* gold tick markers: ENTRY / LOW / EXIT (bracket-with-tick language, geo3d/lowpoint) */
+  function tickMark(xm, name){
+    const px = X(xm);
+    if (px < 4 || px > IW - 4) return;
+    ictx.strokeStyle = GOLD; ictx.lineWidth = 1.5; ictx.globalAlpha = 0.9;
+    ictx.beginPath(); ictx.moveTo(px, gy + 2); ictx.lineTo(px, gy + 9); ictx.stroke();
+    ictx.globalAlpha = 1;
+    iLabel(name, px, gy + 16, '#eec07a', 9);
+  }
+  function iLabel(txt, x, y, col, size, align){
+    ictx.save();
+    ictx.font = '700 ' + size + 'px -apple-system,"Segoe UI",Roboto,sans-serif';
+    ictx.textAlign = align || 'center'; ictx.textBaseline = 'middle';
+    ictx.strokeStyle = 'rgba(5,4,10,.9)'; ictx.lineWidth = 3; ictx.lineJoin = 'round';
+    ictx.strokeText(txt, x, y);
+    ictx.fillStyle = col; ictx.fillText(txt, x, y);
+    ictx.restore();
+  }
+  if (t0g !== null){
+    tickMark(arcPosition(-t0g, s).x, 'ENTRY');
+    tickMark(arcPosition(t0g, s).x, 'EXIT');
+  } else if (state.club === 'iron'){
+    /* for driver a turf-free sweep is the CORRECT state — no warning */
+    iLabel('NO TURF CONTACT', IW / 2, gy + 14, CSS('--warn'), 9);
+  }
+  /* low point: small gold dot on the arc bottom */
+  {
+    const px = X(lpx), py = Y(s.lowPoint.z);
+    if (px > 16 && px < IW - 16){
+      ictx.beginPath(); ictx.arc(px, py, 3.2, 0, Math.PI * 2);
+      ictx.fillStyle = GOLD; ictx.fill();
+      if (t0g !== null && Math.abs(px - X(arcPosition(-t0g, s).x)) > 30)
+        iLabel('LOW', px, gy + 16, '#eec07a', 9);
+    }
+  }
+  /* (mm/quality readout in the eyebrow is owned by updateOutcomes) */
+}
+
+/* ---------- helpers ---------- */
+function heroAlpha(key){                    // selected-input spotlight
+  return state.sel === key ? 1 : 0.4;
+}
+function label(txt, x, y, color, size, align, mono, alpha){
+  ctx.save();
+  ctx.globalAlpha = alpha == null ? 1 : alpha;
+  ctx.font = (mono ? '700 ' : '600 ') + size + 'px ' + (mono
+    ? 'ui-monospace,"SF Mono",Menlo,monospace'
+    : '-apple-system,"Segoe UI",Roboto,sans-serif');
+  ctx.textAlign = align || 'left'; ctx.textBaseline = 'middle';
+  ctx.lineJoin = 'round';
+  ctx.strokeStyle = 'rgba(5,4,10,.85)'; ctx.lineWidth = 3;   // dark halo, not glow
+  ctx.strokeText(txt, x, y);
+  ctx.fillStyle = color; ctx.fillText(txt, x, y);
+  ctx.restore();
+}
+function arrowHead(x, y, ang, size, color, alpha){
+  ctx.save();
+  ctx.globalAlpha = alpha == null ? 1 : alpha;
+  ctx.translate(x, y); ctx.rotate(ang);
+  ctx.beginPath();
+  ctx.moveTo(0, 0); ctx.lineTo(-size, size * 0.55); ctx.lineTo(-size, -size * 0.55);
+  ctx.closePath(); ctx.fillStyle = color; ctx.fill();
+  ctx.restore();
+}
+function coreLine(x1, y1, x2, y2, color, width, glow, alpha){
+  ctx.save();
+  ctx.globalAlpha = alpha == null ? 1 : alpha;
+  ctx.lineCap = 'round';
+  if (glow){ ctx.strokeStyle = glow; ctx.lineWidth = width * 3;
+    ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke(); }
+  ctx.strokeStyle = color; ctx.lineWidth = width;
+  ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+  ctx.restore();
+}
+const CSS = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+/* ============================================================ FACE ON
+ * Impact-centred reframe: uniform circular mapping — the same px/m scale in
+ * x and z, above and below ground, so the swing arc renders as a TRUE
+ * circle with no shape change at the bottom (owner decision). Depth
+ * legibility lives in the inset, which keeps its own magnification. */
+function faceMap(){
+  const winM = W >= 700 ? 1.15 : 0.95;
+  const scale = W / winM;                       // px per metre
+  const bx = W * 0.52, gy = H * 0.71;           // scene sits right of the mini screen
+  return { scale, bx, gy, K: 1,
+    X: xm => bx + xm * scale,
+    Y: zm => gy - zm * scale };
+}
+function drawFace(t){
+  const s = engineState();
+  const M = faceMap();
+  const imp = deriveImpact(s), ct = clubBallContact(s);
+  const t0g = groundCrossingTheta0(s);
+  const thImp = thetaAtImpact(s);
+  const lpx = effectiveLpx(s);
+  const ballR = BALL_R * M.scale;
+  const A = { attack: CSS('--attack'), gold: CSS('--gold'), ink: CSS('--ink'),
+              muted: CSS('--muted'), soil: CSS('--soil'), sec: CSS('--secondary'),
+              plane: CSS('--plane'), depth: CSS('--depth'), accent: CSS('--accent'),
+              warn: CSS('--warn'), pathC: CSS('--path') };
+  const fa = flashAlpha();                    // transient vectors + underground gold
+
+  ctx.save();
+  ctx.clip(sceneClipPath(), 'evenodd');       // never draw under the mini screen
+
+  /* --- ground: green grass layer on top, soil underneath.
+     Higgsfield turf plate as base when loaded; painted fallback otherwise. --- */
+  const gy = M.gy;
+  {
+    if (ready('turf')){
+      ctx.drawImage(IMG.turf, 0, 0, IMG.turf.naturalWidth, IMG.turf.naturalHeight,
+                    0, gy - 2, W, (H - gy) + 2);
+      ctx.fillStyle = 'rgba(7,6,12,.4)';       // seat it in the dusk scene
+      ctx.fillRect(0, gy - 2, W, (H - gy) + 2);
+    }
+    const soil = ctx.createLinearGradient(0, gy, 0, H);
+    soil.addColorStop(0, 'rgba(61,43,26,' + (ready('turf') ? 0.25 : 1) + ')');
+    soil.addColorStop(0.5, 'rgba(42,29,18,' + (ready('turf') ? 0.25 : 1) + ')');
+    soil.addColorStop(1, 'rgba(26,18,12,' + (ready('turf') ? 0.3 : 1) + ')');
+    ctx.fillStyle = soil; ctx.fillRect(0, gy, W, H - gy);
+    const grass = ctx.createLinearGradient(0, gy, 0, gy + 8);
+    grass.addColorStop(0, '#3f6b2e'); grass.addColorStop(1, '#2a4a22');
+    ctx.fillStyle = grass; ctx.fillRect(0, gy, W, 8);
+    ctx.strokeStyle = 'rgba(200,225,150,.55)'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(W, gy); ctx.stroke();
+    ctx.strokeStyle = 'rgba(130,185,85,.7)'; ctx.lineWidth = 1.5;
+    for (let x = 8; x < W; x += 15){
+      ctx.beginPath(); ctx.moveTo(x, gy); ctx.lineTo(x + ((x % 30) ? 2 : -2), gy - 5); ctx.stroke();
+    }
+  }
+
+  /* (no permanent divot in the main scene — ground contact is shown only by
+     the transient gold underground segment; the strike detail lives in the
+     inset) */
+
+  /* --- footprints: stance is fixed in the world, the ball is fixed on screen —
+     so the feet slide when Ball Position changes. Lead foot toward target. --- */
+  {
+    const stanceC = -state.low / 100;           // world x of stance centre
+    const selBall = state.sel === 'low';
+    const fAlpha = selBall ? 0.30 : 0.16;
+    for (const off of [-0.20, 0.20]){
+      const fx = M.X(stanceC + off);
+      if (fx < -30 || fx > W + 30) continue;
+      ctx.save(); ctx.globalAlpha = fAlpha;
+      ctx.beginPath();
+      ctx.ellipse(fx, gy + 4, 23, 7, 0, 0, Math.PI * 2);
+      ctx.fillStyle = CSS('--ghost'); ctx.fill();
+      ctx.restore();
+    }
+    /* the swing's low point is FIXED in the stance: a gold baseline between
+       the feet with a notch at LP_STANCE anchors it there — the ball just
+       stands where you put it */
+    {
+      const aB = selBall ? 0.5 : 0.16;
+      const x0a = M.X(stanceC - 0.20), x1a = M.X(stanceC + 0.20);
+      const nx = M.X(stanceC + LP_STANCE / 100);
+      ctx.save(); ctx.globalAlpha = aB;
+      ctx.strokeStyle = 'rgba(217,179,106,.9)'; ctx.lineWidth = 1.2;
+      ctx.beginPath(); ctx.moveTo(x0a, gy + 9); ctx.lineTo(x1a, gy + 9); ctx.stroke();
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(nx, gy + 5); ctx.lineTo(nx, gy + 13); ctx.stroke();
+      ctx.restore();
+    }
+    if (selBall){
+      for (const t2 of [[-0.11,'BACK'], [0,'MID'], [0.11,'FWD']]){
+        const tx = M.X(stanceC + t2[0]);
+        if (Math.abs(tx - M.X(lpx)) < 36) continue;   // dodge the LOW POINT label
+        coreLine(tx, gy + 12, tx, gy + 17, CSS('--muted'), 1.5, null, 0.75);
+        label(t2[1], tx, gy + 26, CSS('--muted'), 9, 'center', false, 0.8);
+      }
+    }
+  }
+
+  /* --- glass (swing plane + direction) behind the arc: same quad source as
+     the DTL ribbon, projected to face-on (x, z·K). Fill only, no border. --- */
+  {
+    const heroP = state.sel === 'plane' || state.sel === 'dir';
+    const { u, m } = planeBasis(s.planeAngle, s.swingDirection);
+    const lp = lpWorld(s);
+    const pt2 = (a, b2) => ({ x: M.X(lp.x + a * u.x + b2 * m.x),
+                              y: M.Y(lp.z + a * u.z + b2 * m.z) });
+    const quad = [pt2(-0.95, -0.04), pt2(0.95, -0.04), pt2(0.95, 1.0), pt2(-0.95, 1.0)];
+    ctx.save();
+    /* gradient spans the VISIBLE canvas band (0→gy), not the off-canvas
+       quad top — otherwise only the near-transparent part shows */
+    const grad = ctx.createLinearGradient(0, 0, 0, gy);
+    const aG = heroP ? 0.30 : 0.16;
+    grad.addColorStop(0, 'rgba(147,164,242,' + aG * 0.25 + ')');
+    grad.addColorStop(0.7, 'rgba(147,164,242,' + aG * 0.7 + ')');
+    grad.addColorStop(1, 'rgba(147,164,242,' + aG + ')');
+    ctx.beginPath();
+    quad.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y));
+    ctx.closePath();
+    ctx.fillStyle = grad; ctx.fill();
+    ctx.lineWidth = 1;
+    for (const bf of [0.30, 0.65]){
+      const b2 = -0.04 + bf * 1.04;
+      const ra = pt2(-0.95, b2), rb = pt2(0.95, b2);
+      ctx.strokeStyle = 'rgba(147,164,242,' + (heroP ? 0.16 : 0.10) + ')';
+      ctx.beginPath(); ctx.moveTo(ra.x, ra.y); ctx.lineTo(rb.x, rb.y); ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  /* --- static ghosted clubhead at address: sole rides the arc, making the
+     sole-path → face-middle geometry legible. Reference, never a hero;
+     drawn under the arc and the ball. --- */
+  {
+    const hk = state.club === 'iron' ? 'ironHead' : 'driverHead';
+    if (ready(hk)){
+      const im = IMG[hk];
+      const hPx = HEAD_MM[state.club] * (ballR / (BALL_R * 1000));
+      const wPx = hPx * (im.naturalWidth / im.naturalHeight);
+      const yB = M.Y(ct.clubZ), xR = M.bx - ballR * 0.92;
+      ctx.save(); ctx.globalAlpha = 0.45;
+      /* pivot at the leading-edge/sole corner so the lean delofts the head */
+      ctx.translate(xR, yB); ctx.rotate(LEAN[state.club]);
+      ctx.drawImage(im, -wPx, -hPx, wPx, hPx);
+      ctx.restore();
+    }
+  }
+
+  /* --- swing arc (clipped by frame; white core over faint glow).
+     Hero when Arc Height is selected: the arc itself lights up. --- */
+  if (state.sel === 'arc'){
+    strokeArc(s, M, 'rgba(147,164,242,.14)', 18);
+    strokeArc(s, M, 'rgba(255,255,255,.30)', 6);
+  }
+  strokeArc(s, M, 'rgba(255,255,255,.16)', 9);
+  strokeArc(s, M, 'rgba(255,255,255,.92)', 3);
+
+  /* --- ball (live object → ember-comet glow); driver = ball on a tee --- */
+  const bx = M.bx, by = M.Y(ballLift()) - ballR;
+  if (state.club === 'driver'){
+    const tTop = by + ballR * 0.9, tH = gy - tTop;
+    if (ready('tee') && tH > 6){
+      const tW = tH * (IMG.tee.naturalWidth / IMG.tee.naturalHeight);
+      ctx.drawImage(IMG.tee, bx - tW / 2, tTop, tW, tH);
+    } else {
+      ctx.save();
+      ctx.strokeStyle = 'rgba(210,205,225,.65)'; ctx.lineCap = 'round';
+      ctx.lineWidth = 3.5;
+      ctx.beginPath(); ctx.moveTo(bx, gy); ctx.lineTo(bx, by + ballR * 0.9); ctx.stroke();
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(bx - 5, by + ballR * 0.92); ctx.lineTo(bx + 5, by + ballR * 0.92); ctx.stroke();
+      ctx.restore();
+    }
+  }
+  {
+    /* hero when Ball Position is selected: the ball itself lights up */
+    const heroBall = state.sel === 'low';
+    const gr = ballR * (heroBall ? 2.8 : 2.1);
+    const halo = ctx.createRadialGradient(bx, by, ballR * 0.4, bx, by, gr);
+    halo.addColorStop(0, 'rgba(217,179,106,' + (heroBall ? 0.5 : 0.34) + ')');
+    halo.addColorStop(0.5, 'rgba(255,138,77,' + (heroBall ? 0.28 : 0.16) + ')');
+    halo.addColorStop(1, 'rgba(255,138,77,0)');
+    ctx.beginPath(); ctx.arc(bx, by, gr, 0, Math.PI * 2);
+    ctx.fillStyle = halo; ctx.fill();
+  }
+  if (ready('ball')){
+    ctx.drawImage(IMG.ball, bx - ballR - 2, by - ballR - 2, (ballR + 2) * 2, (ballR + 2) * 2);
+  } else {
+    const grad = ctx.createRadialGradient(bx - ballR*0.35, by - ballR*0.4, ballR*0.15, bx, by, ballR);
+    grad.addColorStop(0, '#ffffff'); grad.addColorStop(0.75, '#efe9f2'); grad.addColorStop(1, '#c8bfd2');
+    ctx.beginPath(); ctx.arc(bx, by, ballR, 0, Math.PI * 2);
+    ctx.fillStyle = grad; ctx.fill();
+    ctx.strokeStyle = 'rgba(255,175,120,.4)'; ctx.lineWidth = 1; ctx.stroke();
+  }
+
+  /* strike-location reference on the ghosted face: ember dot = where the
+     ball centre meets the face; faint notch = the face middle (sweet spot) */
+  if (ready(state.club === 'iron' ? 'ironHead' : 'driverHead')){
+    /* anchored in ball-screen space: dot = ball centre against the face;
+       notch = sweet spot, offset by the true face/ball mm difference */
+    const fx2 = M.bx - ballR * 0.92;
+    const yCt = by;
+    const ySw = by - ((ct.clubZ + SWEET[state.club]) - (ballLift() + BALL_R)) * (ballR / BALL_R);
+    ctx.save();
+    ctx.strokeStyle = 'rgba(245,242,255,.5)'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(fx2 - 7, ySw); ctx.lineTo(fx2 + 1, ySw); ctx.stroke();
+    ctx.beginPath(); ctx.arc(fx2, yCt, 3, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(255,138,77,.95)'; ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,.75)'; ctx.lineWidth = 1; ctx.stroke();
+    ctx.restore();
+  }
+
+  /* (no strike tick on the main canvas — strike detail lives in the inset) */
+  const cz = clamp(ct.clubZ, ballLift(), ballLift() + 2 * BALL_R);
+
+  /* --- underground gold: the arc segment the club spends below ground
+     (entry→low→exit), impact-kamera gold, no text — fades with the flash --- */
+  if (t0g !== null && fa > 0.01){
+    ctx.save(); ctx.lineCap = 'round';
+    const ex0 = M.X(arcPosition(-t0g, s).x), ex1 = M.X(arcPosition(t0g, s).x);
+    const seg = pass => {
+      ctx.beginPath();
+      for (let i = 0; i <= 30; i++){
+        const th = -t0g + (2 * t0g * i) / 30;
+        const p = arcPosition(th, s);
+        const x = M.X(p.x), y = M.Y(p.z);
+        if (i) ctx.lineTo(x, y); else ctx.moveTo(x, y);
+      }
+      ctx.lineWidth = pass; ctx.stroke();
+    };
+    ctx.globalAlpha = 0.20 * fa;
+    ctx.strokeStyle = 'rgba(255,154,61,1)'; seg(8);
+    ctx.globalAlpha = fa;
+    const gGold = ctx.createLinearGradient(ex0, 0, ex1, 0);
+    gGold.addColorStop(0, '#fdf3e0'); gGold.addColorStop(0.55, '#e8b45a'); gGold.addColorStop(1, '#ff9a3d');
+    ctx.strokeStyle = gGold; seg(2.6);
+    ctx.restore();
+  }
+
+  /* --- CLUB ATTACK: springs OUT of the arc exactly at the strike point —
+     a lit arc segment upstream that peels off as a straight tangent ray
+     past the ball; the light pulse rides the whole way out. --- */
+  if (fa > 0.01){
+    const segPts = [];
+    for (let i = 0; i <= 16; i++){
+      const th = thImp - 0.16 + (0.16 * i) / 16;
+      const p = arcPosition(th, s);
+      segPts.push({ x: M.X(p.x), y: M.Y(p.z) });
+    }
+    const impactIdx = segPts.length - 1;
+    const tv = tangentAt(thImp, s);
+    const zK = tv.z * M.K;
+    const len2 = Math.hypot(tv.x, zK) || 1;
+    const dx = tv.x / len2, dz = zK / len2;
+    const p0 = segPts[segPts.length - 1];
+    const Lout = W >= 700 ? 104 : 78;
+    for (let i = 1; i <= 10; i++){
+      const d = (Lout * i) / 10;
+      segPts.push({ x: p0.x + dx * d, y: p0.y - dz * d });
+    }
+    litSegment(segPts, A.attack, fa, impactIdx);
+    if (ready('glint') && !REDUCED){           // impact glint, additive
+      ctx.save();
+      ctx.globalCompositeOperation = 'screen';
+      ctx.globalAlpha = 0.85 * fa;
+      ctx.drawImage(IMG.glint, M.X(0) - 27, M.Y(cz) - 27, 54, 54);
+      ctx.restore();
+    }
+    const pe = segPts[segPts.length - 1];
+    label('CLUB ATTACK ' + fmtNum(imp.attackAngle, 1) + '°',
+          Math.min(pe.x + 12, W - 150), pe.y - 12, A.attack, W >= 700 ? 11 : 10, 'left', false, fa);
+  }
+
+  /* --- low point: single plain marker (numbers/sequence live in the inset variant's inset) --- */
+  {
+    const alphaLP = state.sel === 'low' ? 1 : 0.55;
+    const x = M.X(lpx), y = M.Y(s.lowPoint.z);
+    ctx.save(); ctx.globalAlpha = alphaLP;
+    ctx.beginPath();
+    ctx.moveTo(x, y + 4); ctx.lineTo(x - 5, y + 13); ctx.lineTo(x + 5, y + 13);
+    ctx.closePath(); ctx.fillStyle = A.gold; ctx.fill();
+    ctx.restore();
+    const ly = Math.max(y + 24, gy + 24);       // keep the label in the ground band
+    label('LOW POINT', x, ly, A.gold, W >= 700 ? 10 : 9, 'center', false, alphaLP * 0.9);
+    if (state.sel === 'low')
+      label(fmtSigned(lpx * 100, 1) + ' cm', x, ly + 13, A.ink, 10, 'center', true, 1);
+  }
+
+  /* (no path arrow in Face On — path is DTL's transient vector) */
+
+  /* (swing direction has no arrow/text — the glass is its illustration) */
+
+  /* --- hero: arc height (vertical bracket ground ↔ arc bottom, left of low point) --- */
+  if (state.sel === 'arc'){
+    const x = Math.min(M.X(lpx), bx) - 52;
+    const yA = gy, yB = M.Y(s.lowPoint.z);
+    coreLine(x, yA, x, yB, A.depth, 2.5, null, 1);
+    coreLine(x - 6, yA, x + 6, yA, A.depth, 2, null, 1);
+    coreLine(x - 6, yB, x + 6, yB, A.depth, 2, null, 1);
+    if (Math.abs(yB - yA) > 8)
+      arrowHead(x, yB, yB < yA ? -Math.PI / 2 : Math.PI / 2, 7, A.depth, 1);
+    label('ARC ' + fmtSigned(state.arc, 1) + ' cm', x - 10,
+          Math.abs(yB - yA) > 16 ? (yA + yB) / 2 : yA - 18, A.depth, 11, 'right', true);
+  }
+
+  /* (swing plane has no label — the glass is its illustration) */
+
+  ctx.restore();                              // close the inset punch-out clip
+}
+function strokeArc(s, M, style, width){
+  ctx.save();
+  ctx.strokeStyle = style; ctx.lineWidth = width; ctx.lineCap = 'round';
+  ctx.beginPath();
+  const N = 120;
+  let started = false;
+  for (let i = 0; i <= N; i++){
+    const th = -SWEEP_RAD + (2 * SWEEP_RAD * i) / N;
+    const p = arcPosition(th, s);
+    const x = M.X(p.x), y = M.Y(p.z);
+    if (!started){ ctx.moveTo(x, y); started = true; } else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+  ctx.restore();
+}
+
+/* ============================================================ DOWN THE LINE */
+function dtlCam(){
+  /* stands slightly on the trail side of the line, hip height — gives an
+     asymmetric, more spatial DTL and pushes the scene toward the right */
+  /* camera stands on the RIGHT side of the line (viewer's right), hip height */
+  return { pos:{ x:-2.2, y:-0.9, z:1.0 }, look:{ x:2.3, y:0.25, z:0.14 },
+           fov: d2r(H < 220 ? 36 : 32), xStretch: 1.1 };
+}
+const DTL_SWEEP = d2r(78);                    // longer arc into the perspective
+function drawDtl(t){
+  const s = engineState();
+  const B = buildCamera(dtlCam(), W, H);
+  const P = p => project(p, B);
+  const A = { path: CSS('--path'), sec: CSS('--secondary'), plane: CSS('--plane'),
+              gold: CSS('--gold'), ink: CSS('--ink'), muted: CSS('--muted'),
+              accent: CSS('--accent'), depth: CSS('--depth') };
+  const fa = flashAlpha();
+
+  ctx.save();
+  ctx.clip(sceneClipPath(), 'evenodd');       // never draw under the mini screen
+
+  /* ground plane wash + subtle grid */
+  const horizon = P({ x: 60, y: 0, z: 0 });
+  if (horizon){
+    const gGrad = ctx.createLinearGradient(0, horizon.y, 0, H);
+    gGrad.addColorStop(0, 'rgba(46,74,34,.0)');
+    gGrad.addColorStop(0.25, 'rgba(46,74,34,.4)');
+    gGrad.addColorStop(1, 'rgba(30,50,24,.6)');
+    ctx.fillStyle = gGrad; ctx.fillRect(0, horizon.y, W, H - horizon.y);
+  }
+  ctx.save(); ctx.globalAlpha = 0.5;
+  for (const off of [-1.5, -0.75, 0.75, 1.5]){
+    const a = P({ x: -0.5, y: off, z: 0 }), b = P({ x: 40, y: off, z: 0 });
+    if (a && b) coreLine(a.x, a.y, b.x, b.y, 'rgba(255,255,255,.07)', 1);
+  }
+  for (let xm = 1; xm <= 9; xm += 2){
+    const a = P({ x: xm, y: -1.8, z: 0 }), b = P({ x: xm, y: 1.8, z: 0 });
+    if (a && b) coreLine(a.x, a.y, b.x, b.y, 'rgba(255,255,255,.05)', 1);
+  }
+  ctx.restore();
+
+  /* target line: neutral solid reference to the vanishing point */
+  {
+    const a = P({ x: -0.6, y: 0, z: 0 }), b = P({ x: 45, y: 0, z: 0 });
+    if (a && b){
+      coreLine(a.x, a.y, b.x, b.y, 'rgba(245,242,255,.5)', 2, null, 1);
+      label('TARGET', b.x, b.y - 12, 'rgba(245,242,255,.75)', 11, 'center');
+    }
+  }
+
+  /* soft contact shadow under the arc's low region — anchors it to the ground */
+  {
+    const lpw = lpWorld(s);
+    const c = P({ x: lpw.x, y: lpw.y, z: 0 });
+    const e1 = P({ x: lpw.x - 0.45, y: lpw.y, z: 0 });
+    const e2 = P({ x: lpw.x + 0.45, y: lpw.y, z: 0 });
+    if (c && e1 && e2){
+      const rx = Math.hypot(e2.x - e1.x, e2.y - e1.y) / 2;
+      const zLift = Math.max(0, s.lowPoint.z);  /* arc high above turf → fainter */
+      const aS = clamp(0.38 - zLift * 7, 0.08, 0.38);
+      const g = ctx.createRadialGradient(c.x, c.y, 0, c.x, c.y, rx);
+      g.addColorStop(0, 'rgba(5,3,10,' + aS + ')');
+      g.addColorStop(1, 'rgba(5,3,10,0)');
+      ctx.save();
+      ctx.translate(c.x, c.y); ctx.scale(1, 0.28); ctx.translate(-c.x, -c.y);
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(c.x, c.y, rx, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+    }
+  }
+
+  /* swing-plane glass: the ONLY illustration of plane + direction.
+     Extended along u into the perspective; density gradient toward the
+     ground edge + rim light along the upper edge — no outline. */
+  {
+    const heroG = state.sel === 'plane' || state.sel === 'dir';
+    const alpha = heroG ? 1 : 0.45;
+    const { u, m } = planeBasis(s.planeAngle, s.swingDirection);
+    const lp = lpWorld(s);
+    const pt = (a, b2) => ({ x: lp.x + a*u.x + b2*m.x, y: lp.y + a*u.y + b2*m.y, z: lp.z + a*u.z + b2*m.z });
+    const poly = [pt(-1.05, -0.04), pt(1.5, -0.04), pt(1.5, 1.0), pt(-1.05, 1.0)]
+      .map(P);
+    if (poly.every(Boolean)){
+      ctx.save(); ctx.globalAlpha = alpha;
+      ctx.beginPath();
+      poly.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y));
+      ctx.closePath();
+      const mb = { x: (poly[0].x + poly[1].x) / 2, y: (poly[0].y + poly[1].y) / 2 };
+      const mt = { x: (poly[3].x + poly[2].x) / 2, y: (poly[3].y + poly[2].y) / 2 };
+      const base = heroG ? 0.26 : 0.11;
+      const gg = ctx.createLinearGradient(mb.x, mb.y, mt.x, mt.y);
+      gg.addColorStop(0, 'rgba(147,164,242,' + base + ')');
+      gg.addColorStop(0.55, 'rgba(147,164,242,' + (base * 0.55).toFixed(3) + ')');
+      gg.addColorStop(1, 'rgba(157,139,255,' + (base * 0.28).toFixed(3) + ')');
+      ctx.fillStyle = gg;
+      ctx.fill();
+      /* faint inner rungs instead of an outline */
+      ctx.lineWidth = 1;
+      for (const bf of [0.30, 0.65]){
+        const b2 = -0.04 + bf * 1.04;
+        const ra = P(pt(-1.05, b2)), rb = P(pt(1.5, b2));
+        if (ra && rb){
+          ctx.strokeStyle = 'rgba(147,164,242,' + (heroG ? 0.11 : 0.07) + ')';
+          ctx.beginPath(); ctx.moveTo(ra.x, ra.y); ctx.lineTo(rb.x, rb.y); ctx.stroke();
+        }
+      }
+      /* rim light along the upper edge sells the pane as glass */
+      ctx.strokeStyle = 'rgba(190,200,255,' + (heroG ? 0.5 : 0.22) + ')';
+      ctx.lineWidth = 1.5; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(poly[3].x, poly[3].y); ctx.lineTo(poly[2].x, poly[2].y); ctx.stroke();
+      ctx.restore();
+    }
+  }
+
+  /* swing arc: depth-tapered ribbon — thick and bright near the camera,
+     thin, cooler and fading into the perspective; ends die out instead of
+     cutting. Lights up while a change is fresh / Arc Height selected. */
+  {
+    const N = 150;
+    const pts = [];
+    for (let i = 0; i <= N; i++){
+      const th = -DTL_SWEEP + (2 * DTL_SWEEP * i) / N;
+      const p = P(arcPosition(th, s));
+      if (p) pts.push({ x: p.x, y: p.y, d: p.d, u: i / N });
+    }
+    if (pts.length > 8){
+      let dMin = Infinity, dMax = -Infinity;
+      for (const p of pts){ if (p.d < dMin) dMin = p.d; if (p.d > dMax) dMax = p.d; }
+      const span = Math.max(0.001, dMax - dMin);
+      const tOf = p => (p.d - dMin) / span;                 /* 0 near → 1 far */
+      const tip = uu => clamp(Math.min(uu, 1 - uu) / 0.12, 0, 1);  /* ends fade out */
+      const litA = state.sel === 'arc' ? 1 : fa;
+      const CH = 16;                                        /* chunked polylines */
+      /* butt caps: chunks share endpoints — round caps would double-stamp
+         the joints and bead the translucent passes */
+      ctx.save(); ctx.lineCap = 'butt'; ctx.lineJoin = 'round';
+      const passes = [];                                    /* [wNear,wFar,aNear,aFar,color,gate] */
+      if (litA > 0.01) passes.push([24, 8, 0.13, 0.03, 'rgba(147,164,242,1)', litA]);
+      passes.push([11, 3.5, 0.15, 0.05, 'rgba(255,255,255,1)', 1]);
+      if (litA > 0.01) passes.push([7, 2.2, 0.32, 0.09, 'rgba(255,255,255,1)', litA]);
+      passes.push([4.2, 1.2, 0.95, 0.30, 'rgba(255,255,255,1)', 1]);
+      for (const [wN, wF, aN, aF, col, gate] of passes){
+        ctx.strokeStyle = col;
+        const per = Math.ceil((pts.length - 1) / CH);
+        for (let c0 = 0; c0 < pts.length - 1; c0 += per){
+          const c1 = Math.min(c0 + per, pts.length - 1);
+          const mid = pts[Math.floor((c0 + c1) / 2)];
+          const t = tOf(mid);
+          ctx.globalAlpha = gate * (aN + (aF - aN) * t) * tip(mid.u);
+          ctx.lineWidth = wN + (wF - wN) * t;
+          ctx.beginPath();
+          for (let i = c0; i <= c1; i++) i === c0 ? ctx.moveTo(pts[i].x, pts[i].y) : ctx.lineTo(pts[i].x, pts[i].y);
+          ctx.stroke();
+        }
+      }
+      ctx.restore();
+    }
+  }
+
+  /* low point marker on the arc (hero when low selected) */
+  {
+    const alpha = state.sel === 'low' ? 1 : 0.45;
+    const lp = P(arcPosition(0, s));
+    if (lp){
+      ctx.save(); ctx.globalAlpha = alpha;
+      ctx.beginPath(); ctx.arc(lp.x, lp.y, 4.5, 0, Math.PI * 2);
+      ctx.fillStyle = CSS('--gold'); ctx.fill();
+      ctx.restore();
+      if (state.sel === 'low')
+        /* dodge below the arc tail so the label never crosses arc or ball */
+        label('LOW POINT ' + fmtSigned(effectiveLpx(s) * 100, 1) + ' cm',
+              clamp(lp.x - 24, 150, W - 10), Math.min(lp.y + 40, H - 12),
+              A.gold, 11, 'right');
+    }
+  }
+
+  /* arc-height bracket (hero when arc selected) */
+  if (state.sel === 'arc'){
+    const g = P({ x: effectiveLpx(s), y: 0, z: 0 });
+    const l = P(arcPosition(0, s));
+    if (g && l && Math.abs(l.y - g.y) > 2){
+      coreLine(g.x - 26, g.y, l.x - 26, l.y, A.depth, 2.5);
+      coreLine(g.x - 32, g.y, g.x - 20, g.y, A.depth, 2);
+      coreLine(l.x - 32, l.y, l.x - 20, l.y, A.depth, 2);
+      label('ARC ' + fmtSigned(state.arc, 1) + ' cm', g.x - 38, (g.y + l.y) / 2,
+            A.depth, 11, 'right', true);
+    } else if (g){
+      label('ARC ' + fmtSigned(state.arc, 1) + ' cm', g.x - 38, g.y - 14, A.depth, 11, 'right', true);
+    }
+  }
+
+  /* ball (driver: on the tee) */
+  {
+    const lift = ballLift();
+    const b = P({ x: 0, y: 0, z: lift + BALL_R });
+    const gnd = P({ x: 0, y: 0, z: 0 });
+    const bb = P({ x: 0, y: 0, z: lift });
+    if (b && gnd && bb){
+      if (lift > 0){
+        coreLine(gnd.x, gnd.y, bb.x, bb.y, 'rgba(210,205,225,.6)', 2.5);
+      }
+      const r = Math.max(6, (gnd.y - b.y) * 0.55);
+      if (state.sel === 'low'){                // ball hero: ember glow
+        const gr = r * 3;
+        const halo = ctx.createRadialGradient(b.x, b.y, r * 0.4, b.x, b.y, gr);
+        halo.addColorStop(0, 'rgba(217,179,106,.4)');
+        halo.addColorStop(0.5, 'rgba(255,138,77,.2)');
+        halo.addColorStop(1, 'rgba(255,138,77,0)');
+        ctx.beginPath(); ctx.arc(b.x, b.y, gr, 0, Math.PI * 2);
+        ctx.fillStyle = halo; ctx.fill();
+      }
+      const grad = ctx.createRadialGradient(b.x - r*0.3, b.y - r*0.35, r*0.15, b.x, b.y, r);
+      grad.addColorStop(0, '#ffffff'); grad.addColorStop(1, '#b9b2c4');
+      ctx.beginPath(); ctx.arc(b.x, b.y, r, 0, Math.PI * 2);
+      ctx.fillStyle = grad; ctx.fill();
+    }
+  }
+
+  /* underground gold: same θ-segment as Face On, no text, fades out */
+  {
+    const t0g = groundCrossingTheta0(s);
+    if (t0g !== null && fa > 0.01){
+      ctx.save(); ctx.lineCap = 'round';
+      const segPts = [];
+      for (let i = 0; i <= 30; i++){
+        const th = -t0g + (2 * t0g * i) / 30;
+        const p = P(arcPosition(th, s));
+        if (p) segPts.push(p);
+      }
+      if (segPts.length > 1){
+        const seg = wpx => {
+          ctx.beginPath();
+          segPts.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y));
+          ctx.lineWidth = wpx; ctx.stroke();
+        };
+        ctx.globalAlpha = 0.20 * fa;
+        ctx.strokeStyle = 'rgba(255,154,61,1)'; seg(8);
+        ctx.globalAlpha = fa;
+        const gGold = ctx.createLinearGradient(segPts[0].x, segPts[0].y,
+          segPts[segPts.length - 1].x, segPts[segPts.length - 1].y);
+        gGold.addColorStop(0, '#fdf3e0'); gGold.addColorStop(0.55, '#e8b45a'); gGold.addColorStop(1, '#ff9a3d');
+        ctx.strokeStyle = gGold; seg(2.6);
+      }
+      ctx.restore();
+    }
+  }
+
+  /* CLUB PATH: springs OUT of the arc at the strike point — lit arc segment
+     upstream, straight tangent ray out past the ball */
+  if (fa > 0.01){
+    const thImp = thetaAtImpact(s);
+    const segPts = [];
+    for (let i = 0; i <= 16; i++){
+      const th = thImp - 0.16 + (0.16 * i) / 16;
+      const p = P(arcPosition(th, s));
+      if (p) segPts.push(p);
+    }
+    const impactIdx = segPts.length - 1;
+    const tv = tangentAt(thImp, s);
+    const n = Math.hypot(tv.x, tv.y, tv.z) || 1;
+    const dir3 = { x: tv.x / n, y: tv.y / n, z: tv.z / n };
+    const imp3 = arcPosition(thImp, s);
+    for (let i = 1; i <= 10; i++){
+      const d = (0.9 * i) / 10;
+      const p = P({ x: imp3.x + dir3.x * d, y: imp3.y + dir3.y * d, z: imp3.z + dir3.z * d });
+      if (p) segPts.push(p);
+    }
+    litSegment(segPts, A.path, fa, impactIdx);
+    const impP = P(arcPosition(thImp, s));
+    if (impP && ready('glint') && !REDUCED){   // impact glint, additive
+      ctx.save();
+      ctx.globalCompositeOperation = 'screen';
+      ctx.globalAlpha = 0.8 * fa;
+      ctx.drawImage(IMG.glint, impP.x - 24, impP.y - 24, 48, 48);
+      ctx.restore();
+    }
+    if (segPts.length){
+      const pe = segPts[segPts.length - 1];
+      label('CLUB PATH ' + fmtNum(deriveImpact(s).clubPath, 1) + '°',
+            clamp(pe.x + 12, 8, W - 130), clamp(pe.y - 6, 14, H - 10), A.path, 11, 'left', false, fa);
+    }
+  }
+
+  ctx.restore();                              // close the inset punch-out clip
+}
+
+/* ============================================================ boot */
+updateChipValues();
+selectParam('low');
+updateOutcomes();
+prevOut = null; updateOutcomes();   // seed without pulsing
+vecFlashAt = performance.now();     // one orientation flash on load, then fade
+applyStageBg();
+resize();
+</script>
+</body>
+</html>
