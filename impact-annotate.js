@@ -95,25 +95,9 @@ export function buildAnnotations(outcome, station, basis, hotKey = null) {
   const tanDir = Math.tan(launchDir * RAD);
   const path = outcome.path;
 
-  // ── TARGET (ordre §3 "TARGET") — uavhengig av TOP/SIDE-gatene, blender
-  // kontinuerlig fra s=1 og oppover, alltid beregnet. ──
-  {
-    const tl = P(228, 0, 0);
-    const oyPt = P(carry + 12, 0, 0);
-    if (tl && oyPt) {
-      const topBlend = smoothstep(clamp(s - 1, 0, 1));
-      const oy = oyPt.y;
-      const desired = Math.max(112, oy - 16);
-      const tAlpha = lerpN(1, clamp((oy - 118) / 18, 0, 1), topBlend);
-      const tPin = lerpN(tl.y - 8, desired, topBlend);
-      if (tAlpha > 0.05) {
-        primitives.push({
-          kind: 'target', points: [], tone: 'measure', alpha: tAlpha,
-          label: 'TARGET', labelAnchor: { x: tl.x, y: tPin },
-        });
-      }
-    }
-  }
+  // TARGET-annotasjonen (fast 228 m-pinne + «TARGET»-etikett) er fjernet
+  // (eierordre 2026-07-22): den ga ingen mening med skudd-adaptiv innramming.
+  // Down-the-line-siktelinja tegnes fortsatt i impact.html (ren canvas-geometri).
 
   // ── Apex (ordre §3 SIDE "Apex = gulldot på banens visuelle topp") ──
   if (s < 1.4) {

@@ -38,28 +38,23 @@
   }
   .app{position:fixed;inset:0;display:flex;flex-direction:column;overflow:hidden}
 
-  /* ══ TOP STRIP (arvet chrome — modulnavigasjon) ══ */
+  /* ══ TOP STRIP — én tilbake-til-meny-kontroll + global speed-stepper
+     (eierordre 2026-07-22). position:relative så speed-steget kan sentreres
+     absolutt i baren uavhengig av back-knappen til venstre. ══ */
   .topstrip{
-    flex:0 0 auto;display:flex;align-items:center;gap:10px;
+    flex:0 0 auto;position:relative;display:flex;align-items:center;gap:10px;
     height:40px;padding:0 max(12px,env(safe-area-inset-right)) 0 max(12px,env(safe-area-inset-left));
     border-bottom:1px solid var(--line);
     background:linear-gradient(180deg, color-mix(in srgb, var(--surface) 66%, transparent), transparent);
   }
-  .ts-left{display:flex;align-items:center;gap:8px;flex:0 0 auto;min-width:0}
-  .ts-title{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink);white-space:nowrap}
-  .modnav{display:flex;align-items:center;gap:4px;view-transition-name:sa-nav}
-  .modnav a{
-    -webkit-tap-highlight-color:transparent;text-decoration:none;color:var(--muted);
-    border:1px solid transparent;border-radius:8px;position:relative;
-    height:30px;display:inline-flex;align-items:center;justify-content:center;
-    font-size:11px;font-weight:600;line-height:1;padding:0 8px;
-    transition:background .2s,border-color .2s,color .2s;
-  }
-  .modnav a::after{content:"";position:absolute;left:0;right:0;top:50%;height:44px;transform:translateY(-50%)}
-  .modnav a:hover{color:var(--ink)}
-  .modnav a[aria-current="page"]{color:var(--secondary);border-color:var(--secondary-line);background:var(--secondary-soft)}
-  .modnav a:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
-  .modnav a.home{width:30px;padding:0;color:var(--secondary)}
+  .ts-back{-webkit-tap-highlight-color:transparent;text-decoration:none;flex:0 0 auto;
+    width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;
+    color:var(--ink);border:1px solid var(--line);border-radius:9px;
+    background:color-mix(in srgb, var(--surface) 50%, transparent);
+    view-transition-name:sa-nav;transition:transform .15s,border-color .2s}
+  .ts-back:hover{border-color:var(--secondary-line)}
+  .ts-back:active{transform:scale(.93)}
+  .ts-back:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 
   /* ══ SCENE — ett canvas, kamerastyrt ══ */
   .scene{flex:1 1 auto;position:relative;min-height:0;overflow:hidden}
@@ -74,8 +69,6 @@
     text-shadow:0 0 26px color-mix(in srgb, var(--gold) 25%, transparent)}
   .flightCarry .num .u{font-size:17px;font-weight:500;color:var(--muted);margin-left:2px}
   .flightCarry .lab{font-size:10px;letter-spacing:.24em;color:var(--muted-2);margin-top:3px;text-transform:uppercase}
-  .flightCarry .offline{font-size:21px;font-weight:700;color:var(--accent);margin-top:9px;font-variant-numeric:tabular-nums}
-  .flightCarry .offline .side{font-size:12px;font-weight:500;margin-left:2px}
 
   /* ══ STASJONSSEGMENT — TOP · SIDE │ FLIGHT (ordre §2) ══
      Nå nested i .card (§C nedenfor); ikke lenger selv-posisjonert. */
@@ -92,33 +85,34 @@
     background:color-mix(in srgb, var(--gold) 15%, transparent);color:var(--gold)}
   .stations .stdiv{width:1px;align-self:stretch;margin:5px 3px;background:var(--line-strong)}
 
-  /* ══ GLOBAL SPEED STEPPER — synlig i alle stasjoner (ordre §2) ══
-     Farge: --q-launch ("speed/launch varm-rav"-familien), IKKE --accent —
-     --accent er reservert til warm-light-regelens ene oransje fokal
-     (aktiv bane + komet, tegnet i canvas). */
-  .speedctl{position:absolute;left:50%;top:calc(10px + env(safe-area-inset-top));
-    transform:translateX(-50%);z-index:6;
+  /* ══ GLOBAL SPEED STEPPER — nå i topstrip, sentrert (eierordre 2026-07-22) ══
+     Farge: --secondary (kjølig lilla, «input»-familien). Flyttet bort fra
+     --q-launch/--gold slik at den oransje --accent-banen står som DEN ene
+     varme fokal i scenen — mph konkurrerte før med ballbanen. */
+  .speedctl{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:6;
     display:flex;align-items:center;gap:2px;
-    background:var(--panel);border:1px solid color-mix(in srgb, var(--q-launch) 35%, transparent);
+    background:var(--panel);border:1px solid color-mix(in srgb, var(--secondary) 40%, transparent);
     border-radius:999px;padding:3px;
     backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
   .speedctl button{appearance:none;border:0;cursor:pointer;font:inherit;position:relative;
-    width:30px;height:30px;border-radius:50%;
-    color:var(--q-launch);background:color-mix(in srgb, var(--q-launch) 12%, transparent);
-    font-size:17px;font-weight:700;line-height:1;
+    width:28px;height:28px;border-radius:50%;
+    color:var(--secondary);background:color-mix(in srgb, var(--secondary) 14%, transparent);
+    font-size:16px;font-weight:700;line-height:1;
     display:flex;align-items:center;justify-content:center;transition:background .15s}
-  .speedctl button::after{content:"";position:absolute;inset:-7px;border-radius:50%} /* ≥44px hit */
-  .speedctl button:active{background:color-mix(in srgb, var(--q-launch) 30%, transparent)}
+  .speedctl button::after{content:"";position:absolute;inset:-8px;border-radius:50%} /* ≥44px hit */
+  .speedctl button:active{background:color-mix(in srgb, var(--secondary) 32%, transparent)}
   .speedctl button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
-  .speedctl .val{min-width:76px;text-align:center;font-size:13px;font-weight:700;
-    color:var(--q-launch);font-variant-numeric:tabular-nums;cursor:ew-resize;touch-action:none;
+  .speedctl .val{min-width:72px;text-align:center;font-size:13px;font-weight:700;
+    color:var(--secondary);font-variant-numeric:tabular-nums;cursor:ew-resize;touch-action:none;
     border-radius:8px}
   .speedctl .val:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 
-  /* ══ PIN PILL — topp høyre, alle stasjoner (ordre §2) ══ */
+  /* ══ SAVE SHOT PILL — topp høyre, alle stasjoner (ordre §2) ══
+     Kjølig lilla (--secondary), ikke gull — samme grunn som speed-steget:
+     hold den oransje --accent-banen som eneste varme fokal (eierordre). */
   .pinfab{position:absolute;right:14px;top:calc(14px + env(safe-area-inset-top));z-index:6;
     appearance:none;cursor:pointer;font:inherit;font-size:12.5px;font-weight:700;
-    color:var(--gold);background:var(--panel);border:1px solid color-mix(in srgb, var(--gold) 40%, transparent);
+    color:var(--secondary);background:var(--panel);border:1px solid color-mix(in srgb, var(--secondary) 45%, transparent);
     border-radius:999px;padding:9px 15px;
     backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);transition:transform .15s}
   .pinfab:active{transform:scale(.95)}
@@ -126,13 +120,8 @@
 
   /* ══ STATS-HERO — flip mot høyre når skuddet trenger venstrefeltet ══
      (§C: mekanisk port av mockens .stats.right; hysterese-logikken lever i
-     JS, se updateStats). Farge på Δ-linjen: gull (output-familien). */
+     JS, se updateStats). Flytter nå bare CARRY-tallet unna banen. */
   .flightCarry.right{left:auto;right:16px;text-align:right}
-  .flightCarry.right .offline{margin-left:auto}
-  .flightCarry .delta{margin-top:11px;font-size:11.5px;color:var(--muted);line-height:1.55;
-    max-width:190px}
-  .flightCarry .delta b{color:var(--ink);font-weight:500}
-  .flightCarry .delta .gold{color:var(--gold)}
 
   /* ══ STASJONSKORT — kollaps-grabber + paneler (ordre §2) ══ */
   .card{position:absolute;left:10px;right:10px;z-index:6;
@@ -240,15 +229,20 @@
 <body class="sa-depth">
   <div class="app">
 
-    <!-- ══ TOP STRIP ══ -->
+    <!-- ══ TOP STRIP — tilbake til meny + global speed-stepper (ordre 2026-07-22) ══
+         See the Shot-tittelen og Geometry/Impact-fanene er fjernet; igjen står
+         én ←-kontroll til menyen og speed-steget, flyttet opp hit vekk fra
+         scene-annotasjonene. view-transition-name:sa-nav bevart på back-lenken. -->
     <div class="topstrip">
-      <div class="ts-left">
-        <span class="ts-title">See the Shot</span>
-        <nav class="modnav" aria-label="Modules">
-          <a class="home" href="./index.html" aria-label="Home"><svg width="20" height="20" viewBox="0 0 52 52" fill="none" aria-hidden="true"><path d="M11 45 C 16 26, 24 18, 35 15 M21 39 L 30 24 L 43 45" stroke="currentColor" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="37" cy="15" r="5.2" fill="currentColor"/></svg></a>
-          <a class="tab" href="./geometry.html">Geometry</a>
-          <a class="tab" href="#" aria-current="page">Impact</a>
-        </nav>
+      <a class="ts-back" href="./index.html" aria-label="Back to menu">
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M15 5 L8 12 L15 19" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </a>
+      <!-- Global speed-stepper — synlig i alle stasjoner (ordre §2). -->
+      <div class="speedctl">
+        <button type="button" id="spMinus" aria-label="Decrease club speed">−</button>
+        <span class="val" id="spVal" tabindex="0" role="slider" aria-label="Club speed"
+          aria-valuemin="30" aria-valuemax="150" aria-valuenow="90" aria-valuetext="90 mph">90 mph</span>
+        <button type="button" id="spPlus" aria-label="Increase club speed">+</button>
       </div>
     </div>
 
@@ -265,28 +259,18 @@
            a11y-kontrakt som scenen: aria-hidden, ren visuell detalj. -->
       <div class="annoLabels" id="annoLabels" aria-hidden="true"></div>
 
-      <!-- LEFT HERO STACK — stort tall = CARRY (§6, A9). Element-navnene
-           #fCarryNum/#fCarryLive/.flightCarry er arvet og nå riktige.
-           .right-flip (mekanisk port av mockens .stats.right, §3
-           "Stats-flip") styres i JS med hysterese. -->
+      <!-- LEFT HERO STACK — kun CARRY (eierordre 2026-07-22: offline + Δ
+           fjernet). #fCarryNum/#fCarryLive/.flightCarry er arvet a11y-kontrakt.
+           .right-flip (§3 "Stats-flip") flytter nå bare carry-tallet unna banen. -->
       <div class="flightCarry" id="fCarryStack" aria-hidden="true">
         <div class="num"><span id="fCarryNum">0</span><span class="u">m</span></div>
         <div class="lab">Carry</div>
-        <div class="offline"><span id="fHeroOffNum">0</span> m<span class="side" id="fHeroOffSide">R</span></div>
-        <div class="delta" id="fDelta"></div>
       </div>
       <div class="sr-only" id="fCarryLive" aria-live="polite" aria-atomic="true"></div>
 
-      <!-- Global speed-stepper — synlig i alle stasjoner (ordre §2). -->
-      <div class="speedctl">
-        <button type="button" id="spMinus" aria-label="Decrease club speed">−</button>
-        <span class="val" id="spVal" tabindex="0" role="slider" aria-label="Club speed"
-          aria-valuemin="30" aria-valuemax="150" aria-valuenow="130" aria-valuetext="130 mph">130 mph</span>
-        <button type="button" id="spPlus" aria-label="Increase club speed">+</button>
-      </div>
-
-      <!-- Pin pill — topp høyre, alle stasjoner (ordre §2). -->
-      <button type="button" class="pinfab" id="pinFab">⊙ Pin</button>
+      <!-- Save shot pill — topp høyre, alle stasjoner (ordre §2). Lagrer
+           gjeldende skudd som spøkelsesbane til sammenligning. -->
+      <button type="button" class="pinfab" id="pinFab">⊙ Save shot</button>
 
       <!-- ══ STASJONSKORT — kollaps-grabber + stasjonssegment + panel ══
            Stasjonssegment: TOP · SIDE │ FLIGHT (ordre §2 — rekkefølgen er
@@ -323,7 +307,7 @@ import { buildAnnotations, placeLabels, statsFlip, cometPoint, MEASURE_KEEPOUT }
    sannhet; `station` er kamera, aldri parameter (§3.4): scrub re-solver
    aldri fysikk, parameterendring rører aldri kamera. */
 const state = {
-  face: 2.0, path: 0.0, attack: 3.0, dynLoft: 24, speed: 130,
+  face: 2.0, path: 0.0, attack: 3.0, dynLoft: 24, speed: 90,
   station: 0,            // kontinuerlig 0=FLIGHT · 1=SIDE · 2=TOP (§3.2)
   pins: [],              // maks 3, eldste ut
   allMetrics: false,
@@ -331,7 +315,7 @@ const state = {
 };
 
 // én forhåndspinnet ghost (ordre §2, default-oppsettet)
-const seedParams = { face: -3.0, path: 1.2, attack: 2.5, dynLoft: 24, speed: 130 };
+const seedParams = { face: -3.0, path: 1.2, attack: 2.5, dynLoft: 24, speed: 90 };
 state.pins.push({ params: seedParams, outcome: selectOutcome(seedParams) });
 
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -682,7 +666,7 @@ function drawAnnotationPrimitives(prims) {
         ctx.fillStyle = rgba(COL.measure, 1); ctx.fill();
         break;
       }
-      case 'target': case 'label': default: break; // ren DOM-etikett, ingen canvas-geometri
+      case 'label': default: break; // ren DOM-etikett, ingen canvas-geometri
     }
   }
 }
@@ -950,48 +934,29 @@ cv.addEventListener('pointerup', endPan);
 cv.addEventListener('pointercancel', endPan);
 
 /* ══ stats-hero + live-region (a11y-kontrakten) + stats-flip (ordre §3, S2) ══
-   Δ-mot-forrige-pin lever her også (ordre §2): ren lesing av state.pins,
-   ingen tegning. lastHud-vakten er samme mønster som mocken — hopp over
-   DOM-skriving når verken tallene, stasjonen eller pin-listen har endret seg. */
+   Kun CARRY vises nå (eierordre 2026-07-22: offline + Δ fjernet). Live-regionen
+   beholder full carry+offline-opplesning (a11y-kontrakt). lastHud-vakten hopper
+   over DOM-skriving når verken tallene eller stasjonen har endret seg. */
 const fCarryStack = document.getElementById('fCarryStack');
 const fCarryNum = document.getElementById('fCarryNum');
-const fHeroOffNum = document.getElementById('fHeroOffNum');
-const fHeroOffSide = document.getElementById('fHeroOffSide');
 const fCarryLive = document.getElementById('fCarryLive');
-const fDelta = document.getElementById('fDelta');
 let statsRight = false;
 let lastHud = '';
 function updateStats(outcome) {
   const carry = Math.round(outcome.m.carry);
   const side = Math.round(outcome.m.side);
-  const g = state.pins[state.pins.length - 1];
-  const hud = [carry, side, state.station.toFixed(3), state.pins.length,
-    g ? g.outcome.m.carry : '', g ? g.outcome.m.curve : ''].join('|');
+  const hud = [carry, side, state.station.toFixed(3)].join('|');
   if (hud === lastHud) return;
   lastHud = hud;
 
-  const sideDir = side >= 0 ? 'R' : 'L';
   fCarryNum.textContent = carry;
-  fHeroOffNum.textContent = Math.abs(side);
-  fHeroOffSide.textContent = sideDir;
   fCarryLive.textContent =
     `Carry ${carry} metres, ${Math.abs(side)} metres ${side >= 0 ? 'right' : 'left'}.`;
 
-  // dataene viker for skuddet: hysteresebåndet er obligatorisk (ordre §3
-  // "Stats-flip") — én kilde i impact-annotate.js, samme funksjon som S2
-  // testes mot, ikke en duplisert kopi av regelen her.
+  // dataene viker for skuddet: hysteresebåndet (ordre §3 "Stats-flip") flytter
+  // nå bare carry-tallet unna banen. Én kilde i impact-annotate.js (statsFlip).
   statsRight = statsFlip(statsRight, state.station, outcome.m.side);
   fCarryStack.classList.toggle('right', statsRight);
-
-  if (g) {
-    const dt = Math.round(outcome.m.carry - g.outcome.m.carry);
-    const dc = Math.round(Math.abs(outcome.m.curve) - Math.abs(g.outcome.m.curve));
-    fDelta.innerHTML =
-      `<b>Δ vs previous pin</b><br>${dt >= 0 ? '+' : '−'}${Math.abs(dt)} m carry · ` +
-      `<span class="gold">→ ${Math.abs(dc)} m ${dc >= 0 ? 'more' : 'less'} curve</span>`;
-  } else {
-    fDelta.innerHTML = '';
-  }
 }
 
 /* ══ render-løkke ══

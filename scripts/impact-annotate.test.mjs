@@ -75,7 +75,7 @@ test('S1 · normaltilfelle: span ≥ 74 px, midtpunkt utenfor keep-out → midtp
 test('S1 · kollisjonsregister: overlappende etiketter nudges vertikalt vekk, maks 3 iterasjoner, deterministisk', () => {
   const prims = [
     { kind: 'apex', points: [{ x: 300, y: 200 }], label: 'Apex 30 m', labelAnchor: { x: 300, y: 200 } },
-    { kind: 'target', points: [], label: 'TARGET', labelAnchor: { x: 300, y: 201 } }, // nær-identisk anker
+    { kind: 'label', points: [], label: 'Aim', labelAnchor: { x: 300, y: 201 } }, // nær-identisk anker
   ];
   const out1 = placeLabels(prims, null, VBOX);
   const out2 = placeLabels(prims, null, VBOX); // samme input igjen — stateless per kall (ingen jitter)
@@ -203,39 +203,18 @@ test('buildAnnotations · apex-dot til stede for skalar < 1.4, fraværende ved 1
   assert.equal(apexAt135.label, null, 'apex-etikett skal være borte ved 1.35 (label-grense < 1.35)');
 });
 
-test('buildAnnotations · TARGET-etikett er alltid til stede (alpha=1) utenfor TOP (topBlend=0)', () => {
-  for (const s of [0, 0.5, 1]) {
-    const target = byKind(annotationsAt(s), 'target')[0];
-    assert.ok(target, `TARGET mangler ved skalar ${s}`);
-    assert.equal(target.label, 'TARGET');
-    assert.equal(target.alpha, 1);
-  }
-});
-
-// NB (Økt E, motorbinding): motorens carry er IKKE monoton i klubbfart på
-// toppen (drag-saturering i impact-flight.js: 150 mph klubb → kortere carry
-// enn 120 mph). Fade-regelen (§3) er en funksjon av CARRY (piksel-klaring),
-// så fixturene parametriseres på faktisk carry, ikke på speed.
-test('buildAnnotations · TARGET fader i TOP for lang carry, forblir synlig for kort carry (§3 "fader ut ... lang carry")', () => {
-  const shortShot = { face: 0, path: 0, attack: 3, dynLoft: 24, speed: 30 };  // kort carry (~37 m)
-  const longShot = { face: 0, path: 0, attack: 3, dynLoft: 24, speed: 120 }; // motorens lengste carry (~207 m)
-  const shortTarget = byKind(annotationsAt(2, shortShot), 'target')[0];
-  const longTargets = byKind(annotationsAt(2, longShot), 'target');
-  assert.ok(shortTarget, 'kort carry: TARGET skal være synlig i TOP');
-  assert.ok(shortTarget.alpha > 0.5);
-  assert.equal(longTargets.length, 0, 'lang carry: TARGET skal være helt faded (alpha ≤ 0.05) i TOP');
-});
-
-test('buildAnnotations · TARGET-alpha er monoton i CARRY ved fast TOP-skalar (lengre skudd → mer fade)', () => {
-  const shots = [30, 60, 90, 120, 150].map(speed => {
-    const params = { face: 0, path: 0, attack: 3, dynLoft: 24, speed };
-    const carry = selectOutcome(params).m.carry;
-    const t = byKind(annotationsAt(2, params), 'target')[0];
-    return { carry, alpha: t ? t.alpha : 0 };
-  }).sort((a, b) => a.carry - b.carry); // §3-regelen er i carry; speed→carry er ikke monoton i motoren
-  for (let i = 1; i < shots.length; i++) {
-    assert.ok(shots[i].alpha <= shots[i - 1].alpha + 1e-9,
-      `alpha skal ikke øke med lengre carry: ${shots.map(s => `${s.carry.toFixed(0)}m→${s.alpha.toFixed(2)}`)}`);
+// TARGET-annotasjonen er fjernet (eierordre 2026-07-22): den faste 228 m-pinnen
+// og «TARGET»-etiketten ga ingen mening med skudd-adaptiv innramming. Regresjons-
+// vakt: buildAnnotations skal ALDRI emittere en 'target'-primitiv, i noen stasjon
+// eller for noen carry. (Down-the-line-siktelinja i impact.html består — den er
+// ren canvas-geometri, ikke en annotasjons-primitiv.)
+test('buildAnnotations · emitterer aldri en TARGET-primitiv (fjernet)', () => {
+  for (const s of [0, 0.5, 1, 1.5, 2]) {
+    for (const speed of [30, 60, 90, 120, 150]) {
+      const prims = annotationsAt(s, { face: 0, path: 0, attack: 3, dynLoft: 24, speed });
+      assert.equal(byKind(prims, 'target').length, 0, `target-primitiv ved skalar ${s}, ${speed} mph`);
+      assert.equal(prims.filter(p => p.label === 'TARGET').length, 0, `TARGET-etikett ved skalar ${s}, ${speed} mph`);
+    }
   }
 });
 
