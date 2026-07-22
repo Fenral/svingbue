@@ -58,6 +58,7 @@
   .p-lab{right:max(18px,env(safe-area-inset-right));bottom:35%}
   .p-outcome{left:max(18px,env(safe-area-inset-left));top:35%}
   .p-academy{right:max(18px,env(safe-area-inset-right));top:20%}
+  .p-studio{right:max(18px,env(safe-area-inset-right));top:52%}
   .footnote{position:absolute;left:max(20px,env(safe-area-inset-left));right:max(20px,env(safe-area-inset-right));bottom:max(14px,env(safe-area-inset-bottom));display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:10px;letter-spacing:.08em;text-transform:uppercase;pointer-events:none}
   .footnote__state{font-family:var(--font-mono);font-variant-numeric:tabular-nums;color:var(--ink)}
 
@@ -68,7 +69,10 @@
   }
   @media(max-height:850px) and (orientation:portrait){
     .intro__body{display:none}.intro h1{font-size:34px}.intro{top:max(76px,calc(env(safe-area-inset-top) + 66px))}
-    .p-academy{top:20%}.p-outcome{top:36%}.p-lab{bottom:32%}.p-range{bottom:10%}
+    .p-academy{top:20%}.p-outcome{top:36%}.p-lab{bottom:32%}.p-range{bottom:10%}.p-studio{top:52%}
+  }
+  @media(max-height:700px) and (orientation:portrait){
+    .p-studio{top:44%}
   }
   @media(orientation:landscape){
     .masthead{left:max(18px,env(safe-area-inset-left));right:max(18px,env(safe-area-inset-right));top:max(8px,env(safe-area-inset-top))}
@@ -77,14 +81,14 @@
     .intro h1{font-size:clamp(34px,5vw,44px)}
     .intro__body{font-size:12px;max-width:180px}
     .flight--portrait{display:none}.flight--landscape{display:block;inset:18px 8px 14px 150px}
-    .p-range{left:30%;bottom:7%}.p-lab{left:47%;right:auto;bottom:31%}.p-outcome{left:62%;top:29%}.p-academy{right:calc(max(18px,env(safe-area-inset-right)) + 52px);top:14%}
+    .p-range{left:30%;bottom:7%}.p-lab{left:47%;right:auto;bottom:31%}.p-outcome{left:62%;top:29%}.p-academy{right:calc(max(18px,env(safe-area-inset-right)) + 52px);top:14%}.p-studio{right:auto;left:76%;top:44%}
     .place{min-height:54px;max-width:180px;padding:8px 12px}
     .place__value{font-size:14px}
     .footnote{bottom:max(8px,env(safe-area-inset-bottom))}
   }
   @media(max-height:390px) and (orientation:landscape){
     .intro__body{display:none}.intro{top:max(58px,calc(env(safe-area-inset-top) + 50px))}
-    .intro h1{font-size:34px}.p-range{left:31%;bottom:6%}.p-lab{bottom:29%}.p-outcome{left:62%;top:29%}.p-academy{top:10%}
+    .intro h1{font-size:34px}.p-range{left:31%;bottom:6%}.p-lab{bottom:29%}.p-outcome{left:62%;top:29%}.p-academy{top:10%}.p-studio{right:auto;left:77%;top:42%}
     .place{min-height:50px}.place__label{font-size:8px}.place__value{font-size:13px}
   }
   @media(prefers-reduced-motion:reduce){
@@ -143,6 +147,9 @@
     </a>
     <a id="placeAcademy" class="place place--academy p-academy sa-focus" data-key="academy" href="./academy.html" aria-label="Academy — open the physics path">
       <span class="place__copy"><span id="labelAcademy" class="place__label">Academy</span><span id="valueAcademy" class="place__value">Physics path</span></span>
+    </a>
+    <a id="placeStudio" class="place p-studio sa-focus" data-key="studio" href="./impact-studio.html" aria-label="Impact Studio — cause and effect of the strike">
+      <span class="place__copy"><span id="labelStudio" class="place__label">Impact Studio</span><span id="valueStudio" class="place__value">Cause → effect</span></span>
     </a>
   </nav>
 
@@ -215,7 +222,8 @@
     flight:['placeRange','labelRange','Range'],
     geometry:['placeLab','labelLab','Lab'],
     outcome:['placeOutcome','labelOutcome','Outcome'],
-    academy:['placeAcademy','labelAcademy','Academy']
+    academy:['placeAcademy','labelAcademy','Academy'],
+    studio:['placeStudio','labelStudio','Impact Studio']
   };
   let last = readString('sa.home.last');
   if (!hasSavedState || !keyToIds[last]) last = 'flight';

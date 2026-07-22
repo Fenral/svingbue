@@ -34,6 +34,7 @@ const ALLOWED_HTML_FILES = [
   'index.html',
   'geometry.html',
   'impact.html',
+  'impact-studio.html',
   'academy.html',
   'terms.html',
   'privacy.html'
