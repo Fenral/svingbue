@@ -372,6 +372,10 @@ const LP_STANCE = 10.5;                       // cm foran stance-senter
 const PLANE_PRESET = { iron: 60, driver: 50 };
 const ARC_Z0 = { iron: -0.2, driver: 1.8 };   // cm — ideal lowPoint.z per club
 const SWEET  = { iron: 0.0213, driver: 0.033 }; // m — face centre above the sole
+/* ghosted clubhead sprite calibration: real-world mm spanned by the trimmed
+   sprite height (head + faded shaft stub) — tuned so the face middle sits
+   SWEET above the sole on screen */
+const HEAD_MM = { iron: 102, driver: 130 };
 const TEE_H = 0.030;                          // tee height, metres
 const state = { view:'face', sel:'low', plane:60, dir:0, low:0, arc:0, club:'iron' };
 const ballLift = () => state.club === 'driver' ? TEE_H : 0;
@@ -576,6 +580,8 @@ const ASSETS = {
   ball:    '../../assets/impact-studio/ball.png',
   glint:   '../../assets/impact-studio/glint.png',
   tee:     '../../assets/impact-studio/tee.png',
+  ironHead:   '../../assets/impact-studio/iron-head.png',
+  driverHead: '../../assets/impact-studio/driver-head.png',
 };
 const IMG = {};
 for (const k in ASSETS){
@@ -727,6 +733,21 @@ function drawInset(){
     ictx.lineTo(X(x.x), gy); ictx.closePath();
     ictx.fillStyle = 'rgba(24,15,8,.9)'; ictx.fill();
     ictx.strokeStyle = 'rgba(205,142,78,.85)'; ictx.lineWidth = 1.5; ictx.stroke();
+  }
+
+  /* ghosted clubhead (under the gold arc and the ball — see drawFace) */
+  {
+    const hk = state.club === 'iron' ? 'ironHead' : 'driverHead';
+    if (ready(hk)){
+      const im = IMG[hk];
+      const brH = BALL_R * sc;
+      const hPxI = HEAD_MM[state.club] * (brH / (BALL_R * 1000));
+      const wPxI = hPxI * (im.naturalWidth / im.naturalHeight);
+      const yBI = Y(ct.clubZ), xRI = X(0) - brH * 0.92;
+      ictx.save(); ictx.globalAlpha = 0.5;
+      ictx.drawImage(im, xRI - wPxI, yBI - hPxI, wPxI, hPxI);
+      ictx.restore();
+    }
   }
 
   /* gold arc through the zone (glow pass + warm core, impact-kamera style) */
@@ -1013,6 +1034,22 @@ function drawFace(t){
       ctx.beginPath(); ctx.moveTo(ra.x, ra.y); ctx.lineTo(rb.x, rb.y); ctx.stroke();
     }
     ctx.restore();
+  }
+
+  /* --- static ghosted clubhead at address: sole rides the arc, making the
+     sole-path → face-middle geometry legible. Reference, never a hero;
+     drawn under the arc and the ball. --- */
+  {
+    const hk = state.club === 'iron' ? 'ironHead' : 'driverHead';
+    if (ready(hk)){
+      const im = IMG[hk];
+      const hPx = HEAD_MM[state.club] * (ballR / (BALL_R * 1000));
+      const wPx = hPx * (im.naturalWidth / im.naturalHeight);
+      const yB = M.Y(ct.clubZ), xR = M.bx - ballR * 0.92;
+      ctx.save(); ctx.globalAlpha = 0.45;
+      ctx.drawImage(im, xR - wPx, yB - hPx, wPx, hPx);
+      ctx.restore();
+    }
   }
 
   /* --- swing arc (clipped by frame; white core over faint glow).
