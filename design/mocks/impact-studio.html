@@ -556,13 +556,13 @@ const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
  * P3-tonede assets lastes fra CDN i runtime. ALT har canvas-fallback —
  * mocken rendrer fullverdig uten nett/asset. */
 const ASSETS = {
-  turf:    'assets/impact-studio/turf.png',
-  skyFace: 'assets/impact-studio/sky-face.png',
-  bgDtl:   'assets/impact-studio/bg-dtl.png',
-  ball:    'assets/impact-studio/ball.png',
-  glint:   'assets/impact-studio/glint.png',
-  soil:    'assets/impact-studio/soil.png',
-  tee:     'assets/impact-studio/tee.png',
+  turf:    '../../assets/impact-studio/turf.png',
+  skyFace: '../../assets/impact-studio/sky-face.png',
+  bgDtl:   '../../assets/impact-studio/bg-dtl.png',
+  ball:    '../../assets/impact-studio/ball.png',
+  glint:   '../../assets/impact-studio/glint.png',
+  soil:    '../../assets/impact-studio/soil.png',
+  tee:     '../../assets/impact-studio/tee.png',
 };
 const IMG = {};
 for (const k in ASSETS){
@@ -1293,7 +1293,7 @@ function drawDtl(t){
       if (state.sel === 'low')
         /* dodge below the arc tail so the label never crosses arc or ball */
         label('LOW POINT ' + fmtSigned(effectiveLpx(s) * 100, 1) + ' cm',
-              clamp(lp.x - 10, 150, W - 10), Math.min(lp.y + 32, H - 12),
+              clamp(lp.x - 24, 150, W - 10), Math.min(lp.y + 40, H - 12),
               A.gold, 11, 'right');
     }
   }
