@@ -917,25 +917,17 @@ function coreLine(x1, y1, x2, y2, color, width, glow, alpha){
 const CSS = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 
 /* ============================================================ FACE ON
- * Impact-centred reframe: ~0.95 m virtual window, ground line at 65 % height,
- * ball at 40 % width. Below-ground z is exaggerated (soft-capped) so shallow
- * divots stay visible. */
+ * Impact-centred reframe: uniform circular mapping — the same px/m scale in
+ * x and z, above and below ground, so the swing arc renders as a TRUE
+ * circle with no shape change at the bottom (owner decision). Depth
+ * legibility lives in the inset, which keeps its own magnification. */
 function faceMap(){
   const winM = W >= 700 ? 1.15 : 0.95;
   const scale = W / winM;                       // px per metre
   const bx = W * 0.52, gy = H * 0.71;           // scene sits right of the mini screen
-  const K = 2.2;                                // vertical compression: arc reads as a U, like DTL
-  const EXAG = 6, CAP = 0.042;                  // below-ground exaggeration (on top of K)
-  const zMap = z => z >= 0 ? z * K : -CAP * Math.tanh(-z * EXAG / CAP) * (K * 0.55);
-  /* progressive horizontal compression: the contact zone (±0.28 m around
-     the ball) stays true-scale; the outer arms compress to 0.62× so the
-     arc reads as a tighter U */
-  const XC = 0.28, KX = 0.62;
-  const xComp = xm => Math.abs(xm) <= XC ? xm
-    : Math.sign(xm) * (XC + (Math.abs(xm) - XC) * KX);
-  return { scale, bx, gy, K,
-    X: xm => bx + xComp(xm) * scale,
-    Y: zm => gy - zMap(zm) * scale };
+  return { scale, bx, gy, K: 1,
+    X: xm => bx + xm * scale,
+    Y: zm => gy - zm * scale };
 }
 function drawFace(t){
   const s = engineState();
