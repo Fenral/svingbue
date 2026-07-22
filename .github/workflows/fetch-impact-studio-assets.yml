@@ -25,8 +25,15 @@ jobs:
           # 2K-oppskalert turf + DTL-bakgrunn; nedskaleres til 2048 bredde for repo-vekt
           curl -fsSL -o /tmp/turf-2k.png   $B/hf_20260722_031345_f29117c7-c517-4645-a86e-8d3b277eb304.png
           curl -fsSL -o /tmp/bg-dtl-2k.png $B/hf_20260722_031346_aee0c43f-e687-4c7a-a01f-8f8cba7b48d0.png
-          convert /tmp/turf-2k.png   -resize 2048x assets/impact-studio/turf.png
-          convert /tmp/bg-dtl-2k.png -resize 2048x assets/impact-studio/bg-dtl.png
+          pip install --quiet pillow
+          python3 - <<'EOF'
+          from PIL import Image
+          for src, dst in [('/tmp/turf-2k.png','assets/impact-studio/turf.png'),
+                           ('/tmp/bg-dtl-2k.png','assets/impact-studio/bg-dtl.png')]:
+              im = Image.open(src)
+              w, h = im.size
+              im.resize((2048, round(h * 2048 / w)), Image.LANCZOS).save(dst)
+          EOF
           # ny jordtekstur (divot-kavitet) + tee-cutout
           curl -fsSL -o assets/impact-studio/soil.png      $B/hf_20260722_031335_1ec247a2-bf21-4a20-b8b0-5c3d3a201e41.png
           curl -fsSL -o assets/impact-studio/soil-min.webp $B/hf_20260722_031335_1ec247a2-bf21-4a20-b8b0-5c3d3a201e41_min.webp
