@@ -189,7 +189,7 @@
     <button id="resetBtn" aria-label="Reset">↺</button>
   </div>
 
-  <div class="stage">
+  <div class="stage" id="stage">
     <canvas id="scene"></canvas>
     <div class="inset" id="inset">
       <div class="eyebrow"><span>STRIKE<span class="ez"> · CONTACT ZONE</span></span>
@@ -513,6 +513,7 @@ function setView(v){
   /* camera dot orbits the ball: face-on = beside (3 o'clock), DTL = behind (6 o'clock) */
   $('camG').style.transform = v === 'face' ? 'rotate(-90deg)' : 'rotate(0deg)';
   $('viewCap').textContent = v === 'face' ? 'FACE ON' : 'DTL';
+  applyStageBg();
   vecFlashAt = performance.now();          // brief orientation flash on view switch
   kick();
 }
@@ -548,6 +549,35 @@ function flashAlpha(){
   return dt < 900 ? 1 : clamp(1 - (dt - 900) / 700, 0, 1);
 }
 const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ============================================================ HIGGSFIELD-ASSETS
+ * Eier-autorisert unntak fra imagery-defaulten (2026-07-22): genererte
+ * P3-tonede assets lastes fra CDN i runtime. ALT har canvas-fallback —
+ * mocken rendrer fullverdig uten nett/asset. */
+const ASSETS = {
+  turf:    'https://d8j0ntlcm91z4.cloudfront.net/user_3GdzmhDdgaP9stT4ZuGgLhii3Jg/hf_20260722_000301_72dee368-aaf4-471f-93f1-fac03732cbea.png',
+  skyFace: 'https://d8j0ntlcm91z4.cloudfront.net/user_3GdzmhDdgaP9stT4ZuGgLhii3Jg/hf_20260722_000316_583262cb-086e-4399-bd5d-504d5d1a8869.png',
+  bgDtl:   'https://d8j0ntlcm91z4.cloudfront.net/user_3GdzmhDdgaP9stT4ZuGgLhii3Jg/hf_20260722_000319_5a56dcfd-7ca2-46a4-b87f-b76ab3e1d29e.png',
+  ball:    'https://d8j0ntlcm91z4.cloudfront.net/user_3GdzmhDdgaP9stT4ZuGgLhii3Jg/hf_20260722_000448_8e6c4083-2aab-4f3e-b788-97a521437415.png',
+  divot:   'https://d8j0ntlcm91z4.cloudfront.net/user_3GdzmhDdgaP9stT4ZuGgLhii3Jg/hf_20260722_000449_8e002178-5f41-4ae9-a0f4-6c29d4173497.png',
+  glint:   'https://d8j0ntlcm91z4.cloudfront.net/user_3GdzmhDdgaP9stT4ZuGgLhii3Jg/hf_20260722_000332_646fdbdd-5416-4cdd-a65f-384b232ec80b.png',
+};
+const IMG = {};
+for (const k in ASSETS){
+  const im = new Image();
+  im.onload = () => { applyStageBg(); kick(); };
+  im.src = ASSETS[k];
+  IMG[k] = im;
+}
+const ready = k => IMG[k] && IMG[k].complete && IMG[k].naturalWidth > 0;
+function applyStageBg(){
+  const st = document.getElementById('stage');
+  if (state.view === 'face' && ready('skyFace'))
+    st.style.background = 'linear-gradient(180deg, rgba(14,10,24,.9) 0%, rgba(36,21,54,.5) 55%, rgba(15,11,28,.92) 100%), url(' + ASSETS.skyFace + ') center/cover no-repeat #07060C';
+  else if (state.view === 'dtl' && ready('bgDtl'))
+    st.style.background = 'linear-gradient(180deg, rgba(14,10,24,.85) 0%, rgba(36,21,54,.45) 55%, rgba(15,11,28,.9) 100%), url(' + ASSETS.bgDtl + ') center/cover no-repeat #07060C';
+  else st.style.background = '';
+}
 function cometU(){                            // eased 0..1 pulse position along the segment
   const u = clamp((performance.now() - vecFlashAt) / 1200, 0, 1);
   return u < 0.5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2;
@@ -630,10 +660,17 @@ function drawInset(){
   const X = xm => (xm - x0) * sc;
   const Y = zm => gy - (zm >= 0 ? zm : -CAP * Math.tanh(-zm * EXAG / CAP)) * sc;
 
-  /* ground: grass on top, soil underneath */
+  /* ground: grass on top, soil underneath (Higgsfield turf plate when loaded) */
   {
+    if (ready('turf')){
+      ictx.drawImage(IMG.turf, 0, 0, IMG.turf.naturalWidth, IMG.turf.naturalHeight,
+                     0, gy - 1, IW, (IH - gy) + 1);
+      ictx.fillStyle = 'rgba(7,6,12,.42)';
+      ictx.fillRect(0, gy - 1, IW, (IH - gy) + 1);
+    }
     const soil = ictx.createLinearGradient(0, gy, 0, IH);
-    soil.addColorStop(0, '#3d2b1a'); soil.addColorStop(1, '#1a120c');
+    soil.addColorStop(0, 'rgba(61,43,26,' + (ready('turf') ? 0.25 : 1) + ')');
+    soil.addColorStop(1, 'rgba(26,18,12,' + (ready('turf') ? 0.3 : 1) + ')');
     ictx.fillStyle = soil; ictx.fillRect(0, gy, IW, IH - gy);
     const grass = ictx.createLinearGradient(0, gy, 0, gy + 5);
     grass.addColorStop(0, '#3f6b2e'); grass.addColorStop(1, '#2a4a22');
@@ -700,11 +737,15 @@ function drawInset(){
     ictx.beginPath(); ictx.arc(bx2, by2, gr2, 0, Math.PI * 2);
     ictx.fillStyle = halo2; ictx.fill();
   }
-  ictx.beginPath(); ictx.arc(bx2, by2, br, 0, Math.PI * 2);
-  const bg2 = ictx.createRadialGradient(bx2 - br*0.3, by2 - br*0.35, br*0.15, bx2, by2, br);
-  bg2.addColorStop(0, 'rgba(255,255,255,.9)'); bg2.addColorStop(1, 'rgba(210,203,224,.55)');
-  ictx.fillStyle = bg2; ictx.fill();
-  ictx.strokeStyle = 'rgba(245,242,255,.9)'; ictx.lineWidth = 1.5; ictx.stroke();
+  if (ready('ball')){
+    ictx.drawImage(IMG.ball, bx2 - br - 1, by2 - br - 1, (br + 1) * 2, (br + 1) * 2);
+  } else {
+    ictx.beginPath(); ictx.arc(bx2, by2, br, 0, Math.PI * 2);
+    const bg2 = ictx.createRadialGradient(bx2 - br*0.3, by2 - br*0.35, br*0.15, bx2, by2, br);
+    bg2.addColorStop(0, 'rgba(255,255,255,.9)'); bg2.addColorStop(1, 'rgba(210,203,224,.55)');
+    ictx.fillStyle = bg2; ictx.fill();
+    ictx.strokeStyle = 'rgba(245,242,255,.9)'; ictx.lineWidth = 1.5; ictx.stroke();
+  }
 
   /* strike height: warm tick where the arc meets the ball + mm bracket */
   const czI = clamp(ct.clubZ, liftI, liftI + 2 * BALL_R);
@@ -831,11 +872,20 @@ function drawFace(t){
   ctx.save();
   ctx.clip(sceneClipPath(), 'evenodd');       // never draw under the mini screen
 
-  /* --- ground: green grass layer on top, soil underneath --- */
+  /* --- ground: green grass layer on top, soil underneath.
+     Higgsfield turf plate as base when loaded; painted fallback otherwise. --- */
   const gy = M.gy;
   {
+    if (ready('turf')){
+      ctx.drawImage(IMG.turf, 0, 0, IMG.turf.naturalWidth, IMG.turf.naturalHeight,
+                    0, gy - 2, W, (H - gy) + 2);
+      ctx.fillStyle = 'rgba(7,6,12,.4)';       // seat it in the dusk scene
+      ctx.fillRect(0, gy - 2, W, (H - gy) + 2);
+    }
     const soil = ctx.createLinearGradient(0, gy, 0, H);
-    soil.addColorStop(0, '#3d2b1a'); soil.addColorStop(0.5, '#2a1d12'); soil.addColorStop(1, '#1a120c');
+    soil.addColorStop(0, 'rgba(61,43,26,' + (ready('turf') ? 0.25 : 1) + ')');
+    soil.addColorStop(0.5, 'rgba(42,29,18,' + (ready('turf') ? 0.25 : 1) + ')');
+    soil.addColorStop(1, 'rgba(26,18,12,' + (ready('turf') ? 0.3 : 1) + ')');
     ctx.fillStyle = soil; ctx.fillRect(0, gy, W, H - gy);
     const grass = ctx.createLinearGradient(0, gy, 0, gy + 8);
     grass.addColorStop(0, '#3f6b2e'); grass.addColorStop(1, '#2a4a22');
@@ -865,6 +915,15 @@ function drawFace(t){
     ctx.fillStyle = 'rgba(24,15,8,.85)';       /* cavity cut into the turf */
     ctx.fill();
     ctx.strokeStyle = 'rgba(205,142,78,.6)'; ctx.lineWidth = 1.5; ctx.stroke();
+    /* turf-first strike → a torn divot chunk lies at the exit edge */
+    if (ct.clubZ < 0 && ready('divot')){
+      ctx.save();
+      ctx.translate(M.X(exit.x) + 18, gy - 9);
+      ctx.rotate(0.28);
+      ctx.globalAlpha = 0.95;
+      ctx.drawImage(IMG.divot, -19, -19, 38, 38);
+      ctx.restore();
+    }
   }
 
   /* --- footprints: stance is fixed in the world, the ball is fixed on screen —
@@ -947,11 +1006,15 @@ function drawFace(t){
     ctx.beginPath(); ctx.arc(bx, by, gr, 0, Math.PI * 2);
     ctx.fillStyle = halo; ctx.fill();
   }
-  const grad = ctx.createRadialGradient(bx - ballR*0.35, by - ballR*0.4, ballR*0.15, bx, by, ballR);
-  grad.addColorStop(0, '#ffffff'); grad.addColorStop(0.75, '#efe9f2'); grad.addColorStop(1, '#c8bfd2');
-  ctx.beginPath(); ctx.arc(bx, by, ballR, 0, Math.PI * 2);
-  ctx.fillStyle = grad; ctx.fill();
-  ctx.strokeStyle = 'rgba(255,175,120,.4)'; ctx.lineWidth = 1; ctx.stroke();
+  if (ready('ball')){
+    ctx.drawImage(IMG.ball, bx - ballR - 2, by - ballR - 2, (ballR + 2) * 2, (ballR + 2) * 2);
+  } else {
+    const grad = ctx.createRadialGradient(bx - ballR*0.35, by - ballR*0.4, ballR*0.15, bx, by, ballR);
+    grad.addColorStop(0, '#ffffff'); grad.addColorStop(0.75, '#efe9f2'); grad.addColorStop(1, '#c8bfd2');
+    ctx.beginPath(); ctx.arc(bx, by, ballR, 0, Math.PI * 2);
+    ctx.fillStyle = grad; ctx.fill();
+    ctx.strokeStyle = 'rgba(255,175,120,.4)'; ctx.lineWidth = 1; ctx.stroke();
+  }
 
   /* (no strike tick on the main canvas — strike detail lives in the inset) */
   const cz = clamp(ct.clubZ, ballLift(), ballLift() + 2 * BALL_R);
@@ -1001,6 +1064,13 @@ function drawFace(t){
       segPts.push({ x: p0.x + dx * d, y: p0.y - dz * d });
     }
     litSegment(segPts, A.attack, fa);
+    if (ready('glint') && !REDUCED){           // impact glint, additive
+      ctx.save();
+      ctx.globalCompositeOperation = 'screen';
+      ctx.globalAlpha = 0.85 * fa;
+      ctx.drawImage(IMG.glint, M.X(0) - 27, M.Y(cz) - 27, 54, 54);
+      ctx.restore();
+    }
     const pe = segPts[segPts.length - 1];
     label('CLUB ATTACK ' + fmtNum(imp.attackAngle, 1) + '°',
           Math.min(pe.x + 12, W - 150), pe.y - 12, A.attack, W >= 700 ? 11 : 10, 'left', false, fa);
@@ -1062,7 +1132,8 @@ function strokeArc(s, M, style, width){
 function dtlCam(){
   /* stands slightly on the trail side of the line, hip height — gives an
      asymmetric, more spatial DTL and pushes the scene toward the right */
-  return { pos:{ x:-2.2, y:0.9, z:1.0 }, look:{ x:2.3, y:-0.25, z:0.14 },
+  /* camera stands on the RIGHT side of the line (viewer's right), hip height */
+  return { pos:{ x:-2.2, y:-0.9, z:1.0 }, look:{ x:2.3, y:0.25, z:0.14 },
            fov: d2r(H < 220 ? 36 : 32), xStretch: 1.1 };
 }
 const DTL_SWEEP = d2r(60);                    // longer arc into the perspective
@@ -1262,6 +1333,14 @@ function drawDtl(t){
       if (p) segPts.push(p);
     }
     litSegment(segPts, A.path, fa);
+    const impP = P(arcPosition(thImp, s));
+    if (impP && ready('glint') && !REDUCED){   // impact glint, additive
+      ctx.save();
+      ctx.globalCompositeOperation = 'screen';
+      ctx.globalAlpha = 0.8 * fa;
+      ctx.drawImage(IMG.glint, impP.x - 24, impP.y - 24, 48, 48);
+      ctx.restore();
+    }
     if (segPts.length){
       const pe = segPts[segPts.length - 1];
       label('CLUB PATH ' + fmtNum(deriveImpact(s).clubPath, 1) + '°',
@@ -1278,6 +1357,7 @@ selectParam('low');
 updateOutcomes();
 prevOut = null; updateOutcomes();   // seed without pulsing
 vecFlashAt = performance.now();     // one orientation flash on load, then fade
+applyStageBg();
 resize();
 </script>
 </body>
