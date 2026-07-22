@@ -3,6 +3,9 @@ name: Fetch Impact Studio assets
 # CDN inn i repoet, slik at mocken kan bruke lokale filer. Kjøres manuelt.
 on:
   workflow_dispatch:
+  push:
+    branches: [claude/golf-swing-viz-redesign-ctvj75]
+    paths: ['assets/impact-studio/.trigger']
 
 permissions:
   contents: write
