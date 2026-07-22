@@ -355,20 +355,30 @@ const PARAMS = {
    * lowPoint.x (motorinput, ball-relativ) = LP_STANCE − b. */
   low:   { min:-20, max:20, step:0.1, def:0,    bipolar:true,  hue:'var(--accent)',
            fmt:v=>fmtSigned(v,1)+' cm' },
-  arc:   { min:-5,  max:5,  step:0.1, def:-0.2, bipolar:true,  hue:'var(--depth)',
+  arc:   { min:-5,  max:5,  step:0.1, def:0,    bipolar:true,  hue:'var(--depth)',
            fmt:v=>fmtSigned(v,1)+' cm' },
 };
 const LP_STANCE = 10.5;                       // cm foran stance-senter
 /* club presets: plane auto-set on switch (freely adjustable afterwards).
  * Driver = ball on a tee. MOCK STAND-IN: final driver physics (strike vs
- * teed ball, expected up-strike) must come from the production engine. */
+ * teed ball, expected up-strike) must come from the production engine.
+ *
+ * Arc Height is CLUB-RELATIVE: slider 0 = ideal low-point height for the
+ * selected club; engine input lowPoint.z = arc + ARC_Z0[club]. The arc
+ * traces the SOLE's path (engine model — it drives turf contact), while
+ * the strike readout is referenced to the FACE CENTRE (SWEET above the
+ * sole), so Pure reads ~0 mm = middle of the face. The production engine
+ * gets the same mapping when this spec is implemented. */
 const PLANE_PRESET = { iron: 60, driver: 50 };
+const ARC_Z0 = { iron: -0.2, driver: 1.8 };   // cm — ideal lowPoint.z per club
+const SWEET  = { iron: 0.0213, driver: 0.033 }; // m — face centre above the sole
 const TEE_H = 0.030;                          // tee height, metres
-const state = { view:'face', sel:'low', plane:60, dir:0, low:0, arc:-0.2, club:'iron' };
+const state = { view:'face', sel:'low', plane:60, dir:0, low:0, arc:0, club:'iron' };
 const ballLift = () => state.club === 'driver' ? TEE_H : 0;
 function engineState(){
   return { radius:RADIUS, planeAngle:state.plane, swingDirection:state.dir,
-           lowPoint:{ x:(LP_STANCE - state.low)/100, y:0, z:state.arc/100 } };
+           lowPoint:{ x:(LP_STANCE - state.low)/100, y:0,
+                      z:(state.arc + ARC_Z0[state.club])/100 } };
 }
 const MINUS = '−';
 function fmtNum(v, dec){ const s = Math.abs(v).toFixed(dec); return (v < -1e-9 ? MINUS : '') + s; }
@@ -397,22 +407,23 @@ let prevOut = null, pulseTimer = 0;
 function updateOutcomes(){
   const s = engineState();
   const imp = deriveImpact(s), ct = clubBallContact(s), q = strikeQuality(s);
-  /* strike measured against the (possibly teed) ball centre */
-  const offEff = ct.clubZ - (ballLift() + BALL_R);
-  const out = { attack: imp.attackAngle, path: imp.clubPath, strike: offEff };
+  /* strike read at the FACE CENTRE: + = ball meets the face above its
+     middle, − = below. Pure ≈ 0 mm for both clubs. */
+  const faceOff = (ballLift() + BALL_R) - (ct.clubZ + SWEET[state.club]);
+  const out = { attack: imp.attackAngle, path: imp.clubPath, strike: faceOff };
   $('vAttack').textContent = fmtNum(out.attack, 1) + '°';
   $('vPath').textContent = fmtNum(out.path, 1) + '°';
   /* strike lives in the inset eyebrow */
   let band = q.band, col = q.col;
   if (state.club === 'driver' && ct.clubZ >= -0.025){
-    /* mock stand-in driver bands vs the teed ball */
-    if (Math.abs(offEff) <= 0.008){ band = 'Pure'; col = 'var(--good)'; }
-    else if (offEff > 0.008){ band = 'High'; col = 'var(--warn)'; }
+    /* mock stand-in driver bands, centred on the face middle */
+    if (Math.abs(faceOff) <= 0.008){ band = 'Pure'; col = 'var(--good)'; }
+    else if (faceOff > 0.008){ band = 'High'; col = 'var(--warn)'; }
     else { band = 'Low'; col = 'var(--warn)'; }
   }
   const qEl = $('insetQual'); qEl.textContent = band.toUpperCase(); qEl.style.color = col;
-  const mm = Math.round(Math.abs(offEff * 1000));
-  $('insetMm').textContent = (offEff < 0 ? MINUS : '+') + mm + ' mm';
+  const mm = Math.round(Math.abs(faceOff * 1000));
+  $('insetMm').textContent = (mm === 0 ? '0' : (faceOff < 0 ? MINUS : '+') + mm) + ' mm';
 
   if (prevOut){
     const changed = {
@@ -500,10 +511,12 @@ $('resetBtn').addEventListener('click', () => {
 function setClub(c){
   state.club = c;
   state.plane = PLANE_PRESET[c];              // auto-preset; freely adjustable after
+  state.arc = 0;                              // 0 = ideal height for this club
   $('lieIron').style.opacity = c === 'iron' ? '1' : '0';
   $('lieDriver').style.opacity = c === 'driver' ? '1' : '0';
   $('clubCap').textContent = c === 'iron' ? 'IRON' : 'DRIVER';
   if (state.sel === 'plane') range.value = state.plane;
+  if (state.sel === 'arc') range.value = state.arc;
   vecFlashAt = performance.now();
   updateChipValues(); layoutSlider(); updateOutcomes(); kick();
 }
@@ -776,7 +789,8 @@ function drawInset(){
   }
 
   /* strike height: warm tick where the arc meets the ball + mm bracket */
-  const czI = clamp(ct.clubZ, liftI, liftI + 2 * BALL_R);
+  /* contact tick = where the FACE CENTRE meets the ball (SWEET above sole) */
+  const czI = clamp(ct.clubZ + SWEET[state.club], liftI, liftI + 2 * BALL_R);
   const sy = Y(czI);
   ictx.strokeStyle = WARM; ictx.lineWidth = 2;
   ictx.beginPath(); ictx.moveTo(bx2 - br - 5, sy); ictx.lineTo(bx2 + br + 5, sy); ictx.stroke();
@@ -808,7 +822,8 @@ function drawInset(){
   if (t0g !== null){
     tickMark(arcPosition(-t0g, s).x, 'ENTRY');
     tickMark(arcPosition(t0g, s).x, 'EXIT');
-  } else {
+  } else if (state.club === 'iron'){
+    /* for driver a turf-free sweep is the CORRECT state — no warning */
     iLabel('NO TURF CONTACT', IW / 2, gy + 14, CSS('--warn'), 9);
   }
   /* low point: small gold dot on the arc bottom */
