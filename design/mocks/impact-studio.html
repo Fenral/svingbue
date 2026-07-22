@@ -375,7 +375,9 @@ const SWEET  = { iron: 0.0213, driver: 0.033 }; // m — face centre above the s
 /* ghosted clubhead sprite calibration: real-world mm spanned by the trimmed
    sprite height (head + faded shaft stub) — tuned so the face middle sits
    SWEET above the sole on screen */
-const HEAD_MM = { iron: 102, driver: 130 };
+const HEAD_MM = { iron: 102, driver: 89 };
+/* forward shaft lean at address ("delofting"): iron leans 6° toward target */
+const LEAN = { iron: 6 * Math.PI / 180, driver: 0 };
 const TEE_H = 0.030;                          // tee height, metres
 const state = { view:'face', sel:'low', plane:60, dir:0, low:0, arc:0, club:'iron' };
 const ballLift = () => state.club === 'driver' ? TEE_H : 0;
@@ -745,7 +747,8 @@ function drawInset(){
       const wPxI = hPxI * (im.naturalWidth / im.naturalHeight);
       const yBI = Y(ct.clubZ), xRI = X(0) - brH * 0.92;
       ictx.save(); ictx.globalAlpha = 0.5;
-      ictx.drawImage(im, xRI - wPxI, yBI - hPxI, wPxI, hPxI);
+      ictx.translate(xRI, yBI); ictx.rotate(LEAN[state.club]);
+      ictx.drawImage(im, -wPxI, -hPxI, wPxI, hPxI);
       ictx.restore();
     }
   }
@@ -807,6 +810,21 @@ function drawInset(){
     bg2.addColorStop(0, 'rgba(255,255,255,.9)'); bg2.addColorStop(1, 'rgba(210,203,224,.55)');
     ictx.fillStyle = bg2; ictx.fill();
     ictx.strokeStyle = 'rgba(245,242,255,.9)'; ictx.lineWidth = 1.5; ictx.stroke();
+  }
+
+  /* strike-location reference on the ghosted face: ember dot = ball centre
+     against the face; faint notch = face middle (sweet spot) */
+  if (ready(state.club === 'iron' ? 'ironHead' : 'driverHead')){
+    const fxI = bx2 - br * 0.92;
+    const yCtI = by2;
+    const ySwI = by2 - ((ct.clubZ + SWEET[state.club]) - (liftI + BALL_R)) * (br / BALL_R);
+    ictx.save();
+    ictx.strokeStyle = 'rgba(245,242,255,.5)'; ictx.lineWidth = 1.5;
+    ictx.beginPath(); ictx.moveTo(fxI - 7, ySwI); ictx.lineTo(fxI + 1, ySwI); ictx.stroke();
+    ictx.beginPath(); ictx.arc(fxI, yCtI, 2.6, 0, Math.PI * 2);
+    ictx.fillStyle = 'rgba(255,138,77,.95)'; ictx.fill();
+    ictx.strokeStyle = 'rgba(255,255,255,.75)'; ictx.lineWidth = 1; ictx.stroke();
+    ictx.restore();
   }
 
   /* strike height: warm tick where the arc meets the ball + mm bracket */
@@ -1047,7 +1065,9 @@ function drawFace(t){
       const wPx = hPx * (im.naturalWidth / im.naturalHeight);
       const yB = M.Y(ct.clubZ), xR = M.bx - ballR * 0.92;
       ctx.save(); ctx.globalAlpha = 0.45;
-      ctx.drawImage(im, xR - wPx, yB - hPx, wPx, hPx);
+      /* pivot at the leading-edge/sole corner so the lean delofts the head */
+      ctx.translate(xR, yB); ctx.rotate(LEAN[state.club]);
+      ctx.drawImage(im, -wPx, -hPx, wPx, hPx);
       ctx.restore();
     }
   }
@@ -1097,6 +1117,23 @@ function drawFace(t){
     ctx.beginPath(); ctx.arc(bx, by, ballR, 0, Math.PI * 2);
     ctx.fillStyle = grad; ctx.fill();
     ctx.strokeStyle = 'rgba(255,175,120,.4)'; ctx.lineWidth = 1; ctx.stroke();
+  }
+
+  /* strike-location reference on the ghosted face: ember dot = where the
+     ball centre meets the face; faint notch = the face middle (sweet spot) */
+  if (ready(state.club === 'iron' ? 'ironHead' : 'driverHead')){
+    /* anchored in ball-screen space: dot = ball centre against the face;
+       notch = sweet spot, offset by the true face/ball mm difference */
+    const fx2 = M.bx - ballR * 0.92;
+    const yCt = by;
+    const ySw = by - ((ct.clubZ + SWEET[state.club]) - (ballLift() + BALL_R)) * (ballR / BALL_R);
+    ctx.save();
+    ctx.strokeStyle = 'rgba(245,242,255,.5)'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(fx2 - 7, ySw); ctx.lineTo(fx2 + 1, ySw); ctx.stroke();
+    ctx.beginPath(); ctx.arc(fx2, yCt, 3, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(255,138,77,.95)'; ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,.75)'; ctx.lineWidth = 1; ctx.stroke();
+    ctx.restore();
   }
 
   /* (no strike tick on the main canvas — strike detail lives in the inset) */
