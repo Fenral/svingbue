@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <meta name="theme-color" content="#07060C" />
-<title>Impact Studio · cand02 · miniskjerm-variant</title>
+<title>Impact Studio</title>
 <style>
   /* P3 "Ultraviolet Ember" tokens mirrored locally (source: sa-p3.css) */
   :root{
@@ -92,7 +92,7 @@
   }
   .inset .eyebrow{
     display:flex;align-items:center;justify-content:space-between;
-    padding:7px 10px 3px;font-size:10px;font-weight:700;letter-spacing:.14em;
+    padding:7px 36px 3px 10px;font-size:10px;font-weight:700;letter-spacing:.14em;
     color:var(--gold);white-space:nowrap;
   }
   .inset .eyebrow .st{font-family:var(--font-mono);font-variant-numeric:tabular-nums;
@@ -107,10 +107,23 @@
   .inset .eyebrow .ez{display:none}   /* compact inset → short title always */
   @media (max-width:620px){ #insetCv{height:76px}
     .inset .eyebrow{font-size:9px;padding:5px 8px 2px} }
+  /* maksimer: innsetet blir inspeksjonsmodus i full scene (lavpunkt + divot) */
+  .inset__max{position:absolute;right:2px;top:0;width:36px;height:26px;border:0;cursor:pointer;
+    background:transparent;color:var(--gold);font-size:15px;line-height:1;opacity:.85;padding:0;z-index:6;
+    font-family:inherit}
+  .inset--max{top:8px;left:8px;right:8px;bottom:8px;width:auto;max-width:none;
+    display:flex;flex-direction:column}
+  /* i maksimert modus: klar av høyre-railen (view/club-toggles beholdes) */
+  .inset--max .inset__max{right:72px;top:6px;width:44px;height:36px;font-size:17px}
+  .inset--max #insetCv{flex:1 1 auto;height:auto!important;min-height:0}
+  .inset--max .eyebrow{font-size:13px;padding:10px 132px 4px 14px}
+  .inset--max .eyebrow .ez{display:inline}
 
   /* ---------- controls ---------- */
-  .controls{flex:0 0 auto;height:calc(92px + env(safe-area-inset-bottom));
-    padding:6px 10px calc(6px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:6px}
+  /* compressed control block: chips + slider flush mot safe-area (HIG: siste
+     kontroll like over hjem-indikatoren) — frigjør høyde til scenen */
+  .controls{flex:0 0 auto;height:calc(84px + env(safe-area-inset-bottom));
+    padding:4px 10px calc(4px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:4px}
   .chips{display:flex;gap:8px;height:44px}
   .chip{
     flex:1 1 0;min-width:0;border-radius:12px;background:var(--surface);cursor:pointer;
@@ -156,7 +169,7 @@
     .card .val{font-size:15px}
     .card .lab{font-size:10px;letter-spacing:.04em}
     .chip .cl{font-size:10px;letter-spacing:.03em}
-    .controls{height:calc(86px + env(safe-area-inset-bottom))}
+    .controls{height:calc(80px + env(safe-area-inset-bottom))}
     .orb{width:52px;min-height:54px}
     .orb svg{width:34px;height:30px}
   }
@@ -195,6 +208,7 @@
       <div class="eyebrow"><span>STRIKE<span class="ez"> · CONTACT ZONE</span></span>
         <span class="st"><em id="insetQual">PURE</em>&nbsp;·&nbsp;<span id="insetMm">−20 mm</span></span></div>
       <canvas id="insetCv"></canvas>
+      <button id="insetMax" class="inset__max" aria-label="Inspiser kontaktsonen">⤢</button>
     </div>
     <div class="rail">
       <button class="orb" id="btnView" aria-label="Bytt kameravinkel">
@@ -253,77 +267,29 @@
     <p>Rotate your phone to landscape</p>
   </div>
 
-<script>
-"use strict";
+<script type="module">
 /* ============================================================
- * ENGINE (trimmed inline copy — source of truth:
- * swing-parameters-and-impact.js @ repo root. Keep in sync.)
+ * ENGINE — imported directly from the production module.
  * Z-up world: +X target line, +Y away from face-on camera, +Z up.
  * ============================================================ */
-const RADIUS = 1.20, BALL_R = 0.0213;
-const SWEEP_RAD = 48 * Math.PI / 180;
+import { RADIUS, BALL_RADIUS_M as BALL_R, SWEEP_RAD, LP_IDEAL,
+         planeBasis, effectiveLpx, lpWorld, arcPosition, thetaAtImpact,
+         tangentAt, deriveImpact, clubBallContact, strikeQuality }
+  from '../../swing-parameters-and-impact.js';
+import haptics from '../../sa-haptics.js';
 const d2r = d => d * Math.PI / 180, r2d = r => r * 180 / Math.PI;
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 
-function planeBasis(planeAngle, swingDir){
-  const phi = d2r(planeAngle), psi = d2r(-swingDir);
-  return {
-    u: { x: Math.cos(psi), y: Math.sin(psi), z: 0 },
-    m: { x: -Math.sin(psi) * Math.cos(phi), y: Math.cos(psi) * Math.cos(phi), z: Math.sin(phi) },
-  };
-}
-function effectiveLpx(s){
-  const perDeg = s.radius * Math.cos(d2r(s.planeAngle)) * (Math.PI / 180);
-  return s.lowPoint.x - s.swingDirection * perDeg;
-}
-function thetaAtImpact(s){ return Math.asin(clamp(-effectiveLpx(s) / s.radius, -0.999, 0.999)); }
-function lpWorld(s){
-  const psi = d2r(-s.swingDirection), phi = d2r(s.planeAngle);
-  const lpx = effectiveLpx(s), t0 = thetaAtImpact(s);
-  const d = s.radius * (1 - Math.cos(t0)) * Math.cos(phi);
-  return { x: lpx * Math.cos(psi) + d * Math.sin(psi), y: lpx * Math.sin(psi) - d * Math.cos(psi), z: s.lowPoint.z };
-}
-function arcPosition(theta, s){
-  const { u, m } = planeBasis(s.planeAngle, s.swingDirection);
-  const r = s.radius, sT = Math.sin(theta), cT = Math.cos(theta), lp = lpWorld(s);
-  return { x: lp.x + r*sT*u.x + r*(1-cT)*m.x, y: lp.y + r*sT*u.y + r*(1-cT)*m.y, z: lp.z + r*sT*u.z + r*(1-cT)*m.z };
-}
-function tangentAt(theta, s){
-  const { u, m } = planeBasis(s.planeAngle, s.swingDirection);
-  const r = s.radius;
-  return { x: r*Math.cos(theta)*u.x + r*Math.sin(theta)*m.x,
-           y: r*Math.cos(theta)*u.y + r*Math.sin(theta)*m.y,
-           z: r*Math.cos(theta)*u.z + r*Math.sin(theta)*m.z };
-}
-function deriveImpact(s){
-  const t = thetaAtImpact(s), phi = d2r(s.planeAngle);
-  const vhPar = Math.cos(t), vhPerp = -Math.sin(t) * Math.cos(phi), vz = Math.sin(t) * Math.sin(phi);
-  return { attackAngle: r2d(Math.atan2(vz, Math.hypot(vhPar, vhPerp))),
-           clubPath: s.swingDirection + r2d(Math.atan2(vhPerp, vhPar)) };
-}
-function clubBallContact(s){
-  const phi = d2r(s.planeAngle), r = s.radius;
-  const t = Math.asin(clamp(-effectiveLpx(s) / r, -0.999, 0.999));
-  const clubZ = s.lowPoint.z + r * (1 - Math.cos(t)) * Math.sin(phi);
-  return { clubZ, offset: clubZ - BALL_R, theta: t };
-}
+/* presentation helper (NOT engine output): where the arc crosses z = 0 */
 function groundCrossingTheta0(s){
   // z(theta)=lp.z + r(1-cos theta)·sin(phi) = 0  → real only when lp.z < 0
   const cosT0 = 1 + s.lowPoint.z / (s.radius * Math.sin(d2r(s.planeAngle)));
   if (cosT0 >= 1 || cosT0 <= -1) return null;
   return Math.acos(cosT0);
 }
-const LP_AHEAD_MIN = 0.02, LP_AHEAD_MAX = 0.15;
-function strikeQuality(s){
-  const ct = clubBallContact(s), h = ct.clubZ, xLP = effectiveLpx(s), R = BALL_R;
-  const lpAhead = xLP >= LP_AHEAD_MIN && xLP <= LP_AHEAD_MAX;
-  if (h < -0.025) return { band:'Duff',  col:'var(--bad)' };
-  if (h < 0)      return { band:'Fat',   col:'var(--warn)' };
-  if (h <= 1.0*R) return lpAhead ? { band:'Pure', col:'var(--good)' }
-                  : (xLP < 0 ? { band:'Fat', col:'var(--warn)' } : { band:'Thin', col:'var(--warn)' });
-  if (h <= 1.4*R) return { band:'Thin',  col:'var(--warn)' };
-  return { band:'Whiff', col:'var(--bad)' };
-}
+/* engine band → P3 colour language (the WORD is the engine's; colour is UI) */
+const BAND_COL = { Pure:'var(--good)', Thin:'var(--warn)', Fat:'var(--warn)',
+                   Duff:'var(--bad)', Whiff:'var(--bad)' };
 /* pinhole projection (engine `project`) */
 function buildCamera(cam, w, h){
   const sub=(a,b)=>({x:a.x-b.x,y:a.y-b.y,z:a.z-b.z});
@@ -358,7 +324,7 @@ const PARAMS = {
   arc:   { min:-5,  max:5,  step:0.1, def:0,    bipolar:true,  hue:'var(--depth)',
            fmt:v=>fmtSigned(v,1)+' cm' },
 };
-const LP_STANCE = 10.5;                       // cm foran stance-senter
+const LP_STANCE = LP_IDEAL * 100;             // cm foran stance-senter (motorens Pure-ideal)
 /* club presets: plane auto-set on switch (freely adjustable afterwards).
  * Driver = ball on a tee. MOCK STAND-IN: final driver physics (strike vs
  * teed ball, expected up-strike) must come from the production engine.
@@ -379,7 +345,7 @@ const HEAD_MM = { iron: 102, driver: 96 };
 /* forward shaft lean at address ("delofting"): iron leans 6° toward target */
 const LEAN = { iron: 6 * Math.PI / 180, driver: 0 };
 const TEE_H = 0.030;                          // tee height, metres
-const state = { view:'face', sel:'low', plane:60, dir:0, low:0, arc:0, club:'iron' };
+const state = { view:'face', sel:'low', plane:60, dir:0, low:0, arc:0, club:'iron', inspect:false };
 const ballLift = () => state.club === 'driver' ? TEE_H : 0;
 function engineState(){
   return { radius:RADIUS, planeAngle:state.plane, swingDirection:state.dir,
@@ -409,7 +375,7 @@ function resize(){
 addEventListener('resize', resize);
 
 /* outcome feedback: pulse only what changed */
-let prevOut = null, pulseTimer = 0;
+let prevOut = null, pulseTimer = 0, prevBand = '';
 function updateOutcomes(){
   const s = engineState();
   const imp = deriveImpact(s), ct = clubBallContact(s), q = strikeQuality(s);
@@ -420,13 +386,16 @@ function updateOutcomes(){
   $('vAttack').textContent = fmtNum(out.attack, 1) + '°';
   $('vPath').textContent = fmtNum(out.path, 1) + '°';
   /* strike lives in the inset eyebrow */
-  let band = q.band, col = q.col;
+  let band = q.band, col = BAND_COL[q.band];
   if (state.club === 'driver' && ct.clubZ >= -0.025){
     /* mock stand-in driver bands, centred on the face middle */
     if (Math.abs(faceOff) <= 0.008){ band = 'Pure'; col = 'var(--good)'; }
     else if (faceOff > 0.008){ band = 'High'; col = 'var(--warn)'; }
     else { band = 'Low'; col = 'var(--warn)'; }
   }
+  /* haptisk båndskifte: kroppen får beskjed når kvaliteten tipper */
+  if (prevBand && band !== prevBand) haptics.band('strike');
+  prevBand = band;
   const qEl = $('insetQual'); qEl.textContent = band.toUpperCase(); qEl.style.color = col;
   const mm = Math.round(Math.abs(faceOff * 1000));
   $('insetMm').textContent = (mm === 0 ? '0' : (faceOff < 0 ? MINUS : '+') + mm) + ' mm';
@@ -493,12 +462,24 @@ function selectParam(key){
   range.style.setProperty('--slider-hue', p.hue);
   fillEl.style.background = p.hue;
   range.min = p.min; range.max = p.max; range.step = p.step; range.value = state[key];
+  prevSliderVal = state[key];
   layoutSlider(); kick();
 }
 document.querySelectorAll('.chip').forEach(c =>
-  c.addEventListener('click', () => selectParam(c.dataset.p)));
+  c.addEventListener('click', () => { haptics.tick('chip'); selectParam(c.dataset.p); }));
+let prevSliderVal = null;
 range.addEventListener('input', () => {
-  state[state.sel] = parseFloat(range.value);
+  const nv = parseFloat(range.value);
+  const p = PARAMS[state.sel];
+  /* haptiske detents: nullhakket og endestoppene — aldri kontinuerlig */
+  if (prevSliderVal !== null){
+    if (p.bipolar && ((prevSliderVal < 0 && nv >= 0) || (prevSliderVal > 0 && nv <= 0)))
+      haptics.tick('zero');
+    else if ((nv <= p.min && prevSliderVal > p.min) || (nv >= p.max && prevSliderVal < p.max))
+      haptics.tick('end');
+  }
+  prevSliderVal = nv;
+  state[state.sel] = nv;
   vecFlashAt = performance.now();
   updateChipValues(); layoutSlider(); updateOutcomes(); crossViewHint(); kick();
 });
@@ -512,6 +493,7 @@ $('resetBtn').addEventListener('click', () => {
   for (const k in PARAMS) state[k] = PARAMS[k].def;
   state.plane = PLANE_PRESET[state.club];
   range.value = state[state.sel];
+  haptics.impact('light');
   updateChipValues(); layoutSlider(); updateOutcomes(); kick();
 });
 function setClub(c){
@@ -526,10 +508,24 @@ function setClub(c){
   vecFlashAt = performance.now();
   updateChipValues(); layoutSlider(); updateOutcomes(); kick();
 }
-$('btnClub').addEventListener('click', () => setClub(state.club === 'iron' ? 'driver' : 'iron'));
-$('btnView').addEventListener('click', () => setView(state.view === 'face' ? 'dtl' : 'face'));
+$('btnClub').addEventListener('click', () => { haptics.impact('light'); setClub(state.club === 'iron' ? 'driver' : 'iron'); });
+$('btnView').addEventListener('click', () => { haptics.impact('light'); setView(state.view === 'face' ? 'dtl' : 'face'); });
+/* maksimer: innsetet tar hele scenen (inspeksjonsmodus — lavpunkt/divot);
+   chips + slider står urørt. Sentrert innramming skjer i drawInset. */
+$('insetMax').addEventListener('click', () => {
+  setInspect(!state.inspect);
+  haptics.impact('light');
+});
+function setInspect(on){
+  state.inspect = on;
+  $('inset').classList.toggle('inset--max', on);
+  $('insetMax').textContent = on ? '⤡' : '⤢';
+  IW = 0;                                       // re-measure the inset canvas
+  kick();
+}
 function setView(v){
   state.view = v;
+  if (v === 'dtl' && state.inspect) setInspect(false);   // inspeksjon er Face On-eid
   /* camera dot orbits the ball: face-on = beside (3 o'clock), DTL = behind (6 o'clock) */
   $('camG').style.transform = v === 'face' ? 'rotate(-90deg)' : 'rotate(0deg)';
   $('viewCap').textContent = v === 'face' ? 'FACE ON' : 'DTL';
@@ -697,6 +693,12 @@ function drawInset(){
     x0 = Math.min(x0, arcPosition(-t0g, s).x - 0.04);
     x1 = Math.max(x1, arcPosition(t0g, s).x + 0.05);
   }
+  if (state.inspect){
+    /* maksimert: sentrer kontaktklyngen (ball + entry→low→exit) i rammen
+       så handlingen aldri klumper seg i venstre kant */
+    const mid = (x0 + x1) / 2, half = Math.max(0.27, (x1 - x0) * 0.62);
+    x0 = mid - half; x1 = mid + half;
+  }
   const sc = IW / (x1 - x0);
   const gy = IH * 0.66;
   const EXAG = 6, CAP = 0.035;
@@ -851,6 +853,7 @@ function drawInset(){
   }
   function iLabel(txt, x, y, col, size, align){
     ictx.save();
+    if (state.inspect) size = size * 1.6;       // fullscreen inspection → readable type
     ictx.font = '700 ' + size + 'px -apple-system,"Segoe UI",Roboto,sans-serif';
     ictx.textAlign = align || 'center'; ictx.textBaseline = 'middle';
     ictx.strokeStyle = 'rgba(5,4,10,.9)'; ictx.lineWidth = 3; ictx.lineJoin = 'round';
@@ -922,9 +925,9 @@ const CSS = n => getComputedStyle(document.documentElement).getPropertyValue(n).
  * circle with no shape change at the bottom (owner decision). Depth
  * legibility lives in the inset, which keeps its own magnification. */
 function faceMap(){
-  const winM = W >= 700 ? 1.15 : 0.95;
+  const winM = W >= 700 ? 0.80 : 0.70;          // tight window: the teaching zone fills the frame
   const scale = W / winM;                       // px per metre
-  const bx = W * 0.52, gy = H * 0.71;           // scene sits right of the mini screen
+  const bx = W * 0.62, gy = H * 0.71;           // action lives right of the mini screen
   return { scale, bx, gy, K: 1,
     X: xm => bx + xm * scale,
     Y: zm => gy - zm * scale };
@@ -1199,7 +1202,7 @@ function drawFace(t){
     ctx.closePath(); ctx.fillStyle = A.gold; ctx.fill();
     ctx.restore();
     const ly = Math.max(y + 24, gy + 24);       // keep the label in the ground band
-    label('LOW POINT', x, ly, A.gold, W >= 700 ? 10 : 9, 'center', false, alphaLP * 0.9);
+    label('LOW POINT', x, ly, A.gold, W >= 700 ? 12 : 10, 'center', false, alphaLP * 0.9);
     if (state.sel === 'low')
       label(fmtSigned(lpx * 100, 1) + ' cm', x, ly + 13, A.ink, 10, 'center', true, 1);
   }
@@ -1412,7 +1415,7 @@ function drawDtl(t){
       if (state.sel === 'low')
         /* dodge below the arc tail so the label never crosses arc or ball */
         label('LOW POINT ' + fmtSigned(effectiveLpx(s) * 100, 1) + ' cm',
-              clamp(lp.x - 24, 150, W - 10), Math.min(lp.y + 40, H - 12),
+              clamp(lp.x - 24, Math.max(170, W * 0.19), W - 10), Math.min(lp.y + 40, H - 12),
               A.gold, 11, 'right');
     }
   }
