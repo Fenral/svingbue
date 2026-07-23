@@ -22,7 +22,8 @@
   html,body{height:100%;overflow:hidden;overscroll-behavior:none}
   body{
     background:var(--bg);color:var(--ink);font-family:var(--font-ui);
-    display:flex;flex-direction:column;height:100dvh;user-select:none;-webkit-user-select:none;
+    /* height:100% (ikke dvh): dvh desynker i WKWebView etter bakgrunn/forgrunn */
+    display:flex;flex-direction:column;height:100%;user-select:none;-webkit-user-select:none;
     padding:env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left);
   }
 
@@ -373,6 +374,16 @@ function resize(){
   layoutSlider(); kick();
 }
 addEventListener('resize', resize);
+/* WKWebView kan relayoute uten resize-event (app-bytte, orientering):
+   re-mål canvasene når scenen faktisk endrer størrelse, og ved retur */
+if (typeof ResizeObserver === 'function'){
+  const ro = new ResizeObserver(() => resize());
+  ro.observe($('stage'));
+}
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) requestAnimationFrame(() => resize());
+});
+addEventListener('pageshow', () => requestAnimationFrame(() => resize()));
 
 /* outcome feedback: pulse only what changed */
 let prevOut = null, pulseTimer = 0, prevBand = '';
