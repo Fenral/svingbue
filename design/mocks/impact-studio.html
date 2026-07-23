@@ -980,17 +980,21 @@ function coreLine(x1, y1, x2, y2, color, width, glow, alpha){
 const CSS = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 
 /* ============================================================ FACE ON
- * Impact-centred reframe: uniform circular mapping — the same px/m scale in
- * x and z, above and below ground, so the swing arc renders as a TRUE
- * circle with no shape change at the bottom (owner decision). Depth
- * legibility lives in the inset, which keeps its own magnification. */
+ * Impact-centred reframe with UNIFORM vertical pedagogical gain (owner
+ * decision, replaces the true-circle mapping): x stays mm-true (ball,
+ * low point, entry/exit, divot length against the stance), while ALL
+ * heights/slopes are amplified by the same PED_K — attack/path changes
+ * read clearly, the ellipse stays smooth with no shape change at the
+ * bottom, and comparisons stay monotone. The NUMBERS are the engine's;
+ * only the screen's vertical yardstick is stretched. */
+const PED_K = 1.7;
 function faceMap(){
   const winM = W >= 700 ? 0.80 : 0.70;          // tight window: the teaching zone fills the frame
   const scale = W / winM;                       // px per metre
   const bx = W * 0.62, gy = H * 0.71;           // action lives right of the mini screen
-  return { scale, bx, gy, K: 1,
+  return { scale, bx, gy, K: PED_K,
     X: xm => bx + xm * scale,
-    Y: zm => gy - zm * scale };
+    Y: zm => gy - zm * PED_K * scale };
 }
 function drawFace(t){
   const s = engineState();
