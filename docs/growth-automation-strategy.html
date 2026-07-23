@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Flightglass — Growth &amp; Automation Strategy</title>
+<style>
+  :root{
+    --ink:#07060C; --ink2:#100C1A; --card:#141021; --line:#2a2338;
+    --glass:#F5F2ED; --muted:#a49db8; --trace:#FF8A4D; --violet:#9D8BFF;
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:radial-gradient(120% 80% at 50% -10%,#1a1330 0%,var(--ink) 60%);
+    color:var(--glass);font-family:var(--sans);line-height:1.55;
+    -webkit-font-smoothing:antialiased;padding:env(safe-area-inset-top) 0 5rem}
+  .wrap{max-width:760px;margin:0 auto;padding:0 1.15rem}
+  header{padding:3.2rem 0 1.4rem;text-align:center}
+  .kicker{font-family:var(--mono);font-size:.72rem;letter-spacing:.28em;
+    text-transform:uppercase;color:var(--trace);margin:0 0 1rem}
+  h1{font-size:clamp(1.9rem,6vw,2.7rem);line-height:1.08;margin:.2rem 0 .5rem;font-weight:700}
+  h1 .em{color:var(--trace)}
+  .sub{color:var(--muted);font-size:1.02rem;max-width:36ch;margin:.6rem auto 0}
+  .date{font-family:var(--mono);font-size:.72rem;color:var(--muted);margin-top:1.1rem;letter-spacing:.1em}
+  .tldr{background:linear-gradient(180deg,var(--card),#100c1c);border:1px solid var(--line);
+    border-radius:18px;padding:1.3rem 1.25rem;margin:1.8rem 0}
+  .tldr h2{font-size:.74rem;letter-spacing:.2em;text-transform:uppercase;color:var(--violet);
+    margin:0 0 .8rem;font-family:var(--mono)}
+  .tldr ol{margin:0;padding-left:1.15rem}
+  .tldr li{margin:.5rem 0;color:#e7e3f0}
+  .tldr b{color:var(--glass)}
+  .q{background:var(--card);border:1px solid var(--line);border-radius:18px;
+    padding:1.25rem 1.2rem;margin:1rem 0;position:relative;overflow:hidden}
+  .q::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--trace);opacity:.8}
+  .q .n{font-family:var(--mono);font-size:.72rem;color:var(--trace);letter-spacing:.15em}
+  .q h3{margin:.25rem 0 .7rem;font-size:1.16rem;line-height:1.25}
+  .goal{display:flex;gap:.55rem;align-items:flex-start;background:rgba(157,139,255,.08);
+    border:1px solid rgba(157,139,255,.25);border-radius:11px;padding:.6rem .7rem;margin:0 0 .75rem}
+  .goal .tag{font-family:var(--mono);font-size:.63rem;letter-spacing:.12em;color:var(--violet);
+    text-transform:uppercase;white-space:nowrap;padding-top:.15rem}
+  .goal p{margin:0;font-size:.92rem;color:#e7e3f0}
+  .q p.body{margin:.5rem 0 0;color:#cfc9dd;font-size:.96rem}
+  .q .punch{color:var(--glass);font-weight:600}
+  .q ul{margin:.6rem 0 0;padding-left:1.1rem;color:#cfc9dd;font-size:.94rem}
+  .q ul li{margin:.28rem 0}
+  .no{color:#ff7a7a}
+  table{width:100%;border-collapse:collapse;margin:.8rem 0 0;font-size:.86rem}
+  th,td{text-align:left;padding:.5rem .5rem;border-bottom:1px solid var(--line)}
+  th{font-family:var(--mono);font-size:.66rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+  td.num,th.num{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums}
+  .win{color:var(--trace);font-weight:600}
+  .section-label{font-family:var(--mono);font-size:.72rem;letter-spacing:.2em;text-transform:uppercase;
+    color:var(--muted);margin:2.4rem 0 .3rem;text-align:center}
+  footer{text-align:center;color:var(--muted);font-size:.82rem;margin-top:2.5rem;
+    border-top:1px solid var(--line);padding-top:1.4rem}
+  footer a{color:var(--trace);text-decoration:none}
+  .pill{display:inline-block;font-family:var(--mono);font-size:.66rem;letter-spacing:.08em;
+    background:rgba(255,138,77,.12);border:1px solid rgba(255,138,77,.35);color:var(--trace);
+    border-radius:999px;padding:.2rem .6rem;margin:.15rem .2rem 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <p class="kicker">Flightglass · StrikeArc</p>
+    <h1>Growth, Automation &amp; <span class="em">Realistic Revenue</span></h1>
+    <p class="sub">A decision-ready answer to nine owner questions — built on the honest engine, not around it.</p>
+    <p class="date">2026-07-21 · autonomous strategy pass</p>
+  </header>
+
+  <div class="q" style="border-color:rgba(255,138,77,.4)">
+    <span class="n">v1.1 · revised</span>
+    <h3>Read the addendum alongside this</h3>
+    <p class="body">A later deep-research + red-team pass corrected six things. The three that most change the plan: <b>pricing direction is reversed</b> — the risk is <em>over</em>-pricing, not under-pricing (go annual-first / lifetime-forward, test price <em>down</em> toward the $8–15/mo band); <b>shareable shot-cards are build #1</b>, not a later feature; and <b>installs must be derived from a funnel</b>, not assumed. Full corrections + verified competitor pricing → <a href="growth-strategy-addendum.md" style="color:var(--trace)">growth-strategy-addendum.md</a>.</p>
+  </div>
+
+  <div class="tldr">
+    <h2>The short version</h2>
+    <ol>
+      <li>The <b>product is good; the gap is distribution and retention</b> — not the engine. Nothing here changes physics.</li>
+      <li><b>Demand is searchable:</b> "why do I slice" is the #1 amateur golf question, and casual/off-course golf is up <b>40%+ since 2019</b>.</li>
+      <li><b>One production → everywhere:</b> make the app produce its own shareable content, caption it with one AI tool, fan out to TikTok + Reels + Shorts from one scheduler.</li>
+      <li><b>1M NOK/yr net is a top-~5% outcome</b> (only 4.6% of new sub-apps reach $10k MRR in 2 yrs) — reachable, not automatic.</li>
+      <li><b>Biggest blocker:</b> there is still <b>no native iOS/Android project</b> — nothing to send installs into yet.</li>
+      <li><b>Retention low-hanging fruit is cheap</b> because the engine + Academy XP already exist: shot-cards, Diagnose, streaks, seasonal packs.</li>
+      <li><b>Big-studio polish is buyable in 2026</b> — Rive/Lottie, Superwall, Mobbin, and the Figma/Higgsfield tools already wired in here.</li>
+    </ol>
+  </div>
+
+  <p class="section-label">The nine questions</p>
+
+  <div class="q">
+    <span class="n">Q1</span>
+    <h3>What people search for in golf</h3>
+    <div class="goal"><span class="tag">Målbilde</span><p>A list of high-intent "curiosity" phrases + 5 winning formats, each mapped to an app surface.</p></div>
+    <p class="body"><span class="punch">The slice is the centre of gravity.</span> "Why does my ball go right / how to stop slicing" is the single most common question in amateur golf — and the answer (face vs. path at impact) is exactly what your engine draws live. Winning formats: hook-first myth-busters, before/after, "so <em>that's</em> why," challenges, relatable.</p>
+  </div>
+
+  <div class="q">
+    <span class="n">Q2</span>
+    <h3>How to resonate more, realistically</h3>
+    <div class="goal"><span class="tag">Målbilde</span><p>One sentence a stranger repeats after 5 seconds + the 3 things only you can honestly own.</p></div>
+    <p class="body"><span class="punch">"Flightglass answers the one question every golfer asks — why did it do that? — with real physics, live."</span> Own: the honest engine, live cause→effect, and "answer your own shot." Resonance comes from <em>legibility</em> of what you have, not new capability.</p>
+    <p class="body"><span class="no">Not this:</span> external TV shots · measuring the real swing · technique coaching. All break the honesty moat.</p>
+  </div>
+
+  <div class="q">
+    <span class="n">Q3</span>
+    <h3>Which social media, and how</h3>
+    <div class="goal"><span class="tag">Målbilde</span><p>One primary engine, one owned funnel, one credibility beachhead — each with a job.</p></div>
+    <ul>
+      <li><b>Primary:</b> short-form vertical video → TikTok + Reels + Shorts (one post, 3× reach). 3–5×/wk.</li>
+      <li><b>Owned:</b> email/waitlist you control + link-in-bio.</li>
+      <li><b>Trust:</b> Reddit / MyGolfSpy / Norwegian PGA — post the explainer, not the app.</li>
+    </ul>
+    <p class="body">The app <span class="punch">is</span> the content studio: the tracer bending live, the Diagnose reveal, an Academy diagram.</p>
+  </div>
+
+  <div class="q">
+    <span class="n">Q4</span>
+    <h3>Make the marketing near-automatic</h3>
+    <div class="goal"><span class="tag">Målbilde</span><p>One batch day/month + ~20 min/week keeps daily presence, ASO tests &amp; lifecycle all running.</p></div>
+    <ul>
+      <li><b>Product makes the content</b> (shareable shot-cards) — the supply that feeds everything.</li>
+      <li><b>Enhance/caption:</b> Submagic (~$20) or OpusClip (~$15); Higgsfield for hero b-roll.</li>
+      <li><b>Fan out:</b> Metricool (free) or Postiz (free self-host) → all platforms on schedule.</li>
+      <li><b>ASO auto-tests:</b> Apple Custom Product Pages + Google Listing Experiments (free).</li>
+      <li><b>Paid, tiny:</b> Apple Search Ads long-tail, $5–10/day. Defer Meta/TikTok to 2027.</li>
+      <li><b>Lifecycle:</b> OneSignal push + auto review-prompts after the aha.</li>
+    </ul>
+    <p class="body"><span class="punch">Stays manual:</span> the hook idea, community replies, reading the data.</p>
+  </div>
+
+  <div class="q">
+    <span class="n">Q5</span>
+    <h3>Potential earnings (net, after store cut)</h3>
+    <div class="goal"><span class="tag">Målbilde</span><p>A transparent model + four scenarios and the lever that moves each.</p></div>
+    <table>
+      <tr><th>Scenario</th><th class="num">Installs/yr</th><th class="num">Net/yr</th></tr>
+      <tr><td>Floor · ASO only</td><td class="num">10k</td><td class="num">~170k NOK</td></tr>
+      <tr><td>Base · engine spinning</td><td class="num">40k</td><td class="num win">~750k NOK</td></tr>
+      <tr><td>Upside · organic hits + paid</td><td class="num">120k</td><td class="num">~2.3M NOK</td></tr>
+      <tr><td>Breakout · viral + funded</td><td class="num">400k</td><td class="num">~8M NOK</td></tr>
+    </table>
+    <p class="body">At 4% install→paid, ~380 NOK net/payer. <span class="punch">Conversion &amp; price move revenue more than installs — and are cheaper to move.</span> Test them first (Superwall A/B).</p>
+  </div>
+
+  <div class="q">
+    <span class="n">Q6</span>
+    <h3>What blocks &gt; a million</h3>
+    <div class="goal"><span class="tag">Målbilde</span><p>The five real constraints, ranked, each with its unlock.</p></div>
+    <ul>
+      <li><b>1. No native app yet</b> — no iOS/Android project to acquire installs into. <em>First domino.</em></li>
+      <li><b>2. Cold-start invisibility</b> — seed reviews + content engine.</li>
+      <li><b>3. Aha is one-time</b> — needs a recurring reason to return (Diagnose, seasonal).</li>
+      <li><b>4. Solo bandwidth</b> — the automation stack exists to solve exactly this.</li>
+      <li><b>5. Price left on the table</b> — ship 99/399/999, then A/B forever.</li>
+    </ul>
+    <p class="body"><span class="punch">Not the blocker:</span> the engine, the design, the honesty. Those are assets.</p>
+  </div>
+
+  <div class="q">
+    <span class="n">Q7</span>
+    <h3>Download-and-test, or real use?</h3>
+    <div class="goal"><span class="tag">Målbilde</span><p>Honest classification + the changes that move it toward habit.</p></div>
+    <p class="body">Today it leans <span class="punch">"download → get the aha → churn."</span> A revelation is great for acquisition, finite for retention. Design it as <em>a tool you consult</em> (a weather app for your ball flight) — realistic target: consult weekly-to-monthly, driven by Diagnose-after-every-range-session + seasonal content. Truth signal: W4 retention of activated users ≥ 10–15%.</p>
+  </div>
+
+  <div class="q">
+    <span class="n">Q8</span>
+    <h3>Low-hanging retention features</h3>
+    <div class="goal"><span class="tag">Målbilde</span><p>≤6 features scored by effort × impact, all inside the honest lane. (Recommendations — no shipping code touched.)</p></div>
+    <ul>
+      <li><b>1. Shareable shot-cards</b> — low effort; every user becomes a content node. <span class="pill">growth + retention</span></li>
+      <li><b>2. "Diagnose my shot"</b> — the #1 search phrase, made interactive; recurring trigger.</li>
+      <li><b>3. Streaks + "Ball Flight Certified"</b> — XP scaffolding already exists.</li>
+      <li><b>4. Seasonal packs</b> — "why your ball dies in October." Counter-seasonal.</li>
+      <li><b>5. Club-gapping "your bag"</b> · <b>6. Widget + tasteful push.</b></li>
+    </ul>
+  </div>
+
+  <div class="q">
+    <span class="n">Q9</span>
+    <h3>Tools for big-studio polish</h3>
+    <div class="goal"><span class="tag">Målbilde</span><p>A buyable "pro-polish kit" mapped to surfaces — turning "test &amp; see" into a short shopping list.</p></div>
+    <ul>
+      <li><b>Motion:</b> Rive (real-time, GPU) for the tracer/Diagnose/mastery moments; Lottie for lighter bits.</li>
+      <li><b>Paywall:</b> Superwall on RevenueCat — no-code A/B, moves revenue week one.</li>
+      <li><b>Patterns:</b> Mobbin · <b>Design:</b> Figma + SF Symbols · <b>Feel:</b> haptics + sound.</li>
+      <li><b>Store:</b> AppLaunchpad/Rotato + a Higgsfield hero video.</li>
+    </ul>
+    <p class="body"><span class="punch">Already wired into this environment:</span> Higgsfield, Figma, Vercel, Supabase, Stripe — a lot of the kit is one authorization away. Caution: polish serves the truth, never decorates it.</p>
+  </div>
+
+  <footer>
+    <p>Full analysis, sources &amp; appendices → <a href="growth-automation-strategy.md">growth-automation-strategy.md</a></p>
+    <p>Builds on <a href="monetization-strategy.md">monetization-strategy.md</a> &amp; <a href="marketing-films-higgsfield.md">marketing-films-higgsfield.md</a>. Recommends only — no shipping code or protected physics changed.</p>
+  </footer>
+
+</div>
+</body>
+</html>
