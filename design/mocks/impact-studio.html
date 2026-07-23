@@ -980,21 +980,24 @@ function coreLine(x1, y1, x2, y2, color, width, glow, alpha){
 const CSS = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 
 /* ============================================================ FACE ON
- * Impact-centred reframe with UNIFORM vertical pedagogical gain (owner
- * decision, replaces the true-circle mapping): x stays mm-true (ball,
- * low point, entry/exit, divot length against the stance), while ALL
- * heights/slopes are amplified by the same PED_K — attack/path changes
- * read clearly, the ellipse stays smooth with no shape change at the
- * bottom, and comparisons stay monotone. The NUMBERS are the engine's;
- * only the screen's vertical yardstick is stretched. */
-const PED_K = 1.7;
+ * Impact-centred reframe with HYBRID vertical gain (owner decision):
+ * the round ball, the blush and the inset are absolute mm yardsticks,
+ * so the CONTACT BAND (|z| ≤ ~Z0) stays exactly 1:1 — the arc crosses
+ * the ball precisely where the strike is measured, consistent across
+ * both screens. The ARMS, which nothing measures against, ramp
+ * smoothly up to PED_K× for legible attack/path drama:
+ *   f(z) = K·z − (K−1)·Z0·tanh(z/Z0)   (≈ z near 0, slope K far out,
+ * C∞-smooth, antisymmetric — no kink anywhere). Numbers stay engine-true. */
+const PED_K = 1.7, PED_Z0 = 0.055;
+const pedF  = z => PED_K * z - (PED_K - 1) * PED_Z0 * Math.tanh(z / PED_Z0);
+const pedKz = z => PED_K - (PED_K - 1) / Math.cosh(z / PED_Z0) ** 2;
 function faceMap(){
   const winM = W >= 700 ? 0.80 : 0.70;          // tight window: the teaching zone fills the frame
   const scale = W / winM;                       // px per metre
   const bx = W * 0.62, gy = H * 0.71;           // action lives right of the mini screen
-  return { scale, bx, gy, K: PED_K,
+  return { scale, bx, gy, K: PED_K, Kz: pedKz,
     X: xm => bx + xm * scale,
-    Y: zm => gy - zm * PED_K * scale };
+    Y: zm => gy - pedF(zm) * scale };
 }
 function drawFace(t){
   const s = engineState();
@@ -1257,7 +1260,7 @@ function drawFace(t){
     }
     const impactIdx = segPts.length - 1;
     const tv = tangentAt(thImp, s);
-    const zK = tv.z * M.K;
+    const zK = tv.z * M.Kz(ct.clubZ);   // lokal gain ved kontakt: sann retning ved ballen
     const len2 = Math.hypot(tv.x, zK) || 1;
     const dx = tv.x / len2, dz = zK / len2;
     const p0 = segPts[segPts.length - 1];
