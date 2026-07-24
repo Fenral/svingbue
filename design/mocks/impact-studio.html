@@ -1307,7 +1307,7 @@ function drawFace(t){
       ctx.restore();
     }
     const pe = segPts[segPts.length - 1];
-    plateLabel('CLUB ATTACK ' + fmtNum(imp.attackAngle, 1) + '°',
+    plateLabel('ATTACK ANGLE ' + fmtNum(imp.attackAngle, 1) + '°',
           Math.min(pe.x + 16, W - 250), Math.max(pe.y - 22, 20), A.attack,
           W >= 700 ? 17 : 14, 'left', fa);
   }
