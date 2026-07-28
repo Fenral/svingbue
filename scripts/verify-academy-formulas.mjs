@@ -73,6 +73,17 @@ const RULES = [
     says: 'the deleted 1,500-9,000 rpm range (there is no floor)',
     instead: 'Spin goes continuously to zero with spin loft. Only the 9,000 rpm display ceiling remains.',
   },
+  {
+    /* Fifth dead signature, added 2026-07-28. The recalibration replaced the
+       saturating power-law carry fit with a monotone quadratic. The old form
+       survived the first purge because it lived in content files rather than
+       in the engine, and because academy-carry-content.test.mjs asserted it
+       was PRESENT — a green gate defending the deleted physics. */
+    id: 'carry-power-law',
+    pattern: /\^\s*1\.389|\/\s*210\s*\)\s*\^\s*6/g,
+    says: 'the deleted saturating carry fit (0.232 · v^1.389 ÷ [1 + (v/210)^6])',
+    instead: 'Carry is carryBallSpeedFit = 0.9205937574433162·v + 0.004072298666112809·v², scaled by sqrt(clamp(launch/10,0,1)) below 10° launch. There is no denominator, no saturation and no high-speed rollover — d(carry)/dv is positive for every v ≥ 0 by construction. Teach that each extra mph of ball speed buys MORE carry, not less, and never quote a turnover speed.',
+  },
 
   /* ── PROSE FORMS ──────────────────────────────────────────────────────────
      The rules above catch the formulas as written. They do NOT catch the same
