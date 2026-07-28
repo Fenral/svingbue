@@ -37,6 +37,14 @@
       "tolerance": 0.02
     },
     {
+      "id": "attack-weight-is-flat-across-lofts",
+      "taughtIn": "academy.html",
+      "note": "Seeded after the author of the launch-angle migration got this wrong in shipping text. Attack angle moves launch by exactly 0.25 deg per deg at EVERY loft — a driver and a wedge respond identically. It is tempting to read the growing loft coefficient as 'attack matters more at low loft' and then to explain real-world driver AoA importance with it. That inference is false: what changes with loft is the loft term, never the attack term. This claim measures the attack slope at a driver loft and at a wedge loft and asserts the difference is zero.",
+      "expression": "(function(){const L=(dl,aa)=>engine.solveFlight({clubPath:0,faceAngle:0,attackAngle:aa,dynamicLoft:dl,clubSpeed:90}).launchAngle; const slope=dl=>(L(dl,1)-L(dl,-1))/2; return slope(12) - slope(44);})()",
+      "expected": 0,
+      "tolerance": 1e-9
+    },
+    {
       "id": "landing-angle-saturates-below-53",
       "taughtIn": "academy.html",
       "note": "lesson-landing-angle cites 54.35, 57.2 and 60 degrees. The engine saturates below 52.8, so those values cannot be produced by any input. This claim pins the ceiling: a steep, high-spin delivery must still land under 52.8.",
