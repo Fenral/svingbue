@@ -1903,7 +1903,7 @@
       ${rows}
       <p class="sa-sheet__blurb">The advanced model lab is optional and never changes this total.</p>
       <div class="sa-sheet__foot"><button class="sa-sheet__close" data-sheet-close type="button">Close</button></div>`;
-    openSheet(html, { trigger, labelId:'sheet-title' });
+    openSheet(html, { trigger, labelId:'sheet-title', modal:true });
     sheetEl.querySelector('[data-sheet-close]')?.addEventListener('click', () => closeSheet());
   }
   let pendingRouteAnnouncement = null;
@@ -2251,7 +2251,7 @@
       <p class="sa-sheet__rel" style="margin-top:12px"><b>Badges</b></p>
       <div class="msheet-badges">${badges}</div>
       <div class="sa-sheet__foot"><button class="sa-sheet__close" data-sheet-close type="button">Close</button></div>`;
-    openSheet(html, { trigger, labelId:'sheet-title' });
+    openSheet(html, { trigger, labelId:'sheet-title', modal:true });
     const cb = sheetEl.querySelector('[data-sheet-close]'); if (cb) cb.addEventListener('click', () => closeSheet());
   }
   // "How the path works" sheet (path-05): the long intro copy, moved off the first fold.
@@ -2263,7 +2263,7 @@
       <p class="sa-sheet__blurb">Start with the <b>Fundamentals</b> — the five deliveries your hands actually control. Each parameter you master unlocks the ones built on top of it: swing geometry, then the derived numbers, then shot outcomes.</p>
       <p class="sa-sheet__blurb">The <b>Environment</b> set — altitude, wind, temperature — opens once you master <b>Carry</b>. Far-off tiers collapse into a single row you can expand any time; the next lesson within reach is always marked <b>Start here</b>.</p>
       <div class="sa-sheet__foot"><button class="sa-sheet__close" data-sheet-close type="button">Close</button></div>`;
-    openSheet(html, { trigger, labelId:'sheet-title' });
+    openSheet(html, { trigger, labelId:'sheet-title', modal:true });
     const cb = sheetEl.querySelector('[data-sheet-close]'); if (cb) cb.addEventListener('click', () => closeSheet());
   }
 
