@@ -1,6 +1,6 @@
 # WO-E-MOTOR · SPINLOFT → CARRY + CURVE (verifisert diff, klar til innlegging)
 
-> Kjøres i fersk Claude Code-økt · modell: **Sonnet 4.6** · parallelt med S1 (disjunkte filer) · eskaler til Fable 5 kun etter to feilede forsøk
+> Kjøres i fersk Claude Code-økt · modell: **Sonnet 4.6** · parallelt med S1 (disjunkte filer) · eskaler til Opus 5 kun etter to feilede forsøk
 > Forberedelse før innliming: legg `driver-flight.mjs`, `acceptance-harness.mjs` og `impact-flight-E2-reference.js` inn i repoet under `engine/incoming/`
 
 Fysikken er ferdig verifisert utenfor repo. Din jobb er innlegging + tester, ikke design. De tre filene ligger i repoet under `engine/incoming/`.

@@ -6,15 +6,15 @@ export const meta = {
     { title: 'B · Kamerasystem', detail: 'Sonnet høy — scrub + projeksjonsblending', model: 'sonnet' },
     { title: 'C · Paneler', detail: 'Sonnet medium — kontroller mot selector-flaten', model: 'sonnet' },
     { title: 'D · Annotasjoner', detail: 'Sonnet høy — måleregler + enhetstester', model: 'sonnet' },
-    { title: 'E · Motorbinding', detail: 'Fable — ekte motor + ekstremverdi-policy', model: 'fable' },
-    { title: 'F · Dommer', detail: 'Fable fersk kontekst — evidenskrav', model: 'fable' },
+    { title: 'E · Motorbinding', detail: 'Opus 5 — ekte motor + ekstremverdi-policy', model: 'opus' },
+    { title: 'F · Dommer', detail: 'Opus 5 fersk kontekst — evidenskrav', model: 'opus' },
   ],
 };
 
 // ── Ordrens kjøreregler, kodet ──────────────────────────────────────────────
 // - Eneste artefakt som bæres mellom økter (utover koden) er docs/systemkontrakt.md.
-// - Ved eskaleringsutløser: økten stopper, og oppgaven kjøres om igjen på Fable.
-//   Ordren sier "tilbake til Fable" — det er automatisert her, ikke overlatt til
+// - Ved eskaleringsutløser: økten stopper, og oppgaven kjøres om igjen på Opus 5.
+//   Ordren sier "tilbake til Opus 5" — det er automatisert her, ikke overlatt til
 //   en Sonnet-økt som skal vurdere sin egen kompetansegrense.
 // - Dommeren (F) får aldri buildernes kontekst, mål eller score. Egen agent =
 //   fersk kontekst per konstruksjon.
@@ -99,9 +99,9 @@ async function kjorOkt({ id, title, model, effort, oppdrag }) {
     return null;
   }
 
-  // Ordren: "Ved eskaleringsutløser: stopp økten, ikke improviser — tilbake til Fable."
+  // Ordren: "Ved eskaleringsutløser: stopp økten, ikke improviser — tilbake til Opus 5."
   if (r.status === 'escalate') {
-    log(`↑ Økt ${id} eskalerte: ${r.escalation?.reason ?? 'ingen grunn oppgitt'} → kjører om på Fable.`);
+    log(`↑ Økt ${id} eskalerte: ${r.escalation?.reason ?? 'ingen grunn oppgitt'} → kjører om på Opus 5.`);
     const r2 = await agent(
       `${prompt}\n\nDENNE ØKTEN ER ESKALERT. En tidligere kjøring stoppet med:\n` +
         `"${r.escalation?.reason ?? ''}"\n` +
@@ -110,7 +110,7 @@ async function kjorOkt({ id, title, model, effort, oppdrag }) {
         `${KONTRAKT}. Endrer du en flate i kontrakten: oppdater ${KONTRAKT} i samme slengen ` +
         `og skriv beslutningen inn i beslutningsloggen (§9) med begrunnelse og evidens. ` +
         `Kontrakten skal fortsatt kun inneholde verifiserbar systemvirkelighet — ikke planer.`,
-      { label: `okt-${id.toLowerCase()}-fable`, phase: title, model: 'fable', effort: 'high', schema: OKT_SCHEMA },
+      { label: `okt-${id.toLowerCase()}-opus`, phase: title, model: 'opus', effort: 'high', schema: OKT_SCHEMA },
     );
     if (!r2) return null;
     r = r2;
@@ -187,7 +187,7 @@ Testene ligger i scripts/*.test.mjs og kjøres med node --test (repoets konvensj
 });
 
 if (resultater.D) resultater.E = await kjorOkt({
-  id: 'E', title: 'E · Motorbinding', model: 'fable', effort: 'high',
+  id: 'E', title: 'E · Motorbinding', model: 'opus', effort: 'high',
   oppdrag: `Bind mot ekte motor. Implementer impact-outcome.js ferdig per ${KONTRAKT} §3.3:
 selectOutcome er eneste kaller av solveFlight og eneste sted yards→meter skjer.
 
@@ -245,7 +245,7 @@ en kritisk defekt. Skriv rapporten til docs/impact-kamera-dommerrapport.md.`,
     {
       label: 'okt-f-dommer',
       phase: 'F · Dommer',
-      model: 'fable',
+      model: 'opus',
       effort: 'high',
       schema: {
         type: 'object',

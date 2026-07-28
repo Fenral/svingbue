@@ -3,7 +3,7 @@
 **Referanse-artefakt:** `strikearc-kamera-final.html` (mocken ER spec-en for UI-atferd; mock-fysikken er throwaway).
 **Konsept i én linje:** Én scene, tre kamerastasjoner. Input stilles i planene (TOP, SIDE), output leses i FLIGHT. Utfall måles opp i planet der de oppstår.
 
-**Kjøreregler:** Én økt = én fersk Claude Code-kjøring med angitt modell og effort. Eneste artefakt som bæres mellom økter (utover koden) er `docs/systemkontrakt.md`, som Økt A produserer. Ved eskaleringsutløser: stopp økten, ikke improviser — tilbake til Fable.
+**Kjøreregler:** Én økt = én fersk Claude Code-kjøring med angitt modell og effort. Eneste artefakt som bæres mellom økter (utover koden) er `docs/systemkontrakt.md`, som Økt A produserer. Ved eskaleringsutløser: stopp økten, ikke improviser — tilbake til Opus 5.
 
 ---
 
@@ -11,24 +11,24 @@
 
 | Økt | Modell | Effort | Omfang |
 |---|---|---|---|
-| A | Fable | Høy | Integrasjonsarkitektur + docs/systemkontrakt.md |
+| A | Opus 5 | Høy | Integrasjonsarkitektur + docs/systemkontrakt.md |
 | B | Sonnet | Høy | Kamerasystem: scrub + projeksjonsblending |
 | C | Sonnet | Medium | Paneler, slidere, chips, stepper, pin |
 | D | Sonnet | Høy | Annotasjonslaget (måleregler) |
-| E | Fable | Medium-høy | Motorbinding + ekstremverdi-policy |
-| F | Fable (fersk kontekst) | Høy | Dommer, 1× med evidenskrav |
+| E | Opus 5 | Medium-høy | Motorbinding + ekstremverdi-policy |
+| F | Opus 5 (fersk kontekst) | Høy | Dommer, 1× med evidenskrav |
 
-**Økt A — Fable, høy.** Kartlegg eksisterende StrikeArc-kodebase (Impact-skjerm, 3D-visning, tokensystem, motor-API). Beslutt: kamerasystem-tilnærming (se utløser i B), state-modell for stasjonsskalar + parametre, hvor annotasjonslaget bor, ekstremverdi-policy (se §4). Skriv `docs/systemkontrakt.md`: API-flater mellom økter, navngitte tokens, filstruktur, beslutningslogg. Liten i tokens — beslutningene forplanter seg overalt.
+**Økt A — Opus 5, høy.** Kartlegg eksisterende StrikeArc-kodebase (Impact-skjerm, 3D-visning, tokensystem, motor-API). Beslutt: kamerasystem-tilnærming (se utløser i B), state-modell for stasjonsskalar + parametre, hvor annotasjonslaget bor, ekstremverdi-policy (se §4). Skriv `docs/systemkontrakt.md`: API-flater mellom økter, navngitte tokens, filstruktur, beslutningslogg. Liten i tokens — beslutningene forplanter seg overalt.
 
-**Økt B — Sonnet, høy.** Scrub-gest (vertikal drag = kontinuerlig skalar 0–2, snap ved slipp), segmentknapper som animerer dit, blending mellom perspektiv (FLIGHT), side-orto og topp-orto. **Kritisk teknisk risiko:** mocken lerper *projiserte 2D-punkter* — i en ekte renderer kan riktig svar være kamerainterpolasjon (posisjon/FOV/projeksjon) i stedet. docs/systemkontrakt.md skal ha valgt tilnærming. **Eskaleringsutløser:** hvis Sonnet må *redesigne* tilnærmingen (ikke bare implementere den) → stopp, tilbake til Fable.
+**Økt B — Sonnet, høy.** Scrub-gest (vertikal drag = kontinuerlig skalar 0–2, snap ved slipp), segmentknapper som animerer dit, blending mellom perspektiv (FLIGHT), side-orto og topp-orto. **Kritisk teknisk risiko:** mocken lerper *projiserte 2D-punkter* — i en ekte renderer kan riktig svar være kamerainterpolasjon (posisjon/FOV/projeksjon) i stedet. docs/systemkontrakt.md skal ha valgt tilnærming. **Eskaleringsutløser:** hvis Sonnet må *redesigne* tilnærmingen (ikke bare implementere den) → stopp, tilbake til Opus 5.
 
-**Økt C — Sonnet, medium.** Stasjonspaneler med kollaps-grabber, slidere, outcome-grid med ALL METRICS-toggle og gruppehopp, speed-stepper, Pin-pill, stats-blokk med flip. Mekanisk og token-tungt — verst tenkelig Fable-bruk. **Eskaleringsutløser:** avvik fra docs/systemkontrakt.md-flater.
+**Økt C — Sonnet, medium.** Stasjonspaneler med kollaps-grabber, slidere, outcome-grid med ALL METRICS-toggle og gruppehopp, speed-stepper, Pin-pill, stats-blokk med flip. Mekanisk og token-tungt — verst tenkelig Opus 5-bruk. **Eskaleringsutløser:** avvik fra docs/systemkontrakt.md-flater.
 
 **Økt D — Sonnet, høy.** Hele §3 som ren port fra mocken. Reglene er ferdigspesifisert med tallterskler — null designskjønn tillatt. **Eskaleringsutløser:** enhver situasjon der en regel er tvetydig → noter, ikke gjett.
 
-**Økt E — Fable, medium-høy.** Bytt mock-fysikk mot ekte motor for alle 12 outcome-verdier + banegeometri. Implementer ekstremverdi-policy fra docs/systemkontrakt.md. Verifiser tverrgående korrekthet (samme tall i chips, annotasjoner og stort tall).
+**Økt E — Opus 5, medium-høy.** Bytt mock-fysikk mot ekte motor for alle 12 outcome-verdier + banegeometri. Implementer ekstremverdi-policy fra docs/systemkontrakt.md. Verifiser tverrgående korrekthet (samme tall i chips, annotasjoner og stort tall).
 
-**Økt F — Fable, fersk kontekst, høy.** Dommer per §6. Får kun: docs/systemkontrakt.md, denne ordren (§3 + §5), bygget. Ikke chat-historikk, ikke mål.
+**Økt F — Opus 5, fersk kontekst, høy.** Dommer per §6. Får kun: docs/systemkontrakt.md, denne ordren (§3 + §5), bygget. Ikke chat-historikk, ikke mål.
 
 ---
 

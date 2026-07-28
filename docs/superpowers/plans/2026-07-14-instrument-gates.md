@@ -78,9 +78,9 @@ kritiske defekter → tier → avledet score → funn etter alvorlighet → tilt
 
 ## §3 Modell- og effort-ruting (settes opp i Task 12)
 
-**Hovedsesjon:** Fable 5, effort `xhigh` (`/model` + `/effort xhigh`). All
+**Hovedsesjon:** Opus 5, effort `xhigh` (`/model` + `/effort xhigh`). All
 arkitektur, implementering, feilsøking og syntese skjer her. Eiers regel:
-maks Fable 5 — enklere modeller KUN der forskjellen er neglisjerbar, dvs.
+maks Opus 5 — enklere modeller KUN der forskjellen er neglisjerbar, dvs.
 ren deterministisk mekanikk.
 
 **Subagenter** (auto-delegering via description-feltet; fersk isolert kontekst
@@ -130,7 +130,7 @@ rapporteres som funn, aldri som scorejustering.
 - Delegér til `fg-dommer` for AL vurdering — hovedtråden dømmer aldri eget arbeid.
 - Dommer-prompter skal aldri inneholde: mål-score, tidligere scorer, «vi håper»,
   eller referanse til hvem som bygde. Kun manifest-sti + artefakt-stier.
-- Alt annet: hovedsesjon (Fable 5 xhigh). Ved tvil: Fable 5.
+- Alt annet: hovedsesjon (Opus 5 xhigh). Ved tvil: Opus 5.
 
 ---
 

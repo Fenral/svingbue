@@ -55,7 +55,7 @@ The 4-card rail. The card grammar (eyebrow/glyph/stat) migrates into star-plaque
 - `www/` is NOT hand-synced (owner wires Codemagic; copy-web handles it) — root files just stay copy-web-compatible (they are).
 
 ## 5. Iteration protocol (the three passes, owner-mandated)
-After the build verifies green, Fable (main session) runs three fine-toothed-comb passes over BOTH surfaces, each producing surgical fixes before "ok":
+After the build verifies green, Opus 5 (main session) runs three fine-toothed-comb passes over BOTH surfaces, each producing surgical fixes before "ok":
 1. **Design pass** — hierarchy, plaque craft, brass discipline, type optical sizes, ember census, screenshot-graded at 932×430 + 812×375.
 2. **Motion/interaction pass** — replay beat timings against the beat-sheet, orbit inertia feel, magnetic snap thresholds, comet travel, skip/interrupt honesty, reduced-motion parity.
 3. **3D/complexify pass** — lighting depth, ring engraving legibility, fog tuning, ghost-trail alpha curve, one deliberate added flourish per surface IF it earns its place (candidates: nebula plate; plane-angle protractor micro-anim; constellation line draw-in on first paint).
