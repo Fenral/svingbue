@@ -74,6 +74,32 @@ const RULES = [
     instead: 'Spin goes continuously to zero with spin loft. Only the 9,000 rpm display ceiling remains.',
   },
   {
+    /* Added 2026-07-28, after this gate printed "0 hits — no deleted engine
+       formula in shipping Academy content" while five literal `1.46 - 0.004`
+       sat in the file it had just scanned. Smash was never on the list, so the
+       gate certified a false statement — worse than having no gate, because a
+       human read the green and believed it.
+
+       The lesson is the denylist's own: it can only catch what somebody
+       remembered to add. Adding smash closes today's hole; it does not make the
+       list complete. Treat a green result here as "none of the eleven named
+       corpses are visible", never as "the content is correct". The executable
+       registry in verify-engine-claims.mjs is the mechanism that scales. */
+    id: 'smash-linear-law',
+    pattern: /1\.46\s*[-−]\s*0\.004|smashEff\s*=\s*clamp\(\s*1\.46/g,
+    says: 'the deleted linear smash law (1.46 − 0.004 · spinLoft)',
+    instead: 'smashEff = clamp(1.544034400161688 − 0.0033788247838473073·spinLoft − 0.00006496570484201677·spinLoft², 1.15, 1.52). It is quadratic, the ceiling is 1.52 (not 1.42) and is only reached below 6.34° of spin loft, and the 1.15 floor needs 56.1° — unreachable in practice. Note the two laws CROSS near 43°: the dead one reads high below that and low above it, so a stale number can look plausible in either direction.',
+  },
+  {
+    id: 'smash-phantom-ceiling',
+    /* 1.42 is only wrong when it is presented as the model's clamp. The bare
+       number is a legitimate smash reading, so require nearby clamp language. */
+    pattern: /1\.42/g,
+    says: 'the deleted 1.42 smash ceiling (the engine clamps at 1.52)',
+    instead: 'SMASH_MAX is 1.52 (impact-flight.js:104). A flush iron strike does not sit against the ceiling — the ceiling is only touched below 6.34° of spin loft, which is driver territory.',
+    requireNearby: /clamp|ceiling|cap\b|maximum|caps? at|limit/i,
+  },
+  {
     /* Fifth dead signature, added 2026-07-28. The recalibration replaced the
        saturating power-law carry fit with a monotone quadratic. The old form
        survived the first purge because it lived in content files rather than
