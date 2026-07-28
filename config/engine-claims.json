@@ -2,7 +2,6 @@
   "_why": "Executable registry for verify-engine-claims.mjs. Each entry is a claim the Academy content makes about the engine, expressed as something the gate can RUN. A claim in here cannot rot silently: if the engine moves, the gate reports the measured delta instead of staying green. The size of this file is an honest measure of how much of the corpus is verified rather than merely unflagged — it starts small on purpose and grows with each migrated lesson.",
   "_howToAdd": "id: stable slug. taughtIn: the file whose prose makes the claim. expression: JavaScript evaluated with `engine` bound to the impact-flight.js module namespace. expected: the number the content currently teaches. tolerance: optional, defaults to 1e-9. If the gate fails on your new entry, the CONTENT is wrong, not the entry — re-derive the prose from the engine rather than loosening the tolerance.",
   "_seeded": "2026-07-28, from claims re-derived by hand during the seam audit.",
-
   "claims": [
     {
       "id": "smash-at-spinloft-13",
@@ -35,6 +34,22 @@
       "expression": "engine.solveFlight({clubPath:-6, faceAngle:6, attackAngle:-3, dynamicLoft:28, clubSpeed:95}).spinLoft - 31",
       "expected": 2.08,
       "tolerance": 0.02
+    },
+    {
+      "id": "smash-clamps-at-1520-not-1420",
+      "taughtIn": "academy.html",
+      "note": "Four lessons taught the ceiling as 1.42 and said a flush strike sits against it. The engine's ceiling is 1.52 and it is only touched below 6.35 degrees of spin loft — driver territory, not iron. Registered before the migration text was written, per the rule that every causal claim gets an executable check first.",
+      "expression": "engine.solveFlight({clubPath:0, faceAngle:0, attackAngle:21, dynamicLoft:26, clubSpeed:90}).smash",
+      "expected": 1.52,
+      "tolerance": 0.0001
+    },
+    {
+      "id": "smash-floor-needs-56-degrees-of-spin-loft",
+      "taughtIn": "academy.html",
+      "note": "The dead linear form bottomed out far earlier than the engine does. The 1.15 floor is unreachable at any realistic delivery: it needs 56.11 degrees of spin loft. This claim asserts a very steep wedge strike is still well above the floor.",
+      "expression": "engine.solveFlight({clubPath:0, faceAngle:0, attackAngle:-8, dynamicLoft:44, clubSpeed:80}).smash",
+      "expected": 1.1927,
+      "tolerance": 0.0005
     },
     {
       "id": "attack-weight-is-flat-across-lofts",
