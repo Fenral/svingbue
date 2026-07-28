@@ -96,15 +96,22 @@
    denne fila uten å erstatte den. Én :active på samme universelle selector
    dekker alle igjen.
 
-   Inset box-shadow, ikke border-color: linje 88 setter border:0, og flere
+   Inset outline, ikke border-color: linje 88 setter border:0, og flere
    underregler re-legger sin egen rammefarge for å bære tilstand
-   ([data-outcome] rundt linje 1170). En innskygge kolliderer ikke med noen av
-   dem, og måler 17.72:1 mot --plate-solid.
+   ([data-outcome] rundt linje 1170). En ramme her ville kollidert med dem.
+
+   Og ikke en innskygge, som var første forsøk: flightglass-ux.test.mjs
+   håndhever «no glow, gradient, shadow or filter in the lesson» — instrumentets
+   render-signatur, EV-REN-01. Testen skanner rå filtekst, så selv en kommentar
+   som nevner det forbudte ordet feller den. outline med negativ offset gir
+   nøyaktig samme 2px-perimeter og samme 17.72:1 mot --plate-solid, og er
+   dessuten det testen selv peker på: «rings are drawn with borders/outlines».
 
    aria-disabled ekskluderes — en deaktivert knapp som svarer på trykk lyver. */
 .native-lesson button:not([aria-disabled="true"]):active,
 .native-sheet button:active {
-  box-shadow: inset 0 0 0 2px var(--ink);
+  outline: 2px solid var(--ink);
+  outline-offset: -2px;
 }
 
 .native-lesson button:focus-visible,
