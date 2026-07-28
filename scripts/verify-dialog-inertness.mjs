@@ -98,7 +98,16 @@ for (const file of walk(ROOT)) {
   const rel = relative(ROOT, file);
   if (skipFile(rel)) continue;
 
-  const src = readFileSync(file, 'utf8');
+  const raw = readFileSync(file, 'utf8');
+
+  /* Block comments are stripped before matching, and replaced by newlines so
+     reported line numbers stay true. A gate that flags the comment explaining
+     the very pattern it bans is a gate people switch off — and this file's own
+     fix advice quotes `trigger?.focus?.()` verbatim, so it would flag itself.
+     Line comments are left alone deliberately: `//` appears inside URLs and
+     regex literals, and stripping them naively would eat real code. */
+  const src = raw.replace(/\/\*[\s\S]*?\*\//g, m => m.replace(/[^\n]/g, ''));
+
   const declaresModal = DECLARES_MODAL.test(src) || SETS_MODAL_DYNAMICALLY.test(src);
   if (!declaresModal) continue;
 
