@@ -1,9 +1,17 @@
 # Flightglass autonomous execution status
 
-Updated: 2026-07-17
+Updated: 2026-07-28
 
 Release authorization: granted for GitHub, Vercel and configured Apple/Google
 publication after all Phase 8 gates pass. See `RELEASE-AUTHORIZATION.md`.
+
+> **Read `docs/SESSION-HANDOFF.md` first.** Its "Current state (2026-07-28)"
+> block supersedes the branch topology described throughout this file. In
+> short: every Academy and engine branch named below is merged into `main`,
+> `main` is the only working branch, and Fable 5 has been replaced by Opus 5
+> in all forward-looking routing. The phase-by-phase evidence below is still
+> accurate as a record of what was verified and when — treat it as an evidence
+> ledger, not as a description of where the work currently lives.
 
 ## GitHub and Vercel web publication checkpoint
 
