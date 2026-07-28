@@ -80,6 +80,23 @@ const RULES = [
     instead: 'Spin goes continuously to zero with spin loft. Only the 9,000 rpm display ceiling remains.',
   },
   {
+    /* Registered BEFORE the landing/apex migration, not after. Smash taught
+       the lesson: this gate reported "0 hits" while five literal 1.46 - 0.004
+       sat in the file it had just scanned, because nobody had registered the
+       corpse. Register first, then migrate — the gate becomes a tripwire
+       instead of a promise. */
+    id: 'landing-four-term',
+    pattern: /45\s*\+\s*\(\s*spinLoft|\(\s*launchAngle\s*[-−]\s*14\s*\)|\(\s*apex\s*[-−]\s*30\s*\)/g,
+    says: 'the deleted four-term landing law (45 + (spinLoft−25)·0.5 + (launchAngle−14)·0.6 + (apex−30)·1.0)',
+    instead: 'landingRaw = 52.8 − 41.5·exp(−|signedVerticalSpinLoft|/10.9). ONE driver. The engine exposes landingLaunchTerm and landingApexTerm as exactly 0 — launch, apex and club speed do not touch landing angle at all. The curve saturates below 52.8°, so any cited value at or above it (54.35, 57.2, 60) is unreachable by every input. Note this is the one place where signedVerticalSpinLoftDeg IS the operative quantity — unlike spin loft itself, where spinLoft3DDeg is. Do not generalise from that lesson to this one.',
+  },
+  {
+    id: 'apex-saturation-law',
+    pattern: /44\s*[·*x×]\s*\(\s*1\s*[-−]\s*e\^|apex_?TAU|apex_?max\s*=\s*44|0\.45\s*[-−–]\s*1\.35/gi,
+    says: 'the deleted apex saturation law (44 yd hard ceiling, TAU 85 mph, apexLaunchFactor clamped 0.45–1.35)',
+    instead: 'apex = (0.13006·ballSpeed + 0.007999·ballSpeed·launch) · sqrt(clamp(launch/10,0,1)). No saturation and no ceiling: 76.62 yd is reachable at 130 mph club speed with 60° of dynamic loft, 74% above the claimed cap. apexLaunchFactor is an exposed diagnostic ratio (apex ÷ apexBallSpeedTerm), never a clamped input — it measures 3.7997 in that same delivery.',
+  },
+  {
     /* Added 2026-07-28, after this gate printed "0 hits — no deleted engine
        formula in shipping Academy content" while five literal `1.46 - 0.004`
        sat in the file it had just scanned. Smash was never on the list, so the
@@ -170,8 +187,21 @@ function lineOf(text, index) {
 
 const hits = [];
 for (const file of targets()) {
-  let text;
-  try { text = readFileSync(join(ROOT, file), 'utf8'); } catch { continue; }
+  let raw;
+  try { raw = readFileSync(join(ROOT, file), 'utf8'); } catch { continue; }
+
+  /* Block comments are blanked before matching, with newlines preserved so the
+     reported line numbers stay true. A file that explains WHY it does not use a
+     dead formula must be able to name it — academy-flight-height-descent-model.js
+     documents exactly that, and tripped this gate for saying so. Third time
+     today a checker flagged its own documentation; verify-dialog-inertness.mjs
+     carries the same fix and the same reasoning.
+
+     Line comments are left alone on purpose: `//` lives inside URLs and regex
+     literals, and blanking them naively would eat real code. The cost is that a
+     dead formula hidden in a `//` comment still trips the gate — which is the
+     safe direction to be wrong in. */
+  const text = raw.replace(/\/\*[\s\S]*?\*\//g, m => m.replace(/[^\n]/g, ''));
   const lines = text.split('\n');
   for (const rule of RULES) {
     rule.pattern.lastIndex = 0;
