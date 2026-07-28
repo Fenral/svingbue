@@ -40,8 +40,14 @@ const RULES = [
   },
   {
     id: 'axis-gain',
-    /* Both the clamped form and the bare gain — the corpus writes it both ways. */
-    pattern: /clamp\s*\(\s*1\.5|1\.5\s*[×x·*]\s*\(?\s*(the\s+)?face/gi,
+    /* Both the clamped form and the bare gain — the corpus writes it both ways.
+       `clamp\(\s*1\.5` alone was too greedy: the engine's real smash intercept
+       is 1.544034…, so `clamp(1.5440 − 0.003379·spinLoft …)` — the CORRECT
+       formula — tripped this rule and the gate blocked the fix it was asking
+       for. The digit boundary now excludes a longer number, and requireNearby
+       keeps the match anchored to axis language. */
+    pattern: /clamp\s*\(\s*1\.5(?![0-9])|1\.5\s*[×x·*]\s*\(?\s*(the\s+)?face/gi,
+    requireNearby: /axis|face.?to.?path|tilt|curve|sidespin/i,
     says: 'the deleted fitted spin-axis gain (1.5 x face-to-path)',
     instead: 'Spin axis is the tilt of (velocity x faceNormal) from horizontal. Face-to-path sets its direction; loft and attack set how strongly the same gap tilts it.',
   },
