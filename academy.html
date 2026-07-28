@@ -615,7 +615,12 @@
   .minimap{display:block;max-width:150px;margin:0 auto}
 
   /* preview sheet / bottom sheet (spec §3.2 / §4 — bottom-anchored on portrait) */
+  /* max-height is not cosmetic: anchored to bottom:0 with no cap, the mastery
+     sheet's badge grid overflows off the TOP of a short viewport, where no
+     scroll gesture can reach it. svh, not vh, so mobile browser chrome does not
+     hide the last row. */
   .sa-sheet{position:fixed;left:0;right:0;bottom:0;z-index:70;margin:0 auto;max-width:640px;
+    max-height:min(82svh,720px);overflow-y:auto;overscroll-behavior:contain;
     background:var(--plate-solid);border-top:1px solid var(--secondary-line);border-radius:16px 16px 0 0;
     padding:14px 18px calc(16px + env(safe-area-inset-bottom));box-shadow:0 -12px 40px rgba(0,0,0,.5);
     transform:translateY(102%);transition:transform .26s var(--ease);pointer-events:none}
@@ -629,7 +634,9 @@
   .sa-sheet__rel{font-family:var(--f-body);font-size:13px;line-height:1.5;color:var(--muted-2);margin:0 0 6px}
   .sa-sheet__rel b{color:var(--muted);font-weight:600}
   .sa-sheet__chips{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 14px}
-  .sa-sheet__chip{font-family:var(--f-body);font-weight:600;font-size:12px;color:var(--secondary);background:var(--secondary-soft);border:1px solid var(--secondary-line);border-radius:999px;padding:6px 12px;min-height:32px;cursor:pointer}
+  /* 44px to match .sa-sheet__open and .sa-sheet__close below. WCAG 2.5.8 would
+     accept 24px; the product law would not, and these chips navigate. */
+  .sa-sheet__chip{font-family:var(--f-body);font-weight:600;font-size:12px;color:var(--secondary);background:var(--secondary-soft);border:1px solid var(--secondary-line);border-radius:999px;padding:6px 12px;min-height:44px;cursor:pointer}
   .sa-sheet__foot{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
   .sa-sheet__xp{font-family:var(--f-mono);font-variant-numeric:tabular-nums;font-size:13px;color:var(--reward-gold)}
   .sa-sheet__open{margin-left:auto;min-height:44px;padding:11px 20px;border-radius:12px;border:1px solid var(--secondary);background:var(--secondary);color:var(--sec-ink);
@@ -648,9 +655,17 @@
   <div id="live" class="sr-only" aria-live="polite" aria-atomic="true"></div>
   <main id="app" tabindex="-1"></main>
 
-  <!-- shared bottom sheet: node preview (non-modal) + reused for glossary definitions -->
+  <!-- Shared bottom sheet, four call sites with two different modalities:
+       - openPreview (node preview) is deliberately NON-modal: it is a legend for
+         the graph behind it, its chips scroll that graph, and onClose undoes the
+         relation highlight. A scrim or focus trap would break it.
+       - openAcademyOutcomeProgress / openMasterySheet / openHowSheet are
+         read-only panels with no relationship to the content behind them.
+       The old comment here claimed glossary reuse; no glossary code exists.
+       tabindex="-1" so focus can land on the dialog itself when a template
+       renders no focusable child. -->
   <div class="sa-sheet__scrim" id="sheet-scrim"></div>
-  <div class="sa-sheet" id="sheet" role="dialog" aria-modal="false" aria-labelledby="sheet-title" hidden></div>
+  <div class="sa-sheet" id="sheet" role="dialog" aria-modal="false" aria-labelledby="sheet-title" tabindex="-1" hidden></div>
 
   <!-- gentle, non-blocking landscape hint (portrait is the optimized reading layout) -->
   <div class="nudge" id="nudge" role="note">
@@ -1758,21 +1773,35 @@
 
   /* ══ BOTTOM SHEET (spec §3.2 preview / §4 node preview) — replaces the hover tooltip ══ */
   const sheetEl = $('#sheet'), scrimEl = $('#sheet-scrim');
-  let sheetTrigger = null, sheetKey = null, sheetOnClose = null;
+  let sheetTrigger = null, sheetKey = null, sheetOnClose = null, sheetTimer = null;
   const sheetFocusable = () => Array.from(sheetEl.querySelectorAll('button,[href],input,[tabindex]:not([tabindex="-1"])')).filter(e => !e.disabled && e.offsetParent !== null);
   function openSheet(html, opts){
     opts = opts || {};
+    /* A close scheduled <240ms ago is still pending. Left running it would blank
+       the sheet we are about to fill, fire the PREVIOUS onClose, and steal focus
+       back to the previous trigger. Invisible under reduced-motion, where close
+       is synchronous. */
+    if (sheetTimer){ clearTimeout(sheetTimer); sheetTimer = null; }
     if (sheetKey){ document.removeEventListener('keydown', sheetKey); sheetKey = null; }   // no listener leak on re-open
-    if (opts.trigger !== undefined) sheetTrigger = opts.trigger;
+    /* Truthy, not !== undefined: an explicit null must fall through to the
+       activeElement fallback rather than disabling focus return for good. */
+    if (opts.trigger) sheetTrigger = opts.trigger;
     else if (sheetEl.hidden) sheetTrigger = (document.activeElement && document.activeElement !== document.body ? document.activeElement : null);
     sheetOnClose = opts.onClose || null;
     sheetEl.innerHTML = html;
     sheetEl.setAttribute('aria-modal', opts.modal ? 'true' : 'false');
     if (opts.labelId) sheetEl.setAttribute('aria-labelledby', opts.labelId);
     sheetEl.hidden = false;
-    requestAnimationFrame(() => { sheetEl.classList.add('open'); if (opts.modal) scrimEl.classList.add('open'); });
-    const foc = sheetEl.querySelector('[data-autofocus]') || sheetFocusable()[0];
-    if (foc) foc.focus({ preventScroll:true });
+    /* Focus moves in the same frame the sheet starts sliding up, not before it:
+       set synchronously the ring sits off-screen at translateY(102%) for the
+       whole transition. #sheet carries tabindex="-1" so an empty template still
+       lands the user inside the dialog instead of silently leaving them out. */
+    requestAnimationFrame(() => {
+      if (sheetEl.hidden) return;
+      sheetEl.classList.add('open'); if (opts.modal) scrimEl.classList.add('open');
+      const foc = sheetEl.querySelector('[data-autofocus]') || sheetFocusable()[0];
+      (foc || sheetEl).focus({ preventScroll:true });
+    });
     sheetKey = e => {
       if (e.key === 'Escape'){ e.preventDefault(); closeSheet(); return; }
       if (opts.modal && e.key === 'Tab'){ const f = sheetFocusable(); if (!f.length) return; const a = f[0], z = f[f.length-1];
@@ -1787,7 +1816,7 @@
     if (sheetKey){ document.removeEventListener('keydown', sheetKey); sheetKey = null; }
     const cb = sheetOnClose, t = sheetTrigger; sheetOnClose = null; sheetTrigger = null;
     const finish = () => { sheetEl.hidden = true; sheetEl.innerHTML = ''; if (cb) cb(); if (restoreFocus !== false && t && document.contains(t)) t.focus({ preventScroll:true }); };
-    if (immediate || reduced()) finish(); else setTimeout(finish, 240);
+    if (immediate || reduced()) finish(); else sheetTimer = setTimeout(finish, 240);
   }
   scrimEl.addEventListener('click', () => closeSheet());
 
@@ -1830,7 +1859,7 @@
       <div class="hdr-expand">
         <div class="xpbar" id="hdr-xpbar" role="progressbar" aria-valuemin="${li.curXp}" aria-valuemax="${li.nextXp}" aria-valuenow="${store.xp}" aria-label="Experience to next rank"><div class="fill" id="hdr-xpfill" style="width:${(li.pct*100).toFixed(1)}%"></div></div>
         <div class="pathacts" role="group" aria-label="Path actions">
-          <button class="pathact" id="act-progress" type="button" aria-label="Mastery progress and badges">
+          <button class="pathact" id="act-progress" type="button" aria-haspopup="dialog" aria-label="Mastery progress and badges">
             <span aria-hidden="true">${badgeIcon('range-finder')}</span><span class="pa-lbl">Progress</span></button>
           <button class="pathact" id="act-next" type="button" aria-label="Go to the recommended next lesson">
             <span aria-hidden="true">${badgeIcon('curious')}</span><span class="pa-lbl">Where next</span></button>
@@ -1869,11 +1898,11 @@
     const html = `
       <div class="sa-sheet__grip" aria-hidden="true"></div>
       <span class="sa-sheet__tier">Academy evidence</span>
-      <h2 class="sa-sheet__title" id="sheet-title">Outcome progress</h2>
+      <h2 class="sa-sheet__title" id="sheet-title" tabindex="-1" data-autofocus>Outcome progress</h2>
       <p class="sa-sheet__blurb"><b>${viewModel.progress.mastered}</b> of ${viewModel.progress.total} core experiences mastered · <b>${viewModel.progress.practiced}</b> practiced.</p>
       ${rows}
       <p class="sa-sheet__blurb">The advanced model lab is optional and never changes this total.</p>
-      <div class="sa-sheet__foot"><button class="sa-sheet__close" data-sheet-close type="button" data-autofocus>Close</button></div>`;
+      <div class="sa-sheet__foot"><button class="sa-sheet__close" data-sheet-close type="button">Close</button></div>`;
     openSheet(html, { trigger, labelId:'sheet-title' });
     sheetEl.querySelector('[data-sheet-close]')?.addEventListener('click', () => closeSheet());
   }
@@ -2182,7 +2211,7 @@
         <p class="mission">The <b>${totalLessons} numbers</b> behind every shot — learned one instrument at a time.</p>
         <div class="pathprog">
           <div class="pp-top"><span class="pp-count">Mastery path progress</span>
-            <button class="pp-info" id="path-how" type="button">How the path works</button></div>
+            <button class="pp-info" id="path-how" type="button" aria-haspopup="dialog">How the path works</button></div>
           <div class="pp-bar" role="progressbar" aria-valuemin="0" aria-valuemax="${totalLessons}" aria-valuenow="${shown}" aria-valuetext="${esc(ppText)}" aria-label="Path progress">
             <div class="pp-fill" style="width:${pctBar.toFixed(1)}%"></div>${ticks}
           </div>
@@ -2204,7 +2233,10 @@
 
   // Mastery-progress sheet (path-01 målskive): tier breakdown + the badge rail's
   // achievements, now labelled and purposeful rather than mystery chrome.
-  function openMasterySheet(){
+  /* trigger is forwarded, not guessed: WKWebView does not focus a <button> on tap,
+     so the activeElement fallback in openSheet yields body and focus return is
+     silently skipped on the Capacitor build. */
+  function openMasterySheet(trigger){
     const nMastered = masteredCount(), total = LESSON_IDS.length;
     const tiers = TIER_COLS.map(col => { const done = col.ids.filter(isMastered).length;
       return `<div class="msheet-tier"><span class="mt-l">${esc(col.label)}</span><span class="mt-r">${done} / ${col.ids.length} mastered</span></div>`; }).join('');
@@ -2213,25 +2245,25 @@
     const html = `
       <div class="sa-sheet__grip" aria-hidden="true"></div>
       <span class="sa-sheet__tier">Your progress</span>
-      <h2 class="sa-sheet__title" id="sheet-title">Mastery progress</h2>
+      <h2 class="sa-sheet__title" id="sheet-title" tabindex="-1" data-autofocus>Mastery progress</h2>
       <p class="sa-sheet__blurb"><b>${nMastered}</b> of ${total} parameters mastered · <b>${store.badges.length}</b> of ${BADGES.length} badges earned.</p>
       ${tiers}
       <p class="sa-sheet__rel" style="margin-top:12px"><b>Badges</b></p>
       <div class="msheet-badges">${badges}</div>
-      <div class="sa-sheet__foot"><button class="sa-sheet__close" data-sheet-close type="button" data-autofocus>Close</button></div>`;
-    openSheet(html, { labelId:'sheet-title' });
+      <div class="sa-sheet__foot"><button class="sa-sheet__close" data-sheet-close type="button">Close</button></div>`;
+    openSheet(html, { trigger, labelId:'sheet-title' });
     const cb = sheetEl.querySelector('[data-sheet-close]'); if (cb) cb.addEventListener('click', () => closeSheet());
   }
   // "How the path works" sheet (path-05): the long intro copy, moved off the first fold.
-  function openHowSheet(){
+  function openHowSheet(trigger){
     const html = `
       <div class="sa-sheet__grip" aria-hidden="true"></div>
       <span class="sa-sheet__tier">The path</span>
-      <h2 class="sa-sheet__title" id="sheet-title">How the path works</h2>
+      <h2 class="sa-sheet__title" id="sheet-title" tabindex="-1" data-autofocus>How the path works</h2>
       <p class="sa-sheet__blurb">Start with the <b>Fundamentals</b> — the five deliveries your hands actually control. Each parameter you master unlocks the ones built on top of it: swing geometry, then the derived numbers, then shot outcomes.</p>
       <p class="sa-sheet__blurb">The <b>Environment</b> set — altitude, wind, temperature — opens once you master <b>Carry</b>. Far-off tiers collapse into a single row you can expand any time; the next lesson within reach is always marked <b>Start here</b>.</p>
-      <div class="sa-sheet__foot"><button class="sa-sheet__close" data-sheet-close type="button" data-autofocus>Close</button></div>`;
-    openSheet(html, { labelId:'sheet-title' });
+      <div class="sa-sheet__foot"><button class="sa-sheet__close" data-sheet-close type="button">Close</button></div>`;
+    openSheet(html, { trigger, labelId:'sheet-title' });
     const cb = sheetEl.querySelector('[data-sheet-close]'); if (cb) cb.addEventListener('click', () => closeSheet());
   }
 
@@ -2328,7 +2360,7 @@
 
     // path-01 header actions: Progress (målskive) + Where next (kompass)
     const actProg = $('#act-progress');
-    if (actProg) actProg.addEventListener('click', () => { haptic('light'); openMasterySheet(); });
+    if (actProg) actProg.addEventListener('click', e => { haptic('light'); openMasterySheet(e.currentTarget); });
     const actNext = $('#act-next');
     if (actNext) actNext.addEventListener('click', () => {
       const id = nextNodeId();
@@ -2339,7 +2371,7 @@
     });
     // path-05 "how the path works"
     const pathHow = $('#path-how');
-    if (pathHow) pathHow.addEventListener('click', () => { haptic('light'); openHowSheet(); });
+    if (pathHow) pathHow.addEventListener('click', e => { haptic('light'); openHowSheet(e.currentTarget); });
 
     // pulse the just-completed / last-opened node
     if (store.lastOpened && byId[store.lastOpened] && nodeState(store.lastOpened) === 'completed'){

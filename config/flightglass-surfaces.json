@@ -2,10 +2,26 @@
   "version": 1,
   "brand": "Flightglass",
   "viewports": {
-    "landscape-wide": { "width": 932, "height": 430, "orientation": "landscape" },
-    "landscape-compact": { "width": 812, "height": 375, "orientation": "landscape" },
-    "portrait-wide": { "width": 430, "height": 932, "orientation": "portrait" },
-    "portrait-compact": { "width": 375, "height": 812, "orientation": "portrait" }
+    "landscape-wide": {
+      "width": 932,
+      "height": 430,
+      "orientation": "landscape"
+    },
+    "landscape-compact": {
+      "width": 812,
+      "height": 375,
+      "orientation": "landscape"
+    },
+    "portrait-wide": {
+      "width": 430,
+      "height": 932,
+      "orientation": "portrait"
+    },
+    "portrait-compact": {
+      "width": 375,
+      "height": 812,
+      "orientation": "portrait"
+    }
   },
   "surfaces": [
     {
@@ -16,9 +32,23 @@
       "targetScore": 90,
       "route": "index.html",
       "sourceType": "shipping",
-      "viewportIds": ["portrait-wide", "portrait-compact", "landscape-wide", "landscape-compact"],
-      "requiredSelectors": ["body[data-home-direction=\"night-ladder\"]", ".scene", ".flight", ".place--primary"],
-      "references": ["home-portrait-1.html", "home-concept-1.html", "docs/home-creative-concepts.md"],
+      "viewportIds": [
+        "portrait-wide",
+        "portrait-compact",
+        "landscape-wide",
+        "landscape-compact"
+      ],
+      "requiredSelectors": [
+        "body[data-home-direction=\"night-ladder\"]",
+        ".scene",
+        ".flight",
+        ".place--primary"
+      ],
+      "references": [
+        "home-portrait-1.html",
+        "home-concept-1.html",
+        "docs/home-creative-concepts.md"
+      ],
       "primaryJob": "Choose the next Flightglass territory from a night driving range."
     },
     {
@@ -29,9 +59,19 @@
       "targetScore": 90,
       "route": "impact.html",
       "sourceType": "shipping",
-      "viewportIds": ["portrait-wide", "portrait-compact"],
-      "requiredSelectors": ["#stage", "#panel", "#spVal"],
-      "references": ["design/mocks/impact-kamera.html", "design/orders/impact-kamera.md"],
+      "viewportIds": [
+        "portrait-wide",
+        "portrait-compact"
+      ],
+      "requiredSelectors": [
+        "#stage",
+        "#panel",
+        "#spVal"
+      ],
+      "references": [
+        "design/mocks/impact-kamera.html",
+        "design/orders/impact-kamera.md"
+      ],
       "primaryJob": "Change one impact input and see the resulting ball flight immediately."
     },
     {
@@ -42,9 +82,18 @@
       "targetScore": 90,
       "route": "impact-viz-mock.html",
       "sourceType": "reference",
-      "viewportIds": ["landscape-wide", "landscape-compact"],
-      "requiredSelectors": ["#stage", "#lensDir"],
-      "references": ["impact-viz-mock.html", "impact-presentation.html"],
+      "viewportIds": [
+        "landscape-wide",
+        "landscape-compact"
+      ],
+      "requiredSelectors": [
+        "#stage",
+        "#lensDir"
+      ],
+      "references": [
+        "impact-viz-mock.html",
+        "impact-presentation.html"
+      ],
       "primaryJob": "Change perspective without creating a second simulator or duplicated controls."
     },
     {
@@ -55,9 +104,17 @@
       "targetScore": 90,
       "route": "impact-outcome-mock.html",
       "sourceType": "reference",
-      "viewportIds": ["landscape-wide", "landscape-compact"],
-      "requiredSelectors": ["#stage", "#panelDir"],
-      "references": ["impact-outcome-mock.html"],
+      "viewportIds": [
+        "landscape-wide",
+        "landscape-compact"
+      ],
+      "requiredSelectors": [
+        "#stage",
+        "#panelDir"
+      ],
+      "references": [
+        "impact-outcome-mock.html"
+      ],
       "primaryJob": "Explain the shot result and its cause before revealing supporting metrics."
     },
     {
@@ -68,9 +125,19 @@
       "targetScore": 90,
       "route": "range-3d-compare-mock.html",
       "sourceType": "reference",
-      "viewportIds": ["landscape-wide", "landscape-compact"],
-      "requiredSelectors": ["#status-line", "#cardList"],
-      "references": ["range-compare-mock.html", "range-3d-compare-mock.html", "range-night-final-compare-mock.html"],
+      "viewportIds": [
+        "landscape-wide",
+        "landscape-compact"
+      ],
+      "requiredSelectors": [
+        "#status-line",
+        "#cardList"
+      ],
+      "references": [
+        "range-compare-mock.html",
+        "range-3d-compare-mock.html",
+        "range-night-final-compare-mock.html"
+      ],
       "primaryJob": "Understand the most important delta against one named reference shot."
     },
     {
@@ -81,9 +148,18 @@
       "targetScore": 90,
       "route": "geometry.html",
       "sourceType": "shipping",
-      "viewportIds": ["landscape-wide", "landscape-compact"],
-      "requiredSelectors": ["#scene3d", "#chipImpact3d", "#view2d"],
-      "references": ["geometry.html", "docs/geometry-rethink.md"],
+      "viewportIds": [
+        "landscape-wide",
+        "landscape-compact"
+      ],
+      "requiredSelectors": [
+        "#scene3d",
+        "#view2d"
+      ],
+      "references": [
+        "geometry.html",
+        "docs/geometry-rethink.md"
+      ],
       "primaryJob": "See how direction, plane and low point create delivery geometry and contact."
     },
     {
@@ -94,9 +170,20 @@
       "targetScore": 90,
       "route": "geometry-window-mock.html",
       "sourceType": "normative-reference",
-      "viewportIds": ["portrait-wide", "portrait-compact"],
-      "requiredSelectors": ["#winCard", "#winSvg", "#inRow"],
-      "references": ["geometry-window-mock.html", "docs/strike-window-consensus.md", "docs/strike-window-polish-notes.md"],
+      "viewportIds": [
+        "portrait-wide",
+        "portrait-compact"
+      ],
+      "requiredSelectors": [
+        "#winCard",
+        "#winSvg",
+        "#inRow"
+      ],
+      "references": [
+        "geometry-window-mock.html",
+        "docs/strike-window-consensus.md",
+        "docs/strike-window-polish-notes.md"
+      ],
       "primaryJob": "Diagnose ball-first, turf-first and strike height while the active input changes live."
     },
     {
@@ -107,9 +194,20 @@
       "targetScore": 90,
       "route": "academy.html",
       "sourceType": "shipping-web",
-      "viewportIds": ["portrait-wide", "portrait-compact"],
-      "requiredSelectors": ["#app", "[data-academy-home]", ".academy-home__hero"],
-      "references": ["academy.html", "docs/academy-path-verdict.md", "docs/academy-polish-spec.md"],
+      "viewportIds": [
+        "portrait-wide",
+        "portrait-compact"
+      ],
+      "requiredSelectors": [
+        "#app",
+        "[data-academy-home]",
+        ".academy-home__hero"
+      ],
+      "references": [
+        "academy.html",
+        "docs/academy-path-verdict.md",
+        "docs/academy-polish-spec.md"
+      ],
       "primaryJob": "Know current progress, the recommended next lesson and why it is worth opening."
     },
     {
@@ -120,9 +218,23 @@
       "targetScore": 96,
       "route": "academy.html#/lesson/backspin",
       "sourceType": "shipping-web-state",
-      "viewportIds": ["portrait-wide", "portrait-compact"],
-      "requiredSelectors": ["#nativeLesson", "#missionStageBuild", "#backspinTruth", "#labRange", "#masteryTask", "#nativeLessonResult"],
-      "references": ["academy-lesson-v2-mock.html", "docs/academy-native-v2-spec.md", "docs/superpowers/specs/2026-07-13-backspin-96-97-design.md"],
+      "viewportIds": [
+        "portrait-wide",
+        "portrait-compact"
+      ],
+      "requiredSelectors": [
+        "#nativeLesson",
+        "#missionStageBuild",
+        "#backspinTruth",
+        "#labRange",
+        "#masteryTask",
+        "#nativeLessonResult"
+      ],
+      "references": [
+        "academy-lesson-v2-mock.html",
+        "docs/academy-native-v2-spec.md",
+        "docs/superpowers/specs/2026-07-13-backspin-96-97-design.md"
+      ],
       "primaryJob": "Predict, manipulate and demonstrate control of backspin in an honest live model."
     },
     {
@@ -133,9 +245,19 @@
       "targetScore": 90,
       "route": "paywall-mock.html",
       "sourceType": "reference",
-      "viewportIds": ["portrait-wide", "portrait-compact"],
-      "requiredSelectors": [".paywall", "#pw-title"],
-      "references": ["paywall-mock.html", "docs/paywall-verdict.md", "docs/monetization-strategy.md"],
+      "viewportIds": [
+        "portrait-wide",
+        "portrait-compact"
+      ],
+      "requiredSelectors": [
+        ".paywall",
+        "#pw-title"
+      ],
+      "references": [
+        "paywall-mock.html",
+        "docs/paywall-verdict.md",
+        "docs/monetization-strategy.md"
+      ],
       "primaryJob": "Understand Pro value before choosing monthly or annual access."
     }
   ]
