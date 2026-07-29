@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#efede7">
+  <title>Flightglass Academy — Three design systems</title>
+  <link rel="stylesheet" href="./base.css">
+  <style>
+    :root{--bg:#efede7;--surface:#faf8f1;--ink:#161614;--muted:#6b6962;--line:#cbc7bd;--line-strong:#161614;--accent:#ff7147;--focus:#255cf6;--font-ui:"Space Grotesk",sans-serif}
+    body{background:var(--bg)}
+    .board{width:min(1540px,100%);margin:auto;padding:28px}
+    header{min-height:430px;display:grid;grid-template-columns:1.2fr .8fr;gap:8vw;align-content:center;border-bottom:1px solid var(--ink);padding:70px 0}
+    .mark{font:700 .9rem/1 "IBM Plex Mono",monospace;letter-spacing:-.04em}
+    h1{font-size:clamp(3.6rem,7.4vw,8rem);line-height:.84;letter-spacing:-.075em;margin:28px 0 0;max-width:1000px}
+    header aside{align-self:end}
+    header p{color:var(--muted);line-height:1.6;max-width:580px}
+    .facts{display:grid;grid-template-columns:1fr 1fr;margin-top:28px;border-block:1px solid var(--line)}
+    .facts div{padding:16px 0}.facts div+div{border-left:1px solid var(--line);padding-left:18px}
+    .facts strong,.facts span{display:block}.facts strong{font-size:1.15rem}.facts span{font-size:.7rem;color:var(--muted);margin-top:6px}
+    .direction{display:grid;grid-template-columns:76px minmax(0,1fr);border-bottom:1px solid var(--ink);padding:62px 0;gap:32px}
+    .direction-number{font:500 1rem/1 "IBM Plex Mono",monospace}
+    .direction-body{min-width:0}
+    .direction-head{display:grid;grid-template-columns:1.1fr .9fr;gap:40px;align-items:end;margin-bottom:30px}
+    .direction h2{font-size:clamp(2.3rem,5vw,5.2rem);line-height:.9;letter-spacing:-.055em;margin:8px 0}
+    .direction-head p{color:var(--muted);line-height:1.55;margin:0}
+    .tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:15px}
+    .tags span{border:1px solid var(--line);padding:7px 9px;font:500 .62rem/1 "IBM Plex Mono",monospace}
+    .preview{position:relative;aspect-ratio:16/9;overflow:hidden;border:1px solid var(--ink);background:#222}
+    .preview iframe{position:absolute;width:1440px;height:900px;left:0;top:0;border:0;transform-origin:0 0;transform:scale(var(--scale));pointer-events:none}
+    .preview::after{content:"LIVE RESPONSIVE HTML";position:absolute;right:10px;bottom:10px;background:#161614;color:white;padding:8px 10px;font:500 .58rem/1 "IBM Plex Mono",monospace;letter-spacing:.08em}
+    .direction-actions{display:flex;gap:8px;margin-top:14px}
+    .direction-actions .button:first-child{background:var(--ink);color:white}
+    .direction-actions .button:last-child{border-color:var(--line-strong)}
+    .palette{display:flex;margin-left:auto}
+    .palette i{display:block;width:22px;height:22px;border:1px solid rgba(0,0,0,.25);margin-left:-1px}
+    .direction[data-style="performance"] .palette i:nth-child(1){background:#ece8df}.direction[data-style="performance"] .palette i:nth-child(2){background:#171816}.direction[data-style="performance"] .palette i:nth-child(3){background:#2478ff}.direction[data-style="performance"] .palette i:nth-child(4){background:#e96c3a}
+    .direction[data-style="masterclass"] .palette i:nth-child(1){background:#131110}.direction[data-style="masterclass"] .palette i:nth-child(2){background:#e9e3d7}.direction[data-style="masterclass"] .palette i:nth-child(3){background:#a4212d}.direction[data-style="masterclass"] .palette i:nth-child(4){background:#5a5650}
+    .direction[data-style="signal"] .palette i:nth-child(1){background:#151515}.direction[data-style="signal"] .palette i:nth-child(2){background:#f1f1ec}.direction[data-style="signal"] .palette i:nth-child(3){background:#d5f04e}.direction[data-style="signal"] .palette i:nth-child(4){background:#555550}
+    footer{display:flex;justify-content:space-between;gap:40px;padding:34px 0;color:var(--muted);font-size:.75rem;line-height:1.5}
+    @media(max-width:900px){
+      header{grid-template-columns:1fr;gap:42px}.direction-head{grid-template-columns:1fr}
+    }
+    @media(max-width:640px){
+      .board{padding:16px}header{padding:56px 0;min-height:600px}h1{font-size:4.2rem}
+      .direction{grid-template-columns:1fr;gap:18px;padding:48px 0}.direction-number{display:flex;justify-content:space-between}
+      .direction-head{gap:20px}.direction h2{font-size:3.2rem}.preview{aspect-ratio:10/12}.preview iframe{transform:scale(var(--mobile-scale));width:390px;height:1100px}
+      .direction-actions{display:grid;grid-template-columns:1fr}.direction-actions .button{width:100%}
+      footer{display:block}footer p+ p{margin-top:18px}
+    }
+  </style>
+</head>
+<body>
+  <main class="board">
+    <header>
+      <div><div class="mark">FLIGHTGLASS / ACADEMY</div><h1>Three ways to make learning feel expensive.</h1></div>
+      <aside>
+        <p>Same real Academy structure. Three distinct design systems: a performance instrument, a private masterclass and a futuristic learning signal. Open each mock to test the goal selector, progress view and responsive layout.</p>
+        <div class="facts"><div><strong>3</strong><span>DESIGN SYSTEMS</span></div><div><strong>13 + 1</strong><span>CORE EXPERIENCES + LAB</span></div></div>
+      </aside>
+    </header>
+
+    <section class="direction" data-style="performance" aria-labelledby="dir-1">
+      <div class="direction-number">01 <span class="palette" aria-label="Warm ivory, black, electric blue and orange palette"><i></i><i></i><i></i><i></i></span></div>
+      <div class="direction-body">
+        <div class="direction-head">
+          <div><span class="eyebrow">Oura + Teenage Engineering + WHOOP</span><h2 id="dir-1">Performance instrument</h2><div class="tags"><span>CALM</span><span>TACTILE</span><span>SPORTS DATA</span></div></div>
+          <p>Academy becomes a precision training object: warm material surfaces, hard instrument edges, a live ball-flight dial and a restrained weekly learning-load readout.</p>
+        </div>
+        <div class="preview" style="--scale:.92;--mobile-scale:.93"><iframe src="./01-performance-instrument.html" loading="lazy" title="Performance instrument live preview" tabindex="-1"></iframe></div>
+        <div class="direction-actions"><a class="button" href="./01-performance-instrument.html">Open full mock <span aria-hidden="true">→</span></a><a class="button" href="./01-performance-instrument.html?state=error">View error state</a></div>
+      </div>
+    </section>
+
+    <section class="direction" data-style="masterclass" aria-labelledby="dir-2">
+      <div class="direction-number">02 <span class="palette" aria-label="Charcoal, ivory, crimson and warm grey palette"><i></i><i></i><i></i><i></i></span></div>
+      <div class="direction-body">
+        <div class="direction-head">
+          <div><span class="eyebrow">Oura + Teenage Engineering + MasterClass</span><h2 id="dir-2">Private masterclass</h2><div class="tags"><span>CINEMATIC</span><span>EDITORIAL</span><span>EXCLUSIVE</span></div></div>
+          <p>Academy feels like private instruction: a filmic opening, elegant chapter sequencing and one strong recommended lesson. Data steps back; teaching takes the lead.</p>
+        </div>
+        <div class="preview" style="--scale:.92;--mobile-scale:.93"><iframe src="./02-private-masterclass.html" loading="lazy" title="Private masterclass live preview" tabindex="-1"></iframe></div>
+        <div class="direction-actions"><a class="button" href="./02-private-masterclass.html">Open full mock <span aria-hidden="true">→</span></a><a class="button" href="./02-private-masterclass.html?state=empty">View first-use state</a></div>
+      </div>
+    </section>
+
+    <section class="direction" data-style="signal" aria-labelledby="dir-3">
+      <div class="direction-number">03 <span class="palette" aria-label="Off-black, off-white, acid yellow and graphite palette"><i></i><i></i><i></i><i></i></span></div>
+      <div class="direction-body">
+        <div class="direction-head">
+          <div><span class="eyebrow">Endel + Nothing + Teenage Engineering</span><h2 id="dir-3">Future signal</h2><div class="tags"><span>GENERATIVE</span><span>INDUSTRIAL</span><span>FUTURE</span></div></div>
+          <p>Academy behaves like a learning signal: the ball-flight system is always present, navigation is modular and legible, and the selected outcome recomposes the next experience.</p>
+        </div>
+        <div class="preview" style="--scale:.92;--mobile-scale:.93"><iframe src="./03-future-signal.html" loading="lazy" title="Future signal live preview" tabindex="-1"></iframe></div>
+        <div class="direction-actions"><a class="button" href="./03-future-signal.html">Open full mock <span aria-hidden="true">→</span></a><a class="button" href="./03-future-signal.html?state=loading">View loading state</a></div>
+      </div>
+    </section>
+    <footer><p>Built from the current Flightglass Academy curriculum and interaction rules in the repository.</p><p>Responsive targets: 375 · 768 · 1024 · 1440</p></footer>
+  </main>
+  <script>
+    const resizePreviews=()=>document.querySelectorAll(".preview").forEach(box=>{
+      const mobile=matchMedia("(max-width:640px)").matches;
+      const width=mobile?390:1440;
+      box.style.setProperty(mobile?"--mobile-scale":"--scale",String(box.clientWidth/width));
+    });
+    new ResizeObserver(resizePreviews).observe(document.body);resizePreviews();
+  </script>
+</body>
+</html>

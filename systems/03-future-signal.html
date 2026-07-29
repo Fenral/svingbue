@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#151515">
+  <title>Academy 03 — Future Signal</title>
+  <link rel="stylesheet" href="./base.css">
+  <style>
+    :root{--bg:#151515;--surface:#202020;--ink:#f1f1ec;--muted:#999990;--line:#383836;--line-strong:#77776f;--accent:#d5f04e;--focus:#d5f04e;--danger:#e46767;--font-ui:"Space Grotesk",sans-serif}
+    body{background:var(--bg);background-image:radial-gradient(circle at 1px 1px,rgba(255,255,255,.11) 1px,transparent 0);background-size:20px 20px}
+    .shell{background:rgba(21,21,21,.95);border-inline:1px solid var(--line);padding-bottom:92px}
+    .utility-bar{height:70px;padding:0 20px;border-bottom:1px solid var(--line);background:var(--bg)}
+    .wordmark{font-family:"IBM Plex Mono",monospace;font-size:.86rem;letter-spacing:.02em}
+    .wordmark b{display:inline-grid;place-items:center;width:27px;height:27px;margin-right:9px;background:var(--ink);color:var(--bg);border-radius:50%}
+    .header-actions .button{border-color:var(--line-strong);font:500 .68rem/1 "IBM Plex Mono",monospace}
+    .signal-hero{min-height:750px;display:grid;grid-template-columns:minmax(290px,.6fr) minmax(0,1.4fr);border-bottom:1px solid var(--line)}
+    .signal-copy{padding:48px 26px;border-right:1px solid var(--line);display:flex;flex-direction:column}
+    .signal-copy h1{font-size:clamp(3.4rem,6vw,6.7rem);line-height:.88;letter-spacing:-.075em;margin:30px 0 24px;max-width:550px}
+    .signal-copy>p{color:var(--muted);line-height:1.6;max-width:430px}
+    .signal-status{margin-top:auto;display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--line)}
+    .signal-status div{padding:14px}
+    .signal-status div+div{border-left:1px solid var(--line)}
+    .signal-status strong,.signal-status span{display:block}
+    .signal-status strong{font:500 1.25rem/1 "IBM Plex Mono",monospace}
+    .signal-status span{font-size:.62rem;color:var(--muted);margin-top:7px}
+    .signal-field{position:relative;overflow:hidden;display:grid;place-items:center;min-height:620px}
+    .signal-field::before{content:"";position:absolute;inset:30px;border:1px solid var(--line)}
+    .signal-field::after{content:"LIVE LEARNING SIGNAL";position:absolute;right:40px;top:42px;font:500 .6rem/1 "IBM Plex Mono",monospace;letter-spacing:.12em;color:var(--muted)}
+    .orb{width:min(65vw,600px);aspect-ratio:1;position:relative;border-radius:50%;border:1px solid #62625d;display:grid;place-items:center}
+    .orb::before,.orb::after{content:"";position:absolute;border-radius:50%;border:1px solid #3d3d39}
+    .orb::before{inset:12%}.orb::after{inset:29%}
+    .orb svg{position:absolute;inset:5%;width:90%;height:90%;animation:drift 12s cubic-bezier(.2,.8,.2,1) infinite alternate}
+    .orb-core{position:relative;z-index:2;width:118px;height:118px;border-radius:50%;background:var(--accent);color:#171713;display:grid;place-items:center;text-align:center}
+    .orb-core strong{font:500 1.75rem/1 "IBM Plex Mono",monospace}
+    .orb-core span{font:500 .53rem/1 "IBM Plex Mono",monospace;letter-spacing:.08em}
+    .axis{position:absolute;background:#4a4a46}
+    .axis.x{width:100%;height:1px}.axis.y{height:100%;width:1px}
+    .goal-terminal{display:grid;grid-template-columns:240px 1fr;border-bottom:1px solid var(--line)}
+    .terminal-title{padding:28px 22px;border-right:1px solid var(--line)}
+    .terminal-title h2{font-size:1rem;margin:12px 0 0}
+    .goal-grid{display:grid;grid-template-columns:1fr 1fr}
+    .goal-button{border:0;background:transparent;color:var(--ink);display:grid;grid-template-columns:42px 1fr auto;gap:12px;align-items:center;padding:20px;text-align:left;border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
+    .goal-button:nth-child(even){border-right:0}
+    .goal-button:nth-child(n+3){border-bottom:0}
+    .goal-button .num{font:500 .63rem/1 "IBM Plex Mono",monospace;color:var(--muted)}
+    .goal-button strong{font-size:.9rem}
+    .goal-button::after{content:"○";font-size:1.2rem}
+    .goal-button.is-selected{background:var(--accent);color:#171713}
+    .goal-button.is-selected .num{color:#171713}.goal-button.is-selected::after{content:"●"}
+    .next-signal{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(280px,.6fr);border-bottom:1px solid var(--line)}
+    .next-copy{padding:64px 26px;min-height:500px;display:flex;flex-direction:column}
+    .next-copy h2{font-size:clamp(3.4rem,7vw,7.7rem);line-height:.84;letter-spacing:-.08em;margin:38px 0 24px;max-width:850px}
+    .next-copy p{color:var(--muted);line-height:1.6;max-width:570px}
+    .next-copy .button{margin-top:auto;background:var(--ink);color:var(--bg);border-color:var(--ink);width:max-content}
+    .next-data{border-left:1px solid var(--line);display:flex;flex-direction:column}
+    .data-cell{padding:22px;border-bottom:1px solid var(--line)}
+    .data-cell:last-child{border-bottom:0;margin-top:auto;background:var(--accent);color:#171713}
+    .data-cell span,.data-cell strong{display:block}
+    .data-cell span{font:500 .59rem/1 "IBM Plex Mono",monospace;letter-spacing:.09em;color:var(--muted)}
+    .data-cell strong{font:500 clamp(1.3rem,3vw,2.6rem)/1 "IBM Plex Mono",monospace;margin-top:12px}
+    .data-cell:last-child span{color:#4f551f}
+    .matrix-section{display:grid;grid-template-columns:240px 1fr}
+    .matrix-label{padding:28px 22px;border-right:1px solid var(--line)}
+    .matrix-label h2{margin:12px 0 0;font-size:1rem}
+    .families{min-width:0}
+    .family{display:grid;grid-template-columns:150px 1fr;border-bottom:1px solid var(--line)}
+    .family:last-child{border-bottom:0}
+    .family-title{padding:20px;border-right:1px solid var(--line)}
+    .family-title span{font:500 .58rem/1 "IBM Plex Mono",monospace;color:var(--muted)}
+    .family-title h3{font-size:.87rem;margin:10px 0 0}
+    .lesson-list{min-width:0}
+    .lesson-link{display:grid;grid-template-columns:26px minmax(0,1fr) auto auto;align-items:center;gap:14px;padding:14px 18px;text-decoration:none;border-bottom:1px solid var(--line)}
+    .lesson-link:last-child{border-bottom:0}
+    .lesson-link::before{content:"";width:8px;height:8px;border:1px solid var(--line-strong);border-radius:50%}
+    .lesson-link:first-child::before{background:var(--ink)}
+    .lesson-link small{color:var(--muted);font:500 .6rem/1 "IBM Plex Mono",monospace}
+    .lesson-link::after{color:var(--accent)}
+    .footer-modules{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid var(--line)}
+    .footer-modules a{min-height:210px;padding:24px;text-decoration:none;display:flex;flex-direction:column;justify-content:space-between}
+    .footer-modules a+a{border-left:1px solid var(--line)}
+    .footer-modules a:last-child{background:var(--ink);color:var(--bg)}
+    .footer-modules strong{font-size:clamp(1.8rem,4vw,4rem);line-height:.92;letter-spacing:-.05em;max-width:520px}
+    @keyframes drift{0%{transform:rotate(-8deg) scale(.98)}100%{transform:rotate(16deg) scale(1.02)}}
+    @media(max-width:900px){
+      .signal-hero{grid-template-columns:1fr}.signal-copy{border-right:0;border-bottom:1px solid var(--line);min-height:490px}.signal-field{min-height:620px}
+      .goal-terminal,.matrix-section{grid-template-columns:190px 1fr}.next-signal{grid-template-columns:1fr 290px}
+    }
+    @media(max-width:650px){
+      .utility-bar{height:64px;padding-inline:14px}.wordmark span{display:none}
+      .signal-copy{padding:38px 16px;min-height:540px}.signal-copy h1{font-size:3.65rem}.signal-field{min-height:470px;margin-inline:-1px}.signal-field::before{inset:14px}.signal-field::after{top:24px;right:22px}.orb{width:86vw}
+      .goal-terminal,.matrix-section{grid-template-columns:1fr}.terminal-title,.matrix-label{border-right:0;border-bottom:1px solid var(--line)}
+      .goal-grid{grid-template-columns:1fr}.goal-button{border-right:0!important;border-bottom:1px solid var(--line)!important}.goal-button:last-child{border-bottom:0!important}
+      .next-signal{grid-template-columns:1fr}.next-copy{padding:50px 16px;min-height:530px}.next-copy h2{font-size:3.8rem}.next-copy .button{width:100%}.next-data{border-left:0;border-top:1px solid var(--line)}
+      .family{grid-template-columns:1fr}.family-title{border-right:0;border-bottom:1px solid var(--line);padding:16px}.lesson-link{grid-template-columns:20px minmax(0,1fr) auto;padding-inline:16px}.lesson-link::after{grid-column:2/4}
+      .footer-modules{grid-template-columns:1fr}.footer-modules a+a{border-left:0;border-top:1px solid var(--line)}
+    }
+  </style>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to Academy</a>
+  <div class="shell">
+    <header class="utility-bar">
+      <a class="wordmark" href="#"><b>F</b>FLIGHTGLASS <span>/ ACADEMY SIGNAL</span></a>
+      <div class="header-actions"><button class="button" type="button" data-open-progress>MASTERED&nbsp; <span class="mono">04:13</span></button></div>
+    </header>
+    <main id="main">
+      <section class="signal-hero" aria-labelledby="hero-title">
+        <div class="signal-copy">
+          <span class="eyebrow">Academy signal / 03</span>
+          <h1 id="hero-title" data-pretext>Learn the shot as a living system.</h1>
+          <p>Inputs become evidence. Evidence becomes control. Move through thirteen focused experiences and see the flight reorganise around what you change.</p>
+          <div class="signal-status">
+            <div><strong>04/13</strong><span>CORE MASTERY</span></div>
+            <div><strong>480</strong><span>XP · LEVEL 2</span></div>
+          </div>
+        </div>
+        <div class="signal-field" aria-label="Generative learning signal showing an abstract ball-flight relationship">
+          <div class="orb" aria-hidden="true">
+            <i class="axis x"></i><i class="axis y"></i>
+            <svg viewBox="0 0 500 500">
+              <path d="M58 350 C92 118 330 70 443 226 C510 320 354 438 206 386 C85 343 121 192 235 128" fill="none" stroke="#f1f1ec" stroke-width="1.3"/>
+              <path d="M72 360 C152 306 239 278 432 270" fill="none" stroke="#d5f04e" stroke-width="4"/>
+              <path d="M83 151 C168 120 333 134 416 346" fill="none" stroke="#696963" stroke-width="1" stroke-dasharray="3 8"/>
+              <circle cx="72" cy="360" r="7" fill="#d5f04e"/>
+              <circle cx="432" cy="270" r="4" fill="#f1f1ec"/>
+            </svg>
+            <div class="orb-core"><div><strong>31%</strong><span>PATH ACTIVE</span></div></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="goal-terminal" aria-labelledby="goal-title">
+        <div class="terminal-title"><span class="eyebrow">Input</span><h2 id="goal-title">Choose an outcome</h2></div>
+        <div class="goal-grid" role="radiogroup" aria-labelledby="goal-title">
+          <button class="goal-button is-selected" type="button" role="radio" aria-checked="true" data-goal="direction-control"><span class="num">01</span><strong>Control direction</strong></button>
+          <button class="goal-button" type="button" role="radio" aria-checked="false" data-goal="strike-contact"><span class="num">02</span><strong>Understand contact</strong></button>
+          <button class="goal-button" type="button" role="radio" aria-checked="false" data-goal="launch-flight"><span class="num">03</span><strong>Control launch and flight</strong></button>
+          <button class="goal-button" type="button" role="radio" aria-checked="false" data-goal="distance"><span class="num">04</span><strong>Understand distance</strong></button>
+        </div>
+      </section>
+
+      <section class="next-signal" aria-labelledby="next-title">
+        <article class="next-copy">
+          <span class="eyebrow">Output / recommended sequence</span>
+          <h2 id="next-title" data-recommendation-title data-pretext>Start with Start Line</h2>
+          <p data-recommendation-reason>See how face angle and club path decide where every shot begins.</p>
+          <a class="button" href="#start-line" data-experience-action>ENTER EXPERIENCE <span aria-hidden="true">↗</span></a>
+        </article>
+        <aside class="next-data" aria-label="Recommended experience details">
+          <div class="data-cell"><span>DURATION</span><strong>18:00</strong></div>
+          <div class="data-cell"><span>GUIDED EXPERIMENTS</span><strong>01</strong></div>
+          <div class="data-cell"><span>MASTERY VALUE</span><strong>190 XP</strong></div>
+          <div class="data-cell"><span>SIGNAL STATE</span><strong>READY</strong></div>
+        </aside>
+      </section>
+
+      <section class="matrix-section" aria-labelledby="matrix-title">
+        <div class="matrix-label"><span class="eyebrow">Map</span><h2 id="matrix-title">13 core experiences</h2><p class="eyebrow" data-progress-copy>4 mastered · 2 practiced</p></div>
+        <div class="families">
+          <div class="family">
+            <div class="family-title"><span>FAMILY 01</span><h3>Direction</h3></div>
+            <div class="lesson-list">
+              <a id="start-line" class="lesson-link" href="#" data-lesson-id="start-line"><strong>Start Line</strong><small>MASTERED</small></a>
+              <a class="lesson-link" href="#" data-lesson-id="shape"><strong>Shape</strong><small>PRACTICED</small></a>
+              <a class="lesson-link" href="#" data-lesson-id="shot-pattern"><strong>Carry Side</strong><small>NEW</small></a>
+            </div>
+          </div>
+          <div class="family">
+            <div class="family-title"><span>FAMILY 02</span><h3>Strike</h3></div>
+            <div class="lesson-list">
+              <a class="lesson-link" href="#" data-lesson-id="attack-at-impact"><strong>Up or Down at Impact</strong><small>MASTERED</small></a>
+              <a class="lesson-link" href="#" data-lesson-id="low-point"><strong>Low Point</strong><small>MASTERED</small></a>
+              <a class="lesson-link" href="#" data-lesson-id="strike-depth"><strong>Contact Height</strong><small>NEW</small></a>
+            </div>
+          </div>
+          <div class="family">
+            <div class="family-title"><span>FAMILY 03</span><h3>Flight</h3></div>
+            <div class="lesson-list">
+              <a class="lesson-link" href="#" data-lesson-id="delivered-loft-launch"><strong>Delivered Loft & Launch</strong><small>PRACTICED</small></a>
+              <a class="lesson-link" href="#" data-lesson-id="backspin"><strong>Backspin</strong><small>NEW</small></a>
+              <a class="lesson-link" href="#" data-lesson-id="flight-height-descent"><strong>Flight Height & Descent</strong><small>NEW</small></a>
+            </div>
+          </div>
+          <div class="family">
+            <div class="family-title"><span>FAMILY 04</span><h3>Distance</h3></div>
+            <div class="lesson-list">
+              <a class="lesson-link" href="#" data-lesson-id="speed-transfer"><strong>Speed Transfer</strong><small>MASTERED</small></a>
+              <a class="lesson-link" href="#" data-lesson-id="carry"><strong>Carry</strong><small>NEW</small></a>
+            </div>
+          </div>
+          <div class="family">
+            <div class="family-title"><span>FAMILY 05</span><h3>Conditions</h3></div>
+            <div class="lesson-list">
+              <a class="lesson-link" href="#" data-lesson-id="air-density"><strong>Air Density</strong><small>NEW</small></a>
+              <a class="lesson-link" href="#" data-lesson-id="wind"><strong>Wind</strong><small>NEW</small></a>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section class="footer-modules" aria-label="Further learning">
+        <a href="#"><span class="eyebrow">Optional lab / does not affect mastery</span><strong>Plane Coupling</strong><span aria-hidden="true">OPEN  ↗</span></a>
+        <a href="#"><span class="eyebrow">Reference signal</span><strong>Explore the physics.</strong><span aria-hidden="true">BROWSE  ↗</span></a>
+      </section>
+    </main>
+  </div>
+  <a class="back-to-board" href="./index.html">← ALL 3 MOCKS</a>
+  <dialog id="progress-dialog">
+    <div class="dialog-head"><h2>ACADEMY / PROGRESS SIGNAL</h2><button class="icon-button" type="button" data-close-progress aria-label="Close progress">×</button></div>
+    <div class="dialog-body"><p class="dialog-score"><strong>04</strong><span>of 13 core experiences mastered</span></p><div class="progress-line"><span></span></div><div class="dialog-stats"><div><strong>480 XP</strong><span>LEVEL 2</span></div><div><strong>02</strong><span>PRACTICED</span></div><div><strong>01</strong><span>BADGE</span></div></div><p class="dialog-note">Core mastery is a thirteen-signal system. Plane Coupling is optional and does not alter the reading.</p></div>
+  </dialog>
+  <div class="state-banner" role="alert">Academy progress could not sync. Your work is safe on this device. Try again when the connection returns.</div>
+  <script type="module" src="./shared.js"></script>
+</body>
+</html>
