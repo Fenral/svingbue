@@ -1,0 +1,392 @@
+<!doctype html>
+<html lang="no">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#0a0a0b">
+  <title>Flightglass · Velg tre designreferanser</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg:#0a0a0b;
+      --panel:#121214;
+      --panel-2:#18181b;
+      --ink:#f4f2ed;
+      --muted:#a6a3ac;
+      --line:rgba(255,255,255,.12);
+      --violet:#9d8bff;
+      --ember:#ff8a4d;
+    }
+    * { box-sizing:border-box; }
+    html { scroll-behavior:smooth; }
+    body {
+      margin:0;
+      min-width:320px;
+      background:
+        radial-gradient(circle at 18% -5%,rgba(157,139,255,.13),transparent 30rem),
+        radial-gradient(circle at 88% 12%,rgba(255,138,77,.08),transparent 28rem),
+        var(--bg);
+      color:var(--ink);
+      font:15px/1.5 Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    }
+    button,a { font:inherit; }
+    .shell { width:min(1080px,calc(100% - 28px));margin:0 auto; }
+    header {
+      padding:max(42px,env(safe-area-inset-top)) 0 28px;
+      border-bottom:1px solid var(--line);
+    }
+    .eyebrow {
+      margin:0 0 12px;
+      color:var(--violet);
+      font-size:10px;
+      font-weight:800;
+      letter-spacing:.17em;
+      text-transform:uppercase;
+    }
+    h1 {
+      max-width:780px;
+      margin:0;
+      font-size:clamp(38px,7vw,72px);
+      line-height:.98;
+      letter-spacing:-.055em;
+    }
+    .lede {
+      max-width:690px;
+      margin:20px 0 0;
+      color:var(--muted);
+      font-size:clamp(16px,2.2vw,19px);
+    }
+    .legend {
+      display:flex;
+      flex-wrap:wrap;
+      gap:7px;
+      margin-top:22px;
+    }
+    .legend span {
+      padding:8px 11px;
+      border:1px solid var(--line);
+      border-radius:999px;
+      background:rgba(255,255,255,.025);
+      color:#d8d5dc;
+      font-size:11px;
+    }
+    main { padding:28px 0 140px; }
+    .toolbar {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:14px;
+      margin-bottom:15px;
+    }
+    .toolbar h2 { margin:0;font-size:16px; }
+    .quick {
+      min-height:44px;
+      padding:0 14px;
+      border:1px solid var(--line);
+      border-radius:999px;
+      background:var(--panel);
+      color:var(--ink);
+      cursor:pointer;
+    }
+    .grid {
+      display:grid;
+      grid-template-columns:repeat(3,minmax(0,1fr));
+      gap:13px;
+    }
+    .card {
+      position:relative;
+      overflow:hidden;
+      min-width:0;
+      border:1px solid var(--line);
+      border-radius:20px;
+      background:var(--panel);
+      transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease;
+    }
+    .card.selected {
+      border-color:var(--violet);
+      box-shadow:0 0 0 1px rgba(157,139,255,.24),0 18px 46px rgba(0,0,0,.28);
+      transform:translateY(-2px);
+    }
+    .palette {
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      height:72px;
+    }
+    .palette i { display:block; }
+    .card-body { padding:16px; }
+    .topline {
+      display:flex;
+      align-items:start;
+      justify-content:space-between;
+      gap:12px;
+    }
+    .number {
+      margin:0 0 6px;
+      color:var(--ember);
+      font:700 10px/1 ui-monospace,SFMono-Regular,Menlo,monospace;
+      letter-spacing:.12em;
+    }
+    h3 { margin:0;font-size:20px;letter-spacing:-.025em; }
+    .choose {
+      width:46px;
+      height:46px;
+      flex:0 0 46px;
+      display:grid;
+      place-items:center;
+      border:1px solid var(--line);
+      border-radius:14px;
+      background:var(--panel-2);
+      color:var(--ink);
+      cursor:pointer;
+      font-size:20px;
+    }
+    .selected .choose {
+      border-color:var(--violet);
+      background:var(--violet);
+      color:#0d0b16;
+    }
+    .scores {
+      display:flex;
+      flex-wrap:wrap;
+      gap:5px;
+      margin:13px 0 0;
+    }
+    .scores span {
+      padding:5px 7px;
+      border-radius:7px;
+      background:rgba(255,255,255,.055);
+      color:#d7d4dc;
+      font-size:10px;
+      font-weight:700;
+    }
+    .description {
+      min-height:63px;
+      margin:13px 0 15px;
+      color:var(--muted);
+      font-size:13px;
+    }
+    .reference {
+      display:inline-flex;
+      min-height:44px;
+      align-items:center;
+      color:var(--ink);
+      font-size:12px;
+      font-weight:700;
+      text-decoration:none;
+    }
+    .reference::after { content:"↗";margin-left:7px;color:var(--violet); }
+    .sources {
+      margin-top:28px;
+      padding:22px;
+      border:1px solid var(--line);
+      border-radius:20px;
+      background:rgba(255,255,255,.025);
+    }
+    .sources h2 { margin:0 0 8px;font-size:16px; }
+    .sources p { margin:0;color:var(--muted);font-size:13px; }
+    .sources a { color:#dcd7ff; }
+    .selection-bar {
+      position:fixed;
+      z-index:10;
+      left:0;
+      right:0;
+      bottom:0;
+      padding:12px 0 max(12px,env(safe-area-inset-bottom));
+      border-top:1px solid var(--line);
+      background:rgba(10,10,11,.9);
+      backdrop-filter:blur(18px);
+    }
+    .selection-inner {
+      width:min(1080px,calc(100% - 24px));
+      margin:0 auto;
+      display:grid;
+      grid-template-columns:1fr auto;
+      align-items:center;
+      gap:12px;
+    }
+    .selection-copy strong { display:block;font-size:14px; }
+    .selection-copy span { color:var(--muted);font-size:11px; }
+    .copy-button {
+      min-height:50px;
+      padding:0 18px;
+      border:0;
+      border-radius:14px;
+      background:var(--violet);
+      color:#0c0a15;
+      font-weight:800;
+      cursor:pointer;
+    }
+    .copy-button:disabled { opacity:.35;cursor:not-allowed; }
+    .notice {
+      position:fixed;
+      z-index:20;
+      left:50%;
+      bottom:100px;
+      transform:translate(-50%,20px);
+      padding:10px 14px;
+      border-radius:999px;
+      background:#f4f2ed;
+      color:#111;
+      font-size:12px;
+      font-weight:750;
+      opacity:0;
+      pointer-events:none;
+      transition:.2s ease;
+      white-space:nowrap;
+    }
+    .notice.show { opacity:1;transform:translate(-50%,0); }
+    @media (max-width:820px) {
+      .grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+    }
+    @media (max-width:560px) {
+      .shell { width:calc(100% - 22px); }
+      header { padding-bottom:23px; }
+      main { padding-top:21px; }
+      .grid { grid-template-columns:1fr;gap:11px; }
+      .palette { height:62px; }
+      .description { min-height:0; }
+      .toolbar { align-items:flex-start; }
+      .quick { max-width:160px; }
+      .selection-inner { grid-template-columns:1fr auto; }
+      .copy-button { padding:0 14px; }
+    }
+    @media (prefers-reduced-motion:reduce) {
+      * { scroll-behavior:auto!important;transition:none!important; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="shell">
+      <p class="eyebrow">Flightglass Academy · Referanserunde</p>
+      <h1>Velg tre fargespråk.</h1>
+      <p class="lede">Tolv nåværende produkter vurdert for kontrast, lesbarhet, premiumfølelse og særpreg. Velg tre som skal danne grunnlaget for tre komplette designsystemretninger.</p>
+      <div class="legend">
+        <span>K · kontrast</span>
+        <span>L · lesbarhet</span>
+        <span>P · premium</span>
+        <span>S · særpreg</span>
+        <span>5 er høyest</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="shell">
+    <div class="toolbar">
+      <h2>12 kandidater</h2>
+      <button class="quick" id="recommended">Velg anbefalt trio</button>
+    </div>
+    <div class="grid" id="grid"></div>
+
+    <section class="sources">
+      <h2>Researchgrunnlag</h2>
+      <p>
+        Visuell kontroll av de offisielle produktsidene, supplert med
+        <a href="https://mobbin.com/mcp" target="_blank" rel="noreferrer">Mobbin</a>,
+        <a href="https://dribbble.com/tags/health-app-ui" target="_blank" rel="noreferrer">Dribbble Health UI</a>,
+        <a href="https://dribbble.com/devynaforde/collections/7471887-OURA-App-Redesign" target="_blank" rel="noreferrer">Oura på Dribbble</a>,
+        <a href="https://www.pinterest.com/dpon1996/education-app-ui/" target="_blank" rel="noreferrer">Pinterest Education UI</a> og
+        <a href="https://kr.pinterest.com/dnwldus70/instrument-panel-ui/" target="_blank" rel="noreferrer">Pinterest Instrument UI</a>.
+        Skårene er en designvurdering, ikke en formell WCAG-test.
+      </p>
+    </section>
+  </main>
+
+  <div class="selection-bar">
+    <div class="selection-inner">
+      <div class="selection-copy">
+        <strong id="selectionTitle">0 av 3 valgt</strong>
+        <span id="selectionNames">Trykk på + for å velge</span>
+      </div>
+      <button class="copy-button" id="copy" disabled>Kopier valgene</button>
+    </div>
+  </div>
+  <div class="notice" id="notice">Kopiert — lim inn i Codex</div>
+
+  <script>
+    const candidates = [
+      {n:1,name:"Oura",url:"https://ouraring.com/",colors:["#f7f1e8","#4a4741","#b7a58d","#000000"],scores:[4.5,5,5,4.5],text:"Varm elfenben, grafitt og sand. Rolig luksus og svært god lesbarhet for biometriske data."},
+      {n:2,name:"WHOOP",url:"https://www.whoop.com/",colors:["#000000","#f7f7f2","#4c58ff","#58e6a8"],scores:[5,4,4.5,4.5],text:"Atletisk sort med elektrisk blå og semantiske signaltoner. Sterk modell for prestasjonsdata."},
+      {n:3,name:"Endel",url:"https://endel.io/",colors:["#000000","#262626","#bfbfbf","#ffffff"],scores:[5,4.5,5,5],text:"Monokromt nattunivers med organiske, generative visualiseringer. Føles som et levende instrument."},
+      {n:4,name:"Teenage Engineering",url:"https://teenage.engineering/",colors:["#f5f3ed","#111111","#ffb447","#e74c3c"],scores:[5,4.5,4.5,5],text:"Papir, svart blekk og tekniske aksenter. Maksimalt særpreg uten typisk app-estetikk."},
+      {n:5,name:"MasterClass",url:"https://www.masterclass.com/",colors:["#080808","#1c1d21","#e32652","#f4f0e8"],scores:[5,4.5,4.5,4.5],text:"Filmisk svart og kontrollert crimson. Den tydeligste referansen for premium undervisning."},
+      {n:6,name:"Linear",url:"https://linear.app/",colors:["#08090a","#16181d","#f7f8f8","#5e6ad2"],scores:[5,5,4.5,4],text:"Presis nærsvart, kjølige gråtoner og stramt hierarki. Høy tetthet uten visuelt rot."},
+      {n:7,name:"Nothing",url:"https://nothing.tech/",colors:["#f1f1ef","#111111","#f4df18","#e84080"],scores:[4.5,4,5,5],text:"Industriell sort/hvit-identitet med overraskende gule og rosa felt. Umiddelbart gjenkjennelig."},
+      {n:8,name:"Superhuman",url:"https://superhuman.com/products/mail",colors:["#f3f1ec","#292827","#7549c6","#87a8ff"],scores:[4.5,5,4.5,4],text:"Varm off-white med violet og luftige overganger. Tett funksjonalitet som fortsatt føles rolig."},
+      {n:9,name:"Arc",url:"https://arc.net/",colors:["#fffae8","#3039fb","#f4a8c8","#8cc9ff"],scores:[4.5,5,4.5,5],text:"Krem, kobolt og kontrollerte pasteller. Premium med mer personlighet og optimisme."},
+      {n:10,name:"Gentler Streak",url:"https://gentler.app/",colors:["#ffffff","#ff784b","#1aaf79","#0f2d25"],scores:[4.5,5,4.5,4.5],text:"Korall, grønn aktivitetsbane og lyst grensesnitt. Menneskelig, lett og handlingsorientert."},
+      {n:11,name:"Eight Sleep",url:"https://www.eightsleep.com/",colors:["#000000","#ffffff","#3f5975","#7a9cbd"],scores:[5,5,4.5,3.5],text:"Sort, hvitt og stålblått. Svært eksklusivt og tydelig, men mindre egenartet enn toppkandidatene."},
+      {n:12,name:"Apple Fitness+",url:"https://www.apple.com/apple-fitness-plus/",colors:["#f5f5f7","#1d1d1f","#a8ff00","#ff2d55"],scores:[5,5,4.5,4],text:"Rolig chrome med fluorescerende aktivitetsfarger. Mennesker og bevegelse bærer fargen."}
+    ];
+    const selected = new Set();
+    const grid = document.querySelector("#grid");
+    const selectionTitle = document.querySelector("#selectionTitle");
+    const selectionNames = document.querySelector("#selectionNames");
+    const copyButton = document.querySelector("#copy");
+    const notice = document.querySelector("#notice");
+
+    function render() {
+      grid.innerHTML = "";
+      candidates.forEach(item => {
+        const card = document.createElement("article");
+        card.className = `card ${selected.has(item.n) ? "selected" : ""}`;
+        card.innerHTML = `
+          <div class="palette">${item.colors.map(c => `<i style="background:${c}"></i>`).join("")}</div>
+          <div class="card-body">
+            <div class="topline">
+              <div><p class="number">${String(item.n).padStart(2,"0")}</p><h3>${item.name}</h3></div>
+              <button class="choose" aria-label="${selected.has(item.n) ? "Fjern" : "Velg"} ${item.name}" aria-pressed="${selected.has(item.n)}">${selected.has(item.n) ? "✓" : "+"}</button>
+            </div>
+            <div class="scores">
+              <span>K ${item.scores[0]}</span><span>L ${item.scores[1]}</span>
+              <span>P ${item.scores[2]}</span><span>S ${item.scores[3]}</span>
+            </div>
+            <p class="description">${item.text}</p>
+            <a class="reference" href="${item.url}" target="_blank" rel="noreferrer">Åpne referansen</a>
+          </div>`;
+        card.querySelector(".choose").addEventListener("click", () => toggle(item.n));
+        grid.appendChild(card);
+      });
+      const picks = candidates.filter(item => selected.has(item.n));
+      selectionTitle.textContent = `${picks.length} av 3 valgt`;
+      selectionNames.textContent = picks.length ? picks.map(item => `${item.n}. ${item.name}`).join(" · ") : "Trykk på + for å velge";
+      copyButton.disabled = picks.length !== 3;
+    }
+
+    function toggle(n) {
+      if (selected.has(n)) selected.delete(n);
+      else if (selected.size < 3) selected.add(n);
+      else {
+        flash("Du kan velge tre");
+        return;
+      }
+      render();
+    }
+
+    function flash(message) {
+      notice.textContent = message;
+      notice.classList.add("show");
+      setTimeout(() => notice.classList.remove("show"), 1800);
+    }
+
+    document.querySelector("#recommended").addEventListener("click", () => {
+      selected.clear();
+      [1,2,4].forEach(n => selected.add(n));
+      render();
+      flash("Anbefalt trio valgt");
+    });
+
+    copyButton.addEventListener("click", async () => {
+      const picks = candidates.filter(item => selected.has(item.n));
+      const text = `Mine tre valg for Flightglass-designsystemene: ${picks.map(item => `${item.n}. ${item.name}`).join(", ")}.`;
+      try {
+        await navigator.clipboard.writeText(text);
+        flash("Kopiert — lim inn i Codex");
+      } catch {
+        flash(text);
+      }
+    });
+    render();
+  </script>
+</body>
+</html>
