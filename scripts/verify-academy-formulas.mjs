@@ -80,6 +80,34 @@ const RULES = [
     instead: 'Spin goes continuously to zero with spin loft. Only the 9,000 rpm display ceiling remains.',
   },
   {
+    /* Added 2026-07-29 after the owner asked why his own spin-loft analysis
+       never landed. Twelve agent passes read that lesson and none flagged it,
+       because every brief I wrote handed them `clubPath: 0, faceAngle: 0` as
+       the standard delivery — and with face equal to path the 2-D form is
+       EXACTLY right. I built the blind spot and distributed it twelve times.
+       A denylist catches this where measurement could not, because the defect
+       is a claim about the engine rather than a wrong number. */
+    id: 'spinloft-two-dimensional',
+    pattern: /spin ?loft\s*=\s*dynamic ?loft\s*[-−]\s*attack|dynamicLoft\s*[-−]\s*attackAngle/gi,
+    /* The exemption is load-bearing, and the reason is the whole point of this
+       rule. The identity is TRUE in two cases, and the corpus states it
+       correctly in both:
+         - `verticalSpinLoft = dynamicLoft - attackAngle` — the landing formula
+           genuinely runs on the vertical component, and lesson-landing-angle
+           says so four times.
+         - "on a centred, square strike (club path = face angle = 0) it reduces
+           exactly to..." — lesson-attack-angle and lesson-ball-speed qualify it
+           properly.
+       A rule without this would push the next author to "fix" true statements
+       into false ones, which is the exact damage this audit exists to undo.
+       Naming the quantity vertical, or naming the condition under which the
+       simplification holds, is the licence to state the identity. */
+    exempt: /vertical|square|centred|centered|on-plane|simplification|face angle\s*=\s*0|club path\s*=\s*0|path\s*=\s*face/i,
+    says: 'the 2-D spin-loft simplification presented as the engine formula, without saying it is one',
+    instead: 'The engine computes the true 3-D included angle between the club velocity vector and the face normal: atan2(|v x n|, v . n) in flightglass-3d-spin-model.js:186-198. dynamicLoft - attackAngle is only the VERTICAL component, exposed as signedVerticalSpinLoftDeg, and it is exact only when faceAngle equals clubPath. It under-reads as they diverge: on a 7-iron an 8 degree face-to-path gap adds 0.88 degrees; on a driver a 10 degree gap turns 10 into 14.09 - a 41 percent under-read, and that is the slicer delivery. Quote the simplification only if you say it is one.',
+    requireNearby: /engine|formula|computes|calculated|spin ?loft is/i,
+  },
+  {
     /* Registered BEFORE the landing/apex migration, not after. Smash taught
        the lesson: this gate reported "0 hits" while five literal 1.46 - 0.004
        sat in the file it had just scanned, because nobody had registered the
