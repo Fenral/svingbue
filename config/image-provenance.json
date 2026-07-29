@@ -1,0 +1,16 @@
+{
+  "$comment": "Provenance for every image referenced from shipping Academy content. Shape is defined by scripts/verify-image-provenance.mjs. An image that depicts a physical quantity carries `state` (solveFlight inputs) and `shows` (the numbers on the picture); an image that depicts none is `atmospheric` and must not describe geometry.",
+  "images": [
+    {
+      "path": "assets/rw-backspin-green-bite.jpg",
+      "atmospheric": true,
+      "alt": "A golf ball biting and checking up on a green",
+      "depicts": "A ball at rest in the wet turf it marked, dusk light, soil still in the air behind it. An outcome photograph: no numbers, no angles, no measured quantity appears in the frame.",
+      "usedIn": [
+        "academy-native-lesson.js — backspin lesson, 'Real-world estimate' sheet, marked 'not the simulator'"
+      ],
+      "visualCheck": "2026-07-29 — opened the file and looked at it. Ball sitting in a fresh scar in dew-covered turf at dusk, debris airborne behind it. Nothing in the frame is a measurement the engine could contradict, so there is no state to re-derive.",
+      "altFinding": "The shipped alt says 'on a green'. The pixels show longer dew-covered turf at dusk with no hole, flag or green surround, and the ball is at rest in the mark it made rather than visibly checking. The alt describes a scene the image does not show, and it does not tell the reader what to take from it. Proposed replacement (needs an edit to academy-native-lesson.js, out of scope for this task): 'A golf ball at rest in the fresh mark it tore in dew-covered turf, soil still in the air behind it — it stopped where it landed instead of running on.'"
+    }
+  ]
+}
