@@ -21,7 +21,7 @@ button:active,.button:active{transform:scale(.98)}
 .shell{width:min(1440px,100%);margin-inline:auto;min-height:100dvh}
 .mono{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums}
 .eyebrow{text-transform:uppercase;letter-spacing:.13em;font:500 .68rem/1.4 "IBM Plex Mono",monospace}
-.button{min-height:48px;padding:0 18px;border:1px solid currentColor;display:inline-flex;align-items:center;justify-content:center;gap:10px;text-decoration:none;cursor:pointer;transition:transform .18s cubic-bezier(.2,.8,.2,1),background-color .18s}
+.button{min-height:48px;padding:0 18px;border:1px solid currentColor;background:transparent;display:inline-flex;align-items:center;justify-content:center;gap:10px;text-decoration:none;cursor:pointer;transition:transform .18s cubic-bezier(.2,.8,.2,1),background-color .18s}
 .icon-button{width:48px;height:48px;border:1px solid currentColor;background:transparent;display:grid;place-items:center;cursor:pointer}
 .icon-button svg{width:18px;height:18px}
 .progress-line{height:4px;background:var(--line);overflow:hidden}
@@ -35,7 +35,7 @@ button:active,.button:active{transform:scale(.98)}
 .lesson-link.is-relevant::after{content:"IN YOUR PATH";font:500 .56rem/1 "IBM Plex Mono",monospace;letter-spacing:.08em}
 
 .utility-bar{display:flex;align-items:center;justify-content:space-between;gap:12px}
-.wordmark{text-decoration:none;font-weight:700;letter-spacing:-.04em}
+.wordmark{min-height:44px;display:inline-flex;align-items:center;text-decoration:none;font-weight:700;letter-spacing:-.04em}
 .wordmark span{font-weight:500;opacity:.66}
 .header-actions{display:flex;align-items:center;gap:8px}
 
