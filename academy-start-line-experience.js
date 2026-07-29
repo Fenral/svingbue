@@ -1,5 +1,6 @@
 import { START_LINE_CONTENT } from './academy-start-line-content.js';
 import { evaluateStartLineTransfer, predictStartLineShift, solveStartLineState } from './academy-start-line-model.js';
+import{openSheetA11y,closeSheetA11y,trapSheetTab,releaseSheetInertness}from'./academy-sheet-a11y.js';
 
 const esc=value=>String(value??'').replace(/[&<>"']/g,char=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[char]));
 const clamp=(value,min,max)=>Math.min(max,Math.max(min,value));
@@ -208,7 +209,7 @@ export function mountStartLineExperience(options={}) {
   }
 
   function sheetHtml() {
-    return `<div class="start-line__scrim" data-start-line-sheet-scrim hidden></div><aside class="start-line__sheet" role="dialog" aria-modal="true" aria-labelledby="startLineSheetTitle" hidden><div><p data-start-line-sheet-tags></p><h2 id="startLineSheetTitle" data-start-line-sheet-title></h2><p data-start-line-sheet-body></p><button type="button" data-start-line-sheet-close>Close</button></div></aside>`;
+    return `<div class="start-line__scrim" data-sheet-scrim hidden></div><aside class="start-line__sheet" role="dialog" aria-modal="true" aria-labelledby="startLineSheetTitle" tabindex="-1" hidden><div><p data-start-line-sheet-tags></p><h2 id="startLineSheetTitle" data-start-line-sheet-title></h2><p data-start-line-sheet-body></p><button type="button" data-start-line-sheet-close>Close</button></div></aside>`;
   }
 
   function shellHtml(body) {
@@ -229,11 +230,11 @@ export function mountStartLineExperience(options={}) {
 
   function openSheet(key,trigger=null) {
     const content=START_LINE_CONTENT.sheets[key];if(!content)return;
-    const lesson=root.querySelector('#startLineExperience');const sheet=lesson.querySelector('.start-line__sheet');sheetTrigger=trigger||document.activeElement;
+    const lesson=root.querySelector('#startLineExperience');const sheet=lesson.querySelector('.start-line__sheet');
     sheet.querySelector('[data-start-line-sheet-tags]').textContent=content.tags.join(' · ');sheet.querySelector('[data-start-line-sheet-title]').textContent=content.title;sheet.querySelector('[data-start-line-sheet-body]').textContent=content.body;
-    lesson.querySelector('[data-start-line-sheet-scrim]').hidden=false;sheet.hidden=false;sheet.querySelector('[data-start-line-sheet-close]').focus();
+    sheetTrigger=openSheetA11y(lesson,sheet,trigger);
   }
-  function closeSheet() { const lesson=root.querySelector('#startLineExperience');lesson?.querySelector('.start-line__sheet')?.setAttribute('hidden','');const scrim=lesson?.querySelector('[data-start-line-sheet-scrim]');if(scrim)scrim.hidden=true;sheetTrigger?.focus?.();sheetTrigger=null; }
+  function closeSheet() { const lesson=root.querySelector('#startLineExperience'),sheet=lesson?.querySelector('.start-line__sheet');closeSheetA11y(lesson,sheet,sheetTrigger,lesson?.querySelector('#startLineTitle'));sheetTrigger=null; }
 
   function render({announceSurface=true}={}) {
     if(destroyed)return;
@@ -342,8 +343,10 @@ export function mountStartLineExperience(options={}) {
       if(target.dataset.resultNext){navigate(target.dataset.resultNext);}
     });
     listen(lesson,'input',event=>{if(event.target.matches('#startLineRange'))handleInput(event.target);if(event.target.matches('[data-transfer-face],[data-transfer-path]'))handleTransferInput(event.target);});
-    listen(lesson,'keydown',event=>{if(event.key==='Escape'&&!lesson.querySelector('.start-line__sheet')?.hidden){event.preventDefault();closeSheet();}});
-    listen(lesson.querySelector('[data-start-line-sheet-scrim]'),'click',closeSheet);
+    listen(lesson,'keydown',event=>{const sheet=lesson.querySelector('.start-line__sheet');
+      if(event.key==='Escape'&&!sheet?.hidden){event.preventDefault();closeSheet();return;}
+      trapSheetTab(event,sheet);});
+    listen(lesson.querySelector('[data-sheet-scrim]'),'click',closeSheet);
   }
 
   function registerVoiceTargets() {
@@ -358,5 +361,5 @@ export function mountStartLineExperience(options={}) {
 
   render();
   if(conceptId&&CONCEPT_SHEETS[conceptId])queueMicrotask(()=>{if(!destroyed)openSheet(CONCEPT_SHEETS[conceptId]);});
-  return ()=>{destroyed=true;clearTimeout(settleTimer);cleanups.splice(0).forEach(fn=>{try{fn();}catch{}});root.innerHTML='';};
+  return ()=>{destroyed=true;clearTimeout(settleTimer);releaseSheetInertness(root.querySelector('#startLineExperience'));cleanups.splice(0).forEach(fn=>{try{fn();}catch{}});root.innerHTML='';};
 }

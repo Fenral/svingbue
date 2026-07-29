@@ -14,17 +14,17 @@ rangeSteps:[
 {id:'equal',prompt:'At equal Ball Speed, changing Launch from 14.25° to 22.95° makes current Carry:',choices:['Stay at 183.83 yd','Rise with Launch','Fall with Backspin'],answerIndex:0,reveal:'SAME BALL SPEED · SAME CURRENT CARRY · DIFFERENT TRAJECTORY'},
 {id:'roll',prompt:'Why do the two Illustrative Totals differ?',choices:['Landing Angle changes the illustrative roll fraction','Turf firmness was measured','Backspin changes current Carry'],answerIndex:0,reveal:'Low trace 180.83 yd · High trace 177.30 yd · TURF NOT PREDICTED'}],
 influenceStages:[
-{id:'equation',label:'FULL EQUATION',copy:'0.232 × 119.52^1.389 ÷ [1 + (119.52 / 210)^6] = 172.40 yd · MODEL'},
+{id:'equation',label:'FULL EQUATION',copy:'0.9206 × 122.56 + 0.004072 × 122.56² = 174.00 yd · MODEL'},
 {id:'sweep',label:'SPEED SWEEP',copy:'92.96 → 119.52 → 146.08 mph Ball Speed. The fitted gain per added mph is not constant.'},
 {id:'equal',label:'EQUAL CARRY',copy:'Same Ball Speed and current Carry; different Launch, Apex, Landing and Illustrative Total.'},
 {id:'real',label:'REAL BRIDGE',copy:'In real golf, launch and spin materially shape Carry. Current Flightglass Carry is a Ball-Speed-only fitted estimate.'},
-{id:'boundary',label:'FIT BOUNDARY',copy:'Above roughly 172 mph Ball Speed the fit turns downward. This is a fitted-range warning, not real speed advice.'}],
+{id:'boundary',label:'FIT BOUNDARY',copy:'The fit never turns downward — every extra mph buys MORE carry, not less. This is a fitted-range warning, not real speed advice.'}],
 myths:[
 {claim:'Launch and Backspin drive this Carry number.',choices:['True','False in the current solve'],answerIndex:1,explanation:'They matter in real golf but are not inputs to current-engine Carry.'},
 {claim:'Carry ends where the ball stops.',choices:['True','False'],answerIndex:1,explanation:'Carry ends at the equal-elevation crossing. Illustrative Total adds a dashed roll tail.'},
 {claim:'Illustrative Total predicts my course.',choices:['True','False'],answerIndex:1,explanation:'It has no turf, slope, landing-speed or spin-at-landing model.'},
 {claim:'More Total is always the useful answer.',choices:['True','False'],answerIndex:1,explanation:'A hazard-clearance requirement uses Carry before the first landing.'},
-{claim:'The high-speed turnover means more speed shortens real shots.',choices:['True','False · fitted boundary'],answerIndex:1,explanation:'The turnover marks the boundary of this equation, not physical advice.'}],
+{claim:'Somewhere above 172 mph of ball speed, more speed starts costing carry.',choices:['True','False · fitted boundary'],answerIndex:1,explanation:'There is no turnover. The fit is a monotone quadratic — the yards per added mph keep growing across the whole range.'}],
 masteryTasks:[
 {kind:'choice',prompt:'Carry is measured to:',choices:['The resting point','The highest point','The equal-elevation trajectory crossing','The end of the visual screen'],answerIndex:2,evidence:'Definition'},
 {kind:'choice',prompt:'Which value directly enters current Flightglass Carry?',choices:['Ball Speed','Backspin rpm','Launch Angle','Spin Axis'],answerIndex:0,evidence:'Current cause'},

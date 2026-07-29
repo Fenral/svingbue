@@ -1759,9 +1759,32 @@ function closeFlight(){
   flightScrim.classList.remove('open');
   if (fTL) fTL.kill();
   document.removeEventListener('keydown', onFlightKey);
-  if (lastFocus && lastFocus.focus) lastFocus.focus();
+  /* isConnected, not a truthiness check: lastFocus can be a node detached by a
+     re-render, and .focus() on a detached element is a silent no-op that leaves
+     the user on <body> with no announcement. Falls back to the trigger, which
+     is always in the document. */
+  const back = (lastFocus && lastFocus.isConnected) ? lastFocus : $('playFlight');
+  if (back && back.isConnected) back.focus({preventScroll:true});
 }
-function onFlightKey(e){ if (e.key==='Escape'){ e.preventDefault(); closeFlight(); } }
+/* The card declares aria-modal="true", which tells a screen reader the rest of
+   the page is gone. Without a Tab trap that promise is false: a keyboard user
+   Tabs straight out into the grid behind an opaque overlay. Same contract the
+   Academy sheets enforce via academy-sheet-a11y.js — inlined here because this
+   page has no module graph. */
+function flightFocusables(){
+  return Array.from($('flightCard').querySelectorAll(
+    'a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])'
+  )).filter(el => !el.hidden && el.getClientRects().length);
+}
+function onFlightKey(e){
+  if (e.key==='Escape'){ e.preventDefault(); closeFlight(); return; }
+  if (e.key !== 'Tab') return;
+  const f = flightFocusables();
+  if (!f.length) return;
+  const first = f[0], last = f[f.length-1];
+  if (e.shiftKey && document.activeElement === first){ e.preventDefault(); last.focus(); }
+  else if (!e.shiftKey && document.activeElement === last){ e.preventDefault(); first.focus(); }
+}
 $('playFlight').addEventListener('click', openFlight);
 $('flightClose').addEventListener('click', closeFlight);
 $('flightReplay').addEventListener('click', ()=>{ if (reduce) renderStatic(); else fPlay(); });

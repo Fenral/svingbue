@@ -1,0 +1,258 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Flightglass Academy — hvor bilder hører hjemme</title>
+
+<style>
+  :root{
+    --ink:#07060C; --plate:#0E0A18; --plate-2:#141024;
+    --glass:#F5F2ED; --muted:#B3A8D4; --muted-2:#8478A8;
+    --ember:#FF8A4D; --violet:#9D8BFF; --gold:#E8C56A;
+    --line:rgba(157,139,255,.22); --line-2:rgba(157,139,255,.40);
+    --f-display:"Iowan Old Style",Palatino,"Palatino Linotype",Georgia,serif;
+    --f-body:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    --f-mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+    --ease:cubic-bezier(.23,1,.32,1);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--ink);color:var(--glass);font-family:var(--f-body);
+    font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:66rem;margin:0 auto;padding:clamp(1.5rem,4vw,4rem) clamp(1.1rem,4vw,2.5rem) 6rem}
+
+  .eyebrow{font-family:var(--f-mono);font-size:.68rem;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--muted-2);margin:0 0 .9rem}
+  h1{font-family:var(--f-display);font-weight:600;font-size:clamp(2.1rem,6vw,3.4rem);
+    line-height:1.05;letter-spacing:-.025em;margin:0 0 1.1rem;max-width:20ch}
+  .lede{font-size:clamp(1.05rem,2.4vw,1.2rem);color:var(--muted);max-width:62ch;margin:0 0 2.2rem}
+  .lede em{color:var(--glass);font-style:normal}
+
+  h2{font-family:var(--f-display);font-weight:600;font-size:clamp(1.4rem,3.4vw,1.9rem);
+    letter-spacing:-.02em;margin:4rem 0 .5rem;max-width:26ch}
+  h2 + .sub{color:var(--muted);margin:0 0 1.8rem;max-width:64ch}
+  h3{font-family:var(--f-body);font-weight:650;font-size:1.02rem;margin:0 0 .35rem;letter-spacing:-.01em}
+
+  .rule{height:1px;background:var(--line);border:0;margin:3.5rem 0 0}
+
+  /* ── precedent callout ─────────────────────────────────────────── */
+  .found{border-left:2px solid var(--ember);padding:1.1rem 0 1.1rem 1.4rem;margin:2rem 0}
+  .found p{margin:0 0 .6rem;max-width:62ch}
+  .found p:last-child{margin:0}
+  .found code{font-family:var(--f-mono);font-size:.85em;color:var(--ember)}
+
+  /* ── proposal cards ────────────────────────────────────────────── */
+  .items{display:grid;gap:1px;background:var(--line);border:1px solid var(--line);margin:0 0 1rem}
+  .item{background:var(--plate);padding:1.35rem 1.4rem;display:grid;
+    grid-template-columns:1fr auto;gap:.6rem 1.2rem;align-items:start}
+  .item > .body{grid-column:1;min-width:0}
+  .item .tag{grid-column:2;grid-row:1;font-family:var(--f-mono);font-size:.62rem;letter-spacing:.1em;
+    text-transform:uppercase;padding:.32rem .6rem;border-radius:999px;white-space:nowrap;
+    border:1px solid var(--line-2);color:var(--muted)}
+  .tag.eng{border-color:rgba(255,138,77,.5);color:var(--ember)}
+  .tag.atm{border-color:rgba(157,139,255,.5);color:var(--violet)}
+  .item p{margin:.4rem 0 0;color:var(--muted);font-size:.95rem;max-width:60ch}
+  .item .why{color:var(--glass)}
+  .item .lessons{font-family:var(--f-mono);font-size:.72rem;color:var(--muted-2);
+    margin-top:.7rem;letter-spacing:.02em;word-spacing:.15em}
+
+  /* ── the no list ───────────────────────────────────────────────── */
+  .no{border:1px solid var(--line);background:linear-gradient(0deg,var(--plate),var(--plate));
+    padding:1.4rem 1.5rem;margin:1rem 0 0}
+  .no h3{color:var(--glass)}
+  .no ul{margin:.8rem 0 0;padding:0 0 0 1.1rem;color:var(--muted)}
+  .no li{margin:0 0 .55rem;max-width:60ch}
+  .no li strong{color:var(--glass);font-weight:600}
+
+  /* ── decision block ────────────────────────────────────────────── */
+  .decide{margin-top:1.2rem;border:1px solid var(--line-2);padding:1.4rem 1.5rem}
+  .decide h3{font-family:var(--f-mono);font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--muted-2);margin:0 0 .9rem}
+  .decide ol{margin:0;padding:0 0 0 1.2rem;color:var(--muted)}
+  .decide li{margin:0 0 .6rem;max-width:60ch}
+  .decide li strong{color:var(--glass)}
+
+  .count{font-family:var(--f-mono);font-size:.72rem;color:var(--muted-2);letter-spacing:.08em;
+    margin:0 0 1.5rem}
+  .count b{color:var(--ember);font-weight:600}
+
+  @media (max-width:34rem){
+    .item{grid-template-columns:1fr}
+    .item .tag{grid-column:1;grid-row:auto;justify-self:start}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+  @media (prefers-color-scheme:light){
+    /* Denne siden er et instrument-forslag og holder sin mørke verden bevisst. */
+  }
+</style>
+
+<div class="wrap">
+
+  <p class="eyebrow">Flightglass Academy · forslag 2026-07-29</p>
+  <h1>Hvor bilder hører hjemme, og hvor de lyver</h1>
+  <p class="lede">
+    Academy har 24 begrepsleksjoner og bruker i dag <em>to</em> bildetagger totalt.
+    Alt annet er SVG, canvas og tokens. Spørsmålet er ikke om det trenger mer liv —
+    det gjør det. Spørsmålet er hvilke bilder som kan bære en påstand om fysikk uten
+    å motsi den.
+  </p>
+
+  <div class="found">
+    <p><strong>Produktet har allerede løst dette én gang.</strong></p>
+    <p>
+      <code>assets/rw-backspin-green-bite.jpg</code> ligger i backspin-leksjonens
+      «Real-world estimate»-ark. Det er merket <em>«not the simulator»</em>, det står i
+      et eget ark utenfor instrumentet, og bildeteksten sier: <em>«Reality: the ball
+      bites. Spin loft is why — a bad lie is why it sometimes will not.»</em>
+    </p>
+    <p>
+      Bildet påstår ingen geometri. Det viser en konsekvens, og teksten kobler
+      konsekvensen til begrepet. Mønsteret er riktig, og det ble aldri skalert:
+      <b>22 av 24 leksjoner har et realWorld-felt, og bare én har et bilde.</b>
+    </p>
+  </div>
+
+  <hr class="rule">
+
+  <h2>1 · Utvid mønsteret som allerede virker</h2>
+  <p class="sub">
+    Real-world-arket er den ene flaten der et fotografi er trygt: det er eksplisitt
+    ikke simulatoren, og det viser utfall i verden framfor geometri i modellen.
+    21 leksjoner har feltet og mangler bildet.
+  </p>
+
+  <p class="count">Foreslått: <b>8 bilder</b> · alle i realWorld-ark · ingen viser en sving</p>
+
+  <div class="items">
+    <div class="item">
+      <div class="body">
+        <h3>Ballen som stopper</h3>
+        <p class="why">Nærbilde av nedslagsmerke og ball som har bitt på green. Utfall, ikke bevegelse.</p>
+        <p>Konsekvensen backspin finnes for. Speiler bildet som allerede virker.</p>
+        <p class="lessons">backspin · spin-loft · landing-angle</p>
+      </div>
+      <span class="tag atm">atmosfære</span>
+    </div>
+
+    <div class="item">
+      <div class="body">
+        <h3>Torv og lie</h3>
+        <p class="why">Divot etter ballen, tett lie mot flyer-lie i grovt gress. Det motoren <em>ikke</em> modellerer.</p>
+        <p>Lavpunkt og treffdybde har begge en virkelighet motoren har fem input for og ingen torvmodell. Bildet viser nettopp gapet — og gjør «not in this model» konkret.</p>
+        <p class="lessons">low-point · strike-depth</p>
+      </div>
+      <span class="tag atm">atmosfære</span>
+    </div>
+
+    <div class="item">
+      <div class="body">
+        <h3>Vær som betingelse</h3>
+        <p class="why">Vind i flagget. Kald morgen med rim. Tynn fjelluft over en høytliggende bane.</p>
+        <p>Miljøleksjonene handler om forhold, ikke om leveranse. Et bilde av vær påstår ingen svinggeometri, og gjør en abstrakt prosentendring til et sted du har stått.</p>
+        <p class="lessons">wind · temperature · altitude</p>
+      </div>
+      <span class="tag atm">atmosfære</span>
+    </div>
+  </div>
+
+  <hr class="rule">
+
+  <h2>2 · Fem nivåer som steder</h2>
+  <p class="sub">
+    Stien viser fem nivåer som rader i en liste. De kan være steder i stedet — lys og
+    landskap som gir progresjonen retning. Ingen kropp, ingen kølle, ingen ballflukt.
+  </p>
+
+  <p class="count">Foreslått: <b>5 bilder</b> · kun navigasjon · ingen fysikk avbildet</p>
+
+  <div class="items">
+    <div class="item">
+      <div class="body">
+        <h3>Fundamentals · Geometry · Derived · Outcomes · Environment</h3>
+        <p class="why">Fem atmosfærer, samme palett, økende høyde og åpenhet gjennom stien.</p>
+        <p>Gress i motlys på det nederste nivået, mot åpen himmel og distanse på det øverste. Progresjonen leses som bevegelse oppover og utover uten at noe påstås om svingen.</p>
+        <p class="lessons">sti-visningen · fem tier-rader</p>
+      </div>
+      <span class="tag atm">atmosfære</span>
+    </div>
+  </div>
+
+  <hr class="rule">
+
+  <h2>3 · Bilder som faktisk viser tall</h2>
+  <p class="sub">
+    Dette er kategorien du valgte, og den med reell risiko. Et bilde som illustrerer
+    en fysisk størrelse gjør en påstand, akkurat som en setning. Derfor får hvert
+    slikt bilde en oppføring i <code>config/image-provenance.json</code> med
+    motortilstanden det kommer fra, og <code>npm run verify:images</code> re-deriverer
+    den og feiler når tallene flytter seg.
+  </p>
+
+  <p class="count">Foreslått: <b>3 bilder</b> · hvert med motortilstand · gaten er bygget</p>
+
+  <div class="items">
+    <div class="item">
+      <div class="body">
+        <h3>Samme carry, to baner</h3>
+        <p class="why">To flukter side om side som lander på samme punkt med helt ulik takhøyde.</p>
+        <p>Leksjonens eierlåste par: lik carry ~183,8 yd, launch 12,99° mot 23,49°, spinn 3275 mot 9000 rpm. Poenget er kontraintuitivt og tåler et bilde — men tallene må stemme, så det får provenance.</p>
+        <p class="lessons">carry · apex · total</p>
+      </div>
+      <span class="tag eng">motorutledet</span>
+    </div>
+
+    <div class="item">
+      <div class="body">
+        <h3>Kurvatur mot fart</h3>
+        <p class="why">Samme face-to-path, to hastigheter, to vidt ulike sluttpunkter.</p>
+        <p>Målt i dag: 18 yd ved 80 mph mot 104 yd ved 140 mph. Det var en påstand teksten tok feil om inntil i går — nettopp derfor skal bildet være bundet til motoren.</p>
+        <p class="lessons">curve · offline · club-speed</p>
+      </div>
+      <span class="tag eng">motorutledet</span>
+    </div>
+
+    <div class="item">
+      <div class="body">
+        <h3>Taket på landingsvinkel</h3>
+        <p class="why">Kurven som metter mot 52,8° uansett hvor bratt du angriper.</p>
+        <p>Leksjonen siterte 54,35°, 57,2° og 60° i tre måneder — verdier ingen input kan produsere. Et bilde av metningen gjør grensen synlig i stedet for påstått.</p>
+        <p class="lessons">landing-angle</p>
+      </div>
+      <span class="tag eng">motorutledet</span>
+    </div>
+  </div>
+
+  <hr class="rule">
+
+  <h2>4 · Det jeg mener vi ikke skal illustrere</h2>
+  <p class="sub">Ikke fordi regelen sier nei — du opphevet den — men fordi bildet vil undervise noe annet enn teksten.</p>
+
+  <div class="no">
+    <h3>Svingen selv</h3>
+    <ul>
+      <li>
+        <strong>Et bilde av trefføyeblikket viser en bestemt skaftvinkel, et bestemt lavpunkt og en bestemt angrepsvinkel.</strong>
+        Bildemodellen vet ikke at leksjonen akkurat har lært at lavpunktet skal ligge 10,5 cm foran ballen. I <em>low-point</em>, <em>attack-angle</em> og <em>dynamic-loft</em> vil bildet og teksten være uenige om nøyaktig det leksjonen underviser i.
+      </li>
+      <li>
+        <strong>Køllefjeset ved treff.</strong> Face angle og club path er 1–6 graders forskjeller. Ingen generert bilde treffer én grad, og leksjonen handler om at én grad flytter ballen meterer.
+      </li>
+      <li>
+        <strong>Alt instrumentet allerede tegner.</strong> Canvas viser den ekte tilstanden, live, mens brukeren drar i en slider. Et stillbilde ved siden av er en dårligere kopi som ikke oppdaterer seg.
+      </li>
+    </ul>
+  </div>
+
+  <hr class="rule">
+
+  <h2>Det jeg trenger fra deg</h2>
+
+  <div class="decide">
+    <h3>Fire valg</h3>
+    <ol>
+      <li><strong>Hvilke av de tre kategoriene?</strong> Real-world-utvidelsen (8), tier-atmosfæren (5) og de motorutledede (3) kan tas hver for seg.</li>
+      <li><strong>Stil.</strong> Fotorealistisk, eller noe mer bearbeidet som holder avstand til fotografiet og signaliserer «illustrasjon»? Det siste reduserer risikoen for at et bilde leses som dokumentasjon.</li>
+      <li><strong>Er «ikke illustrer svingen» riktig?</strong> Det er min anbefaling, ikke en regel. Overprøv den hvis du mener liv er viktigere enn presisjon på den flaten.</li>
+      <li><strong>Ett bilde først?</strong> Jeg lager ett, du ser det i leksjonen, og vi justerer retningen før de resterende tolv.</li>
+    </ol>
+  </div>
+
+</div>

@@ -62,3 +62,6 @@ outputs/academy-analysis/
 
 # Local git worktrees (isolated agent workspaces)
 .worktrees/
+
+# Agent-artefakter og skann-output. Genereres av workflow-agenter, aldri kilde.
+outputs/

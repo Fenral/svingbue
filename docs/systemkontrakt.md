@@ -695,7 +695,7 @@ trenger den, og bare dette:
    `impact-flight.js` og `swing-parameters-and-impact.js` er urørte.
 10. **§5.5 — eskaleringsgrensen.** Å tune poser, `refDist`, ankerpunkt, easing og
     snap-terskler er implementering. Å konkludere at rigg-tilnærmingen ikke bærer
-    er redesign → stopp, tilbake til Fable.
+    er redesign → stopp, tilbake til Opus 5.
 
 Alt annet Økt B trenger — gest-atferd, snap-regler, segmentknapper, animasjons-
 timing — står i `design/orders/impact-kamera.md` og i mocken. Denne kontrakten

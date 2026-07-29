@@ -43,9 +43,9 @@ export function backspinEngineInput(state) {
   const { dynamicLoft, attackAngle, ballSpeed } = normalizeBackspinState(state);
   // Smash is a function of 3-D spin loft (geometry) only — with face and path
   // held square it does not depend on club speed — so one probe solve yields the
-  // exact live smash needed to hold the requested ball speed. This replaces the
-  // deleted linear smash inverse (1.46 - 0.004*spinLoft), which no longer matches
-  // the recalibrated quadratic and left the lesson feeding the wrong ball speed.
+  // exact live smash needed to hold the requested ball speed. This replaces a
+  // hardcoded linear smash inverse that no longer matched the recalibrated
+  // engine fit and left the lesson feeding the wrong ball speed.
   const probe = solveFlight({
     club: '7iron',
     clubPath: 0,

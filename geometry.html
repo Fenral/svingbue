@@ -1422,6 +1422,25 @@ function applyLens(next) {
   updateSliderFill();
   updateTrackRefs();
   snapped = Math.abs(+slider.value) < 1e-9;
+
+  /* A lens switch changes what the slider MEANS — its quantity, its units, its
+     range and which outcomes it moves — while the 3-D model deliberately stays
+     put. A sighted user reads all of that in one glance from the hue shift, the
+     redrawn range and the dimmed chips. A screen reader user heard only the
+     cell re-announcing "pressed", then arrow-keyed a slider they still believed
+     controlled the previous quantity.
+
+     The dimming carries real information — which outcomes this lens affects —
+     and lives inside an aria-hidden container, so `affects` is spoken here
+     instead. Reuses the single existing polite region rather than adding a
+     second; the file's own guardrail is exactly one.
+
+     clearTimeout first: a drag started under 350 ms ago has a pending scene
+     sentence that would otherwise overwrite this one mid-utterance. */
+  clearTimeout(sceneDataTimer);
+  const affected = c.affects.map(k => ({ attack: 'attack angle', path: 'club path', strike: 'strike' }[k])).join(', ');
+  $('sceneData').textContent =
+    `${c.label}. Slider ${c.min} to ${c.max}. Now ${cellValueText()}. Affects ${affected}. Swing unchanged.`;
 }
 function cellValueText() {
   if (lens === 'plane') return T.plane.toFixed(0) + '°';

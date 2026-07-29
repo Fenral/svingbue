@@ -1,8 +1,43 @@
 # Flightglass session handoff
 
-Updated: 2026-07-17
+Updated: 2026-07-28
 
-## Repository checkpoint
+## Current state (2026-07-28) — supersedes everything below
+
+Everything under "Repository checkpoint" and "Execution state" describes the
+pre-convergence world and is kept only as a record of how the Academy work was
+built. What is true now:
+
+- **`main` is the single source of truth.** `agent/academy-codex`,
+  `agent/academy-s1`, `engine/physics-3d-spin`, `engine/physics-3d-spin-recal`
+  and `claude/impactdelen-access` are all fully merged into it. `main` is 127
+  commits ahead of `academy-codex`. Do not resume work on those branches.
+- Stage B (the recalibrated 3-D spin engine + Academy migration) landed on
+  `main` at `b80dfd6`. Its outcome report is `handoff/06-stage-b-response.md`.
+- Active work since 2026-07-23 is **Impact Studio** (`impact-studio.html`,
+  PR #11–#14), linked from the home page as the third place.
+- **Fable 5 is no longer available. Opus 5 owns the roles Fable held** — final
+  technical decisions, design director, judge. Forward-looking routing in this
+  repo was updated 2026-07-28; historical signatures were deliberately left
+  alone.
+- Not merged: `agent/impact-portrait` (6 unique commits) — merge or discard.
+
+Verified fresh on 2026-07-28, not taken from this document's older claims:
+
+- `npm run test:engine` — **72/72 pass**, 11.2 s.
+- `npm run test:academy-voice` — **red**, 2 suites: licensed-master
+  verification and caption inventory (`1579 != 1546`). This is the known,
+  pre-existing red documented in `handoff/06-stage-b-response.md` §6 — but the
+  inventory count has drifted by one since 2026-07-21, so some cue text changed
+  after that report was written.
+
+Still open, in the order they block release: the voice-pack gate (needs
+regeneration plus the owner's fatigue-listen, physical-device and iOS VoiceOver
+passes), a re-audit of the prose numbers in `academy.html` against the
+post-recalibration engine, the Geometry 3D UX gap, and the missing `ios/` and
+`android/` platform projects.
+
+## Repository checkpoint (historical — pre-convergence)
 
 - Remote: `Fenral/svingbue`
 - Working branch for this handoff: `agent/academy-codex`, rebased on

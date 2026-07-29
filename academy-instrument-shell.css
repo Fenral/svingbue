@@ -5,7 +5,9 @@
 /* ── scene (~60 % av viewport, aldri scroll) ─────────────────────────────── */
 .ai-scene{position:relative;flex:1 1 60%;min-height:0;overflow:hidden;touch-action:none;cursor:ns-resize;-webkit-user-select:none;user-select:none}
 .ai-topline{position:absolute;top:max(8px,env(safe-area-inset-top));left:10px;right:10px;z-index:4;display:flex;align-items:center;gap:10px}
-.ai-back{width:44px;height:44px;border:1px solid var(--line);border-radius:999px;background:var(--plate);color:var(--ink);font-size:17px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+/* --line gav 1.24:1 mot plate-fyllet: kontrollens grense var usynlig, og fyllet
+   er 1.00:1 mot scenen. .45 maaler 4.47:1. Krav 3:1 (WCAG 1.4.11). */
+.ai-back{width:44px;height:44px;border:1px solid rgba(255,255,255,.45);border-radius:999px;background:var(--plate);color:var(--ink);font-size:17px;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:border-color .12s var(--ease)}
 .ai-kicker{flex:1;color:var(--muted-2);font:600 .68rem var(--font-mono);letter-spacing:.14em;text-transform:uppercase}
 .ai-pin{min-height:44px;padding:0 16px;border:1px solid var(--gold);border-radius:var(--radius-pill);background:transparent;color:var(--gold);font:600 12px var(--font-ui);letter-spacing:.06em;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .15s var(--ease)}
 .ai-pin[aria-pressed="true"]{background:rgba(217,179,106,.14)}
@@ -62,7 +64,11 @@
 
 /* ── chips i sheet: solid = kontroll, stiplet = avlesning ─────────────────── */
 .ai-chiprow{display:flex;gap:8px;flex-wrap:wrap}
-.ai-chip{min-height:44px;padding:0 12px;display:inline-flex;align-items:center;gap:8px;border-radius:var(--radius-control);border:1px solid var(--line-strong);background:var(--plate);color:var(--ink);font:600 12px var(--font-mono);font-variant-numeric:tabular-nums;cursor:pointer;-webkit-tap-highlight-color:transparent}
+/* Chip-fyllet er 1.03:1 mot arket, saa RAMMEN er hele grensen -- og solid vs
+   stiplet er hele skillet mellom svarknapp og avlesning i mastery-quizen.
+   --line-strong maalte 2.48:1, under kravet. .55 maaler 6.08:1, saa ogsaa den
+   stiplede varianten blir lesbar. */
+.ai-chip{min-height:44px;padding:0 12px;display:inline-flex;align-items:center;gap:8px;border-radius:var(--radius-control);border:1px solid rgba(255,255,255,.55);background:var(--plate);color:var(--ink);font:600 12px var(--font-mono);font-variant-numeric:tabular-nums;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:border-color .12s var(--ease)}
 .ai-chip--read{border-style:dashed;cursor:default}
 .ai-chip[data-hit="true"]{border-color:var(--good);color:var(--good)}
 .ai-chip[aria-checked="true"]{border-color:var(--secondary);background:var(--secondary-soft)}
@@ -73,6 +79,35 @@
 .ai-question{margin:0;color:var(--ink);font:600 14px/1.4 var(--font-ui)}
 .ai-count{margin:0;color:var(--muted-2);font:600 .68rem var(--font-mono);letter-spacing:.12em;text-transform:uppercase}
 
+/* ── trykk og fokus ───────────────────────────────────────────────────────────
+   Fire kontroller her slo av -webkit-tap-highlight-color uten aa erstatte den,
+   saa mellom finger-ned og handling fantes det null signal. En mistrykk var ikke
+   til aa skille fra en hengt app.
+
+   Rammefarge, ikke transform: den eksisterende husvarianten
+   .sa-btn:active{transform:translateY(1px)} er 2.3 % forflytning UTEN
+   luminansendring, altsaa usynlig for svaksynte. --ink paa ramma gir 14.78:1
+   endringskontrast paa .ai-back og 7.14:1 paa .ai-chip. Bakgrunnsfyll ble
+   forkastet: for aa naa 3:1 mot denne naer-svarte paletten maatte fyllet til
+   #67646F, som ville revet i stykker det visuelle spraaket.
+
+   .ai-chip--read er en avlesning, ikke en kontroll. Den skal ikke ha trykktilstand. */
+.ai-back:active,
+.ai-pin:active,
+.ai-chip:not(.ai-chip--read):active,
+.ai-primary:not([disabled]):active,
+.ai-secondary:active{border-color:var(--ink)}
+
+/* Husmoensteret fra sa-p3.css:200-204, allerede brukt paa slideren tre linjer
+   over. Maaler 13-18:1 paa hver bakgrunn disse kontrollene faktisk staar paa. */
+.ai-back:focus-visible,
+.ai-pin:focus-visible,
+.ai-chip:not(.ai-chip--read):focus-visible,
+.ai-primary:focus-visible,
+.ai-secondary:focus-visible{outline:none;box-shadow:inset 0 0 0 1px rgba(0,0,0,.85),inset 0 0 0 3px var(--ink)}
+
 @media (prefers-reduced-motion: reduce){
-  .ai-cascade span,.ai-cascade__xp,.ai-pin{transition:none !important}
+  /* Utvidet: rammefarge-overgangene over ville ellers sluppet unna filas egen
+     lov om at alt doer under reduced-motion. */
+  .ai-cascade span,.ai-cascade__xp,.ai-pin,.ai-back,.ai-chip{transition:none !important}
 }

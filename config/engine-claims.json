@@ -1,0 +1,79 @@
+{
+  "_why": "Executable registry for verify-engine-claims.mjs. Each entry is a claim the Academy content makes about the engine, expressed as something the gate can RUN. A claim in here cannot rot silently: if the engine moves, the gate reports the measured delta instead of staying green. The size of this file is an honest measure of how much of the corpus is verified rather than merely unflagged — it starts small on purpose and grows with each migrated lesson.",
+  "_howToAdd": "id: stable slug. taughtIn: the file whose prose makes the claim. expression: JavaScript evaluated with `engine` bound to the impact-flight.js module namespace. expected: the number the content currently teaches. tolerance: optional, defaults to 1e-9. If the gate fails on your new entry, the CONTENT is wrong, not the entry — re-derive the prose from the engine rather than loosening the tolerance.",
+  "_seeded": "2026-07-28, from claims re-derived by hand during the seam audit.",
+  "claims": [
+    {
+      "id": "smash-at-spinloft-13",
+      "taughtIn": "academy.html",
+      "note": "lesson-smash and lesson-dynamic-loft taught smashEff = 1.46 - 0.004*spinLoft, giving 1.4080 here. The engine's quadratic gives 1.4891 — a 0.08 gap on the number that sets ball speed.",
+      "expression": "engine.solveFlight({clubPath:0, faceAngle:0, attackAngle:-4, dynamicLoft:9, clubSpeed:90}).smash",
+      "expected": 1.4891,
+      "tolerance": 0.0006
+    },
+    {
+      "id": "carry-monotone-not-saturating",
+      "taughtIn": "academy-carry-content.js",
+      "note": "The lesson taught carry as a power law with a saturation denominator that flattens near ~210 yd and turns over above ~172 mph ball speed. The engine is a monotone quadratic: every extra mph buys MORE carry. This claim asserts the gain per 10 mph is INCREASING between 120 and 140 mph club speed — the opposite of what the prose says.",
+      "expression": "(function(){const c=s=>engine.solveFlight({clubPath:0,faceAngle:0,attackAngle:-4,dynamicLoft:30,clubSpeed:s}).carry; return (c(140)-c(130)) - (c(130)-c(120));})()",
+      "expected": 1.49,
+      "tolerance": 0.05
+    },
+    {
+      "id": "seven-iron-launch-baseline",
+      "taughtIn": "academy.html",
+      "note": "lesson-launch-angle states 17.85 degrees eight times, from the deleted linear fit 0.62*dynamicLoft + 0.25*attackAngle, and concludes the 7-iron launches ABOVE the TrackMan tour average of 16.1. The engine gives 15.38 — below it. The lesson's conclusion is inverted, not merely imprecise.",
+      "expression": "engine.solveFlight({clubPath:0, faceAngle:0, attackAngle:-3, dynamicLoft:30, clubSpeed:90}).launchAngle",
+      "expected": 15.38,
+      "tolerance": 0.02
+    },
+    {
+      "id": "spinloft-includes-face-and-path",
+      "taughtIn": "academy.html",
+      "note": "lesson-spin-loft calls dynamicLoft - attackAngle 'the formula used in this app's engine' and lists only two of four drivers. The engine computes the true 3-D included angle. This claim holds face and path apart by 12 degrees while keeping the vertical component fixed: if spin loft were the 2-D difference the delta would be 0.",
+      "expression": "engine.solveFlight({clubPath:-6, faceAngle:6, attackAngle:-3, dynamicLoft:28, clubSpeed:95}).spinLoft - 31",
+      "expected": 2.08,
+      "tolerance": 0.02
+    },
+    {
+      "id": "smash-clamps-at-1520-not-1420",
+      "taughtIn": "academy.html",
+      "note": "Four lessons taught the ceiling as 1.42 and said a flush strike sits against it. The engine's ceiling is 1.52 and it is only touched below 6.35 degrees of spin loft — driver territory, not iron. Registered before the migration text was written, per the rule that every causal claim gets an executable check first.",
+      "expression": "engine.solveFlight({clubPath:0, faceAngle:0, attackAngle:21, dynamicLoft:26, clubSpeed:90}).smash",
+      "expected": 1.52,
+      "tolerance": 0.0001
+    },
+    {
+      "id": "smash-floor-needs-56-degrees-of-spin-loft",
+      "taughtIn": "academy.html",
+      "note": "The dead linear form bottomed out far earlier than the engine does. The 1.15 floor is unreachable at any realistic delivery: it needs 56.11 degrees of spin loft. This claim asserts a very steep wedge strike is still well above the floor.",
+      "expression": "engine.solveFlight({clubPath:0, faceAngle:0, attackAngle:-8, dynamicLoft:44, clubSpeed:80}).smash",
+      "expected": 1.1927,
+      "tolerance": 0.0005
+    },
+    {
+      "id": "speed-loses-to-flush-above-39-7-spin-loft",
+      "taughtIn": "academy.html",
+      "note": "Seeded after the main session DELETED this true claim. The lesson said it takes over 40° of spin loft before a 150 mph swing loses to a flush 130 mph one. The session could not reproduce it and removed it, replacing it with an absolute 'the engine has no delivery at which 150 mph loses to 130 mph' — which is false. The failure was in the measurement, not the claim: the session tested clubSpeed 150/1.3 ≈ 115 mph, conflating ball speed with club speed. A decorrelated review caught it. Removing a true statement because your own test was wrong is worse than leaving it alone, so this claim now pins the crossover.",
+      "expression": "(function(){const c=(cs,dl)=>engine.solveFlight({clubPath:0,faceAngle:0,attackAngle:4,dynamicLoft:dl,clubSpeed:cs}).carry; const flush=c(130,13); let lo=30,hi=48; for(let i=0;i<60;i++){const m=(lo+hi)/2; c(150,m)>flush?lo=m:hi=m;} return engine.solveFlight({clubPath:0,faceAngle:0,attackAngle:4,dynamicLoft:lo,clubSpeed:150}).spinLoft;})()",
+      "expected": 39.73,
+      "tolerance": 0.05
+    },
+    {
+      "id": "attack-weight-is-flat-across-lofts",
+      "taughtIn": "academy.html",
+      "note": "Seeded after the author of the launch-angle migration got this wrong in shipping text. Attack angle moves launch by exactly 0.25 deg per deg at EVERY loft — a driver and a wedge respond identically. It is tempting to read the growing loft coefficient as 'attack matters more at low loft' and then to explain real-world driver AoA importance with it. That inference is false: what changes with loft is the loft term, never the attack term. This claim measures the attack slope at a driver loft and at a wedge loft and asserts the difference is zero.",
+      "expression": "(function(){const L=(dl,aa)=>engine.solveFlight({clubPath:0,faceAngle:0,attackAngle:aa,dynamicLoft:dl,clubSpeed:90}).launchAngle; const slope=dl=>(L(dl,1)-L(dl,-1))/2; return slope(12) - slope(44);})()",
+      "expected": 0,
+      "tolerance": 1e-9
+    },
+    {
+      "id": "landing-angle-saturates-below-53",
+      "taughtIn": "academy.html",
+      "note": "lesson-landing-angle cites 54.35, 57.2 and 60 degrees. The engine saturates below 52.8, so those values cannot be produced by any input. This claim pins the ceiling: a steep, high-spin delivery must still land under 52.8.",
+      "expression": "engine.solveFlight({clubPath:0, faceAngle:0, attackAngle:-8, dynamicLoft:52, clubSpeed:75}).landingAngle",
+      "expected": 50.5,
+      "tolerance": 2.3
+    }
+  ]
+}

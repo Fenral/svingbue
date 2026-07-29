@@ -44,7 +44,10 @@
     "shots": "node scripts/store-screenshots.mjs",
     "sync": "cap sync ios",
     "sync:android": "cap sync android",
-    "verify:academy-formulas": "node scripts/verify-academy-formulas.mjs"
+    "verify:academy-formulas": "node scripts/verify-academy-formulas.mjs",
+    "verify:dialogs": "node scripts/verify-dialog-inertness.mjs",
+    "verify:engine-claims": "node scripts/verify-engine-claims.mjs",
+    "verify:images": "node scripts/verify-image-provenance.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^7.6.7",

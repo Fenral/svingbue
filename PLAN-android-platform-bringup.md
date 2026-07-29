@@ -300,7 +300,7 @@ Android bring-up: platform dep, landscape-lock script, GH Actions debug APK
 - android/ gitignored — generated fresh in CI, mirroring ios/
 - codemagic.yaml untouched
 
-Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>
+Co-Authored-By: Claude <noreply@anthropic.com>
 ```
 STOP HERE — do not push. Per standing rule (Spør før git push): a push to `main` triggers the full Codemagic iOS pipeline (real Mac minutes). Present Sivert with two push options:
 - Option A (recommended if no other changes are pending): push with `[skip ci]` appended to the commit subject — this skips BOTH Codemagic and the new GitHub Actions push trigger — then start the Android build manually: `gh workflow run android-debug.yml --repo Fenral/svingbue` followed by `gh run watch --repo Fenral/svingbue`. Zero Codemagic minutes burned.

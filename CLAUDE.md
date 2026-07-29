@@ -66,8 +66,23 @@ decisions between recent mocks when a primary reference is already named.
 - Never migrate existing `strikearc.academy.*` storage keys.
 - Do not change golf physics output without a failing regression test and
   explicit authorization.
-- Do not generate new imagery. Existing local assets, CSS, Canvas and SVG are
-  the first implementation path.
+- Generated imagery is allowed. The owner lifted the previous ban on
+  2026-07-29 to give the Academy visual life. Two obligations replace it:
+  - **Every image that depicts or illustrates a physical quantity must declare
+    the engine state it came from**, in `config/image-provenance.json`, and
+    `npm run verify:images` re-derives that state and fails if the image's
+    stated numbers no longer match `solveFlight`. An image is a claim about
+    the physics exactly like a sentence is, and it rots the same way — the
+    Academy shipped five deleted formulas in prose for three months because
+    nothing re-derived them.
+  - Purely atmospheric imagery (tier headers, navigation, marketing) needs no
+    provenance entry, but must not depict a swing, a club face, a ball at
+    impact or a trajectory. If it shows geometry, it is making a claim.
+  - Product law 7 still governs: when the image and the physics disagree, the
+    physics wins and the image is wrong.
+  - Canvas and SVG remain the first path for anything the engine can already
+    draw. A generated image is for atmosphere and for what the engine cannot
+    render, never as a substitute for a live instrument.
 - The owner granted release authorization on 2026-07-13. Read
   `docs/flightglass-autopilot/RELEASE-AUTHORIZATION.md`. Publish to GitHub,
   Vercel and the configured app stores only after every Phase 8 gate passes;

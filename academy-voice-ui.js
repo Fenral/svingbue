@@ -1,3 +1,5 @@
+import { closeSheetA11y, trapSheetTab } from './academy-sheet-a11y.js';
+
 const LABELS = Object.freeze({ unset:'Choose voice', voice:'Voice on', captions:'Captions only', off:'Voice off' });
 
 export function buildVoiceUiViewModel(controllerState = {}, mode = 'unset') {
@@ -45,12 +47,21 @@ export function mountAcademyVoiceUi({ root, controller, getMode = () => 'unset',
   const opener=el('[data-academy-voice-settings]'), choice=el('[data-academy-voice-choice]'), caption=el('[data-academy-voice-caption]'), text=el('[data-academy-voice-text]'), replay=el('[data-academy-voice-replay]'), sheet=el('[data-academy-voice-sheet]'), scrim=el('[data-academy-voice-scrim]');
   let lastFocus = null; const listeners=[];
   const listen=(target,event,fn)=>{target?.addEventListener(event,fn);listeners.push(()=>target?.removeEventListener(event,fn));};
-  const closeSheet=()=>{sheet.hidden=true;scrim.hidden=true;lastFocus?.focus?.();};
+  /* Bakgrunnen inertes IKKE her, i motsetning til experience-sheetene. Denne
+     widgeten eier ikke siden den ligger oppå — den bor i et voice-slot inne i en
+     leksjon, så main.children ville truffet widgetens egne kontroller og ikke
+     bakgrunnen. Tab-fella er da det ærlige alternativet: den holder tastaturet
+     inne i dialogen uten å påstå eierskap over noe widgeten ikke eier.
+     Fokusreturen går via helperen fordi lastFocus?.focus?.() ikke er en vakt —
+     optional chaining fanger null, ikke en løsrevet node eller document.body. */
+  const closeSheet=()=>{scrim.hidden=true;closeSheetA11y(null,sheet,lastFocus,opener);lastFocus=null;};
   const selectMode=mode=>{controller.setVoiceMode(mode);onModeChange(mode);choice.hidden=true;closeSheet();update(controller.getState());};
   listen(opener,'click',()=>{lastFocus=opener;sheet.hidden=false;scrim.hidden=false;(sheet.querySelector(`input[value="${getMode()}"]`) || sheet.querySelector('input'))?.focus();});
   root.querySelectorAll('[data-voice-mode]').forEach(button=>listen(button,'click',()=>selectMode(button.dataset.voiceMode)));
   root.querySelectorAll('input[name="voice-mode"]').forEach(input=>listen(input,'change',()=>selectMode(input.value)));
   listen(el('[data-academy-voice-sheet-close]'),'click',closeSheet);listen(scrim,'click',closeSheet);
+  /* Dialogen hadde ingen Escape i det hele tatt — en modal uten tastatur-utgang. */
+  listen(sheet,'keydown',event=>{if(event.key==='Escape'){event.preventDefault();closeSheet();return;}trapSheetTab(event,sheet);});
   listen(replay,'click',()=>{controller.replay();update(controller.getState());});
   listen(el('[data-academy-voice-close]'),'click',()=>{caption.hidden=true;});
   const update=state=>{
