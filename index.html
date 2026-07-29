@@ -2,475 +2,352 @@
 <html lang="no">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#0d0f0e">
-  <title>Academy — 10 designretninger</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#08090d">
+  <title>Flightglass Academy — 10 nye retninger</title>
   <style>
     :root {
       color-scheme: dark;
-      --bg: #0d0f0e;
-      --surface: #151816;
-      --line: rgba(238, 236, 227, .14);
-      --text: #eeece3;
-      --muted: #989c96;
-      --accent: #c9a95c;
-      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+      --bg: #08090d;
+      --panel: #101117;
+      --line: rgba(255,255,255,.12);
+      --muted: #a6a6b0;
+      --ink: #f6f4ee;
+      --ember: #ff8a4d;
+      --violet: #9d8bff;
     }
-
     * { box-sizing: border-box; }
-
-    html {
-      background: var(--bg);
-      scroll-behavior: smooth;
-    }
-
+    html { scroll-behavior: smooth; }
     body {
       margin: 0;
+      min-width: 320px;
       background:
-        radial-gradient(circle at 20% -10%, rgba(201, 169, 92, .09), transparent 28rem),
+        radial-gradient(circle at 15% -10%, rgba(157,139,255,.15), transparent 35rem),
+        radial-gradient(circle at 90% 15%, rgba(255,138,77,.10), transparent 30rem),
         var(--bg);
-      color: var(--text);
+      color: var(--ink);
+      font: 15px/1.5 Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
-
+    button { font: inherit; }
+    .shell { width: min(1180px, calc(100% - 32px)); margin: 0 auto; }
     header {
-      padding: max(28px, env(safe-area-inset-top)) 20px 24px;
+      padding: max(40px, env(safe-area-inset-top)) 0 30px;
       border-bottom: 1px solid var(--line);
     }
-
     .eyebrow {
-      margin: 0 0 12px;
-      color: var(--accent);
+      margin: 0 0 14px;
+      color: var(--violet);
       font-size: 11px;
-      font-weight: 700;
-      letter-spacing: .18em;
+      font-weight: 800;
+      letter-spacing: .17em;
       text-transform: uppercase;
     }
-
     h1 {
+      max-width: 900px;
       margin: 0;
-      max-width: 13ch;
-      font-size: clamp(34px, 10vw, 64px);
-      font-weight: 450;
-      letter-spacing: -.045em;
-      line-height: .98;
+      font-size: clamp(36px, 7vw, 76px);
+      line-height: .96;
+      letter-spacing: -.055em;
     }
-
-    .intro {
-      margin: 18px 0 0;
-      max-width: 42rem;
+    .lede {
+      max-width: 680px;
+      margin: 22px 0 0;
       color: var(--muted);
-      font-size: 16px;
-      line-height: 1.55;
+      font-size: clamp(16px, 2.5vw, 20px);
     }
-
-    .filters {
-      position: sticky;
-      top: 0;
-      z-index: 5;
+    .facts {
       display: flex;
+      flex-wrap: wrap;
       gap: 8px;
-      overflow-x: auto;
-      padding: 12px 20px;
-      border-bottom: 1px solid var(--line);
-      background: rgba(13, 15, 14, .88);
-      backdrop-filter: blur(18px);
-      scrollbar-width: none;
+      margin-top: 24px;
     }
-
-    .filters::-webkit-scrollbar { display: none; }
-
-    .filters a {
-      flex: none;
-      min-height: 44px;
-      padding: 12px 16px;
+    .fact {
+      padding: 9px 12px;
       border: 1px solid var(--line);
       border-radius: 999px;
-      color: var(--text);
-      font-size: 13px;
-      text-decoration: none;
-    }
-
-    main {
-      display: grid;
-      gap: 12px;
-      width: min(100%, 1480px);
-      margin: 0 auto;
-      padding: 12px;
-    }
-
-    article {
-      overflow: hidden;
-      border: 1px solid var(--line);
-      border-radius: 18px;
-      background: var(--surface);
-    }
-
-    .meta {
-      display: grid;
-      grid-template-columns: 36px minmax(0, 1fr) auto;
-      gap: 12px;
-      align-items: center;
-      min-height: 72px;
-      padding: 14px 16px;
-      border-bottom: 1px solid var(--line);
-    }
-
-    .number {
-      color: var(--accent);
-      font-size: 13px;
-      font-variant-numeric: tabular-nums;
-      letter-spacing: .08em;
-    }
-
-    h2 {
-      margin: 0 0 3px;
-      font-size: 17px;
-      font-weight: 560;
-      letter-spacing: -.015em;
-    }
-
-    .meta p {
-      overflow: hidden;
-      margin: 0;
-      color: var(--muted);
+      background: rgba(255,255,255,.035);
+      color: #d9d7df;
       font-size: 12px;
-      line-height: 1.35;
-      text-overflow: ellipsis;
-      white-space: nowrap;
     }
-
-    .format {
-      padding: 6px 8px;
+    main { padding: 32px 0 64px; }
+    .section-head {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 16px;
+      margin: 0 0 16px;
+    }
+    h2 { margin: 0; font-size: 17px; letter-spacing: -.01em; }
+    .section-head span { color: var(--muted); font-size: 12px; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(12, minmax(0,1fr));
+      gap: 14px;
+    }
+    .card {
+      grid-column: span 4;
+      position: relative;
+      overflow: hidden;
+      padding: 0;
       border: 1px solid var(--line);
-      border-radius: 6px;
-      color: var(--muted);
+      border-radius: 22px;
+      background: var(--panel);
+      color: inherit;
+      text-align: left;
+      cursor: zoom-in;
+      transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+    }
+    .card:hover, .card:focus-visible {
+      transform: translateY(-3px);
+      border-color: rgba(157,139,255,.55);
+      box-shadow: 0 18px 48px rgba(0,0,0,.38);
+      outline: none;
+    }
+    .card.portrait { grid-column: span 3; }
+    .thumb {
+      position: relative;
+      overflow: hidden;
+      background: #171820;
+      aspect-ratio: 16/10;
+    }
+    .portrait .thumb { aspect-ratio: 9/13; }
+    .thumb img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: cover;
+      object-position: top center;
+      transition: transform .35s ease;
+    }
+    .card:hover img { transform: scale(1.015); }
+    .num {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      display: grid;
+      place-items: center;
+      min-width: 38px;
+      height: 38px;
+      padding: 0 10px;
+      border: 1px solid rgba(255,255,255,.2);
+      border-radius: 12px;
+      background: rgba(8,9,13,.72);
+      backdrop-filter: blur(12px);
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .meta { padding: 16px 17px 18px; }
+    .type {
+      margin: 0 0 5px;
+      color: var(--ember);
       font-size: 10px;
-      letter-spacing: .08em;
+      font-weight: 800;
+      letter-spacing: .14em;
       text-transform: uppercase;
     }
-
-    .image-button {
-      display: block;
-      width: 100%;
-      padding: 0;
-      border: 0;
-      background: #090a09;
-      cursor: zoom-in;
+    .meta h3 { margin: 0; font-size: 18px; letter-spacing: -.025em; }
+    .meta p { margin: 7px 0 0; color: var(--muted); font-size: 13px; }
+    .pick {
+      margin-top: 30px;
+      padding: 22px;
+      border: 1px solid rgba(157,139,255,.28);
+      border-radius: 22px;
+      background: linear-gradient(135deg, rgba(157,139,255,.12), rgba(255,138,77,.06));
     }
-
-    .image-button img {
-      display: block;
-      width: 100%;
-      height: auto;
-    }
-
-    .portrait .image-button img {
-      width: min(100%, 640px);
-      margin: 0 auto;
-    }
-
-    footer {
-      padding: 32px 20px calc(32px + env(safe-area-inset-bottom));
-      color: var(--muted);
-      font-size: 13px;
-      line-height: 1.5;
-      text-align: center;
-    }
-
+    .pick strong { display: block; margin-bottom: 5px; font-size: 18px; }
+    .pick p { margin: 0; color: var(--muted); }
     dialog {
-      width: 100vw;
+      width: 100%;
+      height: 100%;
       max-width: none;
-      height: 100dvh;
       max-height: none;
       margin: 0;
       padding: 0;
       border: 0;
-      background: rgba(5, 6, 5, .97);
-      color: var(--text);
+      background: rgba(4,5,8,.96);
+      color: var(--ink);
     }
-
-    dialog::backdrop { background: rgba(0, 0, 0, .9); }
-
+    dialog::backdrop { background: #040508; }
     .viewer {
       display: grid;
       grid-template-rows: auto 1fr auto;
+      width: 100%;
       height: 100%;
-      padding-top: env(safe-area-inset-top);
-      padding-bottom: env(safe-area-inset-bottom);
+      padding: max(10px, env(safe-area-inset-top)) 12px max(12px, env(safe-area-inset-bottom));
     }
-
     .viewer-bar {
-      display: grid;
-      grid-template-columns: 48px 1fr 48px;
+      display: flex;
       align-items: center;
-      min-height: 60px;
-      padding: 6px 8px;
-      border-bottom: 1px solid var(--line);
+      justify-content: space-between;
+      gap: 12px;
+      min-height: 52px;
     }
-
-    .viewer-title {
-      overflow: hidden;
-      margin: 0;
-      font-size: 14px;
-      font-weight: 500;
-      text-align: center;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .icon-button {
-      width: 44px;
-      height: 44px;
-      padding: 0;
-      border: 1px solid var(--line);
-      border-radius: 50%;
-      background: transparent;
-      color: var(--text);
-      font-size: 22px;
-    }
-
-    .viewer-stage {
+    .viewer-title { min-width: 0; font-size: 14px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .viewer-count { color: var(--muted); font-size: 12px; white-space: nowrap; }
+    .viewer-image {
+      min-height: 0;
       display: grid;
-      overflow: auto;
       place-items: center;
+      overflow: auto;
       overscroll-behavior: contain;
     }
-
-    .viewer-stage img {
+    .viewer-image img {
       display: block;
       max-width: 100%;
       max-height: 100%;
       object-fit: contain;
+      border-radius: 12px;
+      box-shadow: 0 16px 60px rgba(0,0,0,.55);
     }
-
-    .viewer-nav {
+    .viewer-actions {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 8px;
-      padding: 10px 12px;
-      border-top: 1px solid var(--line);
+      gap: 10px;
+      padding-top: 12px;
     }
-
-    .viewer-nav button {
+    .control {
       min-height: 48px;
       border: 1px solid var(--line);
-      border-radius: 10px;
-      background: var(--surface);
-      color: var(--text);
-      font: inherit;
+      border-radius: 14px;
+      background: #14151c;
+      color: var(--ink);
+      cursor: pointer;
     }
-
-    button:focus-visible,
-    a:focus-visible {
-      outline: 2px solid var(--accent);
-      outline-offset: 2px;
+    .control:hover, .control:focus-visible { border-color: var(--violet); outline: none; }
+    .close { width: 48px; flex: 0 0 48px; font-size: 20px; }
+    @media (max-width: 860px) {
+      .card, .card.portrait { grid-column: span 6; }
     }
-
-    @media (min-width: 820px) {
-      header { padding-inline: 32px; }
-      .filters { padding-inline: 32px; }
-      main {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 18px;
-        padding: 18px;
-      }
-      article.landscape { grid-column: 1 / -1; }
-      .portrait .image-button img { max-height: 960px; object-fit: contain; }
+    @media (max-width: 560px) {
+      .shell { width: min(100% - 22px, 1180px); }
+      header { padding-bottom: 24px; }
+      main { padding-top: 22px; }
+      .grid { gap: 11px; }
+      .card, .card.portrait { grid-column: span 12; border-radius: 18px; }
+      .portrait .thumb { aspect-ratio: 9/12.2; }
+      .meta { padding: 14px 15px 16px; }
+      .section-head span { display: none; }
+      .pick { padding: 18px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      * { scroll-behavior: auto !important; transition: none !important; }
     }
   </style>
 </head>
 <body>
   <header>
-    <p class="eyebrow">Academy · Designutforskning</p>
-    <h1>10 retninger for forsiden</h1>
-    <p class="intro">Tre brede desktopforslag og sju mobilforslag. Trykk på et design for fullskjerm. Bruk knappene nederst for å bla mens du vurderer dem.</p>
+    <div class="shell">
+      <p class="eyebrow">Flightglass Academy · Concept study 02</p>
+      <h1>10 nye retninger, forankret i Academy.</h1>
+      <p class="lede">Alle forslagene bruker den faktiske læringsmodellen fra repoet: fire outcomes, fem familier, 13 erfaringer, XP, badges og neste anbefalte steg.</p>
+      <div class="facts">
+        <span class="fact">3 landscape</span>
+        <span class="fact">7 portrait</span>
+        <span class="fact">Mobilvennlig visning</span>
+        <span class="fact">Trykk for fullskjerm</span>
+      </div>
+    </div>
   </header>
 
-  <nav class="filters" aria-label="Hopp til format">
-    <a href="#landscape">3 landscape</a>
-    <a href="#portrait">7 portrett</a>
-    <a href="#recommendation">Anbefaling</a>
-  </nav>
-
-  <main>
-    <article class="landscape" id="landscape">
-      <div class="meta">
-        <span class="number">01</span>
-        <div><h2>Performance Atelier</h2><p>Dagens økt og tydelig videreføring</p></div>
-        <span class="format">Landscape</span>
-      </div>
-      <button class="image-button" data-index="0" aria-label="Åpne Performance Atelier i fullskjerm">
-        <img src="01-landscape-performance-atelier.png" alt="Performance Atelier, mørk Academy-forside for desktop">
-      </button>
-    </article>
-
-    <article class="landscape">
-      <div class="meta">
-        <span class="number">02</span>
-        <div><h2>Clubhouse Journal</h2><p>Lys, redaksjonell og eksklusiv</p></div>
-        <span class="format">Landscape</span>
-      </div>
-      <button class="image-button" data-index="1" aria-label="Åpne Clubhouse Journal i fullskjerm">
-        <img loading="lazy" src="02-landscape-clubhouse-journal.png" alt="Clubhouse Journal, lys Academy-forside for desktop">
-      </button>
-    </article>
-
-    <article class="landscape">
-      <div class="meta">
-        <span class="number">03</span>
-        <div><h2>Signal Room</h2><p>Teknisk coaching og presis analyse</p></div>
-        <span class="format">Landscape</span>
-      </div>
-      <button class="image-button" data-index="2" aria-label="Åpne Signal Room i fullskjerm">
-        <img loading="lazy" src="03-landscape-signal-room.png" alt="Signal Room, mørk analysetung Academy-forside for desktop">
-      </button>
-    </article>
-
-    <article class="portrait" id="portrait">
-      <div class="meta">
-        <span class="number">04</span>
-        <div><h2>Daily Tee</h2><p>Rett inn i dagens viktigste økt</p></div>
-        <span class="format">Portrett</span>
-      </div>
-      <button class="image-button" data-index="3" aria-label="Åpne Daily Tee i fullskjerm">
-        <img loading="lazy" src="04-portrait-daily-tee.png" alt="Daily Tee, mørk mobilforside med dagens økt">
-      </button>
-    </article>
-
-    <article class="portrait">
-      <div class="meta">
-        <span class="number">05</span>
-        <div><h2>Quiet Progress</h2><p>Rolig progresjon og redaksjonell læring</p></div>
-        <span class="format">Portrett</span>
-      </div>
-      <button class="image-button" data-index="4" aria-label="Åpne Quiet Progress i fullskjerm">
-        <img loading="lazy" src="05-portrait-quiet-progress.png" alt="Quiet Progress, lys Academy-mobilforside">
-      </button>
-    </article>
-
-    <article class="portrait">
-      <div class="meta">
-        <span class="number">06</span>
-        <div><h2>Coach Lens</h2><p>Coachens observasjon først</p></div>
-        <span class="format">Portrett</span>
-      </div>
-      <button class="image-button" data-index="5" aria-label="Åpne Coach Lens i fullskjerm">
-        <img loading="lazy" src="06-portrait-coach-lens.png" alt="Coach Lens, mørkegrønn mobilforside med svinganalyse">
-      </button>
-    </article>
-
-    <article class="portrait">
-      <div class="meta">
-        <span class="number">07</span>
-        <div><h2>Map of Mastery</h2><p>Hele læringsreisen som et kart</p></div>
-        <span class="format">Portrett</span>
-      </div>
-      <button class="image-button" data-index="6" aria-label="Åpne Map of Mastery i fullskjerm">
-        <img loading="lazy" src="07-portrait-map-of-mastery.png" alt="Map of Mastery, mobil læringssti">
-      </button>
-    </article>
-
-    <article class="portrait" id="recommendation">
-      <div class="meta">
-        <span class="number">08</span>
-        <div><h2>Practice Brief</h2><p>Anbefalt mobilretning · én ting å mestre</p></div>
-        <span class="format">Portrett</span>
-      </div>
-      <button class="image-button" data-index="7" aria-label="Åpne Practice Brief i fullskjerm">
-        <img loading="lazy" src="08-portrait-practice-brief.png" alt="Practice Brief, lys mobilforside med dagens fokus">
-      </button>
-    </article>
-
-    <article class="portrait">
-      <div class="meta">
-        <span class="number">09</span>
-        <div><h2>Swing Archive</h2><p>Historikk og analyse i filmformat</p></div>
-        <span class="format">Portrett</span>
-      </div>
-      <button class="image-button" data-index="8" aria-label="Åpne Swing Archive i fullskjerm">
-        <img loading="lazy" src="09-portrait-swing-archive.png" alt="Swing Archive, mørk mobilforside med svinghistorikk">
-      </button>
-    </article>
-
-    <article class="portrait">
-      <div class="meta">
-        <span class="number">10</span>
-        <div><h2>Members’ Room</h2><p>Privat klubb og personlig coaching</p></div>
-        <span class="format">Portrett</span>
-      </div>
-      <button class="image-button" data-index="9" aria-label="Åpne Members Room i fullskjerm">
-        <img loading="lazy" src="10-portrait-members-room.png" alt="Members Room, eksklusiv mørk Academy-mobilforside">
-      </button>
-    </article>
+  <main class="shell">
+    <div class="section-head">
+      <h2>Designretninger</h2>
+      <span>Swipe eller bruk knappene i fullskjerm</span>
+    </div>
+    <div class="grid" id="gallery"></div>
+    <aside class="pick">
+      <strong>Min anbefaling: 01 + 10</strong>
+      <p>Outcome Observatory gir sterkest premiumfølelse på desktop. Quiet Academy er klarest og mest uanstrengt på mobil. De kan kombineres til én responsiv retning uten å miste Academy-identiteten.</p>
+    </aside>
   </main>
 
-  <footer>
-    Academy designutforskning · 29. juli 2026<br>
-    Visuelle konsepter, ikke ferdig produktkode.
-  </footer>
-
-  <dialog id="viewer" aria-labelledby="viewer-title">
+  <dialog id="viewer">
     <div class="viewer">
       <div class="viewer-bar">
-        <button class="icon-button" id="close-viewer" aria-label="Lukk fullskjerm">×</button>
-        <p class="viewer-title" id="viewer-title"></p>
-        <span aria-hidden="true"></span>
+        <div class="viewer-title" id="viewerTitle"></div>
+        <div class="viewer-count" id="viewerCount"></div>
+        <button class="control close" id="closeViewer" aria-label="Lukk">×</button>
       </div>
-      <div class="viewer-stage">
-        <img id="viewer-image" src="" alt="">
-      </div>
-      <div class="viewer-nav">
-        <button id="previous-design">← Forrige</button>
-        <button id="next-design">Neste →</button>
+      <div class="viewer-image"><img id="viewerImage" alt=""></div>
+      <div class="viewer-actions">
+        <button class="control" id="previous">← Forrige</button>
+        <button class="control" id="next">Neste →</button>
       </div>
     </div>
   </dialog>
 
   <script>
-    const designs = [
-      ["01-landscape-performance-atelier.png", "01 · Performance Atelier"],
-      ["02-landscape-clubhouse-journal.png", "02 · Clubhouse Journal"],
-      ["03-landscape-signal-room.png", "03 · Signal Room"],
-      ["04-portrait-daily-tee.png", "04 · Daily Tee"],
-      ["05-portrait-quiet-progress.png", "05 · Quiet Progress"],
-      ["06-portrait-coach-lens.png", "06 · Coach Lens"],
-      ["07-portrait-map-of-mastery.png", "07 · Map of Mastery"],
-      ["08-portrait-practice-brief.png", "08 · Practice Brief"],
-      ["09-portrait-swing-archive.png", "09 · Swing Archive"],
-      ["10-portrait-members-room.png", "10 · Members’ Room"]
+    const concepts = [
+      { file: "01-landscape-outcome-observatory.png", title: "Outcome Observatory", type: "Landscape", note: "Et rolig, instrumentpreget cockpit med alle fire outcomes synlige." },
+      { file: "02-landscape-flight-ledger.png", title: "Flight Ledger", type: "Landscape", note: "Lys, redaksjonell og eksklusiv — Academy som en presis kunnskapsbok." },
+      { file: "03-landscape-control-deck.png", title: "Control Deck", type: "Landscape", note: "En tett, datarik kontrollflate som gjør hele progresjonen skannbar." },
+      { file: "04-portrait-mission-first.png", title: "Mission First", type: "Portrait", note: "Neste anbefalte økt først, med outcome-valg og familieprogresjon under." },
+      { file: "05-portrait-outcome-dial.png", title: "Outcome Dial", type: "Portrait", note: "En særegen radial navigasjon rundt de fire læringsmålene." },
+      { file: "06-portrait-evidence-path.png", title: "Evidence Path", type: "Portrait", note: "En tydelig vertikal læringsreise med ekte leksjonsnavn fra Academy." },
+      { file: "07-portrait-control-room.png", title: "Control Room", type: "Portrait", note: "Premium dark mode med ballflukt, kontrollmål og presis fremdrift." },
+      { file: "08-portrait-field-notes.png", title: "Field Notes", type: "Portrait", note: "Lys og sofistikert mobilopplevelse inspirert av feltnotater." },
+      { file: "09-portrait-mastery-passport.png", title: "Mastery Passport", type: "Portrait", note: "Academy som et samlerverdig medlems- og mestringspass." },
+      { file: "10-portrait-quiet-academy.png", title: "Quiet Academy", type: "Portrait", note: "Den mest minimalistiske retningen: rask, trygg og svært lett å manøvrere." }
     ];
 
-    const dialog = document.querySelector("#viewer");
-    const viewerImage = document.querySelector("#viewer-image");
-    const viewerTitle = document.querySelector("#viewer-title");
-    let current = 0;
+    const gallery = document.querySelector("#gallery");
+    const viewer = document.querySelector("#viewer");
+    const viewerImage = document.querySelector("#viewerImage");
+    const viewerTitle = document.querySelector("#viewerTitle");
+    const viewerCount = document.querySelector("#viewerCount");
+    let active = 0;
+    let startX = 0;
 
-    function showDesign(index) {
-      current = (index + designs.length) % designs.length;
-      viewerImage.src = designs[current][0];
-      viewerImage.alt = designs[current][1];
-      viewerTitle.textContent = designs[current][1];
+    concepts.forEach((concept, index) => {
+      const card = document.createElement("button");
+      card.className = `card ${concept.type.toLowerCase()}`;
+      card.setAttribute("aria-label", `Åpne ${concept.title}`);
+      card.innerHTML = `
+        <div class="thumb">
+          <img src="${concept.file}" alt="${concept.title}" loading="lazy">
+          <span class="num">${String(index + 1).padStart(2, "0")}</span>
+        </div>
+        <div class="meta">
+          <p class="type">${concept.type}</p>
+          <h3>${concept.title}</h3>
+          <p>${concept.note}</p>
+        </div>`;
+      card.addEventListener("click", () => openViewer(index));
+      gallery.appendChild(card);
+    });
+
+    function renderViewer() {
+      const concept = concepts[active];
+      viewerImage.src = concept.file;
+      viewerImage.alt = concept.title;
+      viewerTitle.textContent = concept.title;
+      viewerCount.textContent = `${active + 1} / ${concepts.length}`;
     }
 
-    document.querySelectorAll(".image-button").forEach((button) => {
-      button.addEventListener("click", () => {
-        showDesign(Number(button.dataset.index));
-        dialog.showModal();
-      });
-    });
+    function openViewer(index) {
+      active = index;
+      renderViewer();
+      viewer.showModal();
+    }
 
-    document.querySelector("#close-viewer").addEventListener("click", () => dialog.close());
-    document.querySelector("#previous-design").addEventListener("click", () => showDesign(current - 1));
-    document.querySelector("#next-design").addEventListener("click", () => showDesign(current + 1));
+    function move(delta) {
+      active = (active + delta + concepts.length) % concepts.length;
+      renderViewer();
+    }
 
-    dialog.addEventListener("click", (event) => {
-      if (event.target === dialog) dialog.close();
-    });
-
-    document.addEventListener("keydown", (event) => {
-      if (!dialog.open) return;
-      if (event.key === "ArrowLeft") showDesign(current - 1);
-      if (event.key === "ArrowRight") showDesign(current + 1);
+    document.querySelector("#closeViewer").addEventListener("click", () => viewer.close());
+    document.querySelector("#previous").addEventListener("click", () => move(-1));
+    document.querySelector("#next").addEventListener("click", () => move(1));
+    viewer.addEventListener("click", event => { if (event.target === viewer) viewer.close(); });
+    viewer.addEventListener("touchstart", event => { startX = event.changedTouches[0].clientX; }, { passive: true });
+    viewer.addEventListener("touchend", event => {
+      const distance = event.changedTouches[0].clientX - startX;
+      if (Math.abs(distance) > 60) move(distance > 0 ? -1 : 1);
+    }, { passive: true });
+    document.addEventListener("keydown", event => {
+      if (!viewer.open) return;
+      if (event.key === "ArrowLeft") move(-1);
+      if (event.key === "ArrowRight") move(1);
     });
   </script>
 </body>
