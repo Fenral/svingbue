@@ -1,0 +1,1613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="robots" content="noindex">
+<title>Flightglass — Backspin · inline-instrument</title>
+
+<!--
+═══════════════════════════════════════════════════════════════════════════════
+DIRECTION MOCK · "INLINE-INSTRUMENT"                       Backspin · 7-iron
+═══════════════════════════════════════════════════════════════════════════════
+
+THE PREMISE, PRESSED
+  One continuous column. The instrument is sticky at the top, never leaves and
+  never resizes — so Law 3 (the model never disappears while an input changes)
+  is structural, not a behaviour someone has to remember to preserve. Prose
+  streams beneath it. Every control is native-grade and sits inline, in the
+  flow, directly under the sentence that needs it. The instrument RE-FRAMES
+  itself per section: same model, six different cameras.
+
+    01 ARC      trajectory · carry / apex / landing
+    02 WEDGE    the spin-loft geometry itself
+    03 SCALE    where this rpm sits on the whole spin rail
+    04 CEILING  display value vs raw model value
+    05 LAYER    engine truth vs sourced real-world estimate
+    06 GATES    the two independent mastery gates
+
+  Reading is scrolling; scrolling is operating. The section you are reading
+  owns the instrument.
+
+── ENGINE PROVENANCE ─────────────────────────────────────────────────────────
+  NO NUMBER IN THIS FILE IS TYPED AS PROSE. Every value rendered anywhere on
+  this page is produced at runtime by solve() below. The only literals in the
+  copy are the lesson's own CONSTANTS (7,000 / 3,500 mission gates, the 9,000
+  display cap, the 6,800–7,400 mastery window, the 50° landing gate, the
+  5,500 / 8,000 spin-band thresholds) which are pedagogy, not engine output.
+
+  solve() is not a re-implementation of the physics. It is a lookup over
+  frozen tables that were MEASURED from the frozen engine, then verified to
+  reproduce it exactly over the complete input grid.
+
+  Produced by:
+    node <scratchpad>/gen-inline.mjs        (imports, never modifies:)
+      solveFlight, trajectorySamples             from impact-flight.js
+      solveBackspinState, backspinSensitivity,
+      backspinEngineInput, BACKSPIN_PARAMS,
+      realWorldRange                             from academy-backspin-model.js
+
+  Verification printed by that run, over every legal input combination
+  (dynamicLoft 10..48 × attackAngle -8..6 × ballSpeed 90..175):
+
+      VERIFY(serialized) 50310 states · mismatches 0
+      shape invariant: true
+
+  i.e. for all 50,310 states the table lookup returns identical rpm, rawRpm,
+  spinLoft, carryM, apexM, landingAngle and limit state to
+  solveBackspinState(). The tables ARE the engine, compressed: 17 KB instead
+  of a 50,310-row dump. This is why all THREE controls move live and
+  simultaneously here; a per-parameter sweep can only move one at a time.
+
+  The verification runs on the JSON round-trip of the tables, not on the
+  in-memory floats, and the coefficients are therefore serialized at full
+  precision. An earlier pass truncated them to six decimals and verified the
+  untruncated values: three of the 50,310 apex figures then landed on the
+  wrong side of a .5 rounding boundary (23/-3/147, 27/+4/161, 32/+6/158, each
+  off by one metre). Verify what ships, not what you computed.
+
+  Table shapes, and the measurement that justifies each factorisation:
+    rpmk[53]        rawRpm is exactly linear in ball speed at fixed spin loft,
+                    so rawRpm = round(rpmk[spinLoft-4] * ballSpeed).
+                    Measured: flight.spinRpmRaw / 120 per spin loft 4..56.
+    land[53]        landingAngle proved to depend on spin loft ONLY
+                    (verified invariant across ball speed 90/120/175).
+    apexk[39][15]   flight.apex / flight.ballSpeed per (dynamicLoft,attackAngle).
+                    apexM = round(ballSpeed * apexk * 0.9144).
+    eff[39][15]     flight.carryLaunchEfficiency, proved ball-speed-independent.
+    carryfit[86]    flight.carryBallSpeedFit per ball speed 90..175.
+                    carryM = round(carryfit * eff * 0.9144).
+    shape[29]       trajectorySamples(flight, 28).
+                    MEASURED, NOT ASSUMED: the sampler returns the identical
+                    normalised profile for every state solved (checked
+                    30/-3/120 against 44/-8/170 — byte equal). The profile
+                    therefore carries no per-state truth. The arc is drawn by
+                    scaling that one profile by the state's real carry and
+                    apex, and the descent tick is drawn at the state's real
+                    landingAngle. The glass says so on screen, under Law 4.
+    ref             {carry:261, apex:61} — maxima over the eight
+                    BACKSPIN_PARAMS corners; the same TRACE_REFERENCE recipe
+                    academy-native-lesson.js uses. The arc is measured against
+                    it instead of auto-scaling, so two states draw honestly
+                    different arcs.
+    sens.s25/s30    backspinSensitivity() at {25,-3,120} and {30,-3,120}.
+                    Used ONLY as expected values for the runtime self-check —
+                    the influence numbers on screen are finite-differenced
+                    live from solve(), by the same recipe the shipping model
+                    uses (step ±1, direction flipped at the parameter max).
+
+  A runtime SELF-CHECK re-asserts 9 engine parities on load and prints the
+  result in the colophon at the foot of the column. If a table were ever
+  edited by hand, that badge goes ember and names the first failure.
+
+── PEDAGOGY PROVENANCE ───────────────────────────────────────────────────────
+  Curriculum is lifted from the shipping Backspin lesson, not invented:
+    academy-native-lesson.js   SHEETS, LIE_ESTIMATES, MYTH_EXPERIMENTS,
+                               MASTERY_TASKS, spinBand(), advanceMission(),
+                               the mission copy and the held/not-modelled line
+    academy-backspin-model.js  BACKSPIN_PARAMS ranges + steps,
+                               BACKSPIN_LIMITS.max, LOW_SPIN_NOTE_RPM,
+                               passesStoppingFlightTarget() gate values
+  Deliberately NOT used: docs/claude-design-brief/lesson-backspin.json quotes
+  rpm figures from the retired linear spin fit (e.g. "33° × 110 mph ≈ 6,530").
+  The recalibrated engine returns different values, so those numbers are stale
+  and quoting them would break the "numbers are truth" law.
+
+── NATIVE GRAMMAR (pass/fail) ────────────────────────────────────────────────
+  safe-area insets on glass + column foot + sheet · every target ≥44px · sheet
+  traps focus and returns it to its opener, Esc closes, shell goes inert · page
+  keeps native momentum, sheet contains its own overscroll · no tap highlight ·
+  no text selection on controls, prose stays selectable · full keyboard parity
+  (native range inputs, real buttons, roving tabindex on the radio group, no
+  gesture-only path) · reduced-motion parity: transitions drop to 0ms and the
+  frame swap becomes instant, nothing is hidden · hover gated behind
+  (hover:hover) and (pointer:fine).
+
+  Self-contained. No external resource of any kind. No bundler. System fonts.
+═══════════════════════════════════════════════════════════════════════════════
+-->
+
+<style>
+:root{
+  /* Flightglass palette — locked, not improvised */
+  --ink:#07060C;
+  --plate:#0E0A18;            /* the single lifted plate: the glass */
+  --glass-c:#F5F2ED;
+  --ember:#FF8A4D;            /* live truth ONLY — rpm numeral, trace, marker */
+  --violet:#9D8BFF;           /* structure, state, every control you touch */
+  --gold:#FFD056;             /* earned mastery ONLY */
+
+  --text:#EDE9E2;             /* 15.9:1 on ink */
+  --text-2:#B3A8D4;           /*  9.1:1 — violet-tinted secondary, never grey */
+  --text-3:#8478A8;           /*  5.0:1 — micro-labels only */
+  --rule:rgba(157,139,255,.20);
+  --rule-2:rgba(157,139,255,.10);
+
+  --serif:ui-serif,"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif;
+  --mono:ui-monospace,"SF Mono",SFMono-Regular,"JetBrains Mono","Cascadia Mono",Menlo,Consolas,monospace;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,system-ui,sans-serif;
+
+  --ease:cubic-bezier(.23,1,.32,1);
+  --sat:env(safe-area-inset-top,0px);
+  --sab:env(safe-area-inset-bottom,0px);
+  --sal:env(safe-area-inset-left,0px);
+  --sar:env(safe-area-inset-right,0px);
+
+  --glass-h:clamp(258px,39svh,352px);
+  --gutter:34px;
+  --pad:clamp(16px,4.6vw,26px);
+}
+
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
+html{background:var(--ink)}
+body{
+  margin:0;background:var(--ink);color:var(--text);
+  font-family:var(--serif);font-size:1.0625rem;line-height:1.62;
+  -webkit-text-size-adjust:100%;text-rendering:optimizeLegibility;
+  padding-left:var(--sal);padding-right:var(--sar);
+  /* the source lines carry engine identifiers — passesStoppingFlightTarget(),
+     academy-native-lesson.js — that at 200% text are wider than the column and
+     have no break opportunity. break-word only fires when the word would
+     otherwise overflow, so nothing changes at normal size. */
+  overflow-wrap:break-word;
+}
+body.is-locked{overflow:hidden}
+
+/* Every live value: mono, tabular, and structurally forbidden from animating.
+   A number that eases into place is a number you cannot trust mid-motion. */
+[data-readout]{
+  font-family:var(--mono);font-variant-numeric:tabular-nums;
+  font-feature-settings:"tnum" 1;letter-spacing:-.02em;
+  transition:none!important;animation:none!important;
+}
+.cap{
+  font-family:var(--mono);font-size:.6875rem;font-weight:600;
+  letter-spacing:.13em;text-transform:uppercase;color:var(--text-3);margin:0;
+}
+
+/* ══ THE GLASS — sticky instrument, fixed height, never leaves ═════════════ */
+.glass{
+  position:sticky;top:0;z-index:20;
+  background:var(--plate);
+  padding-top:var(--sat);
+  border-bottom:1px solid var(--rule);
+  /* Never binds at normal text size on any viewport this ships to. At 200% the
+     grown instrument would otherwise take 97% of a 780px screen and leave no
+     lesson to read; it scrolls inside itself instead, so the ember numeral
+     stays pinned and nothing is clipped away.
+     No overscroll-behavior:contain here — on a container with nothing to scroll
+     Chrome still blocks chaining, and a swipe over the top 45% of the screen
+     then stopped moving the page at all. */
+  max-height:72svh;overflow:auto;
+}
+.glass__bar{display:flex;align-items:center;gap:10px;padding:0 max(10px,calc(var(--pad) - 8px))}
+.glass__back{
+  width:44px;height:44px;flex:none;display:grid;place-items:center;
+  background:none;border:0;color:var(--text-2);font-size:19px;cursor:pointer;border-radius:10px;
+}
+.glass__where{flex:1;min-width:0}
+/* the lesson name is the page's only h1 — heading navigation had no entry
+   point before, every other heading on the page is an h2 */
+.glass__where h1{
+  display:block;margin:0;font-family:var(--sans);font-size:.9375rem;font-weight:600;
+  letter-spacing:-.01em;color:var(--text);line-height:1.2;
+}
+.glass__frame{
+  flex:none;text-align:right;font-family:var(--mono);font-size:.6875rem;
+  font-weight:600;letter-spacing:.11em;text-transform:uppercase;
+  color:var(--violet);max-width:46%;line-height:1.35;
+}
+.glass__frame b{display:block;font-weight:600}
+.glass__frame i{display:block;font-style:normal;color:var(--text-3);letter-spacing:.08em}
+
+/* min-height, not height: at 100% the content is smaller than --glass-h so the
+   1fr row eats the slack and the stage is exactly --glass-h — the instrument
+   still never resizes while an input changes. At 200% text the rows would
+   otherwise sum past the fixed box and squeeze the canvas row to 0px, i.e. the
+   model would vanish (1.4.4). Here the stage grows instead, and the canvas row
+   has a floor. minmax(0,1fr) on the column stops .truth's min-content from
+   pushing the grid wider than the viewport. */
+.glass__stage{
+  position:relative;min-height:var(--glass-h);
+  padding:2px var(--pad) 8px;
+  display:grid;grid-template-columns:minmax(0,1fr);
+  grid-template-rows:auto minmax(120px,1fr) auto auto;gap:7px;
+}
+/* corner ticks — an optical window, not a card */
+.glass__stage::before,.glass__stage::after{
+  content:"";position:absolute;width:13px;height:13px;pointer-events:none;
+  border-color:var(--rule);border-style:solid;
+}
+.glass__stage::before{left:calc(var(--pad) - 7px);top:2px;border-width:1px 0 0 1px}
+.glass__stage::after{right:calc(var(--pad) - 7px);bottom:1px;border-width:0 1px 1px 0}
+
+/* wraps instead of overflowing: at 200% text the rpm numeral alone is wider
+   than half the column, and an unwrapped row pushed the whole page sideways */
+.truth{display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap}
+.truth__rpm{
+  font-family:var(--mono);font-size:clamp(2.4rem,11vw,3.2rem);font-weight:700;
+  line-height:.86;letter-spacing:-.035em;color:var(--ember);
+}
+.truth__unit{
+  font-family:var(--mono);font-size:.6875rem;font-weight:600;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--text-3);padding-bottom:5px;
+}
+.truth__band{
+  margin-left:auto;padding-bottom:4px;font-family:var(--mono);font-size:.625rem;
+  font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--text-3);
+  text-align:right;line-height:1.4;
+}
+.truth__band b{display:block;color:var(--violet)}
+
+.stagecanvas{position:relative;min-height:0}
+.stagecanvas canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.interp{
+  display:block;margin:0;font-family:var(--mono);font-size:.5625rem;
+  letter-spacing:.04em;line-height:1.45;color:var(--text-3);
+}
+
+.outs{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--rule-2)}
+.outs > *{background:var(--plate);padding:7px 2px 3px;text-align:left;border:0;color:inherit;font:inherit;display:block}
+.outs button{cursor:pointer;min-height:44px}
+.outs span{
+  display:block;font-family:var(--mono);font-size:.5625rem;font-weight:600;
+  letter-spacing:.09em;text-transform:uppercase;color:var(--text-3);
+}
+.outs strong{
+  display:block;font-family:var(--mono);font-size:.9375rem;font-weight:600;
+  letter-spacing:-.03em;color:var(--text);
+}
+.outs button span::after{content:" ⓘ";letter-spacing:0;color:var(--violet)}
+
+.glass__rail{display:flex;gap:3px;padding:0 var(--pad) 7px}
+.glass__rail i{flex:1;height:2px;background:var(--rule-2);border-radius:2px;transition:background-color 200ms var(--ease)}
+.glass__rail i[data-on="1"]{background:var(--violet)}
+
+/* ══ THE COLUMN ═══════════════════════════════════════════════════════════ */
+.column{max-width:640px;margin:0 auto;padding:0 var(--pad) calc(70px + var(--sab))}
+/* --stick is the MEASURED height of the glass, written by the observer at the
+   foot of the script. The old constant was built from --glass-h, but --glass-h
+   only describes the stage at normal text size; at 200% the glass renders up to
+   72svh and every scroll target landed completely behind it — the focused rail
+   had zero visible pixels (2.4.11). The calc() stays as the pre-script fallback. */
+.sect{
+  display:grid;grid-template-columns:var(--gutter) minmax(0,1fr);
+  padding:34px 0 8px;border-top:1px solid var(--rule-2);
+  scroll-margin-top:var(--stick,calc(var(--glass-h) + 78px));
+}
+.sect:first-child{border-top:0}
+.sect__n{
+  font-family:var(--mono);font-size:.6875rem;font-weight:600;letter-spacing:.05em;
+  color:var(--text-3);padding-top:.45em;transition:color 200ms var(--ease);
+}
+.sect[data-active="1"] .sect__n{color:var(--violet)}
+.sect__b{min-width:0}
+.sect h2{
+  font-family:var(--serif);font-weight:400;font-size:1.5rem;line-height:1.16;
+  letter-spacing:-.015em;margin:.1em 0 .55em;color:var(--text);
+}
+.sect p{margin:0 0 1em}
+.sect b{font-weight:600;color:var(--text)}
+.sect .sect__n{margin:0}
+.sect .cap{margin:0 0 .4em}
+.sect .lead{font-size:1.1875rem;line-height:1.5;color:var(--text);margin:0 0 1em}
+.sect .formula{
+  font-family:var(--mono);font-size:.9375rem;letter-spacing:-.01em;color:var(--violet);
+  border-left:2px solid var(--rule);padding:.15em 0 .15em .85em;margin:0 0 1.15em;
+}
+.sect .note{font-size:.9375rem;line-height:1.5;color:var(--text-2);margin:0 0 1em}
+.sect .src{
+  font-family:var(--mono);font-size:.625rem;letter-spacing:.04em;line-height:1.55;
+  color:var(--text-3);margin:.5em 0 1.1em;
+}
+.sect .chain{margin:0 0 1.2em}
+.sect .verdict{margin:0 0 1.1em}
+.sect .stamp{margin:0 0 1.1em}
+
+/* inline value — the sentence carries the live number, the rail carries the
+   control. This is an anchor, not a control: 44px tall, focuses its own rail. */
+.inl{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-height:44px;min-width:44px;margin:-14px 0;
+  padding:0 .12em;background:none;border:0;cursor:pointer;
+  font-family:var(--mono);font-size:1rem;font-weight:600;letter-spacing:-.02em;
+  color:var(--violet);
+  /* underline the glyphs, not the 44px touch box, or the rule floats free */
+  text-decoration:underline dashed var(--rule);
+  text-decoration-thickness:1px;text-underline-offset:.24em;
+  -webkit-user-select:none;user-select:none;
+  transition:color 140ms var(--ease),text-decoration-color 140ms var(--ease);
+}
+
+/* ══ CONTROL RAIL — native, inline in the flow ════════════════════════════ */
+/* the same scroll-margin the sections use: a rail jumped to from elsewhere must
+   land BELOW the sticky glass, label and value included, or focus arrives on a
+   slider whose own name is hidden behind the instrument (2.4.11). */
+/* .sect h2 joins the list because a note that vanishes hands focus back to the
+   heading that owns it, and that heading must land clear of the glass too. */
+/* scroll-margin is read off the element being scrolled to, never off a parent.
+   The margin on .rail therefore did nothing for the slider inside it: Tab moves
+   focus to the CONTROL, and at 200% text every control in the column arrived
+   with zero visible pixels behind the glass (2.4.11). The clearance has to sit
+   on everything that can take focus. Scoped to .column — the instrument's own
+   buttons must not push its internal scroll box. */
+.rail,[data-myth-count],.sect h2,.limit,
+.column :is(a[href],button,input,[tabindex]){scroll-margin-top:var(--stick,calc(var(--glass-h) + 78px))}
+.rail{
+  margin:0 0 1.25em;padding:11px 0 4px;border-top:1px solid var(--rule-2);
+  -webkit-user-select:none;user-select:none;
+}
+.rail__head{display:flex;align-items:baseline;gap:8px;margin-bottom:2px}
+.rail__head .cap{flex:1;color:var(--text-2);margin:0}
+.rail__val{font-family:var(--mono);font-size:1.0625rem;font-weight:600;letter-spacing:-.03em;color:var(--text)}
+.rail__row{display:flex;align-items:center;gap:6px}
+.step{
+  width:44px;height:44px;flex:none;border:1px solid var(--rule);border-radius:11px;
+  background:transparent;color:var(--violet);font-family:var(--mono);font-size:19px;
+  line-height:1;cursor:pointer;display:grid;place-items:center;
+  transition:transform 140ms var(--ease),background-color 140ms var(--ease),border-color 140ms var(--ease);
+}
+.step:active{transform:scale(.94);background:var(--rule-2)}
+.rail__sens{font-family:var(--mono);font-size:.6875rem;letter-spacing:.01em;color:var(--text-3);margin:3px 0 0}
+.rail__sens b{color:var(--violet);font-weight:600}
+
+input[type=range]{
+  -webkit-appearance:none;appearance:none;flex:1;min-width:0;
+  height:44px;background:transparent;margin:0;cursor:pointer;
+}
+input[type=range]::-webkit-slider-runnable-track{height:3px;background:var(--rule);border-radius:3px}
+input[type=range]::-moz-range-track{height:3px;background:var(--rule);border-radius:3px}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:28px;height:28px;margin-top:-12.5px;border-radius:50%;
+  background:var(--violet);border:3px solid var(--plate);
+  transition:transform 140ms var(--ease);
+}
+input[type=range]::-moz-range-thumb{
+  width:22px;height:22px;border-radius:50%;background:var(--violet);border:3px solid var(--plate);
+}
+input[type=range]:active::-webkit-slider-thumb{transform:scale(1.14)}
+
+/* ══ chain, chips, choices ════════════════════════════════════════════════ */
+/* deliberately NOT flex: flex drops the whitespace between the label text and
+   its <b> value, so the chain reads "Dynamic loft34°". Inline flow keeps it. */
+.chain{
+  display:block;font-family:var(--mono);font-size:.75rem;line-height:1.85;
+  letter-spacing:-.01em;color:var(--text-2);
+}
+.chain i{font-style:normal;color:var(--violet);padding:0 .45em;opacity:.65}
+.chain b{color:var(--text);font-weight:600}
+.chain b.hot{color:var(--ember)}
+
+.stages{display:grid;gap:1px;background:var(--rule-2);margin:0 0 1.2em}
+.stages > div{background:var(--ink);padding:11px 13px;display:flex;align-items:center;gap:11px}
+.stages .tick{
+  width:20px;height:20px;flex:none;border:1px solid var(--rule);border-radius:50%;
+  display:grid;place-items:center;font-family:var(--mono);font-size:11px;color:transparent;
+  transition:border-color 200ms var(--ease),color 200ms var(--ease);
+}
+.stages [data-done="1"] .tick{border-color:var(--gold);color:var(--gold)}
+.stages [data-done="1"] strong{color:var(--gold)}
+.stages strong{font-family:var(--sans);font-size:.875rem;font-weight:600;color:var(--text)}
+.stages small{display:block;font-family:var(--mono);font-size:.6875rem;color:var(--text-3);font-weight:400}
+
+.opts{display:grid;gap:7px;margin:0 0 1em}
+.opt{
+  min-height:52px;width:100%;text-align:left;padding:12px 14px;
+  border:1px solid var(--rule);border-radius:13px;background:transparent;
+  color:var(--text);font-family:var(--sans);font-size:.9375rem;line-height:1.35;
+  cursor:pointer;-webkit-user-select:none;user-select:none;
+  transition:transform 140ms var(--ease),border-color 160ms var(--ease),
+             background-color 160ms var(--ease),color 160ms var(--ease);
+}
+.opt:active{transform:scale(.985)}
+.opt[data-state="right"]{border-color:var(--gold);background:rgba(255,208,86,.07)}
+.opt[data-state="wrong"]{border-color:var(--rule-2);color:var(--text-3);text-decoration:line-through}
+.opt[aria-disabled="true"]{cursor:default}
+
+.verdict{border-left:2px solid var(--violet);padding-left:.85em;font-size:.9375rem;line-height:1.5;color:var(--text-2)}
+.verdict strong{display:block;color:var(--text);font-family:var(--sans);font-size:.8125rem;letter-spacing:.02em;margin-bottom:.25em}
+
+/* wrap, not shrink: at 320px and 200% text the three rail-return buttons have a
+   combined min-content of 271px inside a 254px column, and the row pushed the
+   whole page into horizontal scroll (1.4.10). Wrapping keeps every label whole. */
+.ab{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 1.15em;-webkit-user-select:none;user-select:none}
+.ab button{
+  flex:1;min-height:44px;padding:0 8px;border:1px solid var(--rule);border-radius:11px;
+  background:transparent;color:var(--text-2);cursor:pointer;
+  font-family:var(--mono);font-size:.6875rem;font-weight:600;letter-spacing:.07em;
+  text-transform:uppercase;
+  transition:transform 140ms var(--ease),color 160ms var(--ease),border-color 160ms var(--ease);
+}
+.ab button:active{transform:scale(.97)}
+.ab button[aria-pressed="true"]{color:var(--violet);border-color:var(--violet)}
+
+.seg{
+  display:flex;margin:0 0 1em;border:1px solid var(--rule);border-radius:13px;
+  overflow:hidden;-webkit-user-select:none;user-select:none;
+}
+.seg button{
+  flex:1;min-height:46px;border:0;border-left:1px solid var(--rule);background:transparent;
+  color:var(--text-2);cursor:pointer;font-family:var(--mono);font-size:.75rem;
+  font-weight:600;letter-spacing:.08em;text-transform:uppercase;
+  transition:background-color 160ms var(--ease),color 160ms var(--ease);
+}
+.seg button:first-child{border-left:0}
+.seg button[aria-checked="true"]{background:var(--rule-2);color:var(--violet)}
+
+.gates{display:grid;gap:1px;background:var(--rule-2);margin:0 0 1.1em}
+.gates > div{background:var(--ink);padding:12px 13px;display:flex;align-items:baseline;gap:10px}
+.gates span{
+  flex:1;font-family:var(--mono);font-size:.6875rem;font-weight:600;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--text-3);
+}
+.gates strong{font-family:var(--mono);font-size:1.0625rem;font-weight:600;letter-spacing:-.03em;color:var(--text)}
+.gates [data-pass="1"] strong,.gates [data-pass="1"] span{color:var(--gold)}
+
+.stamp{
+  display:inline-flex;align-items:center;min-height:44px;padding:0 16px;
+  border:1px solid var(--rule);border-radius:12px;font-family:var(--mono);
+  font-size:.75rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--text-3);
+}
+.stamp[data-pass="1"]{border-color:var(--gold);color:var(--gold)}
+
+.limit{
+  display:block;width:100%;text-align:left;min-height:44px;
+  border:1px dashed var(--rule);border-radius:12px;background:transparent;
+  padding:10px 13px;margin:0 0 1.1em;cursor:pointer;color:var(--text-2);
+  font-family:var(--mono);font-size:.75rem;line-height:1.5;letter-spacing:0;
+}
+.limit b{color:var(--violet);font-weight:600}
+
+.colophon{
+  border-top:1px solid var(--rule-2);margin-top:32px;padding-top:15px;
+  font-family:var(--mono);font-size:.625rem;line-height:1.8;letter-spacing:.03em;
+  color:var(--text-3);
+}
+.colophon b{color:var(--violet);font-weight:600}
+.colophon b[data-fail="1"]{color:var(--ember)}
+
+/* ══ SHEET — progressive disclosure, focus-trapping ═══════════════════════ */
+.scrim{position:fixed;inset:0;z-index:40;background:rgba(7,6,12,.72);opacity:0;transition:opacity 190ms var(--ease)}
+.scrim[data-open="1"]{opacity:1}
+.sheet{
+  position:fixed;left:0;right:0;bottom:0;z-index:41;
+  max-height:86svh;overflow-y:auto;overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;
+  background:var(--plate);border-top:1px solid var(--rule);
+  border-radius:20px 20px 0 0;
+  padding:8px var(--pad) calc(18px + var(--sab));
+  transform:translateY(100%);
+  transition:transform 260ms cubic-bezier(.32,.72,0,1);
+}
+.sheet[data-open="1"]{transform:translateY(0)}
+.sheet__grab{width:38px;height:4px;border-radius:4px;background:var(--rule);margin:4px auto 14px}
+.sheet h2{font-family:var(--serif);font-weight:400;font-size:1.375rem;line-height:1.2;margin:.35em 0 .6em;color:var(--text)}
+.sheet p{margin:0 0 .9em;font-size:1rem;line-height:1.55;color:var(--text-2)}
+.sheet p:last-of-type{margin-bottom:1.2em}
+.sheet strong{color:var(--text);font-weight:600}
+.sheet .formula{
+  font-family:var(--mono);font-size:.9375rem;color:var(--violet);
+  border-left:2px solid var(--rule);padding:.15em 0 .15em .85em;
+}
+.sheet__close{
+  width:100%;min-height:48px;border:1px solid var(--rule);border-radius:13px;
+  background:transparent;color:var(--text);cursor:pointer;
+  font-family:var(--mono);font-size:.8125rem;font-weight:600;letter-spacing:.1em;
+  text-transform:uppercase;transition:transform 140ms var(--ease),border-color 160ms var(--ease);
+}
+.sheet__close:active{transform:scale(.985)}
+
+.sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+
+:focus-visible{outline:2px solid var(--glass-c);outline-offset:2px;border-radius:4px}
+input[type=range]:focus-visible{outline-offset:-6px}
+
+@media (hover:hover) and (pointer:fine){
+  .step:hover,.opt:hover,.sheet__close:hover,.ab button:hover,.limit:hover{border-color:var(--violet)}
+  .inl:hover{color:var(--glass-c);text-decoration-color:var(--violet)}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{transition-duration:0ms!important;animation-duration:0ms!important;scroll-behavior:auto!important}
+}
+@media (min-width:720px){
+  :root{--glass-h:clamp(290px,43svh,396px)}
+}
+</style>
+</head>
+<body>
+
+<!-- ══ THE GLASS ══════════════════════════════════════════════════════════ -->
+<header class="glass" id="glass">
+  <div class="glass__bar">
+    <button class="glass__back" type="button" aria-label="Back to Academy path">←</button>
+    <div class="glass__where">
+      <p class="cap">Academy · Flight</p>
+      <h1>Backspin</h1>
+    </div>
+    <div class="glass__frame" aria-hidden="true">
+      <b data-frame-n>Frame 01</b><i data-frame-name>Arc</i>
+    </div>
+  </div>
+
+  <div class="glass__stage">
+    <div class="truth">
+      <span class="truth__rpm" data-readout data-o="rpm">—</span>
+      <span class="truth__unit">rpm<br>backspin</span>
+      <span class="truth__band">7-iron · live engine<b data-o="band">—</b></span>
+    </div>
+
+    <!-- the canvas carries the premise, so it carries an accessible equivalent:
+         role=img plus an aria-label rewritten by draw() on every state change,
+         naming the frame and the values that frame is actually drawing. -->
+    <div class="stagecanvas"><canvas id="cv" role="img" aria-label="Instrument">Instrument frame. The same values are listed in the readouts below.</canvas></div>
+    <span class="interp" data-interp></span>
+
+    <div class="outs">
+      <button type="button" data-sheet="spinLoft"><span>Spin loft</span><strong data-readout data-o="sl">—</strong></button>
+      <button type="button" data-sheet="carry"><span>Carry</span><strong data-readout data-o="carry">—</strong></button>
+      <div><span>Height</span><strong data-readout data-o="apex">—</strong></div>
+      <div><span>Landing</span><strong data-readout data-o="land">—</strong></div>
+    </div>
+  </div>
+
+  <div class="glass__rail" aria-hidden="true">
+    <i data-rail="0"></i><i data-rail="1"></i><i data-rail="2"></i>
+    <i data-rail="3"></i><i data-rail="4"></i><i data-rail="5"></i><i data-rail="6"></i>
+  </div>
+</header>
+
+<p class="sr" role="status" aria-live="polite" data-live></p>
+
+<!-- ══ THE COLUMN ═════════════════════════════════════════════════════════ -->
+<main class="column">
+
+<!-- ── 00 ─────────────────────────────────────────────────────────────────── -->
+<section class="sect" id="s0" data-frame="arc" data-n="0">
+  <p class="sect__n">00</p>
+  <div class="sect__b">
+    <p class="cap">Mission</p>
+    <h2>Build, then cut.</h2>
+    <p class="lead">Backspin is an outcome. You never add it. You deliver a geometry,
+      and the engine returns the spin that geometry produces.</p>
+    <p>Two stages, one 7-iron. First build at least <b>7,000&nbsp;rpm</b>. Once
+      that stage is credited, cut the same model below <b>3,500&nbsp;rpm</b>.
+      The instrument above never leaves and never resizes; it is the same model
+      in every section, only re-aimed.</p>
+
+    <div class="stages" role="list">
+      <div role="listitem" data-stage="built" data-done="0">
+        <span class="tick" aria-hidden="true">✓</span>
+        <p style="margin:0"><strong>Build the spin</strong><small>Reach 7,000 rpm</small>
+          <span class="sr" data-stage-state></span></p>
+      </div>
+      <div role="listitem" data-stage="cut" data-done="0">
+        <span class="tick" aria-hidden="true">✓</span>
+        <p style="margin:0"><strong>Cut it in half</strong><small>Then drop below 3,500 rpm</small>
+          <span class="sr" data-stage-state></span></p>
+      </div>
+    </div>
+
+    <p class="note">One 7-iron preset · centred, clean and dry contact. Friction,
+      grooves, moisture, strike location and ball or face properties are not
+      modelled. The low-spin stage is a delivery experiment, not a driver
+      simulation.</p>
+    <p class="src">Mission, stages and the held-conditions line:
+      academy-native-lesson.js → SHEETS.mission, advanceMission()</p>
+  </div>
+</section>
+
+<!-- ── 01 ─────────────────────────────────────────────────────────────────── -->
+<section class="sect" id="s1" data-frame="wedge" data-n="1">
+  <p class="sect__n">01</p>
+  <div class="sect__b">
+    <p class="cap">Model term</p>
+    <h2>Spin loft is the whole story.</h2>
+    <p>The instrument has re-framed. It is no longer drawing where the ball goes.
+      It is drawing the geometry that decides the spin: the gap between where the
+      club is travelling and where the face is pointing.</p>
+    <p class="formula">spin loft = dynamic loft − attack angle</p>
+
+    <p>Right now the face delivers
+      <button class="inl" type="button" data-goto="dl" data-o="dl-inl">—</button>
+      of dynamic loft while the head travels at
+      <button class="inl" type="button" data-goto="aa" data-o="aa-inl">—</button>
+      of attack. That is <b data-o="sl-inl">—</b> of spin loft, and it is the only
+      geometric quantity the spin number depends on.</p>
+
+    <div class="rail" id="rail-dl">
+      <div class="rail__head">
+        <p class="cap">Dynamic loft</p>
+        <span class="rail__val" data-readout data-o="dl-val">—</span>
+      </div>
+      <div class="rail__row">
+        <button class="step" type="button" data-nudge="dl" data-dir="-1" aria-label="Dynamic loft down one degree">−</button>
+        <input type="range" id="in-dl" aria-label="Dynamic loft, degrees">
+        <button class="step" type="button" data-nudge="dl" data-dir="1" aria-label="Dynamic loft up one degree">+</button>
+      </div>
+      <p class="rail__sens">Sensitivity at this state · <b data-o="sens-dl">—</b></p>
+    </div>
+
+    <div class="rail" id="rail-aa">
+      <div class="rail__head">
+        <p class="cap">Attack angle</p>
+        <span class="rail__val" data-readout data-o="aa-val">—</span>
+      </div>
+      <div class="rail__row">
+        <button class="step" type="button" data-nudge="aa" data-dir="-1" aria-label="Attack angle down one degree">−</button>
+        <input type="range" id="in-aa" aria-label="Attack angle, degrees">
+        <button class="step" type="button" data-nudge="aa" data-dir="1" aria-label="Attack angle up one degree">+</button>
+      </div>
+      <p class="rail__sens">Sensitivity at this state · <b data-o="sens-aa">—</b></p>
+    </div>
+
+    <p class="chain" data-chain></p>
+
+    <p>Hitting down does not create spin in the ground. It widens the gap, and
+      the gap is what the face converts into revolutions while the ball is still
+      on it. Both rails feed the same term, which is why they can cancel each
+      other exactly.</p>
+    <p class="src">Terms and framing: academy-native-lesson.js → SHEETS.spinLoft,
+      SHEETS.dynamicLoft, SHEETS.attackAngle. Sensitivity is finite-differenced
+      live at ±1 step, the recipe backspinSensitivity() uses.</p>
+  </div>
+</section>
+
+<!-- ── 02 ─────────────────────────────────────────────────────────────────── -->
+<section class="sect" id="s2" data-frame="scale" data-n="2">
+  <p class="sect__n">02</p>
+  <div class="sect__b">
+    <p class="cap">Model role</p>
+    <h2>Ball speed scales it.</h2>
+    <p>The frame is now the whole spin rail, from a dead-square strike to the
+      display ceiling. Geometry decided the rate per mph. Speed multiplies it.</p>
+
+    <p>At
+      <button class="inl" type="button" data-goto="bs" data-o="bs-inl">—</button>
+      of ball speed this delivery returns <b data-o="rpm-inl">—</b> rpm. Every
+      extra mph is worth <b data-o="sens-bs-n">—</b> at the spin loft you are
+      currently holding.</p>
+
+    <div class="rail" id="rail-bs">
+      <div class="rail__head">
+        <p class="cap">Ball speed</p>
+        <span class="rail__val" data-readout data-o="bs-val">—</span>
+      </div>
+      <div class="rail__row">
+        <button class="step" type="button" data-nudge="bs" data-dir="-1" aria-label="Ball speed down one mile per hour">−</button>
+        <input type="range" id="in-bs" aria-label="Ball speed, miles per hour">
+        <button class="step" type="button" data-nudge="bs" data-dir="1" aria-label="Ball speed up one mile per hour">+</button>
+      </div>
+      <p class="rail__sens">Sensitivity at this state · <b data-o="sens-bs">—</b></p>
+    </div>
+
+    <p>Speed is the one control that moves <b>Carry</b> as well. Loft and attack
+      leave carry where it was and re-shape the flight instead. Watch the four
+      readouts on the glass while you drag each rail in turn.</p>
+    <p class="src">Ball-speed mapping: academy-native-lesson.js → SHEETS.ballSpeed.
+      The control is mapped through the same smash relationship the engine uses.</p>
+  </div>
+</section>
+
+<!-- ── 03 ─────────────────────────────────────────────────────────────────── -->
+<section class="sect" id="s3" data-frame="ceiling" data-n="3">
+  <p class="sect__n">03</p>
+  <div class="sect__b">
+    <p class="cap">Engine limit</p>
+    <!-- focus target: when a limit note is hidden out from under the caret, the
+         heading that owns both notes takes the focus instead of BODY -->
+    <h2 tabindex="-1">One ceiling. No floor.</h2>
+    <p>Two bars now: what the interface shows you, and what the model is actually
+      holding. Push spin loft up and they part company at <b>9,000&nbsp;rpm</b>.
+      Push it down and they never part at all.</p>
+
+    <button class="limit" type="button" data-sheet="displayCeiling" data-limit="ceiling" hidden>
+      <b>Display ceiling reached.</b> Shown <b data-o="lim-shown">—</b> rpm ·
+      model <b data-o="lim-raw">—</b> rpm. Tap for what is clamped.
+    </button>
+    <button class="limit" type="button" data-sheet="noFloor" data-limit="floor" hidden>
+      <b>No floor here.</b> Shown <b data-o="lim-shown-lo">—</b> rpm, and the model
+      agrees exactly. Tap for why nothing clamps the bottom.
+    </button>
+
+    <p>The cap is an interface decision, not physics. Below it, display and model
+      are the same number. Above it, only the display stops, which is why the
+      sensitivity figures on the rails keep moving when the big numeral does not.</p>
+    <p>There is nothing equivalent at the bottom. Spin is generated by the
+      glancing blow, so as spin loft goes toward zero the spin goes with it, all
+      the way down. A square strike with no spin loft imparts no backspin at all.</p>
+
+    <div class="ab" role="group" aria-label="Send the model to a limit state">
+      <button type="button" data-jump="48,-8,120">Push to the ceiling</button>
+      <button type="button" data-jump="12,6,120">Push to the floor</button>
+    </div>
+    <p class="src">Limits: academy-backspin-model.js → BACKSPIN_LIMITS.max = 9000,
+      LOW_SPIN_NOTE_RPM = 1500. Copy: SHEETS.displayCeiling, SHEETS.noFloor.</p>
+  </div>
+</section>
+
+<!-- ── 04 ─────────────────────────────────────────────────────────────────── -->
+<section class="sect" id="s4" data-frame="arc" data-n="4">
+  <p class="sect__n">04</p>
+  <div class="sect__b">
+    <p class="cap">Predict · run · explain</p>
+    <h2>Three myths, run on the model.</h2>
+    <p>Answer first. The instrument then takes the experiment's own before and
+      after states, so you watch the claim resolve on the same glass you have
+      been reading against all along.</p>
+
+    <p class="cap" data-myth-count>Experiment 1 of 3</p>
+    <p class="lead" data-myth-prompt tabindex="-1" style="margin-bottom:.7em">—</p>
+    <div class="opts" data-myth-opts role="group" aria-label="Prediction"></div>
+    <div class="ab" data-myth-ab hidden role="group" aria-label="Compare the two model states">
+      <button type="button" data-ab="before" aria-pressed="false">Before</button>
+      <button type="button" data-ab="after" aria-pressed="true">After</button>
+    </div>
+    <p class="chain" data-myth-chain hidden></p>
+    <p class="verdict" data-myth-verdict hidden></p>
+    <div class="ab" data-myth-next hidden>
+      <button type="button" data-myth-advance>Next experiment →</button>
+    </div>
+    <p class="src">Experiments, choices and explanations verbatim:
+      academy-native-lesson.js → MYTH_EXPERIMENTS. Before/after states are the
+      experiment's own; every figure shown is re-solved here.</p>
+  </div>
+</section>
+
+<!-- ── 05 ─────────────────────────────────────────────────────────────────── -->
+<section class="sect" id="s5" data-frame="layer" data-n="5">
+  <p class="sect__n">05</p>
+  <div class="sect__b">
+    <p class="cap">Estimate layer</p>
+    <h2>What the simulator does not know.</h2>
+    <p>The engine strikes a clean, dry, centred ball every time. The real world
+      puts water and grass between face and ball, and friction is the gate that
+      lets a glancing blow become spin at all.</p>
+
+    <div class="seg" role="radiogroup" aria-label="Surface condition">
+      <button type="button" role="radio" data-lie="clean" aria-checked="true" tabindex="0">Clean</button>
+      <button type="button" role="radio" data-lie="wet" aria-checked="false" tabindex="-1">Wet</button>
+      <button type="button" role="radio" data-lie="flyer" aria-checked="false" tabindex="-1">Flyer</button>
+    </div>
+
+    <p class="chain" data-lie-chain></p>
+    <p class="note" data-lie-copy>—</p>
+    <p class="src" data-lie-src>—</p>
+
+    <button class="limit" type="button" data-sheet="realWorld">
+      <b>This band is an estimate, not a second engine.</b> It never changes the
+      ember number on the glass. Tap for the layer rule.
+    </button>
+    <p class="src">Ranges, test notes and sources verbatim: academy-native-lesson.js
+      → LIE_ESTIMATES. Band endpoints computed by realWorldRange(rpm, keep).</p>
+  </div>
+</section>
+
+<!-- ── 06 ─────────────────────────────────────────────────────────────────── -->
+<section class="sect" id="s6" data-frame="gates" data-n="6">
+  <p class="sect__n">06</p>
+  <div class="sect__b">
+    <p class="cap">Mastery · final task</p>
+    <h2>Two gates, independently.</h2>
+    <p>Create <b>6,800–7,400&nbsp;rpm</b> and keep modelled landing angle at or
+      above <b>50°</b>. Both are read from the final live state. There is no
+      separate answer to submit. The frame is now the two gates themselves.</p>
+
+    <div class="gates">
+      <div data-gate="rpm" data-pass="0"><span>Backspin gate</span><strong data-readout data-o="gate-rpm">—</strong><span class="sr" data-gate-state></span></div>
+      <div data-gate="land" data-pass="0"><span>Landing gate</span><strong data-readout data-o="gate-land">—</strong><span class="sr" data-gate-state></span></div>
+    </div>
+
+    <p class="stamp" data-stamp data-pass="0">Not yet met</p>
+    <p class="note" data-gate-hint>—</p>
+
+    <div class="ab" role="group" aria-label="Return to a control rail">
+      <button type="button" data-goto="dl">Loft rail ↑</button>
+      <button type="button" data-goto="aa">Attack rail ↑</button>
+      <button type="button" data-goto="bs">Speed rail ↑</button>
+    </div>
+
+    <p>Before that, one definition worth being certain of.</p>
+    <p class="lead" data-def-prompt style="margin-bottom:.7em">Spin loft equals:</p>
+    <div class="opts" data-def-opts role="group" aria-label="Definition check"></div>
+    <p class="verdict" data-def-verdict hidden></p>
+
+    <p class="src">Tasks and gate values verbatim: academy-native-lesson.js →
+      MASTERY_TASKS (definition, lab-target) and academy-backspin-model.js →
+      passesStoppingFlightTarget().</p>
+
+    <div class="colophon">
+      Flightglass · Backspin · direction mock “inline-instrument”.<br>
+      Every value on this page is engine output, re-derived at runtime from
+      tables measured off the frozen engine.<br>
+      Table ↔ engine parity over the complete input grid:
+      <b>50,310 states · 0 mismatches</b>.<br>
+      Runtime self-check: <b data-selfcheck>…</b>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<!-- ══ SHEET ══════════════════════════════════════════════════════════════ -->
+<div class="scrim" data-scrim hidden></div>
+<div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle" tabindex="-1" hidden>
+  <div class="sheet__grab" aria-hidden="true"></div>
+  <p class="cap" data-sheet-eyebrow>Learn more</p>
+  <h2 id="sheetTitle" data-sheet-title>Learn more</h2>
+  <div data-sheet-body></div>
+  <button class="sheet__close" type="button" data-sheet-close>Close</button>
+</div>
+
+<script>
+"use strict";
+/* ═══════════════════════════════════════════════════════════════════════════
+   FROZEN ENGINE TABLES — measured from impact-flight.js / academy-backspin-
+   model.js, then verified to reproduce solveBackspinState() exactly for all
+   50,310 legal states. See the provenance block at the top of this file.
+   ═══════════════════════════════════════════════════════════════════════════ */
+const E = {"slMin":4,"rpmk":[4.985668042941567,6.2292399906603935,7.470917874738376,8.726405019642844,9.994129786053065,11.267107351548466,12.54534817014211,13.828875979359468,15.117734554401865,16.411998923355817,17.711794011799054,19.017325632979873,20.32893193956155,21.647168678331592,22.972950046621783,24.30778044620359,25.654133478306676,27.01606606277854,28.400199433083063,29.81725065534126,31.28433419336664,32.8281975532741,34.48922247934322,36.32505237732876,38.41065364200275,40.82870993746651,43.64338610431449,46.858668777753856,50.38333003903894,54.03931281260361,57.62469143566986,60.98935035522641,64.07015491465005,66.87695497868225,69.45800122334147,71.87092701197916,74.1672290247392,76.38715940529815,78.55997079114051,80.70606084652051,82.83933592066779,84.96918544905053,87.10195324490402,89.24197141515819,91.39226334502074,93.55501255873925,95.73187195120204,97.92416652551715,100.13302603824906,102.3594719199938,104.60447455934475,106.86899148295888,109.15399329265962],"land":[32,32,32,32,32.9,34.6,36.2,37.7,39,40.2,41.3,42.3,43.2,44.1,44.8,45.5,46.2,46.8,47.3,47.8,48.2,48.6,49,49.3,49.6,49.9,50.2,50.4,50.6,50.8,51,51.1,51.3,51.4,51.5,51.6,51.7,51.8,51.9,52,52.1,52.1,52.2,52.2,52.3,52.3,52.4,52.4,52.4,52.5,52.5,52.5,52.6],"apexk":[[0.17177544957791954,0.17627752647139827,0.1807935152917037,0.18532401755978845,0.189869574146612,0.1944306719288653,0.1990077495818115,0.2036012026393019,0.20821138792871724,0.2112541545937336,0.2132540026437336,0.21525385069373357,0.21725369874373357,0.21925354679373357,0.22125339484373358],[0.17327114686248982,0.1777777794754023,0.18229853123734482,0.18683398270159846,0.1913846560897249,0.19595102164431266,0.20053350316487648,0.20513248284900815,0.20974830554010832,0.21191921994645746,0.21391906799645746,0.21591891604645747,0.21791876409645744,0.21991861214645744,0.22191846019645745],[0.17520170150105133,0.17971431265150764,0.18424129945516077,0.18878321661912673,0.19334056335143693,0.1979137893470799,0.20250330001238379,0.20710946104038824,0.21077681789391742,0.2127766659439174,0.2147765139939174,0.2167763620439174,0.2187762100939174,0.2207760581439174,0.22277590619391738],[0.17756885499140312,0.1820889398691655,0.18662369891479944,0.19117365690305466,0.19573928635469542,0.20032101310733974,0.20491922118639064,0.20953425707825593,0.21182664453611336,0.21382649258611336,0.21582634063611336,0.21782618868611336,0.21982603673611337,0.22182588478611334,0.22382573283611334],[0.1803748131020495,0.18490394808370963,0.18944808967209648,0.19400772948731523,0.19858331044432304,0.2031752318759584,0.20778385402173585,0.2110690037730454,0.21306885182304539,0.2150686998730454,0.2170685479230454,0.2190683959730454,0.2210682440230454,0.2230680920730454,0.2250679401230454],[0.18362228237354608,0.1881621302318135,0.19271734253688444,0.19728837542090127,0.20187564005453038,0.20647950730504896,0.2105037436547135,0.2125035917047135,0.21450343975471353,0.2165032878047135,0.21850313585471348,0.22050298390471348,0.2225028319547135,0.2245026800047135,0.22650252805471352],[0.1873145070459916,0.19186681856331683,0.19643486917201372,0.20101907805421984,0.20561982326582554,0.21013086418111765,0.21213071223111765,0.21413056028111765,0.21613040833111763,0.21813025638111763,0.22013010443111763,0.22212995248111767,0.22412980053111767,0.22612964858111764,0.22812949663111765],[0.1914553043263165,0.19602191652481565,0.20060465091824628,0.20520388909429788,0.20981997534809596,0.21195021340225784,0.21395006145225784,0.21594990950225784,0.21794975755225782,0.21994960560225785,0.22194945365225785,0.22394930170225782,0.22594914975225783,0.22794899780225783,0.22994884585225783],[0.1960490961898004,0.20063192755020526,0.20523126484500787,0.20984745215938147,0.21196209521813408,0.21396194326813409,0.2159617913181341,0.2179616393681341,0.2199614874181341,0.22196133546813407,0.2239611835181341,0.2259610315681341,0.2279608796181341,0.22996072766813408,0.23196057571813408],[0.20110093628502568,0.20570197943960422,0.2101665096287464,0.2121663576787464,0.21416620572874642,0.2161660537787464,0.2181659018287464,0.2201657498787464,0.2221655979287464,0.2241654459787464,0.2261652940287464,0.22816514207874639,0.2301649901287464,0.2321648381787464,0.23416468622874642],[0.20661653093262744,0.21056315273409473,0.21256300078409476,0.21456284883409474,0.21656269688409477,0.21856254493409474,0.22056239298409475,0.22256224103409475,0.22456208908409475,0.22656193713409475,0.22856178518409476,0.23056163323409473,0.23256148128409476,0.23456132933409476,0.2365611773840947],[0.21115217648417914,0.21315202453417917,0.21515187258417917,0.21715172063417917,0.21915156868417915,0.22115141673417915,0.22315126478417915,0.22515111283417916,0.22715096088417916,0.22915080893417916,0.23115065698417914,0.23315050503417917,0.23515035308417917,0.23715020113417917,0.23915004918417915],[0.21393342892899964,0.2159332769789996,0.21793312502899964,0.21993297307899964,0.22193282112899965,0.22393266917899965,0.22593251722899965,0.22793236527899963,0.22993221332899963,0.23193206137899963,0.23393190942899963,0.23593175747899964,0.23793160552899964,0.23993145357899964,0.24193130162899965],[0.21690706201855614,0.21890691006855614,0.22090675811855615,0.22290660616855615,0.22490645421855618,0.22690630226855613,0.22890615031855616,0.23090599836855613,0.23290584641855613,0.23490569446855614,0.23690554251855614,0.23890539056855614,0.24090523861855614,0.24290508666855615,0.24490493471855615],[0.2200730757528487,0.22207292380284874,0.22407277185284874,0.22607261990284874,0.2280724679528487,0.23007231600284872,0.23207216405284872,0.23407201210284873,0.23607186015284873,0.23807170820284873,0.24007155625284873,0.2420714043028487,0.24407125235284874,0.24607110040284874,0.2480709484528487],[0.2234314701318773,0.22543131818187734,0.2274311662318773,0.22943101428187734,0.23143086233187735,0.23343071038187732,0.23543055843187732,0.23743040648187733,0.23943025453187736,0.24143010258187733,0.2434299506318773,0.2454297986818773,0.2474296467318773,0.24942949478187731,0.25142934283187734],[0.226982245155642,0.22898209320564203,0.23098194125564198,0.232981789305642,0.234981637355642,0.236981485405642,0.23898133345564201,0.24098118150564202,0.242981029555642,0.244980877605642,0.246980725655642,0.24898057370564203,0.250980421755642,0.25298026980564203,0.254980117855642],[0.23072540082414275,0.23272524887414275,0.23472509692414273,0.23672494497414276,0.23872479302414273,0.24072464107414274,0.24272448912414274,0.24472433717414274,0.24672418522414274,0.24872403327414275,0.25072388132414275,0.2527237293741427,0.25472357742414276,0.25672342547414273,0.25872327352414276],[0.23466093713737954,0.23666078518737954,0.23866063323737952,0.24066048128737952,0.24266032933737952,0.24466017738737952,0.24666002543737953,0.24865987348737953,0.25065972153737953,0.2526595695873795,0.25465941763737954,0.2566592656873795,0.25865911373737954,0.2606589617873795,0.26265880983737955],[0.23878885409535233,0.24078870214535233,0.24278855019535234,0.24478839824535237,0.24678824629535237,0.24878809434535235,0.25078794239535235,0.2527877904453523,0.25478763849535235,0.25678748654535233,0.25878733459535236,0.26078718264535233,0.26278703069535236,0.26478687874535234,0.2667867267953523],[0.24310915169806127,0.24510899974806127,0.24710884779806128,0.24910869584806125,0.25110854389806125,0.2531083919480613,0.25510823999806126,0.25710808804806123,0.25910793609806126,0.26110778414806124,0.26310763219806127,0.26510748024806124,0.2671073282980613,0.26910717634806125,0.2711070243980613],[0.24762182994550622,0.24962167799550622,0.2516215260455062,0.2536213740955062,0.2556212221455062,0.25762107019550623,0.2596209182455062,0.2616207662955062,0.2636206143455062,0.2656204623955062,0.2676203104455062,0.26962015849550625,0.2716200065455062,0.2736198545955062,0.2756197026455062],[0.25232688883768717,0.2543267368876872,0.2563265849376872,0.25832643298768715,0.2603262810376872,0.26232612908768715,0.2643259771376872,0.26632582518768716,0.2683256732376872,0.27032552128768716,0.2723253693376872,0.2743252173876872,0.2763250654376872,0.2783249134876872,0.28032476153768715],[0.2572243283746042,0.2592241764246042,0.2612240244746042,0.2632238725246042,0.26522372057460425,0.2672235686246042,0.26922341667460425,0.27122326472460423,0.27322311277460426,0.27522296082460423,0.2772228088746042,0.27922265692460424,0.2812225049746042,0.2832223530246042,0.2852222010746042],[0.2623141485562573,0.2643139966062573,0.2663138446562573,0.2683136927062574,0.27031354075625735,0.27231338880625733,0.27431323685625736,0.27631308490625733,0.2783129329562573,0.28031278100625734,0.2823126290562573,0.28431247710625734,0.2863123251562573,0.28831217320625735,0.2903120212562573],[0.2675963493826465,0.26959619743264646,0.2715960454826465,0.27359589353264646,0.2755957415826465,0.27759558963264647,0.2795954376826465,0.2815952857326465,0.2835951337826465,0.2855949818326465,0.2875948298826465,0.2895946779326465,0.2915945259826465,0.2935943740326465,0.2955942220826465],[0.27307093085377165,0.2750707789037717,0.27707062695377166,0.27907047500377163,0.28107032305377166,0.2830701711037717,0.2850700191537717,0.2870698672037717,0.2890697152537717,0.2910695633037717,0.2930694113537717,0.2950692594037717,0.29706910745377174,0.29906895550377166,0.3010688035537717],[0.27873789296963297,0.28073774101963295,0.282737589069633,0.28473743711963295,0.286737285169633,0.28873713321963296,0.29073698126963293,0.29273682931963296,0.29473667736963294,0.29673652541963297,0.29873637346963294,0.3007362215196329,0.30273606956963295,0.3047359176196329,0.30673576566963295],[0.28459723573023027,0.28659708378023024,0.2885969318302302,0.29059677988023025,0.2925966279302302,0.29459647598023025,0.29659632403023023,0.2985961720802302,0.30059602013023023,0.30259586818023027,0.3045957162302303,0.30659556428023027,0.30859541233023025,0.3105952603802303,0.31259510843023025],[0.2906489591355636,0.2926488071855636,0.29464865523556355,0.29664850328556364,0.2986483513355636,0.30064819938556364,0.3026480474355636,0.30464789548556365,0.3066477435355636,0.3086475915855636,0.3106474396355636,0.3126472876855636,0.31464713573556363,0.31664698378556366,0.31864683183556364],[0.29689306318563297,0.298892911235633,0.30089275928563297,0.302892607335633,0.304892455385633,0.30689230343563295,0.308892151485633,0.31089199953563296,0.312891847585633,0.31489169563563296,0.31689154368563294,0.31889139173563297,0.320891239785633,0.32289108783563303,0.324890935885633],[0.3033295478804385,0.30532939593043845,0.3073292439804385,0.30932909203043846,0.3113289400804385,0.31332878813043846,0.31532863618043844,0.3173284842304385,0.3193283322804385,0.32132818033043853,0.3233280283804385,0.3253278764304385,0.3273277244804385,0.3293275725304385,0.3313274205804385],[0.30995841321998,0.31195826126998,0.31395810931998,0.31595795736998,0.31795780541998003,0.31995765346998,0.32195750151998,0.32395734956998,0.32595719761998,0.32795704566998,0.32995689371998,0.33195674176997997,0.33395658981998,0.33595643786998,0.33795628591998],[0.3167796592042576,0.3187795072542576,0.32077935530425766,0.32277920335425764,0.3247790514042576,0.32677889945425764,0.3287787475042576,0.33077859555425765,0.3327784436042576,0.3347782916542576,0.33677813970425763,0.3387779877542576,0.34077783580425763,0.3427776838542576,0.3447775319042576],[0.3237932858332712,0.32579313388327125,0.3277929819332712,0.3297928299832712,0.3317926780332712,0.3337925260832712,0.33579237413327123,0.3377922221832712,0.3397920702332712,0.3417919182832712,0.3437917663332712,0.3457916143832712,0.34779146243327125,0.3497913104832712,0.35179115853327125],[0.3309992931070209,0.33299914115702095,0.3349989892070209,0.3369988372570209,0.33899868530702093,0.3409985333570209,0.34299838140702094,0.3449982294570209,0.346998077507021,0.34899792555702097,0.35099777360702095,0.352997621657021,0.35499746970702095,0.356997317757021,0.35899716580702096],[0.3383976810255066,0.3403975290755066,0.3423973771255066,0.3443972251755066,0.34639707322550656,0.3483969212755066,0.35039676932550656,0.3523966173755066,0.3543964654255066,0.35639631347550665,0.35839616152550663,0.3603960095755066,0.36239585762550663,0.3643957056755066,0.36639555372550664],[0.34598844958872843,0.3479882976387284,0.3499881456887284,0.35198799373872836,0.35398784178872844,0.3559876898387284,0.35798753788872845,0.3599873859387284,0.3619872339887284,0.3639870820387284,0.3659869300887284,0.36798677813872843,0.3699866261887284,0.3719864742387284,0.37398632228872847],[0.35377159879668624,0.35577144684668627,0.35777129489668624,0.3597711429466862,0.36177099099668625,0.3637708390466863,0.3657706870966863,0.3677705351466863,0.36977038319668626,0.3717702312466863,0.37377007929668626,0.3757699273466863,0.37776977539668627,0.37976962344668624,0.3817694714966863]],"eff":[[0.8888514422380218,0.9028050101592322,0.9165461725241186,0.9300843436853518,0.9434282624389686,0.9565860580045119,0.969565307944035,0.982373089191989,0.9950160231717937,1,1,1,1,1,1],[0.8935159959004102,0.9073978371860393,0.9210704831498521,0.9345431156077829,0.947824263737694,0.9609218672347413,0.9738433318198065,0.9865955782030963,0.9991850854220663,1,1,1,1,1,1],[0.8994941491003532,0.9132851275838058,0.9268709318269553,0.9402604555471683,0.9534619679178443,0.9664831732967566,0.9793312638049336,0.9920129657750288,1,1,1,1,1,1,1],[0.906759921024419,0.9204420429207972,0.933923741199575,0.9472135737922102,0.9603195064020155,0.9732489683406865,0.9860089017733109,0.9986058052986727,1,1,1,1,1,1,1],[0.9152826477439793,0.9288392354230247,0.942200788187544,0.9553754891461416,0.9683709646934016,0.9811943361338921,0.9938522653097035,1,1,1,1,1,1,1,1],[0.925027587113392,0.9384434116774563,0.9516701303081986,0.9647155212397196,0.977586843672123,0.9902908850034033,1,1,1,1,1,1,1,1,1],[0.9359565638185323,0.9492179356475489,0.9622965703747438,0.9751998202189099,0.9879345572227921,1,1,1,1,1,1,1,1,1,1],[0.9480286296118597,0.9611234481395929,0.9740422385932453,0.9867919145208582,0.9993789484293436,1,1,1,1,1,1,1,1,1,1],[0.961200716056258,0.974118481780868,0.986867172697047,0.9994532588105676,1,1,1,1,1,1,1,1,1,1,1],[0.9754282604604819,0.9881600534857508,1,1,1,1,1,1,1,1,1,1,1,1,1],[0.9906657896775463,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]],"carryfit":[115.8390573654122,117.49673718142193,119.16256159476391,120.8365306054381,122.5186442134445,124.20890241878317,125.90730522145398,127.61385262145707,129.32854461879242,131.05138121345993,132.7823624054597,134.5214881947917,136.26875858145593,138.02417356545237,139.78773314678105,141.55943732544193,143.339286101435,145.12727947476037,146.92341744541795,148.72770001340774,150.5401271787298,152.36069894138402,154.1894153013705,156.0262762586892,157.87128181334015,159.72443196532325,161.58572671463864,163.45516606128623,165.33275000526606,167.21847854657813,169.1123516852224,171.0143694211989,172.92453175450763,174.8428386851486,176.76929021312174,178.70388633842717,180.6466270610648,182.59751238103468,184.55654229833675,186.52371681297103,188.49903592493757,190.48249963423635,192.47410794086733,194.47386084483054,196.48175834612596,198.49780044475364,200.52198714071352,202.55431843400564,204.59479432462996,206.64341481258654,208.70017989787533,210.76508958049635,212.83814386044958,214.91934273773504,217.00868621235276,219.10617428430265,221.2118069535848,223.32558422019918,225.44750608414574,227.57757254542457,229.7157836040356,231.8621392599789,234.0166395132544,236.1792843638621,238.35007381180208,240.52900785707425,242.71608649967865,244.9113097396153,247.1146775768841,249.3261900114852,251.5458470434185,253.77364867268403,256.0095948992818,258.2536857232118,260.505921144474,262.7663011630684,265.03482577899507,267.311494992254,269.59630880284504,271.88926721076837,274.1903702160239,276.49961781861174,278.81701001853173,281.14254681578393,283.47622821036845,285.8180542022851],"shape":[[0,0],[0.0357,0.1326],[0.0714,0.2559],[0.1071,0.3696],[0.1429,0.474],[0.1786,0.5689],[0.2143,0.6544],[0.25,0.7304],[0.2857,0.797],[0.3214,0.8542],[0.3571,0.9019],[0.3929,0.9402],[0.4286,0.9691],[0.4643,0.9885],[0.5,0.9985],[0.5357,0.9989],[0.5714,0.9885],[0.6071,0.967],[0.6429,0.9345],[0.6786,0.8909],[0.7143,0.8362],[0.75,0.7704],[0.7857,0.6936],[0.8214,0.6056],[0.8571,0.5067],[0.8929,0.3966],[0.9286,0.2755],[0.9643,0.1433],[1,0]],"ref":{"carry":261,"apex":61},"sens":{"s25":{"dynamicLoft":{"displayDelta":290,"rawDelta":290},"attackAngle":{"displayDelta":-250,"rawDelta":-250},"ballSpeed":{"displayDelta":39,"rawDelta":39}},"s30":{"dynamicLoft":{"displayDelta":430,"rawDelta":430},"attackAngle":{"displayDelta":-439,"rawDelta":-439},"ballSpeed":{"displayDelta":54,"rawDelta":54}}}};
+
+/* ── lesson constants (pedagogy from the shipping lesson, not engine output) */
+const CAP = 9000;            // BACKSPIN_LIMITS.max
+const LOW_NOTE = 1500;       // LOW_SPIN_NOTE_RPM
+const YD = 0.9144;
+const P = {
+  dl:{label:"Dynamic loft", min:10, max:48, step:1},
+  aa:{label:"Attack angle", min:-8, max:6,  step:1},
+  bs:{label:"Ball speed",   min:90, max:175,step:1}
+};
+const START = {dl:25, aa:-3, bs:120};   // INITIAL_BACKSPIN_STATE
+
+/* ═══ THE MODEL — table lookup, identical to solveBackspinState() ══════════ */
+function solve(dl, aa, bs){
+  const sl = dl - aa;
+  const raw = Math.round(E.rpmk[sl - E.slMin] * bs);
+  return {
+    dl:dl, aa:aa, bs:bs, spinLoft:sl,
+    rawRpm:raw,
+    rpm:Math.min(CAP, raw),
+    landingAngle:E.land[sl - E.slMin],
+    apexM:Math.round(bs * E.apexk[dl - 10][aa + 8] * YD),
+    carryM:Math.round(E.carryfit[bs - 90] * E.eff[dl - 10][aa + 8] * YD),
+    limit: raw >= CAP ? "ceiling" : (raw <= LOW_NOTE ? "no-floor" : null)
+  };
+}
+const sv = s => solve(s.dl, s.aa, s.bs);
+
+/* Finite difference, same recipe as backspinSensitivity(): ±1 step, direction
+   flipped at the parameter maximum, reported per unit of the input. */
+function sens(state, k){
+  const c = P[k], dir = state[k] >= c.max ? -1 : 1;
+  const a = sv(state);
+  const nx = {dl:state.dl, aa:state.aa, bs:state.bs};
+  nx[k] = state[k] + dir * c.step;
+  const b = sv(nx);
+  return {display:(b.rpm - a.rpm) / dir, raw:(b.rawRpm - a.rawRpm) / dir};
+}
+function spinBand(rpm){
+  if (rpm >= 8000) return "High-spin delivery";
+  if (rpm >= 5500) return "Iron spin window";
+  return "Low-spin delivery";
+}
+const passesTarget = s => s.rpm >= 6800 && s.rpm <= 7400 && s.landingAngle >= 50;
+
+/* ── formatting ──────────────────────────────────────────────────────────── */
+const nf = new Intl.NumberFormat("en-US");
+const num = v => nf.format(Math.round(v));
+const sgn = v => (v >= 0 ? "+" : "−") + nf.format(Math.abs(Math.round(v)));
+const deg = v => (v >= 0 ? "+" : "−") + Math.abs(v) + "°";
+const fmt = (k, v) => k === "bs" ? num(v) + " mph" : k === "dl" ? v + "°" : deg(v);
+
+/* ═══ CURRICULUM — verbatim from academy-native-lesson.js ══════════════════ */
+const SHEETS = {
+  spinLoft:{eyebrow:"Model term", title:"Spin loft",
+    body:"<p>Spin loft is the gap between dynamic loft and attack angle at impact.</p>"+
+      "<p class='formula'>spin loft = dynamic loft − attack angle</p>"+
+      "<p>This lesson uses the app’s 7-iron engine and a centred strike. The full "+
+      "three-dimensional relationship also depends on face-to-path geometry.</p>"},
+  carry:{eyebrow:"Model output", title:"Carry",
+    body:"<p>In this Flightglass model, fixed ball speed holds carry steady while spin "+
+      "changes height and landing. Real high-spin shots can balloon; that effect is not "+
+      "modeled here.</p>"},
+  displayCeiling:{eyebrow:"Engine limit", title:"9,000 rpm display ceiling",
+    body:"<p><strong>9,000 rpm is the interface ceiling.</strong> The displayed engine "+
+      "value stays capped there.</p><p>Underlying model sensitivity; display capped at "+
+      "9,000 rpm. Influence uses the engine’s raw intermediate beyond the cap.</p>"},
+  noFloor:{eyebrow:"No engine limit", title:"There is no floor",
+    body:"<p><strong>Low spin has no lower bound.</strong> Unlike the ceiling, nothing "+
+      "clamps the bottom — the displayed value keeps falling with spin loft, all the way "+
+      "toward zero.</p><p>That is the physics: spin is generated by the glancing blow, so "+
+      "as spin loft goes to zero, so does spin. A square strike with no spin loft imparts "+
+      "no backspin at all.</p><p>Compare the two ends: at 9,000 rpm the display freezes "+
+      "while the model keeps climbing. Down here the display and the model agree exactly.</p>"},
+  realWorld:{eyebrow:"Estimate layer", title:"Real-world spin retention",
+    body:"<p>This sourced range is an approximate real-world layer. It never changes the "+
+      "simulator output and must not be read as a second engine truth.</p>"}
+};
+
+const LIE = {
+  clean:{keep:null,
+    line:"Clean, dry, centred contact — the only case the simulator models.",
+    src:"Simulator baseline. The engine has no lie model."},
+  wet:{keep:[0.80,0.85],
+    line:"Water cuts friction — ≈ 15–20% less spin, higher launch on wedge shots.",
+    src:"TrackMan, 54° wedge, 50-yd shots: dry 6,603 rpm @ 25.4° → wet ball 5,291 rpm "+
+      "@ 30.1° (−20%). Urethane covers retain more wet spin than ionomer. · Andrew Rice, "+
+      "“Wedges and Water”, 2013; corroborated by MyGolfSpy Wet Wedge Test, 2022."},
+  flyer:{keep:[0.35,0.70],
+    line:"Grass cuts friction — spin drops a third to over half; launch up ~2°, longer "+
+      "carry and rollout.",
+    src:"8-iron from light rough spun ~2,469 rpm vs a ~7,000–8,000 rpm baseline (≈65% "+
+      "drop), yet carried farther. · USGA Spin Generation groove research 2006–07 (via "+
+      "Dave Pelz / Into The Grain); Bryan Pate Golf TrackMan test, 2020; Andrew Rice via "+
+      "Golf.com."}
+};
+
+const MYTHS = [
+  {prompt:"Where is backspin actually created?",
+   choices:["Ground interaction","Face friction and spin loft"], answer:1,
+   before:{dl:30,aa:-3,bs:120}, after:{dl:30,aa:-6,bs:120},
+   explanation:"The ground adds no spin. A downward strike can widen spin loft and improve "+
+     "ball-first contact, but spin is created while the ball is on the face."},
+  {prompt:"Dynamic loft rises 4°, but attack angle also rises 4°. What happens to backspin?",
+   choices:["More","Same","Less"], answer:1,
+   before:{dl:30,aa:-3,bs:120}, after:{dl:34,aa:1,bs:120},
+   explanation:"Spin loft is unchanged, so this engine returns the same backspin."},
+  {prompt:"At fixed ball speed, what does this model show when spin rises past the iron window?",
+   choices:["Carry grows","Carry falls","Carry stays while apex and landing change"], answer:2,
+   before:{dl:30,aa:-3,bs:120}, after:{dl:44,aa:-4,bs:120},
+   explanation:"More engine Backspin does not numerically cause more current-engine Carry. "+
+     "Real spin affects flight; this fitted app model currently keeps rpm output and flight "+
+     "trajectory partly decoupled."}
+];
+
+const DEF = {
+  choices:["Dynamic loft − attack angle","Dynamic loft + attack angle","Club speed × face angle"],
+  answer:0,
+  explanation:"Spin loft = dynamic loft − attack angle: the angle between where the face "+
+    "points and where the club is travelling. It is the single geometric quantity backspin "+
+    "depends on in this engine."
+};
+
+/* ═══ STATE ═══════════════════════════════════════════════════════════════ */
+const st = {dl:START.dl, aa:START.aa, bs:START.bs};
+const mission = {built:false, cut:false};
+let frame = "arc";
+let lie = "clean";
+let mythI = 0, mythAnswered = false;
+let defAnswered = false;
+
+const $  = (s, r) => (r || document).querySelector(s);
+const $$ = (s, r) => Array.prototype.slice.call((r || document).querySelectorAll(s));
+const out = {};
+$$("[data-o]").forEach(n => { out[n.dataset.o] = n; });
+const live = $("[data-live]");
+const say = t => { live.textContent = ""; setTimeout(() => { live.textContent = t; }, 40); };
+const reduced = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/* ═══ CANVAS — six frames, one model ══════════════════════════════════════ */
+const cv = $("#cv"), ctx = cv.getContext("2d");
+let W = 0, H = 0;
+const C = {ember:"#FF8A4D", violet:"#9D8BFF", gold:"#FFD056",
+  rule:"rgba(157,139,255,.26)", faint:"rgba(157,139,255,.14)", dim:"#8478A8"};
+
+function resize(){
+  const r = cv.getBoundingClientRect(), d = Math.min(window.devicePixelRatio || 1, 3);
+  W = Math.max(1, Math.round(r.width)); H = Math.max(1, Math.round(r.height));
+  cv.width = Math.round(W * d); cv.height = Math.round(H * d);
+  ctx.setTransform(d, 0, 0, d, 0, 0);
+  draw();
+}
+function line(x1,y1,x2,y2,c,w,dash){
+  ctx.save(); ctx.strokeStyle=c; ctx.lineWidth=w||1;
+  if(dash) ctx.setLineDash(dash);
+  ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke(); ctx.restore();
+}
+function dot(x,y,r,c){ ctx.save(); ctx.fillStyle=c; ctx.beginPath(); ctx.arc(x,y,r,0,6.2832); ctx.fill(); ctx.restore(); }
+function tag(t,x,y,c,align,size){
+  ctx.save(); ctx.fillStyle=c; ctx.textAlign=align||"left"; ctx.textBaseline="middle";
+  ctx.font="600 "+(size||10)+"px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace";
+  ctx.fillText(t,x,y); ctx.restore();
+}
+
+function drawArc(s){
+  const L=8, R=W-8, T=16, B=H-18;
+  const eS=R-L, eR=B-T;
+  const span=eS*(s.carryM/E.ref.carry), rise=eR*(s.apexM/E.ref.apex);
+  /* full-scale deflection: a fixed engine-derived envelope, so two states draw
+     honestly different arcs instead of both filling the box */
+  line(L,B-eR,R,B-eR,C.faint,1,[2,4]);
+  tag("FULL SCALE "+E.ref.apex+" M / "+E.ref.carry+" M",L,B-eR-9,C.dim,"left",9);
+  line(R,T,R,B,C.faint,1,[2,4]);
+  line(L,B,R,B,C.rule,1);
+
+  ctx.save(); ctx.strokeStyle=C.ember; ctx.lineWidth=2; ctx.lineJoin="round"; ctx.beginPath();
+  E.shape.forEach((p,i)=>{ const x=L+p[0]*span, y=B-p[1]*rise; i?ctx.lineTo(x,y):ctx.moveTo(x,y); });
+  ctx.stroke(); ctx.restore();
+
+  const ax=L+0.5*span, ay=B-rise;
+  line(ax,ay,ax,B,C.faint,1,[2,3]);
+  dot(ax,ay,3,C.ember);
+  tag(s.apexM+" M",ax,ay-11,C.ember,"center",10);
+
+  const lx=L+span, a=s.landingAngle*Math.PI/180, len=Math.min(34,Math.max(16,rise*0.45));
+  line(lx-Math.cos(a)*len,B-Math.sin(a)*len,lx,B,C.violet,1.5);
+  tag(s.landingAngle.toFixed(1)+"°",lx-Math.cos(a)*len-4,B-Math.sin(a)*len-2,C.violet,"right",10);
+}
+
+function drawWedge(s){
+  const ox=W*0.13, oy=H*0.62, r=Math.min(W*0.60,H*0.70);
+  line(ox,oy,ox+r+16,oy,C.faint,1,[2,4]);
+  const dirA=-s.aa*Math.PI/180, dirL=-s.dl*Math.PI/180;
+  const wr=r*0.44, mid=(dirA+dirL)/2;
+  ctx.save();
+  ctx.fillStyle="rgba(157,139,255,.17)";
+  ctx.beginPath(); ctx.moveTo(ox,oy);
+  ctx.arc(ox,oy,wr,Math.min(dirA,dirL),Math.max(dirA,dirL));
+  ctx.closePath(); ctx.fill();
+  ctx.strokeStyle=C.violet; ctx.lineWidth=1; ctx.stroke();
+  ctx.restore();
+  line(ox,oy,ox+Math.cos(dirA)*r,oy+Math.sin(dirA)*r,C.violet,1.5);
+  line(ox,oy,ox+Math.cos(dirL)*r,oy+Math.sin(dirL)*r,C.violet,1.5);
+  tag("TRAVEL "+deg(s.aa),ox+Math.cos(dirA)*r+4,oy+Math.sin(dirA)*r,C.violet,"left",10);
+  tag("FACE "+s.dl+"°",ox+Math.cos(dirL)*r+4,oy+Math.sin(dirL)*r,C.violet,"left",10);
+  tag(s.spinLoft+"° SPIN LOFT",ox+Math.cos(mid)*(wr+14),oy+Math.sin(mid)*(wr+14),C.violet,"left",11);
+  dot(ox,oy,3.5,C.ember);
+  tag("IMPACT",ox-6,oy+13,C.dim,"right",9);
+}
+
+function drawScale(s){
+  const L=12, R=W-12, y=H*0.50, MAX=11000;
+  const px = v => L + Math.min(1, v/MAX)*(R-L);
+  ctx.save(); ctx.fillStyle="rgba(157,139,255,.10)";
+  ctx.fillRect(px(5500),y-7,px(8000)-px(5500),14); ctx.restore();
+  line(L,y,R,y,C.rule,2);
+  tag("0",L,y+19,C.dim,"center",9);
+  [[3500,"CUT"],[5500,"IRON"],[7000,"BUILD"],[8000,"HIGH"],[9000,"CAP"]].forEach(t=>{
+    const x=px(t[0]);
+    line(x,y-7,x,y+7,C.faint,1);
+    tag(t[1],x,y+19,C.dim,"center",9);
+    tag(num(t[0]),x,y+31,C.dim,"center",9);
+  });
+  if (s.rawRpm > CAP){
+    const rx=Math.min(px(s.rawRpm),R);
+    line(px(CAP),y,rx,y,C.violet,1.5,[3,3]);
+    tag("MODEL "+num(s.rawRpm),rx,y-31,C.violet,"right",10);
+  }
+  const mx=px(s.rpm);
+  line(mx,y-22,mx,y+7,C.ember,2);
+  dot(mx,y,4.5,C.ember);
+  tag(num(s.rpm),mx,y-31,C.ember,"center",12);
+  tag(spinBand(s.rpm).toUpperCase(),(L+R)/2,H-8,C.dim,"center",9);
+}
+
+function drawCeiling(s){
+  const MAX=19200, base=H-26, top=22, h=base-top;
+  const bw=Math.min(56,W*0.18), gap=Math.max(28,W*0.12);
+  const cx=W/2, x1=cx-gap/2-bw, x2=cx+gap/2;
+  const capY=base-(CAP/MAX)*h;
+  line(12,capY,W-12,capY,C.rule,1,[4,4]);
+  tag("9,000 CAP",W-12,capY-9,C.dim,"right",9);
+  const hd=(s.rpm/MAX)*h, hr=(s.rawRpm/MAX)*h;
+  ctx.save(); ctx.fillStyle="rgba(255,138,77,.88)"; ctx.fillRect(x1,base-hd,bw,hd); ctx.restore();
+  ctx.save(); ctx.strokeStyle=C.violet; ctx.lineWidth=1.5;
+  ctx.strokeRect(x2+0.75,base-hr+0.75,bw-1.5,Math.max(1,hr-1.5)); ctx.restore();
+  line(12,base,W-12,base,C.rule,1);
+  tag("DISPLAY",x1+bw/2,base+11,C.dim,"center",9);
+  tag(num(s.rpm),x1+bw/2,base-hd-10,C.ember,"center",11);
+  tag("MODEL",x2+bw/2,base+11,C.dim,"center",9);
+  tag(num(s.rawRpm),x2+bw/2,base-hr-10,C.violet,"center",11);
+  tag(s.rawRpm>CAP ? "DIVERGED "+sgn(s.rawRpm-s.rpm)+" RPM" : "IDENTICAL",cx,top-10,
+    s.rawRpm>CAP?C.violet:C.dim,"center",10);
+}
+
+function drawLayer(s){
+  const L=12, R=W-12, y=H*0.50, MAX=9000;
+  const px = v => L + Math.min(1, v/MAX)*(R-L);
+  line(L,y,R,y,C.rule,1);
+  [0,3000,6000,9000].forEach(v=>{ const x=px(v); line(x,y-5,x,y+5,C.faint,1); tag(num(v),x,y+19,C.dim,"center",9); });
+  const cfg = LIE[lie];
+  if (cfg.keep){
+    const lo=px(Math.round(s.rpm*cfg.keep[0])), hi=px(Math.round(s.rpm*cfg.keep[1]));
+    ctx.save(); ctx.fillStyle="rgba(157,139,255,.20)"; ctx.fillRect(lo,y-17,hi-lo,34); ctx.restore();
+    line(lo,y-17,lo,y+17,C.violet,1.5); line(hi,y-17,hi,y+17,C.violet,1.5);
+    tag("ESTIMATE "+num(Math.round(s.rpm*cfg.keep[0]))+"–"+num(Math.round(s.rpm*cfg.keep[1])),
+      (lo+hi)/2,y-28,C.violet,"center",10);
+  } else {
+    tag("NO ESTIMATE APPLIED — SIMULATOR BASELINE",(L+R)/2,y-28,C.dim,"center",10);
+  }
+  const mx=px(s.rpm);
+  line(mx,y-23,mx,y+23,C.ember,2);
+  dot(mx,y,4.5,C.ember);
+  tag(num(s.rpm)+" ENGINE",mx,y+36,C.ember,"center",11);
+}
+
+function drawGates(s){
+  const L=12, R=W-12, w=R-L, y1=H*0.30, y2=H*0.72;
+  const p1 = s.rpm>=6800 && s.rpm<=7400, p2 = s.landingAngle>=50;
+  const px = v => L + Math.min(1, v/9000)*w;
+  ctx.save(); ctx.fillStyle=p1?"rgba(255,208,86,.20)":"rgba(157,139,255,.13)";
+  ctx.fillRect(px(6800),y1-13,px(7400)-px(6800),26); ctx.restore();
+  line(L,y1,R,y1,C.rule,1);
+  line(px(6800),y1-13,px(6800),y1+13,p1?C.gold:C.violet,1.5);
+  line(px(7400),y1-13,px(7400),y1+13,p1?C.gold:C.violet,1.5);
+  tag("6,800–7,400",(px(6800)+px(7400))/2,y1-24,p1?C.gold:C.violet,"center",10);
+  tag("0 RPM",L,y1-24,C.dim,"left",9);   // axis origin: shows the window is
+  let mx=px(s.rpm);
+  line(mx,y1-18,mx,y1+18,C.ember,2);
+  tag(num(s.rpm),mx,y1+30,C.ember,"center",11);
+
+  const LO=32, HI=52.6, py = v => L + ((v-LO)/(HI-LO))*w;
+  ctx.save(); ctx.fillStyle=p2?"rgba(255,208,86,.20)":"rgba(157,139,255,.13)";
+  ctx.fillRect(py(50),y2-13,R-py(50),26); ctx.restore();
+  line(L,y2,R,y2,C.rule,1);
+  line(py(50),y2-13,py(50),y2+13,p2?C.gold:C.violet,1.5);
+  // right-aligned: the 50 degree gate sits at ~87% of this axis, so a
+  // left-aligned label runs off the canvas
+  tag("≥ 50°",py(50)-6,y2-24,p2?C.gold:C.violet,"right",10);
+  tag("32°",L,y2-24,C.dim,"left",9); // placed on the model's full range
+  mx=py(s.landingAngle);
+  line(mx,y2-18,mx,y2+18,C.ember,2);
+  tag(s.landingAngle.toFixed(1)+"°",mx,y2+30,C.ember,"center",11);
+}
+
+/* alt() is the canvas read aloud: the same quantities the frame is drawing,
+   never a description of the picture. Every figure comes from the same solve()
+   the drawing does, so the label cannot drift from the pixels. */
+const FRAMES = {
+  arc:    {n:"01", name:"Arc", fn:drawArc,
+    interp:"Arc shape is one fixed normalised profile. Length, height and descent angle are engine truth.",
+    alt:s=>"Trajectory against a fixed "+E.ref.carry+" by "+E.ref.apex+" metre full-scale envelope. Carry "+
+      s.carryM+" metres, apex "+s.apexM+" metres, descending at "+s.landingAngle.toFixed(1)+" degrees."},
+  wedge:  {n:"02", name:"Spin-loft wedge", fn:drawWedge,
+    interp:"Geometry drawn to scale from the two live inputs.",
+    alt:s=>"Impact geometry to scale. The face points "+s.dl+" degrees up, the head travels at "+
+      deg(s.aa)+", and the wedge between them is "+s.spinLoft+" degrees of spin loft."},
+  scale:  {n:"03", name:"Spin rail", fn:drawScale,
+    interp:"Band thresholds are lesson constants; the marker is engine output.",
+    alt:s=>"Spin rail from 0 to 11,000 rpm, marked at the 3,500 cut, the 5,500 to 8,000 iron window, "+
+      "the 7,000 build target and the 9,000 cap. The ember marker sits at "+num(s.rpm)+" rpm — "+
+      spinBand(s.rpm).toLowerCase()+"."+(s.rawRpm>CAP?" A dashed violet extension runs on to the uncapped model value "+num(s.rawRpm)+" rpm.":"")},
+  ceiling:{n:"04", name:"Ceiling", fn:drawCeiling,
+    interp:"Both bars share one axis, 0–19,200 rpm — the model’s true maximum.",
+    alt:s=>"Two bars on one 0 to 19,200 rpm axis. Display "+num(s.rpm)+" rpm beside model "+
+      num(s.rawRpm)+" rpm — "+(s.rawRpm>CAP?"diverged by "+num(s.rawRpm-s.rpm)+" rpm above the 9,000 cap.":"identical, the cap is not in play.")},
+  layer:  {n:"05", name:"Estimate layer", fn:drawLayer,
+    interp:"The violet band is a sourced estimate. It never moves the ember number.",
+    alt:s=>{const c=LIE[lie];return "Spin rail from 0 to 9,000 rpm. The ember engine marker is at "+num(s.rpm)+" rpm"+
+      (c.keep?", with a violet estimate band over "+num(Math.round(s.rpm*c.keep[0]))+" to "+
+        num(Math.round(s.rpm*c.keep[1]))+" rpm.":" and no estimate band applied — this is the simulator baseline.");}},
+  gates:  {n:"06", name:"Mastery gates", fn:drawGates,
+    interp:"Both gates read the final live state. Nothing is submitted.",
+    alt:s=>"Two gate axes. Backspin "+num(s.rpm)+" rpm against the 6,800 to 7,400 window — "+
+      (s.rpm>=6800&&s.rpm<=7400?"inside":"outside")+". Landing "+s.landingAngle.toFixed(1)+
+      " degrees against the 50 degree gate — "+(s.landingAngle>=50?"met":"not met")+"."}
+};
+
+function draw(){
+  if (!W) return;
+  ctx.clearRect(0,0,W,H);
+  const s = sv(st), f = FRAMES[frame] || FRAMES.arc;
+  f.fn(s);
+  cv.setAttribute("aria-label", "Frame " + f.n + ", " + f.name + ". " + f.alt(s));
+}
+
+/* ═══ RENDER ══════════════════════════════════════════════════════════════ */
+function render(){
+  const s = sv(st);
+
+  out.rpm.textContent   = num(s.rpm);
+  out.band.textContent  = spinBand(s.rpm);
+  out.sl.textContent    = s.spinLoft + "°";
+  out.carry.textContent = s.carryM + " m";
+  out.apex.textContent  = s.apexM + " m";
+  out.land.textContent  = s.landingAngle.toFixed(1) + "°";
+
+  ["dl","aa","bs"].forEach(k => {
+    out[k+"-inl"].textContent = fmt(k, st[k]);
+    out[k+"-val"].textContent = fmt(k, st[k]);
+    const inp = $("#in-"+k);
+    if (inp.value !== String(st[k])) inp.value = st[k];
+    const d = sens(st, k), unit = k === "bs" ? "rpm / mph" : "rpm / degree";
+    out["sens-"+k].textContent = sgn(d.raw) + " " + unit +
+      (d.display !== d.raw ? " — display is capped, this is the model" : "");
+  });
+  out["sl-inl"].textContent    = s.spinLoft + "°";
+  out["rpm-inl"].textContent   = num(s.rpm);
+  out["sens-bs-n"].textContent = sgn(sens(st,"bs").raw) + " rpm";
+
+  $("[data-chain]").innerHTML =
+    "Dynamic loft <b>"+st.dl+"°</b><i>→</i>Attack <b>"+deg(st.aa)+"</b>"+
+    "<i>→</i>Spin loft <b>"+s.spinLoft+"°</b><i>→</i>"+
+    "Backspin <b class='hot'>"+num(s.rpm)+" rpm</b><i>→</i>Apex <b>"+s.apexM+" m</b>";
+
+  /* advanceMission(): one stage credited at a time, build before cut */
+  if (!mission.built && s.rpm >= 7000){ mission.built = true; say("Stage credited. 7,000 rpm reached."); }
+  else if (mission.built && !mission.cut && s.rpm <= 3500){ mission.cut = true; say("Stage credited. Cut below 3,500 rpm."); }
+  /* gold is not a status: the credited/uncredited state is also in the name */
+  ["built","cut"].forEach(k => {
+    const el = $("[data-stage='"+k+"']");
+    el.dataset.done = mission[k] ? "1" : "0";
+    $("[data-stage-state]", el).textContent = mission[k] ? " — credited" : " — not yet credited";
+  });
+
+  /* A note hidden while it still holds focus drops focus to BODY: the model
+     moved under the user and the caret went with it (2.4.11). Reveal the
+     incoming note FIRST, then hand focus on before the outgoing one leaves —
+     to its replacement, or to the heading that owns both. */
+  const cel = $("[data-limit='ceiling']"), flo = $("[data-limit='floor']");
+  const wantCel = s.limit === "ceiling", wantFlo = s.limit === "no-floor";
+  if (wantCel) cel.hidden = false;
+  if (wantFlo) flo.hidden = false;
+  [[cel, wantCel], [flo, wantFlo]].forEach(pair => {
+    const el = pair[0];
+    if (pair[1] || el.hidden) return;
+    if (el.contains(document.activeElement)) (wantCel ? cel : wantFlo ? flo : $("#s3 h2")).focus();
+    el.hidden = true;
+  });
+  if (s.limit === "ceiling"){
+    out["lim-shown"].textContent = num(s.rpm);
+    out["lim-raw"].textContent   = num(s.rawRpm);
+  }
+  if (s.limit === "no-floor") out["lim-shown-lo"].textContent = num(s.rpm);
+
+  const cfg = LIE[lie];
+  $("[data-lie-copy]").textContent = cfg.line;
+  $("[data-lie-src]").textContent  = cfg.src;
+  $("[data-lie-chain]").innerHTML  = cfg.keep
+    ? "Engine <b class='hot'>"+num(s.rpm)+" rpm</b><i>→</i>estimated retention <b>"+
+      num(Math.round(s.rpm*cfg.keep[0]))+"–"+num(Math.round(s.rpm*cfg.keep[1]))+" rpm</b>"
+    : "Engine <b class='hot'>"+num(s.rpm)+" rpm</b><i>→</i>no estimate applied";
+
+  const g1 = s.rpm >= 6800 && s.rpm <= 7400, g2 = s.landingAngle >= 50;
+  /* gold is not a status. The hint only ever names the gate that FAILS, so a
+     gate that passes while the other does not was gold and nothing else — each
+     row now carries its own verdict, exactly as the two mission stages do. */
+  const gr = $("[data-gate='rpm']"), gl = $("[data-gate='land']");
+  gr.dataset.pass = g1 ? "1" : "0";
+  gl.dataset.pass = g2 ? "1" : "0";
+  $("[data-gate-state]", gr).textContent = g1 ? " — met" : " — not met";
+  $("[data-gate-state]", gl).textContent = g2 ? " — met" : " — not met";
+  out["gate-rpm"].textContent  = num(s.rpm) + " rpm";
+  out["gate-land"].textContent = s.landingAngle.toFixed(1) + "°";
+  const stamp = $("[data-stamp]"), ok = passesTarget(s);
+  stamp.dataset.pass = ok ? "1" : "0";
+  stamp.textContent  = ok ? "Both gates met" : "Not yet met";
+  const hint = [];
+  if (s.rpm < 6800) hint.push("Raise backspin to at least 6,800 rpm.");
+  if (s.rpm > 7400) hint.push("Lower backspin to no more than 7,400 rpm.");
+  if (!g2) hint.push("Raise modelled landing angle to 50° or more. It follows spin loft alone.");
+  $("[data-gate-hint]").textContent = ok
+    ? "Held live by the current state. Move any rail and both gates re-read immediately."
+    : hint.join(" ");
+
+  draw();
+}
+
+/* ═══ FRAME SWITCHING ═════════════════════════════════════════════════════ */
+function setFrame(f){
+  if (f === frame) return;
+  frame = f;
+  const meta = FRAMES[f];
+  $("[data-frame-n]").textContent    = "Frame " + meta.n;
+  $("[data-frame-name]").textContent = meta.name;
+  $("[data-interp]").textContent     = meta.interp;
+  if (reduced()){ draw(); return; }
+  cv.style.transition = "none";
+  cv.style.opacity = ".26";
+  requestAnimationFrame(() => {
+    draw();
+    requestAnimationFrame(() => {
+      cv.style.transition = "opacity 200ms cubic-bezier(.23,1,.32,1)";
+      cv.style.opacity = "1";
+    });
+  });
+}
+
+const sects = $$(".sect");
+/* The section that owns the instrument is the one at the top of the READING
+   window, so the activation band has to begin where the glass ends. It is built
+   from the same measured glass height that writes --stick, at the foot of this
+   script — not from a fixed percentage. The old -46%/-44% band (y 388–473) was
+   correct only while the glass happened to end near y 383; at 200% text the
+   glass runs to 608 and the band sat entirely INSIDE it, so the frame number,
+   the interpretation line and the canvas's aria-label all described a section
+   the reader could no longer see. */
+function onCross(entries){
+  entries.forEach(e => {
+    if (!e.isIntersecting) return;
+    sects.forEach(x => { x.dataset.active = "0"; });
+    e.target.dataset.active = "1";
+    const n = Number(e.target.dataset.n);
+    $$("[data-rail]").forEach(i => { i.dataset.on = Number(i.dataset.rail) <= n ? "1" : "0"; });
+    setFrame(e.target.dataset.frame);
+  });
+}
+
+/* ═══ CONTROLS ════════════════════════════════════════════════════════════ */
+["dl","aa","bs"].forEach(k => {
+  const c = P[k], inp = $("#in-"+k);
+  inp.min = c.min; inp.max = c.max; inp.step = c.step; inp.value = st[k];
+  inp.addEventListener("input", () => { st[k] = Number(inp.value); render(); });
+});
+$$("[data-nudge]").forEach(b => b.addEventListener("click", () => {
+  const k = b.dataset.nudge, c = P[k];
+  st[k] = Math.max(c.min, Math.min(c.max, st[k] + Number(b.dataset.dir) * c.step));
+  render();
+  say(c.label + " " + fmt(k, st[k]) + ". Backspin " + num(sv(st).rpm) + " rpm.");
+}));
+$$("[data-goto]").forEach(b => b.addEventListener("click", () => {
+  const k = b.dataset.goto;
+  /* block:start + the rail's scroll-margin lands the whole rail under the glass.
+     block:center put the rail's own label behind the instrument on a 667px
+     viewport and left the slider two pixels clear of it. */
+  $("#rail-"+k).scrollIntoView({behavior: reduced() ? "auto" : "smooth", block:"start"});
+  setTimeout(() => $("#in-"+k).focus({preventScroll:true}), reduced() ? 0 : 430);
+}));
+$$("[data-jump]").forEach(b => b.addEventListener("click", () => {
+  const v = b.dataset.jump.split(",").map(Number);
+  st.dl = v[0]; st.aa = v[1]; st.bs = v[2];
+  render();
+  const s = sv(st);
+  say("Model set. Displayed " + num(s.rpm) + " rpm, model " + num(s.rawRpm) + " rpm.");
+}));
+
+/* segmented estimate layer — roving tabindex + arrow keys, no gesture needed */
+const lieBtns = $$("[data-lie]");
+function setLie(key, focus){
+  lie = key;
+  lieBtns.forEach(b => {
+    const on = b.dataset.lie === key;
+    b.setAttribute("aria-checked", on ? "true" : "false");
+    b.tabIndex = on ? 0 : -1;
+    if (on && focus) b.focus();
+  });
+  render();
+}
+lieBtns.forEach((b, i) => {
+  b.addEventListener("click", () => setLie(b.dataset.lie, false));
+  b.addEventListener("keydown", ev => {
+    const d = ev.key === "ArrowRight" ? 1 : ev.key === "ArrowLeft" ? -1 : 0;
+    if (!d) return;
+    ev.preventDefault();
+    setLie(lieBtns[(i + d + lieBtns.length) % lieBtns.length].dataset.lie, true);
+  });
+});
+
+/* Right and wrong were carried by border colour, a strike-through and nothing
+   else. The verdict now lives in each option's accessible name too, so it
+   survives without sight and is still there on a second pass through the tab
+   order — the live region only speaks once. */
+function markAnswers(box, correct, chosen){
+  $$(".opt", box).forEach((b, j) => {
+    b.dataset.state = j === correct ? "right" : (j === chosen ? "wrong" : "");
+    b.setAttribute("aria-disabled", "true");
+    const verdict = j === correct ? " — correct answer"
+                  : j === chosen  ? " — your answer, incorrect" : "";
+    if (verdict){
+      const s = document.createElement("span");
+      s.className = "sr"; s.textContent = verdict;
+      b.appendChild(s);
+    }
+  });
+}
+
+/* ═══ MYTHS — predict, run on the live model, explain ═════════════════════ */
+function chainOf(before, after){
+  const b = sv(before), a = sv(after);
+  const capped = a.rpm === b.rpm && a.rawRpm !== b.rawRpm;
+  return "Spin loft <b>"+b.spinLoft+"° → "+a.spinLoft+"°</b>"+
+    "<i>·</i>Backspin <b class='hot'>"+num(b.rpm)+" → "+num(a.rpm)+" rpm</b>"+
+    (capped ? "<i>·</i>display capped, model <b>"+num(a.rawRpm)+"</b>" : "")+
+    "<i>·</i>Carry <b>"+b.carryM+" → "+a.carryM+" m</b>"+
+    "<i>·</i>Apex <b>"+b.apexM+" → "+a.apexM+" m</b>"+
+    "<i>·</i>Landing <b>"+b.landingAngle.toFixed(1)+" → "+a.landingAngle.toFixed(1)+"°</b>";
+}
+function renderMyth(){
+  const m = MYTHS[mythI];
+  $("[data-myth-count]").textContent  = "Experiment " + (mythI + 1) + " of " + MYTHS.length;
+  $("[data-myth-prompt]").textContent = m.prompt;
+  const box = $("[data-myth-opts]");
+  box.innerHTML = "";
+  m.choices.forEach((c, i) => {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "opt"; b.textContent = c;
+    b.addEventListener("click", () => answerMyth(i));
+    box.appendChild(b);
+  });
+  mythAnswered = false;
+  $("[data-myth-ab]").hidden      = true;
+  $("[data-myth-chain]").hidden   = true;
+  $("[data-myth-verdict]").hidden = true;
+  $("[data-myth-next]").hidden    = true;
+}
+function applyMyth(side){
+  const m = MYTHS[mythI], s = side === "before" ? m.before : m.after;
+  st.dl = s.dl; st.aa = s.aa; st.bs = s.bs;
+  $$("[data-ab]").forEach(b => b.setAttribute("aria-pressed", b.dataset.ab === side ? "true" : "false"));
+  render();
+}
+function answerMyth(i){
+  if (mythAnswered) return;
+  mythAnswered = true;
+  const m = MYTHS[mythI];
+  markAnswers($("[data-myth-opts]"), m.answer, i);
+  const ch = $("[data-myth-chain]");
+  ch.hidden = false; ch.innerHTML = chainOf(m.before, m.after);
+  const v = $("[data-myth-verdict]");
+  v.hidden = false;
+  v.innerHTML = "<strong>" + (i === m.answer ? "Correct" : "Not this one") + "</strong>" + m.explanation;
+  $("[data-myth-ab]").hidden   = false;
+  $("[data-myth-next]").hidden = mythI >= MYTHS.length - 1;
+  applyMyth("after");
+  say((i === m.answer ? "Correct. " : "Not this one. ") + m.explanation);
+}
+$$("[data-ab]").forEach(b => b.addEventListener("click", () => applyMyth(b.dataset.ab)));
+$("[data-myth-advance]").addEventListener("click", () => {
+  if (mythI >= MYTHS.length - 1) return;
+  mythI++;
+  renderMyth();
+  /* renderMyth() hides the button that was just pressed, so focus would fall to
+     BODY. Move it to the new question in the same tick — a timed hand-off left
+     focus on BODY for the whole scroll — then scroll the counter, which owns the
+     scroll-margin, so the destination lands below the glass and not past the fold. */
+  $("[data-myth-prompt]").focus({preventScroll:true});
+  $("[data-myth-count]").scrollIntoView({behavior: reduced() ? "auto" : "smooth", block:"start"});
+});
+
+/* ═══ DEFINITION CHECK ════════════════════════════════════════════════════ */
+(function(){
+  const box = $("[data-def-opts]");
+  DEF.choices.forEach((c, i) => {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "opt"; b.textContent = c;
+    b.addEventListener("click", () => {
+      if (defAnswered) return;
+      defAnswered = true;
+      markAnswers(box, DEF.answer, i);
+      const v = $("[data-def-verdict]");
+      v.hidden = false;
+      v.innerHTML = "<strong>" + (i === DEF.answer ? "Correct" : "Not this one") + "</strong>" + DEF.explanation;
+      say((i === DEF.answer ? "Correct. " : "Not this one. ") + DEF.explanation);
+    });
+    box.appendChild(b);
+  });
+})();
+
+/* ═══ SHEET — focus trap, Esc, returns focus, inert shell ═════════════════ */
+const sheet = $("#sheet"), scrim = $("[data-scrim]");
+const shellEls = [$("#glass"), $(".column")];
+let opener = null;
+
+function openSheet(key){
+  const s = SHEETS[key];
+  if (!s) return;
+  opener = document.activeElement;
+  $("[data-sheet-eyebrow]").textContent = s.eyebrow;
+  $("[data-sheet-title]").textContent   = s.title;
+  $("[data-sheet-body]").innerHTML      = s.body;
+  scrim.hidden = false; sheet.hidden = false;
+  document.body.classList.add("is-locked");
+  shellEls.forEach(e => { e.inert = true; e.setAttribute("aria-hidden","true"); });
+  requestAnimationFrame(() => { scrim.dataset.open = "1"; sheet.dataset.open = "1"; });
+  sheet.focus({preventScroll:true});
+}
+function closeSheet(){
+  if (sheet.hidden) return;
+  delete scrim.dataset.open; delete sheet.dataset.open;
+  shellEls.forEach(e => { e.inert = false; e.removeAttribute("aria-hidden"); });
+  document.body.classList.remove("is-locked");
+  const done = () => { sheet.hidden = true; scrim.hidden = true; };
+  if (reduced()) done(); else setTimeout(done, 250);
+  if (opener && opener.focus) opener.focus({preventScroll:true});
+  opener = null;
+}
+$$("[data-sheet]").forEach(b => b.addEventListener("click", () => openSheet(b.dataset.sheet)));
+$("[data-sheet-close]").addEventListener("click", closeSheet);
+scrim.addEventListener("click", closeSheet);
+sheet.addEventListener("keydown", ev => {
+  if (ev.key === "Escape"){ ev.preventDefault(); closeSheet(); return; }
+  if (ev.key !== "Tab") return;
+  const f = $$("button,[href],input,[tabindex]:not([tabindex='-1'])", sheet)
+    .filter(n => n.offsetParent !== null);
+  if (!f.length) return;
+  const first = f[0], last = f[f.length - 1];
+  if (ev.shiftKey && document.activeElement === first){ ev.preventDefault(); last.focus(); }
+  else if (!ev.shiftKey && document.activeElement === last){ ev.preventDefault(); first.focus(); }
+});
+
+/* ═══ RUNTIME SELF-CHECK ══════════════════════════════════════════════════
+   Re-asserts nine parities against values measured directly from the frozen
+   engine. If a table were ever edited by hand the colophon badge goes ember
+   and names the first failure. This is the one runnable check this file
+   carries; the exhaustive 50,310-state proof lives in the generator.
+   ═══════════════════════════════════════════════════════════════════════════ */
+(function selfCheck(){
+  const S = (d,a,b) => solve(d,a,b);
+  const sensTriple = state => sens(state,"dl").raw + "/" + sens(state,"aa").raw + "/" + sens(state,"bs").raw;
+  const cases = [
+    ["solve(25,-3,120).rpm",            () => S(25,-3,120).rpm, 4609],
+    ["solve(25,-3,120) carry/apex/land",() => { const s=S(25,-3,120); return s.carryM+"/"+s.apexM+"/"+s.landingAngle; }, "155/26/49.6"],
+    ["30/-3 and 34/+1 agree",           () => S(30,-3,120).rpm === S(34,1,120).rpm ? S(30,-3,120).rpm : "differ", 6485],
+    ["solve(44,-4,120) at the cap",     () => { const s=S(44,-4,120); return s.rpm+"/"+s.rawRpm+"/"+s.limit; }, "9000/10967/ceiling"],
+    ["solve(48,-8,120).rawRpm",         () => S(48,-8,120).rawRpm, 13098],
+    ["solve(14,2,120) low end",         () => { const s=S(14,2,120); return s.rpm+"/"+s.landingAngle; }, "1814/39"],
+    ["sensitivity at 25/-3/120",        () => sensTriple({dl:25,aa:-3,bs:120}), "290/-250/39"],
+    ["sensitivity at 30/-3/120",        () => sensTriple({dl:30,aa:-3,bs:120}), "430/-439/54"],
+    ["31/-4/120 meets both gates",      () => { const s=S(31,-4,120); return passesTarget(s) ? s.rpm+"/"+s.landingAngle : "fails"; }, "7319/51.1"]
+  ];
+  let pass = 0, firstFail = null;
+  cases.forEach(c => {
+    let got;
+    try { got = c[1](); } catch (err) { got = "threw: " + err.message; }
+    if (got === c[2]) pass++;
+    else if (!firstFail) firstFail = c[0] + " → " + got + ", expected " + c[2];
+  });
+  const badge = $("[data-selfcheck]");
+  badge.textContent = pass + " / " + cases.length + " engine parities " +
+    (firstFail ? "— FAILED: " + firstFail : "verified in this browser");
+  if (firstFail) badge.dataset.fail = "1";
+})();
+
+/* ═══ BOOT ════════════════════════════════════════════════════════════════ */
+$("[data-frame-n]").textContent    = "Frame " + FRAMES.arc.n;
+$("[data-frame-name]").textContent = FRAMES.arc.name;
+$("[data-interp]").textContent     = FRAMES.arc.interp;
+renderMyth();
+render();
+/* Watch the canvas box, not the window. The interp caption under the canvas
+   wraps to a different number of lines per frame, which resizes the 1fr canvas
+   row without any window resize — the bitmap then stayed at the old height and
+   frames 02, 03, 04 and 06 were drawn into 183px and stretched over 196px. A
+   box-level observer also covers text-zoom and safe-area changes, so it
+   replaces both former listeners. */
+new ResizeObserver(resize).observe(cv);
+
+/* ONE measurement of the glass feeds everything that has to clear it: the
+   scroll-margin every focus target uses, and the band that decides which
+   section owns the instrument. At 200% text the glass grows to its 72svh cap;
+   a design constant or a percentage of the viewport describes neither. */
+const glassEl = $("#glass");
+let io = null, ioKey = "";
+function syncGlass(){
+  const top = Math.round(glassEl.getBoundingClientRect().height) + 14;
+  document.documentElement.style.setProperty("--stick", top + "px");
+  const band = Math.round(innerHeight * .1);
+  const key = top + "/" + band + "/" + innerHeight;
+  if (key === ioKey) return;          /* the glass resizes as captions rewrap */
+  ioKey = key;
+  if (io) io.disconnect();
+  io = new IntersectionObserver(onCross, {
+    rootMargin: "-" + top + "px 0px -" + Math.max(0, innerHeight - top - band) + "px 0px",
+    threshold: 0
+  });
+  sects.forEach(s => io.observe(s));
+}
+new ResizeObserver(syncGlass).observe(glassEl);
+addEventListener("resize", syncGlass);
+</script>
+</body>
+</html>

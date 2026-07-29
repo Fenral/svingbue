@@ -1,0 +1,375 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#07060C">
+<title>Attack Angle vs Delivered Loft — Carry Grid</title>
+<style>
+  :root{
+    --ink:#07060C;
+    --plate:#0D0A18;
+    --plate-2:#110D1C;
+    --glass:#F5F2ED;
+    --glass-2:#B9B4C4;
+    --glass-3:#8E85A8;
+    --ember:#FF8A4D;
+    --violet:#9D8BFF;
+    --line:rgba(157,139,255,.16);
+    --line-2:rgba(157,139,255,.34);
+    --font-ui:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --font-mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+    --ease:cubic-bezier(.23,1,.32,1);
+  }
+  *{box-sizing:border-box}
+  /* clip, not hidden: clip never makes the root a scrollport, so the sticky
+     loft rail inside each .scroller keeps working. The page cannot scroll
+     sideways at any text size; only the two table scrollers do. */
+  html{-webkit-text-size-adjust:100%;overflow-x:clip}
+  body{
+    margin:0;background:var(--ink);color:var(--glass);
+    font-family:var(--font-ui);font-size:1rem;line-height:1.55;
+    overflow-x:hidden;
+    padding:max(1.5rem,env(safe-area-inset-top)) 0 4rem;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{
+    max-width:66rem;margin:0 auto;
+    padding-left:max(1.125rem,env(safe-area-inset-left));
+    padding-right:max(1.125rem,env(safe-area-inset-right));
+  }
+  .sr{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;
+    clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
+
+  /* ---------- masthead ---------- */
+  .eyebrow{
+    font-size:.6875rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--violet);margin:0 0 .75rem;
+  }
+  h1{
+    font-size:clamp(1.75rem,6.2vw,2.75rem);line-height:1.06;letter-spacing:-.02em;
+    font-weight:700;margin:0 0 .5rem;max-width:16ch;
+  }
+  h1 em{font-style:normal;color:var(--glass-3)}
+  .deck{color:var(--glass-2);font-size:1rem;margin:0 0 2rem;max-width:58ch}
+
+  /* ---------- the read ---------- */
+  .read{
+    border-top:1px solid var(--line-2);border-bottom:1px solid var(--line);
+    padding:1.5rem 0 1.75rem;margin:0 0 2.5rem;
+  }
+  .read h2{
+    font-size:.6875rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--violet);margin:0 0 1rem;
+  }
+  .read p{margin:0 0 1.05rem;max-width:64ch;color:var(--glass-2)}
+  .read p:last-child{margin-bottom:0}
+  .read strong{color:var(--glass);font-weight:600}
+  .read .lede{color:var(--glass);font-size:1.0625rem}
+  .q{font-family:var(--font-mono);font-variant-numeric:tabular-nums;
+    color:var(--glass);font-size:.9375em;white-space:nowrap}
+
+  /* ---------- section ---------- */
+  section{margin:0 0 3.5rem}
+  section:last-of-type{margin-bottom:2.5rem}
+
+  /* ---------- table ---------- */
+  /* overflow-x:clip keeps the table's scrollable overflow from propagating into
+     the document's scroll extent. Without it body.scrollWidth reports the full
+     table width and only html{overflow-x:clip} hides the difference. */
+  .shell{position:relative;max-width:100%;overflow-x:clip}
+  .scroller{
+    overflow-x:auto;overflow-y:hidden;
+    -webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;
+    max-width:100%;
+    border-radius:.875rem;border:1px solid var(--line);
+    background:var(--plate);
+  }
+  .scroller:focus-visible{outline:2px solid var(--violet);outline-offset:2px}
+  /* right-edge scrim: marks the horizontal cut as intentional, not clipped.
+     The scrim is an affordance, not decoration — it has to vanish exactly when
+     both tables fit and a fade over the last column would be a lie. A rem media
+     query cannot do that: inside a media query rem resolves against the initial
+     16px, never the root font, so at 200% text the old @media hid the scrim
+     while the table was still cut. This clamp collapses the width to 0 once the
+     window reaches 40rem — the width measured for both tables to fit — and rem
+     here does track the root font, so the affordance survives text scaling. */
+  .shell::after{
+    content:"";position:absolute;top:1px;right:1px;bottom:1px;
+    width:clamp(0px,calc((40rem - 100vw) * 999),min(1.75rem,8.8vw));
+    pointer-events:none;border-radius:0 .8125rem .8125rem 0;
+    background:linear-gradient(to left,var(--ink) 15%,rgba(7,6,12,0));
+  }
+  table{border-collapse:separate;border-spacing:0;width:100%;min-width:max-content}
+
+  caption{
+    text-align:left;padding:1rem 1rem .875rem;
+    border-bottom:1px solid var(--line);
+    position:sticky;left:0;
+  }
+  /* the title needs the same viewport cap its two siblings already carry. Without
+     it the block runs to the full table width (843px against a 318px scrollport at
+     200% text), so "Driver — carry in yards" is cut mid-word and the club's name is
+     only reachable by scrolling the grid sideways — WCAG 1.4.4, and the scrollport
+     is px-measured while the caption is not. */
+  .cap-t{display:block;font-weight:600;font-size:1.0625rem;letter-spacing:-.01em;
+    max-width:min(44ch,100vw - 3.5rem)}
+  .cap-s{display:block;color:var(--glass-3);font-size:.8125rem;line-height:1.45;
+    margin-top:.25rem;max-width:min(44ch,100vw - 3.5rem)}
+  /* the one warm fact, stated in words so it survives before you scroll to the cell */
+  .cap-peak{
+    display:block;margin-top:.6rem;font-size:.8125rem;line-height:1.4;
+    color:var(--glass-2);max-width:min(44ch,100vw - 3.5rem);
+    padding-left:.75rem;border-left:2px solid var(--ember);
+  }
+  .cap-peak b{color:var(--ember);font-family:var(--font-mono);
+    font-variant-numeric:tabular-nums;font-weight:700}
+
+  th,td{padding:.55rem .5rem;text-align:right;white-space:nowrap}
+  thead th{
+    font-size:.75rem;font-weight:700;color:var(--glass-2);
+    letter-spacing:.02em;padding-top:.85rem;padding-bottom:.6rem;
+    border-bottom:1px solid var(--line-2);
+    font-family:var(--font-mono);font-variant-numeric:tabular-nums;
+  }
+  thead th.corner{
+    font-family:var(--font-ui);font-size:.625rem;font-weight:700;
+    letter-spacing:.08em;text-transform:uppercase;color:var(--glass-3);
+    text-align:left;line-height:1.25;
+    /* the corner label, not the row numbers, is what makes the sticky rail wide.
+       Let it wrap and cap it against the viewport so it cannot set a rail width
+       the reading window cannot afford. The vw term only bites once text is
+       scaled up; at default size it is slack at every viewport down to 320px. */
+    white-space:normal;max-width:min(9rem,28vw);
+  }
+  th[scope=row]{
+    font-family:var(--font-mono);font-variant-numeric:tabular-nums;
+    font-size:.8125rem;font-weight:700;color:var(--glass-2);text-align:left;
+  }
+  /* sticky loft rail so the row identity survives horizontal scroll.
+     WCAG 1.4.4: the scrollport is px-measured but the rail's gutters are rem,
+     so at 200% text they doubled while the window did not. Capping the gutters
+     in vw leaves every glyph free to scale and stops the chrome from eating
+     the reading window. */
+  th.corner,th[scope=row]{
+    position:sticky;left:0;z-index:2;
+    background:var(--plate);
+    box-shadow:1px 0 0 var(--line-2);
+    padding-left:min(1rem,5vw);padding-right:min(.875rem,4.4vw);
+  }
+  /* dark hairlines, not bright rules: the cells read as tiles in a field */
+  tbody th,tbody td{border-top:1px solid rgba(7,6,12,.7)}
+  tbody td{border-left:1px solid rgba(7,6,12,.7)}
+  tbody tr:first-child th,tbody tr:first-child td{border-top:0}
+  td{
+    /* tint carries spin loft: equal spin loft = equal shade, so the grid
+       visibly bands along its diagonals instead of its rows */
+    background:rgba(157,139,255,calc(.03 + var(--sl,0) * .34));
+    font-family:var(--font-mono);font-variant-numeric:tabular-nums;
+    font-size:.8125rem;min-width:min(4.6rem,23vw);
+  }
+  td:last-child{padding-right:1rem}
+  .num{display:block;line-height:1.15}
+  .bar{
+    display:block;height:2px;margin-top:.4em;margin-left:auto;border-radius:1px;
+    width:calc(var(--t,0) * 100%);min-width:2px;
+    background:var(--glass-2);opacity:.6;
+  }
+  .mk{font-size:.6875em;line-height:0;margin-left:.15em;color:var(--glass-2);font-weight:700}
+  /* caveated cells are demoted by weight, hatch and mark — never by contrast alone */
+  .flag .num{color:var(--glass-2);font-weight:400}
+  .flag{position:relative}
+  .flag::before{
+    content:"";position:absolute;inset:0;pointer-events:none;
+    background:repeating-linear-gradient(135deg,
+      transparent 0 5px,rgba(7,6,12,.5) 5px 6px);
+  }
+  /* the hatch is cell texture, not an overlay on the reading. An absolutely
+     positioned ::before paints above in-flow inline content, so the 50%-ink
+     stripes were crossing the digits and dropping local contrast on the glyph
+     to ~2.4:1. Lift the number and its bar above the hatch; the cell still
+     reads as hatched, the number stays a number. */
+  .flag .num,.flag .bar{position:relative;z-index:1}
+  .f3 .num{text-decoration:line-through;text-decoration-thickness:1px;
+    text-decoration-color:var(--glass-2)}
+  .f3 .bar{opacity:.22}
+
+  /* the single warm focal per section: the best carry the engine calls plausible */
+  td.best{background:rgba(255,138,77,.10);box-shadow:inset 0 0 0 1px rgba(255,138,77,.5)}
+  td.best .num{color:var(--ember);font-weight:700}
+  td.best .bar{background:var(--ember);opacity:1}
+
+  @media (hover:hover) and (pointer:fine){
+    tbody td,tbody th[scope=row]{transition:background-image 150ms var(--ease)}
+    tbody tr:hover td,tbody tr:hover th[scope=row]{
+      background-image:linear-gradient(rgba(245,242,237,.08),rgba(245,242,237,.08));
+    }
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{transition-duration:0ms!important;animation-duration:0ms!important}
+  }
+
+  .legend{
+    font-size:.8125rem;line-height:1.5;color:var(--glass-3);
+    margin:.875rem 0 0;max-width:62ch;
+  }
+  .legend strong{color:var(--glass-2)}
+  .legend b{color:var(--glass-2);font-family:var(--font-mono);
+    font-variant-numeric:tabular-nums;font-weight:700;font-size:.9375em}
+
+  /* ---------- notes ---------- */
+  .notes{border-top:1px solid var(--line);padding-top:1.5rem;margin-top:2.5rem}
+  .notes h2{font-size:.6875rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--violet);margin:0 0 1rem}
+  .notes dl{margin:0 0 1.5rem;font-size:.875rem;color:var(--glass-2);max-width:64ch}
+  .notes dt{font-family:var(--font-mono);color:var(--violet);font-weight:700;
+    float:left;width:1.75rem;clear:left}
+  .notes dd{margin:0 0 .55rem 1.75rem}
+  .prov{font-size:.75rem;line-height:1.6;color:var(--glass-3);margin:0;max-width:64ch}
+  .prov code{font-family:var(--font-mono);color:var(--glass-2);font-size:.9375em;
+    word-break:break-word}
+</style>
+
+<main class="wrap">
+  <p class="eyebrow">Flightglass · Engine reference</p>
+  <h1>Attack angle vs delivered loft <em>— carry grid</em></h1>
+  <p class="deck">Seventy solved ball flights. Two clubs, one question: which dial actually
+  moves the ball, and when does it stop paying?</p>
+
+  <div class="read">
+    <h2>The read</h2>
+    <p class="lede">Loft and attack angle are not two dials. They are one.
+    The engine sets backspin from <strong>spin loft</strong> — delivered loft minus attack
+    angle — so any two cells sharing a spin loft get the same spin, and once the ball
+    launches high enough to fly efficiently they get the <strong>same carry</strong>.
+    Across these two grids, all <span class="q">9</span> spin-loft groups that hold
+    more than one fully efficient cell land on identical carry, to
+    <span class="q">0.0 yd</span>. The grid runs in diagonal bands,
+    not in rows or columns.</p>
+
+    <p><strong>Driver, 110 mph.</strong> Whichever dial you already have
+    enough of, the other stops paying. Hitting <span class="q">−5°</span>,
+    the whole <span class="q">8–20°</span> loft band spreads
+    <span class="q">35.0 yd</span> of carry. Hitting
+    <span class="q">+7°</span>, that same band spreads
+    <span class="q">7.7 yd</span>. It mirrors: at
+    <span class="q">8°</span> of loft, moving attack angle from
+    <span class="q">−5°</span> to <span class="q">+7°</span>
+    adds <span class="q">51.4 yd</span>; at
+    <span class="q">20°</span> of loft it adds
+    <span class="q">17.2 yd</span>. Read loft as a band, never as a
+    direction: the loft that carries farthest slides from
+    <span class="q">17°</span> when you hit down
+    <span class="q">5°</span> to <span class="q">11°</span>
+    once you hit up, and carry falls away on both sides of it — so at
+    <span class="q">+7°</span> attack the <span class="q">20°</span> row
+    actually ends <span class="q">0.6 yd</span> <em>short</em> of the
+    <span class="q">8°</span> row. The best carry the engine calls
+    plausible is <span class="q">266.0 yd</span> at
+    <span class="q">11°</span> loft and
+    <span class="q">+3°</span> attack — not the grid's numeric
+    maximum of <span class="q">267.8 yd</span>, which needs a backspin the
+    engine itself flags as implausible.</p>
+
+    <p><strong>Iron, 90 mph.</strong> The bands tilt the other way. Loft moves
+    carry about <span class="q">2.3×</span> as far as attack angle does — median
+    <span class="q">36.6 yd</span> across the loft range against
+    <span class="q">16.2 yd</span> across the attack range. That spread is what
+    makes a set of irons a set; attack angle is the trim, not the lever. Read the iron grid
+    with its caveats loud: <span class="q">24 of 35</span> cells are
+    flagged, because every ascending strike is a shot this model was not built to describe.</p>
+
+    <p><strong>What to do with it.</strong> Read the grid along its diagonals. If you are
+    already delivering plenty of loft, buying attack angle returns little. If you deliver
+    little loft, attack angle is the largest single lever on this page — and the numbers
+    in the shallow-loft corner get less trustworthy the further up you swing.</p>
+  </div>
+
+  <section aria-labelledby="h-driver">
+    <h2 class="sr" id="h-driver">Driver carry grid</h2>
+    <div class="shell"><div class="scroller" role="region" tabindex="0"
+         aria-label="Driver carry grid, scrollable horizontally">
+      <table>
+        <caption>
+          <span class="cap-t">Driver — carry in yards</span>
+          <span class="cap-s">Club speed 110 mph, club path 0°, face angle 0°.
+          Rows are delivered loft, columns are attack angle. Range 209.3–267.8 yd.</span>
+          <span class="cap-peak">Peak carry the engine flags no caveat on:
+            <b>266.0 yd</b> at 11° loft,
+            +3° attack</span>
+        </caption>
+        <thead>
+          <tr><th scope="col" class="corner"><span class="hv">Loft ↓<br>Attack →</span><span class="sr">Delivered loft down the side, attack angle across the top</span></th><th scope="col"><span class="hv">−5°</span><span class="sr"> attack angle, descending</span></th><th scope="col"><span class="hv">−3°</span><span class="sr"> attack angle, descending</span></th><th scope="col"><span class="hv">−1°</span><span class="sr"> attack angle, descending</span></th><th scope="col"><span class="hv">+1°</span><span class="sr"> attack angle, ascending</span></th><th scope="col"><span class="hv">+3°</span><span class="sr"> attack angle, ascending</span></th><th scope="col"><span class="hv">+5°</span><span class="sr"> attack angle, ascending</span></th><th scope="col"><span class="hv">+7°</span><span class="sr"> attack angle, ascending</span></th></tr>
+        </thead>
+        <tbody>
+        <tr><th scope="row"><span class="hv">8°</span><span class="sr"> delivered loft</span></th><td class="" style="--t:0.000;--sl:0.500"><span class="num">209.3</span><span class="bar" aria-hidden="true"></span></td><td class="" style="--t:0.171;--sl:0.417"><span class="num">219.3</span><span class="bar" aria-hidden="true"></span></td><td class="" style="--t:0.337;--sl:0.333"><span class="num">229.0</span><span class="bar" aria-hidden="true"></span></td><td class="flag f2" style="--t:0.499;--sl:0.250"><span class="num">238.5<sup class="mk mk2" aria-hidden="true">2</sup></span><span class="bar" aria-hidden="true"></span><span class="sr">. Caveat: landing angle clamped at the engine limit; backspin below 1500 rpm, which a real driver strike does not produce</span></td><td class="flag f2" style="--t:0.638;--sl:0.167"><span class="num">246.6<sup class="mk mk2" aria-hidden="true">2</sup></span><span class="bar" aria-hidden="true"></span><span class="sr">. Caveat: smash factor clamped at the engine ceiling; landing angle clamped at the engine limit; backspin below 1500 rpm, which a real driver strike does not produce</span></td><td class="flag f3" style="--t:0.759;--sl:0.083"><span class="num">253.7<sup class="mk mk3" aria-hidden="true">3</sup></span><span class="bar" aria-hidden="true"></span><span class="sr">. Caveat: smash factor clamped at the engine ceiling; landing angle clamped at the engine limit; backspin below 1500 rpm, which a real driver strike does not produce; the two solvers disagree, so this carry is not trustworthy</span></td><td class="flag f3" style="--t:0.879;--sl:0.000"><span class="num">260.7<sup class="mk mk3" aria-hidden="true">3</sup></span><span class="bar" aria-hidden="true"></span><span class="sr">. Caveat: smash factor clamped at the engine ceiling; landing angle clamped at the engine limit; backspin below 1500 rpm, which a real driver strike does not produce; the two solvers disagree, so this carry is not trustworthy</span></td></tr>
+        <tr><th scope="row"><span class="hv">11°</span><span class="sr"> delivered loft</span></th><td class="" style="--t:0.515;--sl:0.625"><span class="num">239.4</span><span class="bar" aria-hidden="true"></span></td><td class="" style="--t:0.674;--sl:0.542"><span class="num">248.7</span><span class="bar" aria-hidden="true"></span></td><td class="" style="--t:0.829;--sl:0.458"><span class="num">257.8</span><span class="bar" aria-hidden="true"></span></td><td class="" style="--t:0.930;--sl:0.375"><span class="num">263.7</span><span class="bar" aria-hidden="true"></span></td><td class=" best" style="--t:0.969;--sl:0.292"><span class="num">266.0</span><span class="bar" aria-hidden="true"></span><span class="sr">. Highest carry in this grid that the engine flags no caveat on</span></td><td class="flag f2" style="--t:1.000;--sl:0.208"><span class="num">267.8<sup class="mk mk2" aria-hidden="true">2</sup></span><span class="bar" aria-hidden="true"></span><span class="sr">. Caveat: smash factor clamped at the engine ceiling; landing angle clamped at the engine limit; backspin below 1500 rpm, which a real driver strike does not produce</span></td><td class="flag f2" style="--t:1.000;--sl:0.125"><span class="num">267.8<sup class="mk mk2" aria-hidden="true">2</sup></span><span class="bar" aria-hidden="true"></span><span class="sr">. Caveat: smash factor clamped at the engine ceiling; landing angle clamped at the engine limit; backspin below 1500 rpm, which a real driver strike does not produce</span></td></tr>
+        <tr><th scope="row"><span class="hv">14°</span><span class="sr"> delivered loft</span></th><td class="" style="--t:0.538;--sl:0.750"><span class="num">240.8</span><span class="bar" aria-hidden="true"></span></td><td class="" style="--t:0.696;--sl:0.667"><span class="num">250.0</span><span class="bar" aria-hidden="true"></span></td><td class="" style="--t:0.824;--sl:0.583"><span class="num">257.5</span><span class="bar" aria-hidden="true"></span></td><td class="" style="--t:0.868;--sl:0.500"><span class="num">260.1</span><span class="bar" aria-hidden="true"></span></td><td class="" style="--t:0.909;--sl:0.417"><span class="num">262.5</span><span class="bar" aria-hidden="true"></span></td><td class="" style="--t:0.950;--sl:0.333"><span class="num">264.9</span><span class="bar" aria-hidden="true"></span></td><td class="flag f2" style="--t:0.988;--sl:0.250"><span class="num">267.1<sup class="mk mk2" aria-hidden="true">2</sup></span><span class="bar" aria-hidden="true"></span><span class="sr">. Caveat: landing angle clamped at the engine limit; backspin below 1500 rpm, which a real driver strike does not produce</span></td></tr>
+        <tr><th scope="row"><span class="hv">17°</span><span class="sr"> delivered loft</span></th><td class="" style="--t:0.598;--sl:0.875"><span class="num">244.3</span><span class="bar" aria-hidden="true"></span></td><td class="" style="--t:0.706;--sl:0.792"><span class="num">250.6</span><span class="bar" aria-hidden="true"></span></td><td class="" style="--t:0.754;--sl:0.708"><span class="num">253.4</span><span class="bar" aria-hidden="true"></span></td><td class="" style="--t:0.802;--sl:0.625"><span class="num">256.2</span><span class="bar" aria-hidden="true"></span></td><td class="" style="--t:0.846;--sl:0.542"><span class="num">258.8</span><span class="bar" aria-hidden="true"></span></td><td class="" style="--t:0.889;--sl:0.458"><span class="num">261.3</span><span class="bar" aria-hidden="true"></span></td><td class="" style="--t:0.930;--sl:0.375"><span class="num">263.7</span><span class="bar" aria-hidden="true"></span></td></tr>
+        <tr><th scope="row"><span class="hv">20°</span><span class="sr"> delivered loft</span></th><td class="" style="--t:0.574;--sl:1.000"><span class="num">242.9</span><span class="bar" aria-hidden="true"></span></td><td class="" style="--t:0.627;--sl:0.917"><span class="num">246.0</span><span class="bar" aria-hidden="true"></span></td><td class="" style="--t:0.680;--sl:0.833"><span class="num">249.1</span><span class="bar" aria-hidden="true"></span></td><td class="" style="--t:0.730;--sl:0.750"><span class="num">252.0</span><span class="bar" aria-hidden="true"></span></td><td class="" style="--t:0.778;--sl:0.667"><span class="num">254.8</span><span class="bar" aria-hidden="true"></span></td><td class="" style="--t:0.824;--sl:0.583"><span class="num">257.5</span><span class="bar" aria-hidden="true"></span></td><td class="" style="--t:0.868;--sl:0.500"><span class="num">260.1</span><span class="bar" aria-hidden="true"></span></td></tr>
+        </tbody>
+      </table>
+    </div></div>
+    <p class="legend"><strong>Tint = spin loft</strong>, 1–25° across this grid: the more violet, the more backspin.
+    Equal tint means equal spin, which is why the shading bands diagonally rather than by row. Read one band to check it: <b>11° loft at +1°</b>
+       and <b>17° loft at +7°</b> are both 10° of spin loft —
+       same 2075 rpm, same 263.7 yd.
+    <strong>Underline = where that carry sits</strong> inside this club's own 209.3–267.8 yd range — not measured from zero, so bar lengths compare within a table and never between the two.
+    7 of 35 cells carry a numbered caveat; the notes below say what each one means.</p>
+  </section>
+
+  <section aria-labelledby="h-iron">
+    <h2 class="sr" id="h-iron">Iron carry grid</h2>
+    <div class="shell"><div class="scroller" role="region" tabindex="0"
+         aria-label="Iron carry grid, scrollable horizontally">
+      <table>
+        <caption>
+          <span class="cap-t">Iron — carry in yards</span>
+          <span class="cap-s">Club speed 90 mph, club path 0°, face angle 0°.
+          Rows are delivered loft, columns are attack angle. Range 147.4–200.0 yd.</span>
+          <span class="cap-peak">Peak carry the engine flags no caveat on:
+            <b>192.7 yd</b> at 16° loft,
+            −1° attack</span>
+        </caption>
+        <thead>
+          <tr><th scope="col" class="corner"><span class="hv">Loft ↓<br>Attack →</span><span class="sr">Delivered loft down the side, attack angle across the top</span></th><th scope="col"><span class="hv">−5°</span><span class="sr"> attack angle, descending</span></th><th scope="col"><span class="hv">−3°</span><span class="sr"> attack angle, descending</span></th><th scope="col"><span class="hv">−1°</span><span class="sr"> attack angle, descending</span></th><th scope="col"><span class="hv">+1°</span><span class="sr"> attack angle, ascending</span></th><th scope="col"><span class="hv">+3°</span><span class="sr"> attack angle, ascending</span></th><th scope="col"><span class="hv">+5°</span><span class="sr"> attack angle, ascending</span></th><th scope="col"><span class="hv">+7°</span><span class="sr"> attack angle, ascending</span></th></tr>
+        </thead>
+        <tbody>
+        <tr><th scope="row"><span class="hv">16°</span><span class="sr"> delivered loft</span></th><td class="" style="--t:0.692;--sl:0.286"><span class="num">183.8</span><span class="bar" aria-hidden="true"></span></td><td class="" style="--t:0.821;--sl:0.238"><span class="num">190.6</span><span class="bar" aria-hidden="true"></span></td><td class=" best" style="--t:0.861;--sl:0.190"><span class="num">192.7</span><span class="bar" aria-hidden="true"></span><span class="sr">. Highest carry in this grid that the engine flags no caveat on</span></td><td class="flag f2" style="--t:0.897;--sl:0.143"><span class="num">194.6<sup class="mk mk2" aria-hidden="true">2</sup></span><span class="bar" aria-hidden="true"></span><span class="sr">. Caveat: an iron struck on the way up, which this model was not built to describe</span></td><td class="flag f2" style="--t:0.933;--sl:0.095"><span class="num">196.5<sup class="mk mk2" aria-hidden="true">2</sup></span><span class="bar" aria-hidden="true"></span><span class="sr">. Caveat: an iron struck on the way up, which this model was not built to describe</span></td><td class="flag f2" style="--t:0.968;--sl:0.048"><span class="num">198.3<sup class="mk mk2" aria-hidden="true">2</sup></span><span class="bar" aria-hidden="true"></span><span class="sr">. Caveat: an iron struck on the way up, which this model was not built to describe</span></td><td class="flag f2" style="--t:1.000;--sl:0.000"><span class="num">200.0<sup class="mk mk2" aria-hidden="true">2</sup></span><span class="bar" aria-hidden="true"></span><span class="sr">. Caveat: an iron struck on the way up, which this model was not built to describe</span></td></tr>
+        <tr><th scope="row"><span class="hv">23°</span><span class="sr"> delivered loft</span></th><td class="" style="--t:0.627;--sl:0.452"><span class="num">180.4</span><span class="bar" aria-hidden="true"></span></td><td class="" style="--t:0.673;--sl:0.405"><span class="num">182.8</span><span class="bar" aria-hidden="true"></span></td><td class="" style="--t:0.717;--sl:0.357"><span class="num">185.1</span><span class="bar" aria-hidden="true"></span></td><td class="flag f2" style="--t:0.760;--sl:0.310"><span class="num">187.4<sup class="mk mk2" aria-hidden="true">2</sup></span><span class="bar" aria-hidden="true"></span><span class="sr">. Caveat: an iron struck on the way up, which this model was not built to describe</span></td><td class="flag f2" style="--t:0.802;--sl:0.262"><span class="num">189.6<sup class="mk mk2" aria-hidden="true">2</sup></span><span class="bar" aria-hidden="true"></span><span class="sr">. Caveat: an iron struck on the way up, which this model was not built to describe</span></td><td class="flag f2" style="--t:0.842;--sl:0.214"><span class="num">191.7<sup class="mk mk2" aria-hidden="true">2</sup></span><span class="bar" aria-hidden="true"></span><span class="sr">. Caveat: an iron struck on the way up, which this model was not built to describe</span></td><td class="flag f2" style="--t:0.880;--sl:0.167"><span class="num">193.7<sup class="mk mk2" aria-hidden="true">2</sup></span><span class="bar" aria-hidden="true"></span><span class="sr">. Caveat: an iron struck on the way up, which this model was not built to describe</span></td></tr>
+        <tr><th scope="row"><span class="hv">31°</span><span class="sr"> delivered loft</span></th><td class="" style="--t:0.428;--sl:0.643"><span class="num">169.9</span><span class="bar" aria-hidden="true"></span></td><td class="" style="--t:0.481;--sl:0.595"><span class="num">172.7</span><span class="bar" aria-hidden="true"></span></td><td class="" style="--t:0.530;--sl:0.548"><span class="num">175.3</span><span class="bar" aria-hidden="true"></span></td><td class="flag f2" style="--t:0.580;--sl:0.500"><span class="num">177.9<sup class="mk mk2" aria-hidden="true">2</sup></span><span class="bar" aria-hidden="true"></span><span class="sr">. Caveat: an iron struck on the way up, which this model was not built to describe</span></td><td class="flag f2" style="--t:0.627;--sl:0.452"><span class="num">180.4<sup class="mk mk2" aria-hidden="true">2</sup></span><span class="bar" aria-hidden="true"></span><span class="sr">. Caveat: an iron struck on the way up, which this model was not built to describe</span></td><td class="flag f2" style="--t:0.673;--sl:0.405"><span class="num">182.8<sup class="mk mk2" aria-hidden="true">2</sup></span><span class="bar" aria-hidden="true"></span><span class="sr">. Caveat: an iron struck on the way up, which this model was not built to describe</span></td><td class="flag f2" style="--t:0.717;--sl:0.357"><span class="num">185.1<sup class="mk mk2" aria-hidden="true">2</sup></span><span class="bar" aria-hidden="true"></span><span class="sr">. Caveat: an iron struck on the way up, which this model was not built to describe</span></td></tr>
+        <tr><th scope="row"><span class="hv">38°</span><span class="sr"> delivered loft</span></th><td class="flag f1" style="--t:0.238;--sl:0.810"><span class="num">159.9<sup class="mk mk1" aria-hidden="true">1</sup></span><span class="bar" aria-hidden="true"></span><span class="sr">. Caveat: backspin clamped at the engine ceiling of 9000 rpm</span></td><td class="" style="--t:0.293;--sl:0.762"><span class="num">162.8</span><span class="bar" aria-hidden="true"></span></td><td class="" style="--t:0.348;--sl:0.714"><span class="num">165.7</span><span class="bar" aria-hidden="true"></span></td><td class="flag f2" style="--t:0.403;--sl:0.667"><span class="num">168.6<sup class="mk mk2" aria-hidden="true">2</sup></span><span class="bar" aria-hidden="true"></span><span class="sr">. Caveat: an iron struck on the way up, which this model was not built to describe</span></td><td class="flag f2" style="--t:0.454;--sl:0.619"><span class="num">171.3<sup class="mk mk2" aria-hidden="true">2</sup></span><span class="bar" aria-hidden="true"></span><span class="sr">. Caveat: an iron struck on the way up, which this model was not built to describe</span></td><td class="flag f2" style="--t:0.506;--sl:0.571"><span class="num">174.0<sup class="mk mk2" aria-hidden="true">2</sup></span><span class="bar" aria-hidden="true"></span><span class="sr">. Caveat: an iron struck on the way up, which this model was not built to describe</span></td><td class="flag f2" style="--t:0.555;--sl:0.524"><span class="num">176.6<sup class="mk mk2" aria-hidden="true">2</sup></span><span class="bar" aria-hidden="true"></span><span class="sr">. Caveat: an iron struck on the way up, which this model was not built to describe</span></td></tr>
+        <tr><th scope="row"><span class="hv">46°</span><span class="sr"> delivered loft</span></th><td class="flag f1" style="--t:0.000;--sl:1.000"><span class="num">147.4<sup class="mk mk1" aria-hidden="true">1</sup></span><span class="bar" aria-hidden="true"></span><span class="sr">. Caveat: backspin clamped at the engine ceiling of 9000 rpm</span></td><td class="flag f1" style="--t:0.061;--sl:0.952"><span class="num">150.6<sup class="mk mk1" aria-hidden="true">1</sup></span><span class="bar" aria-hidden="true"></span><span class="sr">. Caveat: backspin clamped at the engine ceiling of 9000 rpm</span></td><td class="flag f1" style="--t:0.120;--sl:0.905"><span class="num">153.7<sup class="mk mk1" aria-hidden="true">1</sup></span><span class="bar" aria-hidden="true"></span><span class="sr">. Caveat: backspin clamped at the engine ceiling of 9000 rpm</span></td><td class="flag f2" style="--t:0.179;--sl:0.857"><span class="num">156.8<sup class="mk mk2" aria-hidden="true">2</sup></span><span class="bar" aria-hidden="true"></span><span class="sr">. Caveat: backspin clamped at the engine ceiling of 9000 rpm; an iron struck on the way up, which this model was not built to describe</span></td><td class="flag f2" style="--t:0.238;--sl:0.810"><span class="num">159.9<sup class="mk mk2" aria-hidden="true">2</sup></span><span class="bar" aria-hidden="true"></span><span class="sr">. Caveat: backspin clamped at the engine ceiling of 9000 rpm; an iron struck on the way up, which this model was not built to describe</span></td><td class="flag f2" style="--t:0.293;--sl:0.762"><span class="num">162.8<sup class="mk mk2" aria-hidden="true">2</sup></span><span class="bar" aria-hidden="true"></span><span class="sr">. Caveat: an iron struck on the way up, which this model was not built to describe</span></td><td class="flag f2" style="--t:0.348;--sl:0.714"><span class="num">165.7<sup class="mk mk2" aria-hidden="true">2</sup></span><span class="bar" aria-hidden="true"></span><span class="sr">. Caveat: an iron struck on the way up, which this model was not built to describe</span></td></tr>
+        </tbody>
+      </table>
+    </div></div>
+    <p class="legend"><strong>Tint = spin loft</strong>, 9–51° across this grid: the more violet, the more backspin.
+    Equal tint means equal spin, which is why the shading bands diagonally rather than by row. Read one band to check it: <b>23° loft at −1°</b>
+       and <b>31° loft at +7°</b> are both 24° of spin loft —
+       same 4014 rpm, same 185.1 yd.
+    <strong>Underline = where that carry sits</strong> inside this club's own 147.4–200.0 yd range — not measured from zero, so bar lengths compare within a table and never between the two.
+    24 of 35 cells carry a numbered caveat; the notes below say what each one means.</p>
+  </section>
+
+  <div class="notes">
+    <h2>Caveat marks</h2>
+    <dl>
+      <dt>1</dt><dd><strong>Clamped.</strong> The engine hit one of its own ceilings —
+      spin at 9000 rpm, smash factor, or landing angle — so the true value lies beyond
+      the number shown.</dd>
+      <dt>2</dt><dd><strong>Implausible strike.</strong> The input combination is solvable but
+      not a shot a golfer produces: driver backspin under 1500 rpm, or an iron struck on the
+      way up.</dd>
+      <dt>3</dt><dd><strong>Unreliable.</strong> The closed-form carry and the RK4 integrator
+      disagree materially. Do not use this number.</dd>
+    </dl>
+    <h2>Provenance</h2>
+    <p class="prov">Every value on this page is re-derived engine output, not transcribed.
+    70 <code>solveFlight()</code>
+    calls into <code>impact-flight.js</code>, one per cell, as
+    <code>solveFlight({ dynamicLoft: row, attackAngle: col, clubSpeed: preset, clubPath: 0, faceAngle: 0 })</code>. Generated <code>2026-07-28T06:18:19.597Z</code>.
+    Carry and total are tagged <code>ESTIMATE</code> by the engine;
+    backspin and spin loft are <code>CALCULATED</code>.
+    Both clubs are solved with club path and face angle at zero, so this page describes
+    distance only — it says nothing about curvature or dispersion.</p>
+  </div>
+</main>

@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#07060C" />
+<title>The Cost of One Degree — Flightglass</title>
+<style>
+  :root{
+    color-scheme:dark;
+    --bg:#07060C;
+    --ink:#F5F2ED;
+    --muted:#B3ABCE;          /* body prose on ink — 7.6:1 */
+    --muted-2:#9A91B6;        /* labels and notes on ink — 6.4:1 */
+    --ember:#FF8A4D;          /* the ONE warm focal: driver at +1° */
+    --violet:#9D8BFF;         /* structure and state, never emphasis */
+    --line:rgba(255,255,255,.10);
+    --line-strong:rgba(255,255,255,.24);
+    --target:rgba(157,139,255,.22);   /* the target line the ball leaves */
+    --bar:rgba(245,242,237,.34);
+
+    --font-display:ui-serif,"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif;
+    --font-ui:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --font-mono:ui-monospace,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+    --ease-out:cubic-bezier(.16,1,.3,1);
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    background:var(--bg);color:var(--ink);
+    font-family:var(--font-ui);font-size:100%;line-height:1.55;
+    padding:
+      calc(env(safe-area-inset-top) + 2rem)
+      calc(env(safe-area-inset-right) + 1.25rem)
+      calc(env(safe-area-inset-bottom) + 3.5rem)
+      calc(env(safe-area-inset-left) + 1.25rem);
+    overflow-x:hidden;                 /* the page never scrolls sideways */
+  }
+  main{max-width:44rem;margin:0 auto}
+
+  /* ---------------- header ---------------- */
+  .kicker{
+    font-size:.75rem;font-weight:600;letter-spacing:.14em;
+    color:var(--violet);text-transform:uppercase;
+  }
+  h1{
+    margin-top:.625rem;
+    font-family:var(--font-display);font-weight:600;
+    font-size:clamp(2rem,8.5vw,3.25rem);line-height:1.02;
+    letter-spacing:-.022em;text-wrap:balance;max-width:15ch;
+  }
+  .deck{
+    margin-top:.75rem;color:var(--muted);font-size:1rem;
+    max-width:52ch;text-wrap:pretty;
+  }
+
+  /* ------- the summary; on its own this must carry the insight ------- */
+  .takeaway{margin-top:1.75rem;padding-left:1.125rem;border-left:2px solid var(--violet)}
+  .takeaway p{font-size:1.0625rem;line-height:1.5;max-width:50ch;text-wrap:pretty}
+  .takeaway p + p{margin-top:.75rem;font-size:1rem;color:var(--muted)}
+  .takeaway b{font-weight:600}
+
+  .num{font-family:var(--font-mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+  .num.wrap{white-space:normal}   /* a whole formula must wrap or it clips at 200% */
+
+  /* Ember and violet carry meaning here — which value the title names, which
+     column the page is about. Colour is not a channel every reader has, and the
+     caption's "the single ember value" is unresolvable without it. These nodes
+     say the same thing in text, to the accessibility tree only. */
+  .sr-only{
+    position:absolute;width:1px;height:1px;margin:-1px;padding:0;
+    overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0;
+  }
+
+  /* ---------------- table ---------------- */
+  .scroller{
+    margin-top:2.25rem;
+    overflow-x:auto;
+    scrollbar-width:thin;
+    scrollbar-color:rgba(157,139,255,.38) transparent;
+    -webkit-overflow-scrolling:touch;
+    overscroll-behavior-x:contain;
+  }
+  .scroller:focus-visible{outline:2px solid var(--violet);outline-offset:4px;border-radius:2px}
+  .scroller::-webkit-scrollbar{height:10px}
+  .scroller::-webkit-scrollbar-thumb{
+    background:rgba(157,139,255,.34);border-radius:99px;
+    border:3px solid var(--bg);background-clip:padding-box;
+  }
+
+  /* The floor is rem-sized so it tracks text size, but it is capped at the
+     scrollport: a rem floor alone inflates every column at 200% root font and
+     the pinned column then swallows the whole reading window (WCAG 1.4.4).
+     The columns' own min-widths still push the table past the viewport, so it
+     still scrolls — the table is never squeezed, only never over-inflated. */
+  table{border-collapse:collapse;width:100%;min-width:min(33rem,100%)}
+
+  caption{
+    caption-side:top;text-align:left;color:var(--muted-2);
+    font-size:.8125rem;line-height:1.55;
+    width:min(70ch,calc(100vw - 2.5rem));   /* table may exceed the viewport; caption must not */
+    padding-bottom:1rem;text-wrap:pretty;
+  }
+  caption b{color:var(--muted);font-weight:600}
+
+  th,td{text-align:right;vertical-align:bottom;padding:.75rem .5625rem}
+
+  thead th{
+    font-size:.75rem;font-weight:700;letter-spacing:.055em;
+    color:var(--muted-2);line-height:1.25;white-space:nowrap;
+    padding-bottom:.5rem;
+  }
+  thead .group{
+    text-align:center;color:var(--muted);letter-spacing:.045em;
+    padding-bottom:.5rem;border-bottom:1px solid var(--line);
+  }
+  thead .unit{
+    display:block;font-weight:500;font-size:.6875rem;
+    letter-spacing:.02em;color:var(--muted-2);opacity:.85;
+  }
+  thead tr:last-child th{border-bottom:1px solid var(--line-strong)}
+  thead tr:first-child th[rowspan]{border-bottom:1px solid var(--line-strong)}
+
+  /* Club column stays pinned so a row never loses its name mid-scroll.
+     A pin that covers the data it is pinned beside defeats itself, so its
+     floor is capped against the viewport: at 200% root font 8.75rem is 280px,
+     wider than a 320px scrollport. The cap only binds when text is enlarged. */
+  .club{
+    position:sticky;left:0;z-index:2;
+    text-align:left;min-width:min(8.75rem,44vw);
+    background:var(--bg);border-right:1px solid var(--line-strong);
+  }
+  thead .club{z-index:3}
+  tbody .club{padding-top:.9375rem;padding-bottom:.9375rem}
+  .club .name{display:block;font-size:1rem;font-weight:650;letter-spacing:-.01em;color:var(--ink)}
+  .club .setup{
+    display:block;margin-top:.25rem;font-family:var(--font-mono);
+    font-size:.6875rem;letter-spacing:0;color:var(--muted-2);line-height:1.5;
+  }
+
+  tbody tr + tr th,tbody tr + tr td{border-top:1px solid var(--line)}
+
+  /* Every face cell opens on the target line; the ball leaves it to the right. */
+  .face{border-left:1px solid var(--target);min-width:4.25rem}
+  /* The +1° column is the subject of the page — marked structurally, in violet.
+     position:relative is load-bearing: it is the containing block for the
+     sr-only node this column hosts. Without it that node resolves against the
+     initial containing block, escapes the scroller's clip, and widens the whole
+     document — 390px became 418px at 200% root font. z-index stays auto so the
+     sticky club column (z-index 2/3) still paints over this cell. */
+  .face.subject{border-left:1px solid var(--violet);position:relative}
+  thead th.subject{color:var(--violet)}
+
+  .v{
+    display:block;font-family:var(--font-mono);font-variant-numeric:tabular-nums;
+    font-size:.9375rem;font-weight:600;line-height:1;white-space:nowrap;color:var(--ink);
+  }
+  .track{display:block;margin-top:.5rem;height:4px;border-radius:99px;background:rgba(255,255,255,.08)}
+  .bar{
+    display:block;height:100%;border-radius:99px;
+    width:calc(var(--w) * 100%);
+    background:var(--bar);
+    transform-origin:left center;
+    animation:grow .46s var(--ease-out) both;
+  }
+  @keyframes grow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+  tbody tr:nth-child(1) .bar{animation-delay:0ms}
+  tbody tr:nth-child(2) .bar{animation-delay:55ms}
+  tbody tr:nth-child(3) .bar{animation-delay:110ms}
+  tbody tr:nth-child(4) .bar{animation-delay:165ms}
+
+  /* The single warm focal on this page: the figure the title names. */
+  td.focal .v{color:var(--ember);font-weight:700}
+  td.focal .bar{background:var(--ember)}
+
+  /* No bar in these cells — pad so every number in a row shares one baseline. */
+  .carry .v,.ratio .v{color:var(--muted);font-weight:500;margin-bottom:calc(.5rem + 4px)}
+  .carry{min-width:4rem}
+  .ratio{border-left:1px solid var(--line);min-width:4.5rem}
+
+  /* Shown only when the table really does overflow — measured, never guessed.
+     A media-query breakpoint cannot know the table's content width across fonts
+     and text zoom, and a hint that is wrong is worse than no hint. Fails safe:
+     without scripting it stays hidden and simply says nothing. */
+  .hint{display:none;margin-top:.875rem;color:var(--muted-2);font-size:.78125rem;letter-spacing:.01em}
+  .hint.on{display:block}
+  .hint span{color:var(--violet)}
+
+  /* ---------------- notes ---------------- */
+  .notes{margin-top:2.25rem;padding-top:1.25rem;border-top:1px solid var(--line);max-width:70ch}
+  .notes h2{
+    font-size:.75rem;font-weight:700;letter-spacing:.1em;
+    color:var(--muted-2);text-transform:uppercase;margin-bottom:.875rem;
+  }
+  .notes li{
+    list-style:none;position:relative;padding-left:1rem;
+    color:var(--muted-2);font-size:.8125rem;line-height:1.65;text-wrap:pretty;
+  }
+  .notes li + li{margin-top:.625rem}
+  .notes li::before{
+    content:"";position:absolute;left:0;top:.72em;
+    width:.375rem;height:1px;background:var(--violet);opacity:.75;
+  }
+  .notes b{color:var(--muted);font-weight:600}
+  .notes code{font-family:var(--font-mono);font-size:.9em;color:var(--muted)}
+
+  @media (prefers-reduced-motion:reduce){
+    .bar{animation:none}
+  }
+
+  /* rem in a media query resolves against the INITIAL root font size, so this
+     block stays active at 200% text zoom — its floors need the same cap as the
+     rules above, or they re-inflate the columns the cap just held down. */
+  @media (max-width:38.5rem){
+    th,td{padding:.6875rem .4375rem}
+    /* .club keeps the 8.75rem floor above: the vw cap already buys the space
+       this breakpoint used to buy by shrinking it, and dropping below 8.75rem
+       wraps "Pitching wedge" onto two lines. */
+    .carry{min-width:min(3.75rem,24vw)}
+    .face{min-width:min(4rem,30vw)}
+    .ratio{min-width:min(4.25rem,28vw)}
+  }
+
+  @media (max-width:26rem){
+    body{padding-left:calc(env(safe-area-inset-left) + 1rem);
+         padding-right:calc(env(safe-area-inset-right) + 1rem)}
+  }
+</style>
+</head>
+<body>
+<main>
+
+  <p class="kicker">Face control</p>
+  <h1>The cost of one degree</h1>
+  <p class="deck">How far offline a single degree of open face puts the ball. The same
+    mistake is a different mistake in every club in the bag.</p>
+
+  <section class="takeaway" aria-label="Summary of the table">
+    <p>One degree of open face costs <b>11.1 yards</b> with a driver and <b>2.5 yards</b>
+      with a pitching wedge — the same mistake, <b>4.4× the punishment</b>. In between sit the
+      5-iron at <span class="num">5.7</span> yd and the 7-iron at <span class="num">4.5</span> yd.
+      The longer the club, the more a degree costs.</p>
+    <p>Inside any one club the cost is a straight line: four degrees costs between
+      <span class="num">3.90×</span> and <span class="num">4.02×</span> what one degree costs,
+      in every row here. There is no forgiving first degree and no cliff at the fourth — so you
+      can multiply. Carry barely moves at all; face error is a direction problem.</p>
+  </section>
+
+  <div class="scroller" tabindex="0" role="region" aria-label="Cost of one degree, scrollable table">
+    <table>
+      <caption>
+        Yards offline from the target line, by club and by degrees of open face. Club path is
+        held at <b>0°</b>; a positive face angle is <b>open</b> — right for a right-handed
+        player. Each bar starts on the target line at the left of its cell and ends where the
+        ball does; all sixteen share one scale, so the longest — driver at +4°, <b>43.3 yd</b> —
+        is full width. The single ember value is the figure the title names.
+      </caption>
+      <thead>
+        <tr>
+          <th scope="col" rowspan="2" class="club">Club</th>
+          <th scope="col" rowspan="2" class="carry">Carry<span class="unit">yd</span></th>
+          <th colspan="4" class="group" scope="colgroup">Yards offline with the face open by</th>
+          <th scope="col" rowspan="2" class="ratio">Linear?<span class="unit">+4° ÷ +1°</span></th>
+        </tr>
+        <tr>
+          <th scope="col" class="face subject">+1°<span class="sr-only"> — the column this page is about</span></th>
+          <th scope="col" class="face">+2°</th>
+          <th scope="col" class="face">+3°</th>
+          <th scope="col" class="face">+4°</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th scope="row" class="club">
+            <span class="name">Driver</span>
+            <span class="setup">14°&nbsp;loft&nbsp;· +2°&nbsp;AoA&nbsp;· 110&nbsp;mph</span>
+          </th>
+          <td class="carry"><span class="v">261.3</span></td>
+          <td class="face subject focal"><span class="v">11.1</span><span class="sr-only"> — the highlighted value: the figure the title names</span><span class="track"><span class="bar" style="--w:.2564"></span></span></td>
+          <td class="face"><span class="v">22.2</span><span class="track"><span class="bar" style="--w:.5127"></span></span></td>
+          <td class="face"><span class="v">32.9</span><span class="track"><span class="bar" style="--w:.7598"></span></span></td>
+          <td class="face"><span class="v">43.3</span><span class="track"><span class="bar" style="--w:1"></span></span></td>
+          <td class="ratio"><span class="v">3.90×</span></td>
+        </tr>
+        <tr>
+          <th scope="row" class="club">
+            <span class="name">5-iron</span>
+            <span class="setup">22°&nbsp;loft&nbsp;· −3°&nbsp;AoA&nbsp;· 95&nbsp;mph</span>
+          </th>
+          <td class="carry"><span class="v">198.1</span></td>
+          <td class="face subject"><span class="v">5.7</span><span class="track"><span class="bar" style="--w:.1316"></span></span></td>
+          <td class="face"><span class="v">11.4</span><span class="track"><span class="bar" style="--w:.2633"></span></span></td>
+          <td class="face"><span class="v">17.0</span><span class="track"><span class="bar" style="--w:.3926"></span></span></td>
+          <td class="face"><span class="v">22.7</span><span class="track"><span class="bar" style="--w:.5242"></span></span></td>
+          <td class="ratio"><span class="v">3.98×</span></td>
+        </tr>
+        <tr>
+          <th scope="row" class="club">
+            <span class="name">7-iron</span>
+            <span class="setup">30°&nbsp;loft&nbsp;· −4°&nbsp;AoA&nbsp;· 90&nbsp;mph</span>
+          </th>
+          <td class="carry"><span class="v">172.7</span></td>
+          <td class="face subject"><span class="v">4.5</span><span class="track"><span class="bar" style="--w:.1039"></span></span></td>
+          <td class="face"><span class="v">9.1</span><span class="track"><span class="bar" style="--w:.2102"></span></span></td>
+          <td class="face"><span class="v">13.6</span><span class="track"><span class="bar" style="--w:.3141"></span></span></td>
+          <td class="face"><span class="v">18.1</span><span class="track"><span class="bar" style="--w:.4180"></span></span></td>
+          <td class="ratio"><span class="v">4.02×</span></td>
+        </tr>
+        <tr>
+          <th scope="row" class="club">
+            <span class="name">Pitching wedge</span>
+            <span class="setup">44°&nbsp;loft&nbsp;· −6°&nbsp;AoA&nbsp;· 78&nbsp;mph</span>
+          </th>
+          <td class="carry"><span class="v">123.5</span></td>
+          <td class="face subject"><span class="v">2.5</span><span class="track"><span class="bar" style="--w:.0577"></span></span></td>
+          <td class="face"><span class="v">4.9</span><span class="track"><span class="bar" style="--w:.1132"></span></span></td>
+          <td class="face"><span class="v">7.4</span><span class="track"><span class="bar" style="--w:.1709"></span></span></td>
+          <td class="face"><span class="v">9.8</span><span class="track"><span class="bar" style="--w:.2263"></span></span></td>
+          <td class="ratio"><span class="v">3.92×</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p class="hint"><span>&#8594;</span> The table scrolls sideways. The club column stays pinned.</p>
+
+  <section class="notes">
+    <h2>Where these numbers come from</h2>
+    <ul>
+      <li>Every value is output from <code>impact-flight.js · solveFlight</code>, re-derived by
+        <code>outputs/agent-scan/gen-face-error-cost-by-club.mjs</code>: twenty solver calls, one
+        baseline and four face angles per club. Nothing here is transcribed or estimated.</li>
+      <li>The mechanism is that offline distance is
+        <span class="num wrap">carry × sin(start direction) + curve</span>, and both terms grow
+        with face angle. A driver carries <span class="num">261</span> yd instead of
+        <span class="num">124</span>, its face steers a larger share of start direction
+        (<span class="num">0.83</span> against the wedge's <span class="num">0.68</span>), and it
+        spins <span class="num">2485</span> rpm instead of <span class="num">9000</span>, so the
+        spin axis tilts further for the same face-to-path gap. Long and low-spinning is the same
+        thing as unforgiving.</li>
+      <li><b>Linear?</b> is the check: <span class="num">4.00×</span> would be perfectly linear;
+        the observed spread <span class="num">3.90–4.02×</span> is how far reality bends, which is
+        not far.</li>
+      <li>Carry barely moves — the driver loses <span class="num">0.8</span> yd across the full
+        <span class="num">4°</span>, from <span class="num">261.3</span> to
+        <span class="num">260.5</span>. The whole cost is sideways.</li>
+      <li>The wedge row runs into the engine's <span class="num">9000</span> rpm backspin ceiling
+        (raw <span class="num">9056–9072</span> rpm), so its curve term — and therefore its offline
+        values — is marginally conservative. Flagged, not hidden.</li>
+      <li>All four rows carry the engine's <code>aero-extrapolated</code> flag. That is the normal
+        state across roughly 94% of the parameter domain, not a fault in these rows.</li>
+    </ul>
+  </section>
+
+</main>
+
+<script>
+  // Only claim the table scrolls when it actually does. Measured, not guessed.
+  (function(){
+    var sc = document.querySelector('.scroller'), hint = document.querySelector('.hint');
+    if (!sc || !hint) return;
+    function sync(){ hint.classList.toggle('on', sc.scrollWidth > sc.clientWidth); }
+    if (window.ResizeObserver) new ResizeObserver(sync).observe(sc);
+    else addEventListener('resize', sync);
+    addEventListener('load', sync);
+    sync();
+  })();
+</script>
+</body>
+</html>

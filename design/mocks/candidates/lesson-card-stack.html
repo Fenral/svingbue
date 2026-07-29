@@ -1,0 +1,1550 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#07060C" />
+<meta name="robots" content="noindex, nofollow" />
+<meta name="color-scheme" content="dark" />
+<link rel="icon" href="data:," />
+<title>Backspin — card stack (direction mock)</title>
+
+<!--
+═══════════════════════════════════════════════════════════════════════════════
+ FLIGHTGLASS · DIRECTION MOCK · "CARD-STACK"
+ Lesson: Academy · Flight · Backspin  (the reference lesson in this repo)
+
+ PREMISE
+   The lesson is a physical deck of native cards. One concept per card. You peel
+   cards off the top. The model is NOT a card — it is a pinned instrument above
+   the deck that re-poses per card and never unmounts. Product law 3 (the model
+   never disappears while an input changes) is therefore structural here, not a
+   behaviour someone has to remember to implement.
+
+ MOTION POV
+   Backspin is the top of the ball rotating back toward you. The card peels the
+   same way: rotateX(-deg) about its bottom edge, top tipping toward the viewer
+   as it lifts off the deck. The gesture IS the concept. Reduced motion →
+   crossfade, same states, no travel.
+
+ CONTENT SOURCE (no invented pedagogy)
+   academy-curriculum.js            → experience 'backspin', family 'flight',
+                                      rendererKey 'backspin-native'
+   academy-native-lesson.js         → SURFACES, SHEETS, LIE_ESTIMATES,
+                                      MYTH_EXPERIMENTS, MASTERY_TASKS copy
+   academy-backspin-model.js        → INITIAL_BACKSPIN_STATE, BACKSPIN_PARAMS,
+                                      BACKSPIN_LIMITS.max, LOW_SPIN_NOTE_RPM,
+                                      realWorldRange(), passesStoppingFlightTarget()
+   docs/claude-design-brief/lesson-backspin.json → misconception wording
+
+ NUMBERS — EVERY DISPLAYED VALUE IS RE-DERIVED ENGINE OUTPUT
+   The tables in ENGINE_LUT below were produced by running the real, untouched
+   engine. Exact reproduction command (repo root, Node 24, one line per table):
+
+     node --input-type=module -e "
+       const R='file:///C:/Users/SkotvoldSivertSende/svingbue/';
+       const M=await import(R+'academy-backspin-model.js');
+       const row=s=>{const r=M.solveBackspinState(s);return [r.rpm,r.rawRpm,r.spinLoft,
+         r.carryM,r.apexM,r.landingAngle,r.displayLimit==='ceiling'?1:r.displayLimit==='no-floor'?2:0];};
+       const L={};
+       L.A={key:'dynamicLoft',from:10,anchor:{attackAngle:-3,ballSpeed:120},rows:[]};
+       for(let d=10;d<=48;d++)L.A.rows.push(row({dynamicLoft:d,attackAngle:-3,ballSpeed:120}));
+       L.B={key:'attackAngle',from:-8,anchor:{dynamicLoft:30,ballSpeed:120},rows:[]};
+       for(let a=-8;a<=6;a++)L.B.rows.push(row({dynamicLoft:30,attackAngle:a,ballSpeed:120}));
+       L.C={key:'ballSpeed',from:90,anchor:{dynamicLoft:30,attackAngle:-3},rows:[]};
+       for(let b=90;b<=175;b++)L.C.rows.push(row({dynamicLoft:30,attackAngle:-3,ballSpeed:b}));
+       L.D={key:'dynamicLoft',from:10,anchor:{attackAngle:6,ballSpeed:120},rows:[]};
+       for(let d=10;d<=48;d++)L.D.rows.push(row({dynamicLoft:d,attackAngle:6,ballSpeed:120}));
+       console.log(JSON.stringify(L));"
+
+   Each row is [displayRpm, rawRpm, spinLoft, carryM, apexM, landingAngle, limit]
+   exactly as solveBackspinState() returns it. limit: 0 none · 1 ceiling · 2
+   below LOW_SPIN_NOTE_RPM. Rows sit one engine step apart (1°, 1 mph), so the
+   live sensitivity readout is the identical forward difference that
+   backspinSensitivity() computes — not a curve fit.
+
+   Frozen single-state solves used by the myth cards, same import,
+   solveBackspinState(state):
+     {dynamicLoft:30,attackAngle:-3,ballSpeed:120} → 6485 rpm · spinLoft 33 · carry 155 m · apex 28 m · land 50.8°
+     {dynamicLoft:30,attackAngle:-6,ballSpeed:120} → 7688 rpm · spinLoft 36 · carry 155 m · apex 27 m · land 51.3°
+     {dynamicLoft:34,attackAngle: 1,ballSpeed:120} → 6485 rpm · spinLoft 33 · carry 155 m · apex 31 m · land 50.8°
+     {dynamicLoft:44,attackAngle:-4,ballSpeed:120} → 9000 rpm (raw 10967) · spinLoft 48 · carry 155 m · apex 36 m · land 52.3°
+   Real-world bands = academy-backspin-model.js realWorldRange(rpm, keep)
+   reproduced verbatim, with LIE_ESTIMATES keep ranges wet [0.80,0.85] and
+   flyer [0.35,0.70].
+
+   A console self-check at the bottom asserts nine of these values on load, so
+   the file fails loudly if the tables ever drift from the engine.
+
+ SELF-CONTAINED: no bundler, no network, no external font or image. Opens from
+ file://. System font stack stands in for the vendored Space Grotesk / IBM Plex
+ Mono / Inter; colour roles follow academy.html's incumbent :root.
+═══════════════════════════════════════════════════════════════════════════════
+-->
+
+<style>
+/* ── tokens: roles copied from academy.html :root, no invented hues ───────── */
+:root{
+  --ink:#07060C;          /* page */
+  --surface:#0E0A18;      /* card */
+  --surface-2:#160F28;    /* inset within card */
+  --glass:#F5F2ED;        /* primary text — 19:1 on ink */
+  --muted:rgba(245,242,237,.68);   /* 8.0:1 on ink */
+  --dim:rgba(245,242,237,.52);     /* 5.2:1 on ink */
+  --ember:#FF8A4D;        /* LIVE ENGINE TRUTH ONLY — the one warm focal, 8.2:1 */
+  --violet:#9D8BFF;       /* structure / state / chrome — 7.0:1 */
+  --gold:#FFD056;         /* earned mastery only — 13.2:1 */
+  --good:#58E6A8;
+  --bad:#FF7B8A;
+  --path:#6FC6FF;         /* SYS-11 param colour: club path / travel */
+  --loft:#B9A0FF;         /* SYS-11 param colour: delivered loft */
+  --rule:rgba(245,242,255,.10);
+  --rule-2:rgba(245,242,255,.055);
+  --rule-hot:rgba(157,139,255,.40);
+  --f-ui:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+  --f-mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --ease:cubic-bezier(.23,1,.32,1);
+  --ease-peel:cubic-bezier(.32,.72,0,1);
+  --r:22px;
+}
+
+*,*::before,*::after{box-sizing:border-box}
+html,body{height:100%}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;background:var(--ink);color:var(--glass);
+  font:400 15px/1.5 var(--f-ui);
+  -webkit-font-smoothing:antialiased;
+  overscroll-behavior:none;
+  -webkit-tap-highlight-color:transparent;
+}
+button,input{font:inherit;color:inherit;-webkit-tap-highlight-color:transparent}
+button{background:none;border:0;padding:0;cursor:pointer}
+:focus-visible{outline:2px solid var(--violet);outline-offset:3px;border-radius:6px}
+
+.sr{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;
+  clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
+
+/* ── app frame ────────────────────────────────────────────────────────────── */
+.app{
+  position:fixed;inset:0;display:flex;flex-direction:column;
+  padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px)
+          env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px);
+  max-width:520px;margin-inline:auto;
+  /* the horizon: one low violet wash behind the instrument, nothing decorative */
+  background:linear-gradient(180deg,rgba(157,139,255,.13) 0%,rgba(157,139,255,0) 36%),var(--ink);
+}
+
+/* ── top bar ──────────────────────────────────────────────────────────────── */
+.topbar{display:flex;align-items:center;gap:10px;padding:6px 10px 2px;flex:0 0 auto}
+.iconbtn{
+  width:44px;height:44px;flex:0 0 44px;display:grid;place-items:center;
+  border-radius:14px;color:var(--muted);
+  transition:background 140ms var(--ease),color 140ms var(--ease),transform 140ms var(--ease);
+}
+.iconbtn:active{transform:scale(.94);background:rgba(157,139,255,.12);color:var(--glass)}
+.topbar__id{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;align-items:center;gap:1px}
+.topbar__id small{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim)}
+.topbar__id strong{font-size:15px;font-weight:600;letter-spacing:-.01em}
+.topbar__xp{
+  flex:0 0 auto;min-width:60px;text-align:right;
+  font:700 13px/1.1 var(--f-mono);font-variant-numeric:tabular-nums;color:var(--muted);
+}
+.topbar__xp span{display:block;font:400 11px/1.4 var(--f-ui);color:var(--dim)}
+
+/* ══ THE LIVING HEADER · pinned instrument ════════════════════════════════ */
+.stage{
+  flex:0 0 auto;position:relative;
+  margin:2px 12px 0;padding:12px 14px 10px;
+  border-top:1px solid var(--rule-hot);
+  border-bottom:1px solid var(--rule);
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  grid-template-rows:auto minmax(92px,14vh) auto;
+  column-gap:12px;
+  user-select:none;-webkit-user-select:none;
+}
+.stage__label{
+  grid-column:1;grid-row:1;align-self:center;min-width:0;
+  margin:0;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  transition:opacity 180ms var(--ease),filter 180ms var(--ease);
+}
+.stage__truth{grid-column:2;grid-row:1;display:flex;align-items:baseline;gap:6px}
+.stage__rpm{
+  font:700 52px/0.86 var(--f-mono);font-variant-numeric:tabular-nums;
+  letter-spacing:-.035em;color:var(--ember);
+  transition:color 200ms var(--ease);
+}
+.stage__unit{font-size:13px;color:var(--dim);letter-spacing:.06em}
+.stage__scope{
+  grid-column:1 / -1;grid-row:2;position:relative;min-width:0;
+  transition:opacity 180ms var(--ease),filter 180ms var(--ease);
+}
+.stage__scope canvas{display:block;width:100%;height:100%}
+.stage__meta{
+  grid-column:1 / -1;grid-row:3;
+  display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding-top:8px;
+}
+/* mode swap: blur bridges the two instrument poses so they read as one object */
+.stage[data-swapping="true"] .stage__scope,
+.stage[data-swapping="true"] .stage__label{opacity:.22;filter:blur(3px)}
+/* mastery pose: gold becomes the single warm focal, ember stands down */
+.stage[data-mode="evidence"] .stage__rpm{color:var(--gold)}
+
+.chip{
+  min-height:28px;display:inline-flex;align-items:center;gap:6px;
+  padding:0 10px;border-radius:999px;border:1px solid var(--rule-hot);
+  font:600 11px/1 var(--f-ui);letter-spacing:.06em;text-transform:uppercase;color:var(--violet);
+  white-space:nowrap;
+}
+.chip b{font:700 12px/1 var(--f-mono);font-variant-numeric:tabular-nums;letter-spacing:0}
+.chip--flat{border-color:var(--rule);color:var(--dim)}
+.chip--warn{border-color:rgba(255,208,86,.42);color:var(--gold)}
+/* the limit chip is the one tappable pill, so it carries a full 44px target —
+   being taller than its neighbours is also the affordance that says "tap me" */
+button.chip{min-height:44px;padding:0 13px;transition:background 140ms var(--ease),transform 140ms var(--ease)}
+button.chip:active{transform:scale(.96);background:rgba(157,139,255,.14)}
+button.chip[hidden]{display:none}
+
+/* ══ THE DECK ═════════════════════════════════════════════════════════════ */
+.deck{
+  position:relative;flex:1 1 auto;min-height:0;
+  margin:14px 12px 0;padding-bottom:26px;
+  perspective:1100px;perspective-origin:50% 38%;
+}
+.card{
+  position:absolute;inset:0 0 26px 0;
+  display:flex;flex-direction:column;
+  background:var(--surface);
+  border:1px solid var(--rule);
+  border-radius:var(--r);
+  box-shadow:0 -1px 0 rgba(157,139,255,.20), 0 26px 44px -26px #000;
+  transform-origin:50% 100%;
+  will-change:transform,opacity;
+  transition:transform 320ms var(--ease-peel),opacity 240ms var(--ease);
+  overflow:hidden;
+}
+/* depth: a real pile. the next cards rest below and behind, seen from above. */
+.card[data-rel="0"]{transform:none;opacity:1;z-index:5}
+.card[data-rel="1"]{transform:translateY(11px) scale(.962);opacity:.62;z-index:4}
+.card[data-rel="2"]{transform:translateY(21px) scale(.926);opacity:.34;z-index:3}
+.card[data-rel="3"]{transform:translateY(30px) scale(.892);opacity:.16;z-index:2}
+.card[data-rel="far"]{transform:translateY(34px) scale(.88);opacity:0;z-index:1;pointer-events:none}
+/* peeled: the top tips TOWARD you and lifts away — that is what backspin is */
+.card[data-rel="-1"]{transform:rotateX(-13deg) translateY(-13%) scale(.985);opacity:0;z-index:6;pointer-events:none}
+.card[data-rel="-2"]{transform:rotateX(-16deg) translateY(-22%) scale(.97);opacity:0;z-index:6;pointer-events:none}
+.card[data-dragging="true"]{transition:none}
+
+.card__grip{
+  flex:0 0 auto;padding:10px 0 2px;display:grid;place-items:center;
+  cursor:grab;touch-action:none;
+}
+.card__grip::before{content:"";width:34px;height:4px;border-radius:999px;background:var(--rule-hot)}
+.card__scroll{
+  flex:1 1 auto;min-height:0;display:flex;flex-direction:column;
+  overflow-y:auto;overscroll-behavior:contain;
+  padding:6px 18px 0;-webkit-overflow-scrolling:touch;touch-action:pan-y;
+}
+.card__foot{flex:0 0 auto;padding:12px 18px 16px}
+
+.card__eyebrow{
+  margin:0 0 6px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--violet);
+  display:flex;align-items:center;gap:8px;
+}
+.card__eyebrow i{font-style:normal;color:var(--dim);letter-spacing:.1em;margin-left:auto}
+.card__title{margin:0 0 8px;font:600 20px/1.22 var(--f-ui);letter-spacing:-.02em}
+.card__body{margin:0 0 12px;color:var(--muted);font-size:15px;line-height:1.5}
+.card__body strong{color:var(--glass);font-weight:600}
+.formula{
+  margin:0 0 12px;padding:9px 12px;border-radius:12px;
+  background:var(--surface-2);border:1px solid var(--rule-2);
+  font:600 13px/1.4 var(--f-mono);color:var(--loft);
+}
+.note{
+  margin:0;padding-left:11px;border-left:2px solid var(--rule-hot);
+  font-size:13px;line-height:1.45;color:var(--dim);
+}
+
+/* ── the lever: exactly one input per card ────────────────────────────────── */
+.lever{margin-top:auto;padding-top:12px}
+.lever__head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:2px}
+.lever__head label{font-size:13px;color:var(--muted);font-weight:600}
+.lever__head output{
+  font:700 20px/1 var(--f-mono);font-variant-numeric:tabular-nums;letter-spacing:-.02em;color:var(--glass);
+}
+input[type=range]{
+  -webkit-appearance:none;appearance:none;
+  display:block;width:100%;height:48px;margin:0;background:transparent;touch-action:none;
+}
+input[type=range]::-webkit-slider-runnable-track{
+  height:4px;border-radius:999px;
+  background:linear-gradient(90deg,var(--violet) var(--fill,0%),var(--rule) var(--fill,0%));
+}
+input[type=range]::-moz-range-track{height:4px;border-radius:999px;background:var(--rule)}
+input[type=range]::-moz-range-progress{height:4px;border-radius:999px;background:var(--violet)}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;appearance:none;
+  width:28px;height:28px;margin-top:-12px;border-radius:50%;
+  background:var(--glass);border:2px solid var(--ink);
+  box-shadow:0 2px 10px rgba(0,0,0,.6);
+  transition:transform 120ms var(--ease);
+}
+input[type=range]::-moz-range-thumb{
+  width:28px;height:28px;border-radius:50%;border:2px solid var(--ink);
+  background:var(--glass);box-shadow:0 2px 10px rgba(0,0,0,.6);
+}
+input[type=range]:active::-webkit-slider-thumb{transform:scale(1.14)}
+.lever__sens{margin:2px 0 0;font:400 12px/1.4 var(--f-ui);color:var(--dim)}
+.lever__sens b{font:700 12px/1 var(--f-mono);font-variant-numeric:tabular-nums;color:var(--muted)}
+
+/* ── gates (mission / mastery) ────────────────────────────────────────────── */
+.gates{display:grid;gap:6px;margin:0 0 12px}
+.gate{
+  display:flex;align-items:center;gap:10px;min-height:44px;padding:6px 12px;
+  border-radius:12px;background:var(--surface-2);border:1px solid var(--rule-2);
+  font-size:13px;color:var(--muted);
+  transition:border-color 200ms var(--ease),color 200ms var(--ease);
+}
+.gate small{display:block;color:var(--dim);font-size:12px}
+.gate__mark{
+  flex:0 0 18px;width:18px;height:18px;border-radius:50%;
+  border:1.5px solid var(--rule-hot);display:grid;place-items:center;
+  font:700 11px/1 var(--f-ui);color:transparent;
+  transition:border-color 200ms var(--ease),background 200ms var(--ease),color 200ms var(--ease);
+}
+.gate__val{margin-left:auto;font:700 13px/1 var(--f-mono);font-variant-numeric:tabular-nums;color:var(--dim)}
+.gate[data-done="true"]{border-color:rgba(88,230,168,.34);color:var(--glass)}
+.gate[data-done="true"] .gate__mark{border-color:var(--good);background:var(--good);color:var(--ink)}
+.gate[data-done="true"] .gate__val{color:var(--good)}
+
+/* ── choices (myth cards) ─────────────────────────────────────────────────── */
+.choices{display:grid;gap:8px;margin:0 0 4px}
+/* an author `display` beats the UA `[hidden]{display:none}`, so both panes
+   need the guard — without it the reveal never replaces the choices, the card
+   grows, and the outcome chain is pushed under the card's fold */
+.choices[hidden]{display:none}
+.choice{
+  min-height:52px;display:flex;align-items:center;gap:12px;
+  padding:10px 14px;border-radius:14px;text-align:left;
+  background:var(--surface-2);border:1px solid var(--rule);
+  color:var(--glass);font-size:15px;line-height:1.35;
+  transition:transform 140ms var(--ease),border-color 160ms var(--ease),background 160ms var(--ease);
+}
+.choice:active{transform:scale(.985)}
+.choice[aria-disabled="true"]{cursor:default}
+.choice[aria-disabled="true"]:active{transform:none}
+.choice__key{
+  flex:0 0 22px;width:22px;height:22px;border-radius:6px;display:grid;place-items:center;
+  border:1px solid var(--rule-hot);color:var(--violet);font:700 11px/1 var(--f-mono);
+}
+.choice[data-state="right"]{border-color:rgba(88,230,168,.5);background:rgba(88,230,168,.10)}
+.choice[data-state="right"] .choice__key{border-color:var(--good);color:var(--good)}
+.choice[data-state="wrong"]{border-color:rgba(255,123,138,.5);background:rgba(255,123,138,.09)}
+.choice[data-state="wrong"] .choice__key{border-color:var(--bad);color:var(--bad)}
+
+/* the reveal REPLACES the choices — the card never grows, so nothing essential
+   is ever pushed below the fold of a card (law 9 held per card, not per page) */
+.reveal{display:grid;gap:10px}
+.reveal[hidden]{display:none}
+.verdict{
+  margin:0;display:inline-flex;justify-self:start;align-items:center;gap:8px;min-height:24px;
+  font:600 12px/1 var(--f-ui);letter-spacing:.1em;text-transform:uppercase;
+}
+.verdict[data-ok="true"]{color:var(--good)}
+.verdict[data-ok="false"]{color:var(--bad)}
+.chain{display:grid;border-radius:14px;overflow:hidden;background:var(--surface-2);border:1px solid var(--rule-2)}
+.chain__row{
+  display:flex;align-items:center;gap:10px;min-height:34px;padding:0 12px;
+  font-size:13px;color:var(--muted);border-top:1px solid var(--rule-2);
+}
+.chain__row:first-child{border-top:0}
+.chain__row b{margin-left:auto;font:700 13px/1 var(--f-mono);font-variant-numeric:tabular-nums;color:var(--glass)}
+.chain__row[data-lane="live"] b{color:var(--ember)}
+.chain__row[data-lane="flat"] b{color:var(--dim)}
+
+/* ── real-world estimate layer — deliberately NOT in the ember lane ───────── */
+.seg{
+  display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:4px;
+  padding:4px;border-radius:14px;background:var(--surface-2);border:1px solid var(--rule-2);
+  margin:0 0 12px;
+}
+.seg button{
+  min-height:46px;border-radius:10px;font:600 14px/1 var(--f-ui);color:var(--muted);
+  transition:background 160ms var(--ease),color 160ms var(--ease);
+}
+.seg button[aria-checked="true"]{background:rgba(157,139,255,.20);color:var(--glass)}
+.estimate{display:grid;gap:4px;padding:12px 14px;border-radius:14px;border:1px dashed var(--rule-hot)}
+.estimate[data-sim="true"]{border-style:solid}
+.estimate__stamp{font:600 10px/1.3 var(--f-ui);letter-spacing:.16em;text-transform:uppercase;color:var(--dim)}
+.estimate__val{font:700 20px/1.15 var(--f-mono);font-variant-numeric:tabular-nums;color:var(--violet);letter-spacing:-.02em}
+.estimate[data-sim="true"] .estimate__val{color:var(--ember)}
+.estimate__src{font-size:12px;line-height:1.45;color:var(--dim)}
+
+/* ── result ───────────────────────────────────────────────────────────────── */
+.result__score{
+  margin:2px 0;font:700 52px/0.9 var(--f-mono);font-variant-numeric:tabular-nums;
+  letter-spacing:-.035em;color:var(--gold);
+}
+.abilities{display:grid;gap:2px;margin:12px 0 0;padding:0;list-style:none}
+.abilities li{display:flex;align-items:center;gap:10px;min-height:30px;font-size:13px;color:var(--muted)}
+.abilities li::before{content:"";flex:0 0 6px;width:6px;height:6px;border-radius:50%;background:var(--gold)}
+
+/* ── actions ──────────────────────────────────────────────────────────────── */
+.btn{
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  width:100%;min-height:50px;border-radius:14px;
+  font:600 15px/1 var(--f-ui);letter-spacing:-.01em;
+  transition:transform 140ms var(--ease),filter 140ms var(--ease);
+}
+.btn:active{transform:scale(.975)}
+.btn--primary{background:var(--ember);color:var(--ink)}
+.btn--gold{background:var(--gold);color:var(--ink)}
+.btn--ghost{border:1px solid var(--rule-hot);color:var(--violet);background:transparent;min-height:46px}
+
+/* ── dock ─────────────────────────────────────────────────────────────────── */
+.dock{
+  flex:0 0 auto;display:flex;align-items:center;gap:10px;
+  padding:10px 12px calc(10px + env(safe-area-inset-bottom,0px));
+  user-select:none;-webkit-user-select:none;
+}
+.dock__nav{
+  min-width:44px;height:44px;padding:0 14px;border-radius:14px;
+  display:flex;align-items:center;gap:7px;
+  border:1px solid var(--rule);color:var(--muted);font-size:14px;font-weight:600;
+  transition:transform 140ms var(--ease),border-color 140ms var(--ease),color 140ms var(--ease),opacity 140ms var(--ease);
+}
+.dock__nav:active{transform:scale(.95)}
+.dock__nav:disabled{opacity:.32;cursor:default}
+.dock__nav--next{margin-left:auto;border-color:var(--rule-hot);color:var(--glass)}
+.dock__ticks{flex:1 1 auto;display:flex;gap:3px;align-items:center;justify-content:center;min-width:0}
+.dock__ticks span{
+  flex:0 1 13px;height:3px;border-radius:999px;background:var(--rule);
+  transition:background 220ms var(--ease),flex-basis 220ms var(--ease);
+}
+.dock__ticks span[data-on="true"]{background:var(--violet)}
+.dock__ticks span[data-now="true"]{flex-basis:22px;background:var(--glass)}
+
+/* ── sheet: native <dialog> supplies the focus trap, Esc, inert background,
+      and focus return to the exact opener — no hand-rolled trap ─────────── */
+dialog.sheet{
+  width:min(520px,100%);max-width:100%;max-height:100%;
+  margin:auto auto 0;padding:0;border:0;background:transparent;color:var(--glass);
+  transform:translateY(0);opacity:1;
+  transition:transform 300ms var(--ease-peel),opacity 200ms var(--ease),
+             overlay 300ms allow-discrete,display 300ms allow-discrete;
+}
+dialog.sheet::backdrop{background:rgba(3,2,8,.66)}
+dialog.sheet:not([open]){transform:translateY(100%);opacity:0}
+@starting-style{ dialog.sheet[open]{transform:translateY(100%);opacity:0} }
+.sheet__panel{
+  background:var(--surface);border:1px solid var(--rule);border-bottom:0;
+  border-radius:24px 24px 0 0;
+  padding:8px 20px calc(20px + env(safe-area-inset-bottom,0px));
+  box-shadow:0 -1px 0 rgba(157,139,255,.22);
+}
+.sheet__grab{width:38px;height:4px;border-radius:999px;background:var(--rule-hot);margin:0 auto 14px}
+.sheet__eyebrow{margin:0 0 4px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--violet)}
+.sheet__title{margin:0 0 10px;font:600 20px/1.24 var(--f-ui);letter-spacing:-.02em}
+.sheet__body{
+  margin:0 0 16px;color:var(--muted);font-size:15px;line-height:1.55;
+  max-height:42vh;overflow-y:auto;overscroll-behavior:contain;
+}
+.sheet__body p{margin:0 0 10px}
+.sheet__body p:last-child{margin-bottom:0}
+.sheet__body strong{color:var(--glass);font-weight:600}
+
+/* ── hover only where hover is real ───────────────────────────────────────── */
+@media (hover:hover) and (pointer:fine){
+  .iconbtn:hover{color:var(--glass);background:rgba(157,139,255,.10)}
+  .choice:not([aria-disabled="true"]):hover{border-color:var(--rule-hot)}
+  .dock__nav:hover:not(:disabled){border-color:var(--rule-hot);color:var(--glass)}
+  .btn--primary:hover,.btn--gold:hover{filter:brightness(1.06)}
+}
+
+/* ── reduced-motion parity: identical states, no travel, no rotation ──────── */
+@media (prefers-reduced-motion:reduce){
+  .card{transition:opacity 160ms linear}
+  .card[data-rel="-1"],.card[data-rel="-2"]{transform:none;opacity:0}
+  .card[data-dragging="true"]{transition:none}
+  .stage__scope,.stage__label{transition:opacity 120ms linear}
+  .stage[data-swapping="true"] .stage__scope,
+  .stage[data-swapping="true"] .stage__label{filter:none;opacity:.4}
+  dialog.sheet{transition:opacity 140ms linear,overlay 140ms allow-discrete,display 140ms allow-discrete}
+  dialog.sheet:not([open]){transform:none;opacity:0}
+  @starting-style{ dialog.sheet[open]{transform:none;opacity:0} }
+  .btn:active,.choice:active,.iconbtn:active,.dock__nav:active,button.chip:active{transform:none}
+  /* the last two travelling things: the tick that grows into place, and the
+     slider thumb that swells under the thumb. Same states, no travel. */
+  .dock__ticks span{transition:background 220ms linear}
+  input[type=range]:active::-webkit-slider-thumb{transform:none}
+}
+
+/* short viewports: the instrument yields first, the card never does */
+@media (max-height:680px){
+  .stage{grid-template-rows:auto minmax(70px,12vh) auto}
+  .stage__rpm{font-size:42px}
+  .card__title{font-size:18px}
+}
+
+/* ── the 200%-zoom floor (WCAG 1.4.4) ──────────────────────────────────────
+   Zooming a phone to 200% lands here (a 390×844 device becomes 195×422 CSS
+   px). Unbounded, the chip row wraps to three lines, the instrument swells,
+   and the deck — which is the only flex:1 child — is squeezed to nothing:
+   the card measured 17px tall, i.e. the lesson was gone. So at this size the
+   chips stop wrapping and scroll horizontally in their own container, which
+   pins the instrument to a known height, and every band around the deck
+   yields its slack. The instrument still never unmounts; it only gets smaller.
+   ────────────────────────────────────────────────────────────────────────── */
+@media (max-height:560px){
+  /* one column: sharing a row, the pose label loses its ellipsis fight with a
+     34px readout and truncates to "7 …". Stacked, it stays whole — the label
+     is how you know WHICH pose the instrument is holding. */
+  .stage{
+    grid-template-columns:minmax(0,1fr);
+    grid-template-rows:auto auto minmax(54px,10vh) auto;
+    padding:6px 12px 6px;margin-top:0;
+  }
+  .stage__label{grid-column:1;grid-row:1}
+  .stage__truth{grid-column:1;grid-row:2}
+  .stage__scope{grid-column:1;grid-row:3}
+  .stage__meta{grid-column:1;grid-row:4}
+  .stage__rpm{font-size:32px}
+  .stage__meta{
+    flex-wrap:nowrap;padding:6px 0 4px;
+    overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;
+    scrollbar-width:none;
+  }
+  .stage__meta::-webkit-scrollbar{display:none}
+  /* in a scrolling strip the limit chip would sit off-screen on the very card
+     whose whole point it is — lead with it */
+  .stage__meta > button.chip{order:-1}
+  /* truncate rather than wrap — same treatment .stage__label already gets */
+  .topbar{padding:2px 8px 0}
+  .topbar__id small{max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .deck{margin-top:8px;padding-bottom:18px}
+  .card__grip{padding:6px 0 0}
+  .card__scroll{padding:4px 14px 0}
+  .card__foot{padding:6px 14px 8px}
+  .btn--ghost{min-height:44px}
+  .card__title{font-size:17px;margin-bottom:6px}
+  .card__body{font-size:14px;margin-bottom:8px}
+  .dock{padding:6px 10px calc(6px + env(safe-area-inset-bottom,0px))}
+}
+
+/* ── the second floor (WCAG 1.4.4, measured) ───────────────────────────────
+   200 % zoom on the smallest supported phone (375×667) lands at 187×333 CSS
+   px, and the block above stops yielding: topbar 46 + instrument 151 + dock 56
+   left the deck 80px, of which the card's foot alone wanted 58. The card's own
+   scrollport measured 4px — the lesson was gone while the chrome around it was
+   untouched. So below this every band yields a second time. The instrument
+   never unmounts and never drops a number: label, rpm, canvas, all four chips
+   and the limit chip's 44px tap target all survive, only smaller.
+   ────────────────────────────────────────────────────────────────────────── */
+@media (max-height:440px){
+  .topbar{padding:0 8px}
+  .stage{grid-template-rows:auto auto minmax(36px,9vh) auto;padding:2px 12px 2px}
+  .stage__rpm{font-size:22px}
+  .stage__unit{font-size:11px}
+  .stage__label{font-size:10px}
+  .stage__meta{padding:2px 0 0;gap:4px}
+  /* the flat chips are read-only, so they may shrink; button.chip above keeps
+     its 44px because it is the one thing here you tap */
+  .chip{min-height:26px;padding:0 8px}
+  .deck{margin-top:6px;padding-bottom:14px}
+  /* the pile still shows beneath the top card, just a thinner sliver of it */
+  .card{inset:0 0 14px 0}
+  .card__grip{padding:4px 0 0}
+  .card__scroll{padding:2px 12px 0}
+  .card__foot{padding:4px 12px 6px}
+  .card__title{font-size:15px;margin-bottom:4px}
+  .card__body{font-size:13px;line-height:1.42;margin-bottom:6px}
+  .lever{padding-top:6px}
+  .lever__head output{font-size:17px}
+  /* gates are read-only rows, not tap targets — they do not owe 44px */
+  .gate{min-height:34px;padding:4px 10px}
+  .dock{padding:2px 10px calc(2px + env(safe-area-inset-bottom,0px))}
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <header class="topbar">
+    <button class="iconbtn" type="button" aria-label="Back to Academy path">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+        <path d="M12.5 4.5 7 10l5.5 5.5" stroke="currentColor" stroke-width="1.8"
+              stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+    <div class="topbar__id">
+      <small>Academy · Flight</small>
+      <strong>Backspin</strong>
+    </div>
+    <div class="topbar__xp" aria-label="340 XP, level 3, Shaper">340 XP<span>Lv 3 · Shaper</span></div>
+  </header>
+
+  <!-- ══ THE LIVING HEADER ═══════════════════════════════════════════════════
+       One instrument. It never unmounts, it only re-poses per card. Every
+       slider on every card writes straight into it, so the model is physically
+       incapable of disappearing while an input changes.                    -->
+  <!-- tabindex=-1 only so the instrument can catch focus when the limit chip
+       inside it is hidden out from under the user (see paintStage) -->
+  <section class="stage" id="stage" data-mode="flight" data-swapping="false"
+           tabindex="-1" aria-label="Live engine model">
+    <p class="stage__label" id="stageLabel">7-iron · live engine</p>
+    <div class="stage__truth">
+      <output class="stage__rpm" id="rpm" aria-live="off">6,485</output>
+      <span class="stage__unit">rpm</span>
+    </div>
+    <!-- role=img + a label rebuilt on every solve: the arc and the wedge carry
+         numbers (apex, both delivery angles) that live nowhere else on screen,
+         so a non-visual user gets the insight, not just "there is a picture" -->
+    <div class="stage__scope"><canvas id="scope" role="img" aria-label=""></canvas></div>
+    <div class="stage__meta">
+      <span class="chip" id="chipSpin">Spin loft <b>33°</b></span>
+      <span class="chip chip--flat" id="chipCarry">Carry <b>155 m</b></span>
+      <span class="chip chip--flat" id="chipLand">Land <b>50.8°</b></span>
+      <button class="chip chip--warn" id="chipLimit" type="button" hidden></button>
+    </div>
+  </section>
+
+  <!-- ══ THE DECK ══════════════════════════════════════════════════════════ -->
+  <!-- the deck IS the main content, so it keeps the main landmark. role="group"
+       used to sit here and overwrote it, which both broke the allowed-role rule
+       for <main> and left the whole lesson outside any landmark. -->
+  <main class="deck" id="deck"
+        aria-roledescription="card deck" aria-label="Backspin lesson"></main>
+  <p class="sr" id="deckLive" role="status" aria-live="polite"></p>
+
+  <nav class="dock" aria-label="Deck navigation">
+    <button class="dock__nav" id="prev" type="button">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+        <path d="M8 12.5 3.5 8 8 3.5M12.5 8h-9" stroke="currentColor" stroke-width="1.7"
+              stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>Back
+    </button>
+    <div class="dock__ticks" id="ticks" aria-hidden="true"></div>
+    <button class="dock__nav dock__nav--next" id="next" type="button">
+      <span id="nextLabel">Next</span>
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+        <path d="M8 3.5 12.5 8 8 12.5M3.5 8h9" stroke="currentColor" stroke-width="1.7"
+              stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+  </nav>
+</div>
+
+<dialog class="sheet" id="sheet" aria-labelledby="sheetTitle">
+  <form method="dialog" class="sheet__panel">
+    <div class="sheet__grab" aria-hidden="true"></div>
+    <p class="sheet__eyebrow" id="sheetEyebrow">Learn more</p>
+    <h2 class="sheet__title" id="sheetTitle">Learn more</h2>
+    <div class="sheet__body" id="sheetBody"></div>
+    <button class="btn btn--ghost" type="submit" value="close">Close</button>
+  </form>
+</dialog>
+
+<script>
+"use strict";
+/* ═══════════════════════════════════════════════════════════════════════════
+   1. FROZEN ENGINE OUTPUT — see the reproduction command in the head comment.
+   Row = [displayRpm, rawRpm, spinLoft, carryM, apexM, landAngle, limit]
+   limit: 0 none · 1 = 9,000 rpm display ceiling · 2 = at or below
+   LOW_SPIN_NOTE_RPM (1,500), where display and model still agree exactly.
+   ═════════════════════════════════════════════════════════════════════════ */
+const ENGINE_LUT = {
+  /* solveBackspinState({dynamicLoft:10..48, attackAngle:-3, ballSpeed:120}) */
+  A:{key:"dynamicLoft",unit:"°",label:"Dynamic loft",from:10,step:1,rows:[
+    [1969,1969,13,148,21,40.2,0],[2125,2125,14,149,22,41.3,0],[2282,2282,15,149,22,42.3,0],
+    [2439,2439,16,150,22,43.2,0],[2598,2598,17,152,22,44.1,0],[2757,2757,18,153,23,44.8,0],
+    [2917,2917,19,155,23,45.5,0],[3078,3078,20,155,23,46.2,0],[3242,3242,21,155,23,46.8,0],
+    [3408,3408,22,155,24,47.3,0],[3578,3578,23,155,24,47.8,0],[3754,3754,24,155,24,48.2,0],
+    [3939,3939,25,155,25,48.6,0],[4139,4139,26,155,25,49,0],[4359,4359,27,155,25,49.3,0],
+    [4609,4609,28,155,26,49.6,0],[4899,4899,29,155,26,49.9,0],[5237,5237,30,155,26,50.2,0],
+    [5623,5623,31,155,27,50.4,0],[6046,6046,32,155,27,50.6,0],[6485,6485,33,155,28,50.8,0],
+    [6915,6915,34,155,28,51,0],[7319,7319,35,155,29,51.1,0],[7688,7688,36,155,29,51.3,0],
+    [8025,8025,37,155,30,51.4,0],[8335,8335,38,155,30,51.5,0],[8625,8625,39,155,31,51.6,0],
+    [8900,8900,40,155,32,51.7,0],[9000,9166,41,155,32,51.8,1],[9000,9427,42,155,33,51.9,1],
+    [9000,9685,43,155,34,52,1],[9000,9941,44,155,34,52.1,1],[9000,10196,45,155,35,52.1,1],
+    [9000,10452,46,155,36,52.2,1],[9000,10709,47,155,37,52.2,1],[9000,10967,48,155,37,52.3,1],
+    [9000,11227,49,155,38,52.3,1],[9000,11488,50,155,39,52.4,1],[9000,11751,51,155,40,52.4,1]]},
+  /* solveBackspinState({dynamicLoft:30, attackAngle:-8..6, ballSpeed:120}) */
+  B:{key:"attackAngle",unit:"°",label:"Attack angle",from:-8,step:1,rows:[
+    [8335,8335,38,155,27,51.5,0],[8025,8025,37,155,27,51.4,0],[7688,7688,36,155,27,51.3,0],
+    [7319,7319,35,155,27,51.1,0],[6915,6915,34,155,28,51,0],[6485,6485,33,155,28,50.8,0],
+    [6046,6046,32,155,28,50.6,0],[5623,5623,31,155,28,50.4,0],[5237,5237,30,155,28,50.2,0],
+    [4899,4899,29,155,29,49.9,0],[4609,4609,28,155,29,49.6,0],[4359,4359,27,155,29,49.3,0],
+    [4139,4139,26,155,29,49,0],[3939,3939,25,155,30,48.6,0],[3754,3754,24,155,30,48.2,0]]},
+  /* solveBackspinState({dynamicLoft:30, attackAngle:-3, ballSpeed:90..175}) */
+  C:{key:"ballSpeed",unit:" mph",label:"Ball speed",from:90,step:1,rows:[
+    [4864,4864,33,106,21,50.8,0],[4918,4918,33,107,21,50.8,0],[4972,4972,33,109,21,50.8,0],
+    [5026,5026,33,110,22,50.8,0],[5080,5080,33,112,22,50.8,0],[5134,5134,33,114,22,50.8,0],
+    [5188,5188,33,115,22,50.8,0],[5242,5242,33,117,22,50.8,0],[5296,5296,33,118,23,50.8,0],
+    [5350,5350,33,120,23,50.8,0],[5404,5404,33,121,23,50.8,0],[5458,5458,33,123,23,50.8,0],
+    [5512,5512,33,125,24,50.8,0],[5566,5566,33,126,24,50.8,0],[5620,5620,33,128,24,50.8,0],
+    [5674,5674,33,129,24,50.8,0],[5728,5728,33,131,25,50.8,0],[5782,5782,33,133,25,50.8,0],
+    [5836,5836,33,134,25,50.8,0],[5890,5890,33,136,25,50.8,0],[5944,5944,33,138,25,50.8,0],
+    [5998,5998,33,139,26,50.8,0],[6052,6052,33,141,26,50.8,0],[6106,6106,33,143,26,50.8,0],
+    [6160,6160,33,144,26,50.8,0],[6215,6215,33,146,27,50.8,0],[6269,6269,33,148,27,50.8,0],
+    [6323,6323,33,149,27,50.8,0],[6377,6377,33,151,27,50.8,0],[6431,6431,33,153,28,50.8,0],
+    [6485,6485,33,155,28,50.8,0],[6539,6539,33,156,28,50.8,0],[6593,6593,33,158,28,50.8,0],
+    [6647,6647,33,160,28,50.8,0],[6701,6701,33,162,29,50.8,0],[6755,6755,33,163,29,50.8,0],
+    [6809,6809,33,165,29,50.8,0],[6863,6863,33,167,29,50.8,0],[6917,6917,33,169,30,50.8,0],
+    [6971,6971,33,171,30,50.8,0],[7025,7025,33,172,30,50.8,0],[7079,7079,33,174,30,50.8,0],
+    [7133,7133,33,176,31,50.8,0],[7187,7187,33,178,31,50.8,0],[7241,7241,33,180,31,50.8,0],
+    [7295,7295,33,182,31,50.8,0],[7349,7349,33,183,31,50.8,0],[7403,7403,33,185,32,50.8,0],
+    [7457,7457,33,187,32,50.8,0],[7511,7511,33,189,32,50.8,0],[7566,7566,33,191,32,50.8,0],
+    [7620,7620,33,193,33,50.8,0],[7674,7674,33,195,33,50.8,0],[7728,7728,33,197,33,50.8,0],
+    [7782,7782,33,198,33,50.8,0],[7836,7836,33,200,34,50.8,0],[7890,7890,33,202,34,50.8,0],
+    [7944,7944,33,204,34,50.8,0],[7998,7998,33,206,34,50.8,0],[8052,8052,33,208,34,50.8,0],
+    [8106,8106,33,210,35,50.8,0],[8160,8160,33,212,35,50.8,0],[8214,8214,33,214,35,50.8,0],
+    [8268,8268,33,216,35,50.8,0],[8322,8322,33,218,36,50.8,0],[8376,8376,33,220,36,50.8,0],
+    [8430,8430,33,222,36,50.8,0],[8484,8484,33,224,36,50.8,0],[8538,8538,33,226,37,50.8,0],
+    [8592,8592,33,228,37,50.8,0],[8646,8646,33,230,37,50.8,0],[8700,8700,33,232,37,50.8,0],
+    [8754,8754,33,234,37,50.8,0],[8808,8808,33,236,38,50.8,0],[8862,8862,33,238,38,50.8,0],
+    [8916,8916,33,240,38,50.8,0],[8971,8971,33,242,38,50.8,0],[9000,9025,33,244,39,50.8,1],
+    [9000,9079,33,247,39,50.8,1],[9000,9133,33,249,39,50.8,1],[9000,9187,33,251,39,50.8,1],
+    [9000,9241,33,253,40,50.8,1],[9000,9295,33,255,40,50.8,1],[9000,9349,33,257,40,50.8,1],
+    [9000,9403,33,259,40,50.8,1],[9000,9457,33,261,41,50.8,1]]},
+  /* solveBackspinState({dynamicLoft:10..48, attackAngle:6, ballSpeed:120})
+     the only axis in this lesson that actually reaches the low-spin note */
+  D:{key:"dynamicLoft",unit:"°",label:"Dynamic loft",from:10,step:1,rows:[
+    [598,598,4,155,24,32,2],[748,748,5,155,24,32,2],[897,897,6,155,24,32,2],
+    [1047,1047,7,155,25,32,2],[1199,1199,8,155,25,32.9,2],[1352,1352,9,155,25,34.6,2],
+    [1505,1505,10,155,25,36.2,0],[1659,1659,11,155,25,37.7,0],[1814,1814,12,155,25,39,0],
+    [1969,1969,13,155,26,40.2,0],[2125,2125,14,155,26,41.3,0],[2282,2282,15,155,26,42.3,0],
+    [2439,2439,16,155,27,43.2,0],[2598,2598,17,155,27,44.1,0],[2757,2757,18,155,27,44.8,0],
+    [2917,2917,19,155,28,45.5,0],[3078,3078,20,155,28,46.2,0],[3242,3242,21,155,28,46.8,0],
+    [3408,3408,22,155,29,47.3,0],[3578,3578,23,155,29,47.8,0],[3754,3754,24,155,30,48.2,0],
+    [3939,3939,25,155,30,48.6,0],[4139,4139,26,155,31,49,0],[4359,4359,27,155,31,49.3,0],
+    [4609,4609,28,155,32,49.6,0],[4899,4899,29,155,32,49.9,0],[5237,5237,30,155,33,50.2,0],
+    [5623,5623,31,155,34,50.4,0],[6046,6046,32,155,34,50.6,0],[6485,6485,33,155,35,50.8,0],
+    [6915,6915,34,155,36,51,0],[7319,7319,35,155,36,51.1,0],[7688,7688,36,155,37,51.3,0],
+    [8025,8025,37,155,38,51.4,0],[8335,8335,38,155,39,51.5,0],[8625,8625,39,155,39,51.6,0],
+    [8900,8900,40,155,40,51.7,0],[9000,9166,41,155,41,51.8,1],[9000,9427,42,155,42,51.9,1]]}
+};
+/* fixed instrument references = the maxima over every corner solved above, so
+   two different states draw honestly different arcs (same rule as the shipped
+   lesson's TRACE_REFERENCE): carry 261 m · apex 42 m. */
+const REF = { carry:261, apex:42 };
+const CEILING  = 9000;   // BACKSPIN_LIMITS.max
+const LOW_NOTE = 1500;   // LOW_SPIN_NOTE_RPM
+const MASTERY_XP = 120;  // ACADEMY_MASTERY_XP
+
+/* single engine solves used by the myth cards — see head comment */
+const SOLVE = {
+  base:      { dl:30, aa:-3, rpm:6485, raw:6485,  sl:33, carry:155, apex:28, land:50.8, cap:false },
+  attackDown:{ dl:30, aa:-6, rpm:7688, raw:7688,  sl:36, carry:155, apex:27, land:51.3, cap:false },
+  loftUpAAUp:{ dl:34, aa: 1, rpm:6485, raw:6485,  sl:33, carry:155, apex:31, land:50.8, cap:false },
+  loftHuge:  { dl:44, aa:-4, rpm:9000, raw:10967, sl:48, carry:155, apex:36, land:52.3, cap:true }
+};
+
+const lutAt = (lut, v) => {
+  const i = Math.max(0, Math.min(lut.rows.length - 1, Math.round((v - lut.from) / lut.step)));
+  const r = lut.rows[i];
+  return { i, value:lut.from + i * lut.step, rpm:r[0], raw:r[1], sl:r[2],
+           carry:r[3], apex:r[4], land:r[5], limit:r[6] };
+};
+/* exact forward difference over one engine step — the same finite difference
+   backspinSensitivity() performs, so this is engine truth, not a fitted slope */
+function lutSlope(lut, i){
+  const a = lut.rows[i];
+  if (i + 1 < lut.rows.length) return (lut.rows[i + 1][1] - a[1]) / lut.step;
+  return i > 0 ? (a[1] - lut.rows[i - 1][1]) / lut.step : 0;
+}
+const fmt  = n => Number(n).toLocaleString("en-US");
+const sign = n => (n >= 0 ? "+" : "\u2212") + fmt(Math.abs(n));
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   2. SHEETS — copy lifted verbatim from academy-native-lesson.js SHEETS
+   ═════════════════════════════════════════════════════════════════════════ */
+const SHEETS = {
+  mission:{ eyebrow:"Mission", title:"Build, then cut",
+    body:`<p>First build at least <strong>7,000 rpm</strong>. After that stage is credited, cut the same 7-iron model below <strong>3,500 rpm</strong>.</p>
+<p>The low-spin stage is a delivery experiment. It is not a driver simulation.</p>
+<p>Flightglass calculates Backspin as an outcome. The current flight fit does not feed that rpm value back into Carry, Apex or Landing Angle.</p>
+<p>One 7-iron preset, centred contact. Friction, grooves, moisture, strike location and ball/face properties are <strong>not modeled</strong>.</p>` },
+  spinLoft:{ eyebrow:"Model term", title:"Spin loft",
+    body:`<p>Spin loft is the gap between dynamic loft and attack angle at impact.</p>
+<p class="formula">spin loft = dynamic loft \u2212 attack angle</p>
+<p>This lesson uses the app\u2019s 7-iron engine and a centred strike. The full three-dimensional relationship also depends on face-to-path geometry.</p>` },
+  dynamicLoft:{ eyebrow:"Input", title:"Dynamic loft",
+    body:`<p>The loft delivered at impact. It is the dominant geometric lever at fixed speed and strike conditions.</p>
+<p>More dynamic loft usually widens spin loft in this lab; less loft narrows it.</p>` },
+  attackAngle:{ eyebrow:"Input", title:"Attack angle",
+    body:`<p>The vertical direction of the clubhead at impact. Negative is downward; positive is upward.</p>
+<p>Changing attack angle changes spin loft, but \u201chitting down\u201d does not create spin in the ground.</p>` },
+  ballSpeed:{ eyebrow:"Input", title:"Ball speed",
+    body:`<p>The speed of the ball immediately after impact. The control is mapped through the same smash relationship used by the engine.</p>` },
+  displayCeiling:{ eyebrow:"Engine limit", title:"9,000 rpm display ceiling",
+    body:`<p><strong>9,000 rpm is the interface ceiling.</strong> The displayed engine value stays capped there.</p>
+<p>Underlying model sensitivity; display capped at 9,000 rpm. Influence uses the engine\u2019s raw intermediate beyond the cap.</p>` },
+  noFloor:{ eyebrow:"No engine limit", title:"There is no floor",
+    body:`<p><strong>Low spin has no lower bound.</strong> Unlike the ceiling, nothing clamps the bottom \u2014 the displayed value keeps falling with spin loft, all the way toward zero.</p>
+<p>That is the physics: spin is generated by the glancing blow, so as spin loft goes to zero, so does spin. A square strike with no spin loft imparts no backspin at all.</p>
+<p>Compare the two ends: at 9,000 rpm the display freezes while the model keeps climbing. Down here the display and the model agree exactly.</p>` },
+  carry:{ eyebrow:"Model output", title:"Carry",
+    body:`<p>In this Flightglass model, fixed ball speed holds carry steady while spin changes height and landing. Real high-spin shots can balloon; that effect is not modeled here.</p>` },
+  realWorld:{ eyebrow:"Estimate layer", title:"Real-world spin retention",
+    body:`<p>This sourced range is an approximate real-world layer. It never changes the simulator output and must not be read as a second engine truth.</p>` }
+};
+
+/* LIE_ESTIMATES: keep ranges, copy and sources verbatim from academy-native-lesson.js */
+const LIES = {
+  clean:{ label:"Clean", keep:null,
+    line:"Clean, dry, centred contact. This is the simulator state \u2014 the engine assumes friction is never missing.",
+    src:"Flightglass 7-iron engine \u00b7 solveFlight()" },
+  wet:{ label:"Wet", keep:[0.80,0.85],
+    line:"Water cuts friction \u2014 15\u201320% less spin, higher launch.",
+    src:"Andrew Rice, \u201cWedges and Water\u201d, 2013 \u00b7 corroborated by MyGolfSpy Wet Wedge Test, 2022." },
+  flyer:{ label:"Flyer", keep:[0.35,0.70],
+    line:"Grass cuts friction \u2014 spin drops a third to over half.",
+    src:"USGA Spin Generation groove research 2006\u201307; Bryan Pate Golf TrackMan test, 2020." }
+};
+/* realWorldRange(rpm, keep) from academy-backspin-model.js, reproduced exactly */
+const realWorldRange = (rpm, keep) => ({ low:Math.round(rpm * keep[0]), high:Math.round(rpm * keep[1]) });
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   3. THE DECK — one concept per card, in curriculum order
+   ═════════════════════════════════════════════════════════════════════════ */
+const LESSON = [
+  { id:"mission", kind:"lever", mode:"flight", sheet:"mission",
+    eyebrow:"Mission", title:"Build it, then cut it",
+    stageLabel:"7-iron \u00b7 live engine",
+    body:"Backspin is an <strong>outcome</strong>, never something you add. Widen the delivered gap and it climbs; close it and it collapses.",
+    lut:"A", start:25,
+    gates:[
+      { id:"built", text:"Build the spin", hint:"Reach 7,000 rpm",
+        test:s => s.rpm >= 7000, val:s => fmt(s.rpm) + " rpm", sticky:true },
+      { id:"cut", text:"Cut it in half", hint:"Then drop below 3,500 rpm",
+        test:(s, g) => g.built && s.rpm <= 3500, val:s => fmt(s.rpm) + " rpm", sticky:true, needs:"built" }
+    ] },
+
+  { id:"spinloft", kind:"lever", mode:"geometry", sheet:"spinLoft",
+    eyebrow:"Model term", title:"The gap is the whole story",
+    stageLabel:"Impact geometry",
+    body:"Spin loft is the angle between where the face points and where the club is travelling. It is the master lever \u2014 it alone decides whether you make driver spin or wedge spin.",
+    formula:"spin loft = dynamic loft \u2212 attack angle",
+    lut:"A", start:30 },
+
+  { id:"attack", kind:"lever", mode:"geometry", sheet:"attackAngle",
+    eyebrow:"Input", title:"Attack angle subtracts",
+    stageLabel:"Impact geometry",
+    body:"Hold the face still and swing the travel direction instead. Down widens the gap, up closes it \u2014 the identical per-degree weight as loft, through the same channel.",
+    lut:"B", start:-3 },
+
+  { id:"speed", kind:"lever", mode:"flight", sheet:"ballSpeed",
+    eyebrow:"Input", title:"Speed multiplies it",
+    stageLabel:"Spin loft held at 33\u00b0",
+    body:"Spin loft is frozen at 33\u00b0 on this card. Only ball speed moves. A faster ball skids up the face harder and grips more, so spin scales with speed \u2014 near enough to a straight line.",
+    lut:"C", start:120 },
+
+  { id:"ceiling", kind:"lever", mode:"flight", sheet:"displayCeiling",
+    eyebrow:"Engine limit", title:"Where the display stops",
+    stageLabel:"Display vs model",
+    body:"Push past 40\u00b0 of delivered loft and the readout freezes at 9,000 rpm. The model has not stopped \u2014 the <strong>display</strong> has. Watch the raw model value keep climbing underneath it.",
+    lut:"A", start:36, showRaw:true },   /* opens two steps below the cap: the freeze is the user's discovery */
+
+  { id:"nofloor", kind:"lever", mode:"flight", sheet:"noFloor",
+    eyebrow:"No engine limit", title:"\u2026and where it does not",
+    stageLabel:"Upward strike +6\u00b0",
+    body:"Now the other end, struck 6\u00b0 upward. Nothing clamps the bottom. Spin keeps falling with the gap, all the way toward zero, and display and model stay in exact agreement.",
+    lut:"D", start:22, showRaw:true },
+
+  { id:"myth-ground", kind:"myth", mode:"geometry", sheet:"attackAngle",
+    eyebrow:"Myth \u00b7 1 of 3", title:"Where is backspin actually created?",
+    stageLabel:"Geometry \u00b7 prediction",
+    choices:["Ground interaction", "Face friction and spin loft"], answer:1,
+    before:"base", after:"attackDown", activeLabel:"Attack angle",
+    explain:"The ground adds no spin. A downward strike can widen spin loft and improve ball-first contact, but spin is created while the ball is on the face." },
+
+  { id:"myth-loft", kind:"myth", mode:"geometry", sheet:"spinLoft",
+    eyebrow:"Myth \u00b7 2 of 3", title:"Dynamic loft rises 4\u00b0, but attack angle also rises 4\u00b0. Backspin?",
+    stageLabel:"Geometry \u00b7 prediction",
+    choices:["More", "Same", "Less"], answer:1,
+    before:"base", after:"loftUpAAUp", activeLabel:"Dynamic loft",
+    explain:"Spin loft remains 33\u00b0, so this engine returns the same backspin. Only the flight moved \u2014 the ball launches higher." },
+
+  { id:"myth-more", kind:"myth", mode:"flight", sheet:"carry",
+    eyebrow:"Myth \u00b7 3 of 3", title:"Spin climbs past the iron window. What happens to carry?",
+    stageLabel:"Flight \u00b7 prediction",
+    choices:["Carry grows", "Carry falls", "Carry stays while apex and landing change"], answer:2,
+    before:"base", after:"loftHuge", activeLabel:"Dynamic loft",
+    explain:"More engine Backspin does not numerically cause more current-engine Carry. Real spin affects flight; this fitted app model currently keeps rpm output and flight trajectory partly decoupled." },
+
+  { id:"realworld", kind:"estimate", mode:"flight", sheet:"realWorld",
+    eyebrow:"Estimate layer", title:"What the simulator does not model",
+    stageLabel:"Simulator state held",
+    body:"Friction is the gate that lets a glancing blow become spin. These bands are sourced outside estimates laid <em>over</em> the simulator. They never change it.",
+    base:"base" },
+
+  { id:"mastery", kind:"lever", mode:"flight", sheet:"carry",
+    eyebrow:"Mastery check", title:"Hold a stopping flight",
+    stageLabel:"Gates · live solve",
+    body:"Both gates are read from the final live solve \u2014 not from an answer you picked.",
+    lut:"A", start:25,
+    gates:[
+      { id:"rpm",  text:"Backspin window", hint:"6,800\u20137,400 rpm",
+        test:s => s.rpm >= 6800 && s.rpm <= 7400, val:s => fmt(s.rpm) + " rpm" },
+      { id:"land", text:"Landing angle", hint:"50\u00b0 or steeper",
+        test:s => s.land >= 50, val:s => s.land.toFixed(1) + "\u00b0" }
+    ] },
+
+  { id:"result", kind:"result", mode:"evidence",
+    eyebrow:"Backspin result", title:"Your Backspin evidence",
+    stageLabel:"Settled evidence" }
+];
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   4. THE INSTRUMENT
+   ═════════════════════════════════════════════════════════════════════════ */
+const stage      = document.getElementById("stage");
+const stageLabel = document.getElementById("stageLabel");
+const rpmOut     = document.getElementById("rpm");
+const chipSpin   = document.getElementById("chipSpin");
+const chipCarry  = document.getElementById("chipCarry");
+const chipLand   = document.getElementById("chipLand");
+const chipLimit  = document.getElementById("chipLimit");
+const canvas     = document.getElementById("scope");
+const ctx        = canvas.getContext("2d");
+const reduce     = matchMedia("(prefers-reduced-motion: reduce)");
+
+let model = { rpm:6485, raw:6485, sl:33, carry:155, apex:28, land:50.8, limit:0, dl:30, aa:-3 };
+let ghost = null;            // previous settled solve, drawn as a violet echo
+let stageMode = "flight";
+let cssW = 1, cssH = 1;
+
+function sizeCanvas(){
+  const r = canvas.parentElement.getBoundingClientRect();
+  const d = Math.min(devicePixelRatio || 1, 2.5);
+  cssW = Math.max(1, r.width); cssH = Math.max(1, r.height);
+  canvas.width  = Math.round(cssW * d);
+  canvas.height = Math.round(cssH * d);
+  ctx.setTransform(d, 0, 0, d, 0, 0);
+  draw();
+}
+
+/* the shipped trace profile: piecewise parabola peaking at 0.52 of carry
+   (impact-flight.js trajectorySamples — an explicit ESTIMATE of the shape).
+   The SCALE is real: carry and apex come straight out of solveFlight(). */
+function traceH(d){
+  const apexAt = 0.52;
+  if (d <= apexAt){ const u = d / apexAt; return 1 - (1 - u) * (1 - u); }
+  const u = (d - apexAt) / (1 - apexAt);
+  return 1 - u * u;
+}
+
+function drawArc(w, h, s, alpha, color, width){
+  const padL = 14, padR = 30, ground = h - 16, top = 10;
+  const span = (w - padL - padR) * Math.min(1, s.carry / REF.carry);
+  const rise = (ground - top)    * Math.min(1, s.apex  / REF.apex);
+  ctx.save();
+  ctx.globalAlpha = alpha; ctx.strokeStyle = color; ctx.lineWidth = width;
+  ctx.lineJoin = "round"; ctx.lineCap = "round";
+  ctx.beginPath();
+  for (let i = 0; i <= 48; i++){
+    const d = i / 48, x = padL + span * d, y = ground - rise * traceH(d);
+    i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+  }
+  ctx.stroke();
+  ctx.beginPath(); ctx.arc(padL + span, ground, alpha > .8 ? 3.4 : 2.4, 0, 6.2832);
+  ctx.fillStyle = color; ctx.fill();
+  ctx.restore();
+  return { span, rise, ground, padL };
+}
+
+function drawFlight(w, h){
+  const ground = h - 16;
+  ctx.strokeStyle = "rgba(245,242,255,.10)"; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(0, ground + .5); ctx.lineTo(w, ground + .5); ctx.stroke();
+  if (ghost) drawArc(w, h, ghost, .30, "#9D8BFF", 1.4);
+  const g = drawArc(w, h, model, 1, "#FF8A4D", 2.2);
+  const ax = g.padL + g.span * .52, ay = g.ground - g.rise;
+  ctx.strokeStyle = "rgba(245,242,255,.16)"; ctx.setLineDash([2, 3]);
+  ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(ax, g.ground); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = "rgba(245,242,237,.52)";
+  ctx.font = "600 10px " + getComputedStyle(document.body).fontFamily;
+  ctx.textAlign = "center";
+  /* clamp the baseline into the canvas: at 200 % zoom the scope row is 36px,
+     the apex sits near the top, and ay-6 put the one place apex is printed
+     outside the bitmap entirely. 10 = the 10px font's ascent. */
+  ctx.fillText(model.apex + " m", ax, Math.max(10, ay - 6));
+  ctx.textAlign = "right";
+  ctx.fillText(model.carry + " m", Math.min(w - 3, g.padL + g.span + 24), g.ground - 6);
+}
+
+/* geometry pose: the two rays whose difference IS spin loft. exact, not stylised. */
+function drawGeometry(w, h){
+  const ox = w * .24, oy = h * .60, L = Math.min(w * .58, h * .80);
+  const rad = d => d * Math.PI / 180;
+  const { aa, dl, sl } = model;
+  ctx.strokeStyle = "rgba(245,242,255,.10)"; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(0, oy + .5); ctx.lineTo(w, oy + .5); ctx.stroke();
+
+  ctx.save();                                   // the wedge itself = spin loft
+  ctx.beginPath(); ctx.moveTo(ox, oy);
+  ctx.arc(ox, oy, L * .55, -rad(dl), -rad(aa));
+  ctx.closePath();
+  ctx.fillStyle = "rgba(157,139,255,.16)"; ctx.fill();
+  ctx.strokeStyle = "rgba(157,139,255,.45)"; ctx.lineWidth = 1; ctx.stroke();
+  ctx.restore();
+
+  const ray = (deg, color) => {
+    ctx.save(); ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.lineCap = "round";
+    ctx.beginPath(); ctx.moveTo(ox, oy);
+    ctx.lineTo(ox + Math.cos(rad(deg)) * L, oy - Math.sin(rad(deg)) * L);
+    ctx.stroke(); ctx.restore();
+  };
+  ray(aa, "#6FC6FF");                            // club travel direction
+  ray(dl, "#B9A0FF");                            // delivered face
+  ctx.beginPath(); ctx.arc(ox, oy, 4.5, 0, 6.2832);
+  ctx.fillStyle = "#F5F2ED"; ctx.fill();
+
+  const f = getComputedStyle(document.body).fontFamily;
+  /* every label stays inside the bitmap. At 200 % zoom this row is 36px tall,
+     which pushed "face 30\u00b0" off the top and "travel \u22123\u00b0" off the bottom \u2014 and
+     those two angles are printed nowhere else on the screen. */
+  const inY = y => Math.min(h - 3, Math.max(10, y));
+  ctx.font = "600 10px " + f; ctx.textAlign = "left";
+  ctx.fillStyle = "#B9A0FF";
+  ctx.fillText("face " + dl + "\u00b0",
+    ox + Math.cos(rad(dl)) * L * .80, inY(oy - Math.sin(rad(dl)) * L * .80 - 7));
+  ctx.fillStyle = "#6FC6FF";
+  ctx.fillText("travel " + (aa >= 0 ? "+" : "\u2212") + Math.abs(aa) + "\u00b0",
+    ox + Math.cos(rad(aa)) * L * .80, inY(oy - Math.sin(rad(aa)) * L * .80 + 15));
+  ctx.font = "700 11px " + f; ctx.textAlign = "center";
+  ctx.fillStyle = "rgba(245,242,237,.68)";
+  const mid = rad((dl + aa) / 2);
+  ctx.fillText(sl + "\u00b0", ox + Math.cos(mid) * L * .70, inY(oy - Math.sin(mid) * L * .70 + 4));
+}
+
+function draw(){
+  ctx.clearRect(0, 0, cssW, cssH);
+  if (stageMode === "geometry") drawGeometry(cssW, cssH);
+  else drawFlight(cssW, cssH);
+  canvas.setAttribute("aria-label", describeScope());
+}
+
+/* The text equivalent of the drawing — every quantity named here is one the
+   canvas actually renders. Apex, the two delivery rays and the violet echo are
+   drawn nowhere else, so without this they are simply unavailable. Rebuilt on
+   every solve; role=img means it is read on demand, never announced mid-drag. */
+function describeScope(){
+  const deg = a => Math.abs(a) + " degrees " + (a >= 0 ? "up" : "down");
+  if (stageMode === "geometry")
+    return "Impact geometry. Face delivered at " + model.dl + " degrees, club travelling "
+      + deg(model.aa) + ". The shaded wedge between them is " + model.sl + " degrees of spin loft.";
+  return "Flight trace. Apex " + model.apex + " metres, carry " + model.carry + " metres."
+    + (ghost ? " A violet echo behind it holds the previous solve: apex " + ghost.apex
+               + " metres, carry " + ghost.carry + " metres." : "");
+}
+
+function paintStage(){
+  rpmOut.textContent = fmt(model.rpm);
+  chipSpin.innerHTML  = "Spin loft <b>" + model.sl + "\u00b0</b>";
+  chipCarry.innerHTML = "Carry <b>" + model.carry + " m</b>";
+  chipLand.innerHTML  = "Land <b>" + model.land.toFixed(1) + "\u00b0</b>";
+  if (model.limit === 1){
+    chipLimit.hidden = false;
+    chipLimit.className = "chip chip--warn";
+    chipLimit.innerHTML = "Display ceiling \u00b7 model <b>" + fmt(model.raw) + "</b>";
+    chipLimit.dataset.sheet = "displayCeiling";
+    chipLimit.setAttribute("aria-label",
+      "Display ceiling reached. Raw model value " + fmt(model.raw) + " rpm. Open explanation.");
+  } else if (model.limit === 2){
+    chipLimit.hidden = false;
+    chipLimit.className = "chip";
+    chipLimit.innerHTML = "No floor \u00b7 display <b>= model</b>";
+    chipLimit.dataset.sheet = "noFloor";
+    chipLimit.setAttribute("aria-label",
+      "Below 1,500 rpm. Display still equals the model. Open explanation.");
+  } else {
+    /* Hiding a control the user is standing on drops focus to <body> (WCAG
+       2.4.11). It happens for real: focus the chip on the ceiling card, press
+       an arrow, and the next card's solve hides it. The chip belongs to the
+       instrument, so the instrument catches the focus — same object, still in
+       the viewport, still named. Guarding here and not in layout() covers the
+       delayed pose commit as well, which repaints after layout has returned. */
+    if (chipLimit.contains(document.activeElement)) stage.focus({ preventScroll:true });
+    chipLimit.hidden = true;
+  }
+  draw();
+}
+
+/* One pending pose at a time. Without the cancel, peeling three cards fast
+   lets an older queued commit land after a newer one and the instrument shows
+   the wrong pose for the card you are actually on. */
+let poseTimer = 0;
+function setStagePose(label, mode){
+  clearTimeout(poseTimer);
+  const commit = () => {
+    stageLabel.textContent = label;
+    stageMode = mode;
+    stage.dataset.mode = mode;
+    paintStage();
+    requestAnimationFrame(() => { stage.dataset.swapping = "false"; });
+  };
+  if (mode === stageMode && label === stageLabel.textContent){
+    stage.dataset.swapping = "false";
+    paintStage();
+    return;
+  }
+  if (reduce.matches){ commit(); return; }
+  stage.dataset.swapping = "true";
+  poseTimer = setTimeout(commit, 170);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   5. CARDS
+   ═════════════════════════════════════════════════════════════════════════ */
+const deck     = document.getElementById("deck");
+const deckLive = document.getElementById("deckLive");
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[c]));
+const progress = {};
+
+function cardMarkup(c, idx){
+  const head = `<p class="card__eyebrow">${esc(c.eyebrow)}<i>${idx + 1} / ${LESSON.length}</i></p>
+    <h2 class="card__title" id="ct${idx}">${esc(c.title)}</h2>`;
+  const info = c.sheet
+    ? `<button class="btn btn--ghost" type="button" data-sheet="${c.sheet}">What this means</button>`
+    : "";
+
+  if (c.kind === "lever"){
+    const lut = ENGINE_LUT[c.lut];
+    const min = lut.from, max = lut.from + (lut.rows.length - 1) * lut.step;
+    return `<div class="card__grip" data-grip aria-hidden="true"></div>
+      <div class="card__scroll">
+        ${head}
+        ${c.body ? `<p class="card__body">${c.body}</p>` : ""}
+        ${c.formula ? `<p class="formula">${esc(c.formula)}</p>` : ""}
+        ${c.gates ? `<div class="gates" data-gates></div>` : ""}
+        ${c.foot ? `<p class="note">${esc(c.foot)}</p>` : ""}
+        <div class="lever">
+          <div class="lever__head">
+            <label for="lv${idx}">${esc(lut.label)}</label>
+            <output for="lv${idx}" data-lever-value>${c.start}${lut.unit}</output>
+          </div>
+          <input id="lv${idx}" type="range" min="${min}" max="${max}" step="${lut.step}"
+                 value="${c.start}" data-lever="${c.lut}" aria-describedby="sens${idx}">
+          <p class="lever__sens" id="sens${idx}" data-sens></p>
+        </div>
+      </div>
+      <div class="card__foot">${info}</div>`;
+  }
+
+  if (c.kind === "myth"){
+    const opts = c.choices.map((t, i) =>
+      `<button class="choice" type="button" data-choice="${i}">
+         <span class="choice__key" aria-hidden="true">${String.fromCharCode(65 + i)}</span>
+         <span>${esc(t)}</span></button>`).join("");
+    return `<div class="card__grip" data-grip aria-hidden="true"></div>
+      <div class="card__scroll">
+        ${head}
+        <p class="card__body">Predict first. The engine then runs both deliveries and prints the difference.</p>
+        <div class="choices" data-choices role="group" aria-labelledby="ct${idx}">${opts}</div>
+        <div class="reveal" data-reveal hidden></div>
+      </div>
+      <div class="card__foot">${info}</div>`;
+  }
+
+  if (c.kind === "estimate"){
+    const segs = Object.entries(LIES).map(([k, v], i) =>
+      `<button type="button" role="radio" data-lie="${k}"
+         aria-checked="${i === 0}" tabindex="${i === 0 ? 0 : -1}">${esc(v.label)}</button>`).join("");
+    return `<div class="card__grip" data-grip aria-hidden="true"></div>
+      <div class="card__scroll">
+        ${head}
+        <p class="card__body">${c.body}</p>
+        <div class="seg" role="radiogroup" aria-label="Surface condition" data-lies>${segs}</div>
+        <div class="estimate" data-estimate></div>
+      </div>
+      <div class="card__foot">${info}</div>`;
+  }
+
+  return `<div class="card__grip" data-grip aria-hidden="true"></div>
+    <div class="card__scroll">
+      ${head}
+      <p class="card__body" data-result-copy></p>
+      <p class="result__score" data-result-score>0 / 5</p>
+      <p class="note">Credited from the deck's live solves and predictions, never from a stored answer.</p>
+      <ul class="abilities" data-abilities></ul>
+    </div>
+    <div class="card__foot">
+      <button class="btn btn--gold" type="button">Continue to Flight Height &amp; Descent</button>
+    </div>`;
+}
+
+const cards = LESSON.map((c, i) => {
+  const el = document.createElement("article");
+  el.className = "card";
+  el.dataset.card = c.id;
+  el.setAttribute("aria-roledescription", "card");
+  el.setAttribute("aria-label", `Card ${i + 1} of ${LESSON.length}: ${c.title}`);
+  el.tabIndex = -1;                            // a landing pad for rescued focus
+  el.innerHTML = cardMarkup(c, i);
+  deck.appendChild(el);
+  return el;
+});
+
+/* ── lever wiring ─────────────────────────────────────────────────────────── */
+function applyLever(c, el, input, settle){
+  const lut = ENGINE_LUT[input.dataset.lever];
+  const s = lutAt(lut, Number(input.value));
+  input.style.setProperty("--fill", (s.i / (lut.rows.length - 1)) * 100 + "%");
+  el.querySelector("[data-lever-value]").textContent =
+    (lut.key === "attackAngle" && s.value >= 0 ? "+" : "") + s.value + lut.unit;
+
+  const aa = lut.key === "attackAngle" ? s.value : (input.dataset.lever === "D" ? 6 : -3);
+  const dl = lut.key === "dynamicLoft" ? s.value : 30;
+  model = { rpm:s.rpm, raw:s.raw, sl:s.sl, carry:s.carry, apex:s.apex,
+            land:s.land, limit:s.limit, dl, aa };
+  paintStage();
+
+  /* aria-valuetext carries the outcome, so a screen reader hears live truth
+     without a live region firing on every drag frame */
+  input.setAttribute("aria-valuetext",
+    `${lut.key === "attackAngle" && s.value >= 0 ? "plus " : ""}${s.value}` +
+    `${lut.key === "ballSpeed" ? " miles per hour" : " degrees"} ${lut.label.toLowerCase()}, ` +
+    `spin loft ${s.sl} degrees, backspin ${fmt(s.rpm)} rpm` +
+    (s.limit === 1 ? `, display ceiling, model ${fmt(s.raw)} rpm` : ""));
+
+  const sens = el.querySelector("[data-sens]");
+  if (sens){
+    const slope = Math.round(lutSlope(lut, s.i));
+    const unit  = lut.key === "ballSpeed" ? "rpm / mph" : "rpm / degree";
+    sens.innerHTML = `Engine sensitivity here <b>${sign(slope)}</b> ${unit}` +
+      (c.showRaw && s.limit === 1 ? ` \u00b7 display frozen, model at <b>${fmt(s.raw)}</b>`
+       : c.showRaw && s.limit === 2 ? ` \u00b7 under ${fmt(LOW_NOTE)} rpm, display <b>= model</b>` : "");
+  }
+
+  if (c.gates){
+    const g = progress[c.id] || (progress[c.id] = {});
+    el.querySelector("[data-gates]").innerHTML = c.gates.map(gate => {
+      const now = gate.test(s, g);
+      if (gate.sticky && now) g[gate.id] = true;
+      if (!gate.sticky) g[gate.id] = now;
+      const done   = gate.sticky ? !!g[gate.id] : now;
+      const locked = gate.needs && !g[gate.needs];
+      return `<div class="gate" data-done="${done}">
+        <span class="gate__mark" aria-hidden="true">\u2713</span>
+        <span>${esc(gate.text)}<small>${esc(gate.hint)}</small></span>
+        <span class="gate__val">${locked ? "locked" : gate.val(s)}</span>
+        <span class="sr">${done ? "complete" : "not complete"}</span></div>`;
+    }).join("");
+  }
+  if (settle) ghost = { carry:s.carry, apex:s.apex };
+}
+
+function revealMyth(c, el, ok){
+  const b = SOLVE[c.before], a = SOLVE[c.after];
+  const dRpm = a.rpm - b.rpm;
+  const dLand = a.land - b.land;
+  const rows = [
+    { l:c.activeLabel, v:sign((a.dl - b.dl) || (a.aa - b.aa)) + "\u00b0" },
+    { l:"Spin loft",   v:sign(a.sl - b.sl) + "\u00b0" },
+    { l:"Backspin",    v:a.cap ? "held at " + fmt(a.rpm) : sign(dRpm) + " rpm",
+      lane:(dRpm === 0 && !a.cap) ? "flat" : "live" },
+    { l:"Carry",       v:sign(a.carry - b.carry) + " m", lane:a.carry === b.carry ? "flat" : "" },
+    { l:"Apex",        v:sign(a.apex - b.apex) + " m",   lane:a.apex === b.apex ? "flat" : "" },
+    { l:"Landing angle", v:(dLand >= 0 ? "+" : "\u2212") + Math.abs(dLand).toFixed(1) + "\u00b0",
+      lane:Math.abs(dLand) < 0.05 ? "flat" : "" }
+  ];
+  const reveal = el.querySelector("[data-reveal]");
+  reveal.innerHTML =
+    `<p class="verdict" data-ok="${ok}" tabindex="-1">${ok ? "\u2713 Correct" : "\u2715 Not quite"}</p>
+     <div class="chain">${rows.map(r =>
+        `<div class="chain__row"${r.lane ? ` data-lane="${r.lane}"` : ""}>
+           <span>${esc(r.l)}</span><b>${r.v}</b></div>`).join("")}</div>
+     <p class="card__body" style="margin:0">${esc(c.explain)}</p>
+     ${a.cap ? `<p class="note">Display frozen at ${fmt(a.rpm)} rpm \u00b7 raw model ${fmt(a.raw)} rpm.</p>` : ""}`;
+  /* the reveal REPLACES the choices: the card never grows, so nothing
+     essential is ever pushed under a card's fold. Focus lands on the verdict
+     BEFORE the choices go away, so it is handed over rather than dropped. */
+  reveal.hidden = false;
+  reveal.querySelector(".verdict").focus();
+  el.querySelector("[data-choices]").hidden = true;
+  ghost = { carry:b.carry, apex:b.apex };
+  model = { rpm:a.rpm, raw:a.raw, sl:a.sl, carry:a.carry, apex:a.apex,
+            land:a.land, limit:a.cap ? 1 : 0, dl:a.dl, aa:a.aa };
+  paintStage();
+  updateResult();
+}
+
+function paintEstimate(c, el, key){
+  const lie = LIES[key], base = SOLVE[c.base];
+  const box = el.querySelector("[data-estimate]");
+  if (!lie.keep){
+    box.dataset.sim = "true";
+    box.innerHTML = `<span class="estimate__stamp">Simulator output</span>
+      <span class="estimate__val">${fmt(base.rpm)} rpm</span>
+      <span class="estimate__src">${esc(lie.line)}<br>${esc(lie.src)}</span>`;
+  } else {
+    const r = realWorldRange(base.rpm, lie.keep);
+    box.dataset.sim = "false";
+    box.innerHTML = `<span class="estimate__stamp">Estimate \u00b7 not simulator output</span>
+      <span class="estimate__val">${fmt(r.low)}\u2013${fmt(r.high)} rpm</span>
+      <span class="estimate__src">${esc(lie.line)}<br>${esc(lie.src)}</span>`;
+  }
+  ghost = null;
+  model = { rpm:base.rpm, raw:base.raw, sl:base.sl, carry:base.carry, apex:base.apex,
+            land:base.land, limit:0, dl:base.dl, aa:base.aa };
+  paintStage();
+}
+
+/* ── result reads the deck, never a stored answer ─────────────────────────── */
+const ABILITIES = ["Define spin loft", "Compare model deliveries", "Reduce spin loft",
+  "Separate estimates from simulator truth", "Meet Backspin and Landing gates independently"];
+
+function updateResult(){
+  const el = cards[LESSON.length - 1];
+  const myths = ["myth-ground", "myth-loft", "myth-more"].filter(id => progress[id]?.right).length;
+  const m = progress.mastery || {};
+  const gates = (m.rpm ? 1 : 0) + (m.land ? 1 : 0);
+  const score = myths + (gates === 2 ? 2 : gates);
+  el.querySelector("[data-result-score]").textContent = score + " / 5";
+  el.querySelector("[data-result-copy]").innerHTML = score >= 4
+    ? `Mastered. <strong>+${MASTERY_XP} XP</strong> credited.`
+    : `The ability you have shown so far. Reach 4 of 5 to master this lesson.`;
+  el.querySelector("[data-abilities]").innerHTML =
+    ABILITIES.slice(0, Math.max(0, score)).map(a => `<li>${esc(a)}</li>`).join("");
+}
+
+cards.forEach((el, i) => {
+  const c = LESSON[i];
+  const input = el.querySelector("input[type=range]");
+  if (input){
+    input.addEventListener("input",  () => applyLever(c, el, input, false));
+    input.addEventListener("change", () => applyLever(c, el, input, true));
+  }
+  el.querySelectorAll("[data-choice]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      if (progress[c.id]?.answered) return;
+      const picked = Number(btn.dataset.choice);
+      const ok = picked === c.answer;
+      el.querySelectorAll("[data-choice]").forEach(b => {
+        const bi = Number(b.dataset.choice);
+        const state = bi === c.answer ? "right" : (bi === picked ? "wrong" : "");
+        b.dataset.state = state;
+        /* aria-disabled, never disabled: disabling the button the user just
+           pressed evicts focus to <body>. The sr mark is the second half —
+           right and wrong must not live in colour and font-weight alone. */
+        b.setAttribute("aria-disabled", "true");
+        if (state) b.append(Object.assign(document.createElement("span"), {
+          className:"sr",
+          textContent: state === "right" ? " — correct answer"
+                                         : " — your answer, not correct" }));
+      });
+      progress[c.id] = { answered:true, right:ok };
+      reduce.matches ? revealMyth(c, el, ok) : setTimeout(() => revealMyth(c, el, ok), 260);
+    });
+  });
+  const lieBtns = [...el.querySelectorAll("[data-lie]")];
+  lieBtns.forEach((btn, bi) => {
+    btn.addEventListener("click", () => {
+      lieBtns.forEach((b, j) => { b.setAttribute("aria-checked", String(j === bi)); b.tabIndex = j === bi ? 0 : -1; });
+      paintEstimate(c, el, btn.dataset.lie);
+    });
+    btn.addEventListener("keydown", e => {
+      const d = e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0;
+      if (!d) return;
+      e.preventDefault();
+      const n = lieBtns[(bi + d + lieBtns.length) % lieBtns.length];
+      n.focus(); n.click();
+    });
+  });
+});
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   6. THE STACK — peel gesture, keyboard parity, focus ownership
+   ═════════════════════════════════════════════════════════════════════════ */
+let active = 0;
+const ticks = document.getElementById("ticks");
+ticks.innerHTML = LESSON.map(() => "<span></span>").join("");
+const tickEls   = [...ticks.children];
+const prevBtn   = document.getElementById("prev");
+const nextBtn   = document.getElementById("next");
+const nextLabel = document.getElementById("nextLabel");
+
+function layout(){
+  /* captured before the mutation below: inerting the outgoing card and
+     disabling a dock button both drop focus to <body> (WCAG 2.4.11) */
+  const hadFocus = document.activeElement;
+
+  cards.forEach((el, i) => {
+    const rel = i - active;
+    el.dataset.rel = rel < -2 ? "-2" : rel > 3 ? "far" : String(rel);
+    const isActive = rel === 0;
+    /* inert alone removes the card from BOTH the tab order and the a11y tree.
+       Adding aria-hidden on top only manufactures a focusable-inside-hidden
+       false positive, so it is deliberately absent. */
+    el.inert = !isActive;
+    el.style.transform = "";
+  });
+  tickEls.forEach((t, i) => { t.dataset.on = String(i <= active); t.dataset.now = String(i === active); });
+  prevBtn.disabled = active === 0;
+  nextBtn.disabled = active === LESSON.length - 1;
+  nextLabel.textContent = active === LESSON.length - 1 ? "Done" : "Next";
+
+  const c = LESSON[active], el = cards[active];
+  setStagePose(c.stageLabel, c.mode);
+  const input = el.querySelector("input[type=range]");
+  if (input){ ghost = null; applyLever(c, el, input, false); }
+  else if (c.kind === "estimate"){
+    paintEstimate(c, el, el.querySelector('[data-lie][aria-checked="true"]').dataset.lie);
+  } else if (c.kind === "myth" && !progress[c.id]?.answered){
+    const b = SOLVE[c.before];
+    ghost = null;
+    model = { rpm:b.rpm, raw:b.raw, sl:b.sl, carry:b.carry, apex:b.apex,
+              land:b.land, limit:0, dl:b.dl, aa:b.aa };
+    paintStage();
+  } else if (c.kind === "result"){
+    updateResult();
+  }
+  deckLive.textContent = `Card ${active + 1} of ${LESSON.length}. ${c.title}`;
+
+  /* Focus never falls to <body>. Inerting the outgoing card and disabling a
+     dock button both evict focus, and Chrome does that fix-up asynchronously —
+     so decide from what WAS focused, not from what happens to be focused now.
+     The rescue target is the opposite dock button when the one you pressed
+     just disabled itself, otherwise the card you are now on. Both sit inside
+     the fixed app frame, so the target is always within the viewport. */
+  const evicted = hadFocus && hadFocus !== document.body &&
+    (!hadFocus.isConnected || hadFocus.disabled || hadFocus.closest("[inert]"));
+  if (evicted){
+    if (hadFocus === nextBtn && !prevBtn.disabled) prevBtn.focus();
+    else if (hadFocus === prevBtn && !nextBtn.disabled) nextBtn.focus();
+    else el.focus({ preventScroll:true });
+  }
+}
+
+function goto(i){
+  const n = Math.max(0, Math.min(LESSON.length - 1, i));
+  if (n === active) return;
+  if (LESSON[active].id === "mastery"){       // freeze the gates from the live solve
+    const s = lutAt(ENGINE_LUT.A, Number(cards[active].querySelector("input").value));
+    progress.mastery = { rpm:s.rpm >= 6800 && s.rpm <= 7400, land:s.land >= 50 };
+  }
+  active = n;
+  layout();
+}
+
+/* peel gesture: vertical, because the peel axis is horizontal.
+   up = next (the card tips its top toward you and lifts off) · down = previous */
+let drag = null;
+deck.addEventListener("pointerdown", e => {
+  if (e.button) return;
+  const card = cards[active];
+  if (!card.contains(e.target)) return;
+  if (e.target.closest("input, button, a, [data-nodrag]")) return;
+  const scroller = e.target.closest(".card__scroll");
+  const scrollable = scroller && scroller.scrollHeight > scroller.clientHeight + 1;
+  if (scrollable && !e.target.closest("[data-grip]")) return;   // the scroller owns the gesture
+  drag = { id:e.pointerId, y0:e.clientY, x0:e.clientX, t0:performance.now(), dy:0, live:false };
+  deck.setPointerCapture(e.pointerId);
+});
+deck.addEventListener("pointermove", e => {
+  if (!drag || e.pointerId !== drag.id) return;
+  const dy = e.clientY - drag.y0, dx = e.clientX - drag.x0;
+  if (!drag.live){
+    if (Math.abs(dy) < 6) return;
+    if (Math.abs(dx) > Math.abs(dy)){ drag = null; return; }     // not our axis
+    drag.live = true;
+    cards[active].dataset.dragging = "true";
+  }
+  drag.dy = dy;
+  const card = cards[active], h = deck.clientHeight || 1;
+  /* friction at the ends — it slows, it never hits an invisible wall */
+  const atEnd = (dy < 0 && active === LESSON.length - 1) || (dy > 0 && active === 0);
+  const eff = atEnd ? dy * 0.22 : dy;
+  card.style.transform = reduce.matches
+    ? `translateY(${(eff * 0.3).toFixed(1)}px)`
+    : `rotateX(${((-eff / h) * 16).toFixed(2)}deg) translateY(${(eff * 0.5).toFixed(1)}px)`;
+  e.preventDefault();
+});
+function endDrag(e){
+  if (!drag || (e && e.pointerId !== drag.id)) return;
+  const card = cards[active], { dy, live, t0 } = drag;
+  const v = Math.abs(dy) / Math.max(1, performance.now() - t0);   // px per ms
+  drag = null;
+  card.dataset.dragging = "false";
+  card.style.transform = "";
+  if (!live) return;
+  const far = Math.abs(dy) > Math.min(110, deck.clientHeight * 0.16);
+  if (far || v > 0.11) goto(active + (dy < 0 ? 1 : -1));          // Sonner's velocity rule
+}
+deck.addEventListener("pointerup", endDrag);
+deck.addEventListener("pointercancel", endDrag);
+
+prevBtn.addEventListener("click", () => goto(active - 1));
+nextBtn.addEventListener("click", () => goto(active + 1));
+
+/* keyboard parity — never gesture-only */
+addEventListener("keydown", e => {
+  /* defaultPrevented = a focused widget already owns this key. Without it the
+     deck ate the estimate card's ArrowLeft/Right: the radio group called
+     preventDefault, but preventDefault does not stop propagation, so the deck
+     peeled to the next card and the roving radios were unreachable. */
+  if (sheet.open || e.defaultPrevented) return;
+  const t = e.target;
+  if (t && (t.tagName === "INPUT" || t.isContentEditable)) return;
+  const k = e.key;
+  if (k === "ArrowDown" || k === "ArrowRight" || k === "PageDown"){ e.preventDefault(); goto(active + 1); }
+  else if (k === "ArrowUp" || k === "ArrowLeft" || k === "PageUp"){ e.preventDefault(); goto(active - 1); }
+  else if (k === "Home"){ e.preventDefault(); goto(0); }
+  else if (k === "End"){ e.preventDefault(); goto(LESSON.length - 1); }
+});
+
+/* ── sheet: <dialog> supplies the trap, Esc, inert background and focus
+      return to the exact opener ───────────────────────────────────────────── */
+const sheet = document.getElementById("sheet");
+document.addEventListener("click", e => {
+  const trigger = e.target.closest("[data-sheet]");
+  if (!trigger) return;
+  const s = SHEETS[trigger.dataset.sheet];
+  if (!s) return;
+  document.getElementById("sheetEyebrow").textContent = s.eyebrow;
+  document.getElementById("sheetTitle").textContent = s.title;
+  document.getElementById("sheetBody").innerHTML = s.body;
+  sheet.showModal();
+});
+sheet.addEventListener("click", e => { if (e.target === sheet) sheet.close(); });
+
+/* ── boot ─────────────────────────────────────────────────────────────────── */
+addEventListener("resize", sizeCanvas);
+reduce.addEventListener?.("change", layout);
+sizeCanvas();
+layout();
+
+/* ── self-check: the non-trivial logic here is the LUT lookup, the forward
+   difference and the velocity rule. One assert run, printed to the console,
+   fails loudly the moment the frozen tables drift from the engine. ───────── */
+(function selfCheck(){
+  const log = [];
+  const ok = (name, cond) => log.push((cond ? "ok   " : "FAIL ") + name);
+  const a = lutAt(ENGINE_LUT.A, 30);
+  ok("A@30 -> 6485 rpm, spin loft 33", a.rpm === 6485 && a.sl === 33 && a.carry === 155 && a.land === 50.8);
+  ok("A@30 slope +430 rpm/deg (backspinSensitivity)", Math.round(lutSlope(ENGINE_LUT.A, a.i)) === 430);
+  const b = lutAt(ENGINE_LUT.B, -3);
+  ok("B@-3 slope -439 rpm/deg", b.rpm === 6485 && Math.round(lutSlope(ENGINE_LUT.B, b.i)) === -439);
+  const cc = lutAt(ENGINE_LUT.C, 120);
+  ok("C@120 -> 6485 rpm, slope +54 rpm/mph", cc.rpm === 6485 && Math.round(lutSlope(ENGINE_LUT.C, cc.i)) === 54);
+  const cap = lutAt(ENGINE_LUT.A, 45);   // dynamic loft 45 -> spin loft 48
+  ok("A@45 capped at 9000, raw 10967", cap.rpm === CEILING && cap.raw === 10967 && cap.sl === 48 && cap.limit === 1);
+  const lo = lutAt(ENGINE_LUT.D, 10);
+  ok("D@10 -> 598 rpm, no-floor note", lo.rpm === 598 && lo.limit === 2 && lo.rpm < LOW_NOTE);
+  ok("mission is reachable on one lever",
+    lutAt(ENGINE_LUT.A, 36).rpm >= 7000 && lutAt(ENGINE_LUT.A, 10).rpm <= 3500);
+  const m = lutAt(ENGINE_LUT.A, 32);
+  ok("mastery window reachable (passesStoppingFlightTarget)", m.rpm >= 6800 && m.rpm <= 7400 && m.land >= 50);
+  const rw = realWorldRange(6485, [0.80, 0.85]);
+  ok("realWorldRange(6485, wet) -> 5188-5512", rw.low === 5188 && rw.high === 5512);
+  ok("every card declares a stage pose", LESSON.every(c => c.stageLabel && c.mode));
+  console.log("card-stack self-check\n" + log.join("\n"));
+  if (log.some(l => l[0] === "F")) console.error("card-stack: FROZEN ENGINE TABLE DRIFT");
+})();
+</script>
+</body>
+</html>

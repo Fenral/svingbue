@@ -1,0 +1,314 @@
+{
+  "id": "face-error-cost-by-club",
+  "title": "Cost of One Degree — Yards Offline per Degree of Open Face",
+  "generatedAt": "2026-07-28T08:33:35.630Z",
+  "engine": "impact-flight.js solveFlight (frosset, uendret)",
+  "units": {
+    "offline": "yd from target line",
+    "carry": "yd",
+    "angles": "deg"
+  },
+  "fixed": {
+    "clubPath": 0,
+    "faceAngleSign": "+ = open = right for RHP"
+  },
+  "columns": [
+    "+1°",
+    "+2°",
+    "+3°",
+    "+4°"
+  ],
+  "rows": [
+    {
+      "id": "driver",
+      "label": "Driver",
+      "dynamicLoft": 14,
+      "attackAngle": 2,
+      "clubSpeed": 110,
+      "startFaceW": 0.83,
+      "baseline": {
+        "carryYd": 261.3,
+        "offlineYd": 0,
+        "backspinRpm": 2485,
+        "launchAngleDeg": 10.9,
+        "shape": "Straight",
+        "flags": [
+          "aero-extrapolated"
+        ]
+      },
+      "cells": [
+        {
+          "faceAngle": 1,
+          "offlineYd": 11.1,
+          "curveYd": 7.4,
+          "startDirectionDeg": 0.83,
+          "spinAxisDeg": 4.7,
+          "carryYd": 261.3,
+          "shape": "Fade",
+          "flags": [
+            "aero-extrapolated"
+          ]
+        },
+        {
+          "faceAngle": 2,
+          "offlineYd": 22.2,
+          "curveYd": 14.6,
+          "startDirectionDeg": 1.66,
+          "spinAxisDeg": 9.2,
+          "carryYd": 261.1,
+          "shape": "Push Fade",
+          "flags": [
+            "aero-extrapolated"
+          ]
+        },
+        {
+          "faceAngle": 3,
+          "offlineYd": 32.9,
+          "curveYd": 21.6,
+          "startDirectionDeg": 2.49,
+          "spinAxisDeg": 13.7,
+          "carryYd": 260.9,
+          "shape": "Push Fade",
+          "flags": [
+            "aero-extrapolated"
+          ]
+        },
+        {
+          "faceAngle": 4,
+          "offlineYd": 43.3,
+          "curveYd": 28.2,
+          "startDirectionDeg": 3.32,
+          "spinAxisDeg": 18,
+          "carryYd": 260.5,
+          "shape": "Push Fade",
+          "flags": [
+            "aero-extrapolated"
+          ]
+        }
+      ],
+      "yardsPerDegree": 11.1,
+      "linearityRatio": 3.9
+    },
+    {
+      "id": "5iron",
+      "label": "5-iron",
+      "dynamicLoft": 22,
+      "attackAngle": -3,
+      "clubSpeed": 95,
+      "startFaceW": 0.79,
+      "baseline": {
+        "carryYd": 198.1,
+        "offlineYd": 0,
+        "backspinRpm": 4425,
+        "launchAngleDeg": 11.7,
+        "shape": "Straight",
+        "flags": [
+          "aero-extrapolated"
+        ]
+      },
+      "cells": [
+        {
+          "faceAngle": 1,
+          "offlineYd": 5.7,
+          "curveYd": 3,
+          "startDirectionDeg": 0.79,
+          "spinAxisDeg": 2.2,
+          "carryYd": 198.1,
+          "shape": "Fade",
+          "flags": [
+            "aero-extrapolated"
+          ]
+        },
+        {
+          "faceAngle": 2,
+          "offlineYd": 11.4,
+          "curveYd": 5.9,
+          "startDirectionDeg": 1.58,
+          "spinAxisDeg": 4.4,
+          "carryYd": 198,
+          "shape": "Push Fade",
+          "flags": [
+            "aero-extrapolated"
+          ]
+        },
+        {
+          "faceAngle": 3,
+          "offlineYd": 17,
+          "curveYd": 8.9,
+          "startDirectionDeg": 2.37,
+          "spinAxisDeg": 6.5,
+          "carryYd": 197.9,
+          "shape": "Push Fade",
+          "flags": [
+            "aero-extrapolated"
+          ]
+        },
+        {
+          "faceAngle": 4,
+          "offlineYd": 22.7,
+          "curveYd": 11.8,
+          "startDirectionDeg": 3.16,
+          "spinAxisDeg": 8.7,
+          "carryYd": 197.7,
+          "shape": "Push Fade",
+          "flags": [
+            "aero-extrapolated"
+          ]
+        }
+      ],
+      "yardsPerDegree": 5.7,
+      "linearityRatio": 3.98
+    },
+    {
+      "id": "7iron",
+      "label": "7-iron",
+      "dynamicLoft": 30,
+      "attackAngle": -4,
+      "clubSpeed": 90,
+      "startFaceW": 0.75,
+      "baseline": {
+        "carryYd": 172.7,
+        "offlineYd": 0,
+        "backspinRpm": 7022,
+        "launchAngleDeg": 15.1,
+        "shape": "Straight",
+        "flags": [
+          "aero-extrapolated"
+        ]
+      },
+      "cells": [
+        {
+          "faceAngle": 1,
+          "offlineYd": 4.5,
+          "curveYd": 2.3,
+          "startDirectionDeg": 0.75,
+          "spinAxisDeg": 1.5,
+          "carryYd": 172.6,
+          "shape": "Fade",
+          "flags": [
+            "aero-extrapolated"
+          ]
+        },
+        {
+          "faceAngle": 2,
+          "offlineYd": 9.1,
+          "curveYd": 4.6,
+          "startDirectionDeg": 1.5,
+          "spinAxisDeg": 3.1,
+          "carryYd": 172.6,
+          "shape": "Push Fade",
+          "flags": [
+            "aero-extrapolated"
+          ]
+        },
+        {
+          "faceAngle": 3,
+          "offlineYd": 13.6,
+          "curveYd": 6.8,
+          "startDirectionDeg": 2.25,
+          "spinAxisDeg": 4.6,
+          "carryYd": 172.5,
+          "shape": "Push Fade",
+          "flags": [
+            "aero-extrapolated"
+          ]
+        },
+        {
+          "faceAngle": 4,
+          "offlineYd": 18.1,
+          "curveYd": 9.1,
+          "startDirectionDeg": 3,
+          "spinAxisDeg": 6.2,
+          "carryYd": 172.4,
+          "shape": "Push Fade",
+          "flags": [
+            "aero-extrapolated"
+          ]
+        }
+      ],
+      "yardsPerDegree": 4.5,
+      "linearityRatio": 4.02
+    },
+    {
+      "id": "pw",
+      "label": "PW",
+      "dynamicLoft": 44,
+      "attackAngle": -6,
+      "clubSpeed": 78,
+      "startFaceW": 0.68,
+      "baseline": {
+        "carryYd": 123.5,
+        "offlineYd": 0,
+        "backspinRpm": 9000,
+        "launchAngleDeg": 24.7,
+        "shape": "Straight",
+        "flags": [
+          "spin-clamped:9055->9000",
+          "aero-extrapolated"
+        ]
+      },
+      "cells": [
+        {
+          "faceAngle": 1,
+          "offlineYd": 2.5,
+          "curveYd": 1,
+          "startDirectionDeg": 0.68,
+          "spinAxisDeg": 0.9,
+          "carryYd": 123.5,
+          "shape": "Fade",
+          "flags": [
+            "spin-clamped:9056->9000",
+            "aero-extrapolated"
+          ]
+        },
+        {
+          "faceAngle": 2,
+          "offlineYd": 4.9,
+          "curveYd": 2,
+          "startDirectionDeg": 1.36,
+          "spinAxisDeg": 1.9,
+          "carryYd": 123.5,
+          "shape": "Fade",
+          "flags": [
+            "spin-clamped:9059->9000",
+            "aero-extrapolated"
+          ]
+        },
+        {
+          "faceAngle": 3,
+          "offlineYd": 7.4,
+          "curveYd": 3,
+          "startDirectionDeg": 2.04,
+          "spinAxisDeg": 2.8,
+          "carryYd": 123.4,
+          "shape": "Push Fade",
+          "flags": [
+            "spin-clamped:9065->9000",
+            "aero-extrapolated"
+          ]
+        },
+        {
+          "faceAngle": 4,
+          "offlineYd": 9.8,
+          "curveYd": 4,
+          "startDirectionDeg": 2.72,
+          "spinAxisDeg": 3.7,
+          "carryYd": 123.3,
+          "shape": "Push Fade",
+          "flags": [
+            "spin-clamped:9072->9000",
+            "aero-extrapolated"
+          ]
+        }
+      ],
+      "yardsPerDegree": 2.5,
+      "linearityRatio": 3.92
+    }
+  ],
+  "notes": [
+    "offline = carry·sin(startDirection) + curve. Begge ledd vokser med face-error; derfor er skalering med face nesten lineær.",
+    "startFaceW = clamp(0.90 − 0.005·dynamicLoft, 0.60, 0.88) — motorens egen face-taper. Driver 0.83 → PW 0.68.",
+    "Alle fire rader er inDomain (dynamicLoft − attackAngle > 0). Ingen tom celle.",
+    "aero-extrapolated er normaltilstanden i denne motoren (94 % av slider-domenet), ikke en feil."
+  ]
+}

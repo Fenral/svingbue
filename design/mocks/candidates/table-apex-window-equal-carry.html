@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#07060C" />
+<title>Same Carry, Different Ceiling — the Apex Window</title>
+<style>
+  /* Flightglass "Ultraviolet Ember" tokens, mirrored locally. Self-contained: no external resource. */
+  :root{
+    --ink:#07060C;              /* page */
+    --surface:#110D1C;          /* table plate */
+    --glass:#F5F2ED;            /* primary text */
+    --muted:#A79FC7;            /* secondary — tinted from the violet, never gray */
+    --muted-2:#8E85A8;          /* tertiary */
+    --ember:#FF8A4D;            /* the ONE warm focal: apex, the only quantity that moves */
+    --violet:#9D8BFF;           /* structure / state */
+    --line:rgba(157,139,255,.16);
+    --line-strong:rgba(157,139,255,.34);
+    --font-ui:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --font-mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+    --ease:cubic-bezier(.23,1,.32,1);
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    background:var(--ink);
+    color:var(--glass);
+    font-family:var(--font-ui);
+    font-size:100%;
+    line-height:1.5;
+    /* Every word here is prose in a px-wide window while the type is sized in rem. Above
+       ~250% text a single long word ("window", "speed") is wider than the whole reading
+       column and pushed the page into sideways scroll. Breaking is the lesser loss. */
+    overflow-wrap:break-word;
+    padding:
+      calc(env(safe-area-inset-top) + 1.5rem)
+      calc(env(safe-area-inset-right) + 1.25rem)
+      calc(env(safe-area-inset-bottom) + 3rem)
+      calc(env(safe-area-inset-left) + 1.25rem);
+  }
+  .wrap{max-width:64rem;margin-inline:auto}
+
+  /* ---------- masthead ---------- */
+  .rule{height:1px;background:var(--line);border:0;margin:1.75rem 0}
+  h1{
+    font-size:clamp(1.7rem,6.2vw,2.9rem);
+    line-height:1.06;
+    letter-spacing:-.028em;
+    font-weight:680;
+    text-wrap:balance;
+    max-width:20ch;
+  }
+  h1 em{font-style:normal;color:var(--violet)}
+  .kicker{
+    font-family:var(--font-mono);
+    font-size:.72rem;
+    letter-spacing:.16em;
+    text-transform:uppercase;
+    color:var(--muted-2);
+    margin-bottom:.75rem;
+  }
+
+  /* ---------- summary: the insight, readable without the cells ---------- */
+  .lede{
+    max-width:68ch;
+    font-size:clamp(1rem,2.6vw,1.125rem);
+    color:var(--muted);
+    margin-top:1rem;
+  }
+  .lede strong{color:var(--glass);font-weight:600}
+  .lede .moves{color:var(--ember);font-weight:600}
+  .lede + .lede{margin-top:.85rem}
+
+  /* ---------- held-constant rail ---------- */
+  .held{
+    margin-top:1.75rem;
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:.9rem 1rem 1rem;
+  }
+  .held h2{
+    font-family:var(--font-mono);
+    font-size:.68rem;
+    font-weight:600;
+    letter-spacing:.15em;
+    text-transform:uppercase;
+    color:var(--violet);
+    margin-bottom:.7rem;
+  }
+  .held dl{
+    display:flex;
+    flex-wrap:wrap;
+    gap:.6rem 2rem;
+  }
+  /* Same px-window-vs-rem-content trap as the frozen column below: a bare 6.5rem floor is
+     104px at 100% but 416px at 400%, so each held-constant pair demanded more width than
+     the page had and the whole document scrolled sideways. The floor only earns its keep
+     while it is smaller than the rail. */
+  .held div{min-width:min(6.5rem,100%)}
+  .held dt{font-size:.75rem;color:var(--muted-2);letter-spacing:.01em}
+  .held dd{
+    font-family:var(--font-mono);
+    font-variant-numeric:tabular-nums;
+    font-size:1rem;
+    color:var(--glass);
+    margin-top:.1rem;
+  }
+  .held dd .unit{
+    font-family:var(--font-ui);
+    font-size:.8em;
+    color:var(--muted);
+    margin-left:.25em;
+  }
+
+  /* ---------- scroll region ---------- */
+  .scroller{
+    margin-top:1.5rem;
+    max-width:100%;
+    overflow-x:auto;
+    overscroll-behavior-x:contain;
+    -webkit-overflow-scrolling:touch;
+    border:1px solid var(--line);
+    border-radius:14px;
+    background:var(--surface);
+    /* The scrollport is measured in px while everything inside it is measured in em.
+       Making it a query container is what lets the rules below compare the two, so the
+       frozen column can never grow past the reading window at large text sizes. */
+    container-type:inline-size;
+  }
+  .scroller:focus-visible{outline:2px solid var(--violet);outline-offset:3px}
+
+  table{
+    border-collapse:collapse;
+    width:100%;
+    /* px, not rem, on purpose: this floor exists to stop the table squashing on a small
+       phone, and a rem floor would scale with the user's text size and inflate the table
+       far past its own min-content width inside a scrollport that did not grow. */
+    min-width:320px;
+    font-variant-numeric:tabular-nums;
+  }
+  /* A caption is normally as wide as the table, so at large text sizes its prose ran off
+     the right edge of the scrollport and had to be read by scrolling sideways. Sized to
+     the container instead, it wraps inside the reading window, and left:0 then genuinely
+     pins it while the table scrolls under it. */
+  caption{
+    caption-side:top;
+    text-align:left;
+    padding:.95rem 1rem .85rem;
+    font-size:.9rem;
+    color:var(--muted);
+    border-bottom:1px solid var(--line);
+    position:sticky;
+    left:0;
+    width:100cqi;
+    box-sizing:border-box;
+  }
+  caption b{display:block;color:var(--glass);font-weight:600;font-size:1rem;margin-bottom:.2rem}
+
+  th,td{
+    padding:.7rem .75rem;
+    text-align:right;
+    white-space:nowrap;               /* numbers never break */
+    border-bottom:1px solid var(--line);
+    vertical-align:bottom;
+  }
+  tbody tr:last-child th,
+  tbody tr:last-child td{border-bottom:0}
+
+  /* header labels wrap; only the data cells stay nowrap. Keeps the table's
+     min-content width small enough to fit a 390px phone without scrolling. */
+  thead th{
+    text-align:right;
+    white-space:normal;
+    font-size:.7rem;
+    font-weight:600;
+    letter-spacing:.05em;
+    text-transform:uppercase;
+    color:var(--muted-2);
+    line-height:1.25;
+    vertical-align:bottom;
+    padding-top:.9rem;
+    border-bottom:1px solid var(--line-strong);
+  }
+  /* sub-labels wrap: if they stayed nowrap they would set each column's min-content
+     width and push the data off-screen on a 390px phone. */
+  thead th .u{
+    display:block;
+    font-family:var(--font-mono);
+    font-size:.66rem;
+    letter-spacing:.02em;
+    text-transform:none;
+    white-space:normal;
+    /* no decorative opacity here: at 10.5px it dropped this label to 3.6:1 on the plate.
+       --muted-2 at full strength is 5.5:1 and still reads as a sub-label. */
+    color:var(--muted-2);
+  }
+
+  /* row header: the delivery, sticky so it survives horizontal scroll and 200% zoom */
+  th[scope="row"]{
+    text-align:left;
+    position:sticky;
+    left:0;
+    background:var(--surface);
+    border-right:1px solid var(--line);
+    font-weight:600;
+    z-index:1;
+  }
+  thead th:first-child{
+    text-align:left;
+    position:sticky;
+    left:0;
+    background:var(--surface);
+    border-right:1px solid var(--line);
+    z-index:2;
+  }
+  th[scope="row"] .loft{
+    font-family:var(--font-mono);
+    font-size:1.05rem;
+    color:var(--glass);
+    display:block;
+  }
+  th[scope="row"] .aa{
+    display:block;
+    font-family:var(--font-mono);
+    font-size:.72rem;
+    font-weight:400;
+    color:var(--muted-2);
+    margin-top:.1rem;
+  }
+  th[scope="row"] .tag{
+    display:inline-block;
+    font-size:.62rem;
+    font-weight:600;
+    letter-spacing:.11em;
+    text-transform:uppercase;
+    line-height:1;
+    margin-top:.4rem;
+    padding:.2rem .35rem;
+    border-radius:4px;
+  }
+  .tag.typical{color:var(--muted);border:1px solid var(--line)}
+  .tag.extreme{color:var(--violet);border:1px solid var(--line-strong)}
+
+  /* The frozen column is sized by text, the scrollport by px, so at 200% text the column
+     grew to 180px of a 308px window and no data cell could ever be brought fully into
+     view — the figure and its rule were always partly under the delivery column. These
+     two steps keep the column earning its place instead of eating the reading window.
+     They sit after the rules they narrow so they actually win the cascade. */
+  @container (max-width:14rem){
+    th[scope="row"],thead th:first-child{max-width:36vw;white-space:normal}
+    /* EXTREME is one unbreakable word, so once the column is capped the badge was the one
+       thing that could not wrap and it painted out over the carry figures. It stops
+       tracking the text size quite so fast; at 200% it is still larger than it is at 100%. */
+    th[scope="row"] .tag{font-size:.52rem;letter-spacing:.05em;padding:.2rem .28rem}
+  }
+  /* And when even a capped column would not leave room for a whole cell, it stops being
+     frozen. Losing the row label while scrolled is recoverable; a permanently clipped
+     number is not. */
+  @container (max-width:9rem){
+    th[scope="row"],thead th:first-child{position:static;max-width:none}
+  }
+
+  td{font-family:var(--font-mono);font-size:.95rem;color:var(--glass)}
+  td.dim{color:var(--muted)}
+
+  /* Carry: the locked channel. The claim is that this column does not move, so the
+     column is drawn as one object: the horizontal rules that separate rows everywhere
+     else are suppressed inside it, and the four identical figures sit on one unbroken
+     plate. The value is still printed per row, because a merged cell would hide which
+     row it belongs to from a screen reader. */
+  th.carry,td.carry{
+    border-left:1px solid var(--line-strong);
+    border-right:1px solid var(--line-strong);
+  }
+  tbody td.carry{
+    border-bottom-color:transparent;
+    background:rgba(157,139,255,.05);
+  }
+  thead th.carry{color:var(--violet)}
+  thead th.carry .u{color:var(--violet);opacity:.8}
+
+  /* apex: the one thing that moves */
+  td.apex{
+    color:var(--ember);
+    font-size:1.15rem;
+    font-weight:600;
+  }
+  td.apex .row{display:flex;align-items:flex-end;justify-content:flex-end;gap:.55rem}
+  /* The rule beside each apex figure. Tall enough that the 27.8 to 41.8 climb is a
+     visible staircase down the column rather than four near-identical ticks; the axis
+     itself is untouched, still linear from 0 on a shared 0–45 yd scale. */
+  .track{
+    display:flex;
+    align-items:flex-end;
+    height:4.2em;
+    flex:0 0 auto;
+  }
+  .tick{
+    display:block;
+    width:5px;
+    border-radius:2.5px;
+    background:var(--ember);
+    height:calc(var(--v) * 4.2em);     /* em-based: survives 200% text zoom */
+    transform-origin:bottom;
+    animation:rise 340ms var(--ease) backwards;
+  }
+  tbody tr:nth-child(1) .tick{animation-delay:0ms}
+  tbody tr:nth-child(2) .tick{animation-delay:55ms}
+  tbody tr:nth-child(3) .tick{animation-delay:110ms}
+  tbody tr:nth-child(4) .tick{animation-delay:165ms}
+  @keyframes rise{
+    from{transform:scaleY(.18);opacity:0}
+    to{transform:scaleY(1);opacity:1}
+  }
+
+  /* ---------- notes ---------- */
+  .note{
+    max-width:68ch;
+    margin-top:1rem;
+    font-size:.85rem;
+    color:var(--muted-2);
+  }
+  .note b{color:var(--muted);font-weight:600}
+
+  .block{margin-top:2rem}
+  .block h2{
+    font-size:1.05rem;
+    font-weight:640;
+    letter-spacing:-.012em;
+    color:var(--glass);
+    margin-bottom:.6rem;
+  }
+  .block p{max-width:68ch;font-size:.92rem;color:var(--muted)}
+  .block p + p{margin-top:.6rem}
+  .block .num{font-family:var(--font-mono);color:var(--glass)}
+
+  .stable{
+    display:flex;
+    flex-wrap:wrap;
+    gap:.55rem .9rem;
+    margin-top:.8rem;
+    padding:0;
+    list-style:none;
+  }
+  .stable li{
+    font-family:var(--font-mono);
+    font-size:.82rem;
+    color:var(--muted);
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:.3rem .55rem;
+  }
+  .stable b{color:var(--glass);font-weight:600}
+
+  .prov{
+    margin-top:2.25rem;
+    padding-top:1rem;
+    border-top:1px solid var(--line);
+    font-size:.76rem;
+    color:var(--muted-2);
+    max-width:74ch;
+  }
+  .prov dt{
+    font-family:var(--font-mono);
+    font-size:.62rem;
+    letter-spacing:.13em;
+    text-transform:uppercase;
+    /* same reason: .8 opacity put these 9.9px labels at 4.07:1 on the page ink. */
+    margin-top:.6rem;
+  }
+  .prov dd{
+    font-family:var(--font-mono);
+    color:var(--muted);
+    overflow-wrap:anywhere;
+    line-height:1.5;
+  }
+
+  @media (max-width:26rem){
+    th,td{padding:.6rem .55rem}
+    td{font-size:.88rem}
+    td.apex{font-size:1.02rem}
+    th[scope="row"] .loft{font-size:.98rem}
+    thead th{font-size:.66rem}
+  }
+
+  /* Reduced motion: no movement, zero information lost — the ticks are simply already there. */
+  @media (prefers-reduced-motion:reduce){
+    .tick{animation:none}
+    *{transition-duration:.01ms !important}
+  }
+</style>
+</head>
+<body>
+<main class="wrap">
+
+  <p class="kicker">Flightglass · constant spin loft</p>
+  <h1>Same carry, different ceiling — <em>the apex window</em></h1>
+
+  <p class="lede">
+    Hold spin loft at 34° and club speed at 95 mph, then trade attack angle for delivered
+    loft one degree for one degree. Along that diagonal the ball does not care which of the
+    two you moved: <strong>every row carries exactly 185.81 yd</strong>, lands at the same
+    50.97°, spins the same 7413 rpm and leaves the face at the same 128.64 mph.
+  </p>
+  <p class="lede">
+    One number moves, and only one. <span class="moves">Apex climbs from 27.8 yd to 41.8 yd,
+    a 14 yd window</span> across the four deliveries. Steeper attack with less loft buys a
+    flat, boring ceiling; shallower attack with more loft buys a high one. Same distance,
+    same landing angle, different flight to get there. That window is the whole choice.
+  </p>
+
+  <section class="held">
+    <h2>Held constant in every row</h2>
+    <dl>
+      <div><dt>Spin loft</dt><dd>34°</dd></div>
+      <div><dt>Club speed</dt><dd>95<span class="unit">mph</span></dd></div>
+      <div><dt>Club path</dt><dd>0°</dd></div>
+      <div><dt>Face angle</dt><dd>0°</dd></div>
+    </dl>
+  </section>
+
+  <div class="scroller" role="region" aria-label="Apex window data table, scrollable horizontally" tabindex="0">
+    <table>
+      <caption>
+        <b>Same carry, different ceiling</b>
+        Four deliveries, one constant-spin-loft diagonal.
+      </caption>
+      <thead>
+        <tr>
+          <th scope="col">Delivery<span class="u">loft · attack</span></th>
+          <th scope="col">Apex<span class="u">yd · ESTIMATE</span></th>
+          <th scope="col" class="carry">Carry<span class="u">yd · unchanged</span></th>
+          <th scope="col">Launch angle<span class="u">deg</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th scope="row">
+            <span class="loft">24°</span>
+            <span class="aa">attack −10°</span>
+            <span class="tag extreme">extreme</span>
+          </th>
+          <td class="apex">
+            <span class="row">
+              <span class="track"><span class="tick" style="--v:0.6177" aria-hidden="true"></span></span>
+              <span>27.8</span>
+            </span>
+          </td>
+          <td class="carry">185.81</td>
+          <td class="dim">10.75°</td>
+        </tr>
+        <tr>
+          <th scope="row">
+            <span class="loft">28°</span>
+            <span class="aa">attack −6°</span>
+            <span class="tag typical">typical</span>
+          </th>
+          <td class="apex">
+            <span class="row">
+              <span class="track"><span class="tick" style="--v:0.6822" aria-hidden="true"></span></span>
+              <span>30.7</span>
+            </span>
+          </td>
+          <td class="carry">185.81</td>
+          <td class="dim">13.58°</td>
+        </tr>
+        <tr>
+          <th scope="row">
+            <span class="loft">34°</span>
+            <span class="aa">attack 0°</span>
+            <span class="tag typical">typical</span>
+          </th>
+          <td class="apex">
+            <span class="row">
+              <span class="track"><span class="tick" style="--v:0.7956" aria-hidden="true"></span></span>
+              <span>35.8</span>
+            </span>
+          </td>
+          <td class="carry">185.81</td>
+          <td class="dim">18.53°</td>
+        </tr>
+        <tr>
+          <th scope="row">
+            <span class="loft">40°</span>
+            <span class="aa">attack +6°</span>
+            <span class="tag extreme">extreme</span>
+          </th>
+          <td class="apex">
+            <span class="row">
+              <span class="track"><span class="tick" style="--v:0.9287" aria-hidden="true"></span></span>
+              <span>41.8</span>
+            </span>
+          </td>
+          <td class="carry">185.81</td>
+          <td class="dim">24.36°</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p class="note">
+    Apex is tagged <b>ESTIMATE</b>: it is engine output, not a measured ball flight. The orange
+    rule beside each apex figure is that same number drawn to scale, measured linearly from 0 yd
+    on one shared 0–45 yd axis. It is not zoomed and it does not exaggerate. The figure is the
+    truth; the rule is only a second reading of it.
+  </p>
+  <p class="note">
+    <b>Typical</b> marks a delivery an ordinary player actually produces. <b>Extreme</b> marks one
+    that is correctly computed and inside the engine domain but outside the normal player window:
+    24° / −10° is a very steep punch, and 40° / +6° cannot be produced off the ground with a
+    mid-iron at all. Both are bounds on the window, not recommendations.
+  </p>
+  <p class="note">
+    So read the 14 yd figure as the full width of the window, not as a shot menu. Between the two
+    <b>typical</b> deliveries on their own, 28° and 34°, apex moves <b>5.1 yd</b>, from 30.7 yd
+    to 35.8 yd. That is the part of the window an ordinary player can actually choose between.
+  </p>
+
+  <hr class="rule" />
+
+  <section class="block">
+    <h2>What else did not move</h2>
+    <p>
+      Carry is the headline, but three more outputs are identical in all four rows. They are not
+      repeated in the table because repeating a constant four times is not evidence, it is noise.
+    </p>
+    <ul class="stable">
+      <li>Landing angle <b>50.97°</b></li>
+      <li>Backspin <b>7413 rpm</b></li>
+      <li>Ball speed <b>128.64 mph</b></li>
+      <li>Smash <b>1.3541</b></li>
+      <li>Total <b>191.57 yd</b></li>
+    </ul>
+  </section>
+
+  <section class="block">
+    <h2>Where the equal-carry claim stops</h2>
+    <p>
+      This diagonal only holds carry constant above a knee at <span class="num">22.83°</span>
+      delivered loft (<span class="num">−11.17°</span> attack). Below it, launch angle drops
+      under 10°, carry launch efficiency falls below 1, and carry starts falling with it.
+    </p>
+    <p>
+      The originally specified grid opened at <span class="num">22°</span> delivered loft, which
+      is under that knee. Re-derived, that row carries <span class="num">180.96</span> yd, which is
+      <span class="num">4.84</span> yd short of the other three, so a single shared carry figure
+      would have been false. The table above therefore opens at <span class="num">24°</span>,
+      the smallest change that makes the premise true; nothing else in the grid moved.
+    </p>
+  </section>
+
+  <dl class="prov">
+    <dt>Engine</dt>
+    <dd>impact-flight.js · solveFlight({dynamicLoft, attackAngle, clubSpeed}); clubPath and faceAngle default 0</dd>
+    <dt>Derived by</dt>
+    <dd>node C:\Users\SkotvoldSivertSende\svingbue\outputs\agent-scan\gen-apex-window-equal-carry.mjs</dd>
+    <dt>Data</dt>
+    <dd>outputs/agent-scan/tabell-apex-window-equal-carry.json · recommendedGrid · generated 2026-07-28T06:16:34.716Z</dd>
+    <dt>Aerodynamics</dt>
+    <dd>PREMIUM_TOUR_CLASS_AERO reports extrapolated:true for every row. That is the normal state for this engine, not an error. No row was clamped.</dd>
+  </dl>
+
+</main>
+</body>
+</html>

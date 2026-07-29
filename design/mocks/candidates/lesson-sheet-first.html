@@ -1,0 +1,1767 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<!-- No maximum-scale: it blocked pinch zoom outright (WCAG 1.4.4), and the usual
+     reason to keep it — iOS auto-zooming a focused text field — does not apply
+     here, because the only input on the screen is a range slider. -->
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="color-scheme" content="dark">
+<title>Backspin &#183; Sheet-first direction</title>
+<!--
+  DIRECTION MOCK — "sheet-first". The lesson IS the instrument.
+  No side-wall scroll: every teaching beat lives in one native sheet with three
+  detents, dragged up over a model that is never hidden. Back is a gesture.
+
+  WHAT THIS DIRECTION COMMITS TO
+  ------------------------------
+  · The detent is the reading altitude. peek = drive the model, half = the claim,
+    full = the evidence. It is a real button and answers Arrow/Home/End, because
+    the primary navigation of a screen can never be gesture-only.
+  · The model degrades by dropping facts, never by shrinking one. Under ~178 px
+    of band the trajectory is replaced by the spin axis (spinScale) — a 155 m
+    carry squashed into 90 px reads as a flat shot, and a visual that understates
+    is as untrue as one that exaggerates.
+  · The sheet raises itself when the lesson has something to say. Crediting a
+    mission stage is the answer to the golfer's own delivery, so the sheet comes
+    up to acknowledge it. It never passes half; one drag puts it back.
+  · Colour carries the causal claim. Violet = geometry the golfer sets (sliders,
+    wedge, rays, spin loft). Ember = the engine's single answer (rpm + trace) —
+    exactly one warm focal per beat, asserted by the harness, not by eye.
+    Gold takes over only on Result, where ember steps back to violet.
+  · The model prints the lesson's own term on itself: the spin-loft wedge is
+    drawn at readable size with its live value, so the reader never has to leave
+    the instrument to find what the lesson is about.
+
+  NUMBERS
+  -------
+  Every figure on screen is live engine output. Nothing is frozen, nothing typed
+  by hand. The imports below are the production modules, untouched:
+
+      import { solveBackspinState, backspinSensitivity, buildCauseChain,
+               realWorldRange, advanceMission, passesStoppingFlightTarget,
+               BACKSPIN_PARAMS, INITIAL_BACKSPIN_STATE }
+        from '../../../academy-backspin-model.js';
+      import { trajectorySamples } from '../../../impact-flight.js';
+
+  academy-backspin-model.js calls solveFlight() from impact-flight.js on every
+  state change. Spot-check of the boot state, re-derived 2026-07-28 with:
+
+      node --input-type=module -e "import {solveBackspinState} from
+        './academy-backspin-model.js';
+        console.log(solveBackspinState({dynamicLoft:25,attackAngle:-3,ballSpeed:120}))"
+
+      -> rpm 4609 · rawRpm 4609 · spinLoft 28 · ballSpeed 120
+         carryM 155 · apexM 26 · landingAngle 49.6 · displayLimit null
+
+  Further states shown by this mock, re-derived from the same call on the same
+  date (dynamicLoft, attackAngle=-3, ballSpeed=120 unless stated):
+
+      36°           -> 8625 rpm            (mission "build" stage credits)
+      12°           -> 2282 rpm            (mission "cut" stage credits)
+      48°           -> 9000 shown / 11751 raw, displayLimit "ceiling"
+      32°           -> 7319 rpm, landing 51.1°  (both mastery gates pass)
+      30°/-3°       -> 6485 rpm, spinLoft 33°, apex 28 m   (myth "before")
+      30°/-6°       -> 7688 rpm, spinLoft 36°, apex 27 m   (myth "ground")
+      34°/+1°       -> 6485 rpm, spinLoft 33°, apex 31 m   (myth "loft-alone")
+      44°/-4°       -> 9000 shown / 10967 raw              (myth "more-is-better")
+      backspinSensitivity(boot) -> loft +290, attack -250, speed +39 rpm/step
+      realWorldRange(4609,[.35,.70]) -> 1613-3226 rpm (Flyer estimate layer)
+
+  Carry is 155 m at every one of those states. That is not a bug in the mock —
+  it is the decoupling the lesson exists to teach, and the reason Carry sits in
+  the rail unchanged while the trace visibly changes shape.
+
+  COPY
+  ----
+  Lesson prose, myth experiments and mastery tasks are verbatim from
+  academy-native-lesson.js (SHEETS L49-95, MYTH_EXPERIMENTS L116-144,
+  MASTERY_TASKS L146-177, LIE_ESTIMATES L97-114). No invented pedagogy.
+
+  VERIFIED
+  --------
+  outputs/agent-scan/sf-harness.html drives this file in an iframe at 375x812
+  and 430x932 and re-derives every displayed figure from the engine itself.
+  Reported SF PASS on 2026-07-28: engine parity, no horizontal scroll, every
+  control >=44 px on all six beats, detent reachable by keyboard alone, model
+  band >=150 px at every detent, exactly one ember element per beat, arrow keys
+  on both radiogroups, term page modal with focus returned, no tab stop inside
+  the closed term page, mission gates and ceiling disclosure driven by
+  solveFlight() output.
+
+  The ">=150 px band at every detent" claim holds at the default root font. At a
+  200 % root font the instrument itself is taller than that reserve, and the
+  sheet now takes the room it needs so the lesson keeps a reading window; the
+  band then falls to the reduced instrument, and below 34 px the canvas says so
+  in its own accessible name. See measure() and describe().
+
+  Re-measured 2026-07-28 at 390x844, root 16 px and 32 px, both motion settings:
+
+  · Ceiling disclosure. It used to float in the model layer and the sheet covered
+    61 % of it at a 200 % root font — elementFromPoint at its own centre returned
+    the drag handle. It is now a row in the rail, under the figure it qualifies:
+    100 % of it hit-tests to itself at peek, half and full, at both root sizes,
+    and no figure inside it is clipped. Non-ceiling states are unchanged to the
+    pixel (peek/half/full = 543/405/150 at 16 px, 182/82/82 at 32 px).
+  · Canvas ink. Every stroke the model draws now clears 3:1 on Ink and every
+    9.5 px caption clears 4.5:1; rank moved from fade to weight and dash.
+  · The cost, stated plainly: at a 200 % root font AND the ceiling showing, the
+    rail is 756 of 844 px and the model has no room to draw at any detent. That
+    is forced arithmetic, not a preference — the sentence and the model cannot
+    both fit — and the handle now says so instead of offering a model it cannot
+    deliver. Below 200 %, or off the ceiling, all three altitudes are unchanged.
+
+  This file writes nothing outside itself and modifies no engine.
+-->
+<style>
+  :root{
+    --ink:#07060C;
+    --sheet:#12101C;
+    --sheet-2:#191627;
+    --glass:#F5F2ED;
+    --ember:#FF8A4D;
+    --violet:#9D8BFF;
+    --gold:#E8B959;
+    --dim:#A79FC0;
+    --rule:rgba(157,139,255,.18);
+    --rule-soft:rgba(157,139,255,.10);
+
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+    --serif:"Iowan Old Style",Palatino,"Palatino Linotype",Georgia,serif;
+    --mono:ui-monospace,"SF Mono","JetBrains Mono","Cascadia Mono",Menlo,Consolas,monospace;
+
+    --drawer:cubic-bezier(.32,.72,0,1);
+    --out:cubic-bezier(.23,1,.32,1);
+
+    --sat:env(safe-area-inset-top);
+    --sab:env(safe-area-inset-bottom);
+    --sal:env(safe-area-inset-left);
+    --sar:env(safe-area-inset-right);
+  }
+
+  *,*::before,*::after{box-sizing:border-box}
+  html,body{height:100%;margin:0;overscroll-behavior:none}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    background:var(--ink); color:var(--glass);
+    font-family:var(--sans); font-size:16px; line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+    -webkit-tap-highlight-color:transparent;
+    overflow:hidden;
+  }
+  button,input,[role="radio"],[role="tab"]{font:inherit;color:inherit;-webkit-tap-highlight-color:transparent}
+  button{background:none;border:0;padding:0;cursor:pointer}
+  .sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
+      clip-path:inset(50%);white-space:nowrap;border:0}
+
+  :focus-visible{outline:2px solid var(--ember);outline-offset:3px;border-radius:6px}
+  /* Containers we move focus to for screen-reader continuity are not keyboard
+     stops, so they must not draw a ring the sighted user cannot act on. */
+  .beat:focus,.beat:focus-visible,.term:focus,.term:focus-visible{outline:none}
+
+  /* ── Destination behind the shell. Revealed by the back gesture. ───────── */
+  .path{
+    position:fixed;inset:0;z-index:0;
+    padding:calc(var(--sat) + 4.5rem) calc(1.5rem + var(--sar)) calc(var(--sab) + 2rem) calc(1.5rem + var(--sal));
+    display:flex;flex-direction:column;gap:1.5rem;
+    background:var(--ink);
+  }
+  .path__kicker{font-size:.75rem;letter-spacing:.14em;text-transform:uppercase;color:var(--violet);margin:0}
+  .path__title{font-family:var(--serif);font-weight:400;font-size:2rem;line-height:1.08;
+    letter-spacing:-.02em;margin:.35rem 0 0}
+  .path__list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+  .path__list li{
+    display:flex;align-items:center;gap:.9rem;min-height:56px;
+    border-top:1px solid var(--rule-soft);color:var(--dim);font-size:.95rem;
+  }
+  .path__list li:last-child{border-bottom:1px solid var(--rule-soft)}
+  .path__list li b{font-weight:600;color:var(--glass)}
+  .path__pip{width:9px;height:9px;border-radius:50%;background:var(--rule);flex:none}
+  .path__list li[data-current] .path__pip{background:var(--ember)}
+  .path__list li[data-done] .path__pip{background:var(--violet)}
+  .path__resume{
+    align-self:flex-start;min-height:48px;padding:0 1.35rem;border-radius:999px;
+    background:var(--ember);color:#160A02;font-weight:650;letter-spacing:-.01em;
+    transition:transform 160ms var(--out);
+  }
+  .path__resume:active{transform:scale(.97)}
+
+  /* ── Shell: model + sheet. Translated by the back gesture. ─────────────── */
+  .shell{
+    position:fixed;inset:0;z-index:1;background:var(--ink);
+    transform:translate3d(0,0,0);
+    will-change:transform;
+  }
+  .shell[data-settling]{transition:transform 320ms var(--drawer)}
+  body[data-departed] .shell{transform:translate3d(100%,0,0)}
+  .shell::before{ /* the edge the gesture lives on */
+    content:"";position:absolute;top:0;left:0;width:2px;height:100%;
+    background:linear-gradient(to bottom,transparent,var(--rule) 22%,var(--rule) 78%,transparent);
+    opacity:0;transition:opacity 200ms var(--out);pointer-events:none;
+  }
+  .shell[data-edge]::before{opacity:1}
+
+  /* ── The model. Always drawn, never removed. ───────────────────────────── */
+  #model{position:absolute;inset:0;display:block;width:100%;height:100%}
+
+  .back{
+    position:absolute;z-index:3;
+    top:calc(var(--sat) + .5rem); left:calc(var(--sal) + .5rem);
+    width:44px;height:44px;border-radius:50%;
+    display:grid;place-items:center;color:var(--dim);
+    transition:transform 160ms var(--out),color 160ms ease;
+    user-select:none;-webkit-user-select:none;
+  }
+  .back:active{transform:scale(.94);color:var(--glass)}
+  .back svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.7;
+    stroke-linecap:round;stroke-linejoin:round}
+
+  /* The ceiling disclosure qualifies ONE number — the rpm readout — so it lives
+     with that number, not in the model layer. As a badge floating over the model
+     it was addressed to the viewport (top-right, z-index 3) while the sheet that
+     covers it (z-index 4) moves independently: at a 200 % root font the sheet
+     took 79 of its 129 px, elementFromPoint at the badge's own centre returned
+     the drag handle, and a tap where the warning is SEEN changed the detent.
+     No amount of repositioning fixes that, because at 200 % the model layer is
+     82 px tall and the disclosure needs 129 — the model band can be consumed
+     entirely, and by this direction's own premise the rail cannot. So the fact
+     that the display is capped now sits directly under the capped figure. */
+  /* flex-wrap, and it is not cosmetic: renderRail writes a sentence whose figures
+     are <b> elements, so a flex row makes each text run and each figure its own
+     item. Un-wrapped they shrink to min-content and the last one — the raw model
+     value, the whole point of the disclosure — was cut off at the right edge at
+     a 200 % root font. Wrapping lets the sentence behave like a sentence. */
+  .limit{
+    display:flex;flex-wrap:wrap;align-items:center;gap:0 .5rem;
+    width:100%;min-height:44px;margin:.55rem 0 -.15rem;
+    padding:.45rem .7rem;border-radius:12px;
+    background:rgba(255,138,77,.13);
+    color:var(--ember);font-size:.78rem;line-height:1.3;text-align:left;
+    transition:transform 160ms var(--out),opacity 200ms var(--out);
+  }
+  .limit[hidden]{display:none}
+  .limit:active{transform:scale(.97)}
+  .limit b{font-family:var(--mono);font-weight:600;letter-spacing:-.01em}
+
+  /* ── Sheet ─────────────────────────────────────────────────────────────── */
+  .sheet{
+    position:absolute;left:0;right:0;bottom:0;z-index:4;
+    height:100%;
+    border-radius:20px 20px 0 0;
+    background:var(--sheet);
+    border-top:1px solid var(--rule);
+    display:flex;flex-direction:column;
+    transform:translate3d(0,100%,0);
+    will-change:transform;
+    padding-left:var(--sal);padding-right:var(--sar);
+    overflow:hidden;
+  }
+  .sheet[data-settling]{transition:transform 420ms var(--drawer)}
+
+  /* Rail: the instrument. Present at every detent, on every beat. */
+  .rail{
+    flex:none;position:relative;
+    padding:0 1.15rem .5rem;
+    touch-action:none;
+    user-select:none;-webkit-user-select:none;
+  }
+  /* 44px of real target around a 38×4 handle: the affordance stays a hairline,
+     the hit area is native-sized, and the same element is the keyboard control. */
+  .grab{display:flex;align-items:center;justify-content:center;
+    width:100%;height:44px;margin:-.45rem 0 -.35rem;touch-action:none}
+  /* Grabber sits alone and centered in a fixed 44px flex parent, so scaleX is
+     pixel-identical to the 38→46px width it replaces — and costs no layout.
+     Base width is the grown size; rest state scales down (38/46 = .826). */
+  .grab i{display:block;width:46px;height:4px;border-radius:2px;background:var(--rule);
+    transform:scaleX(.826);transform-origin:center;
+    transition:background 180ms ease,transform 260ms var(--out)}
+  .grab:active i{background:var(--dim);transform:scaleX(1)}
+  .grab:focus-visible{outline:none}
+  .grab:focus-visible i{background:var(--ember);transform:scaleX(1);
+    box-shadow:0 0 0 3px rgba(255,138,77,.28)}
+
+  /* At a large root font the beat name and the 2.55rem readout no longer fit on
+     one line, and the readout used to be clipped off the right edge of a sheet
+     that hides its overflow. They wrap instead: nothing is lost at 200 %, and at
+     the default size the row has slack to spare so nothing moves. */
+  .rail__top{display:flex;align-items:flex-end;justify-content:space-between;gap:1rem;
+    flex-wrap:wrap}
+  .beatname{margin:0;font-size:.72rem;letter-spacing:.15em;text-transform:uppercase;
+    color:var(--violet);white-space:nowrap}
+  .steps{display:flex;gap:5px;margin-top:.45rem;align-items:center}
+  /* Colour animates, width does not. Changing beat is discrete navigation, and
+     tweening a layout property on six siblings buys nothing but reflow. */
+  .steps i{display:block;width:14px;height:3px;border-radius:2px;background:var(--rule);
+    transition:background 200ms ease}
+  .steps i[data-on]{background:var(--dim)}
+  .steps i[data-now]{background:var(--violet);width:26px}
+
+  .truth{text-align:right;line-height:1;margin-left:auto}
+  .truth output{
+    display:block;font-family:var(--mono);font-weight:600;
+    font-size:2.55rem;letter-spacing:-.035em;color:var(--ember);
+    font-variant-numeric:tabular-nums;
+  }
+  .truth small{display:block;margin-top:.3rem;font-size:.7rem;letter-spacing:.13em;
+    text-transform:uppercase;color:var(--dim)}
+
+  .chips{display:flex;gap:.4rem;margin:.8rem 0 .1rem;flex-wrap:wrap}
+  .chips button{
+    flex:1 1 0;min-height:44px;padding:0 .5rem;border-radius:12px;
+    background:var(--sheet-2);color:var(--dim);
+    font-size:.8rem;font-weight:550;letter-spacing:-.01em;
+    transition:background 180ms ease,color 180ms ease,transform 160ms var(--out);
+  }
+  .chips button:active{transform:scale(.97)}
+  .chips button[aria-checked="true"]{background:rgba(157,139,255,.17);color:var(--glass)}
+
+  .slot{display:flex;align-items:baseline;justify-content:space-between;
+    margin:.75rem 0 -.15rem}
+  .slot span{font-size:.82rem;color:var(--dim)}
+  .slot output{font-family:var(--mono);font-size:1rem;font-weight:600;color:var(--glass);
+    font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+
+  input[type=range]{
+    -webkit-appearance:none;appearance:none;
+    width:100%;height:44px;background:transparent;display:block;margin:0;
+    touch-action:none;
+  }
+  /* Colour carries the causal claim, not decoration: violet is every geometry
+     the golfer sets, ember is the single outcome the engine returns. The inputs
+     are therefore violet end to end — track, thumb, wedge rays — which leaves
+     the rpm readout and its trace as the one warm focal on the screen. */
+  input[type=range]::-webkit-slider-runnable-track{
+    height:3px;border-radius:2px;
+    background:linear-gradient(to right,var(--violet) var(--fill,50%),var(--rule) var(--fill,50%));
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;appearance:none;
+    width:26px;height:26px;border-radius:50%;margin-top:-11.5px;
+    background:var(--violet);box-shadow:0 2px 10px rgba(7,6,12,.65);
+  }
+  input[type=range]::-moz-range-track{height:3px;border-radius:2px;background:var(--rule)}
+  input[type=range]::-moz-range-progress{height:3px;border-radius:2px;background:var(--violet)}
+  input[type=range]::-moz-range-thumb{
+    width:26px;height:26px;border:0;border-radius:50%;background:var(--violet);
+    box-shadow:0 2px 10px rgba(7,6,12,.65);
+  }
+
+  /* minmax(0,…) instead of 1fr, for the same reason as .ab: the mono readouts
+     set a min-content width that at a 200 % root font pushed the row 28 px past
+     a 320 px rail, and the sheet clips rather than scrolls, so the figures were
+     simply cut off. The columns yield and the numbers stay whole. */
+  .outs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.15rem;
+    border-top:1px solid var(--rule-soft);padding-top:.6rem;margin-top:.25rem}
+  .outs>*{text-align:left;min-height:44px;display:flex;flex-direction:column;
+    justify-content:center;gap:.15rem;border-radius:10px;padding:0 .1rem;
+    transition:transform 160ms var(--out)}
+  .outs button:active{transform:scale(.97)}
+  .outs span{font-size:.68rem;letter-spacing:.11em;text-transform:uppercase;color:var(--dim)}
+  .outs strong{font-family:var(--mono);font-size:1.02rem;font-weight:600;letter-spacing:-.02em;
+    font-variant-numeric:tabular-nums}
+  .outs button span::after{content:" ⓘ";color:var(--violet);letter-spacing:0}
+  /* Spin loft is the wedge the model draws. It is a cause, so it is violet —
+     and the model prints the same number on the wedge itself, which is the link
+     the two need. No second warm accent is spent on it. */
+  .outs button[data-term="spinLoft"] strong{color:var(--violet)}
+
+  /* Stack: beats + pushed term page */
+  .stack{position:relative;flex:1 1 auto;min-height:0}
+  .beats,.term{
+    position:absolute;inset:0;overflow-y:auto;overscroll-behavior:contain;
+    -webkit-overflow-scrolling:touch;
+    /* The sheet is a full viewport tall and slid down by (vh − detent), so the
+       bottom (vh − detent) px of this scroller hang below the fold. Without the
+       matching scroll room the last thing in a beat — the primary action — could
+       not be brought on screen at ANY detent. --overhang is written once per
+       settled detent, never per drag frame. */
+    padding:.35rem 1.15rem calc(1.5rem + var(--sab) + var(--overhang,0px));
+    /* Overlay scrollbars on the platforms this ships to; a persistent desktop
+       gutter inside a drag-to-resize sheet reads as a web page, not an app. */
+    scrollbar-width:none;
+  }
+  .beats::-webkit-scrollbar,.term::-webkit-scrollbar{width:0;height:0}
+  .term{
+    background:var(--sheet);
+    transform:translate3d(100%,0,0);opacity:0;pointer-events:none;
+    transition:transform 260ms var(--out),opacity 180ms ease;
+  }
+  .term[data-open]{transform:translate3d(0,0,0);opacity:1;pointer-events:auto}
+  /* A definition is modal, so the instrument behind it must look unavailable
+     rather than merely be unavailable. */
+  #model,.rail{transition:opacity 220ms var(--out)}
+  body[data-term] #model{opacity:.3}
+  body[data-term] .rail{opacity:.4}
+  .beats{transition:transform 260ms var(--out),opacity 180ms ease}
+  .beats[data-pushed]{transform:translate3d(-14%,0,0);opacity:0}
+
+  .beat{display:none;padding-top:.4rem}
+  .beat[data-active]{display:block;animation:rise 300ms var(--out) both}
+  @keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+  .beat h1,.beat h2,.term h2{
+    font-family:var(--serif);font-weight:400;letter-spacing:-.02em;
+    font-size:1.95rem;line-height:1.1;margin:.15rem 0 .55rem;text-wrap:balance;
+    /* A 1.95rem serif word at a 200 % root font is wider than the column. */
+    overflow-wrap:break-word;
+  }
+  .lede{font-size:1.02rem;color:var(--glass);margin:0 0 1.1rem;max-width:38ch}
+  .beat p,.term p{color:var(--dim);margin:0 0 .85rem;max-width:42ch}
+  .beat p strong,.term p strong{color:var(--glass);font-weight:600}
+  .beat p b,.term p b{color:var(--glass);font-weight:600}
+  .kicker{font-size:.72rem;letter-spacing:.15em;text-transform:uppercase;
+    color:var(--violet);margin:0}
+
+  .formula{font-family:var(--mono);font-size:.92rem;color:var(--glass);
+    background:var(--sheet-2);border-radius:10px;padding:.7rem .85rem;letter-spacing:-.01em}
+
+  .stages{display:flex;flex-direction:column;gap:.1rem;margin:0 0 1rem}
+  .stage{display:flex;gap:.85rem;align-items:center;min-height:56px;
+    border-top:1px solid var(--rule-soft)}
+  .stage:last-child{border-bottom:1px solid var(--rule-soft)}
+  .stage i{flex:none;width:10px;height:10px;border-radius:50%;background:var(--rule);
+    transition:background 240ms var(--out),box-shadow 240ms var(--out)}
+  .stage[data-complete] i{background:var(--glass);box-shadow:0 0 0 4px rgba(245,242,237,.10)}
+  .stage p{margin:0;color:var(--dim);font-size:.86rem}
+  .stage p strong{display:block;color:var(--glass);font-size:.98rem;font-weight:600}
+  .stage[data-complete] p{color:var(--glass)}
+
+  .support{font-size:.8rem;line-height:1.55;color:var(--dim);max-width:44ch;margin:0 0 1rem}
+
+  .chain{
+    font-family:var(--mono);font-size:.8rem;line-height:1.7;color:var(--dim);
+    letter-spacing:-.01em;margin:0 0 1rem;
+  }
+  .chain b{color:var(--glass);font-weight:600}
+  .chain span{display:block}
+  .chain span::before{content:"› ";color:var(--violet)}
+
+  .infl{display:flex;flex-direction:column;gap:.1rem;margin:0 0 1.1rem}
+  .infl button{
+    display:block;width:100%;text-align:left;min-height:56px;padding:.6rem 0;
+    border-top:1px solid var(--rule-soft);
+  }
+  .infl button:last-child{border-bottom:1px solid var(--rule-soft)}
+  /* Same treatment as the rail: at a 200 % root font the label's longest word and
+     the nowrap measurement cannot share a line, so the measurement drops to its
+     own. Nothing breaks mid-word and nothing spills out of the row. */
+  .infl .row{display:flex;justify-content:space-between;align-items:baseline;gap:1rem;
+    flex-wrap:wrap}
+  .infl .row span{font-size:.92rem;color:var(--glass);font-weight:550;min-width:0}
+  .infl .row em{font-family:var(--mono);font-style:normal;font-size:.82rem;color:var(--dim);
+    font-variant-numeric:tabular-nums;letter-spacing:-.01em;white-space:nowrap}
+  /* The track was the same weight and nearly the same colour as the row rule
+     above it, so the bar read as a second divider. It is now inset, taller and
+     unmistakably a measurement. */
+  .infl .bar{height:6px;border-radius:3px;background:rgba(157,139,255,.10);
+    margin-top:.55rem;overflow:hidden}
+  .infl .bar i{display:block;height:100%;width:100%;border-radius:3px;background:var(--violet);
+    transform-origin:left center;transition:transform 260ms var(--out)}
+  /* The strongest lever is marked by brightness, not by a second warm accent. */
+  .infl button[data-lead] .bar i{background:var(--glass)}
+  .infl button[data-lead] .row span{color:var(--glass);font-weight:650}
+
+  .seg{display:flex;gap:.4rem;margin:0 0 1rem}
+  .seg button{flex:1 1 0;min-height:44px;border-radius:12px;background:var(--sheet-2);
+    color:var(--dim);font-size:.82rem;font-weight:550;
+    transition:background 180ms ease,color 180ms ease,transform 160ms var(--out)}
+  .seg button:active{transform:scale(.97)}
+  .seg button[aria-checked="true"]{background:rgba(157,139,255,.17);color:var(--glass)}
+
+  .estimate{
+    display:block;width:100%;text-align:left;border-radius:14px;padding:.9rem 1rem;
+    background:var(--sheet-2);margin:0 0 1.1rem;
+    transition:transform 160ms var(--out);
+  }
+  .estimate:active{transform:scale(.99)}
+  .estimate[hidden]{display:none}
+  .estimate em{display:block;font-style:normal;font-size:.68rem;letter-spacing:.13em;
+    text-transform:uppercase;color:var(--violet)}
+  .estimate strong{display:block;font-family:var(--mono);font-size:1.35rem;font-weight:600;
+    letter-spacing:-.025em;margin:.3rem 0 .25rem;color:var(--glass)}
+  .estimate small{display:block;font-size:.76rem;color:var(--dim);line-height:1.45}
+
+  .quiz{margin:0 0 1rem}
+  .quiz p.q{color:var(--glass);font-size:1.02rem;margin:0 0 .9rem;max-width:38ch}
+  .quiz .opts{display:flex;flex-direction:column;gap:.45rem}
+  .quiz .opts button{
+    text-align:left;min-height:52px;padding:.75rem .95rem;border-radius:14px;
+    background:var(--sheet-2);color:var(--glass);font-size:.92rem;line-height:1.35;
+    transition:background 180ms ease,transform 160ms var(--out);
+  }
+  .quiz .opts button:active{transform:scale(.98)}
+  /* Right and wrong must differ by more than hue, or the answer is invisible to
+     a colour-blind reader: the correct choice gains weight and a solid marker,
+     the discarded one loses both. */
+  .quiz .opts button[data-pick]::before{
+    content:"";float:right;width:9px;height:9px;border-radius:50%;margin:.35rem 0 0 .7rem}
+  .quiz .opts button[data-pick="right"]{background:rgba(245,242,237,.10);color:var(--glass);font-weight:600}
+  .quiz .opts button[data-pick="right"]::before{background:var(--glass)}
+  .quiz .opts button[data-pick="wrong"]{background:transparent;color:var(--dim);opacity:.62}
+  .quiz .opts button[data-pick="wrong"]::before{box-shadow:inset 0 0 0 1px var(--rule)}
+  .quiz .why{margin:.9rem 0 0;color:var(--dim);max-width:42ch}
+  .quiz .why[hidden]{display:none}
+
+  /* minmax(0,…) instead of 1fr: the mono figures set a min-content width that at
+     a 200 % root font pushed the A/B block past the sheet and gave the beat
+     column its own sideways scroll. The columns yield and the text breaks. */
+  .ab{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.5rem;margin:0 0 .9rem}
+  .ab div{background:var(--sheet-2);border-radius:14px;padding:.8rem .9rem;
+    min-width:0;overflow-wrap:anywhere}
+  .ab em{display:block;font-style:normal;font-size:.68rem;letter-spacing:.13em;
+    text-transform:uppercase;color:var(--violet)}
+  .ab strong{display:block;font-family:var(--mono);font-size:1.3rem;font-weight:600;
+    letter-spacing:-.025em;margin:.3rem 0 .1rem;font-variant-numeric:tabular-nums}
+  .ab small{display:block;font-family:var(--mono);font-size:.72rem;color:var(--dim);
+    letter-spacing:-.01em}
+
+  .gates{display:flex;flex-direction:column;gap:.1rem;margin:.2rem 0 1rem}
+  .gate{display:flex;align-items:center;gap:.8rem;min-height:52px;
+    border-top:1px solid var(--rule-soft)}
+  .gate:last-child{border-bottom:1px solid var(--rule-soft)}
+  .gate i{flex:none;width:10px;height:10px;border-radius:50%;background:var(--rule);
+    transition:background 240ms var(--out)}
+  .gate[data-met] i{background:var(--glass);box-shadow:0 0 0 4px rgba(245,242,237,.10)}
+  .gate span{font-size:.9rem;color:var(--dim)}
+  .gate[data-met] span{color:var(--glass)}
+  .gate b{font-family:var(--mono);margin-left:auto;font-size:.86rem;font-weight:600;
+    color:var(--glass);font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+
+  .seal{
+    font-family:var(--mono);font-size:.76rem;letter-spacing:.13em;text-transform:uppercase;
+    color:var(--gold);margin:0 0 .6rem;
+  }
+  .abilities{list-style:none;margin:0 0 1.2rem;padding:0}
+  .abilities li{display:flex;gap:.8rem;align-items:center;min-height:48px;
+    border-top:1px solid var(--rule-soft);color:var(--dim);font-size:.9rem}
+  .abilities li:last-child{border-bottom:1px solid var(--rule-soft)}
+  .abilities li i{flex:none;width:8px;height:8px;border-radius:50%;background:var(--gold)}
+
+  .nav{display:flex;gap:.6rem;margin:1.4rem 0 .4rem}
+  .nav button{
+    min-height:52px;border-radius:14px;padding:0 1.2rem;font-weight:600;
+    letter-spacing:-.01em;transition:transform 160ms var(--out),opacity 180ms ease;
+  }
+  .nav button:active{transform:scale(.98)}
+  .nav .prev{background:var(--sheet-2);color:var(--dim);flex:none}
+  /* The one warm focal on every beat is the engine's live answer — the rpm and
+     the trace it draws. The primary action therefore cannot also be warm; it
+     takes the brightest neutral instead, which reads as forward and never
+     competes with the number the lesson is about. */
+  .nav .next{background:var(--glass);color:#0C0A14;flex:1 1 auto}
+  /* Only on the Result beat does warmth change hands: the trace and the readout
+     go violet, and gold — earned mastery — becomes the single warm mark. */
+  body[data-focal="gold"] .nav .next{background:var(--gold);color:#1A1204}
+  body[data-focal="gold"] .truth output{color:var(--violet)}
+  .nav button[disabled]{opacity:.32;pointer-events:none}
+
+  .termhead{display:flex;align-items:center;gap:.6rem;margin:.2rem 0 .5rem}
+  .termback{width:44px;height:44px;margin-left:-.6rem;border-radius:50%;
+    display:grid;place-items:center;color:var(--violet);
+    transition:transform 160ms var(--out)}
+  .termback:active{transform:scale(.94)}
+  .termback svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.8;
+    stroke-linecap:round;stroke-linejoin:round}
+
+  .live{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+
+  /* Reduced motion removes movement, never behaviour: the sheet still changes
+     detent, the term page still becomes modal, the stage still credits — each
+     one arrives instead of travelling. Only the width and transform tweens go. */
+  @media (prefers-reduced-motion:reduce){
+    .sheet[data-settling],.shell[data-settling],.term,.beats,.steps i,.infl .bar i,
+    .stage i,.gate i,.grab i,#model,.rail{transition-duration:1ms !important}
+    .beat[data-active]{animation-duration:1ms}
+    /* Focus and press still change colour — only the size change is dropped. */
+    .grab:active i,.grab:focus-visible i{transform:scaleX(.826)}
+    .back:active,.nav button:active,.chips button:active,.quiz .opts button:active,
+    .seg button:active,.outs button:active,.estimate:active,.path__resume:active,
+    .termback:active,.limit:active{transform:none}
+  }
+</style>
+</head>
+<body>
+
+<!-- Destination revealed by the left-edge back gesture. Real curriculum goal.
+     aria-hidden alone left #resume as the FIRST tab stop on the page — and a
+     live tab stop inside the term page's modal. inert is the half that actually
+     removes it; both are lifted together in leave(). -->
+<div class="path" id="path" aria-hidden="true" inert>
+  <p class="path__kicker">Academy goal</p>
+  <h2 class="path__title" id="pathTitle">Control launch and flight</h2>
+  <ul class="path__list" id="pathList"></ul>
+  <button type="button" class="path__resume" id="resume">Resume Backspin</button>
+</div>
+
+<div class="shell" id="shell">
+  <!-- The canvas carries the whole premise, so it is an image with a name that
+       states what the model SHOWS right now. draw() rewrites the label on every
+       state change, and it names the reduced instrument when the band is too
+       short for an honest trajectory — the insight, not "there is a picture". -->
+  <canvas id="model" role="img" aria-label="Ball-flight model">Ball-flight model.
+    Every figure it draws is also printed on the rail below.</canvas>
+
+  <button type="button" class="back" id="back" aria-label="Back to Academy goal. Or swipe from the left edge.">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+  </button>
+
+  <section class="sheet" id="sheet" role="region" aria-label="Backspin lesson">
+
+    <!-- RAIL — the instrument. Never leaves the screen, on any beat. -->
+    <div class="rail" id="rail">
+      <!-- The detent is the primary navigation of this direction, so it can never
+           be gesture-only: the handle is a real 44px button that cycles
+           peek → half → full, and Arrow keys drive it directly. -->
+      <button type="button" class="grab" id="grab" aria-controls="beats">
+        <i aria-hidden="true"></i><span class="sr" id="grabLabel">Raise sheet</span>
+      </button>
+
+      <div class="rail__top">
+        <div>
+          <p class="beatname" id="beatName">Mission</p>
+          <div class="steps" id="steps" role="presentation"></div>
+        </div>
+        <div class="truth">
+          <output id="rpm" for="range">—</output>
+          <small>rpm backspin</small>
+        </div>
+      </div>
+
+      <!-- Sits under the readout it corrects, inside the one surface this
+           direction guarantees is on screen at every detent. -->
+      <button type="button" class="limit" id="limit" hidden></button>
+
+      <div class="chips" id="chips" role="radiogroup" aria-label="Choose an input"></div>
+
+      <label class="slot" for="range">
+        <span id="rangeLabel">Dynamic loft</span>
+        <output id="rangeValue" for="range">25°</output>
+      </label>
+      <input id="range" type="range" aria-describedby="chain">
+
+      <div class="outs">
+        <button type="button" data-term="spinLoft"><span>Spin loft</span><strong id="oSpin">—</strong></button>
+        <button type="button" data-term="carry"><span>Carry</span><strong id="oCarry">—</strong></button>
+        <div><span>Landing</span><strong id="oLand">—</strong></div>
+      </div>
+    </div>
+
+    <!-- STACK — beats, and the term page that pushes over them. -->
+    <div class="stack">
+      <div class="beats" id="beats">
+
+        <!-- 0 · Mission -->
+        <article class="beat" data-beat="0" data-active tabindex="-1" aria-labelledby="h0">
+          <h1 id="h0">Build, then cut</h1>
+          <p class="lede">First build at least <strong>7,000 rpm</strong>. After that stage is credited,
+            cut the same 7-iron model below <strong>3,500 rpm</strong>.</p>
+          <div class="stages">
+            <!-- Credit was carried by a filled dot and a text colour alone. -->
+            <div class="stage" id="stBuild"><i aria-hidden="true"></i>
+              <p><strong>Build the spin</strong>Reach 7,000 rpm<span class="sr" data-state></span></p></div>
+            <div class="stage" id="stCut"><i aria-hidden="true"></i>
+              <p><strong>Cut it in half</strong>Then drop below 3,500 rpm<span class="sr" data-state></span></p></div>
+          </div>
+          <p class="support">The low-spin stage is a delivery experiment. It is not a driver simulation.
+            One 7-iron preset · centered, clean/dry contact. Friction, grooves, moisture, strike
+            location and ball/face properties are not modeled.</p>
+          <div class="nav"><button type="button" class="next" data-go="1">Enter the Spin Lab</button></div>
+        </article>
+
+        <!-- 1 · Spin Lab -->
+        <article class="beat" data-beat="1" tabindex="-1" aria-labelledby="h1">
+          <h2 id="h1">Spin Lab</h2>
+          <p>Spin loft is the gap between dynamic loft and attack angle at impact. Move an input on the rail — the model above redraws while you drag.</p>
+          <div class="chain" id="chain" aria-live="polite">Move one input to reveal the cause chain.</div>
+          <p class="support">Flightglass calculates Backspin as an outcome. The current flight fit does not feed that rpm value back into Carry, Apex or Landing Angle.</p>
+          <div class="nav">
+            <button type="button" class="prev" data-go="0">Back</button>
+            <button type="button" class="next" data-go="2">Explore influence</button>
+          </div>
+        </article>
+
+        <!-- 2 · Influence -->
+        <article class="beat" data-beat="2" tabindex="-1" aria-labelledby="h2">
+          <h2 id="h2">Influence</h2>
+          <p>Measured at the state on the rail right now: one step of each input, re-solved
+            by the engine. Spin loft is the direct geometric driver — dynamic loft and attack
+            angle are its two components. Ball speed is a multiplicative scaler. Friction and
+            strike condition are held, or not modeled at all.</p>
+          <div class="infl" id="infl"></div>
+          <div class="seg" id="lie" role="radiogroup" aria-label="Surface condition">
+            <button type="button" role="radio" data-lie="clean" aria-checked="true" tabindex="0">Clean</button>
+            <button type="button" role="radio" data-lie="wet" aria-checked="false" tabindex="-1">Wet</button>
+            <button type="button" role="radio" data-lie="flyer" aria-checked="false" tabindex="-1">Flyer</button>
+          </div>
+          <button type="button" class="estimate" id="estimate" data-term="realWorld" hidden></button>
+          <div class="nav">
+            <button type="button" class="prev" data-go="1">Back</button>
+            <button type="button" class="next" data-go="3">Test the myths</button>
+          </div>
+        </article>
+
+        <!-- 3 · Myths -->
+        <article class="beat" data-beat="3" tabindex="-1" aria-labelledby="h3">
+          <h2 id="h3">Myth experiments</h2>
+          <p>Answer first, then the engine runs both deliveries and shows what it returns.</p>
+          <div id="myths"></div>
+          <div class="nav">
+            <button type="button" class="prev" data-go="2">Back</button>
+            <button type="button" class="next" data-go="4">Start Mastery Check</button>
+          </div>
+        </article>
+
+        <!-- 4 · Mastery -->
+        <article class="beat" data-beat="4" tabindex="-1" aria-labelledby="h4">
+          <h2 id="h4">Mastery Check</h2>
+          <p>Four of five resolves the lesson. The last task is not a question — it is the rail.</p>
+          <div id="mastery"></div>
+          <div class="nav">
+            <button type="button" class="prev" data-go="3">Back</button>
+            <button type="button" class="next" data-go="5">View result</button>
+          </div>
+        </article>
+
+        <!-- 5 · Result -->
+        <article class="beat" data-beat="5" tabindex="-1" aria-labelledby="h5">
+          <p class="seal" id="resultSeal">Backspin result</p>
+          <h2 id="h5">Your Backspin evidence</h2>
+          <p id="resultCopy">Complete the Mastery Check to see the ability you demonstrated.</p>
+          <ul class="abilities" id="abilities"></ul>
+          <div class="nav">
+            <button type="button" class="prev" data-go="4">Back</button>
+            <button type="button" class="next" id="toPath">Return to current goal</button>
+          </div>
+        </article>
+      </div>
+
+      <!-- Pushed term page. Modal while open: everything else goes inert.
+           Closed it is only translated off-screen, so it must be inert itself —
+           opacity and pointer-events do not take an element out of the tab order,
+           and a keyboard user would otherwise land inside an invisible page. -->
+      <div class="term" id="term" tabindex="-1" aria-labelledby="termTitle" inert>
+        <div class="termhead">
+          <button type="button" class="termback" id="termBack" aria-label="Close definition">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+          </button>
+          <p class="kicker" id="termKicker"></p>
+        </div>
+        <h2 id="termTitle"></h2>
+        <div id="termBody"></div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<p class="live" id="live" role="status" aria-live="polite"></p>
+
+<script type="module">
+/* ═══ ENGINE — production modules, imported, never modified ═══════════════ */
+import {
+  INITIAL_BACKSPIN_STATE, BACKSPIN_PARAMS, BACKSPIN_LIMITS,
+  solveBackspinState, backspinSensitivity, buildCauseChain,
+  realWorldRange, advanceMission, passesStoppingFlightTarget
+} from '../../../academy-backspin-model.js';
+import { trajectorySamples } from '../../../impact-flight.js';
+import { formatNumber, formatSigned, speakValue } from '../../../academy-readout-format.js';
+import { ACADEMY_GOALS, ACADEMY_EXPERIENCES } from '../../../academy-curriculum.js';
+
+/* ═══ COPY — verbatim from academy-native-lesson.js ═══════════════════════ */
+const SHEETS = {
+  mission:{eyebrow:'Mission',title:'Build, then cut',
+    body:`<p>First build at least <strong>7,000 rpm</strong>. After that stage is credited, cut the same 7-iron model below <strong>3,500 rpm</strong>.</p><p>The low-spin stage is a delivery experiment. It is not a driver simulation.</p><p>Flightglass calculates Backspin as an outcome. The current flight fit does not feed that rpm value back into Carry, Apex or Landing Angle.</p>`},
+  spinLoft:{eyebrow:'Model term',title:'Spin loft',
+    body:`<p>Spin loft is the gap between dynamic loft and attack angle at impact.</p><p class="formula">spin loft = dynamic loft − attack angle</p><p>This lesson uses the app’s 7-iron engine and a centred strike. The full three-dimensional relationship also depends on face-to-path geometry.</p>`},
+  dynamicLoft:{eyebrow:'Input',title:'Dynamic loft',
+    body:`<p>The loft delivered at impact. It is the dominant geometric lever at fixed speed and strike conditions.</p><p>More dynamic loft usually widens spin loft in this lab; less loft narrows it.</p>`},
+  attackAngle:{eyebrow:'Input',title:'Attack angle',
+    body:`<p>The vertical direction of the clubhead at impact. Negative is downward; positive is upward.</p><p>Changing attack angle changes spin loft, but “hitting down” does not create spin in the ground.</p>`},
+  ballSpeed:{eyebrow:'Input',title:'Ball speed',
+    body:`<p>The speed of the ball immediately after impact. The control is mapped through the same smash relationship used by the engine.</p>`},
+  displayCeiling:{eyebrow:'Engine limit',title:'9,000 rpm display ceiling',
+    body:`<p><strong>9,000 rpm is the interface ceiling.</strong> The displayed engine value stays capped there.</p><p>Underlying model sensitivity; display capped at 9,000 rpm. Influence uses the engine's raw intermediate beyond the cap.</p>`},
+  noFloor:{eyebrow:'No engine limit',title:'There is no floor',
+    body:`<p><strong>Low spin has no lower bound.</strong> Unlike the ceiling, nothing clamps the bottom — the displayed value keeps falling with spin loft, all the way toward zero.</p><p>That is the physics: spin is generated by the glancing blow, so as spin loft goes to zero, so does spin. A square strike with no spin loft imparts no backspin at all.</p><p>Compare the two ends: at 9,000 rpm the display freezes while the model keeps climbing. Down here the display and the model agree exactly.</p>`},
+  carry:{eyebrow:'Model output',title:'Carry',
+    body:`<p>In this Flightglass model, fixed ball speed holds carry steady while spin changes height and landing. Real high-spin shots can balloon; that effect is not modeled here.</p>`},
+  realWorld:{eyebrow:'Estimate layer',title:'Real-world spin retention',
+    body:`<p>This sourced range is an approximate real-world layer. It never changes the simulator output and must not be read as a second engine truth.</p>`}
+};
+
+const LIE_ESTIMATES = {
+  wet:{label:'Wet face / ball',keep:[0.80,0.85],source:'Andrew Rice, 2013',
+    frac:'≈ 15–20% less spin',
+    test:'TrackMan, 54° wedge, 50-yd shots: dry 6,603 rpm @ 25.4° → wet ball 5,291 rpm @ 30.1° (−20%). Urethane covers retain more wet spin than ionomer.'},
+  flyer:{label:'Flyer lie',keep:[0.35,0.70],source:'USGA / Pate, 2020',
+    frac:'≈ 30–65% less spin',
+    test:'8-iron from light rough spun ~2,469 rpm vs a ~7,000–8,000 rpm baseline (≈65% drop), yet carried farther. Grass between face and ball kills friction.'}
+};
+
+const MYTHS = [
+  {id:'ground',prompt:'Where is backspin actually created?',
+   choices:['Ground interaction','Face friction and spin loft'],answerIndex:1,
+   before:{dynamicLoft:30,attackAngle:-3,ballSpeed:120},
+   after:{dynamicLoft:30,attackAngle:-6,ballSpeed:120},
+   explanation:'The ground adds no spin. A downward strike can widen spin loft and improve ball-first contact, but spin is created while the ball is on the face.'},
+  {id:'loft-alone',prompt:'Dynamic loft rises 4°, but attack angle also rises 4°. What happens to backspin?',
+   choices:['More','Same','Less'],answerIndex:1,
+   before:{dynamicLoft:30,attackAngle:-3,ballSpeed:120},
+   after:{dynamicLoft:34,attackAngle:1,ballSpeed:120},
+   explanation:'Spin loft remains 33°, so this engine returns the same backspin.'},
+  {id:'more-is-better',prompt:'At fixed ball speed, what does this model show when spin rises past the iron window?',
+   choices:['Carry grows','Carry falls','Carry stays while apex and landing change'],answerIndex:2,
+   before:{dynamicLoft:30,attackAngle:-3,ballSpeed:120},
+   after:{dynamicLoft:44,attackAngle:-4,ballSpeed:120},
+   explanation:'More engine Backspin does not numerically cause more current-engine Carry. Real spin affects flight; this fitted app model currently keeps rpm output and flight trajectory partly decoupled.'}
+];
+
+const MASTERY = [
+  {id:'definition',kind:'choice',prompt:'Spin loft equals:',
+   choices:['Dynamic loft − attack angle','Dynamic loft + attack angle','Club speed × face angle'],
+   answerIndex:0,ability:'Define spin loft'},
+  {id:'compare',kind:'engine-compare',prompt:'Which delivery produces more backspin?',
+   left:{dynamicLoft:26,attackAngle:-2,ballSpeed:120},right:{dynamicLoft:34,attackAngle:-4,ballSpeed:120},
+   choices:['Delivery A','Delivery B'],answerIndex:1,ability:'Compare model deliveries'},
+  {id:'reduce',kind:'engine-compare',
+   prompt:'From 30° loft and −1° attack, which attack-angle change reduces spin loft?',
+   left:{dynamicLoft:30,attackAngle:3,ballSpeed:120},right:{dynamicLoft:30,attackAngle:-5,ballSpeed:120},
+   choices:['Change attack to +3°','Change attack to −5°'],answerIndex:0,ability:'Reduce spin loft'},
+  {id:'honesty',kind:'choice',prompt:'The Wet range is:',
+   choices:['A solveFlight output','A measured value from this phone','A sourced real-world estimate'],
+   answerIndex:2,ability:'Separate estimates from simulator truth'},
+  {id:'target',kind:'lab-target',
+   prompt:'Create 6,800–7,400 rpm and keep modeled Landing Angle at or above 50°. Both are gates from the final live solveFlight() state.',
+   ability:'Meet Backspin and Landing gates independently'}
+];
+
+const BEATS = ['Mission','Spin Lab','Influence','Myths','Mastery','Result'];
+const KEYS = ['dynamicLoft','attackAngle','ballSpeed'];
+
+/* ═══ STATE ══════════════════════════════════════════════════════════════ */
+const $ = id => document.getElementById(id);
+const state = { ...INITIAL_BACKSPIN_STATE };
+let settled = { ...INITIAL_BACKSPIN_STATE };   // ghost source: last released state
+let ghost = solveBackspinState(settled);
+let solved = ghost;
+let activeKey = 'dynamicLoft';
+let beat = 0;
+let mission = { built:false, cut:false };
+let lie = 'clean';
+const mythAnswers = new Array(MYTHS.length).fill(null);
+const masteryAnswers = new Array(MASTERY.length).fill(null);
+
+/* Law 13 (repo): trace scales against fixed engine-derived references so two
+   different states draw honestly different arcs. Corners of the real domain. */
+const REF = (() => {
+  let carry = 1, apex = 1;
+  for (const dl of [BACKSPIN_PARAMS.dynamicLoft.min, BACKSPIN_PARAMS.dynamicLoft.max])
+    for (const aa of [BACKSPIN_PARAMS.attackAngle.min, BACKSPIN_PARAMS.attackAngle.max])
+      for (const bs of [BACKSPIN_PARAMS.ballSpeed.min, BACKSPIN_PARAMS.ballSpeed.max]) {
+        try { const s = solveBackspinState({dynamicLoft:dl,attackAngle:aa,ballSpeed:bs});
+              carry = Math.max(carry, s.carryM); apex = Math.max(apex, s.apexM); } catch {}
+      }
+  return { carry, apex };
+})();
+
+/* The corner state that produces REF.apex, re-solved so the empty headroom can
+   be drawn as the model's actual envelope instead of left as blank pixels. */
+const ENVELOPE = (() => {
+  let best = null;
+  for (const dl of [BACKSPIN_PARAMS.dynamicLoft.min, BACKSPIN_PARAMS.dynamicLoft.max])
+    for (const aa of [BACKSPIN_PARAMS.attackAngle.min, BACKSPIN_PARAMS.attackAngle.max])
+      for (const bs of [BACKSPIN_PARAMS.ballSpeed.min, BACKSPIN_PARAMS.ballSpeed.max]) {
+        try { const s = solveBackspinState({dynamicLoft:dl,attackAngle:aa,ballSpeed:bs});
+              if (!best || s.apexM > best.apexM) best = s; } catch {}
+      }
+  return best;
+})();
+
+/* ═══ SHEET ══════════════════════════════════════════════════════════════ */
+const sheet = $('sheet'), rail = $('rail'), shell = $('shell');
+/* The premise: the model never leaves. The floor is set by what the reduced
+   instrument needs to stay legible — value label, axis, threshold captions —
+   not by an arbitrary sliver. */
+const MIN_MODEL = 150;
+/* The lesson needs a reading window of its own, and the strip that carries the
+   back control has to survive even when the sheet is at its tallest. */
+const MIN_STACK = 112, MIN_HEADER = 56;
+let detents = {}, height = 0, order = ['peek','half','full'];
+
+function measure(){
+  const vh = window.innerHeight;
+  const railH = rail.offsetHeight;
+  /* At a 200 % root font the rail alone grows taller than vh − MIN_MODEL, and
+     the lesson was then left with ZERO visible pixels at every detent: the beat,
+     its primary action and the mastery gates could not be reached at any scroll
+     position, because the sheet clips instead of scrolling (WCAG 1.4.4). The
+     model yields before the lesson disappears — full grows to what the
+     instrument plus a reading window needs, and draw() already answers a
+     vanishing band with the reduced instrument and an honest canvas label.
+     At the default root font every detent is bit-identical to before. */
+  const room = Math.min(vh - MIN_HEADER, Math.max(vh - MIN_MODEL, railH + MIN_STACK));
+  const peek = Math.min(railH + 12, room);
+  /* half is the reading altitude, so it has to actually contain a reading
+     window. 52 % of a short viewport — or of any viewport at a large root font —
+     is swallowed whole by the rail, and yieldToModel() drops here from full on
+     every input touch, which used to land the reader on 12 px of lesson. */
+  const half = Math.min(room, Math.max(Math.round(vh * 0.52), railH + MIN_STACK));
+  detents = { peek, half: Math.max(peek, half), full: Math.max(peek, room) };
+}
+function setHeight(h, animate){
+  height = h;
+  sheet.toggleAttribute('data-settling', !!animate);
+  sheet.style.transform = `translate3d(0,${Math.round(window.innerHeight - h)}px,0)`;
+  draw();
+}
+function snap(name, announce){
+  measure();
+  setHeight(detents[name], true);
+  /* Scroll room for the part of the sheet that hangs below the fold at this
+     detent. Written here, at rest, and never inside the drag loop. */
+  sheet.style.setProperty('--overhang', `${Math.round(window.innerHeight - detents[name])}px`);
+  sheet.dataset.detent = name;
+  syncGrab();
+  if (announce) say(grab.getAttribute('aria-label'));
+}
+/* Nearest detent, biased by flick velocity (Sonner's 0.11 px/ms rule). */
+function settle(h, velocity){
+  measure();
+  const names = order.slice();
+  let nearest = names.reduce((a,b) => Math.abs(detents[b]-h) < Math.abs(detents[a]-h) ? b : a);
+  if (Math.abs(velocity) > 0.11) {
+    const i = names.indexOf(nearest);
+    const dir = velocity > 0 ? 1 : -1;          // +1 = growing = upward
+    nearest = names[Math.max(0, Math.min(names.length-1, i + dir))] || nearest;
+  }
+  snap(nearest);
+}
+
+let drag = null;
+function beginDrag(e, fromBody){
+  if (drag) return;                              // multi-touch protection
+  drag = { id:e.pointerId, y:e.clientY, h:height, t:performance.now(), v:0, fromBody };
+  sheet.removeAttribute('data-settling');
+}
+let draggedAt = 0;                                 // suppresses the click a drag emits
+function moveDrag(e){
+  if (!drag || e.pointerId !== drag.id) return;
+  const now = performance.now();
+  const dy = drag.y - e.clientY;
+  if (Math.abs(dy) > 4) draggedAt = now;
+  let h = drag.h + dy;
+  const max = detents.full;
+  if (h > max) h = max + (h - max) * 0.22;        // friction, not a wall
+  if (h < detents.peek) h = detents.peek - (detents.peek - h) * 0.22;
+  drag.v = (h - height) / Math.max(1, now - drag.t);
+  drag.t = now;
+  setHeight(h, false);
+}
+function endDrag(e){
+  if (!drag || e.pointerId !== drag.id) return;
+  const v = drag.v; drag = null;
+  settle(height, v);
+}
+
+/* Capture is an optimisation, not a precondition: setPointerCapture throws if
+   the pointer is already gone, and that must never cost us the drag. */
+const capture = (el, e) => { try { el.setPointerCapture(e.pointerId); } catch {} };
+
+rail.addEventListener('pointerdown', e => {
+  // The handle is a button so it is keyboard-reachable, but it is still the
+  // primary drag surface, so it must not be excluded with the other controls.
+  if (e.target.closest('button, input') && !e.target.closest('#grab')) return;
+  beginDrag(e, false);
+  capture(rail, e);
+});
+rail.addEventListener('pointermove', moveDrag);
+rail.addEventListener('pointerup', endDrag);
+rail.addEventListener('pointercancel', endDrag);
+
+/* Scrolled-to-top pull-down hands the gesture to the sheet — the native detail. */
+const beats = $('beats');
+beats.addEventListener('pointerdown', e => {
+  if (beats.scrollTop > 0 || e.pointerType === 'mouse') return;
+  beginDrag(e, true);
+  capture(beats, e);
+});
+beats.addEventListener('pointermove', e => {
+  if (!drag || !drag.fromBody) return;
+  if (e.clientY < drag.y) { endDrag(e); return; } // upward: give scrolling back
+  moveDrag(e);
+});
+beats.addEventListener('pointerup', endDrag);
+beats.addEventListener('pointercancel', endDrag);
+
+/* Law 3: the model never disappears while an input changes. Touching a control
+   while the sheet is raised drops it to half so the trace stays readable. */
+/* At a large root font half has to grow past the model's reserve to keep a
+   reading window, and half can even coincide with full — so "am I above half"
+   is no longer the same question as "can the model be seen". Ask the second one:
+   yield whenever the model has no room, and yield to a detent that gives it
+   some. Otherwise the law is honoured by name and broken in fact. */
+const modelRoom = h => window.innerHeight - h;
+function yieldToModel(){
+  if (height <= detents.half + 4 && modelRoom(height) >= MIN_MODEL) return;
+  snap(modelRoom(detents.half) >= MIN_MODEL ? 'half' : 'peek');
+}
+
+/* The detent is this direction's main navigation, so it can never be reachable
+   by drag alone. Tapping the handle cycles up and wraps back down at the top;
+   Arrow keys move one detent at a time, Home/End jump to the ends. */
+const grab = $('grab');
+function step(dir){
+  const i = order.indexOf(sheet.dataset.detent || 'half');
+  snap(order[Math.max(0, Math.min(order.length - 1, i + dir))], true);
+}
+function syncGrab(){
+  const at = sheet.dataset.detent || 'half';
+  /* "Collapse the lesson to see the model" is a promise, and at a 200 % root font
+     with the ceiling disclosure showing the rail is 756 px of an 844 px viewport
+     — collapsing all the way to peek still leaves the model too short to draw,
+     so the handle would be offering something it cannot deliver. The test is not
+     "does the sheet move" but "is there a model at the bottom of the travel",
+     and that is the same question, against the same threshold, that
+     yieldToModel() already asks. One measurement, asked twice, never a guess. */
+  const showsModel = modelRoom(detents.peek) >= MIN_MODEL;
+  grab.setAttribute('aria-label',
+    !showsModel ? 'Sheet raised to fit the lesson at this text size. The model has no room to draw.'
+    : at === 'full' ? 'Sheet fully raised. Collapse the lesson to see the model.'
+    : at === 'peek' ? 'Sheet collapsed. Raise the lesson.'
+    : 'Sheet half raised. Raise the lesson further.');
+  grab.setAttribute('aria-expanded', String(!showsModel || at !== 'peek'));
+}
+grab.addEventListener('click', e => {
+  if (e.detail === 0) { step(1); return; }        // keyboard Enter/Space
+  if (drag || performance.now() - draggedAt < 350) return;  // a drag settled it
+  const i = order.indexOf(sheet.dataset.detent || 'half');
+  snap(order[(i + 1) % order.length], true);      // tap cycles and wraps
+});
+grab.addEventListener('keydown', e => {
+  const map = { ArrowUp:1, ArrowDown:-1 };
+  if (e.key in map) { e.preventDefault(); step(map[e.key]); return; }
+  if (e.key === 'Home') { e.preventDefault(); snap('peek', true); syncGrab(); }
+  if (e.key === 'End')  { e.preventDefault(); snap('full', true); syncGrab(); }
+});
+
+/* Roving tabindex without arrow keys leaves every option after the first
+   unreachable from a keyboard. One handler serves both radiogroups. */
+function wireRadios(group, onPick){
+  group.addEventListener('keydown', e => {
+    const items = [...group.querySelectorAll('[role="radio"]')];
+    const i = items.indexOf(document.activeElement);
+    if (i < 0) return;
+    const delta = { ArrowRight:1, ArrowDown:1, ArrowLeft:-1, ArrowUp:-1 }[e.key];
+    let target = null;
+    if (delta) target = items[(i + delta + items.length) % items.length];
+    else if (e.key === 'Home') target = items[0];
+    else if (e.key === 'End') target = items[items.length - 1];
+    if (!target) return;
+    e.preventDefault();
+    target.focus();
+    onPick(target);                                // selection follows focus
+  });
+}
+
+/* ═══ BACK IS A GESTURE ══════════════════════════════════════════════════ */
+let edge = null;
+shell.addEventListener('pointerdown', e => {
+  if (e.clientX > 26 + (parseFloat(getComputedStyle(document.documentElement)
+      .getPropertyValue('--sal')) || 0)) return;
+  if (term.hasAttribute('data-open')) return;
+  edge = { id:e.pointerId, x:e.clientX, t:performance.now(), v:0, dx:0 };
+  shell.dataset.edge = '';
+  shell.removeAttribute('data-settling');
+  capture(shell, e);
+});
+shell.addEventListener('pointermove', e => {
+  if (!edge || e.pointerId !== edge.id) return;
+  const now = performance.now();
+  let dx = Math.max(0, e.clientX - edge.x);
+  const soft = window.innerWidth * 0.42;
+  if (dx > soft) dx = soft + (dx - soft) * 0.3;
+  edge.v = (dx - edge.dx) / Math.max(1, now - edge.t);
+  edge.dx = dx; edge.t = now;
+  shell.style.transform = `translate3d(${Math.round(dx)}px,0,0)`;
+});
+function endEdge(e){
+  if (!edge || e.pointerId !== edge.id) return;
+  const commit = edge.dx > window.innerWidth * 0.3 || edge.v > 0.35;
+  edge = null;
+  shell.removeAttribute('data-edge');
+  shell.dataset.settling = '';
+  shell.style.transform = '';
+  if (commit) leave();
+}
+shell.addEventListener('pointerup', endEdge);
+shell.addEventListener('pointercancel', endEdge);
+
+function leave(){
+  document.body.dataset.departed = '';
+  $('path').removeAttribute('aria-hidden');
+  $('path').removeAttribute('inert');
+  shell.setAttribute('inert','');
+  $('resume').focus();
+  say('Returned to Academy goal, Control launch and flight');
+}
+function enter(){
+  document.body.removeAttribute('data-departed');
+  $('path').setAttribute('aria-hidden','true');
+  $('path').setAttribute('inert','');
+  shell.removeAttribute('inert');
+  $('back').focus();
+}
+$('back').addEventListener('click', leave);
+$('toPath').addEventListener('click', leave);
+$('resume').addEventListener('click', enter);
+
+/* ═══ TERM PAGE — pushes over the beat, modal while open ═════════════════ */
+const term = $('term');
+let termOpener = null;
+function openTerm(key, opener){
+  const sheetCopy = SHEETS[key]; if (!sheetCopy) return;
+  termOpener = opener || null;
+  $('termKicker').textContent = sheetCopy.eyebrow;
+  $('termTitle').textContent = sheetCopy.title;
+  $('termBody').innerHTML = sheetCopy.body;
+  term.setAttribute('data-open','');
+  term.removeAttribute('inert');
+  beats.setAttribute('data-pushed','');
+  beats.setAttribute('inert','');
+  rail.setAttribute('inert','');
+  $('model').setAttribute('inert','');
+  $('back').setAttribute('inert','');
+  $('limit').setAttribute('inert','');
+  sheet.setAttribute('role','dialog');
+  sheet.setAttribute('aria-modal','true');
+  document.body.dataset.term = '';
+  if (height < detents.half) snap('half');
+  term.focus();
+}
+function closeTerm(){
+  if (!term.hasAttribute('data-open')) return;
+  term.removeAttribute('data-open');
+  term.setAttribute('inert','');
+  beats.removeAttribute('data-pushed');
+  beats.removeAttribute('inert');
+  rail.removeAttribute('inert');
+  $('model').removeAttribute('inert');
+  $('back').removeAttribute('inert');
+  $('limit').removeAttribute('inert');
+  sheet.setAttribute('role','region');
+  sheet.removeAttribute('aria-modal');
+  delete document.body.dataset.term;
+  (termOpener || $('beats').querySelector('.beat[data-active]')).focus();
+  termOpener = null;
+}
+/* The sheet's scrollers are taller than the part of the sheet that is on screen,
+   so the browser's own scroll-into-view is satisfied while the control is still
+   below the fold (WCAG 2.4.11). Pull it up to the fold — never past the point
+   where the element's own top would leave the reading window, so focusing a
+   whole beat still lands at its heading. */
+function bring(box, el){
+  const r = el.getBoundingClientRect();
+  const over = Math.min(r.bottom - window.innerHeight + 12,
+                        r.top - box.getBoundingClientRect().top);
+  if (over > 0) box.scrollTop += over;
+}
+for (const box of [beats, term]) {
+  box.addEventListener('focusin', e => {
+    /* At peek the scroller's own window is an 11 px sliver at the bottom edge,
+       so NO scroll position can bring a control into view — tabbing off the rail
+       put the primary action 41 px below the fold with 11 px of it showing. The
+       sheet itself has to rise. This is yieldToModel mirrored: touching the
+       instrument lowers the sheet, reading the lesson raises it.
+       :focus-visible only, and that is not pedantry: raising the sheet on a tap
+       would slide the surface out from under the finger between press and
+       release, and the tap would land on whatever moved into its place. A
+       pointer already brings its own target into view; a Tab cannot. */
+    if (box === beats && height < detents.half - 4 && e.target.matches(':focus-visible')) {
+      snap('half');
+      setTimeout(() => { if (document.activeElement === e.target) bring(box, e.target); }, 440);
+    }
+    bring(box, e.target);
+  });
+}
+
+$('termBack').addEventListener('click', closeTerm);
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-term]');
+  if (t) openTerm(t.dataset.term, t);
+});
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return;
+  if (term.hasAttribute('data-open')) closeTerm();
+  else if (!document.body.hasAttribute('data-departed')) leave();
+});
+
+/* ═══ MODEL ══════════════════════════════════════════════════════════════ */
+const cv = $('model'), ctx = cv.getContext('2d');
+function resize(){
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  cv.width = Math.round(window.innerWidth * dpr);
+  cv.height = Math.round(window.innerHeight * dpr);
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+}
+function arc(s, band, x0, y0, sx, sy){
+  const pts = trajectorySamples(s.flight, 60);
+  const path = new Path2D();
+  pts.forEach((p,i) => {
+    const x = x0 + p.d * s.carryM * sx;
+    const y = y0 - p.h * s.apexM * sy;
+    i ? path.lineTo(x,y) : path.moveTo(x,y);
+  });
+  return { path, endX:x0 + s.carryM * sx, apexX:x0 + 0.52 * s.carryM * sx, apexY:y0 - s.apexM * sy };
+}
+/* ── Canvas ink ──────────────────────────────────────────────────────────────
+   Every mark the model draws, on Ink #07060C, at or above its floor: 3:1 for a
+   graphic, 4.5:1 for the 9.5 px captions. It used to rank these by fade — the
+   envelope at 1.22:1, the ground line at 1.31, the gate marks at 1.75, the ghost
+   at 1.60 — and the geometry that carries the whole lesson was in the file but
+   not on the screen. Rank did not disappear with the fade: it moved to line
+   weight and dash, which is how a drawn instrument has always separated the
+   claim from the scale, and it survives a bright room and a cheap panel.
+   The one warm mark is untouched at 8.65:1 and is still the widest stroke.
+   Ratios are re-derived from these literals by scratchpad/sf2-canvas-ink.mjs. */
+const INK_FAINT   = 'rgba(157,139,255,.58)';   // 3.05:1 — envelope, distance ticks
+const INK_LINE    = 'rgba(157,139,255,.62)';   // 3.34:1 — ground, spin-scale axis
+const INK_GHOST   = 'rgba(157,139,255,.66)';   // 3.66:1 — released state, idle rays
+const INK_MARK    = 'rgba(157,139,255,.70)';   // 3.99:1 — gate marks, landing ray
+const INK_APEX    = 'rgba(245,242,237,.40)';   // 3.46:1 — apex drop line
+const INK_CAPTION = 'rgba(167,159,192,.72)';   // 4.54:1 — every 9.5 px caption
+
+/* The reduced instrument. Same engine values, no trajectory: displayed rpm on a
+   0 → 9,000 axis, with the two mission thresholds and the ceiling marked where
+   they actually fall. When the raw model runs past the ceiling the overrun is
+   drawn dashed beyond the axis, so the freeze is visible rather than asserted. */
+function spinScale(W, top, bottom, padL, padR){
+  const max = BACKSPIN_LIMITS.max;
+  const y = Math.round((top + bottom) / 2) + 6;
+  const x0 = padL, x1 = W - padR, span = x1 - x0;
+  const at = v => x0 + Math.min(1, v / max) * span;
+  const gold = document.body.dataset.focal === 'gold';
+  const live = gold ? '#9D8BFF' : '#FF8A4D';
+
+  ctx.strokeStyle = INK_LINE; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(x0, y + .5); ctx.lineTo(x1, y + .5); ctx.stroke();
+
+  /* Captions are laid out left to right and dropped the moment one would touch
+     its neighbour, so the axis never renders overlapping text at any width. */
+  ctx.font = '500 9.5px ui-monospace, SFMono-Regular, Menlo, monospace';
+  let occupied = x0 - 8;
+  for (const [v, label] of [[3500, 'CUT 3,500'], [7000, 'BUILD 7,000'], [max, '9,000 CEILING']]) {
+    const x = at(v);
+    ctx.strokeStyle = INK_MARK; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y - 9); ctx.stroke();
+    const w = ctx.measureText(label).width;
+    const lx = Math.min(x - 12, x1 - w);
+    if (lx < occupied + 8) continue;
+    ctx.fillStyle = INK_CAPTION;
+    ctx.fillText(label, lx, y + 14);
+    occupied = lx + w;
+  }
+
+  const lx = at(solved.rpm);
+  ctx.strokeStyle = live; ctx.lineWidth = 3; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(x0, y); ctx.lineTo(lx, y); ctx.stroke();
+  ctx.lineCap = 'butt';
+
+  if (solved.rawRpm > max) {                     // the overrun the display hides
+    ctx.strokeStyle = INK_MARK; ctx.lineWidth = 1.5;
+    ctx.setLineDash([3,4]);
+    ctx.beginPath(); ctx.moveTo(lx, y); ctx.lineTo(Math.min(x1 + 40, W), y); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  /* No number here. The rail already prints the rpm a hundred pixels below, and
+     truth stated twice is chrome. What the rail cannot show is position — how
+     far this delivery sits from the two gates — so that is all the strip says. */
+  ctx.fillStyle = live;
+  ctx.beginPath(); ctx.arc(lx, y, 4.5, 0, Math.PI * 2); ctx.fill();
+}
+
+/* Canvas text sits on top of traces and grid lines, so every label is knocked
+   out of the background first. Without it the spin-loft caption reads as broken
+   wherever a curve happens to pass through a letter. */
+function label(text, x, y, colour){
+  ctx.save();
+  ctx.lineWidth = 3.5; ctx.lineJoin = 'round';
+  ctx.strokeStyle = 'rgba(7,6,12,.88)';
+  ctx.strokeText(text, x, y);
+  ctx.fillStyle = colour; ctx.fillText(text, x, y);
+  ctx.restore();
+}
+
+/* The canvas is the premise, so its accessible name is the reading — the same
+   engine values it is drawing at this instant, in the same two modes it renders:
+   the trajectory and its wedge, or the reduced spin scale. Nothing is typed by
+   hand here either; every figure is the live solve. */
+function describe(band){
+  if (band < 34) return 'Model hidden while the sheet is fully raised.';
+  if (band < 178)
+    return `Spin scale. Backspin ${formatNumber(solved.rpm)} rpm on a 0 to `
+      + `${formatNumber(BACKSPIN_LIMITS.max)} rpm axis, marked at the cut gate 3,500 `
+      + `and the build gate 7,000.`
+      + (solved.rawRpm > BACKSPIN_LIMITS.max
+        ? ` The display is frozen; the model runs on to ${formatNumber(solved.rawRpm)} rpm.` : '');
+  return `Ball-flight model. Backspin ${formatNumber(solved.rpm)} rpm, spin loft `
+    + `${solved.spinLoft}°, carry ${solved.carryM} m, apex ${solved.apexM} m, landing angle `
+    + `${solved.landingAngle}°. The impact wedge draws face ${state.dynamicLoft}° against `
+    + `travel ${formatSigned(state.attackAngle)}°.`;
+}
+
+function draw(){
+  const W = window.innerWidth, H = window.innerHeight;
+  const top = (parseFloat(getComputedStyle(document.documentElement)
+      .getPropertyValue('--sat')) || 0) + 56;
+  const bottom = (H - height) - 20;
+  const band = bottom - top;
+  cv.setAttribute('aria-label', describe(band));
+  ctx.clearRect(0,0,W,H);
+  if (band < 34) return;                        // sliver: nothing legible to draw
+
+  const padL = 26, padR = 22;
+
+  /* Below this the trajectory cannot be drawn honestly: a 155 m carry squashed
+     into 90 px reads as a flat shot, and a visual that understates is as untrue
+     as one that exaggerates. So the instrument does not shrink the same fact —
+     it shows a different, smaller one at full fidelity. The spin scale is the
+     lesson's own axis, and it stays exact at any height. */
+  if (band < 178) { spinScale(W, top, bottom, padL, padR); return; }
+
+  const y0 = bottom, usableW = W - padL - padR;
+  const sx = usableW / REF.carry;
+  /* Fixed engine-derived scale (repo Law 13), never per-shot autoscale: two
+     deliveries always draw at the same metres-per-pixel, so the arcs are
+     honestly comparable and the unused headroom is real, labelled information. */
+  const sy = band * 0.92 / REF.apex;
+
+  /* ground */
+  ctx.strokeStyle = INK_LINE; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(padL, y0 + .5); ctx.lineTo(W - padR, y0 + .5); ctx.stroke();
+
+  /* The band is scaled to the engine's own extremes, not to this shot. The
+     headroom above the arc is therefore real information — how much of the
+     modelled envelope this delivery is using — so it gets a labelled edge
+     rather than being left as empty pixels. */
+  const ceilY = y0 - REF.apex * sy;
+  if (band > 120 && ceilY > top + 6) {
+    if (ENVELOPE) {                              // the envelope, re-solved, not drawn freehand
+      const env = arc(ENVELOPE, band, padL, y0, sx, sy);
+      ctx.strokeStyle = INK_FAINT; ctx.lineWidth = 1;
+      ctx.setLineDash([3,5]); ctx.stroke(env.path); ctx.setLineDash([]);
+    }
+    ctx.font = '500 9.5px ui-monospace, SFMono-Regular, Menlo, monospace';
+    label(`MODEL ENVELOPE · ${REF.apex} m apex · ${REF.carry} m carry`, padL, ceilY - 6,
+      INK_CAPTION);
+  }
+
+  /* How far the impact wedge reaches along the ground. Everything else on the
+     baseline yields to it, because the wedge is the lesson and the ticks are
+     only scale. */
+  const wedge = band > 150 ? Math.max(74, Math.min(150, band * 0.42)) : 0;
+
+  /* distance ticks — measurement, only where there is room for it */
+  if (band > 150) {
+    ctx.fillStyle = INK_CAPTION;
+    ctx.font = '500 9.5px ui-monospace, SFMono-Regular, Menlo, monospace';
+    for (let m = 50; m <= REF.carry; m += 50) {
+      const x = padL + m * sx;
+      if (x > W - padR) break;
+      ctx.strokeStyle = INK_FAINT;
+      ctx.beginPath(); ctx.moveTo(x, y0); ctx.lineTo(x, y0 - 4); ctx.stroke();
+      if (x > padL + wedge + 26) ctx.fillText(String(m), x - 6, y0 + 12);
+    }
+  }
+
+  /* ghost: last released state */
+  if (ghost !== solved) {
+    const g = arc(ghost, band, padL, y0, sx, sy);
+    ctx.strokeStyle = INK_GHOST;
+    ctx.lineWidth = 1.5; ctx.setLineDash([]); ctx.stroke(g.path);
+  }
+
+  /* live trace */
+  const a = arc(solved, band, padL, y0, sx, sy);
+  ctx.strokeStyle = document.body.dataset.focal === 'gold' ? '#9D8BFF' : '#FF8A4D';
+  ctx.lineWidth = 2.25; ctx.lineJoin = 'round'; ctx.stroke(a.path);
+
+  if (band > 110) {
+    /* apex tick */
+    ctx.strokeStyle = INK_APEX;
+    ctx.setLineDash([2,4]); ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(a.apexX, a.apexY); ctx.lineTo(a.apexX, y0); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.font = '600 10px ui-monospace, SFMono-Regular, Menlo, monospace';
+    label(`APEX ${solved.apexM} m`,
+      Math.min(Math.max(padL, a.apexX - 26), W - padR - 62), a.apexY - 9,
+      'rgba(245,242,237,.8)');
+
+    /* landing ray at the modeled descent angle */
+    const la = solved.landingAngle * Math.PI / 180, L = 26;
+    ctx.strokeStyle = INK_MARK; ctx.lineWidth = 1.25;
+    ctx.beginPath();
+    ctx.moveTo(a.endX - Math.cos(la) * L, y0 - Math.sin(la) * L);
+    ctx.lineTo(a.endX, y0); ctx.stroke();
+  }
+
+  /* Spin-loft wedge at impact — the lesson's own geometry, exact, live.
+     Two rays from the strike: club travel (attack angle) and delivered loft.
+     The filled gap between them IS spin loft, and the model prints that number
+     on the wedge itself. This is the whole premise: the reader never has to
+     leave the instrument to find the term the lesson is teaching.
+     It is drawn large enough to read — a 60 px scribble in the corner taught
+     nothing — and it is violet, because it is a cause the golfer sets, not the
+     engine's answer. */
+  if (wedge) {
+    const L = wedge;
+    const aa = state.attackAngle * Math.PI / 180;
+    const dl = state.dynamicLoft * Math.PI / 180;
+    const ox = padL, oy = y0 - 1;
+    const R = L * 0.66;
+
+    ctx.beginPath();
+    ctx.moveTo(ox, oy); ctx.arc(ox, oy, R, -dl, -aa); ctx.closePath();
+    ctx.fillStyle = 'rgba(157,139,255,.14)'; ctx.fill();
+    ctx.strokeStyle = INK_LINE; ctx.lineWidth = 1.25;
+    ctx.beginPath(); ctx.arc(ox, oy, R, -dl, -aa); ctx.stroke();
+
+    /* Both rays are always drawn; only the one under the active control is
+       named, so two labels can never collide. */
+    /* Both rays bound the spin loft, so the idle one is a required graphic too:
+       it carries the floor and yields to the live one on width, not on fade. */
+    const ray = (angle, idle, text, live) => {
+      const x = ox + Math.cos(angle) * L, y = oy - Math.sin(angle) * L;
+      ctx.strokeStyle = live ? 'rgba(157,139,255,.95)' : idle;
+      ctx.lineWidth = live ? 1.9 : 1.1;
+      ctx.beginPath(); ctx.moveTo(ox, oy); ctx.lineTo(x, y); ctx.stroke();
+      if (!live) return;
+      ctx.font = '600 10.5px ui-monospace, SFMono-Regular, Menlo, monospace';
+      label(text, x + 8, Math.min(y + 3, y0 - 8), 'rgba(245,242,237,.92)');
+    };
+    ray(dl, INK_GHOST, `face ${state.dynamicLoft}°`, activeKey === 'dynamicLoft');
+    ray(aa, INK_GHOST, `travel ${formatSigned(state.attackAngle)}°`, activeKey === 'attackAngle');
+
+    /* The value gets its own lane directly above the wedge rather than sitting
+       on the bisector: on a descending strike the travel ray runs almost along
+       the baseline, and a bisector label lands straight on top of its caption. */
+    ctx.font = '600 11.5px ui-monospace, SFMono-Regular, Menlo, monospace';
+    label(`${solved.spinLoft}° SPIN LOFT`, ox, oy - R - 10, 'rgba(157,139,255,.98)');
+  }
+}
+
+/* ═══ RENDER ═════════════════════════════════════════════════════════════ */
+function say(msg){ $('live').textContent = msg; }
+
+function renderRail(){
+  const p = BACKSPIN_PARAMS[activeKey];
+  $('rpm').textContent = formatNumber(solved.rpm);
+  $('rpm').setAttribute('aria-label', `Backspin ${speakValue(solved.rpm,' rpm')}`);
+  $('oSpin').textContent = `${solved.spinLoft}°`;
+  $('oCarry').textContent = `${solved.carryM} m`;
+  $('oLand').textContent = `${solved.landingAngle}°`;
+  $('rangeLabel').textContent = p.label;
+  $('rangeValue').textContent = `${formatNumber(state[activeKey])}${p.unit}`;
+  const r = $('range');
+  r.style.setProperty('--fill', `${(state[activeKey]-p.min)/(p.max-p.min)*100}%`);
+  r.setAttribute('aria-valuetext', speakValue(state[activeKey], p.unit));
+
+  const lim = $('limit'), wasShown = !lim.hidden;
+  if (solved.displayLimit === 'ceiling') {
+    lim.hidden = false; lim.dataset.term = 'displayCeiling';
+    lim.innerHTML = `Display frozen at <b>${formatNumber(BACKSPIN_LIMITS.max)}</b> — model is at <b>${formatNumber(solved.rawRpm)}</b>`;
+  } else if (solved.displayLimit === 'no-floor') {
+    lim.hidden = false; lim.dataset.term = 'noFloor';
+    lim.innerHTML = `No floor here — display still tracks the model at <b>${formatNumber(solved.rpm)}</b>`;
+  } else lim.hidden = true;
+  /* The disclosure is a row in the rail now, so appearing or leaving changes
+     railH — and peek is derived from railH. Without re-settling, crossing the
+     ceiling mid-drag leaves peek sized to a rail that no longer exists and the
+     sheet clips its own instrument. Only on the transition, never per solve. */
+  if (!lim.hidden !== wasShown && detents.peek) snap(sheet.dataset.detent || 'half');
+
+  $('beatName').textContent = BEATS[beat];
+  [...$('steps').children].forEach((el,i) => {
+    el.toggleAttribute('data-now', i === beat);
+    el.toggleAttribute('data-on', i < beat);
+  });
+}
+
+function renderMission(){
+  const stage = (el, done) => {
+    el.toggleAttribute('data-complete', done);
+    el.querySelector('[data-state]').textContent = done ? '. Credited' : '. Not credited yet';
+  };
+  stage($('stBuild'), mission.built);
+  stage($('stCut'), mission.cut);
+}
+
+function renderInfluence(){
+  const s = backspinSensitivity(state);
+  const rows = KEYS.map(k => {
+    const d = s[k];
+    const value = d.displayDelta !== d.rawDelta ? d.rawDelta : d.displayDelta;
+    return { k, value, capped: d.displayDelta !== d.rawDelta };
+  });
+  const peak = Math.max(...rows.map(r => Math.abs(r.value)), 1);
+  /* This list is rewritten on every solve, so a keyboard user standing on a
+     lever while the rail changes state had the element under them destroyed and
+     focus dropped to BODY. The rows are the same three keys in the same order,
+     so the seat is given back. */
+  const held = [...$('infl').children].indexOf(document.activeElement);
+  $('infl').innerHTML = rows.map(r => `
+    <button type="button" data-term="${r.k}"${Math.abs(r.value) === peak ? ' data-lead' : ''}>
+      <span class="row"><span>${BACKSPIN_PARAMS[r.k].label}</span>
+      <em>${formatSigned(Math.round(r.value))} ${r.k === 'ballSpeed' ? 'rpm / mph' : 'rpm / °'}${r.capped ? ' · raw' : ''}</em></span>
+      <span class="bar"><i style="transform:scaleX(${Math.abs(r.value)/peak})"></i></span>
+    </button>`).join('');
+  if (held > -1) $('infl').children[held]?.focus();
+
+  const est = $('estimate');
+  if (lie === 'clean') { est.hidden = true; return; }
+  const cfg = LIE_ESTIMATES[lie];
+  const range = realWorldRange(solved.rpm, cfg.keep);
+  est.hidden = false;
+  est.innerHTML = `<em>Real-world estimate · not the simulator</em>
+    <strong>${formatNumber(range.low)}–${formatNumber(range.high)} rpm</strong>
+    <small>${cfg.label} · ${cfg.frac}. ${cfg.test}</small>
+    <small>Source: ${cfg.source}</small>`;
+}
+
+function quizCard(item, index, answer, attr, extra=''){
+  const opts = item.choices.map((c,i) => {
+    const right = i === item.answerIndex, chosen = i === answer;
+    const pick = answer === null ? '' :
+      (right ? ' data-pick="right"' : (chosen ? ' data-pick="wrong"' : ''));
+    /* Background, weight and a ::before dot were the whole verdict. The result
+       has to survive with the stylesheet switched off, so it is also text in the
+       button's own name. */
+    const verdict = answer === null || !(right || chosen) ? ''
+      : `<span class="sr">. ${right ? (chosen ? 'Your answer, correct' : 'Correct answer')
+                                    : 'Your answer, incorrect'}</span>`;
+    return `<button type="button" ${attr}="${index}" data-c="${i}"${pick}
+      ${answer !== null ? 'aria-disabled="true"' : ''}>${c}${verdict}</button>`;
+  }).join('');
+  return `<div class="quiz">
+    <p class="q">${item.prompt}</p>${extra}
+    <div class="opts">${opts}</div>
+    <p class="why"${answer === null ? ' hidden' : ''}>${item.explanation || ''}</p>
+  </div>`;
+}
+
+function abBlock(a, b, labels){
+  const L = solveBackspinState(a), R = solveBackspinState(b);
+  return `<div class="ab">
+    <div><em>${labels[0]}</em><strong>${formatNumber(L.rpm)}</strong>
+      <small>${L.spinLoft}° spin loft · ${L.apexM} m apex</small></div>
+    <div><em>${labels[1]}</em><strong>${formatNumber(R.rpm)}</strong>
+      <small>${R.spinLoft}° spin loft · ${R.apexM} m apex</small></div>
+  </div>`;
+}
+
+function renderMyths(){
+  $('myths').innerHTML = MYTHS.map((m,i) => {
+    const shown = mythAnswers[i] !== null
+      ? abBlock(m.before, m.after, ['Before','After']) : '';
+    return quizCard(m, i, mythAnswers[i], 'data-q', shown);
+  }).join('');
+}
+
+function renderMastery(){
+  $('mastery').innerHTML = MASTERY.map((t,i) => {
+    if (t.kind === 'lab-target') {
+      return `<div class="quiz">
+        <p class="q">${t.prompt}</p>
+        <div class="gates">
+          <div class="gate" data-gate="rpm"><i aria-hidden="true"></i>
+            <span>Backspin 6,800–7,400 rpm<span class="sr" data-state></span></span><b></b></div>
+          <div class="gate" data-gate="land"><i aria-hidden="true"></i>
+            <span>Landing angle ≥ 50°<span class="sr" data-state></span></span><b></b></div>
+        </div>
+        <p class="why" data-gate-note></p>
+      </div>`;
+    }
+    const extra = t.kind === 'engine-compare'
+      ? abBlock(t.left, t.right, ['Delivery A','Delivery B']) : '';
+    const item = { ...t, explanation: masteryAnswers[i] === t.answerIndex
+      ? `Correct — ${t.ability.toLowerCase()}.` : `The engine answer is “${t.choices[t.answerIndex]}”.` };
+    return quizCard(item, i, masteryAnswers[i], 'data-m', extra);
+  }).join('');
+  updateGates();
+}
+
+/* Patched in place, never re-rendered: the mastery list must not be rebuilt on
+   every slider frame or it would steal focus mid-drag. */
+function updateGates(){
+  const rpmGate = document.querySelector('[data-gate="rpm"]');
+  if (!rpmGate) return;
+  const landGate = document.querySelector('[data-gate="land"]');
+  const pass = passesStoppingFlightTarget(state);
+  const target = MASTERY.findIndex(t => t.kind === 'lab-target');
+  masteryAnswers[target] = pass ? 0 : null;
+  /* Met and unmet differed by a dot fill and a text colour only. */
+  const gate = (el, met, value) => {
+    el.toggleAttribute('data-met', met);
+    el.querySelector('b').textContent = value;
+    el.querySelector('[data-state]').textContent = met ? '. Met' : '. Not met';
+  };
+  gate(rpmGate, solved.rpm >= 6800 && solved.rpm <= 7400, formatNumber(solved.rpm));
+  gate(landGate, solved.landingAngle >= 50, `${solved.landingAngle}°`);
+  document.querySelector('[data-gate-note]').textContent = pass
+    ? 'Both gates met from the live solveFlight() state.'
+    : 'Drop the sheet and drive the rail until both gates light.';
+}
+
+function renderResult(){
+  const scored = MASTERY.filter((t,i) => masteryAnswers[i] === (t.answerIndex ?? 0)).length;
+  const mastered = scored >= 4;
+  document.body.dataset.focal = mastered ? 'gold' : 'ember';
+  $('resultSeal').textContent = mastered ? `Mastered · ${scored} of 5` : 'Backspin result';
+  $('resultCopy').textContent = mastered
+    ? 'You separated the geometry from the scaler, and the simulator from the estimate.'
+    : 'Complete the Mastery Check to see the ability you demonstrated.';
+  $('abilities').innerHTML = MASTERY
+    .filter((t,i) => masteryAnswers[i] === (t.answerIndex ?? 0))
+    .map(t => `<li><i aria-hidden="true"></i>${t.ability}</li>`).join('');
+}
+
+function solve(){
+  try { solved = solveBackspinState(state); }
+  catch { return; }
+  const next = advanceMission(mission, solved.rpm);
+  if (next.event) {
+    say(next.event === 'built' ? 'Stage credited: 7,000 rpm reached'
+      : 'Stage credited: below 3,500 rpm');
+    /* The premise, stated as behaviour: the sheet is the lesson, so when the
+       lesson has something to say it comes up on its own. The user's own
+       delivery credited the stage — this is the answer to their action, not an
+       interruption — and one drag puts it back. It never rises past half, so
+       the model they are still driving stays on screen. */
+    if (beat === 0 && height < detents.half - 4) snap('half');
+  }
+  mission = next;
+  renderRail(); renderMission();
+  if (beat === 2) renderInfluence();
+  if (beat === 4) updateGates();
+  draw();
+}
+
+/* ═══ WIRING ═════════════════════════════════════════════════════════════ */
+$('steps').innerHTML = BEATS.map(() => '<i></i>').join('');
+$('chips').innerHTML = KEYS.map((k,i) => `<button type="button" role="radio" data-key="${k}"
+  aria-checked="${i===0}" tabindex="${i===0?0:-1}">${BACKSPIN_PARAMS[k].label}</button>`).join('');
+
+function pickKey(b){
+  if (!b) return;
+  activeKey = b.dataset.key;
+  [...$('chips').children].forEach(c => {
+    const on = c === b;
+    c.setAttribute('aria-checked', String(on));
+    c.tabIndex = on ? 0 : -1;
+  });
+  syncRange(); yieldToModel(); draw();
+}
+$('chips').addEventListener('click', e => pickKey(e.target.closest('[data-key]')));
+wireRadios($('chips'), pickKey);
+
+const range = $('range');
+function syncRange(){
+  const p = BACKSPIN_PARAMS[activeKey];
+  range.min = p.min; range.max = p.max; range.step = p.step;
+  range.value = state[activeKey];
+  range.setAttribute('aria-label', p.label);
+  renderRail();
+}
+range.addEventListener('pointerdown', yieldToModel);
+range.addEventListener('focus', yieldToModel);
+range.addEventListener('input', () => { state[activeKey] = Number(range.value); solve(); });
+range.addEventListener('change', () => {
+  const chain = buildCauseChain(settled, state, activeKey);
+  $('chain').innerHTML = chain.visual.map(v => `<span>${v}</span>`).join('');
+  say(chain.speech);
+  ghost = solveBackspinState(settled);
+  settled = { ...state };
+});
+
+function pickLie(b){
+  if (!b) return;
+  lie = b.dataset.lie;
+  [...$('lie').children].forEach(c => {
+    const on = c === b;
+    c.setAttribute('aria-checked', String(on));
+    c.tabIndex = on ? 0 : -1;
+  });
+  renderInfluence();
+}
+$('lie').addEventListener('click', e => pickLie(e.target.closest('[data-lie]')));
+wireRadios($('lie'), pickLie);
+
+/* Re-rendering the list destroys the button the user just pressed, which drops
+   focus to BODY — the answer, the explanation and the A/B engine block all
+   appear somewhere a keyboard user has been evicted from. Focus is put back on
+   the same option, which now carries its own verdict. */
+function answered(host, attr, i, c){
+  host.querySelector(`[${attr}="${i}"][data-c="${c}"]`)?.focus();
+}
+$('myths').addEventListener('click', e => {
+  const b = e.target.closest('[data-q]'); if (!b || b.getAttribute('aria-disabled')) return;
+  const { q, c } = b.dataset;
+  mythAnswers[+q] = +c;
+  renderMyths();
+  answered($('myths'), 'data-q', q, c);
+});
+$('mastery').addEventListener('click', e => {
+  const b = e.target.closest('[data-m]'); if (!b || b.getAttribute('aria-disabled')) return;
+  const { m, c } = b.dataset;
+  masteryAnswers[+m] = +c;
+  renderMastery();
+  answered($('mastery'), 'data-m', m, c);
+});
+
+document.addEventListener('click', e => {
+  const g = e.target.closest('[data-go]'); if (!g) return;
+  goTo(+g.dataset.go);
+});
+function goTo(n){
+  beat = Math.max(0, Math.min(BEATS.length-1, n));
+  [...beats.querySelectorAll('.beat')].forEach(el =>
+    el.toggleAttribute('data-active', +el.dataset.beat === beat));
+  beats.scrollTop = 0;
+  if (beat === 2) renderInfluence();
+  if (beat === 3) renderMyths();
+  if (beat === 4) renderMastery();
+  if (beat === 5) renderResult(); else document.body.dataset.focal = 'ember';
+  renderRail();
+  const active = beats.querySelector('.beat[data-active]');
+  snap(beat === 1 ? 'peek' : 'half');
+  /* WCAG 2.4.11. At peek the sheet is a rail and a sliver, so focusing the beat
+     put the caret 5 px from the bottom edge and made the next tab stop a button
+     252 px below the fold. The collapsed state IS "drive the model", so focus
+     goes to the handle that is on screen; the live region still names the beat
+     the rail just switched to, using the text already printed there. */
+  if (sheet.dataset.detent === 'peek') {
+    grab.focus();
+    say(`${BEATS[beat]}. ${active.querySelector('h1,h2').textContent}`);
+  } else active.focus();
+  draw();
+}
+
+/* Path stub — real curriculum, real goal. */
+const goal = ACADEMY_GOALS.find(g => g.id === 'launch-flight');
+$('pathTitle').textContent = goal.title;
+$('pathList').innerHTML = goal.experienceIds.map(id => {
+  const x = ACADEMY_EXPERIENCES.find(e => e.id === id);
+  const cur = id === 'backspin';
+  const done = goal.experienceIds.indexOf(id) < goal.experienceIds.indexOf('backspin');
+  return `<li${cur ? ' data-current' : ''}${done ? ' data-done' : ''}>
+    <span class="path__pip"></span>${cur ? `<b>${x.title}</b>` : x.title}</li>`;
+}).join('');
+
+window.addEventListener('resize', () => { resize(); measure(); snap(sheet.dataset.detent || 'half'); });
+resize(); measure();
+syncRange(); solve(); renderMission(); renderMyths(); renderMastery();
+snap('half');
+requestAnimationFrame(() => { sheet.dataset.detent = 'half'; setHeight(detents.half, true); });
+</script>
+</body>
+</html>

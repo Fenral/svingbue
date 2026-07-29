@@ -1,0 +1,350 @@
+{
+  "id": "apex-window-equal-carry",
+  "title": "Same Carry, Different Ceiling — the Apex Window",
+  "generatedAt": "2026-07-28T06:16:34.716Z",
+  "generator": "outputs/agent-scan/gen-apex-window-equal-carry.mjs",
+  "engine": "impact-flight.js solveFlight({dynamicLoft, attackAngle, clubSpeed}) — clubPath/faceAngle default 0",
+  "constants": {
+    "spinLoftDeg": 34,
+    "clubSpeedMph": 95,
+    "clubPathDeg": 0,
+    "faceAngleDeg": 0,
+    "note": "Every row satisfies deliveredLoft - attackAngle = 34 deg exactly."
+  },
+  "cellMetric": {
+    "field": "apexYd",
+    "unit": "yd",
+    "tag": "ESTIMATE"
+  },
+  "rows": [
+    {
+      "deliveredLoftDeg": 22,
+      "attackAngleDeg": -12,
+      "apexYd": 25.8,
+      "carryYd": 180.96,
+      "landingAngleDeg": 50.97,
+      "backspinRpm": 7413,
+      "ballSpeedMph": 128.64,
+      "smash": 1.3541,
+      "totalYd": 186.58,
+      "launchAngleDeg": 9.49,
+      "spinLoft3dDeg": 34,
+      "signedVerticalSpinLoftDeg": 34,
+      "carryLaunchEfficiency": 0.973936,
+      "apexBallSpeedTermYd": 16.294,
+      "apexLaunchTermYd": 9.506,
+      "flags": [
+        "below-full-launch-efficiency"
+      ],
+      "raw": {
+        "carry": 180.96209613839088,
+        "apex": 25.79989389694248,
+        "landingAngle": 50.96613204626033,
+        "backspin": 7412.559688891961,
+        "ballSpeed": 128.63513025778326,
+        "smashEff": 1.354054002713508,
+        "launchAngle": 9.485503602261137,
+        "spinLoft": 34,
+        "spinRpmRaw": 7412.559688891961,
+        "landingRaw": 50.96613204626033,
+        "rollFrac": 0.03105080193060951,
+        "carryFullLaunchAtDeg": 10
+      }
+    },
+    {
+      "deliveredLoftDeg": 28,
+      "attackAngleDeg": -6,
+      "apexYd": 30.7,
+      "carryYd": 185.81,
+      "landingAngleDeg": 50.97,
+      "backspinRpm": 7413,
+      "ballSpeedMph": 128.64,
+      "smash": 1.3541,
+      "totalYd": 191.57,
+      "launchAngleDeg": 13.58,
+      "spinLoft3dDeg": 34,
+      "signedVerticalSpinLoftDeg": 34,
+      "carryLaunchEfficiency": 1,
+      "apexBallSpeedTermYd": 16.73,
+      "apexLaunchTermYd": 13.97,
+      "flags": [],
+      "raw": {
+        "carry": 185.80501064118795,
+        "apex": 30.70014164389535,
+        "landingAngle": 50.96613204626033,
+        "backspin": 7412.559688891961,
+        "ballSpeed": 128.63513025778326,
+        "smashEff": 1.354054002713508,
+        "launchAngle": 13.576638989819692,
+        "spinLoft": 34,
+        "spinRpmRaw": 7412.559688891961,
+        "landingRaw": 50.96613204626033,
+        "rollFrac": 0.03105080193060951,
+        "carryFullLaunchAtDeg": 10
+      }
+    },
+    {
+      "deliveredLoftDeg": 34,
+      "attackAngleDeg": 0,
+      "apexYd": 35.8,
+      "carryYd": 185.81,
+      "landingAngleDeg": 50.97,
+      "backspinRpm": 7413,
+      "ballSpeedMph": 128.64,
+      "smash": 1.3541,
+      "totalYd": 191.57,
+      "launchAngleDeg": 18.53,
+      "spinLoft3dDeg": 34,
+      "signedVerticalSpinLoftDeg": 34,
+      "carryLaunchEfficiency": 1,
+      "apexBallSpeedTermYd": 16.73,
+      "apexLaunchTermYd": 19.071,
+      "flags": [],
+      "raw": {
+        "carry": 185.80501064118795,
+        "apex": 35.80082038325386,
+        "landingAngle": 50.96613204626033,
+        "backspin": 7412.559688891962,
+        "ballSpeed": 128.63513025778326,
+        "smashEff": 1.354054002713508,
+        "launchAngle": 18.53355305622561,
+        "spinLoft": 34,
+        "spinRpmRaw": 7412.559688891962,
+        "landingRaw": 50.96613204626033,
+        "rollFrac": 0.03105080193060951,
+        "carryFullLaunchAtDeg": 10
+      }
+    },
+    {
+      "deliveredLoftDeg": 40,
+      "attackAngleDeg": 6,
+      "apexYd": 41.8,
+      "carryYd": 185.81,
+      "landingAngleDeg": 50.97,
+      "backspinRpm": 7413,
+      "ballSpeedMph": 128.64,
+      "smash": 1.3541,
+      "totalYd": 191.57,
+      "launchAngleDeg": 24.36,
+      "spinLoft3dDeg": 34,
+      "signedVerticalSpinLoftDeg": 34,
+      "carryLaunchEfficiency": 1,
+      "apexBallSpeedTermYd": 16.73,
+      "apexLaunchTermYd": 25.063,
+      "flags": [],
+      "raw": {
+        "carry": 185.80501064118795,
+        "apex": 41.79238785722151,
+        "landingAngle": 50.96613204626033,
+        "backspin": 7412.559688891959,
+        "ballSpeed": 128.63513025778326,
+        "smashEff": 1.354054002713508,
+        "launchAngle": 24.35624580147889,
+        "spinLoft": 34,
+        "spinRpmRaw": 7412.559688891959,
+        "landingRaw": 50.96613204626033,
+        "rollFrac": 0.03105080193060951,
+        "carryFullLaunchAtDeg": 10
+      }
+    }
+  ],
+  "sharedFootnote": {
+    "premiseHolds": false,
+    "identical": {
+      "carry": false,
+      "landingAngle": true,
+      "backspin": true,
+      "ballSpeed": true,
+      "smashEff": true
+    },
+    "carryYd": 185.81,
+    "landingAngleDeg": 50.97,
+    "backspinRpm": 7413,
+    "ballSpeedMph": 128.64,
+    "smash": 1.3541,
+    "text": "185.81 yd carry · 50.97° landing angle · 7413 rpm backspin. Only apex moves.",
+    "warning": "Row 22° breaks the shared footnote: carry 180.96 yd, not 185.81 yd. Do not publish this grid with a single carry figure. Use recommendedGrid instead."
+  },
+  "apexSpread": {
+    "minYd": 25.8,
+    "maxYd": 41.8,
+    "rangeYd": 16
+  },
+  "equalCarryKnee": {
+    "deliveredLoftDeg": 22.830246,
+    "attackAngleDeg": -11.169754,
+    "why": "carryLaunchEfficiency = min(launchAngle / carryFullLaunchAtDeg, 1), carryFullLaunchAtDeg = 10. Below this delivered loft the diagonal no longer holds carry constant, because launchAngle drops under 10 deg. Equal carry is therefore a property of the diagonal ONLY above this knee."
+  },
+  "recommendedGrid": {
+    "reason": "The ordered grid starts at 22 deg, which is below the 22.83 deg knee, so its carry is 4.84 yd short and the shared footnote would be false. Lifting the first row to 24 deg restores the premise and changes nothing else.",
+    "premiseHolds": true,
+    "identical": {
+      "carry": true,
+      "landingAngle": true,
+      "backspin": true,
+      "ballSpeed": true,
+      "smashEff": true
+    },
+    "rows": [
+      {
+        "deliveredLoftDeg": 24,
+        "attackAngleDeg": -10,
+        "apexYd": 27.8,
+        "carryYd": 185.81,
+        "landingAngleDeg": 50.97,
+        "backspinRpm": 7413,
+        "ballSpeedMph": 128.64,
+        "smash": 1.3541,
+        "totalYd": 191.57,
+        "launchAngleDeg": 10.75,
+        "spinLoft3dDeg": 34,
+        "signedVerticalSpinLoftDeg": 34,
+        "carryLaunchEfficiency": 1,
+        "apexBallSpeedTermYd": 16.73,
+        "apexLaunchTermYd": 11.065,
+        "flags": [],
+        "raw": {
+          "carry": 185.80501064118795,
+          "apex": 27.79462733688365,
+          "landingAngle": 50.96613204626033,
+          "backspin": 7412.559688891961,
+          "ballSpeed": 128.63513025778326,
+          "smashEff": 1.354054002713508,
+          "launchAngle": 10.753017767130947,
+          "spinLoft": 34,
+          "spinRpmRaw": 7412.559688891961,
+          "landingRaw": 50.96613204626033,
+          "rollFrac": 0.03105080193060951,
+          "carryFullLaunchAtDeg": 10
+        }
+      },
+      {
+        "deliveredLoftDeg": 28,
+        "attackAngleDeg": -6,
+        "apexYd": 30.7,
+        "carryYd": 185.81,
+        "landingAngleDeg": 50.97,
+        "backspinRpm": 7413,
+        "ballSpeedMph": 128.64,
+        "smash": 1.3541,
+        "totalYd": 191.57,
+        "launchAngleDeg": 13.58,
+        "spinLoft3dDeg": 34,
+        "signedVerticalSpinLoftDeg": 34,
+        "carryLaunchEfficiency": 1,
+        "apexBallSpeedTermYd": 16.73,
+        "apexLaunchTermYd": 13.97,
+        "flags": [],
+        "raw": {
+          "carry": 185.80501064118795,
+          "apex": 30.70014164389535,
+          "landingAngle": 50.96613204626033,
+          "backspin": 7412.559688891961,
+          "ballSpeed": 128.63513025778326,
+          "smashEff": 1.354054002713508,
+          "launchAngle": 13.576638989819692,
+          "spinLoft": 34,
+          "spinRpmRaw": 7412.559688891961,
+          "landingRaw": 50.96613204626033,
+          "rollFrac": 0.03105080193060951,
+          "carryFullLaunchAtDeg": 10
+        }
+      },
+      {
+        "deliveredLoftDeg": 34,
+        "attackAngleDeg": 0,
+        "apexYd": 35.8,
+        "carryYd": 185.81,
+        "landingAngleDeg": 50.97,
+        "backspinRpm": 7413,
+        "ballSpeedMph": 128.64,
+        "smash": 1.3541,
+        "totalYd": 191.57,
+        "launchAngleDeg": 18.53,
+        "spinLoft3dDeg": 34,
+        "signedVerticalSpinLoftDeg": 34,
+        "carryLaunchEfficiency": 1,
+        "apexBallSpeedTermYd": 16.73,
+        "apexLaunchTermYd": 19.071,
+        "flags": [],
+        "raw": {
+          "carry": 185.80501064118795,
+          "apex": 35.80082038325386,
+          "landingAngle": 50.96613204626033,
+          "backspin": 7412.559688891962,
+          "ballSpeed": 128.63513025778326,
+          "smashEff": 1.354054002713508,
+          "launchAngle": 18.53355305622561,
+          "spinLoft": 34,
+          "spinRpmRaw": 7412.559688891962,
+          "landingRaw": 50.96613204626033,
+          "rollFrac": 0.03105080193060951,
+          "carryFullLaunchAtDeg": 10
+        }
+      },
+      {
+        "deliveredLoftDeg": 40,
+        "attackAngleDeg": 6,
+        "apexYd": 41.8,
+        "carryYd": 185.81,
+        "landingAngleDeg": 50.97,
+        "backspinRpm": 7413,
+        "ballSpeedMph": 128.64,
+        "smash": 1.3541,
+        "totalYd": 191.57,
+        "launchAngleDeg": 24.36,
+        "spinLoft3dDeg": 34,
+        "signedVerticalSpinLoftDeg": 34,
+        "carryLaunchEfficiency": 1,
+        "apexBallSpeedTermYd": 16.73,
+        "apexLaunchTermYd": 25.063,
+        "flags": [],
+        "raw": {
+          "carry": 185.80501064118795,
+          "apex": 41.79238785722151,
+          "landingAngle": 50.96613204626033,
+          "backspin": 7412.559688891959,
+          "ballSpeed": 128.63513025778326,
+          "smashEff": 1.354054002713508,
+          "launchAngle": 24.35624580147889,
+          "spinLoft": 34,
+          "spinRpmRaw": 7412.559688891959,
+          "landingRaw": 50.96613204626033,
+          "rollFrac": 0.03105080193060951,
+          "carryFullLaunchAtDeg": 10
+        }
+      }
+    ],
+    "sharedFootnote": {
+      "carryYd": 185.81,
+      "landingAngleDeg": 50.97,
+      "backspinRpm": 7413,
+      "ballSpeedMph": 128.64,
+      "smash": 1.3541,
+      "text": "185.81 yd carry · 50.97° landing angle · 7413 rpm backspin. Only apex moves."
+    },
+    "apexSpread": {
+      "minYd": 27.8,
+      "maxYd": 41.8,
+      "rangeYd": 14
+    }
+  },
+  "domain": {
+    "engineDomain": "All rows inside impact-outcome.js gate (signedVerticalSpinLoftDeg = 34 > 0). No clamp, no no-flight row.",
+    "outOfEngineDomainRows": [],
+    "clampedRows": [],
+    "aerodynamics": "PREMIUM_TOUR_CLASS_AERO reports extrapolated:true for every row (normal state for this engine — motor-api.md §4.5), not an error."
+  },
+  "golfPlausibility": {
+    "plausible": [
+      28,
+      34
+    ],
+    "strained": [
+      22,
+      24,
+      40
+    ],
+    "note": "Delivered loft 34 deg / attack 0 deg and 28 deg / -6 deg are ordinary mid-iron deliveries. 22-24 deg / -10 to -12 deg is a very steep punch (attack angles past about -8 deg are rare off turf). 40 deg / +6 deg cannot be produced off the ground with a mid-iron; it reads as a teed or launched-up delivery. All are inside the engine domain and correctly computed - they are outside the normal player window, so the table must label the outer rows as extremes, not as recommendations."
+  }
+}
