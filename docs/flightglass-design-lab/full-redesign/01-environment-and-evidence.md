@@ -8,7 +8,7 @@
 |---|---|
 | `npm run verify:change` (docs-scope, dry-run + reell) | PASS nivå A tidligere i økten (Ask-arbeidet); samme regime gjelder her |
 | `npm run claude:ready` | **Ikke kjørt** — krever full testmatrise inkl. Playwright; se under. Gaten gjelder implementering; denne fasen endrer ingen kontrollpakke-fil |
-| Playwright-harness (`ux:baseline`, `test:visreg`, screenshots) | **Ikke kjørbart i denne økten:** `playwright@1.62.1` er ikke installert i `node_modules` (npx krever nedlasting). Å installere ~300 MB browsere er en miljøendring jeg ikke gjør i en docs-fase |
+| Playwright-harness (`ux:baseline`, `test:visreg`, screenshots) | **Delvis kjørbart (oppdatert senere i økten):** `npm ci --prefix tools` gjenopprettet repoets deklarerte `playwright-core`, og browser-spotene kjører mot system-Edge/Chrome/WebKit uten browser-nedlasting — verifisert ved triptyk-mockens nivå B-gate (chromium + webkit spot, 2 cases, 0 kritiske). Full `ux:baseline`-kaptura er fortsatt uverifisert i denne økten |
 | Node-baserte skript uten browser (change-gate, generatorer) | Fungerer (verifisert via change-gate og tidligere kjøringer) |
 | Git-fjernlager | Push til feature-brancher fungerer (verifisert med `agent/ask-flightglass-spec`) |
 
