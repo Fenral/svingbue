@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Flightglass — Direction Triptych (Fieldbook · Signal · Quiet Phosphor)</title>
+<!-- DESIGN MOCK, NOT SHIPPED. Decision-support artefact for owner gate FR-O1.
+     Token values verbatim from docs/flightglass-design-lab/full-redesign/09-direction-{1,2,3}
+     including board addenda 2026-08-05 (FB: metric row in ink, tab underline in ink;
+     SG: Home/trace rules; QP: ink-filled selected chip). Same engine-shaped trace in all
+     three frames. Contrast figures are hex-math estimates until render-measured (D-gate).
+     Fonts: vendored faces first, graceful system fallbacks (mock must be self-contained). -->
+<style>
+  :root{
+    --page:#101114; --page-ink:#E9EAEC; --page-muted:#9AA1A8; --page-line:rgba(255,255,255,.12);
+  }
+  *{box-sizing:border-box; margin:0; padding:0}
+  body{background:var(--page); color:var(--page-ink);
+       font:15px/1.5 Inter,-apple-system,"Segoe UI",Roboto,sans-serif; padding:28px 20px 60px}
+  header.page{max-width:1280px; margin:0 auto 26px}
+  header.page h1{font-size:20px; font-weight:600; letter-spacing:.02em}
+  header.page p{color:var(--page-muted); font-size:13px; max-width:70ch; margin-top:6px}
+  .grid{max-width:1280px; margin:0 auto; display:grid; gap:22px;
+        grid-template-columns:repeat(auto-fit,minmax(340px,1fr))}
+  .col{border:1px solid var(--page-line); border-radius:14px; padding:16px; background:#16181C}
+  .col h2{font-size:15px; font-weight:600}
+  .col .thesis{font-size:12px; color:var(--page-muted); margin:4px 0 12px; min-height:3.2em}
+  .swatches{display:flex; gap:6px; margin-bottom:14px}
+  .sw{flex:1; height:26px; border-radius:5px; border:1px solid rgba(255,255,255,.14); position:relative}
+  .sw span{position:absolute; left:4px; bottom:-16px; font:9px/1 ui-monospace,Menlo,Consolas,monospace; color:var(--page-muted)}
+  .swatches{margin-bottom:26px}
+  .phone{border-radius:22px; overflow:hidden; border:1px solid rgba(255,255,255,.18);
+         box-shadow:0 10px 30px rgba(0,0,0,.45); aspect-ratio:390/660; display:flex; flex-direction:column}
+  .cap{font-size:11px; color:var(--page-muted); margin:10px 2px 0}
+  .paysample{margin-top:14px; border-radius:10px; overflow:hidden; border:1px solid rgba(255,255,255,.14)}
+  svg{display:block; width:100%}
+  .mono{font-family:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace; font-variant-numeric:tabular-nums}
+
+  /* ─────────── 1 · FIELDBOOK ─────────── */
+  .fb{--bg:#F2EEE3; --surface:#FAF7EF; --sunk:#E7E1D2; --ink:#1D1A14; --muted:#575039; --dim:#6E6650;
+      --line:rgba(29,26,20,.14); --line2:rgba(29,26,20,.38); --sig:#C2340F; --sigdeep:#9E2A0C}
+  .fb .screen{background:var(--bg); color:var(--ink); font-family:Inter,-apple-system,sans-serif;
+              display:flex; flex-direction:column; height:100%}
+  .fb .rulertop{height:10px; border-bottom:1px solid var(--line2);
+      background:repeating-linear-gradient(90deg,transparent 0 9px,var(--line2) 9px 10px)}
+  .fb .head{display:flex; justify-content:space-between; align-items:baseline; padding:10px 14px 6px}
+  .fb .head .t{font:600 11px/1 ui-monospace,Menlo,monospace; letter-spacing:.08em; color:var(--dim)}
+  .fb .head .club{font:600 11px/1 ui-monospace,Menlo,monospace; letter-spacing:.08em; color:var(--muted)}
+  .fb .stage{flex:1; padding:2px 10px 0}
+  .fb .metrics{display:flex; gap:14px; padding:8px 14px 2px}
+  .fb .m .v{font:600 15px/1.2 "IBM Plex Mono",ui-monospace,monospace; color:var(--ink)}
+  .fb .m .l{font:600 8.5px/1.6 ui-monospace,monospace; letter-spacing:.1em; color:var(--dim)}
+  .fb .dock{margin:10px 12px; background:var(--surface); border:1px solid var(--line2); border-radius:8px; padding:10px 12px}
+  .fb .dock .row1{display:flex; justify-content:space-between; align-items:baseline}
+  .fb .dock .pn{font:600 9.5px/1 ui-monospace,monospace; letter-spacing:.12em; color:var(--dim)}
+  .fb .dock .pv{font:600 14px/1 "IBM Plex Mono",ui-monospace,monospace}
+  .fb .slider{margin:12px 2px 4px; height:22px; border-radius:4px; background:var(--sunk); position:relative;
+      background-image:repeating-linear-gradient(90deg,transparent 0 17px,var(--line2) 17px 18px)}
+  .fb .slider i{position:absolute; top:50%; left:62%; width:14px; height:14px; border-radius:50%;
+      background:var(--ink); transform:translate(-50%,-50%)}
+  .fb .chips{display:flex; gap:6px; padding:0 12px 12px}
+  .fb .chip{font:600 9.5px/1 ui-monospace,monospace; letter-spacing:.08em; padding:8px 10px;
+      border:1px solid var(--line2); border-radius:999px; color:var(--muted)}
+  .fb .chip.on{background:var(--ink); color:var(--surface); border-color:var(--ink)}
+  .fb .tabs{display:flex; border-top:1px solid var(--line2); background:var(--bg)}
+  .fb .tab{flex:1; text-align:center; padding:9px 0 8px; font:600 9px/1 ui-monospace,monospace;
+      letter-spacing:.1em; color:var(--muted)}
+  .fb .tab.on{color:var(--ink); box-shadow:inset 0 -2px 0 var(--ink)}
+  .fb .pay{background:var(--surface); color:var(--ink); padding:12px 14px; font-family:Inter,sans-serif}
+  .fb .pay .ph{font:600 10px/1 ui-monospace,monospace; letter-spacing:.12em; color:var(--dim); margin-bottom:8px}
+  .fb .pay .tkt{display:flex; justify-content:space-between; border-top:1px dashed var(--line2); padding:7px 0; font-size:12px}
+  .fb .pay .tkt .p{font-family:"IBM Plex Mono",ui-monospace,monospace; font-weight:600}
+  .fb .pay .rec{font:600 8.5px/1 ui-monospace,monospace; letter-spacing:.1em; color:var(--sigdeep)}
+  .fb .pay .cta{margin-top:9px; background:var(--sig); color:var(--surface); text-align:center;
+      border-radius:4px; padding:9px 0; font:600 11px/1 Inter,sans-serif; letter-spacing:.04em}
+  .fb .disp{font-family:Fraunces,Georgia,"Times New Roman",serif; font-weight:600}
+
+  /* ─────────── 2 · SIGNAL ─────────── */
+  .sg{--bg:#F1F2F3; --scene0:#E7E9EB; --scene1:#F3F4F5; --panel:#FBFCFC; --ink:#17191B; --ink2:#52575D;
+      --ink3:#61686F; --hair:#D9DBDE; --hair2:#A9AEB4; --sig:#C8102E; --carbon:#1B1D20; --cink:#F4F5F6}
+  .sg .screen{background:var(--bg); color:var(--ink); font-family:Inter,-apple-system,sans-serif;
+              display:flex; flex-direction:column; height:100%}
+  .sg .strip{display:flex; justify-content:space-between; align-items:center; padding:10px 14px;
+      background:var(--panel); border-bottom:1px solid var(--hair)}
+  .sg .strip .t{font:600 11px/1 "Space Grotesk",Inter,sans-serif; letter-spacing:.1em; color:var(--ink2)}
+  .sg .tally{display:flex; align-items:center; gap:5px; font:600 9.5px/1 ui-monospace,monospace; letter-spacing:.08em}
+  .sg .tally i{width:7px; height:7px; border-radius:50%; background:var(--sig)}
+  .sg .stage{flex:1; background:linear-gradient(180deg,var(--scene1),var(--scene0)); padding:4px 10px 0}
+  .sg .lower{margin:0 12px; background:var(--panel); border:1px solid var(--hair); border-radius:10px; padding:9px 12px}
+  .sg .lower .plain{font-size:11.5px; color:var(--ink)}
+  .sg .tele{display:flex; gap:14px; margin-top:5px}
+  .sg .tele .v{font:600 13px/1.2 "IBM Plex Mono",ui-monospace,monospace}
+  .sg .tele .l{font:600 8px/1.6 ui-monospace,monospace; letter-spacing:.1em; color:var(--ink3)}
+  .sg .desk{margin:10px 12px 12px; background:var(--panel); border:1px solid var(--hair); border-radius:10px; padding:10px 12px}
+  .sg .chips{display:flex; gap:6px; margin-bottom:10px}
+  .sg .chip{display:flex; align-items:center; gap:5px; font:600 9.5px/1 ui-monospace,monospace;
+      padding:7px 9px; border-radius:6px; color:var(--ink2); border:1px solid var(--hair)}
+  .sg .chip .dot{width:7px; height:7px; border-radius:50%; background:var(--hair2)}
+  .sg .chip.on{color:var(--ink); box-shadow:inset 0 -2px 0 var(--ink)}
+  .sg .chip.on .dot{background:#8A1038}
+  .sg .fader{height:20px; border-radius:6px; background:var(--scene0); position:relative; border:1px solid var(--hair)}
+  .sg .fader b{position:absolute; inset:0 auto 0 0; width:62%; border-radius:6px 0 0 6px; background:rgba(138,16,56,.25)}
+  .sg .fader i{position:absolute; top:50%; left:62%; width:13px; height:13px; border-radius:3px;
+      background:var(--ink); transform:translate(-50%,-50%)}
+  .sg .pay{background:var(--carbon); color:var(--cink); padding:12px 14px}
+  .sg .pay .ph{font:600 10px/1 "Space Grotesk",Inter,sans-serif; letter-spacing:.12em; color:#B8BDC3; margin-bottom:8px}
+  .sg .pay .row{display:flex; justify-content:space-between; padding:7px 0; font-size:12px; border-top:1px solid #24272B}
+  .sg .pay .p{font-family:"IBM Plex Mono",ui-monospace,monospace; font-weight:600}
+  .sg .pay .rec{font:600 8.5px/1 ui-monospace,monospace; letter-spacing:.1em; color:#FF6B57}
+  .sg .pay .cta{margin-top:9px; background:var(--sig); color:#FFF; text-align:center; border-radius:6px;
+      padding:9px 0; font:600 11px/1 Inter,sans-serif; letter-spacing:.04em}
+
+  /* ─────────── 3 · QUIET PHOSPHOR ─────────── */
+  .qp{--g0:#0B0C0E; --g1:#15171A; --g2:#1C1F23; --g3:#24272C; --ink:#E8EAED; --muted:#A6ACB3;
+      --dim:#81888F; --struct:#9BA6B1; --line:rgba(255,255,255,.08); --line2:rgba(255,255,255,.22);
+      --sig:#F9A04A}
+  .qp .screen{background:var(--g0); color:var(--ink); font-family:Inter,-apple-system,sans-serif;
+              display:flex; flex-direction:column; height:100%}
+  .qp .strip{display:flex; justify-content:space-between; align-items:center; padding:10px 14px;
+      background:var(--g1); border-bottom:1px solid var(--line)}
+  .qp .strip .t{font:600 11px/1 "Space Grotesk",Inter,sans-serif; letter-spacing:.1em; color:var(--muted)}
+  .qp .strip .ask{font:600 9.5px/1 ui-monospace,monospace; color:var(--dim)}
+  .qp .stage{flex:1; padding:4px 10px 0}
+  .qp .metrics{display:flex; gap:14px; padding:8px 14px 2px}
+  .qp .m .v{font:500 15px/1.2 "IBM Plex Mono",ui-monospace,monospace; color:var(--ink); letter-spacing:-.02em}
+  .qp .m .v.live{color:var(--sig)}
+  .qp .m .l{font:600 8.5px/1.6 ui-monospace,monospace; letter-spacing:.1em; color:var(--dim)}
+  .qp .dock{margin:10px 12px; background:var(--g2); border:1px solid var(--line); border-radius:14px; padding:10px 12px}
+  .qp .dock .row1{display:flex; justify-content:space-between; align-items:baseline}
+  .qp .dock .pn{font:600 9.5px/1 ui-monospace,monospace; letter-spacing:.12em; color:var(--dim)}
+  .qp .dock .pv{font:500 14px/1 "IBM Plex Mono",ui-monospace,monospace}
+  .qp .slider{margin:12px 2px 4px; height:20px; border-radius:10px; background:var(--g3); position:relative}
+  .qp .slider i{position:absolute; top:50%; left:62%; width:14px; height:14px; border-radius:50%;
+      background:var(--ink); transform:translate(-50%,-50%)}
+  .qp .chips{display:flex; gap:6px; padding:0 12px 12px}
+  .qp .chip{font:600 9.5px/1 ui-monospace,monospace; letter-spacing:.08em; padding:8px 10px;
+      border:1px solid var(--line2); border-radius:10px; color:var(--muted); background:var(--g3)}
+  .qp .chip.on{background:var(--ink); color:var(--g0); border-color:var(--ink)}
+  .qp .pay{background:var(--g1); color:var(--ink); padding:12px 14px}
+  .qp .pay .ph{font:600 10px/1 "Space Grotesk",Inter,sans-serif; letter-spacing:.12em; color:var(--dim); margin-bottom:8px}
+  .qp .pay .row{display:flex; justify-content:space-between; padding:7px 0; font-size:12px; border-top:1px solid var(--line)}
+  .qp .pay .row.rec2{border:1px solid var(--line2); border-radius:8px; padding:7px 8px; margin-top:6px}
+  .qp .pay .p{font-family:"IBM Plex Mono",ui-monospace,monospace; font-weight:500}
+  .qp .pay .rec{font:600 8.5px/1 ui-monospace,monospace; letter-spacing:.1em; color:var(--muted)}
+  .qp .pay .cta{margin-top:9px; background:var(--sig); color:var(--g0); text-align:center; border-radius:8px;
+      padding:9px 0; font:600 11px/1 Inter,sans-serif; letter-spacing:.04em}
+
+  footer{max-width:1280px; margin:26px auto 0; color:var(--page-muted); font-size:11.5px; border-top:1px solid var(--page-line); padding-top:12px}
+</style>
+</head>
+<body>
+
+<header class="page">
+  <h1>Flightglass — retningstriptyk til eierport FR-O1</h1>
+  <p>Samme Range-instrument (identisk trace-geometri og innhold) gjengitt i de tre retningenes tokens,
+     pluss paywall-miniatyr i hver grammatikk. Verdier ordrett fra 09-direction-1/2/3 inkl. board-addenda.
+     DESIGN MOCK — ikke shippet; kontraster er anslag til render-måling (D-gate).</p>
+</header>
+
+<div class="grid">
+
+  <!-- ════════ FIELDBOOK ════════ -->
+  <section class="col fb">
+    <h2><span class="disp" style="font-size:17px">Fieldbook</span> · dagslys-papir</h2>
+    <p class="thesis">«Sannheten trenger ikke natt.» Blekk på benhvitt ark, gravert linjal, én signalfarge som feltmerkespray. Display: Fraunces.</p>
+    <div class="swatches">
+      <div class="sw" style="background:#F2EEE3"><span>bg</span></div>
+      <div class="sw" style="background:#FAF7EF"><span>surface</span></div>
+      <div class="sw" style="background:#1D1A14"><span>ink</span></div>
+      <div class="sw" style="background:#575039"><span>muted</span></div>
+      <div class="sw" style="background:#C2340F"><span>signal</span></div>
+      <div class="sw" style="background:#7A5A00"><span>warn</span></div>
+    </div>
+    <div class="phone"><div class="screen">
+      <div class="rulertop"></div>
+      <div class="head"><span class="t">SHEET 01 · RANGE</span><span class="club">7-IRON · ⌕ ASK</span></div>
+      <div class="stage">
+        <svg viewBox="0 0 360 210" aria-label="Ball flight, ink on paper">
+          <path d="M20 185 Q150 30 330 150" fill="none" stroke="#C2340F" stroke-width="2.6"/>
+          <path d="M20 185 Q140 55 322 158" fill="none" stroke="#1D1A14" stroke-width="1.6" opacity=".45"/>
+          <path d="M20 185 Q132 75 315 164" fill="none" stroke="#1D1A14" stroke-width="1.4" opacity=".22"/>
+          <circle cx="330" cy="150" r="4" fill="none" stroke="#C2340F" stroke-width="1.6"/>
+          <line x1="12" y1="186" x2="348" y2="186" stroke="rgba(29,26,20,.38)"/>
+          <g stroke="rgba(29,26,20,.38)">
+            <line x1="20" y1="186" x2="20" y2="192"/><line x1="82" y1="186" x2="82" y2="190"/>
+            <line x1="144" y1="186" x2="144" y2="192"/><line x1="206" y1="186" x2="206" y2="190"/>
+            <line x1="268" y1="186" x2="268" y2="192"/><line x1="330" y1="186" x2="330" y2="190"/>
+          </g>
+          <text x="18" y="204" font-family="IBM Plex Mono,monospace" font-size="9" fill="#6E6650">0</text>
+          <text x="138" y="204" font-family="IBM Plex Mono,monospace" font-size="9" fill="#6E6650">100</text>
+          <text x="316" y="204" font-family="IBM Plex Mono,monospace" font-size="9" fill="#6E6650">216 m</text>
+        </svg>
+      </div>
+      <div class="metrics">
+        <div class="m"><div class="v mono">216 m</div><div class="l">CARRY</div></div>
+        <div class="m"><div class="v mono">9 m L</div><div class="l">CURVE</div></div>
+        <div class="m"><div class="v mono">29 m</div><div class="l">APEX</div></div>
+      </div>
+      <div class="dock">
+        <div class="row1"><span class="pn">FACE ANGLE</span><span class="pv mono">+2.0°</span></div>
+        <div class="slider"><i></i></div>
+      </div>
+      <div class="chips">
+        <span class="chip on">FACE</span><span class="chip">PATH</span>
+        <span class="chip">ATTACK</span><span class="chip">LOFT</span>
+      </div>
+      <div class="tabs">
+        <span class="tab">INDEX</span><span class="tab on">RANGE</span>
+        <span class="tab">REPORT</span><span class="tab">PLATES</span><span class="tab">BOOK</span>
+      </div>
+    </div></div>
+    <p class="cap">Range som «SHEET 01»: blekk-spor-ghosts (fallende metning), gravert linjal-slider, arkfaner nederst (understrek i blekk, jf. addendum).</p>
+    <div class="paysample fb"><div class="pay">
+      <div class="ph">FLIGHTGLASS PRO · ORDER FORM</div>
+      <div class="tkt"><span>Annual — 2 months free <span class="rec">RECOMMENDED</span></span><span class="p">kr 590</span></div>
+      <div class="tkt"><span>Monthly</span><span class="p">kr 99</span></div>
+      <div class="cta">START PRO</div>
+    </div></div>
+  </section>
+
+  <!-- ════════ SIGNAL ════════ -->
+  <section class="col sg">
+    <h2 style="font-family:'Space Grotesk',Inter,sans-serif; letter-spacing:.03em">SIGNAL · broadcast-grafitt</h2>
+    <p class="thesis">Din egen direktesending: nøytral dagslys-grafitt, broadcast-rød tracer (TV-kontrakten), telemetri i lower third, karbonfelt for replay/paywall. Display: Space Grotesk.</p>
+    <div class="swatches">
+      <div class="sw" style="background:#F1F2F3"><span>bg</span></div>
+      <div class="sw" style="background:#FBFCFC"><span>panel</span></div>
+      <div class="sw" style="background:#17191B"><span>ink</span></div>
+      <div class="sw" style="background:#1B1D20"><span>carbon</span></div>
+      <div class="sw" style="background:#C8102E"><span>signal</span></div>
+      <div class="sw" style="background:#8A6A15"><span>medal</span></div>
+    </div>
+    <div class="phone"><div class="screen">
+      <div class="strip"><span class="t">RANGE</span><span class="tally"><i></i>LIVE</span></div>
+      <div class="stage">
+        <svg viewBox="0 0 360 210" aria-label="Ball flight, broadcast tracer">
+          <path d="M20 185 Q150 30 330 150" fill="none" stroke="#C8102E" stroke-width="2.6"/>
+          <path d="M20 185 Q140 55 322 158" fill="none" stroke="#767E87" stroke-width="1.5" opacity=".7"/>
+          <circle cx="330" cy="150" r="3.4" fill="#C8102E"/>
+          <path d="M150 62 L170 46 L196 46" fill="none" stroke="#61686F" stroke-width="1" stroke-dasharray="3 3"/>
+          <text x="200" y="49" font-family="IBM Plex Mono,monospace" font-size="9" fill="#61686F">APEX 29 m</text>
+          <line x1="12" y1="186" x2="348" y2="186" stroke="#A9AEB4"/>
+          <g stroke="#A9AEB4">
+            <line x1="20" y1="186" x2="20" y2="192"/><line x1="82" y1="186" x2="82" y2="190"/>
+            <line x1="144" y1="186" x2="144" y2="192"/><line x1="206" y1="186" x2="206" y2="190"/>
+            <line x1="268" y1="186" x2="268" y2="192"/><line x1="330" y1="186" x2="330" y2="190"/>
+          </g>
+        </svg>
+      </div>
+      <div class="lower">
+        <div class="plain">A high fade, landing soft.</div>
+        <div class="tele">
+          <div><div class="v mono">216 m</div><div class="l">CARRY</div></div>
+          <div><div class="v mono">58 m/s</div><div class="l">BALL SPEED</div></div>
+          <div><div class="v mono">9 m L</div><div class="l">CURVE</div></div>
+        </div>
+      </div>
+      <div class="desk">
+        <div class="chips">
+          <span class="chip on"><span class="dot"></span>FACE +2.0°</span>
+          <span class="chip"><span class="dot"></span>PATH</span>
+          <span class="chip"><span class="dot"></span>ATTACK</span>
+        </div>
+        <div class="fader"><b></b><i></i></div>
+      </div>
+      <div style="flex:0 0 8px"></div>
+    </div></div>
+    <p class="cap">Range som «Live program»: tally + trace er skjermens eneste signal-røde; aktiv chip = dot + ink-underline; ControlDesk nederst.</p>
+    <div class="paysample sg"><div class="pay">
+      <div class="ph">FULL COVERAGE</div>
+      <div class="row"><span>Annual — 2 months free <span class="rec">RECOMMENDED</span></span><span class="p">kr 590</span></div>
+      <div class="row"><span>Monthly</span><span class="p">kr 99</span></div>
+      <div class="cta">Get full coverage</div>
+    </div></div>
+  </section>
+
+  <!-- ════════ QUIET PHOSPHOR ════════ -->
+  <section class="col qp">
+    <h2 style="font-family:'Space Grotesk',Inter,sans-serif; letter-spacing:.03em">QUIET PHOSPHOR · natt destillert</h2>
+    <p class="thesis">«Lys kommer kun fra data.» Violet fjernet, matt gunmetal-grafitt, amber-fosfor som eneste emisjon, alle numeraler i mono. Display: Space Grotesk (kun ikke-numerisk).</p>
+    <div class="swatches">
+      <div class="sw" style="background:#0B0C0E"><span>g0</span></div>
+      <div class="sw" style="background:#1C1F23"><span>g2</span></div>
+      <div class="sw" style="background:#E8EAED"><span>ink</span></div>
+      <div class="sw" style="background:#9BA6B1"><span>struct</span></div>
+      <div class="sw" style="background:#F9A04A"><span>signal</span></div>
+      <div class="sw" style="background:#D2B373"><span>gold*</span></div>
+    </div>
+    <div class="phone"><div class="screen">
+      <div class="strip"><span class="t">RANGE</span><span class="ask">ASK ?</span></div>
+      <div class="stage">
+        <svg viewBox="0 0 360 210" aria-label="Ball flight, amber phosphor">
+          <path d="M20 185 Q150 30 330 150" fill="none" stroke="#F9A04A" stroke-width="2.6"/>
+          <path d="M20 185 Q150 30 330 150" fill="none" stroke="#FFF4E4" stroke-width="1" opacity=".8"/>
+          <path d="M20 185 Q140 55 322 158" fill="none" stroke="#F9A04A" stroke-width="1.6" opacity=".38"/>
+          <path d="M20 185 Q132 75 315 164" fill="none" stroke="#F9A04A" stroke-width="1.3" opacity=".16"/>
+          <circle cx="330" cy="150" r="3.4" fill="#F9A04A"/>
+          <path d="M150 62 L170 46 L196 46" fill="none" stroke="#9BA6B1" stroke-width="1" stroke-dasharray="3 3"/>
+          <text x="200" y="49" font-family="IBM Plex Mono,monospace" font-size="9" fill="#9BA6B1">APEX 29 m</text>
+          <line x1="12" y1="186" x2="348" y2="186" stroke="rgba(255,255,255,.22)"/>
+          <g stroke="#9BA6B1" opacity=".8">
+            <line x1="20" y1="186" x2="20" y2="192"/><line x1="82" y1="186" x2="82" y2="190"/>
+            <line x1="144" y1="186" x2="144" y2="192"/><line x1="206" y1="186" x2="206" y2="190"/>
+            <line x1="268" y1="186" x2="268" y2="192"/><line x1="330" y1="186" x2="330" y2="190"/>
+          </g>
+        </svg>
+      </div>
+      <div class="metrics">
+        <div class="m"><div class="v live">216 m</div><div class="l">CARRY</div></div>
+        <div class="m"><div class="v">58 m/s</div><div class="l">BALL SPEED</div></div>
+        <div class="m"><div class="v">2 900 rpm</div><div class="l">BACKSPIN</div></div>
+      </div>
+      <div class="dock">
+        <div class="row1"><span class="pn">FACE ANGLE</span><span class="pv mono">+2.0°</span></div>
+        <div class="slider"><i></i></div>
+      </div>
+      <div class="chips">
+        <span class="chip on">FACE</span><span class="chip">PATH</span>
+        <span class="chip">ATTACK</span><span class="chip">LOFT</span>
+      </div>
+    </div></div>
+    <p class="cap">Range i emisjonsregelen: trace + hero-tall er de eneste amber-elementene; ghosts = ekte fosfor-decay; struktur i grå ink, aldri violet. Valgt chip er ink-fylt (addendum). *gold separeres ≥8 ΔL fra amber før D (addendum 1).</p>
+    <div class="paysample qp"><div class="pay">
+      <div class="ph">FLIGHTGLASS PRO · SPEC SHEET</div>
+      <div class="row rec2"><span>Annual — 2 months free <span class="rec">RECOMMENDED</span></span><span class="p">kr 590</span></div>
+      <div class="row"><span>Monthly</span><span class="p">kr 99</span></div>
+      <div class="cta">Start Pro</div>
+    </div></div>
+  </section>
+
+</div>
+
+<footer>
+  Triptyk-mock for eierport FR-O1 · 2026-08-05 · Samme trace-geometri i alle tre rammer (kurve, ghosts, apex-annotasjon, tick-ruler, landing som eneste markør — lov 13-strukturen holdt i alle).
+  Ikke shippet; ingen fysikk-/token-/identifikator-endring. Fraunces/Space Grotesk/IBM Plex Mono faller tilbake til systemfonter utenfor repoet.
+</footer>
+
+</body>
+</html>
