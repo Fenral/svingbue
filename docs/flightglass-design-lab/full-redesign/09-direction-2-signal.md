@@ -404,3 +404,15 @@ Innholdet fra Fase 7 beholdes uendret [F: masterplan §7.7]; SIGNAL endrer bare 
 
 ---
 *Skrevet av retningsutvikler SIGNAL, Flightglass Design Lab, 2026-08-05. Kontrastberegninger: eget skript (WCAG 2.x relativ luminans + sRGB→OKLCH), kjørt mot alle tokenverdier i §4.1; kun `--sg-celebrate` står som ANSLAG.*
+
+---
+
+## Board-addendum (2026-08-05, etter uavhengig review — korrigeringer, originaltekst star)
+
+1. **face<->bad-kollaps (SG-1, P1):** det tredje paret i varmtriaden ble aldri regnet: #8A1038 vs #7F1D1D = ΔL 1.7, 1.06:1. REVIDERT KRAV: bad eller face re-deriveres for >=8 ΔL-separasjon; CVD-gaten i SS10.4 utvides eksplisitt til alle tre par i triaden.
+2. **Tab bar-regnestykket (SG-N1, P1) — KORRIGERT:** SS2.2-tabellen dobbeltbokforte bunn-safe-arean (~21 pt). Symmetrisk bokforing gir reell marginalkostnad ~32 pt og modellflate ~187-198 pt med tab bar (ikke 166). Konklusjonen «tab bar taper» star fortsatt pa strukturargumentet + sannsynlig lesbarhets-underskridelse, men er naa en MALBAR pastand: lesbarhets-gulvet for trace+ruler+outcome-rail males pa enhet i D-fasen for konklusjonen kan siteres som bevist. Antakelsen om at safe-area absorberes i kontrollsheet-padding testes samtidig.
+3. **Orientering (SG-N2, P1):** regnestykket antar landskaps-Range; shippet Range er portrettlast. Orienterings-reverseringen FLAGGES HERVED SOM EIERVALG; regnestykket leveres for begge orienteringer med retningens faktiske orienteringspolicy i D.
+4. **Migrering re-kostet (SG-P1-3, P1):** Outcome/Replay desk M -> **L** (replay-motor/scrubber er ny kapabilitet, ikke re-toning); Paywall S/M -> **M** (karbonfelt-hero med egen trace er tilstandsavhengig rendering).
+5. **Home-motsigelse (SG-2, P2):** apningssekvensens signal-trace pa Home (SS1) trekkes tilbake; SS3.3 gjelder (Homes eneste signal er tally-punktet; LATEST REPLAY-miniatyren er grafitt).
+6. **Kant-census (SG-4, P2):** IsoSwitch, ReplayScrubber og ControlDesk ma hver bevise at tilstand aldri baeres av kant alene — inn i evidensmanifestet.
+7. **WTP/thumbnail (SG-P1-1/2, P1):** lant-kontrakt-risikoen (gratis-assosiasjon) og butikkhylle-tapet er D-krav: WTP-mock-test og Screenshot-1-A/B (karbonfelt-scenen som mulig hylle-baerer) FOR retningsvalg effektueres.

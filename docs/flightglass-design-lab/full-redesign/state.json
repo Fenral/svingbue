@@ -1,6 +1,6 @@
 {
   "workstream": "full-redesign",
-  "phase": "C-directions-in-development",
+  "phase": "D-complete-awaiting-owner-gate-FR-O1",
   "updated": "2026-08-05",
   "branch": "agent/full-redesign-lab",
   "scope": "full decision-ready revision: product architecture, IA, design system, color/light, typography, motion, haptics, a11y, monetization placement; Ask Flightglass is one candidate within it; docs-only, no implementation",
@@ -26,11 +26,14 @@
     "ask-flightglass": "../ask-flightglass/ — board-revised spec 2026-08-05, owner gate open (O1-O4, O9); reused as candidate basis, not duplicated"
   },
   "approvedDecisions": [],
-  "openFindings": [],
+  "openFindings": [
+    "Board round over directions: 3x REVIDER, all P1 dispositioned via addenda + D-gates; no open P0/P1 without disposition",
+    "Groupthink check: Home-world-dies and tab-bar-rejected convergences are partially mandate-induced; kept open as real owner choices with task-based blind-test evidence requirement"
+  ],
   "blocked": [],
   "ownerGate": {
-    "required": ["FR-O1 direction choice after board+feasibility"],
-    "status": "NOT YET REACHED"
+    "required": ["FR-O1 direction (recommended: quiet-phosphor with addenda)", "FR-O2 Home blind-test mandate", "FR-O6 Ask inclusion", "FR-O8 price-ladder cleanup"],
+    "status": "AWAITING OWNER"
   },
-  "nextAction": "Await A1/A2 baseline reports -> write 02/03; await direction agents -> synthesis 09-overview; then Review Board, feasibility, prototype spec, owner package"
+  "nextAction": "Owner answers FR-O1 (+C-list in 14-owner-package.md); then build prototype per 12 (3 sessions, mocks-only), board-verify evidence, separate owner gate for implementation start per 10 section 4"
 }

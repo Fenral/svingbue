@@ -381,3 +381,15 @@ Kontrakten [F: ask/03] gjenbrukes uendret — AskAnswer-skjemaet, tall-/register
 
 ---
 *Skrevet av retningsutvikler Fieldbook, Flightglass Design Lab, 2026-08-05. Kontrasttall beregnet med WCAG-luminansformel; OKLCH konvertert fra sRGB. Ingen kodeendringer utført; ingen bilder produsert.*
+
+---
+
+## Board-addendum (2026-08-05, etter uavhengig review — korrigeringer, originaltekst star)
+
+1. **Varm triade (FB-1, P1):** signal/face/bad er nesten-metamere (innbyrdes 1.16/1.13:1). REVIDERT KRAV: face og bad re-deriveres med >=8-10 OKLCH-L-separasjon fra signal og hverandre (eller face flyttes ut av rodfamilien); CVD-simulering av hele varmfamilien er GO-gate for D-fasen.
+2. **Signalbudsjett pa Home (FB-2, P1):** SS3.1/SS4.10-motsigelsen loses slik: metrikk-raden pa INDEX star i blekk (SS3.1 gjelder); carry-hero i signal er lovlig KUN som del av live-clusteret trace+landing+verdi, som teller som ETT budsjett-element. Census-regel: live-cluster=1, primaerhandling=1, fane-understrek flyttes til blekk (signal skal ikke vaere chrome-aksent, jf. FB-8).
+3. **Reward-gull (FB-3, P1):** delt hex med warn trekkes tilbake; alternativ-hexen (#8A6410-familien) beregnes og adopteres for D — gull-splitten av 2026-07-11 reverseres ikke.
+4. **Paywall (FB-P1-1, P1):** ORDER FORM korrigeres til fase 7-lovene: utfalls-demo (siste trace + telemetri) overst, Annual eksplisitt merket som anbefalt. Billett-perforeringen (dekor uten data) fjernes (FB-P2-2).
+5. **Nav-kostnad (FB-P1-2/N1/N2/N3, P1):** (a) egen migreringslinje: nav-rearkitektur + tilstandslag = L; (b) fanerad-minimering respesifiseres som ren overlay uten layout-reflow, minimert tilstand er ikke-interaktiv, >=300 ms reveal etter drag — binaert prototype-krav; (c) pastanden om aa teste kategoristandarden omformuleres: Fieldbook tester en DIEGETISK fanevariant, ikke native tab bar; tablist-/VoiceOver-semantikk spesifiseres i prototypen; (d) post-for-post-hoydebudsjett pa 812x375 leveres med delt regneark for valget.
+6. **EST-register (FB-6, P2):** EST-verdier settes i muted (6.94:1), dim reserveres etiketter.
+7. **Motion-presisering (FB-5, P2):** blekk-avsetning gjelder KUN skudd-avspilling; live parameterdrag rendrer ferdig trace <16,7 ms uten strek-animasjon.

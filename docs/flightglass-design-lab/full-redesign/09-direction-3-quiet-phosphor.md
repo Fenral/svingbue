@@ -405,3 +405,16 @@ Innholdet er låst av masterplanen fase 7 og beholdes ordrett [F: masterplan §7
 **Risikoregister:** (1) glidebane 1 — vane-regresjon til P3; mitigeres av lint, ikke prosa (§5); (2) [H] contact-sammenslåingen kan feile i Geometry-brukertest → tilbakefall til 7. hue; (3) [H] høydepersepsjon uten himmel; (4) blindtest-tap for Bench mot Night Ladder → dokumentert fallback finnes; (5) [H] austere paywall-konvertering (§9); (6) alle kontrasttall er ANSLAG til render-måling — samme re-målingsplikt som geometry-paletten hadde [F: sa-p3.css:77–80].
 
 **Irreversible/eiervalg samlet:** Home-beslutningen (reverserer fase 1-lås), lov 5/13-omformuleringen, .sa-plate-kontrakten (blur av), SYS-07/08-verdiene, Fraunces-terminering, Impact Studio-innplassering, natteland-foto til marketing-only, entry-koreografi 0 s.
+
+---
+
+## Board-addendum (2026-08-05, etter uavhengig review — korrigeringer, originaltekst star)
+
+1. **amber<->reward-gull (QP-1, P1):** #F9A04A (L78.03) og #D2B373 (L77.96) har ΔL 0.1 / 1.03:1 — kollisjonen linten skulle fanget. REVIDERT KRAV: separasjon >=8-10 ΔL (signal trekkes mot H50-55 og/eller gull morkere); amber<->gull-paret inn i CVD-gaten, og linten utvides med par-separasjonssjekk.
+2. **Contact-sammenslaingen (QP-2, P1) — BEVISBYRDEN SNUDD:** 7. hue (separat depth/strike) er DEFAULT; sammenslaingen til --q-contact ma VINNE Geometry-/Strike Window-brukertesten for aa adopteres. SS4.2 pkt. 2 leses heretter med denne polariteten.
+3. **90 %-pastanden (QP-P1-1, P1):** strykes som retorikk; S/M/L-tabellen i SS10 star alene som kostnadsbilde.
+4. **Repricing-svar (QP-P1-2, P1):** paywall-spec-sheetet SKAL vise Academy-som-pensum (kapittelliste med mestring) som leksjonsanker-kommunikasjon; WTP-test mot alternativ-uttrykk er D-krav (samme test som Signal).
+5. **Chip-tilstand (QP-N1, P1):** valgt tilstand far >=3:1-baerer: ink-fylt chip med g0-tekst (lant fra Fieldbook-monsteret). Tilstandskontrast inn i linten.
+6. **Bench-blindtest (QP-N2, P1) — PROTOKOLL SPESIFISERT:** oppgavebasert pa interaktiv prototype, ikke statisk mock: (a) 5 s produkt+primaerhandling-forstaelse, (b) tid-til-riktig-tapp for «forklar siste skudd», (c) retur-fra-Academy-med-kontekst; fase 1-exitbevisene er fasit. Statisk skjermbilde-sammenligning er ugyldig som avgjorelse (partisk mot scenografi per egen tese).
+7. **Lens-paritet (QP-N3, P2):** Camera-lensen og Compare-referansebytte far knapp+tastatur+sveip-paritet med identisk plassering (masterplan SS7.2/7.4) — inn i prototypekravene.
+8. **Lov 5-semantikk (QP-5, P2):** «amber kun under endring» presiseres: tracen og det ENE hero-tallet er amber i ro (tilstand=live sannhet); ovrige tall er ink og far amber kun transient under endring. Fargen betyr tilstand; transienten er unntaket, ikke regelen.

@@ -14,7 +14,6 @@ wait.
 | Agent | Branch | Working on | Since |
 |-------|--------|-----------|-------|
 | Claude Code | `agent/impact-kamera` | Impact-kamera (design/orders/impact-kamera.md): Økt A ferdig (docs/systemkontrakt.md), Økt B–F via scripts/impact-kamera-workflow.mjs. Files: impact.html, impact-camera.js, impact-outcome.js, impact-annotate.js, sa-p3.css | 2026-07-17 |
-| Claude Code (Fable 5) | `agent/full-redesign-lab` | Full Flightglass-revisjon (design-/arkitekturfase, docs-only) per eierens startprompt 2026-08-05. Files: NEW docs/flightglass-design-lab/full-redesign/* + denne raden. Ingen shipping-kode, fysikk eller identifikatorer. | 2026-08-05 |
 
 ## Queue / free to take
 
@@ -31,6 +30,14 @@ wait.
   pair before build.
 
 ## Done / handed off
+
+- Full Flightglass-revisjon fase A–D — `agent/full-redesign-lab` (Claude Code/Fable 5,
+  2026-08-05); docs-only arbeidsområde `docs/flightglass-design-lab/full-redesign/`:
+  baseline-audit + designinventar m/ UV-Ember-kritikk, first principles, tre komplette
+  retninger (Fieldbook/Signal/Quiet Phosphor) m/ board-addenda, Review Board (3 linser,
+  3× REVIDER, gruppetenk-sjekk), feasibility/beslutningsmatrise, prototype-spec,
+  eierpakke. Anbefaling: Quiet Phosphor m/ addenda. Venter på EIERPORT FR-O1
+  (14-owner-package.md). Ingen shipping-/fysikk-/identifikator-endring.
 
 - Ask Flightglass design- og monetiseringsspesifikasjon — `agent/ask-flightglass-spec`
   (Claude Code/Fable 5, 2026-08-05); docs-only arbeidsområde
