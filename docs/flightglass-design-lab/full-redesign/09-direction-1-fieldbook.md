@@ -358,7 +358,7 @@ Kontrakten [F: ask/03] gjenbrukes uendret — AskAnswer-skjemaet, tall-/register
 **Må skrives om (reell kostnad):**
 - **Alle hvit-alpha-avledninger:** `--line rgba(255,255,255,.10)`, plate-gradienter, `.sa-depth`-laget (topplys, bloom, grain) [F: sa-p3.css:98–99, 390 ff.] — inverteres ikke, de erstattes av blekk-alpha + hairline-logikken i §4.3. `.sa-depth` slettes som konsept.
 - **Canvas-/JS-hardkodede farger:** tracer-rendering med glød/white-hot tip, scene-gradienter, dusk-sky-rampen [F: sa-p3.css:159–167] — trace-rendereren må få «blekk-modus» (strøk uten glow, metningsfall i stedet for opacity-decay). Dette er den største enkeltjobben.
-- **Geometry 3D:** natteverden (stjerner, dusk) er scenografi som må bygges om til dagslys-plansje (hvit grunn, blekk-wireframe). 
+- **Geometry 3D:** natteverden (stjerner, dusk) er scenografi som må bygges om til dagslys-plansje (hvit grunn, blekk-wireframe).
 - **Blur-plater:** backdrop-blur har ingen jobb på opakt papir — plate-komponenten forenkles (ytelses-gevinst på lav-ende [H]).
 
 **Relativ kostnad per flate [S-estimat]:**
