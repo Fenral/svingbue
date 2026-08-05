@@ -126,6 +126,18 @@
         border-radius:var(--r-panel);font-size:12px;color:var(--muted)}
   .cannot b{font:600 9px/1 var(--font-mono);letter-spacing:.12em;color:var(--dim);display:block;margin-bottom:4px}
 
+  /* ladder rungs (kandidat B) — destinasjoner i dybde, full bredde */
+  .ladder{display:flex;flex-direction:column;gap:10px;padding:6px 14px}
+  .rung{display:flex;align-items:baseline;gap:12px;background:var(--g2);border:1px solid var(--line);
+        border-radius:var(--r-panel);padding:14px;text-decoration:none;min-height:44px}
+  .rung .n{font:600 11px/1 var(--font-mono);letter-spacing:.12em;color:var(--ink);min-width:86px}
+  .rung .d{flex:1;font:400 12px/1.4 var(--font-ui);color:var(--dim)}
+  .rung .go{color:var(--dim)}
+  .rung:hover{border-color:var(--line2)}
+  .rung:nth-child(2){margin-inline:8px}
+  .rung:nth-child(3){margin-inline:16px}
+  .rung:nth-child(4){margin-inline:24px}
+
   .spacer{flex:1}
   footer.note{padding:10px 16px calc(12px + env(safe-area-inset-bottom));
         font:400 10px/1.5 var(--font-ui);color:var(--dim);border-top:1px solid var(--line)}
@@ -154,6 +166,35 @@
     </nav>
     <div class="spacer"></div>
     <footer class="note">Quiet Phosphor prototype · session 1 · mock, not shipped · engine: solveFlight (protected, read-only) · values are MODEL output</footer>
+  </section>
+
+  <!-- ══════════ LADDER — blindtest B-kandidat (avkledd Night Ladder) ══════════
+       Session 2: Night Ladder-komposisjonen (destinasjoner i dybde langs korridoren)
+       re-materialisert i grafitt: foto/floodlights fjernet, stigen beholdt.
+       Testes oppgavebasert mot Bench per 12 §2.4 — aldri som statisk preferansevalg. -->
+  <section class="view" id="v-ladder" aria-label="Home, ladder candidate">
+    <div class="strip"><span class="t">FLIGHTGLASS</span><span class="t" style="color:var(--dim)">B</span></div>
+    <div class="stage">
+      <svg class="flight" viewBox="0 0 430 150" aria-hidden="true">
+        <line x1="24" y1="128" x2="406" y2="128" stroke="var(--line2)"/>
+        <g stroke="var(--struct)" opacity=".75">
+          <line x1="60" y1="128" x2="60" y2="134"/><line x1="146" y1="128" x2="146" y2="132"/>
+          <line x1="232" y1="128" x2="232" y2="134"/><line x1="318" y1="128" x2="318" y2="132"/>
+          <line x1="404" y1="128" x2="404" y2="134"/>
+        </g>
+        <path d="M40 126 Q180 30 356 100" fill="none" stroke="var(--signal)" stroke-width="2.2"/>
+        <circle cx="356" cy="100" r="3" fill="var(--signal)"/>
+        <text x="330" y="90" font-family="IBM Plex Mono,monospace" font-size="9.5" fill="var(--dim)" id="ladder-carry"></text>
+      </svg>
+    </div>
+    <nav class="ladder" aria-label="Destinations">
+      <a class="rung" href="#/range"><span class="n">RANGE</span><span class="d">Start here — try a shot</span><span class="mono go">→</span></a>
+      <a class="rung" href="#/outcome"><span class="n">OUTCOME</span><span class="d">Why the last one flew</span><span class="mono go">→</span></a>
+      <a class="rung off" href="#/ladder"><span class="n">LAB</span><span class="d">Geometry &amp; strike</span><span class="mono go">→</span></a>
+      <a class="rung off" href="#/ladder"><span class="n">ACADEMY</span><span class="d">Learn it properly</span><span class="mono go">→</span></a>
+    </nav>
+    <div class="spacer"></div>
+    <footer class="note">Blindtest-kandidat B («avkledd Ladder») · samme data, samme tokens — annen komposisjon enn Bench (kandidat A, <a href="#/bench" style="color:var(--muted)">bytt</a>)</footer>
   </section>
 
   <!-- ══════════ RANGE ══════════ -->
@@ -340,11 +381,12 @@ function announce(msg){ clearTimeout(liveT);
   liveT=setTimeout(()=>{document.getElementById('live').textContent=msg;},800); } // one polite region, throttled
 
 /* ── router: hash views, state survives navigation (the chain contract) ── */
-const views={'#/bench':'v-bench','#/range':'v-range','#/outcome':'v-outcome'};
+const views={'#/bench':'v-bench','#/ladder':'v-ladder','#/range':'v-range','#/outcome':'v-outcome'};
 function route(){
   const id=views[location.hash]||'v-bench';
   document.querySelectorAll('.view').forEach(v=>v.classList.toggle('on',v.id===id));
   if(id==='v-bench')renderBench();
+  if(id==='v-ladder')document.getElementById('ladder-carry').textContent=fmt(flight.carry*YD2M)+' m';
   if(id==='v-range')renderRange();
   if(id==='v-outcome')renderOutcome();
   document.title=`Flightglass — QP prototype · ${id.slice(2).toUpperCase()}`;
