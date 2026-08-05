@@ -25,7 +25,9 @@
   "relatedWorkstreams": {
     "ask-flightglass": "../ask-flightglass/ — board-revised spec 2026-08-05, owner gate open (O1-O4, O9); reused as candidate basis, not duplicated"
   },
-  "approvedDecisions": [],
+  "approvedDecisions": [
+    "FR-O1: Quiet Phosphor chosen by owner 2026-08-05 ('ja, prov det'); prototype session 1 delivered (qp-prototype.html + qp-lint.mjs, chain core on real engine, lint+browser-spots green)"
+  ],
   "openFindings": [
     "Board round over directions: 3x REVIDER, all P1 dispositioned via addenda + D-gates; no open P0/P1 without disposition",
     "Groupthink check: Home-world-dies and tab-bar-rejected convergences are partially mandate-induced; kept open as real owner choices with task-based blind-test evidence requirement"

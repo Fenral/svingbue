@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0B0C0E">
+<title>Flightglass — Quiet Phosphor prototype (session 1: Bench · Range · Outcome)</title>
+<!-- DESIGN MOCK, NOT SHIPPED. Quiet Phosphor prototype, session 1 of 3 per
+     docs/flightglass-design-lab/full-redesign/12-prototype-spec.md.
+     Owner gate FR-O1 answered 2026-08-05: Quiet Phosphor chosen.
+     Scope this session: QP tokens + doctrine lint + the chain core
+     Bench -> EXPLAIN -> Outcome -> "Try a squarer face" -> Range (live engine).
+     Academy + Paywall + blind-test B-candidate follow in sessions 2-3.
+     Engine: real solveFlight from ../../impact-flight.js (protected, read-only).
+     Doctrine (QP direction + board addendum): light comes only from data;
+     max 2 amber elements at rest; all numerals mono; selected chip = ink-filled;
+     no violet, no glow, no blur, no gradients, no box shadows (focus ring is
+     the inset double ink ring); ghosts = data only, max 2, strokes only. -->
+<style>
+  @font-face{font-family:'Inter';src:url('../../../vendor/fonts/Inter-Regular.woff2') format('woff2');font-weight:400;font-display:swap}
+  @font-face{font-family:'Inter';src:url('../../../vendor/fonts/Inter-Medium.woff2') format('woff2');font-weight:500;font-display:swap}
+  @font-face{font-family:'Inter';src:url('../../../vendor/fonts/Inter-SemiBold.woff2') format('woff2');font-weight:600;font-display:swap}
+  @font-face{font-family:'IBM Plex Mono';src:url('../../../vendor/fonts/IBMPlexMono-Regular.woff2') format('woff2');font-weight:400;font-display:swap}
+  @font-face{font-family:'IBM Plex Mono';src:url('../../../vendor/fonts/IBMPlexMono-Medium.woff2') format('woff2');font-weight:500;font-display:swap}
+  @font-face{font-family:'Space Grotesk';src:url('../../../vendor/fonts/SpaceGrotesk-Medium.woff2') format('woff2');font-weight:500;font-display:swap}
+
+  :root{
+    /* Quiet Phosphor tokens — 09-direction-3 §4.1 + board addendum */
+    --g0:#0B0C0E; --g1:#15171A; --g2:#1C1F23; --g3:#24272C;
+    --ink:#E8EAED; --muted:#A6ACB3; --dim:#81888F;
+    --struct:#9BA6B1; --ghost:#9299A1;
+    --line:rgba(255,255,255,.08); --line2:rgba(255,255,255,.22);
+    --signal:#F9A04A; --signal-tip:#FFF4E4;
+    --signal-soft:rgba(249,160,74,.14);
+    --font-ui:Inter,-apple-system,"Segoe UI",Roboto,sans-serif;
+    --font-display:'Space Grotesk',Inter,sans-serif;
+    --font-mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
+    --r-control:10px; --r-panel:14px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{background:var(--g0);color:var(--ink);font:15px/1.5 var(--font-ui);
+       -webkit-font-smoothing:antialiased}
+  .mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+
+  .app{max-width:430px;min-height:100dvh;margin:0 auto;display:flex;flex-direction:column;
+       border-inline:1px solid var(--line)}
+
+  /* strip — opaque g1 chrome (SYS-13) */
+  .strip{display:flex;justify-content:space-between;align-items:center;
+         padding:calc(10px + env(safe-area-inset-top)) 16px 10px;
+         background:var(--g1);border-bottom:1px solid var(--line)}
+  .strip .t{font:500 12px/1 var(--font-display);letter-spacing:.1em;color:var(--muted)}
+  .strip a.back{font:500 11px/1 var(--font-mono);color:var(--dim);text-decoration:none;
+         padding:12px 10px;margin:-12px -10px}
+  .strip a.back:hover{color:var(--muted)}
+
+  main{flex:1;display:flex;flex-direction:column}
+  .view{display:none;flex:1;flex-direction:column}
+  .view.on{display:flex}
+
+  /* stage + svg trace */
+  .stage{padding:6px 10px 0}
+  svg.flight{display:block;width:100%;height:auto}
+
+  /* readout row — all numerals mono; ONE amber hero */
+  .metrics{display:flex;gap:18px;padding:10px 18px 4px}
+  .m .v{font:500 17px/1.25 var(--font-mono);letter-spacing:-.02em;color:var(--ink)}
+  .m .v.live{color:var(--signal)}
+  .m .l{font:600 8.5px/1.8 var(--font-mono);letter-spacing:.12em;color:var(--dim)}
+  .register{font:500 8.5px/1 var(--font-mono);letter-spacing:.1em;color:var(--struct);
+            border:1px solid var(--line2);border-radius:4px;padding:3px 5px;align-self:center}
+
+  /* dock — active parameter */
+  .dock{margin:12px 14px;background:var(--g2);border:1px solid var(--line);
+        border-radius:var(--r-panel);padding:12px 14px}
+  .dock .row1{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px}
+  .dock .pn{font:600 10px/1 var(--font-mono);letter-spacing:.14em;color:var(--dim)}
+  .dock .pv{font:500 16px/1 var(--font-mono);color:var(--ink)}
+  input[type=range]{appearance:none;-webkit-appearance:none;width:100%;height:44px;background:transparent}
+  input[type=range]::-webkit-slider-runnable-track{height:20px;border-radius:10px;background:var(--g3)}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;margin-top:1px;
+        border-radius:50%;background:var(--ink);border:none}
+  input[type=range]::-moz-range-track{height:20px;border-radius:10px;background:var(--g3)}
+  input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:var(--ink);border:none}
+  .dock .ends{display:flex;justify-content:space-between;font:500 9px/1 var(--font-mono);
+        letter-spacing:.08em;color:var(--dim);margin-top:2px}
+
+  /* chips — selected = ink-filled (board addendum QP-N1) */
+  .chips{display:flex;gap:8px;padding:0 14px 16px;flex-wrap:wrap}
+  .chip{font:600 10px/1 var(--font-mono);letter-spacing:.1em;padding:0 14px;height:44px;
+        display:inline-flex;align-items:center;border:1px solid var(--line2);
+        border-radius:var(--r-control);color:var(--muted);background:var(--g3);cursor:pointer}
+  .chip[aria-pressed="true"]{background:var(--ink);color:var(--g0);border-color:var(--ink)}
+
+  /* buttons */
+  .btn{display:flex;align-items:center;justify-content:center;height:48px;margin:6px 14px;
+       border-radius:var(--r-control);font:600 13px/1 var(--font-ui);letter-spacing:.03em;
+       text-decoration:none;cursor:pointer;border:1px solid transparent}
+  .btn.primary{background:var(--signal);color:var(--g0)}
+  .btn.quiet{background:none;border-color:var(--line2);color:var(--muted)}
+
+  /* focus — double ink ring, never signal (sa-p3 grammar) */
+  a:focus-visible,button:focus-visible,input:focus-visible,[tabindex]:focus-visible{
+    outline:none;
+    box-shadow:inset 0 0 0 1px rgba(0,0,0,.85), inset 0 0 0 3px var(--ink)}
+
+  /* bench modules */
+  .plain{padding:2px 18px 0;font-size:13.5px;color:var(--ink)}
+  .modules{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px}
+  .mod{background:var(--g2);border:1px solid var(--line);border-radius:var(--r-panel);
+       padding:12px;min-height:64px;text-decoration:none;display:block}
+  .mod .n{font:600 10px/1 var(--font-mono);letter-spacing:.12em;color:var(--muted)}
+  .mod .d{font:400 11.5px/1.5 var(--font-ui);color:var(--dim);margin-top:5px}
+  .mod:hover{border-color:var(--line2)}
+  .mod.off .d::after{content:" · session 2–3";color:var(--dim)}
+
+  /* outcome chain */
+  .result{padding:6px 18px 0;font:400 17px/1.45 var(--font-ui);color:var(--ink);text-wrap:balance}
+  .chain{margin:14px;border:1px solid var(--line);border-radius:var(--r-panel);background:var(--g2)}
+  .chain li{list-style:none;display:flex;justify-content:space-between;gap:10px;
+        padding:11px 14px;border-top:1px solid var(--line);font-size:12.5px;color:var(--muted)}
+  .chain li:first-child{border-top:none}
+  .chain li .cv{font:500 12.5px/1.5 var(--font-mono);color:var(--ink);white-space:nowrap}
+  .cannot{margin:0 14px;padding:11px 14px;border:1px solid var(--line);
+        border-radius:var(--r-panel);font-size:12px;color:var(--muted)}
+  .cannot b{font:600 9px/1 var(--font-mono);letter-spacing:.12em;color:var(--dim);display:block;margin-bottom:4px}
+
+  .spacer{flex:1}
+  footer.note{padding:10px 16px calc(12px + env(safe-area-inset-bottom));
+        font:400 10px/1.5 var(--font-ui);color:var(--dim);border-top:1px solid var(--line)}
+
+  /* live region visually hidden */
+  .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+  @media (prefers-reduced-motion: reduce){ *{transition:none !important;animation:none !important} }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ══════════ BENCH (Home) ══════════ -->
+  <section class="view" id="v-bench" aria-label="The Bench">
+    <div class="strip"><span class="t">FLIGHTGLASS</span><span class="t" style="color:var(--dim)">BENCH</span></div>
+    <div class="stage"><svg class="flight" id="svg-bench" viewBox="0 0 430 240" aria-hidden="true"></svg></div>
+    <div class="metrics" id="met-bench"></div>
+    <p class="plain" id="plain-bench"></p>
+    <a class="btn primary" href="#/outcome" id="btn-explain">Explain this shot</a>
+    <nav class="modules" aria-label="Destinations">
+      <a class="mod" href="#/range"><span class="n">RANGE</span><span class="d">Try it live</span></a>
+      <a class="mod off" href="#/bench" aria-disabled="true"><span class="n">ACADEMY</span><span class="d">Learn it properly</span></a>
+      <a class="mod off" href="#/bench" aria-disabled="true"><span class="n">LAB</span><span class="d">Geometry &amp; strike</span></a>
+      <a class="mod off" href="#/bench" aria-disabled="true"><span class="n">PRO</span><span class="d">Spec sheet</span></a>
+    </nav>
+    <div class="spacer"></div>
+    <footer class="note">Quiet Phosphor prototype · session 1 · mock, not shipped · engine: solveFlight (protected, read-only) · values are MODEL output</footer>
+  </section>
+
+  <!-- ══════════ RANGE ══════════ -->
+  <section class="view" id="v-range" aria-label="Range">
+    <div class="strip"><a class="back" href="#/bench">◂ BENCH</a><span class="t">RANGE</span><span class="t mono" style="color:var(--dim)">7-IRON</span></div>
+    <div class="stage"><svg class="flight" id="svg-range" viewBox="0 0 430 240" aria-hidden="true"></svg></div>
+    <div class="metrics" id="met-range"></div>
+    <div class="dock">
+      <div class="row1"><span class="pn" id="pname">FACE ANGLE</span><span class="pv" id="pval">+2.0°</span></div>
+      <input type="range" id="slider" min="-6" max="6" step="0.5" value="2" aria-label="Face angle, degrees">
+      <div class="ends"><span id="pend0">open −6°</span><span id="pend1">closed +6°</span></div>
+    </div>
+    <div class="chips" role="group" aria-label="Parameter">
+      <button class="chip" data-p="faceAngle" aria-pressed="true">FACE</button>
+      <button class="chip" data-p="clubPath" aria-pressed="false">PATH</button>
+      <button class="chip" data-p="attackAngle" aria-pressed="false">ATTACK</button>
+      <button class="chip" data-p="dynamicLoft" aria-pressed="false">LOFT</button>
+    </div>
+    <div class="spacer"></div>
+    <a class="btn quiet" href="#/outcome">See why it flew →</a>
+    <footer class="note">One active parameter · trace and carry are the only amber at rest · ghosts show your two previous deliveries</footer>
+  </section>
+
+  <!-- ══════════ OUTCOME ══════════ -->
+  <section class="view" id="v-outcome" aria-label="Outcome">
+    <div class="strip"><a class="back" href="#/bench">◂ BENCH</a><span class="t">OUTCOME</span><span class="register">MODEL</span></div>
+    <div class="stage"><svg class="flight" id="svg-outcome" viewBox="0 0 430 200" aria-hidden="true"></svg></div>
+    <p class="result" id="result"></p>
+    <ul class="chain" id="chain" aria-label="Cause chain"></ul>
+    <div class="cannot"><b>WHAT FLIGHTGLASS CANNOT SAY</b>
+      Flightglass doesn't measure your swing or where you strike the face. These numbers are the model's
+      answer for this delivery — not a measurement of you.</div>
+    <a class="btn primary" href="#/range" id="btn-try">Try a squarer face →</a>
+    <div class="spacer"></div>
+    <footer class="note">Read-only. The scrub is time, never physics. Returning keeps your delivery loaded.</footer>
+  </section>
+
+</div>
+
+<p class="sr" role="status" aria-live="polite" id="live"></p>
+
+<script type="module">
+import { solveFlight, trajectorySamples, shapeLabel, clamp } from '../../../impact-flight.js';
+
+const YD2M = 0.9144;
+const fmt = (v,d=0)=> (v<0?'−':'') + Math.abs(v).toFixed(d);
+const deg = v => (v>0?'+':v<0?'−':'') + Math.abs(v).toFixed(1) + '°';
+
+/* ── state: one delivery, shared by all three surfaces (the chain contract) ── */
+const state = { clubPath:-1.5, faceAngle:2.0, attackAngle:-3.0, dynamicLoft:28, clubSpeed:84 };
+let ghosts = [];            // up to 2 previous traces (data, strokes only)
+let flight = solveFlight(state);
+
+const PARAMS = {
+  faceAngle:  { label:'FACE ANGLE',  min:-6,  max:6,  step:.5, ends:['open −6°','closed +6°'] },
+  clubPath:   { label:'CLUB PATH',   min:-8,  max:8,  step:.5, ends:['out-to-in −8°','in-to-out +8°'] },
+  attackAngle:{ label:'ATTACK',      min:-8,  max:5,  step:.5, ends:['down −8°','up +5°'] },
+  dynamicLoft:{ label:'DYNAMIC LOFT',min:18,  max:38, step:1,  ends:['18°','38°'] },
+};
+let active = 'faceAngle';
+
+/* ── trace drawing: tick-ruler baseline, landing = only marker,
+      one dashed struct annotation (apex), phosphor ghosts ── */
+function drawTrace(svg, fl, opts={}){
+  const W=430, H=+svg.viewBox.baseVal.height, padL=24, padR=24, base=H-34;
+  const span = Math.max(fl.carry*YD2M*1.15, 120);
+  const X = m => padL + (m/span)*(W-padL-padR);
+  const apexH = Math.min(fl.apex*YD2M, 45);
+  const Y = h => base - (h/48)*(base-16);
+  const pts = trajectorySamples(fl, 40).map(p=>({
+    x: X(p.d * fl.carry*YD2M),
+    y: Y(p.h * apexH),
+  }));
+  const d = 'M'+pts.map(p=>`${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' L');
+  let g='';
+  ghosts.slice(0,2).forEach((gh,i)=>{
+    const op=[.34,.15][i];
+    const gp=gh.pts.map(p=>`${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' L');
+    g += `<path d="M${gp}" fill="none" stroke="var(--signal)" stroke-width="1.5" opacity="${op}"/>`;
+  });
+  const land=pts[pts.length-1];
+  const apexPt = pts.reduce((a,b)=> b.y<a.y?b:a);
+  const ticks = Array.from({length:9},(_,i)=>{
+    const x=padL+i*(W-padL-padR)/8;
+    return `<line x1="${x}" y1="${base}" x2="${x}" y2="${base+(i%2?4:7)}"/>`;
+  }).join('');
+  svg.innerHTML = `
+    ${g}
+    <path d="${d}" fill="none" stroke="var(--signal)" stroke-width="2.6"/>
+    <path d="${d}" fill="none" stroke="var(--signal-tip)" stroke-width=".9" opacity=".7"/>
+    <circle cx="${land.x}" cy="${land.y}" r="3.5" fill="var(--signal)"/>
+    ${opts.apex!==false ? `
+      <path d="M${apexPt.x} ${apexPt.y-6} L${apexPt.x+16} ${apexPt.y-18} H${apexPt.x+34}"
+            fill="none" stroke="var(--struct)" stroke-width="1" stroke-dasharray="3 3"/>
+      <text x="${apexPt.x+38}" y="${apexPt.y-15}" font-family="IBM Plex Mono,monospace"
+            font-size="9.5" fill="var(--struct)">APEX ${fmt(fl.apex*YD2M)} m</text>`:''}
+    <line x1="${padL-8}" y1="${base}" x2="${W-padR+8}" y2="${base}" stroke="var(--line2)"/>
+    <g stroke="var(--struct)" opacity=".75">${ticks}</g>
+    <text x="${padL-6}" y="${base+18}" font-family="IBM Plex Mono,monospace" font-size="9" fill="var(--dim)">0</text>
+    <text x="${land.x-14}" y="${base+18}" font-family="IBM Plex Mono,monospace" font-size="9"
+          fill="var(--signal)">${fmt(fl.carry*YD2M)} m</text>`;
+}
+
+function metric(v,l,live=false){ return `<div class="m"><div class="v mono${live?' live':''}">${v}</div><div class="l">${l}</div></div>`; }
+const curveTxt = fl => `${fmt(Math.abs(fl.curve*YD2M))} m ${fl.curve>0?'R':fl.curve<0?'L':''}`.trim();
+
+/* ── renderers ── */
+function renderBench(){
+  drawTrace(document.getElementById('svg-bench'), flight);
+  document.getElementById('met-bench').innerHTML =
+    metric(fmt(flight.carry*YD2M)+' m','CARRY',true) +
+    metric(curveTxt(flight),'CURVE') +
+    metric(fmt(flight.backspin)+' rpm','BACKSPIN');
+  const f2p = flight.faceToPath;
+  document.getElementById('plain-bench').textContent =
+    Math.abs(f2p)<0.75 ? 'Face matched your path — it flew straight.' :
+    f2p>0 ? 'Face was open to your path — it curved right.' :
+            'Face was closed to your path — it curved left.';
+}
+function renderRange(){
+  drawTrace(document.getElementById('svg-range'), flight);
+  document.getElementById('met-range').innerHTML =
+    metric(fmt(flight.carry*YD2M)+' m','CARRY',true) +
+    metric(curveTxt(flight),'CURVE') +
+    metric(fmt(flight.ballSpeed)+' mph','BALL SPEED');
+  const p = PARAMS[active];
+  document.getElementById('pname').textContent = p.label;
+  document.getElementById('pval').textContent = deg(state[active]);
+  document.getElementById('pend0').textContent = p.ends[0];
+  document.getElementById('pend1').textContent = p.ends[1];
+  const s = document.getElementById('slider');
+  s.min=p.min; s.max=p.max; s.step=p.step; s.value=state[active];
+  s.setAttribute('aria-label', p.label.toLowerCase()+', degrees');
+  s.setAttribute('aria-valuetext', deg(state[active]));
+}
+function renderOutcome(){
+  drawTrace(document.getElementById('svg-outcome'), flight, {apex:false});
+  const shape = shapeLabel(flight.startDirection, flight.faceToPath);
+  document.getElementById('result').textContent =
+    `A ${shape.toLowerCase()} — it started ${Math.abs(flight.startDirection)<1.5?'on line':(flight.startDirection>0?'right':'left')} and finished ${fmt(Math.abs(flight.offline*YD2M))} m ${flight.offline>0?'right':'left'} of target.`;
+  document.getElementById('chain').innerHTML = `
+    <li><span>Face ${deg(state.faceAngle)} against path ${deg(state.clubPath)} → gap</span><span class="cv">${deg(flight.faceToPath)}</span></li>
+    <li><span>The gap tilts the spin axis</span><span class="cv">${deg(flight.spinAxis)}</span></li>
+    <li><span>Tilted spin bends the flight</span><span class="cv">${curveTxt(flight)}</span></li>
+    <li><span>Spin loft (loft ${deg(state.dynamicLoft)} − attack ${deg(state.attackAngle)})</span><span class="cv">${fmt(flight.spinLoft,1)}° → ${fmt(flight.backspin)} rpm</span></li>`;
+  const fix = flight.faceToPath>0.75 ? 'squarer face' : flight.faceToPath<-0.75 ? 'squarer face' : 'different path';
+  document.getElementById('btn-try').textContent = `Try a ${fix} →`;
+}
+
+/* ── interaction ── */
+document.getElementById('slider').addEventListener('input', e=>{
+  const prev = { pts: Array.from(document.querySelectorAll('#svg-range path')).length ? null : null };
+  // capture current trace as ghost BEFORE the change (data, not decor)
+  captureGhost();
+  state[active] = parseFloat(e.target.value);
+  flight = solveFlight(state);            // sub-ms: truth answers immediately
+  renderRange();
+  announce(`${PARAMS[active].label.toLowerCase()} ${deg(state[active])}, carry ${fmt(flight.carry*YD2M)} metres, curve ${curveTxt(flight)}`);
+});
+let lastGhostAt=0;
+function captureGhost(){
+  const now=performance.now();
+  if(now-lastGhostAt<350) return;         // one ghost per gesture-ish, not per pixel
+  lastGhostAt=now;
+  const svg=document.getElementById('svg-range');
+  const W=430,H=+svg.viewBox.baseVal.height,padL=24,padR=24,base=H-34;
+  const span=Math.max(flight.carry*YD2M*1.15,120);
+  const X=m=>padL+(m/span)*(W-padL-padR);
+  const apexH=Math.min(flight.apex*YD2M,45);
+  const Y=h=>base-(h/48)*(base-16);
+  ghosts.unshift({pts:trajectorySamples(flight,40).map(p=>({x:X(p.d*flight.carry*YD2M),y:Y(p.h*apexH)}))});
+  ghosts=ghosts.slice(0,2);
+}
+document.querySelectorAll('.chip').forEach(c=>c.addEventListener('click',()=>{
+  document.querySelectorAll('.chip').forEach(x=>x.setAttribute('aria-pressed','false'));
+  c.setAttribute('aria-pressed','true');
+  active=c.dataset.p;
+  ghosts=[];                               // new parameter, new comparison space
+  renderRange();
+}));
+
+let liveT;
+function announce(msg){ clearTimeout(liveT);
+  liveT=setTimeout(()=>{document.getElementById('live').textContent=msg;},800); } // one polite region, throttled
+
+/* ── router: hash views, state survives navigation (the chain contract) ── */
+const views={'#/bench':'v-bench','#/range':'v-range','#/outcome':'v-outcome'};
+function route(){
+  const id=views[location.hash]||'v-bench';
+  document.querySelectorAll('.view').forEach(v=>v.classList.toggle('on',v.id===id));
+  if(id==='v-bench')renderBench();
+  if(id==='v-range')renderRange();
+  if(id==='v-outcome')renderOutcome();
+  document.title=`Flightglass — QP prototype · ${id.slice(2).toUpperCase()}`;
+}
+addEventListener('hashchange',route);
+route();
+</script>
+</body>
+</html>

@@ -14,6 +14,7 @@ wait.
 | Agent | Branch | Working on | Since |
 |-------|--------|-----------|-------|
 | Claude Code | `agent/impact-kamera` | Impact-kamera (design/orders/impact-kamera.md): Økt A ferdig (docs/systemkontrakt.md), Økt B–F via scripts/impact-kamera-workflow.mjs. Files: impact.html, impact-camera.js, impact-outcome.js, impact-annotate.js, sa-p3.css | 2026-07-17 |
+| Claude Code (Fable 5) | `agent/full-redesign-lab` | Quiet Phosphor-prototype (eiervalgt FR-O1 2026-08-05), økt 1 av 3 levert. Files: design/mocks/candidates/qp-prototype.html, qp-lint.mjs + full-redesign-loggene. Mocks-only; ingen shipping/fysikk/identifikatorer. | 2026-08-05 |
 
 ## Queue / free to take
 

@@ -41,6 +41,14 @@
 | FR-B11 | Syntese («QP + Signals replay») vurdert og avvist som høflig kompromiss | Masterprompt fase 8-regelen; 10 §2 |
 | FR-B12 | Anbefaling til FR-O1: Quiet Phosphor m/ addenda; Signal som utfordrer m/ WTP-/thumbnail-gates; Fieldbook ikke videreført (to arvede elementer) | 10 §3, 14 §B |
 
+## Eierbeslutninger mottatt
+
+| # | Beslutning | Dato | Kilde |
+|---|---|---|---|
+| FR-O1 | **Quiet Phosphor valgt** («ja, prøv det») — prototypefasen startet per 12-prototype-spec | 2026-08-05 | Eier i chat, etter triptyk-mock + slop-/innstrammingsdrøfting |
+
+Prototypestatus: **økt 1 levert** — `design/mocks/candidates/qp-prototype.html` (QP-tokens, Bench→EXPLAIN→Outcome→Range-kjeden med ekte solveFlight, addendum-krav innarbeidet: ink-fylt valgt chip, ≤2 amber i ro, mono-numeraler, ingen violet/glød/blur/gradient) + `qp-lint.mjs` (doktrine-lint, 11 regler). Evidens: lint PASS; Chromium + WebKit browser-spot 2 cases / 0 kritiske hver. Gjenstår: økt 2 (Bench-varianter + oppgavebasert blindtest), økt 3 (Academy + Paywall + render-målt kontrast/CVD-pakke).
+
 ## Avvik fra låste beslutninger (flagget, aldri stille)
 
 Fylles ut i 14-owner-package per finalist: enhver retning som endrer Night Ladder-Home, P3-tokens, Fase 7-paywallpresentasjon eller shippet IA er et eierstyrt avvik fra tidligere låste beslutninger — det er hele poenget med denne bestillingen, men det skal navngis per punkt.
