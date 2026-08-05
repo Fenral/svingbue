@@ -59,20 +59,22 @@
   .p-outcome{left:max(18px,env(safe-area-inset-left));top:35%}
   .p-academy{right:max(18px,env(safe-area-inset-right));top:20%}
   .p-studio{right:max(18px,env(safe-area-inset-right));top:52%}
+  .p-jarvis{left:max(18px,env(safe-area-inset-left));top:20%}
+  .place--v1-hidden{display:none}
   .footnote{position:absolute;left:max(20px,env(safe-area-inset-left));right:max(20px,env(safe-area-inset-right));bottom:max(14px,env(safe-area-inset-bottom));display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:10px;letter-spacing:.08em;text-transform:uppercase;pointer-events:none}
   .footnote__state{font-family:var(--font-mono);font-variant-numeric:tabular-nums;color:var(--ink)}
 
   @media(max-width:390px){
     .intro{width:210px}.intro h1{font-size:35px}.intro__body{font-size:12px}
     .place{max-width:166px;padding-inline:11px}.place__value{font-size:13px}
-    .p-academy{top:21%}.p-outcome{top:37%}.p-lab{bottom:34%}.p-range{bottom:11%}
+    .p-academy{top:21%}.p-outcome{top:37%}.p-lab{bottom:34%}.p-range{bottom:11%}.p-jarvis{top:20%}
   }
   @media(max-height:850px) and (orientation:portrait){
     .intro__body{display:none}.intro h1{font-size:34px}.intro{top:max(76px,calc(env(safe-area-inset-top) + 66px))}
-    .p-academy{top:20%}.p-outcome{top:36%}.p-lab{bottom:32%}.p-range{bottom:10%}.p-studio{top:52%}
+    .p-academy{top:20%}.p-outcome{top:36%}.p-lab{bottom:32%}.p-range{bottom:10%}.p-studio{top:52%}.p-jarvis{top:20%}
   }
   @media(max-height:700px) and (orientation:portrait){
-    .p-studio{top:44%}
+    .p-studio{top:44%}.p-jarvis{top:20%}
   }
   @media(orientation:landscape){
     .masthead{left:max(18px,env(safe-area-inset-left));right:max(18px,env(safe-area-inset-right));top:max(8px,env(safe-area-inset-top))}
@@ -81,14 +83,14 @@
     .intro h1{font-size:clamp(34px,5vw,44px)}
     .intro__body{font-size:12px;max-width:180px}
     .flight--portrait{display:none}.flight--landscape{display:block;inset:18px 8px 14px 150px}
-    .p-range{left:30%;bottom:7%}.p-lab{left:47%;right:auto;bottom:31%}.p-outcome{left:62%;top:29%}.p-academy{right:calc(max(18px,env(safe-area-inset-right)) + 52px);top:14%}.p-studio{right:auto;left:76%;top:44%}
+    .p-range{left:30%;bottom:7%}.p-lab{left:47%;right:auto;bottom:31%}.p-outcome{left:62%;top:29%}.p-academy{right:calc(max(18px,env(safe-area-inset-right)) + 52px);top:14%}.p-studio{right:auto;left:76%;top:44%}.p-jarvis{right:30px;left:auto;top:18%}
     .place{min-height:54px;max-width:180px;padding:8px 12px}
     .place__value{font-size:14px}
     .footnote{bottom:max(8px,env(safe-area-inset-bottom))}
   }
   @media(max-height:390px) and (orientation:landscape){
     .intro__body{display:none}.intro{top:max(58px,calc(env(safe-area-inset-top) + 50px))}
-    .intro h1{font-size:34px}.p-range{left:31%;bottom:6%}.p-lab{bottom:29%}.p-outcome{left:62%;top:29%}.p-academy{top:10%}.p-studio{right:auto;left:77%;top:42%}
+    .intro h1{font-size:34px}.p-range{left:31%;bottom:6%}.p-lab{bottom:29%}.p-outcome{left:62%;top:29%}.p-academy{top:10%}.p-studio{right:auto;left:77%;top:42%}.p-jarvis{right:24px;left:auto;top:16%}
     .place{min-height:50px}.place__label{font-size:8px}.place__value{font-size:13px}
   }
   @media(prefers-reduced-motion:reduce){
@@ -139,17 +141,20 @@
     <a id="placeRange" class="place place--primary p-range sa-focus" data-key="flight" href="./impact.html" aria-label="Range — demo shot 154 metres, 12 metres right">
       <span class="place__copy"><span id="labelRange" class="place__label">Start here · Range</span><span id="valueRange" class="place__value">154 m · 12 m R</span></span>
     </a>
-    <a id="placeLab" class="place p-lab sa-focus" data-key="geometry" href="./geometry.html" aria-label="Lab — inspect the strike">
+    <a id="placeLab" class="place place--v1-hidden p-lab sa-focus" data-key="geometry" href="./geometry.html" aria-label="Lab — inspect the strike">
       <span class="place__copy"><span id="labelLab" class="place__label">Lab</span><span id="valueLab" class="place__value">Inspect the strike</span></span>
     </a>
-    <a id="placeOutcome" class="place p-outcome sa-focus" data-key="outcome" href="./impact.html?play=1" aria-label="Outcome — demo shot faded right">
+    <a id="placeOutcome" class="place place--v1-hidden p-outcome sa-focus" data-key="outcome" href="./impact.html?play=1" aria-label="Outcome — demo shot faded right">
       <span class="place__copy"><span id="labelOutcome" class="place__label">Outcome</span><span id="valueOutcome" class="place__value">Fade · demo shot</span></span>
     </a>
-    <a id="placeAcademy" class="place place--academy p-academy sa-focus" data-key="academy" href="./academy.html" aria-label="Academy — open the physics path">
+    <a id="placeAcademy" class="place place--v1-hidden place--academy p-academy sa-focus" data-key="academy" href="./academy.html" aria-label="Academy — open the physics path">
       <span class="place__copy"><span id="labelAcademy" class="place__label">Academy</span><span id="valueAcademy" class="place__value">Physics path</span></span>
     </a>
     <a id="placeStudio" class="place p-studio sa-focus" data-key="studio" href="./impact-studio.html" aria-label="Impact Studio — cause and effect of the strike">
       <span class="place__copy"><span id="labelStudio" class="place__label">Impact Studio</span><span id="valueStudio" class="place__value">Cause → effect</span></span>
+    </a>
+    <a id="placeJarvis" class="place p-jarvis sa-focus" data-key="jarvis" href="./jarvis.html" aria-label="Jarvis — choose a question about your shot">
+      <span class="place__copy"><span id="labelJarvis" class="place__label">Jarvis</span><span id="valueJarvis" class="place__value">Pick a question</span></span>
     </a>
   </nav>
 
@@ -223,10 +228,11 @@
     geometry:['placeLab','labelLab','Lab'],
     outcome:['placeOutcome','labelOutcome','Outcome'],
     academy:['placeAcademy','labelAcademy','Academy'],
-    studio:['placeStudio','labelStudio','Impact Studio']
+    studio:['placeStudio','labelStudio','Impact Studio'],
+    jarvis:['placeJarvis','labelJarvis','Jarvis']
   };
   let last = readString('sa.home.last');
-  if (!hasSavedState || !keyToIds[last]) last = 'flight';
+  if (!hasSavedState || !['flight', 'studio', 'jarvis'].includes(last)) last = 'flight';
   document.querySelectorAll('.place').forEach(place => place.classList.remove('place--primary'));
   const [placeId, labelId, label] = keyToIds[last];
   byId(placeId).classList.add('place--primary');

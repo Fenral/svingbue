@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="robots" content="noindex">
+  <title>Flightglass — Jarvis</title>
+  <link rel="icon" href="./assets/flightglass-mark-micro.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./sa-p3.css">
+  <style>
+    :root { --jarvis-panel: rgba(16,14,28,.88); --jarvis-line: rgba(157,139,255,.28); }
+    * { box-sizing:border-box; }
+    html, body { margin:0; min-height:100%; background:var(--bg); color:var(--ink); }
+    body { font-family:var(--font-ui); -webkit-font-smoothing:antialiased; }
+    .jarvis-shell { min-height:100dvh; padding: max(18px,env(safe-area-inset-top)) max(18px,env(safe-area-inset-right)) max(30px,env(safe-area-inset-bottom)) max(18px,env(safe-area-inset-left)); background:radial-gradient(circle at 8% 0%,rgba(157,139,255,.18),transparent 34rem), radial-gradient(circle at 100% 80%,rgba(255,138,77,.12),transparent 30rem),var(--bg); }
+    .jarvis-top { width:min(760px,100%); margin:0 auto; display:flex; justify-content:space-between; align-items:center; gap:16px; }
+    .back { display:inline-flex; align-items:center; min-height:44px; padding:8px 12px; border:1px solid var(--line-strong); border-radius:999px; color:var(--ink); text-decoration:none; font:600 12px/1 var(--font-mono); }
+    .back:hover,.back:focus-visible { border-color:var(--secondary-line); outline:0; }
+    .jarvis-mark { display:flex; align-items:center; gap:8px; color:var(--muted); font:700 11px/1 var(--font-mono); letter-spacing:.16em; text-transform:uppercase; }
+    .jarvis-mark::before { content:""; width:9px; height:9px; border-radius:50%; background:var(--secondary); box-shadow:0 0 16px var(--secondary); }
+    .hero { width:min(760px,100%); margin:clamp(48px,12vh,110px) auto 0; }
+    .kicker { margin:0 0 10px; color:var(--secondary); font:700 11px/1 var(--font-mono); letter-spacing:.18em; text-transform:uppercase; }
+    h1 { margin:0; max-width:10ch; font:600 clamp(46px,12vw,94px)/.9 var(--font-display); letter-spacing:-.05em; }
+    .lede { max-width:42ch; margin:18px 0 0; color:var(--muted); font-size:16px; line-height:1.5; }
+    .question-block { width:min(760px,100%); margin:42px auto 0; }
+    .section-label { margin:0 0 12px; color:var(--muted); font:700 10px/1 var(--font-mono); letter-spacing:.17em; text-transform:uppercase; }
+    .questions { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+    .question { min-height:82px; padding:15px 16px; border:1px solid var(--line); border-radius:14px; background:var(--jarvis-panel); color:var(--ink); text-align:left; cursor:pointer; font:600 15px/1.25 var(--font-ui); transition:transform .16s var(--ease),border-color .16s var(--ease),background .16s var(--ease); }
+    .question:hover,.question:focus-visible { transform:translateY(-2px); border-color:var(--secondary-line); background:rgba(29,24,49,.94); outline:0; }
+    .question[aria-pressed="true"] { border-color:var(--accent); box-shadow:0 0 0 1px var(--accent); }
+    .question small { display:block; margin-bottom:8px; color:var(--muted); font:700 10px/1 var(--font-mono); letter-spacing:.14em; text-transform:uppercase; }
+    .answer { margin-top:18px; padding:20px; border:1px solid var(--jarvis-line); border-left:3px solid var(--accent); border-radius:16px; background:rgba(13,11,23,.92); }
+    .answer[hidden] { display:none; }
+    .answer__eyebrow { margin:0 0 10px; color:var(--accent); font:700 10px/1 var(--font-mono); letter-spacing:.17em; text-transform:uppercase; }
+    .answer h2 { margin:0; font:600 clamp(24px,6vw,38px)/1 var(--font-display); letter-spacing:-.03em; }
+    .answer p { max-width:58ch; margin:12px 0 0; color:var(--muted); font-size:15px; line-height:1.55; }
+    .answer__actions { display:flex; flex-wrap:wrap; gap:10px; margin-top:18px; }
+    .action { display:inline-flex; align-items:center; min-height:44px; padding:10px 15px; border-radius:999px; background:var(--accent); color:var(--bg); text-decoration:none; font:700 12px/1 var(--font-mono); }
+    .action.secondary { border:1px solid var(--line-strong); background:transparent; color:var(--ink); }
+    .action:hover,.action:focus-visible { filter:brightness(1.08); outline:0; }
+    .boundary { width:min(760px,100%); margin:28px auto 0; color:var(--muted); font-size:12px; }
+    @media (max-width:560px) { .questions { grid-template-columns:1fr; } .hero { margin-top:54px; } }
+    @media (prefers-reduced-motion:reduce) { .question { transition:none; } }
+  </style>
+</head>
+<body>
+  <main class="jarvis-shell">
+    <div class="jarvis-top">
+      <a class="back" href="./index.html" aria-label="Back to Home">← Home</a>
+      <div class="jarvis-mark">Jarvis / v1</div>
+    </div>
+    <section class="hero" aria-labelledby="jarvisTitle">
+      <p class="kicker">Your shot, explained</p>
+      <h1 id="jarvisTitle">Ask Jarvis.</h1>
+      <p class="lede">Choose a question and get a focused answer from the same Range and Impact Studio model. There is no free-text input in v1.</p>
+    </section>
+    <section class="question-block" aria-labelledby="questionTitle">
+      <p id="questionTitle" class="section-label">Choose a question</p>
+      <div class="questions" role="group" aria-label="Preset Jarvis questions">
+        <button class="question" type="button" data-question="curve" aria-pressed="false"><small>Flight shape</small>Why did my shot curve right?</button>
+        <button class="question" type="button" data-question="first" aria-pressed="false"><small>Next move</small>What should I change first?</button>
+        <button class="question" type="button" data-question="studio" aria-pressed="false"><small>Impact Studio</small>What does Impact Studio show?</button>
+        <button class="question" type="button" data-question="height" aria-pressed="false"><small>Trajectory</small>How do I make the flight higher?</button>
+      </div>
+      <article id="answer" class="answer" aria-live="polite" hidden>
+        <p id="answerEyebrow" class="answer__eyebrow"></p>
+        <h2 id="answerTitle"></h2>
+        <p id="answerBody"></p>
+        <div class="answer__actions">
+          <a id="answerPrimary" class="action" href="./impact.html">Open Range</a>
+          <a id="answerSecondary" class="action secondary" href="./impact-studio.html">Open Impact Studio</a>
+        </div>
+      </article>
+    </section>
+    <p class="boundary">Jarvis v1 answers only the four questions above. It will not invent a diagnosis from an unstructured message.</p>
+  </main>
+  <script>
+    const answers = {
+      curve: { eyebrow:'Flight shape', title:'Face-to-path is the first place to look.', body:'A face that points right of the swing path sends the start line right. If the face-to-path gap stays open through impact, the ball curves right as well. Change one input in Range and watch the flight respond live.', primary:'Open Range', secondary:'Open Impact Studio', href:'./impact.html' },
+      first: { eyebrow:'Next move', title:'Change one input, then read the flight.', body:'Start with Face or Path — not both. Make a small change, replay the shot, and compare the new trace with the previous one. Impact Studio is the follow-up when you want to see the contact cause behind the result.', primary:'Open Range', secondary:'Open Impact Studio', href:'./impact.html' },
+      studio: { eyebrow:'Impact Studio', title:'It shows the cause before the outcome.', body:'Impact Studio puts attack angle, club path, low point and ball position in one impact scene. Use it to understand why the strike happened, then return to Range to test the next change.', primary:'Open Impact Studio', secondary:'Back to Range', href:'./impact-studio.html', secondaryHref:'./impact.html' },
+      height: { eyebrow:'Trajectory', title:'Start with delivered loft.', body:'More delivered loft generally raises launch and apex in this model. Change loft in Range, keep the other inputs stable, and compare the flight rather than guessing from a single number.', primary:'Open Range', secondary:'See the cause in Impact Studio', href:'./impact.html' }
+    };
+    const answer = document.querySelector('#answer');
+    const buttons = [...document.querySelectorAll('[data-question]')];
+    const eyebrow = document.querySelector('#answerEyebrow');
+    const title = document.querySelector('#answerTitle');
+    const body = document.querySelector('#answerBody');
+    const primary = document.querySelector('#answerPrimary');
+    const secondary = document.querySelector('#answerSecondary');
+    buttons.forEach(button => button.addEventListener('click', () => {
+      const item = answers[button.dataset.question];
+      if (!item) return;
+      buttons.forEach(other => other.setAttribute('aria-pressed', String(other === button)));
+      eyebrow.textContent = item.eyebrow;
+      title.textContent = item.title;
+      body.textContent = item.body;
+      primary.textContent = item.primary;
+      primary.href = item.href;
+      secondary.textContent = item.secondary;
+      secondary.href = item.secondaryHref || './impact-studio.html';
+      answer.hidden = false;
+    }));
+  </script>
+</body>
+</html>
