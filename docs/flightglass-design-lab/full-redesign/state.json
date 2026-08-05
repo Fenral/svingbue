@@ -1,0 +1,36 @@
+{
+  "workstream": "full-redesign",
+  "phase": "C-directions-in-development",
+  "updated": "2026-08-05",
+  "branch": "agent/full-redesign-lab",
+  "scope": "full decision-ready revision: product architecture, IA, design system, color/light, typography, motion, haptics, a11y, monetization placement; Ask Flightglass is one candidate within it; docs-only, no implementation",
+  "order": "outputs/flightglass-claude-code-start-prompt-full-redesign.md under outputs/flightglass-design-lab-masterprompt-creative-director-review-board.md",
+  "documents": {
+    "00-master-brief.md": "mandate, unlocked vs fixed, phase map, DoD",
+    "01-environment-and-evidence.md": "environment probes, evidence gap (no local Playwright), runnable commands",
+    "02-baseline-audit.md": "feature matrix + IA map (pending A1 agent)",
+    "03-design-inventory.md": "CSS truth vs docs vs mock legacy + UV Ember critique (pending A2 agent)",
+    "04-first-principles.md": "golfer jobs, role clarity, adopt/adapt/reinvent/reject, removal candidates",
+    "08-decision-log.md": "framework decisions FR-B*, owner choices FR-O*, assumptions FR-A*",
+    "09-direction-1-fieldbook.md": "daylight paper instrument (in development)",
+    "09-direction-2-signal.md": "broadcast graphite + tab-bar experiment (in development)",
+    "09-direction-3-quiet-phosphor.md": "night distillation (in development)",
+    "09-directions-overview.md": "creative-director synthesis + comparison (pending)",
+    "10-feasibility-review.md": "pending phase D",
+    "11-review-board.md": "pending board round over directions",
+    "12-prototype-spec.md": "pending phase D",
+    "14-owner-package.md": "pending phase D",
+    "20-next-handoff.md": "pending"
+  },
+  "relatedWorkstreams": {
+    "ask-flightglass": "../ask-flightglass/ — board-revised spec 2026-08-05, owner gate open (O1-O4, O9); reused as candidate basis, not duplicated"
+  },
+  "approvedDecisions": [],
+  "openFindings": [],
+  "blocked": [],
+  "ownerGate": {
+    "required": ["FR-O1 direction choice after board+feasibility"],
+    "status": "NOT YET REACHED"
+  },
+  "nextAction": "Await A1/A2 baseline reports -> write 02/03; await direction agents -> synthesis 09-overview; then Review Board, feasibility, prototype spec, owner package"
+}
