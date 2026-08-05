@@ -1,0 +1,35 @@
+{
+  "workstream": "ask-flightglass",
+  "phase": "specification-revised-after-review-board-awaiting-owner-gate",
+  "updated": "2026-08-05",
+  "branch": "agent/ask-flightglass-spec",
+  "scope": "design + monetization specification only; no implementation, no LLM vendor, no backend",
+  "documents": {
+    "00-master-brief.md": "mandate, scope, sources, DoD",
+    "02-product-audit.md": "entry points Range/Academy/Lab/Diagnose, gap register G1-G5",
+    "03-answer-contract.md": "AskAnswer contract, deterministic-first routing, deeplink allowlist",
+    "07-business-review.md": "3 freemium models (A recommended), cost/abuse/outage/consent/data",
+    "08-decision-log.md": "decisions B1-B10, assumptions A1-A6, owner choices O1-O8",
+    "11-evaluation-set.md": "R1-R12 core, E1-E10 edge, F1-F8 forbidden, deeplink checks",
+    "11-review-board.md": "independent review verdict (pending)",
+    "12-prototype-spec.md": "spin-loft loop mock proposal",
+    "20-next-handoff.md": "handoff"
+  },
+  "approvedDecisions": [],
+  "openFindings": [
+    "Review Board round 1: 3x REVIDER, 17 P0/P1 all implemented, verification 17/17 confirmed, no open P0/P1",
+    "Next board round (over prototype): AskAnswer example instances R6/E8/R9, deeplink screenshot, intent-match thresholds, R7 grounding check"
+  ],
+  "blocked": [],
+  "ownerGate": {
+    "required": ["O1 direction", "O2 monetization path (staged v0->A recommended)", "O3 data/LLM boundary", "O4 prototype", "O9 backend precondition (at step 2)"],
+    "status": "AWAITING OWNER"
+  },
+  "links": {
+    "masterPlan": "../../FLIGHTGLASS-CLAUDE-CODE-MASTER-PLAN.md",
+    "masterprompt": "outputs/flightglass-design-lab-masterprompt-creative-director-review-board.md (utenfor repo-docs; levert av eier)",
+    "status": "../../flightglass-autopilot/STATUS.md",
+    "coordination": "../../flightglass-autopilot/COORDINATION.md"
+  },
+  "nextAction": "Run independent Review Board on 00/02/03/07/11/12; answer P0/P1; then deliver owner decision package"
+}

@@ -31,6 +31,14 @@ wait.
 
 ## Done / handed off
 
+- Ask Flightglass design- og monetiseringsspesifikasjon — `agent/ask-flightglass-spec`
+  (Claude Code/Fable 5, 2026-08-05); docs-only arbeidsområde
+  `docs/flightglass-design-lab/ask-flightglass/` med answer-contract,
+  deeplink-register, tre freemium-modeller, evalueringssett, prototypeforslag og
+  Review Board-runde (3× REVIDER → 17/17 P0/P1 implementert og verifisert).
+  Venter på eierport (O1–O4, O9 i 08-decision-log.md). Ingen shipping-/fysikk-/
+  identifikator-endring.
+
 - Academy complete analysis pack — `agent/academy-codex`; one tracked module
   description and 15 visual contact sheets cover Academy Home plus all 84
   canonical experience surfaces. A deterministic generator creates 86 raw
