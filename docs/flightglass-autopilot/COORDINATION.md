@@ -31,6 +31,8 @@ wait.
 
 ## Done / handed off
 
+- Codex `agent/page-overview` — added standalone `page-overview.html` with 78 unique links to the repository's HTML surfaces; Chromium/WebKit spot checks and the level-B change gate passed on 2026-08-05.
+
 - Academy complete analysis pack — `agent/academy-codex`; one tracked module
   description and 15 visual contact sheets cover Academy Home plus all 84
   canonical experience surfaces. A deterministic generator creates 86 raw
