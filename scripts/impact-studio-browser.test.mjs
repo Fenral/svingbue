@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
 import { createRequire } from 'node:module';
-import { mkdirSync, readFile } from 'node:fs';
+import { mkdirSync, readFile, readFileSync } from 'node:fs';
 import { dirname, extname, join, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -109,6 +109,42 @@ async function currentView(page) {
   return page.locator('#stage').getAttribute('data-view');
 }
 
+async function lowPointFacts(page) {
+  return page.evaluate(() => {
+    const canvas = document.querySelector('#scene');
+    const [view, xRaw, yRaw, opacityRaw] = document.querySelector('#stage')
+      .dataset.lowPointMarker.split(',');
+    const x = Number(xRaw), y = Number(yRaw), opacity = Number(opacityRaw);
+    const scaleX = canvas.width / canvas.getBoundingClientRect().width;
+    const scaleY = canvas.height / canvas.getBoundingClientRect().height;
+    const pixel = [...canvas.getContext('2d').getImageData(
+      Math.round(x * scaleX), Math.round(y * scaleY), 1, 1,
+    ).data];
+    return { view, x, y, opacity, width:canvas.getBoundingClientRect().width,
+      height:canvas.getBoundingClientRect().height, pixel };
+  });
+}
+
+function assertVisibleLowPoint(facts, expectedView) {
+  assert.equal(facts.view, expectedView);
+  assert.equal(facts.opacity, 1, 'Low Point marker must never dim');
+  assert.ok(facts.x >= 7 && facts.x <= facts.width - 7,
+    `Low Point x is outside the scene: ${facts.x} / ${facts.width}`);
+  assert.ok(facts.y >= 7 && facts.y <= facts.height - 7,
+    `Low Point y is outside the scene: ${facts.y} / ${facts.height}`);
+  assert.ok(facts.pixel[0] > 180 && facts.pixel[2] > 130 && facts.pixel[0] > facts.pixel[1] + 30,
+    `Low Point centre is not visibly attack-pink: ${facts.pixel.join(',')}`);
+}
+
+test(`${ENGINE}: canvas outcome plates cannot cover the physical teaching geometry`, () => {
+  for (const relative of ['impact-studio.html', 'design/mocks/impact-studio.html']) {
+    const source = readFileSync(join(ROOT, relative), 'utf8');
+    assert.doesNotMatch(source, /plateLabel\('ATTACK ANGLE/);
+    assert.doesNotMatch(source, /plateLabel\('CLUB PATH/);
+    assert.doesNotMatch(source, /dataset\.lowPointPlate/);
+  }
+});
+
 test(`${ENGINE}: Studio camera announces its destination and contact stays reachable`, async () => {
   const { browserContext, page, errors } = await open({ viewport: { width: 812, height: 375 } });
   await page.locator('#stage').waitFor();
@@ -200,25 +236,26 @@ test(`${ENGINE}: ghost club teaches turf entry before impact`, async () => {
   await browserContext.close();
 });
 
-test(`${ENGINE}: low-point plate clears the rail at the extreme back position`, async () => {
+test(`${ENGINE}: swing arc keeps an opaque Low Point marker through live changes`, async () => {
   const { browserContext, page, errors } = await open({ viewport: { width: 812, height: 375 } });
-  await page.locator('#range').evaluate(element => {
-    element.value = '-20';
-    element.dispatchEvent(new Event('input', { bubbles: true }));
-  });
-  await page.waitForFunction(() => document.querySelector('#stage')?.dataset.lowPointPlate);
-  const facts = await page.evaluate(() => {
-    const values = document.querySelector('#stage').dataset.lowPointPlate.split(',').map(Number);
-    const canvas = document.querySelector('#scene').getBoundingClientRect();
-    const rail = document.querySelector('.rail').getBoundingClientRect();
-    return {
-      plate:{ left:values[0], top:values[1], right:values[2], bottom:values[3] },
-      rail:{ left:rail.left - canvas.left, top:rail.top - canvas.top, bottom:rail.bottom - canvas.top },
-    };
-  });
-  const overlapsRailY = facts.plate.bottom > facts.rail.top && facts.plate.top < facts.rail.bottom;
-  assert.ok(!overlapsRailY || facts.plate.right <= facts.rail.left - 4,
-    `low-point plate overlaps the rail: ${JSON.stringify(facts)}`);
+  await page.waitForFunction(() => document.querySelector('#stage')?.dataset.lowPointMarker?.startsWith('face,'));
+
+  for (const value of ['-20', '20']) {
+    await page.locator('.chip[data-p="low"]').click();
+    await page.locator('#range').evaluate((element, next) => {
+      element.value = next;
+      element.dispatchEvent(new Event('input', { bubbles: true }));
+    }, value);
+    await page.locator('.chip[data-p="plane"]').click();
+    await page.evaluate(() => new Promise(resolveFrame => requestAnimationFrame(() => requestAnimationFrame(resolveFrame))));
+    assertVisibleLowPoint(await lowPointFacts(page), 'face');
+  }
+  await capture(page, 'persistent-low-point-face--812x375');
+
+  await page.locator('#btnView').click();
+  await page.waitForFunction(() => document.querySelector('#stage')?.dataset.lowPointMarker?.startsWith('dtl,'));
+  assertVisibleLowPoint(await lowPointFacts(page), 'dtl');
+  await capture(page, 'persistent-low-point-dtl--812x375');
   assert.deepEqual(errors, []);
   await browserContext.close();
 });

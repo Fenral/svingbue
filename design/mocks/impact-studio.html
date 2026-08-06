@@ -787,7 +787,7 @@ function drawInset(){
   if (!IW) resizeInset();
   const s = engineState();
   const ct = clubBallContact(s), t0g = groundCrossingTheta0(s), lpx = effectiveLpx(s);
-  const GOLD = '#e8b45a', WARM = '#ff9a3d';
+  const GOLD = '#e8b45a', WARM = '#ff9a3d', LOW = CSS('--attack');
   ictx.clearRect(0, 0, IW, IH);
 
   /* world window: adaptive — always frames the whole contact zone */
@@ -1021,14 +1021,14 @@ function drawInset(){
       iLabel(t2[1], tx, gy + 47, CSS('--muted'), 9);
     }
   }
-  /* low point: small gold dot on the arc bottom */
+  /* low point keeps the same attack-pink semantic as the main scene */
   {
     const px = X(lpx), py = Y(s.lowPoint.z);
     if (px > 16 && px < IW - 16){
       ictx.beginPath(); ictx.arc(px, py, 3.2, 0, Math.PI * 2);
-      ictx.fillStyle = GOLD; ictx.fill();
+      ictx.fillStyle = LOW; ictx.fill();
       if (t0g !== null && Math.abs(px - X(arcPosition(-t0g, s).x)) > 30)
-        iLabel('LOW', px, gy + 16, '#eec07a', 9);
+        iLabel('LOW', px, gy + 16, LOW, 9);
     }
   }
   /* (mm/quality readout in the eyebrow is owned by updateOutcomes) */
@@ -1082,6 +1082,16 @@ function plateLabel(txt, x, y, hue, size, align, alpha){
   ctx.restore();
   return { left:lx - padX, top:y - h / 2, right:lx + w + padX, bottom:y + h / 2 };
 }
+function lowPointMarker(x, y, hue, view){
+  /* Geometry is the source of truth: keep this marker opaque and draw it last. */
+  ctx.save();
+  ctx.globalAlpha = 1;
+  ctx.beginPath(); ctx.arc(x, y, 6.5, 0, Math.PI * 2);
+  ctx.fillStyle = hue; ctx.fill();
+  ctx.strokeStyle = 'rgba(8,5,14,.96)'; ctx.lineWidth = 2; ctx.stroke();
+  ctx.restore();
+  $('stage').dataset.lowPointMarker = [view, x.toFixed(1), y.toFixed(1), '1'].join(',');
+}
 function arrowHead(x, y, ang, size, color, alpha){
   ctx.save();
   ctx.globalAlpha = alpha == null ? 1 : alpha;
@@ -1116,9 +1126,9 @@ const PED_K = 1.7, PED_Z0 = 0.055;
 const pedF  = z => PED_K * z - (PED_K - 1) * PED_Z0 * Math.tanh(z / PED_Z0);
 const pedKz = z => PED_K - (PED_K - 1) / Math.cosh(z / PED_Z0) ** 2;
 function faceMap(){
-  const winM = W >= 700 ? 0.80 : 0.70;          // tight window: the teaching zone fills the frame
+  const winM = W >= 700 ? 0.90 : 0.82;          // wide enough to keep Low Point visible at both extremes
   const scale = W / winM;                       // px per metre
-  const bx = W * 0.62, gy = H * 0.71;           // action lives right of the mini screen
+  const bx = W * 0.57, gy = H * 0.71;           // action stays clear of the mini screen and right rail
   return { scale, bx, gy, K: PED_K, Kz: pedKz,
     X: xm => bx + xm * scale,
     Y: zm => gy - pedF(zm) * scale };
@@ -1126,12 +1136,12 @@ function faceMap(){
 function drawFace(t){
   const s = engineState();
   const M = faceMap();
-  const imp = deriveImpact(s), ct = clubBallContact(s);
+  const ct = clubBallContact(s);
   const t0g = groundCrossingTheta0(s);
   const thImp = thetaAtImpact(s);
   const lpx = effectiveLpx(s);
   const ballR = BALL_R * M.scale;
-  const A = { attack: CSS('--attack'), gold: CSS('--gold'), ink: CSS('--ink'),
+  const A = { attack: CSS('--attack'), ink: CSS('--ink'),
               muted: CSS('--muted'), soil: CSS('--soil'), sec: CSS('--secondary'),
               plane: CSS('--plane'), depth: CSS('--depth'), accent: CSS('--accent'),
               warn: CSS('--warn'), pathC: CSS('--path') };
@@ -1185,7 +1195,7 @@ function drawFace(t){
       ctx.fillStyle = CSS('--ghost'); ctx.fill();
       ctx.restore();
     }
-    /* the swing's low point is FIXED in the stance: a gold baseline between
+    /* the swing's low point is FIXED in the stance: an attack-pink baseline between
        the feet with a notch at LP_STANCE anchors it there — the ball just
        stands where you put it */
     {
@@ -1193,7 +1203,7 @@ function drawFace(t){
       const x0a = M.X(stanceC - 0.20), x1a = M.X(stanceC + 0.20);
       const nx = M.X(stanceC + LP_STANCE / 100);
       ctx.save(); ctx.globalAlpha = aB;
-      ctx.strokeStyle = 'rgba(217,179,106,.9)'; ctx.lineWidth = 1.2;
+      ctx.strokeStyle = A.attack; ctx.lineWidth = 1.2;
       ctx.beginPath(); ctx.moveTo(x0a, gy + 9); ctx.lineTo(x1a, gy + 9); ctx.stroke();
       ctx.lineWidth = 2;
       ctx.beginPath(); ctx.moveTo(nx, gy + 5); ctx.lineTo(nx, gy + 13); ctx.stroke();
@@ -1202,7 +1212,7 @@ function drawFace(t){
     if (selBall){
       for (const t2 of [[-0.11,'BACK'], [0,'MID'], [0.11,'FWD']]){
         const tx = M.X(stanceC + t2[0]);
-        if (Math.abs(tx - M.X(lpx)) < 36) continue;   // dodge the LOW POINT label
+        if (Math.abs(tx - M.X(lpx)) < 18) continue;   // keep the permanent marker clear
         coreLine(tx, gy + 12, tx, gy + 17, CSS('--muted'), 1.5, null, 0.75);
         label(t2[1], tx, gy + 26, CSS('--muted'), 9, 'center', false, 0.8);
       }
@@ -1401,27 +1411,6 @@ function drawFace(t){
       ctx.drawImage(IMG.glint, contactPt.x - 27, contactPt.y - 27, 54, 54);
       ctx.restore();
     }
-    const pe = segPts[segPts.length - 1];
-    plateLabel('ATTACK ANGLE ' + fmtNum(imp.attackAngle, 1) + '°',
-          Math.min(pe.x + 16, W - 250), Math.max(pe.y - 22, 20), A.attack,
-          W >= 700 ? 17 : 14, 'left', fa);
-  }
-
-  /* --- low point: raised plate stays clear of the white arc at every value. --- */
-  {
-    const alphaLP = state.sel === 'low' ? 1 : 0.55;
-    const x = M.X(lpx), y = M.Y(s.lowPoint.z);
-    ctx.save(); ctx.globalAlpha = alphaLP;
-    ctx.beginPath();
-    ctx.moveTo(x, y + 4); ctx.lineTo(x - 5, y + 13); ctx.lineTo(x + 5, y + 13);
-    ctx.closePath(); ctx.fillStyle = A.gold; ctx.fill();
-    ctx.restore();
-    const txt = state.sel === 'low'
-      ? 'LOW POINT ' + fmtSigned(lpx * 100, 1) + ' cm'
-      : 'LOW POINT';
-    const bounds = plateLabel(txt, clamp(x, 108, W - 108), clamp(y - 64, 18, H - 18), A.gold,
-      W >= 700 ? 15 : 13, 'center', alphaLP * 0.96);
-    $('stage').dataset.lowPointPlate = [bounds.left,bounds.top,bounds.right,bounds.bottom].map(v => v.toFixed(1)).join(',');
   }
 
   /* (no path arrow in Face On — path is DTL's transient vector) */
@@ -1442,6 +1431,9 @@ function drawFace(t){
   }
 
   /* (swing plane has no label — the glass is its illustration) */
+
+  /* Permanent physical low point, above every transient teaching vector. */
+  lowPointMarker(M.X(lpx), M.Y(s.lowPoint.z), A.attack, 'face');
 
   ctx.restore();                              // close the inset punch-out clip
 }
@@ -1476,8 +1468,8 @@ function drawDtl(t){
   const s = engineState();
   const B = buildCamera(dtlCam(), W, H);
   const P = p => project(p, B);
-  const A = { path: CSS('--path'), sec: CSS('--secondary'), plane: CSS('--plane'),
-              gold: CSS('--gold'), ink: CSS('--ink'), muted: CSS('--muted'),
+  const A = { path: CSS('--path'), attack: CSS('--attack'), sec: CSS('--secondary'), plane: CSS('--plane'),
+              ink: CSS('--ink'), muted: CSS('--muted'),
               accent: CSS('--accent'), depth: CSS('--depth') };
   const fa = flashAlpha();
 
@@ -1644,27 +1636,6 @@ function drawDtl(t){
     }
   }
 
-  /* low point marker on the arc (hero when low selected) */
-  {
-    const alpha = state.sel === 'low' ? 1 : 0.45;
-    const lp = P(arcPosition(0, s));
-    if (lp){
-      ctx.save(); ctx.globalAlpha = alpha;
-      ctx.beginPath(); ctx.arc(lp.x, lp.y, 4.5, 0, Math.PI * 2);
-      ctx.fillStyle = CSS('--gold'); ctx.fill();
-      ctx.restore();
-      const txt = state.sel === 'low'
-        ? 'LOW POINT ' + fmtSigned(effectiveLpx(s) * 100, 1) + ' cm'
-        : 'LOW POINT';
-      const stageRect = cv.getBoundingClientRect();
-      const insetRect = $('inset').getBoundingClientRect();
-      const clearOfInset = insetRect.right - stageRect.left + 98;
-      const bounds = plateLabel(txt, clamp(lp.x, clearOfInset, W - 108),
-        clamp(lp.y - 64, 18, H - 18), A.gold, W >= 700 ? 15 : 13, 'center', alpha * 0.96);
-      $('stage').dataset.lowPointPlate = [bounds.left,bounds.top,bounds.right,bounds.bottom].map(v => v.toFixed(1)).join(',');
-    }
-  }
-
   /* arc-height bracket (hero when arc selected) */
   if (state.sel === 'arc'){
     const g = P({ x: effectiveLpx(s), y: 0, z: 0 });
@@ -1765,12 +1736,12 @@ function drawDtl(t){
       ctx.drawImage(IMG.glint, impP.x - 24, impP.y - 24, 48, 48);
       ctx.restore();
     }
-    if (segPts.length){
-      const pe = segPts[segPts.length - 1];
-      plateLabel('CLUB PATH ' + fmtNum(deriveImpact(s).clubPath, 1) + '°',
-            clamp(pe.x + 16, 10, W - 250), clamp(pe.y - 10, 22, H - 20), A.path,
-            W >= 700 ? 17 : 14, 'left', fa);
-    }
+  }
+
+  /* Draw last so neither Club Path nor another transient can cover it. */
+  {
+    const lp = P(arcPosition(0, s));
+    if (lp) lowPointMarker(lp.x, lp.y, A.attack, 'dtl');
   }
 
   ctx.restore();                              // close the inset punch-out clip
