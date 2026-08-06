@@ -134,6 +134,12 @@ export function mountAppShell(doc = document) {
   doc.body.appendChild(createNavigation(doc, currentRoute));
   doc.body.classList.add('sa-shell-ready');
   installOrientationGuard(doc, currentRoute);
+
+  if (currentRoute === 'range') {
+    import('./sa-range-context.js')
+      .then(({ mountGuidedRangeContext }) => mountGuidedRangeContext(doc))
+      .catch(() => {});
+  }
 }
 
 if (typeof document !== 'undefined') {

@@ -106,9 +106,17 @@ A small shared module MUST own a versioned context object. Proposed key:
   version: 1,
   onboarding: {
     complete: false,
+    step: 1,
+    dismissed: false,
     goal: "straighter|distance|contact|trajectory|null",
     handedness: "right|left|null",
-    experience: "new|improving|experienced|null"
+    experience: "new|improving|experienced|null",
+    draftShot: {
+      club: "driver|7iron|wedge|null",
+      start: "left|straight|right|null",
+      curve: "left|straight|right|null",
+      flight: "low|neutral|high|null"
+    }
   },
   currentShot: null,
   lastExperiment: null,
@@ -346,16 +354,31 @@ Stop condition met: `PHASE 1 DONE`. Do not begin Phase 2 automatically.
 
 Objective: deliver a useful first shot in 90 seconds without account friction.
 
-- [ ] First launch opens the four-step onboarding; returning launch does not.
-- [ ] Skip and resume work at every step.
-- [ ] The guided first shot produces a deterministic Range result.
-- [ ] Home shows first-shot CTA when empty and latest-shot/next experiment when
+Phase 2 MUST replace the current Night Ladder destination scene in full. The
+new `index.html` is a deterministic app start, not an iteration on the existing
+world/flight-trace/floating-card layout. Only the Flightglass brand system and
+shared four-route bottom navigation carry forward as visual constraints. The
+public animated marketing landing remains a separate future web surface.
+
+- [x] First launch opens the four-step onboarding; returning launch does not.
+- [x] Skip and resume work at every step.
+- [x] The guided first shot produces a deterministic Range result.
+- [x] Home shows first-shot CTA when empty and latest-shot/next experiment when
   context exists.
-- [ ] No sign-in, notification or paywall appears before the first result.
-- [ ] All states pass keyboard, screen reader, reduced motion and target-size
+- [x] No sign-in, notification or paywall appears before the first result.
+- [x] All states pass keyboard, screen reader, reduced motion and target-size
   checks.
 - [ ] Moderated usability evidence: at least 8 of 10 new users finish without
   help and median completion is 90 seconds or less.
+
+Automated verification record (2026-08-06): `npm run verify:phase2:automated`
+passed 6 Home contracts, 16 v1/context/shell/native contracts, 9 focused
+context tests and 14 real Chromium/WebKit journeys. The journeys cover first
+and returning launch, every resume point, exact Range hydration, keyboard and
+focus behavior, automated WCAG A/AA checks, 44 px targets, reduced motion, and
+375x812/430x932 layouts. Representative screenshots were inspected manually.
+The moderated 10-user protocol remains open in `docs/phase2-onboarding-uat.md`;
+therefore Phase 2 is not yet declared done.
 
 Stop condition: print `PHASE 2 DONE` and stop.
 

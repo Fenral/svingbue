@@ -31,6 +31,13 @@ wait.
 
 ## Done / handed off
 
+- Codex `agent/page-overview` — implemented the Phase 2 Home/onboarding slice
+  without editing active Impact/sa-p3 ownership. Night Ladder was replaced by
+  the first-shot app Home, all four onboarding steps resume from local v1
+  context, and the deterministic experiment hydrates the existing Range. The
+  full Chromium/WebKit automated gate passed on 2026-08-06; moderated 10-user
+  usability acceptance remains open, so Phase 2 is not declared done.
+
 - Codex `agent/page-overview` — completed v1 Phase 1 app-shell/design-system
   convergence without editing the active Impact/sa-p3 ownership. Home, Range,
   Studio and Jarvis share a four-route 44 px shell with current-route state;

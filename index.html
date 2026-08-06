@@ -4,275 +4,251 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#07060C">
+<meta name="description" content="Build a model of your golf shot, see why it flew, and test one change.">
 <meta name="robots" content="noindex">
-<title>Flightglass — Night Ladder</title>
+<title>Flightglass — First shot</title>
 <link rel="icon" href="./assets/flightglass-mark-micro.svg" type="image/svg+xml">
-<link rel="preload" as="image" href="./assets/range-night-3d-33.png">
 <link rel="stylesheet" href="./sa-p3.css">
 <link rel="stylesheet" href="./sa-app-shell.css">
-<style>
-  @view-transition{navigation:auto}
-  *{box-sizing:border-box}
-  html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg)}
-  body{min-width:320px;min-height:100dvh;color:var(--ink);font-family:var(--font-ui);-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
-  .scene{position:fixed;inset:0;overflow:hidden;background:var(--bg)}
-  .scene__photo{position:absolute;inset:-2%;width:104%;height:104%;object-fit:cover;object-position:50% 48%;filter:saturate(.76) brightness(.62);transform:scale(1.01);transition:filter .72s var(--ease),transform .72s var(--ease)}
-  .scene__wash{position:absolute;inset:0;background:color-mix(in srgb,var(--bg) 28%,transparent)}
-  .scene__lower{position:absolute;inset:40% 0 0;background:linear-gradient(180deg,transparent,color-mix(in srgb,var(--bg) 84%,transparent))}
-  .scene__horizon{position:absolute;left:0;right:0;top:37%;height:1px;background:var(--secondary-line);opacity:.32}
-  .is-booting:not(.is-ready) .scene__photo{filter:saturate(.5) brightness(.40);transform:scale(1.035)}
-
-  .masthead{position:fixed;z-index:20;left:max(20px,env(safe-area-inset-left));right:max(20px,env(safe-area-inset-right));top:max(16px,env(safe-area-inset-top));height:44px;display:flex;align-items:center;justify-content:space-between}
-  .wordmark{display:block;width:132px;height:auto;view-transition-name:sa-logo}
-  .help{display:grid;place-items:center;width:44px;height:44px;border:1px solid var(--line-strong);border-radius:50%;color:var(--muted);text-decoration:none;font:600 14px/1 var(--font-mono);background:color-mix(in srgb,var(--bg) 82%,transparent)}
-  .help:hover{color:var(--ink);border-color:var(--secondary-line)}
-
-  main{position:fixed;z-index:3;inset:0;padding-top:max(74px,calc(env(safe-area-inset-top) + 64px));padding-bottom:max(24px,env(safe-area-inset-bottom))}
-  .intro{position:absolute;z-index:3;left:max(20px,env(safe-area-inset-left));top:max(84px,calc(env(safe-area-inset-top) + 74px));width:min(240px,calc(100vw - 40px))}
-  .intro__kicker{margin:0 0 8px;color:var(--secondary);font:700 10px/1 var(--font-ui);letter-spacing:.18em;text-transform:uppercase}
-  .intro h1{margin:0;font:600 clamp(34px,10vw,46px)/.94 var(--font-display);letter-spacing:-.045em;text-wrap:balance}
-  .intro__body{margin:12px 0 0;color:var(--muted);font-size:13px;line-height:1.45;max-width:220px}
-
-  .flight{position:absolute;inset:70px 0 54px;pointer-events:none}
-  .flight svg{width:100%;height:100%;overflow:visible}
-  .flight--landscape{display:none}
-  .trace-under{fill:none;stroke:color-mix(in srgb,var(--accent) 13%,transparent);stroke-width:9;stroke-linecap:round}
-  .trace{fill:none;stroke:var(--accent);stroke-width:2.4;stroke-linecap:round;stroke-dasharray:1;stroke-dashoffset:1;animation:draw 1.2s var(--ease) .12s forwards}
-  .trace-structure{fill:none;stroke:var(--secondary-line);stroke-width:1;stroke-dasharray:4 8}
-  .ball{fill:var(--accent);offset-distance:0%;animation:fly 1.2s var(--ease) .12s forwards}
-  .ball--portrait{offset-path:path('M 212 780 C 150 650 287 522 212 214')}
-  .ball--landscape{offset-path:path('M 188 374 C 390 118 642 238 850 74')}
-  @keyframes draw{to{stroke-dashoffset:0}}
-  @keyframes fly{to{offset-distance:100%}}
-
-  .places{position:absolute;inset:0;list-style:none;margin:0;padding:0}
-  .place{position:absolute;display:flex;min-height:56px;max-width:min(188px,calc(100vw - 36px));align-items:center;text-decoration:none;color:var(--ink);border:1px solid var(--line-strong);border-left:2px solid var(--secondary);background:color-mix(in srgb,var(--bg) 92%,transparent);padding:10px 13px;border-radius:12px;transition:transform .16s var(--ease),border-color .16s var(--ease),opacity .48s var(--ease);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
-  .is-booting:not(.is-ready) .place{opacity:.38}
-  .place:hover{transform:translateY(-2px);border-color:var(--secondary-line)}
-  .place--primary{border-left-color:var(--accent);background:color-mix(in srgb,var(--bg) 97%,transparent)}
-  .place__copy{display:grid;gap:4px;min-width:0}
-  .place__label{color:var(--muted);font-size:9px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;white-space:nowrap}
-  .place__value{font:600 15px/1.15 var(--font-mono);font-variant-numeric:tabular-nums;white-space:nowrap}
-  .place--primary .place__label,.place--primary .place__value{color:var(--accent)}
-  .place--academy .place__value{color:var(--gold)}
-  .p-range{left:max(18px,env(safe-area-inset-left));bottom:12%}
-  .p-lab{right:max(18px,env(safe-area-inset-right));bottom:35%}
-  .p-outcome{left:max(18px,env(safe-area-inset-left));top:35%}
-  .p-academy{right:max(18px,env(safe-area-inset-right));top:20%}
-  .p-studio{right:max(18px,env(safe-area-inset-right));top:52%}
-  .p-jarvis{left:max(18px,env(safe-area-inset-left));top:29%}
-  .place--v1-hidden{display:none}
-  .footnote{position:absolute;left:max(20px,env(safe-area-inset-left));right:max(20px,env(safe-area-inset-right));bottom:max(14px,env(safe-area-inset-bottom));display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:10px;letter-spacing:.08em;text-transform:uppercase;pointer-events:none}
-  .footnote__state{font-family:var(--font-mono);font-variant-numeric:tabular-nums;color:var(--ink)}
-
-  @media(max-width:390px){
-    .intro{width:210px}.intro h1{font-size:35px}.intro__body{font-size:12px}
-    .place{max-width:166px;padding-inline:11px}.place__value{font-size:13px}
-    .p-academy{top:21%}.p-outcome{top:37%}.p-lab{bottom:34%}.p-range{bottom:11%}.p-jarvis{top:29%}
-  }
-  @media(max-height:850px) and (orientation:portrait){
-    .intro__body{display:none}.intro h1{font-size:34px}.intro{top:max(76px,calc(env(safe-area-inset-top) + 66px))}
-    .p-academy{top:20%}.p-outcome{top:36%}.p-lab{bottom:32%}.p-range{bottom:10%}.p-studio{top:52%}.p-jarvis{top:28%}
-  }
-  @media(max-height:700px) and (orientation:portrait){
-    .p-studio{top:44%}.p-jarvis{top:27%}
-  }
-  @media(orientation:landscape){
-    .masthead{left:max(18px,env(safe-area-inset-left));right:max(18px,env(safe-area-inset-right));top:max(8px,env(safe-area-inset-top))}
-    .wordmark{width:120px}
-    .intro{left:max(20px,env(safe-area-inset-left));top:max(62px,calc(env(safe-area-inset-top) + 54px));width:190px}
-    .intro h1{font-size:clamp(34px,5vw,44px)}
-    .intro__body{font-size:12px;max-width:180px}
-    .flight--portrait{display:none}.flight--landscape{display:block;inset:18px 8px 14px 150px}
-    .p-range{left:30%;bottom:7%}.p-lab{left:47%;right:auto;bottom:31%}.p-outcome{left:62%;top:29%}.p-academy{right:calc(max(18px,env(safe-area-inset-right)) + 52px);top:14%}.p-studio{right:auto;left:76%;top:44%}.p-jarvis{right:30px;left:auto;top:18%}
-    .place{min-height:54px;max-width:180px;padding:8px 12px}
-    .place__value{font-size:14px}
-    .footnote{bottom:max(8px,env(safe-area-inset-bottom))}
-  }
-  @media(max-height:390px) and (orientation:landscape){
-    .intro__body{display:none}.intro{top:max(58px,calc(env(safe-area-inset-top) + 50px))}
-    .intro h1{font-size:34px}.p-range{left:31%;bottom:6%}.p-lab{bottom:29%}.p-outcome{left:62%;top:29%}.p-academy{top:10%}.p-studio{right:auto;left:77%;top:42%}.p-jarvis{right:24px;left:auto;top:16%}
-    .place{min-height:50px}.place__label{font-size:8px}.place__value{font-size:13px}
-  }
-  @media(prefers-reduced-motion:reduce){
-    @view-transition{navigation:none}
-    .trace{stroke-dashoffset:0;animation:none}.ball{offset-distance:100%;animation:none}
-    .scene__photo,.place{transition:none}.is-booting:not(.is-ready) .place{opacity:1}
-  }
-</style>
+<link rel="stylesheet" href="./sa-home.css">
 </head>
-<body class="is-booting" data-home-direction="night-ladder" data-sa-route="home">
-<div class="scene shell" aria-hidden="true">
-  <img class="scene__photo" src="./assets/range-night-3d-33.png" alt="">
-  <div class="scene__wash"></div>
-  <div class="scene__lower"></div>
-  <div class="scene__horizon"></div>
+<body data-home-experience="first-shot" data-sa-route="home">
+<a class="skip-link" href="#homeMain">Skip to main content</a>
+
+<div class="home-atmosphere" aria-hidden="true">
+  <div class="home-atmosphere__grid"></div>
+  <div class="home-atmosphere__arc home-atmosphere__arc--one"></div>
+  <div class="home-atmosphere__arc home-atmosphere__arc--two"></div>
 </div>
 
-<header class="masthead">
-  <img class="wordmark" src="./assets/flightglass-lockup.svg" alt="Flightglass">
-  <a class="help sa-focus" href="./jarvis.html" aria-label="Open guided Jarvis help">?</a>
+<header class="home-top">
+  <img class="home-top__lockup" src="./assets/flightglass-lockup.svg" alt="Flightglass">
+  <a class="home-help sa-focus" href="./jarvis.html" aria-label="Open guided Jarvis help">?</a>
 </header>
 
-<main>
-  <section class="intro" aria-labelledby="homeTitle">
-    <p class="intro__kicker">The range is live</p>
-    <h1 id="homeTitle">Walk the<br>shot.</h1>
-    <p class="intro__body">Every light downrange opens a different part of the explanation.</p>
+<main id="homeMain" class="home-main" data-home-main tabindex="-1">
+  <section id="homeEmpty" class="home-state home-state--empty" aria-labelledby="emptyTitle">
+    <div class="home-copy">
+      <p id="emptyEyebrow" class="home-eyebrow">Your first model</p>
+      <h1 id="emptyTitle">See why it flew.</h1>
+      <p id="emptyBody" class="home-lede">Choose a few things you noticed. Flightglass turns them into a shot model you can test.</p>
+    </div>
+
+    <div class="home-launch">
+      <button id="startFirstShot" class="home-primary sa-focus" type="button">Run your first shot</button>
+      <button id="resumeSetup" class="home-text-action sa-focus" type="button" hidden>Resume setup</button>
+      <p class="home-time">About a minute · no account needed</p>
+    </div>
+
+    <p class="home-truth">Flightglass is a learning model. It does not measure your swing or replace a human coach.</p>
   </section>
 
-  <div class="flight flight--portrait" aria-hidden="true">
-    <svg viewBox="0 0 430 860" preserveAspectRatio="none">
-      <path class="trace-structure" d="M212 780 C150 650 287 522 212 214" pathLength="1"/>
-      <path class="trace-under" d="M212 780 C150 650 287 522 212 214" pathLength="1"/>
-      <path class="trace" d="M212 780 C150 650 287 522 212 214" pathLength="1"/>
-      <circle class="ball ball--portrait" r="5" cx="0" cy="0"/>
-    </svg>
-  </div>
-  <div class="flight flight--landscape" aria-hidden="true">
-    <svg viewBox="0 0 932 430" preserveAspectRatio="none">
-      <path class="trace-structure" d="M188 374 C390 118 642 238 850 74" pathLength="1"/>
-      <path class="trace-under" d="M188 374 C390 118 642 238 850 74" pathLength="1"/>
-      <path class="trace" d="M188 374 C390 118 642 238 850 74" pathLength="1"/>
-      <circle class="ball ball--landscape" r="5" cx="0" cy="0"/>
-    </svg>
-  </div>
+  <section id="homeReturning" class="home-state home-state--returning" aria-labelledby="returningTitle" hidden>
+    <div class="home-state-row">
+      <p class="home-eyebrow">Latest model</p>
+      <time id="shotTime" datetime="">Today</time>
+    </div>
+    <h1 id="returningTitle">Your next shot starts here.</h1>
 
-  <nav class="places" aria-label="Flightglass destinations">
-    <a id="placeRange" class="place place--primary p-range sa-focus" data-key="flight" href="./impact.html" aria-label="Range — demo shot 154 metres, 12 metres right">
-      <span class="place__copy"><span id="labelRange" class="place__label">Start here · Range</span><span id="valueRange" class="place__value">154 m · 12 m R</span></span>
-    </a>
-    <a id="placeLab" class="place place--v1-hidden p-lab sa-focus" data-key="geometry" href="./geometry.html" aria-label="Lab — inspect the strike">
-      <span class="place__copy"><span id="labelLab" class="place__label">Lab</span><span id="valueLab" class="place__value">Inspect the strike</span></span>
-    </a>
-    <a id="placeOutcome" class="place place--v1-hidden p-outcome sa-focus" data-key="outcome" href="./impact.html?play=1" aria-label="Outcome — demo shot faded right">
-      <span class="place__copy"><span id="labelOutcome" class="place__label">Outcome</span><span id="valueOutcome" class="place__value">Fade · demo shot</span></span>
-    </a>
-    <a id="placeAcademy" class="place place--v1-hidden place--academy p-academy sa-focus" data-key="academy" href="./academy.html" aria-label="Academy — open the physics path">
-      <span class="place__copy"><span id="labelAcademy" class="place__label">Academy</span><span id="valueAcademy" class="place__value">Physics path</span></span>
-    </a>
-    <a id="placeStudio" class="place p-studio sa-focus" data-key="studio" href="./impact-studio.html" aria-label="Impact Studio — cause and effect of the strike">
-      <span class="place__copy"><span id="labelStudio" class="place__label">Impact Studio</span><span id="valueStudio" class="place__value">Cause → effect</span></span>
-    </a>
-    <a id="placeJarvis" class="place p-jarvis sa-focus" data-key="jarvis" href="./jarvis.html" aria-label="Jarvis — choose a question about your shot">
-      <span class="place__copy"><span id="labelJarvis" class="place__label">Jarvis</span><span id="valueJarvis" class="place__value">Pick a question</span></span>
-    </a>
-  </nav>
+    <article class="shot-card" aria-labelledby="shotSummary">
+      <div class="shot-card__visual">
+        <svg id="homeShotSvg" viewBox="0 0 320 190" role="img" aria-labelledby="homeShotTitle homeShotDescription">
+          <title id="homeShotTitle">Modelled ball flight</title>
+          <desc id="homeShotDescription">A deterministic path drawn from the saved Flightglass result.</desc>
+          <path class="shot-gridline" d="M24 160H296"></path>
+          <path class="shot-targetline" d="M160 160V24"></path>
+          <path id="homeShotUnderlay" class="shot-trace-under" d="M50 160 C105 115 160 72 240 34"></path>
+          <path id="homeShotPath" class="shot-trace" d="M50 160 C105 115 160 72 240 34" pathLength="1"></path>
+          <circle id="homeShotBall" class="shot-ball" cx="240" cy="34" r="5"></circle>
+        </svg>
+        <span class="shot-scale-note">Deterministic · not to scale</span>
+      </div>
+      <div class="shot-card__body">
+        <p id="shotSummary" class="shot-summary">Started right · curved right</p>
+        <dl class="shot-metrics">
+          <div><dt>Carry</dt><dd id="shotCarry">—</dd></div>
+          <div><dt>Finish</dt><dd id="shotFinish">—</dd></div>
+        </dl>
+        <p id="shotTruth" class="shot-truth">Modelled shot</p>
+      </div>
+    </article>
 
-  <div class="footnote" aria-hidden="true"><span>Night Ladder</span><span id="sessionState" class="footnote__state">Demo shot</span></div>
+    <article class="experiment-card" aria-labelledby="experimentTitle">
+      <p class="home-eyebrow">Next test</p>
+      <h2 id="experimentTitle">Change one thing.</h2>
+      <p id="experimentInstruction">Keep the path. Move the face a little closer to target.</p>
+      <a id="tryExperiment" class="home-primary sa-focus" href="./impact.html?guided=experiment">Try this in Range</a>
+    </article>
+
+    <a class="home-jarvis-link sa-focus" href="./jarvis.html">Ask Jarvis about this model</a>
+    <button id="resumeReturningSetup" class="home-text-action sa-focus" type="button" hidden>Finish setup</button>
+  </section>
 </main>
 
-<script>
-(() => {
-  const readJSON = key => {
-    try {
-      const raw = localStorage.getItem(key);
-      return raw ? JSON.parse(raw) : null;
-    } catch (_) { return null; }
-  };
-  const readString = key => {
-    try { return localStorage.getItem(key); } catch (_) { return null; }
-  };
-  const writeString = (key, value) => {
-    try { localStorage.setItem(key, value); } catch (_) {}
-  };
-  const fresh = value => value && typeof value.ts === 'number' && Date.now() - value.ts < 30 * 864e5;
-  const signed = value => `${value < 0 ? '−' : value > 0 ? '+' : ''}${Math.abs(value).toFixed(1)}`;
-  const byId = id => document.getElementById(id);
+<dialog id="onboarding" aria-labelledby="onboardingTitle" aria-describedby="onboardingLive">
+  <form id="onboardingForm" class="onboarding-form">
+    <header class="onboarding-top">
+      <button id="onboardingBack" class="onboarding-icon sa-focus" type="button" aria-label="Previous step" hidden>
+        <svg viewBox="0 0 20 20" aria-hidden="true"><path d="m12.5 4.5-5 5.5 5 5.5"></path></svg>
+      </button>
+      <div class="onboarding-brand">
+        <img src="./assets/flightglass-mark-micro.svg" alt="">
+        <div>
+          <h1 id="onboardingTitle">First shot setup</h1>
+          <p id="onboardingProgress">Step 1 of 4</p>
+        </div>
+      </div>
+      <button id="onboardingLater" class="onboarding-later sa-focus" type="button">Not now</button>
+    </header>
 
-  const flight = readJSON('sa.stat.flight');
-  const geometry = readJSON('sa.stat.geometry');
-  const outcome = readJSON('sa.stat.outcome');
-  const academy = readJSON('strikearc.academy.v1');
-  const hasFlight = fresh(flight);
-  const hasGeometry = fresh(geometry);
-  const hasOutcome = fresh(outcome);
-  const xp = academy && Number.isFinite(academy.xp) ? Math.max(0, academy.xp) : 0;
-  const hasSavedState = hasFlight || hasGeometry || hasOutcome || xp > 0;
+    <div class="onboarding-progress" aria-hidden="true"><span id="onboardingProgressBar"></span></div>
 
-  if (hasFlight) {
-    const total = Math.round(Number(flight.total) || 0);
-    const offline = Math.round(Math.abs(Number(flight.offlineM) || 0));
-    const side = flight.offlineSide === 'L' ? 'L' : flight.offlineSide === 'R' ? 'R' : '';
-    const sideWords = side === 'L' ? 'left' : side === 'R' ? 'right' : 'on line';
-    byId('valueRange').textContent = `${total} m · ${offline} m ${side}`.trim();
-    byId('placeRange').setAttribute('aria-label', `Range — last shot ${total} metres, ${offline} metres ${sideWords}`);
-  }
+    <div class="onboarding-scroll">
+      <section class="onboarding-step" data-onboarding-step="1" aria-labelledby="stepOneTitle">
+        <div class="promise-mark" aria-hidden="true">
+          <span class="promise-mark__target"></span>
+          <span class="promise-mark__flight"></span>
+          <span class="promise-mark__ball"></span>
+        </div>
+        <p class="home-eyebrow">One useful relationship</p>
+        <h2 id="stepOneTitle" tabindex="-1">See why it flew.</h2>
+        <p class="onboarding-lede">Flightglass is a learning model, not a launch monitor or a human coach.</p>
+        <div class="onboarding-actions">
+          <button id="beginOnboarding" class="home-primary sa-focus" type="button">Set up my first shot</button>
+        </div>
+      </section>
 
-  if (hasGeometry) {
-    const band = String(geometry.band || 'Saved strike');
-    const attack = signed(Number(geometry.attack) || 0);
-    byId('valueLab').textContent = `${band} · ${attack}°`;
-    byId('placeLab').setAttribute('aria-label', `Lab — ${band}, ${attack} degrees attack`);
-  }
+      <section class="onboarding-step" data-onboarding-step="2" aria-labelledby="stepTwoTitle" hidden>
+        <p class="home-eyebrow">A useful starting point</p>
+        <h2 id="stepTwoTitle" tabindex="-1">What are you working on?</h2>
+        <p class="onboarding-lede">These choices only set a starting point. You can leave any of them blank.</p>
 
-  if (hasOutcome) {
-    const carry = Math.round(Number(outcome.carry) || 0);
-    const shape = String(outcome.shape || 'Saved outcome');
-    byId('valueOutcome').textContent = `${shape} · ${carry} m`;
-    byId('placeOutcome').setAttribute('aria-label', `Outcome — ${shape}, ${carry} metres carry`);
-  }
+        <fieldset class="choice-question" data-context-field="goal">
+          <legend>Your goal</legend>
+          <button class="skip-answer sa-focus" type="button" data-skip-field="goal">Skip</button>
+          <div class="choice-grid choice-grid--two">
+            <label><input type="radio" name="goal" value="straighter"><span>Straighter shots</span></label>
+            <label><input type="radio" name="goal" value="distance"><span>More distance</span></label>
+            <label><input type="radio" name="goal" value="contact"><span>Better contact</span></label>
+            <label><input type="radio" name="goal" value="trajectory"><span>Higher / lower flight</span></label>
+          </div>
+        </fieldset>
 
-  if (xp > 0) {
-    const thresholds = [0, 150, 350, 650, 1000, 1500];
-    let level = 1;
-    for (let index = 0; index < thresholds.length; index += 1) {
-      if (xp >= thresholds[index]) level = index + 1;
-    }
-    if (xp >= 2100) level = 7 + Math.floor((xp - 2100) / 600);
-    byId('valueAcademy').textContent = `Level ${level} · ${xp} XP`;
-    byId('placeAcademy').setAttribute('aria-label', `Academy — level ${level}, ${xp} XP`);
-  }
+        <fieldset class="choice-question" data-context-field="handedness">
+          <legend>Handedness</legend>
+          <button class="skip-answer sa-focus" type="button" data-skip-field="handedness">Skip</button>
+          <div class="choice-grid choice-grid--two">
+            <label><input type="radio" name="handedness" value="right"><span>Right-handed</span></label>
+            <label><input type="radio" name="handedness" value="left"><span>Left-handed</span></label>
+          </div>
+        </fieldset>
 
-  const keyToIds = {
-    flight:['placeRange','labelRange','Range'],
-    geometry:['placeLab','labelLab','Lab'],
-    outcome:['placeOutcome','labelOutcome','Outcome'],
-    academy:['placeAcademy','labelAcademy','Academy'],
-    studio:['placeStudio','labelStudio','Impact Studio'],
-    jarvis:['placeJarvis','labelJarvis','Jarvis']
-  };
-  let last = readString('sa.home.last');
-  if (!hasSavedState || !['flight', 'studio', 'jarvis'].includes(last)) last = 'flight';
-  document.querySelectorAll('.place').forEach(place => place.classList.remove('place--primary'));
-  const [placeId, labelId, label] = keyToIds[last];
-  byId(placeId).classList.add('place--primary');
-  byId(labelId).textContent = `${hasSavedState ? 'Continue' : 'Start here'} · ${label}`;
-  byId('sessionState').textContent = hasSavedState ? 'Latest saved session' : 'Demo shot';
+        <fieldset class="choice-question" data-context-field="experience">
+          <legend>Experience</legend>
+          <button class="skip-answer sa-focus" type="button" data-skip-field="experience">Skip</button>
+          <div class="choice-grid">
+            <label><input type="radio" name="experience" value="new"><span>New to golf</span></label>
+            <label><input type="radio" name="experience" value="improving"><span>Improving</span></label>
+            <label><input type="radio" name="experience" value="experienced"><span>Experienced</span></label>
+          </div>
+        </fieldset>
 
-  document.querySelectorAll('.place[data-key]').forEach(place => {
-    place.addEventListener('click', () => writeString('sa.home.last', place.dataset.key));
-  });
+        <div class="onboarding-actions">
+          <button id="continueProfile" class="home-primary sa-focus" type="button">Continue</button>
+        </div>
+      </section>
 
-  let ready = false;
-  const finishBoot = () => {
-    if (ready) return;
-    ready = true;
-    document.body.classList.add('is-ready');
-    try { sessionStorage.setItem('sa.home.night-ladder.ready', '1'); } catch (_) {}
-  };
-  let reduced = false;
-  let seen = false;
-  try {
-    reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-    seen = sessionStorage.getItem('sa.home.night-ladder.ready') === '1';
-  } catch (_) {}
-  if (reduced || seen) finishBoot();
-  else setTimeout(finishBoot, 900);
-  window.addEventListener('pointerdown', finishBoot, { once:true, passive:true });
-  window.addEventListener('keydown', finishBoot, { once:true });
-})();
-</script>
-<!-- Portrait lock (see sa-orientation.js): the native app holds portrait; this
-     is the web fallback shown only on a landscape phone, where the browser
-     cannot be force-rotated. -->
-<style>
-  .rotate{position:fixed;inset:0;z-index:9999;display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:var(--bg);color:var(--ink);text-align:center;padding:24px}
-  .rotate .ico{font-size:46px;line-height:1}
-  .rotate p{font-size:15px;max-width:240px;margin:0}
-  @media (orientation:landscape) and (max-height:480px){.rotate{display:flex}}
-</style>
-<div class="rotate"><div class="ico" aria-hidden="true">📱</div><p>Rotate your phone to portrait</p></div>
+      <section class="onboarding-step" data-onboarding-step="3" aria-labelledby="stepThreeTitle" hidden>
+        <p class="home-eyebrow">Closest match</p>
+        <h2 id="stepThreeTitle" tabindex="-1">What did you see?</h2>
+        <p class="onboarding-lede">Pick the closest description. This creates a model to explore.</p>
+
+        <fieldset class="choice-question">
+          <legend>Club</legend>
+          <div class="choice-grid choice-grid--three">
+            <label><input type="radio" name="club" value="driver"><span>Driver</span></label>
+            <label><input type="radio" name="club" value="7iron"><span>7-iron</span></label>
+            <label><input type="radio" name="club" value="wedge"><span>Wedge</span></label>
+          </div>
+        </fieldset>
+
+        <fieldset class="choice-question">
+          <legend>Start direction</legend>
+          <div class="choice-grid choice-grid--three">
+            <label><input type="radio" name="start" value="left"><span>Left</span></label>
+            <label><input type="radio" name="start" value="straight"><span>Straight</span></label>
+            <label><input type="radio" name="start" value="right"><span>Right</span></label>
+          </div>
+        </fieldset>
+
+        <fieldset class="choice-question">
+          <legend>Curve</legend>
+          <div class="choice-grid choice-grid--three">
+            <label><input type="radio" name="curve" value="left"><span>Left</span></label>
+            <label><input type="radio" name="curve" value="straight"><span>Straight</span></label>
+            <label><input type="radio" name="curve" value="right"><span>Right</span></label>
+          </div>
+        </fieldset>
+
+        <fieldset class="choice-question">
+          <legend>Flight</legend>
+          <div class="choice-grid choice-grid--three">
+            <label><input type="radio" name="flight" value="low"><span>Low</span></label>
+            <label><input type="radio" name="flight" value="neutral"><span>About right</span></label>
+            <label><input type="radio" name="flight" value="high"><span>High / thin</span></label>
+          </div>
+        </fieldset>
+
+        <p id="guidedValidation" class="onboarding-validation" role="status" hidden>Choose one option in each row, or use a neutral model.</p>
+        <div class="onboarding-actions">
+          <button id="showShot" class="home-primary sa-focus" type="button">Show my shot</button>
+          <button id="useNeutralShot" class="home-text-action sa-focus" type="button">Skip with a neutral model</button>
+        </div>
+      </section>
+
+      <section class="onboarding-step" data-onboarding-step="4" aria-labelledby="stepFourTitle" hidden>
+        <p class="home-eyebrow">Your first result</p>
+        <h2 id="stepFourTitle" tabindex="-1">Here’s the relationship.</h2>
+
+        <div class="onboarding-result-visual">
+          <svg id="onboardingShotSvg" viewBox="0 0 320 190" role="img" aria-labelledby="onboardingShotTitle onboardingShotDescription">
+            <title id="onboardingShotTitle">Your modelled ball flight</title>
+            <desc id="onboardingShotDescription">A deterministic path drawn from the Flightglass engine result.</desc>
+            <path class="shot-gridline" d="M24 160H296"></path>
+            <path class="shot-targetline" d="M160 160V24"></path>
+            <path id="onboardingShotUnderlay" class="shot-trace-under" d="M50 160 C105 115 160 72 240 34"></path>
+            <path id="onboardingShotPath" class="shot-trace" d="M50 160 C105 115 160 72 240 34" pathLength="1"></path>
+            <circle id="onboardingShotBall" class="shot-ball" cx="240" cy="34" r="5"></circle>
+          </svg>
+          <span class="shot-scale-note">Deterministic · not to scale</span>
+        </div>
+
+        <p id="onboardingRelationship" class="onboarding-relationship">This model turns your observations into one relationship to test.</p>
+
+        <table id="onboardingResultTable" class="result-table">
+          <caption>Exact model result</caption>
+          <tbody>
+            <tr><th scope="row">Start</th><td id="resultStart">—</td></tr>
+            <tr><th scope="row">Curve</th><td id="resultCurve">—</td></tr>
+            <tr><th scope="row">Carry</th><td id="resultCarry">—</td></tr>
+            <tr><th scope="row">Finish</th><td id="resultFinish">—</td></tr>
+          </tbody>
+        </table>
+
+        <p id="firstExperiment" class="first-experiment"></p>
+        <div class="onboarding-actions">
+          <a id="tryFirstChange" class="home-primary sa-focus" href="./impact.html?guided=experiment">Try one change</a>
+          <button id="finishOnboarding" class="home-text-action sa-focus" type="button">Go to Home</button>
+        </div>
+      </section>
+    </div>
+    <p id="onboardingLive" class="sr-only" aria-live="polite"></p>
+  </form>
+</dialog>
+
+<div class="rotate"><div class="rotate__icon" aria-hidden="true">↻</div><p>Rotate your phone to portrait</p></div>
+
+<script type="module" src="./sa-home.js"></script>
 <script type="module">import { lockPortrait } from './sa-orientation.js'; lockPortrait();</script>
 </body>
 </html>

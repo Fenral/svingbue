@@ -109,3 +109,15 @@ measurable face, path, angle, contact or ball-flight geometry. Generative image
 tools, including Nano Banana Pro when available, may support non-metric
 conceptual explanations, but generated art must be labelled illustrative and
 must never become evidence for a diagnosis or a degree-accurate claim.
+
+## D-012: App Home is a total replacement
+
+Status: owner-decided on 2026-08-06
+
+Phase 2 replaces the current Night Ladder Home composition rather than refining
+it. The background world, animated route trace and floating destination cards
+are not product constraints. The replacement keeps the Flightglass brand token
+system and shared Home/Range/Studio/Jarvis bottom navigation, then gives the
+screen one state-driven job: run the first shot when empty, or continue the
+latest shot with exactly one next experiment when context exists. The animated
+public landing is a separate surface and is not implemented inside app Home.

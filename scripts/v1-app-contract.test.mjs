@@ -27,6 +27,10 @@ const REQUIRED_LOCAL_DEPENDENCIES = [
   'sa.css',
   'sa-app-shell.css',
   'sa-app-shell.js',
+  'sa-home.css',
+  'sa-home.js',
+  'sa-v1-context.js',
+  'sa-range-context.js',
   'sa-orientation.js',
   'impact-camera.js',
   'impact-framing.js',
@@ -73,21 +77,15 @@ test('native HTML allowlist contains only v1 routes and legal pages', () => {
   assert.deepEqual(entries, NATIVE_HTML);
 });
 
-test('Home exposes v1 destinations and sends guided help to Jarvis', () => {
+test('Home exposes the first-shot loop and sends guided help to v1 routes', () => {
   const home = readFileSync(join(ROOT, 'index.html'), 'utf8');
 
-  assert.match(home, /class="help sa-focus" href="\.\/jarvis\.html"/);
-  assert.match(home, /id="placeRange" class="place place--primary[^>]+href="\.\/impact\.html"/);
-  assert.match(home, /id="placeStudio" class="place p-studio[^>]+href="\.\/impact-studio\.html"/);
-  assert.match(home, /id="placeJarvis" class="place p-jarvis[^>]+href="\.\/jarvis\.html"/);
-
-  for (const id of ['placeLab', 'placeOutcome', 'placeAcademy']) {
-    assert.match(
-      home,
-      new RegExp(`id="${id}" class="[^"]*place--v1-hidden`),
-      `${id} must remain outside v1 navigation`,
-    );
-  }
+  assert.match(home, /class="home-help sa-focus" href="\.\/jarvis\.html"/);
+  assert.match(home, /id="startFirstShot"[^>]+>Run your first shot</);
+  assert.match(home, /id="tryExperiment"[^>]+href="\.\/impact\.html\?guided=experiment"/);
+  assert.match(home, /class="home-jarvis-link sa-focus" href="\.\/jarvis\.html"/);
+  assert.doesNotMatch(home, /href="\.\/(?:geometry|academy|impact-outcome[^"?]*)\.html/);
+  assert.doesNotMatch(home, /place--v1-hidden/);
 });
 
 test('copy-web produces a byte-identical v1 native payload', () => {

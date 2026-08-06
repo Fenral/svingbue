@@ -29,10 +29,10 @@ const PHASE1_MOTIONS = Object.freeze([
 ]);
 const REQUIRED_SELECTORS = Object.freeze({
   'index.html': [
-    'body[data-home-direction="night-ladder"]',
-    '.scene.shell',
-    '.flight',
-    'nav[aria-label="Flightglass destinations"]'
+    'body[data-home-experience="first-shot"]',
+    '[data-home-main]',
+    '#homeEmpty',
+    '#onboarding'
   ]
 });
 
