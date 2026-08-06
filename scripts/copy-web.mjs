@@ -6,13 +6,13 @@
 // must keep serving index.html/geometry.html/impact.html and every sibling
 // dev-mock file exactly as-is), so we do NOT point Capacitor at the repo
 // root. Instead this script copies only the "shipping" web assets into a
-// disposable `www/` folder that mirrors the three real app pages + the
-// paywall's terms/privacy pages.
+// disposable `www/` folder that mirrors the four v1 app pages + the paywall's
+// terms/privacy pages.
 //
 // Run: node scripts/copy-web.mjs   (also wired as `npm run copy-web`)
 //
 // Strategy: explicit ALLOWLIST of top-level HTML entry points (only the
-// three real app pages — every *-mock.html / *-glass.html / design-system
+// four v1 app pages — every *-mock.html / *-glass.html / design-system
 // / presentation / calibration variant is deliberately left out), plus an
 // allowlist of asset directories, plus a DENYLIST-by-extension/name sweep
 // over remaining top-level files (all *.js and *.css at the repo root,
@@ -29,13 +29,12 @@ const WWW = join(ROOT, 'www');
 // --- 1. Explicit allowlist: the only HTML pages that ship in the native app.
 // terms.html + privacy.html: linked from the paywall's legal row
 // (sa-paywall.js → ./terms.html / ./privacy.html) — Apple requires these to
-// resolve inside the native app, so they ship alongside the three app pages.
+// resolve inside the native app, so they ship alongside the four v1 app pages.
 const ALLOWED_HTML_FILES = [
   'index.html',
-  'geometry.html',
   'impact.html',
   'impact-studio.html',
-  'academy.html',
+  'jarvis.html',
   'terms.html',
   'privacy.html'
 ];

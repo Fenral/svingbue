@@ -31,6 +31,11 @@ wait.
 
 ## Done / handed off
 
+- Codex `agent/page-overview` — defined the owner-approved v1 scope and completed
+  Phase 0 shipping parity. The native payload now contains Home, Range, Impact
+  Studio, Jarvis and legal pages; Academy/legacy entry points are excluded.
+  The focused v1 gate and Chromium/WebKit route spots passed on 2026-08-06.
+
 - Codex `agent/page-overview` — added standalone `page-overview.html` with 78 unique links to the repository's HTML surfaces; Chromium/WebKit spot checks and the level-B change gate passed on 2026-08-05.
 
 - Academy complete analysis pack — `agent/academy-codex`; one tracked module
