@@ -152,6 +152,12 @@ Initial question library:
 5. What does Impact Studio show here?
 6. What is one thing I can ignore for now?
 
+Jarvis answers MAY use a small comparison table or a conceptual illustration
+when that makes the relationship easier to understand. Tables MUST preserve
+exact model values. Any illustration that suggests angles, path, face or ball
+flight MUST be rendered from deterministic data; generated imagery is allowed
+only for clearly non-metric concepts and MUST be labelled illustrative.
+
 OpenAI or another model MUST NOT be introduced for v1 Jarvis. Guided questions
 can prove demand without latency, cost, privacy risk or invented golf advice.
 
@@ -237,6 +243,11 @@ historical mocks and evidence pages.
 - one reduced-motion contract;
 - no hardcoded parameter color when a semantic token exists.
 
+Explanatory tables and illustrations follow the same truth boundary: HTML
+tables are preferred for exact comparisons, SVG/Canvas is used for measurable
+geometry, and generative image tools such as Nano Banana Pro may be used only
+for non-metric conceptual art when the tool is available.
+
 Impact Studio is the first migration target because it currently duplicates an
 older token family and uses system fonts. Range and the canonical token file are
 temporarily excluded from edits while another active branch owns them.
@@ -310,18 +321,26 @@ Stop condition met: `PHASE 0 DONE`. Do not begin Phase 1 automatically.
 
 Objective: make the four v1 routes read as one app without changing physics.
 
-- [ ] One shared shell contract defines brand, route state, 44 px navigation,
+- [x] One shared shell contract defines brand, route state, 44 px navigation,
   safe areas, focus and reduced motion.
-- [ ] Home, Range, Studio and Jarvis load the canonical token layer.
-- [ ] Impact Studio has no local token mirror or system-font fallback.
-- [ ] Every route identifies current location and can reach the other v1 routes.
-- [ ] Shared navigation does not obscure Range controls at target viewports.
-- [ ] Automated source tests reject shipping-page token duplication and
+- [x] Home, Range, Studio and Jarvis load the canonical token layer.
+- [x] Impact Studio has no local token mirror or system-font fallback.
+- [x] Every route identifies current location and can reach the other v1 routes.
+- [x] Shared navigation does not obscure Range controls at target viewports.
+- [x] Automated source tests reject shipping-page token duplication and
   unapproved color literals.
-- [ ] Screenshots pass at 375x812, 430x932, 812x375 and 932x430, normal and
+- [x] Screenshots pass at 375x812, 430x932, 812x375 and 932x430, normal and
   reduced motion, in Chromium and WebKit.
 
-Stop condition: print `PHASE 1 DONE` and stop.
+Verification record, 2026-08-06:
+
+- `npm run verify:phase1`: brand, Home and seven v1 contracts passed.
+- Chromium: 32 route/viewport/motion cases, 0 critical findings.
+- WebKit: 32 route/viewport/motion cases, 0 critical findings.
+- Representative normal/reduced screenshots were inspected manually; one Home
+  content collision found in the first WebKit pass was corrected and re-run.
+
+Stop condition met: `PHASE 1 DONE`. Do not begin Phase 2 automatically.
 
 ### Phase 2: Onboarding and app Home
 

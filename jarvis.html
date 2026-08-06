@@ -7,12 +7,12 @@
   <title>Flightglass — Jarvis</title>
   <link rel="icon" href="./assets/flightglass-mark-micro.svg" type="image/svg+xml">
   <link rel="stylesheet" href="./sa-p3.css">
+  <link rel="stylesheet" href="./sa-app-shell.css">
   <style>
-    :root { --jarvis-panel: rgba(16,14,28,.88); --jarvis-line: rgba(157,139,255,.28); }
     * { box-sizing:border-box; }
     html, body { margin:0; min-height:100%; background:var(--bg); color:var(--ink); }
     body { font-family:var(--font-ui); -webkit-font-smoothing:antialiased; }
-    .jarvis-shell { min-height:100dvh; padding: max(18px,env(safe-area-inset-top)) max(18px,env(safe-area-inset-right)) max(30px,env(safe-area-inset-bottom)) max(18px,env(safe-area-inset-left)); background:radial-gradient(circle at 8% 0%,rgba(157,139,255,.18),transparent 34rem), radial-gradient(circle at 100% 80%,rgba(255,138,77,.12),transparent 30rem),var(--bg); }
+    .jarvis-shell { --jarvis-panel:color-mix(in srgb,var(--surface) 88%,transparent); --jarvis-line:color-mix(in srgb,var(--secondary) 28%,transparent); min-height:100dvh; padding: max(18px,env(safe-area-inset-top)) max(18px,env(safe-area-inset-right)) max(30px,env(safe-area-inset-bottom)) max(18px,env(safe-area-inset-left)); background:radial-gradient(circle at 8% 0%,color-mix(in srgb,var(--secondary) 18%,transparent),transparent 34rem),radial-gradient(circle at 100% 80%,color-mix(in srgb,var(--accent) 12%,transparent),transparent 30rem),var(--bg); }
     .jarvis-top { width:min(760px,100%); margin:0 auto; display:flex; justify-content:space-between; align-items:center; gap:16px; }
     .back { display:inline-flex; align-items:center; min-height:44px; padding:8px 12px; border:1px solid var(--line-strong); border-radius:999px; color:var(--ink); text-decoration:none; font:600 12px/1 var(--font-mono); }
     .back:hover,.back:focus-visible { border-color:var(--secondary-line); outline:0; }
@@ -26,10 +26,10 @@
     .section-label { margin:0 0 12px; color:var(--muted); font:700 10px/1 var(--font-mono); letter-spacing:.17em; text-transform:uppercase; }
     .questions { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
     .question { min-height:82px; padding:15px 16px; border:1px solid var(--line); border-radius:14px; background:var(--jarvis-panel); color:var(--ink); text-align:left; cursor:pointer; font:600 15px/1.25 var(--font-ui); transition:transform .16s var(--ease),border-color .16s var(--ease),background .16s var(--ease); }
-    .question:hover,.question:focus-visible { transform:translateY(-2px); border-color:var(--secondary-line); background:rgba(29,24,49,.94); outline:0; }
+    .question:hover,.question:focus-visible { transform:translateY(-2px); border-color:var(--secondary-line); background:color-mix(in srgb,var(--surface) 86%,var(--secondary) 14%); outline:0; }
     .question[aria-pressed="true"] { border-color:var(--accent); box-shadow:0 0 0 1px var(--accent); }
     .question small { display:block; margin-bottom:8px; color:var(--muted); font:700 10px/1 var(--font-mono); letter-spacing:.14em; text-transform:uppercase; }
-    .answer { margin-top:18px; padding:20px; border:1px solid var(--jarvis-line); border-left:3px solid var(--accent); border-radius:16px; background:rgba(13,11,23,.92); }
+    .answer { margin-top:18px; padding:20px; border:1px solid var(--jarvis-line); border-left:3px solid var(--accent); border-radius:16px; background:color-mix(in srgb,var(--plate-solid) 92%,transparent); }
     .answer[hidden] { display:none; }
     .answer__eyebrow { margin:0 0 10px; color:var(--accent); font:700 10px/1 var(--font-mono); letter-spacing:.17em; text-transform:uppercase; }
     .answer h2 { margin:0; font:600 clamp(24px,6vw,38px)/1 var(--font-display); letter-spacing:-.03em; }
@@ -40,10 +40,11 @@
     .action:hover,.action:focus-visible { filter:brightness(1.08); outline:0; }
     .boundary { width:min(760px,100%); margin:28px auto 0; color:var(--muted); font-size:12px; }
     @media (max-width:560px) { .questions { grid-template-columns:1fr; } .hero { margin-top:54px; } }
+    @media (orientation:landscape) and (max-height:500px) { .hero { margin-top:16px; } .hero h1 { font-size:44px; } .lede,.boundary { display:none; } .question-block { margin-top:18px; } .questions { grid-template-columns:repeat(4,minmax(0,1fr)); } .question { min-height:78px; padding:12px; font-size:13px; } }
     @media (prefers-reduced-motion:reduce) { .question { transition:none; } }
   </style>
 </head>
-<body>
+<body data-sa-route="jarvis">
   <main class="jarvis-shell">
     <div class="jarvis-top">
       <a class="back" href="./index.html" aria-label="Back to Home">← Home</a>
@@ -102,5 +103,6 @@
       answer.hidden = false;
     }));
   </script>
+  <script type="module" src="./sa-app-shell.js"></script>
 </body>
 </html>

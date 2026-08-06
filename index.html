@@ -9,6 +9,7 @@
 <link rel="icon" href="./assets/flightglass-mark-micro.svg" type="image/svg+xml">
 <link rel="preload" as="image" href="./assets/range-night-3d-33.png">
 <link rel="stylesheet" href="./sa-p3.css">
+<link rel="stylesheet" href="./sa-app-shell.css">
 <style>
   @view-transition{navigation:auto}
   *{box-sizing:border-box}
@@ -16,14 +17,14 @@
   body{min-width:320px;min-height:100dvh;color:var(--ink);font-family:var(--font-ui);-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
   .scene{position:fixed;inset:0;overflow:hidden;background:var(--bg)}
   .scene__photo{position:absolute;inset:-2%;width:104%;height:104%;object-fit:cover;object-position:50% 48%;filter:saturate(.76) brightness(.62);transform:scale(1.01);transition:filter .72s var(--ease),transform .72s var(--ease)}
-  .scene__wash{position:absolute;inset:0;background:rgba(7,6,12,.28)}
-  .scene__lower{position:absolute;inset:40% 0 0;background:linear-gradient(180deg,transparent,rgba(7,6,12,.84))}
+  .scene__wash{position:absolute;inset:0;background:color-mix(in srgb,var(--bg) 28%,transparent)}
+  .scene__lower{position:absolute;inset:40% 0 0;background:linear-gradient(180deg,transparent,color-mix(in srgb,var(--bg) 84%,transparent))}
   .scene__horizon{position:absolute;left:0;right:0;top:37%;height:1px;background:var(--secondary-line);opacity:.32}
   .is-booting:not(.is-ready) .scene__photo{filter:saturate(.5) brightness(.40);transform:scale(1.035)}
 
   .masthead{position:fixed;z-index:20;left:max(20px,env(safe-area-inset-left));right:max(20px,env(safe-area-inset-right));top:max(16px,env(safe-area-inset-top));height:44px;display:flex;align-items:center;justify-content:space-between}
   .wordmark{display:block;width:132px;height:auto;view-transition-name:sa-logo}
-  .help{display:grid;place-items:center;width:44px;height:44px;border:1px solid var(--line-strong);border-radius:50%;color:var(--muted);text-decoration:none;font:600 14px/1 var(--font-mono);background:rgba(7,6,12,.82)}
+  .help{display:grid;place-items:center;width:44px;height:44px;border:1px solid var(--line-strong);border-radius:50%;color:var(--muted);text-decoration:none;font:600 14px/1 var(--font-mono);background:color-mix(in srgb,var(--bg) 82%,transparent)}
   .help:hover{color:var(--ink);border-color:var(--secondary-line)}
 
   main{position:fixed;z-index:3;inset:0;padding-top:max(74px,calc(env(safe-area-inset-top) + 64px));padding-bottom:max(24px,env(safe-area-inset-bottom))}
@@ -35,7 +36,7 @@
   .flight{position:absolute;inset:70px 0 54px;pointer-events:none}
   .flight svg{width:100%;height:100%;overflow:visible}
   .flight--landscape{display:none}
-  .trace-under{fill:none;stroke:rgba(255,138,77,.13);stroke-width:9;stroke-linecap:round}
+  .trace-under{fill:none;stroke:color-mix(in srgb,var(--accent) 13%,transparent);stroke-width:9;stroke-linecap:round}
   .trace{fill:none;stroke:var(--accent);stroke-width:2.4;stroke-linecap:round;stroke-dasharray:1;stroke-dashoffset:1;animation:draw 1.2s var(--ease) .12s forwards}
   .trace-structure{fill:none;stroke:var(--secondary-line);stroke-width:1;stroke-dasharray:4 8}
   .ball{fill:var(--accent);offset-distance:0%;animation:fly 1.2s var(--ease) .12s forwards}
@@ -45,10 +46,10 @@
   @keyframes fly{to{offset-distance:100%}}
 
   .places{position:absolute;inset:0;list-style:none;margin:0;padding:0}
-  .place{position:absolute;display:flex;min-height:56px;max-width:min(188px,calc(100vw - 36px));align-items:center;text-decoration:none;color:var(--ink);border:1px solid var(--line-strong);border-left:2px solid var(--secondary);background:rgba(7,6,12,.92);padding:10px 13px;border-radius:12px;transition:transform .16s var(--ease),border-color .16s var(--ease),opacity .48s var(--ease);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+  .place{position:absolute;display:flex;min-height:56px;max-width:min(188px,calc(100vw - 36px));align-items:center;text-decoration:none;color:var(--ink);border:1px solid var(--line-strong);border-left:2px solid var(--secondary);background:color-mix(in srgb,var(--bg) 92%,transparent);padding:10px 13px;border-radius:12px;transition:transform .16s var(--ease),border-color .16s var(--ease),opacity .48s var(--ease);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
   .is-booting:not(.is-ready) .place{opacity:.38}
   .place:hover{transform:translateY(-2px);border-color:var(--secondary-line)}
-  .place--primary{border-left-color:var(--accent);background:rgba(7,6,12,.97)}
+  .place--primary{border-left-color:var(--accent);background:color-mix(in srgb,var(--bg) 97%,transparent)}
   .place__copy{display:grid;gap:4px;min-width:0}
   .place__label{color:var(--muted);font-size:9px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;white-space:nowrap}
   .place__value{font:600 15px/1.15 var(--font-mono);font-variant-numeric:tabular-nums;white-space:nowrap}
@@ -59,7 +60,7 @@
   .p-outcome{left:max(18px,env(safe-area-inset-left));top:35%}
   .p-academy{right:max(18px,env(safe-area-inset-right));top:20%}
   .p-studio{right:max(18px,env(safe-area-inset-right));top:52%}
-  .p-jarvis{left:max(18px,env(safe-area-inset-left));top:20%}
+  .p-jarvis{left:max(18px,env(safe-area-inset-left));top:29%}
   .place--v1-hidden{display:none}
   .footnote{position:absolute;left:max(20px,env(safe-area-inset-left));right:max(20px,env(safe-area-inset-right));bottom:max(14px,env(safe-area-inset-bottom));display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:10px;letter-spacing:.08em;text-transform:uppercase;pointer-events:none}
   .footnote__state{font-family:var(--font-mono);font-variant-numeric:tabular-nums;color:var(--ink)}
@@ -67,14 +68,14 @@
   @media(max-width:390px){
     .intro{width:210px}.intro h1{font-size:35px}.intro__body{font-size:12px}
     .place{max-width:166px;padding-inline:11px}.place__value{font-size:13px}
-    .p-academy{top:21%}.p-outcome{top:37%}.p-lab{bottom:34%}.p-range{bottom:11%}.p-jarvis{top:20%}
+    .p-academy{top:21%}.p-outcome{top:37%}.p-lab{bottom:34%}.p-range{bottom:11%}.p-jarvis{top:29%}
   }
   @media(max-height:850px) and (orientation:portrait){
     .intro__body{display:none}.intro h1{font-size:34px}.intro{top:max(76px,calc(env(safe-area-inset-top) + 66px))}
-    .p-academy{top:20%}.p-outcome{top:36%}.p-lab{bottom:32%}.p-range{bottom:10%}.p-studio{top:52%}.p-jarvis{top:20%}
+    .p-academy{top:20%}.p-outcome{top:36%}.p-lab{bottom:32%}.p-range{bottom:10%}.p-studio{top:52%}.p-jarvis{top:28%}
   }
   @media(max-height:700px) and (orientation:portrait){
-    .p-studio{top:44%}.p-jarvis{top:20%}
+    .p-studio{top:44%}.p-jarvis{top:27%}
   }
   @media(orientation:landscape){
     .masthead{left:max(18px,env(safe-area-inset-left));right:max(18px,env(safe-area-inset-right));top:max(8px,env(safe-area-inset-top))}
@@ -100,7 +101,7 @@
   }
 </style>
 </head>
-<body class="is-booting" data-home-direction="night-ladder">
+<body class="is-booting" data-home-direction="night-ladder" data-sa-route="home">
 <div class="scene shell" aria-hidden="true">
   <img class="scene__photo" src="./assets/range-night-3d-33.png" alt="">
   <div class="scene__wash"></div>
@@ -266,7 +267,7 @@
      is the web fallback shown only on a landscape phone, where the browser
      cannot be force-rotated. -->
 <style>
-  .rotate{position:fixed;inset:0;z-index:9999;display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:var(--bg,#0a0d13);color:#e8eaed;text-align:center;padding:24px}
+  .rotate{position:fixed;inset:0;z-index:9999;display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:var(--bg);color:var(--ink);text-align:center;padding:24px}
   .rotate .ico{font-size:46px;line-height:1}
   .rotate p{font-size:15px;max-width:240px;margin:0}
   @media (orientation:landscape) and (max-height:480px){.rotate{display:flex}}

@@ -31,6 +31,12 @@ wait.
 
 ## Done / handed off
 
+- Codex `agent/page-overview` — completed v1 Phase 1 app-shell/design-system
+  convergence without editing the active Impact/sa-p3 ownership. Home, Range,
+  Studio and Jarvis share a four-route 44 px shell with current-route state;
+  Studio consumes canonical tokens/fonts, rotation blockers are inert-safe, and
+  64 Chromium/WebKit viewport/motion cases passed on 2026-08-06.
+
 - Codex `agent/page-overview` — defined the owner-approved v1 scope and completed
   Phase 0 shipping parity. The native payload now contains Home, Range, Impact
   Studio, Jarvis and legal pages; Academy/legacy entry points are excluded.

@@ -29,6 +29,8 @@
      lockLandscape()  → Promise<void>  lock the device to landscape (native)
    ══════════════════════════════════════════════════════════════════════════ */
 
+import './sa-app-shell.js';
+
 let nativeMod = null;      // cached @capacitor/screen-orientation module
 let nativeLoading = null;  // in-flight import promise (dedupes concurrent calls)
 

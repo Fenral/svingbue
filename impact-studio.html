@@ -5,19 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <meta name="theme-color" content="#07060C" />
 <title>Impact Studio</title>
+<link rel="stylesheet" href="./sa-p3.css" />
+<link rel="stylesheet" href="./sa-app-shell.css" />
 <style>
-  /* P3 "Ultraviolet Ember" tokens mirrored locally (source: sa-p3.css) */
-  :root{
-    --bg:#07060C; --surface:#110D1C; --plate:rgba(8,5,14,.86); --plate-solid:#0D0A18;
-    --ink:#F5F2FF; --muted:#A79FC7; --muted-2:#8E85A8;
-    --accent:#FF8A4D; --secondary:#9D8BFF; --gold:#D9B36A; --strike:#e3b05c;
-    --attack:#f470b8; --path:#5bc8f5; --plane:#9c8df5; --depth:#C98AE6;
-    --good:#58E6A8; --warn:#FFD056; --bad:#FF7B8A; --soil:#8a5a2b;
-    --line:rgba(255,255,255,.10); --line-strong:rgba(255,255,255,.30);
-    --font-ui:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-    --font-mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
-    --ease:cubic-bezier(.2,.8,.2,1);
-  }
+  html{--studio-soil:#8a5a2b}
   *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
   html,body{height:100%;overflow:hidden;overscroll-behavior:none}
   body{
@@ -42,9 +33,9 @@
   .card .val{font-family:var(--font-mono);font-variant-numeric:tabular-nums;
     font-size:18px;font-weight:700;color:var(--ink);line-height:1;white-space:nowrap}
   .card .qual{font-size:10px;font-weight:800;letter-spacing:.08em;line-height:1;margin-top:1px}
-  .card.attack{--card-hue:var(--attack);--card-line:rgba(244,112,184,.22)}
-  .card.path{--card-hue:var(--path);--card-line:rgba(91,200,245,.22)}
-  .card.strike{--card-hue:var(--strike);--card-line:rgba(227,176,92,.22)}
+  .card.attack{--card-hue:var(--q-attack);--card-line:color-mix(in srgb,var(--q-attack) 22%,transparent)}
+  .card.path{--card-hue:var(--q-path);--card-line:color-mix(in srgb,var(--q-path) 22%,transparent)}
+  .card.strike{--card-hue:var(--q-strike);--card-line:color-mix(in srgb,var(--q-strike) 22%,transparent)}
   .card::after{content:"";position:absolute;left:14%;right:14%;bottom:-1px;height:2px;
     border-radius:2px;background:var(--card-hue);opacity:0;transition:opacity .3s var(--ease)}
   .card.hit::after{opacity:1}
@@ -68,9 +59,7 @@
      glodefokus flyttet ned mot kontaktsonen */
   .stage{position:relative;flex:1 1 auto;min-height:0;margin:0 10px;border-radius:14px;
     overflow:hidden;border:1px solid var(--line);
-    background:
-      radial-gradient(120% 55% at 50% 62%, #3B2A55 0%, transparent 60%),
-      linear-gradient(180deg, #0E0A18 0%, #120D1E 34%, #241536 58%, #17102A 74%, #0F0B1C 100%)}
+    background:var(--dusk-scene-bg)}
   #scene{position:absolute;inset:0;width:100%;height:100%;display:block}
   /* right rail: two glyph toggles — camera orbit (view) and ball lie (club).
      State lives in the little drawing, not in paired pill buttons. */
@@ -92,9 +81,9 @@
   .inset{
     position:absolute;top:8px;left:8px;z-index:4;
     width:min(32%,240px);border-radius:14px;overflow:hidden;
-    background:linear-gradient(180deg, rgba(13,10,24,.96), rgba(8,5,14,.96));
-    border:1px solid rgba(217,179,106,.30);
-    box-shadow:0 18px 50px -20px rgba(0,0,0,.85), inset 0 0 0 1px rgba(255,255,255,.02);
+    background:linear-gradient(180deg,color-mix(in srgb,var(--plate-solid) 96%,transparent),color-mix(in srgb,var(--bg) 96%,transparent));
+    border:1px solid color-mix(in srgb,var(--gold) 30%,transparent);
+    box-shadow:0 18px 50px -20px color-mix(in srgb,var(--bg) 85%,transparent),inset 0 0 0 1px color-mix(in srgb,var(--ink) 2%,transparent);
     backdrop-filter:blur(3px);
   }
   .inset .eyebrow{
@@ -144,14 +133,14 @@
   .chip.active{border-color:var(--chip-hue);color:var(--ink);
     box-shadow:inset 0 0 0 1px var(--chip-hue), 0 0 18px -8px var(--chip-hue)}
   .chip.active .cl{color:var(--chip-hue)}
-  .chip[data-p="plane"]{--chip-hue:var(--plane)}
-  .chip[data-p="dir"]{--chip-hue:var(--secondary)}
+  .chip[data-p="plane"]{--chip-hue:var(--q-plane)}
+  .chip[data-p="dir"]{--chip-hue:var(--q-path)}
   .chip[data-p="low"]{--chip-hue:var(--accent)}   /* Ball Position: live ball → ember */
-  .chip[data-p="arc"]{--chip-hue:var(--depth)}
+  .chip[data-p="arc"]{--chip-hue:var(--q-depth)}
 
   .sliderZone{position:relative;height:36px;display:flex;align-items:center}
   .track{position:absolute;left:13px;right:13px;top:50%;height:4px;margin-top:-2px;
-    border-radius:2px;background:rgba(255,255,255,.14)}
+    border-radius:2px;background:color-mix(in srgb,var(--ink) 14%,transparent)}
   .fill{position:absolute;top:50%;height:4px;margin-top:-2px;border-radius:2px;
     background:var(--slider-hue,var(--secondary))}
   .notch{position:absolute;top:50%;width:2px;height:12px;margin-top:-6px;
@@ -164,7 +153,7 @@
   #range::-webkit-slider-thumb{
     -webkit-appearance:none;width:26px;height:26px;border-radius:50%;margin-top:5px;
     background:var(--ink);border:3px solid var(--slider-hue,var(--secondary));
-    box-shadow:0 2px 10px rgba(0,0,0,.6);
+    box-shadow:0 2px 10px color-mix(in srgb,var(--bg) 60%,transparent);
   }
   #range::-moz-range-track{height:36px;background:transparent}
   #range::-moz-range-thumb{width:22px;height:22px;border-radius:50%;
@@ -191,7 +180,7 @@
   @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
-<body>
+<body data-sa-route="studio">
 
   <div class="top">
     <a class="ts-back" href="./index.html" aria-label="Back to menu">
@@ -321,9 +310,9 @@ function project(p, b){
 
 /* ============================================================ STATE */
 const PARAMS = {
-  plane: { min:30,  max:80, step:0.5, def:60,   bipolar:false, hue:'var(--plane)',
+  plane: { min:30,  max:80, step:0.5, def:60,   bipolar:false, hue:'var(--q-plane)',
            fmt:v=>fmtNum(v,0)+'°' },
-  dir:   { min:-12, max:12, step:0.1, def:0,    bipolar:true,  hue:'var(--secondary)',
+  dir:   { min:-12, max:12, step:0.1, def:0,    bipolar:true,  hue:'var(--q-path)',
            fmt:v=>fmtNum(v,1)+'°' },
   /* Ball Position i stance: 0 = midt, + = frem (mot target), − = bak.
    * Arcens naturlige lavpunkt ligger fast i stance ved LP_STANCE foran
@@ -331,7 +320,7 @@ const PARAMS = {
    * lowPoint.x (motorinput, ball-relativ) = LP_STANCE − b. */
   low:   { min:-20, max:20, step:0.1, def:0,    bipolar:true,  hue:'var(--accent)',
            fmt:v=>fmtSigned(v,1)+' cm' },
-  arc:   { min:-5,  max:5,  step:0.1, def:0,    bipolar:true,  hue:'var(--depth)',
+  arc:   { min:-5,  max:5,  step:0.1, def:0,    bipolar:true,  hue:'var(--q-depth)',
            fmt:v=>fmtSigned(v,1)+' cm' },
 };
 const LP_STANCE = LP_IDEAL * 100;             // cm foran stance-senter (motorens Pure-ideal)
@@ -1036,10 +1025,10 @@ function drawFace(t){
   const thImp = thetaAtImpact(s);
   const lpx = effectiveLpx(s);
   const ballR = BALL_R * M.scale;
-  const A = { attack: CSS('--attack'), gold: CSS('--gold'), ink: CSS('--ink'),
-              muted: CSS('--muted'), soil: CSS('--soil'), sec: CSS('--secondary'),
-              plane: CSS('--plane'), depth: CSS('--depth'), accent: CSS('--accent'),
-              warn: CSS('--warn'), pathC: CSS('--path') };
+  const A = { attack: CSS('--q-attack'), gold: CSS('--gold'), ink: CSS('--ink'),
+              muted: CSS('--muted'), soil: CSS('--studio-soil'), sec: CSS('--secondary'),
+              plane: CSS('--q-plane'), depth: CSS('--q-depth'), accent: CSS('--accent'),
+              warn: CSS('--warn'), pathC: CSS('--q-path') };
   const fa = flashAlpha();                    // transient vectors + underground gold
 
   ctx.save();
@@ -1377,9 +1366,9 @@ function drawDtl(t){
   const s = engineState();
   const B = buildCamera(dtlCam(), W, H);
   const P = p => project(p, B);
-  const A = { path: CSS('--path'), sec: CSS('--secondary'), plane: CSS('--plane'),
+  const A = { path: CSS('--q-path'), sec: CSS('--secondary'), plane: CSS('--q-plane'),
               gold: CSS('--gold'), ink: CSS('--ink'), muted: CSS('--muted'),
-              accent: CSS('--accent'), depth: CSS('--depth') };
+              accent: CSS('--accent'), depth: CSS('--q-depth') };
   const fa = flashAlpha();
 
   ctx.save();
@@ -1660,5 +1649,7 @@ vecFlashAt = performance.now();     // one orientation flash on load, then fade
 applyStageBg();
 resize();
 </script>
+<script type="module" src="./sa-app-shell.js"></script>
+<script type="module">import { lockLandscape } from './sa-orientation.js'; lockLandscape();</script>
 </body>
 </html>

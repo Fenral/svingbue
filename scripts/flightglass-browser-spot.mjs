@@ -11,6 +11,22 @@ const VIEWPORTS = Object.freeze([
   { id: 'portrait-compact', width: 375, height: 812 },
   { id: 'landscape-compact', width: 812, height: 375 }
 ]);
+const PHASE1_VIEWPORTS = Object.freeze([
+  { id: 'portrait-compact', width: 375, height: 812 },
+  { id: 'portrait-large', width: 430, height: 932 },
+  { id: 'landscape-compact', width: 812, height: 375 },
+  { id: 'landscape-large', width: 932, height: 430 }
+]);
+const PHASE1_ROUTES = Object.freeze([
+  'index.html',
+  'impact.html',
+  'impact-studio.html',
+  'jarvis.html'
+]);
+const PHASE1_MOTIONS = Object.freeze([
+  { id: 'motion', value: 'no-preference' },
+  { id: 'reduced', value: 'reduce' }
+]);
 const REQUIRED_SELECTORS = Object.freeze({
   'index.html': [
     'body[data-home-direction="night-ladder"]',
@@ -21,7 +37,7 @@ const REQUIRED_SELECTORS = Object.freeze({
 });
 
 function parseArgs(argv) {
-  const options = { engine: 'chromium', routes: [], json: false };
+  const options = { engine: 'chromium', routes: [], json: false, phase1: false };
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
     if (arg === '--engine') options.engine = argv[++index];
@@ -29,6 +45,7 @@ function parseArgs(argv) {
     else if (arg === '--route') options.routes.push(argv[++index]);
     else if (arg.startsWith('--route=')) options.routes.push(arg.slice('--route='.length));
     else if (arg === '--json') options.json = true;
+    else if (arg === '--phase1') options.phase1 = true;
     else throw new Error(`Unknown argument: ${arg}`);
   }
   if (!['chromium', 'webkit'].includes(options.engine)) {
@@ -41,8 +58,8 @@ function normalizedRoute(route) {
   return String(route || '').trim().replaceAll('\\', '/').replace(/^\.\//, '');
 }
 
-function validateRoutes(inputRoutes) {
-  const routes = [...new Set((inputRoutes.length ? inputRoutes : ['index.html']).map(normalizedRoute))];
+function validateRoutes(inputRoutes, fallbackRoutes = ['index.html']) {
+  const routes = [...new Set((inputRoutes.length ? inputRoutes : fallbackRoutes).map(normalizedRoute))];
   for (const route of routes) {
     if (!route || route.startsWith('/') || route.includes('..') || !/\.html$/i.test(route)) {
       throw new Error(`Unsafe or unsupported route: ${route}`);
@@ -119,8 +136,8 @@ function ignoredResource(url = '') {
   }
 }
 
-async function inspectPage(page, requiredSelectors) {
-  return page.evaluate(async (selectors) => {
+async function inspectPage(page, requiredSelectors, phase1 = false) {
+  return page.evaluate(async ({ selectors, phase1Mode }) => {
     const interactiveSelector = [
       'a',
       'button',
@@ -186,7 +203,7 @@ async function inspectPage(page, requiredSelectors) {
       return `${element.tagName.toLowerCase()}${classes}`;
     };
     const interactive = scoped.filter((element) => reachable(element));
-    const targets = interactive.map((element) => {
+    const targetFor = (element) => {
       const rect = element.getBoundingClientRect();
       return {
         selector: selectorFor(element),
@@ -197,7 +214,8 @@ async function inspectPage(page, requiredSelectors) {
         width: rect.width,
         height: rect.height
       };
-    });
+    };
+    const targets = interactive.map(targetFor);
     const overlaps = [];
     for (let left = 0; left < targets.length; left += 1) {
       for (let right = left + 1; right < targets.length; right += 1) {
@@ -223,6 +241,51 @@ async function inspectPage(page, requiredSelectors) {
       }
     }));
 
+    const shell = document.querySelector('[data-sa-shell]');
+    const shellLinks = shell ? [...shell.querySelectorAll('a[data-sa-route-link]')] : [];
+    const currentLinks = shellLinks.filter((link) => link.getAttribute('aria-current') === 'page');
+    const shellTargets = shellLinks.filter((link) => interactive.includes(link)).map(targetFor);
+    const outsideShellTargets = shell
+      ? interactive.filter((element) => !shell.contains(element)).map(targetFor)
+      : [];
+    const navControlOverlaps = [];
+    for (const navTarget of shellTargets) {
+      for (const controlTarget of outsideShellTargets) {
+        const overlapWidth = Math.min(navTarget.right, controlTarget.right)
+          - Math.max(navTarget.left, controlTarget.left);
+        const overlapHeight = Math.min(navTarget.bottom, controlTarget.bottom)
+          - Math.max(navTarget.top, controlTarget.top);
+        if (overlapWidth > 1 && overlapHeight > 1) {
+          navControlOverlaps.push({
+            nav: navTarget.selector,
+            control: controlTarget.selector,
+            overlapWidth,
+            overlapHeight
+          });
+        }
+      }
+    }
+
+    const orientationOverlay = document.querySelector('.rotate');
+    const overlayVisible = Boolean(orientationOverlay && visible(orientationOverlay));
+    let orientationOverlayState = null;
+    if (overlayVisible) {
+      const rect = orientationOverlay.getBoundingClientRect();
+      const leaking = [...document.querySelectorAll(interactiveSelector)]
+        .filter((element) => visible(element)
+          && element.tabIndex >= 0
+          && !orientationOverlay.contains(element)
+          && !element.closest('[aria-hidden="true"], [inert]'))
+        .map(selectorFor);
+      orientationOverlayState = {
+        role: orientationOverlay.getAttribute('role'),
+        ariaModal: orientationOverlay.getAttribute('aria-modal'),
+        coversViewport: rect.left <= 1 && rect.top <= 1
+          && rect.right >= innerWidth - 1 && rect.bottom >= innerHeight - 1,
+        leaking
+      };
+    }
+
     return {
       missingSelectors: selectors.filter((selector) => !document.querySelector(selector)),
       htmlOverflowX: Math.max(0, document.documentElement.scrollWidth - innerWidth),
@@ -231,15 +294,34 @@ async function inspectPage(page, requiredSelectors) {
         .filter((target) => target.width < 44 || target.height < 44)
         .map(({ selector, width, height }) => ({ selector, width, height })),
       overlaps,
-      brokenLinks: linkResults.filter((result) => result.status < 200 || result.status >= 400)
+      brokenLinks: linkResults.filter((result) => result.status < 200 || result.status >= 400),
+      shellLinkCount: shellLinks.length,
+      shellCurrentCount: currentLinks.length,
+      shellCurrentRoute: currentLinks[0]?.dataset.saRouteLink || null,
+      declaredRoute: document.body.dataset.saRoute || null,
+      smallShellTargets: shellTargets
+        .filter((target) => target.width < 44 || target.height < 44)
+        .map(({ selector, width, height }) => ({ selector, width, height })),
+      navControlOverlaps,
+      orientationOverlayState,
+      phase1Mode
     };
-  }, requiredSelectors);
+  }, { selectors: requiredSelectors, phase1Mode: phase1 });
 }
 
 async function main() {
   const options = parseArgs(process.argv.slice(2));
-  const routes = validateRoutes(options.routes);
-  const outputDir = join(ROOT, 'outputs', 'flightglass-gates', 'browser-spot');
+  const routes = validateRoutes(options.routes, options.phase1 ? PHASE1_ROUTES : ['index.html']);
+  const viewports = options.phase1 ? PHASE1_VIEWPORTS : VIEWPORTS;
+  const motions = options.phase1
+    ? PHASE1_MOTIONS
+    : [{ id: 'motion', value: 'no-preference' }];
+  const outputDir = join(
+    ROOT,
+    'outputs',
+    'flightglass-gates',
+    options.phase1 ? 'phase1-browser' : 'browser-spot'
+  );
   mkdirSync(outputDir, { recursive: true });
   const server = await startStaticServer();
   const browser = await launch(options.engine);
@@ -248,11 +330,12 @@ async function main() {
 
   try {
     for (const route of routes) {
-      for (const viewport of VIEWPORTS) {
-        const page = await browser.newPage({
-          viewport: { width: viewport.width, height: viewport.height },
-          reducedMotion: 'no-preference'
-        });
+      for (const viewport of viewports) {
+        for (const motion of motions) {
+          const page = await browser.newPage({
+            viewport: { width: viewport.width, height: viewport.height },
+            reducedMotion: motion.value
+          });
         const consoleErrors = [];
         const pageErrors = [];
         const resourceErrors = [];
@@ -279,52 +362,83 @@ async function main() {
           }
         });
 
-        const response = await page.goto(`${base}/${route}`, {
-          waitUntil: 'load',
-          timeout: 20_000
-        });
-        await page.waitForTimeout(route === 'index.html' ? 1600 : 800);
-        const inspection = await inspectPage(page, REQUIRED_SELECTORS[route] || ['body']);
-        const routeSlug = route.replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '').toLowerCase();
-        const screenshot = join(
-          outputDir,
-          `${routeSlug}--${viewport.id}--${options.engine}.png`
-        );
-        await page.screenshot({ path: screenshot, fullPage: false });
-        await page.close();
+          const response = await page.goto(`${base}/${route}`, {
+            waitUntil: 'load',
+            timeout: 20_000
+          });
+          await page.evaluate(() => document.fonts.ready);
+          await page.waitForTimeout(route === 'index.html' ? 1600 : 800);
+          const inspection = await inspectPage(
+            page,
+            REQUIRED_SELECTORS[route] || ['body'],
+            options.phase1
+          );
+          const routeSlug = route.replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '').toLowerCase();
+          const screenshot = join(
+            outputDir,
+            options.phase1
+              ? `${routeSlug}--${viewport.id}--${motion.id}--${options.engine}.png`
+              : `${routeSlug}--${viewport.id}--${options.engine}.png`
+          );
+          await page.screenshot({ path: screenshot, fullPage: false, animations: 'disabled' });
+          await page.close();
 
-        const critical = [];
-        if (!response || response.status() < 200 || response.status() >= 400) {
-          critical.push(`HTTP ${response?.status() ?? 'missing'}`);
-        }
-        if (consoleErrors.length) critical.push(`${consoleErrors.length} console error(s)`);
-        if (pageErrors.length) critical.push(`${pageErrors.length} page error(s)`);
-        if (resourceErrors.length) critical.push(`${resourceErrors.length} resource error(s)`);
-        if (inspection.missingSelectors.length) {
-          critical.push(`missing selector(s): ${inspection.missingSelectors.join(', ')}`);
-        }
-        if (inspection.htmlOverflowX > 1 || inspection.bodyOverflowX > 1) {
-          critical.push('horizontal overflow');
-        }
-        if (inspection.overlaps.length) {
-          critical.push(`${inspection.overlaps.length} overlapping target pair(s)`);
-        }
-        if (inspection.brokenLinks.length) {
-          critical.push(`${inspection.brokenLinks.length} broken local link(s)`);
-        }
+          const critical = [];
+          if (!response || response.status() < 200 || response.status() >= 400) {
+            critical.push(`HTTP ${response?.status() ?? 'missing'}`);
+          }
+          if (consoleErrors.length) critical.push(`${consoleErrors.length} console error(s)`);
+          if (pageErrors.length) critical.push(`${pageErrors.length} page error(s)`);
+          if (resourceErrors.length) critical.push(`${resourceErrors.length} resource error(s)`);
+          if (inspection.missingSelectors.length) {
+            critical.push(`missing selector(s): ${inspection.missingSelectors.join(', ')}`);
+          }
+          if (inspection.htmlOverflowX > 1 || inspection.bodyOverflowX > 1) {
+            critical.push('horizontal overflow');
+          }
+          if (inspection.overlaps.length) {
+            critical.push(`${inspection.overlaps.length} overlapping target pair(s)`);
+          }
+          if (inspection.brokenLinks.length) {
+            critical.push(`${inspection.brokenLinks.length} broken local link(s)`);
+          }
+          if (options.phase1) {
+            if (inspection.shellLinkCount !== 4) {
+              critical.push(`shell links (${inspection.shellLinkCount}/4)`);
+            }
+            if (inspection.shellCurrentCount !== 1
+                || inspection.shellCurrentRoute !== inspection.declaredRoute) {
+              critical.push(`shell current route (${inspection.shellCurrentCount}/1)`);
+            }
+            if (inspection.smallShellTargets.length) {
+              critical.push(`${inspection.smallShellTargets.length} undersized shell target(s)`);
+            }
+            if (inspection.navControlOverlaps.length) {
+              critical.push(`${inspection.navControlOverlaps.length} shell/control overlap(s)`);
+            }
+            const overlay = inspection.orientationOverlayState;
+            if (overlay && (overlay.role !== 'dialog'
+                || overlay.ariaModal !== 'true'
+                || !overlay.coversViewport
+                || overlay.leaking.length)) {
+              critical.push('orientation overlay accessibility contract');
+            }
+          }
 
-        results.push({
-          route,
-          viewportId: viewport.id,
-          engine: options.engine,
-          httpStatus: response?.status() ?? null,
-          consoleErrors,
-          pageErrors,
-          resourceErrors,
-          ...inspection,
-          screenshot,
-          critical
-        });
+          results.push({
+            route,
+            viewportId: viewport.id,
+            motion: motion.value,
+            engine: options.engine,
+            httpStatus: response?.status() ?? null,
+            consoleErrors,
+            pageErrors,
+            resourceErrors,
+            ...inspection,
+            screenshot,
+            critical
+          });
+        }
       }
     }
   } finally {
@@ -335,6 +449,7 @@ async function main() {
   const report = {
     generatedAt: new Date().toISOString(),
     engine: options.engine,
+    mode: options.phase1 ? 'phase1' : 'spot',
     routes,
     cases: results.length,
     criticalCount: results.reduce((count, result) => count + result.critical.length, 0),
@@ -345,7 +460,8 @@ async function main() {
 
   if (options.json) process.stdout.write(`${JSON.stringify(report, null, 2)}\n`);
   else {
-    console.log(`Flightglass ${options.engine} spot: ${report.cases} case(s), ${report.criticalCount} critical finding(s).`);
+    const label = options.phase1 ? 'Phase 1' : 'spot';
+    console.log(`Flightglass ${options.engine} ${label}: ${report.cases} case(s), ${report.criticalCount} critical finding(s).`);
   }
   if (report.criticalCount) process.exitCode = 1;
 }

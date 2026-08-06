@@ -98,3 +98,14 @@ or make the changed cues caption-only until regeneration.
 Academy is v2, so these failures are documented debt and do not block the
 phase-scoped v1 gate. A release that includes Academy remains blocked until its
 voice package is repaired and the full repository gate is green.
+
+## D-011: Tables and illustration truth boundary
+
+Status: owner-directed on 2026-08-06
+
+Use accessible HTML tables when users need to compare exact inputs, outputs or
+recommended changes. Use deterministic SVG/Canvas for anything that depicts
+measurable face, path, angle, contact or ball-flight geometry. Generative image
+tools, including Nano Banana Pro when available, may support non-metric
+conceptual explanations, but generated art must be labelled illustrative and
+must never become evidence for a diagnosis or a degree-accurate claim.

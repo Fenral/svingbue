@@ -25,6 +25,8 @@ const NATIVE_HTML = [
 const REQUIRED_LOCAL_DEPENDENCIES = [
   'sa-p3.css',
   'sa.css',
+  'sa-app-shell.css',
+  'sa-app-shell.js',
   'sa-orientation.js',
   'impact-camera.js',
   'impact-framing.js',
