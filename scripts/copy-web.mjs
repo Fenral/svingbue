@@ -19,7 +19,7 @@
 // excluding anything on the denylist).
 
 import { readdirSync, statSync, rmSync, mkdirSync, cpSync, existsSync } from 'node:fs';
-import { join, dirname, extname, basename } from 'node:path';
+import { join, dirname, extname, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -74,7 +74,22 @@ function isDenylistedFile(name) {
   if (lower.endsWith('.mock.html')) return true;
   if (lower.endsWith('-mock.html')) return true;
   if (lower === 'club-calibration.html') return true;
+  // Academy remains source-only for v2 and must not leak into the v1 payload.
+  if (lower.startsWith('academy-')) return true;
   return false;
+}
+
+const DENYLIST_ASSET_PATHS = new Set([
+  'mission-backspin.jpg',
+  'rw-backspin-green-bite.jpg',
+]);
+
+function shouldCopyAsset(source) {
+  const assetsRoot = join(ROOT, 'assets');
+  const path = relative(assetsRoot, source).split(sep).join('/');
+  if (!path) return true;
+  if (path === 'audio/academy' || path.startsWith('audio/academy/')) return false;
+  return !DENYLIST_ASSET_PATHS.has(path);
 }
 
 function log(msg) {
@@ -105,7 +120,10 @@ for (const dir of ALLOWED_DIRS) {
   if (!existsSync(src)) {
     throw new Error(`[copy-web] required directory missing: ${dir}`);
   }
-  cpSync(src, join(WWW, dir), { recursive: true });
+  cpSync(src, join(WWW, dir), {
+    recursive: true,
+    filter: dir === 'assets' ? shouldCopyAsset : undefined,
+  });
   log(`copied ${dir}/`);
 }
 

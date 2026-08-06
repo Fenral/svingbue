@@ -11,6 +11,10 @@
 <link rel="stylesheet" href="./sa-p3.css">
 <link rel="stylesheet" href="./sa-app-shell.css">
 <link rel="stylesheet" href="./sa-home.css">
+<style>
+  /* Static web fallback: native is locked by sa-orientation.js. */
+  @media (orientation:landscape) and (max-height:480px){.rotate{display:flex}}
+</style>
 </head>
 <body data-home-experience="first-shot" data-sa-route="home">
 <a class="skip-link" href="#homeMain">Skip to main content</a>

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
@@ -65,21 +65,18 @@ test('Backspin reference lesson targets 96 before Academy rollout', () => {
   ]);
 });
 
-test('copy-web ships the Backspin lesson assets and never the mock', () => {
+test('copy-web keeps deferred Academy source out of the native v1 payload', () => {
   const copyResult = spawnSync(process.execPath, [join(ROOT, 'scripts', 'copy-web.mjs')], {
     encoding: 'utf8'
   });
   assert.equal(copyResult.status, 0, copyResult.stderr || copyResult.stdout);
-  for (const file of [
-    'academy.html',
-    'academy-backspin-model.js',
-    'academy-lesson-journey.js',
-    'academy-native-lesson.js',
-    'academy-native-lesson.css'
-  ]) {
-    assert.equal(existsSync(join(ROOT, 'www', file)), true, `${file} must ship`);
-  }
-  assert.equal(existsSync(join(ROOT, 'www', 'academy-lesson-v2-mock.html')), false);
+  const academyEntries = readdirSync(join(ROOT, 'www'))
+    .filter((name) => name === 'academy.html' || name.startsWith('academy-'));
+  assert.deepEqual(academyEntries, [], 'Academy is source-only until v2');
+  assert.equal(existsSync(join(ROOT, 'www', 'assets', 'audio', 'academy')), false);
+  assert.equal(existsSync(join(ROOT, 'www', 'assets', 'mission-backspin.jpg')), false);
+  assert.equal(existsSync(join(ROOT, 'www', 'assets', 'rw-backspin-green-bite.jpg')), false);
+  assert.equal(existsSync(join(ROOT, 'academy.html')), true, 'deferred Academy source stays in the repo');
 });
 
 test('instrument typography tokens: one font pair, no ad-hoc families in lesson CSS', () => {

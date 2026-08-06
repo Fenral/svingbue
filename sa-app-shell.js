@@ -41,7 +41,7 @@ function routeFromDocument(doc) {
   if (APP_ROUTES.some((route) => route.id === declared)) return declared;
 
   const file = new URL(doc.location.href).pathname.split('/').pop() || 'index.html';
-  return APP_ROUTES.find((route) => route.file === file)?.id || 'home';
+  return APP_ROUTES.find((route) => route.file === file)?.id || null;
 }
 
 function createNavigation(doc, currentRoute) {
@@ -130,6 +130,7 @@ export function mountAppShell(doc = document) {
   if (!doc.body || doc.querySelector('[data-sa-shell]')) return;
 
   const currentRoute = routeFromDocument(doc);
+  if (!currentRoute) return;
   doc.body.dataset.saRoute = currentRoute;
   doc.body.appendChild(createNavigation(doc, currentRoute));
   doc.body.classList.add('sa-shell-ready');

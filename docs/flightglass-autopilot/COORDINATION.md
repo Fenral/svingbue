@@ -31,6 +31,14 @@ wait.
 
 ## Done / handed off
 
+- Codex `agent/page-overview` — completed the Impact Studio teaching pass and
+  prerequisite v1 gate repairs without touching active Impact/sa-p3 ownership.
+  Low Point clears the arc/rail, DTL framing uses the scene, view controls show
+  their destination with transient confirmation, turf-first ghost clubs anchor
+  at Entry, and Contact Zone remains available as a mini-screen plus dedicated
+  inspector. Eight Chromium and eight WebKit Studio contracts, the focused v1
+  gate, and the level-B change gate passed on 2026-08-06.
+
 - Codex `agent/page-overview` — implemented the Phase 2 Home/onboarding slice
   without editing active Impact/sa-p3 ownership. Night Ladder was replaced by
   the first-shot app Home, all four onboarding steps resume from local v1

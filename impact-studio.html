@@ -61,21 +61,31 @@
     overflow:hidden;border:1px solid var(--line);
     background:var(--dusk-scene-bg)}
   #scene{position:absolute;inset:0;width:100%;height:100%;display:block}
-  /* right rail: two glyph toggles — camera orbit (view) and ball lie (club).
-     State lives in the little drawing, not in paired pill buttons. */
+  /* right rail: next view, club, and the MVP contact-zone inspector. */
   .rail{position:absolute;top:8px;right:8px;display:flex;flex-direction:column;gap:6px;z-index:5}
   .orb{
     width:58px;min-height:60px;padding:4px 2px 6px;border-radius:14px;cursor:pointer;
     background:var(--plate);border:1px solid var(--line);color:var(--muted);
     font-family:inherit;backdrop-filter:blur(3px);position:relative;
     display:flex;flex-direction:column;align-items:center;gap:1px;
+    transition:transform .16s cubic-bezier(.16,1,.3,1),border-color .18s cubic-bezier(.16,1,.3,1);
   }
-  .orb:active{border-color:var(--line-strong)}
+  .orb:active{border-color:var(--line-strong);transform:scale(.96)}
   .orb svg{width:40px;height:36px;display:block}
   .orb .cap{font-size:10px;font-weight:700;letter-spacing:.03em;line-height:1;color:var(--ink)}
-  .orb.pulse::before{content:"";position:absolute;inset:-3px;border-radius:17px;
-    border:2px solid var(--secondary);animation:ringPulse .55s var(--ease) 1;pointer-events:none}
-  @keyframes ringPulse{0%{opacity:.9;transform:scale(.96)}100%{opacity:0;transform:scale(1.12)}}
+  .orb::before{content:"";position:absolute;inset:-3px;border-radius:17px;
+    border:2px solid var(--secondary);opacity:0;transform:scale(.97);pointer-events:none;
+    transition:opacity .18s cubic-bezier(.16,1,.3,1),transform .18s cubic-bezier(.16,1,.3,1)}
+  .orb.pulse::before{opacity:.9;transform:scale(1.06)}
+  .orb.contact-active{border-color:color-mix(in srgb,var(--gold) 62%,transparent)}
+  .view-toast{position:absolute;top:10px;left:50%;z-index:7;transform:translate(-50%,-4px);
+    min-height:36px;padding:9px 14px;border-radius:12px;background:var(--plate);
+    border:1px solid color-mix(in srgb,var(--secondary) 46%,transparent);
+    box-shadow:0 14px 34px -18px color-mix(in srgb,var(--bg) 88%,transparent);
+    color:var(--ink);font-size:11px;font-weight:800;letter-spacing:.12em;white-space:nowrap;
+    opacity:0;transition:opacity .18s cubic-bezier(.16,1,.3,1),transform .18s cubic-bezier(.16,1,.3,1);
+    pointer-events:none}
+  .view-toast.is-visible{opacity:1;transform:translate(-50%,0)}
 
   /* miniskjerm: zoomed contact-zone inset (pattern: impact-inset-mock.html, P3-toned) */
   .inset{
@@ -104,13 +114,14 @@
   @media (max-width:620px){ #insetCv{height:76px}
     .inset .eyebrow{font-size:9px;padding:5px 8px 2px} }
   /* maksimer: innsetet blir inspeksjonsmodus i full scene (lavpunkt + divot) */
-  .inset__max{position:absolute;right:2px;top:0;width:36px;height:26px;border:0;cursor:pointer;
+  .inset__max{position:absolute;right:0;top:0;width:44px;height:44px;border:0;cursor:pointer;
     background:transparent;color:var(--gold);font-size:15px;line-height:1;opacity:.85;padding:0;z-index:6;
-    font-family:inherit}
+    font-family:inherit;transition:transform .16s cubic-bezier(.16,1,.3,1),opacity .16s cubic-bezier(.16,1,.3,1)}
+  .inset__max:active{transform:scale(.92);opacity:1}
   .inset--max{top:8px;left:8px;right:8px;bottom:8px;width:auto;max-width:none;
     display:flex;flex-direction:column}
   /* i maksimert modus: klar av høyre-railen (view/club-toggles beholdes) */
-  .inset--max .inset__max{right:72px;top:6px;width:44px;height:36px;font-size:17px}
+  .inset--max .inset__max{right:72px;top:2px;width:44px;height:44px;font-size:17px}
   .inset--max #insetCv{flex:1 1 auto;height:auto!important;min-height:0}
   .inset--max .eyebrow{font-size:13px;padding:10px 132px 4px 14px}
   .inset--max .eyebrow .ez{display:inline}
@@ -169,6 +180,23 @@
     .orb{width:52px;min-height:54px}
     .orb svg{width:34px;height:30px}
   }
+  @media (max-height:480px){
+    .rail{gap:5px}
+    .orb{width:52px;min-height:48px;height:48px;padding:2px 2px 4px;border-radius:12px}
+    .orb svg{width:31px;height:27px}
+    .orb .cap{font-size:9px}
+    .view-toast{top:8px;min-height:32px;padding:7px 12px;font-size:10px}
+  }
+  @media (max-height:340px){
+    .rail{top:5px;right:5px;flex-direction:row;gap:4px}
+    .orb{width:44px;min-height:44px;height:44px;padding:1px;border-radius:11px}
+    .orb svg{width:27px;height:23px}
+    .orb .cap{font-size:8px;letter-spacing:0}
+    .inset--max .inset__max{right:152px}
+  }
+  @media (hover:hover) and (pointer:fine){
+    .orb:hover,.inset__max:hover{border-color:var(--line-strong)}
+  }
 
   /* portrait gate (pattern: impact-viz-mock.html) */
   .rotate{position:fixed;inset:0;z-index:60;display:none;flex-direction:column;align-items:center;
@@ -177,7 +205,10 @@
   .rotate p{font-size:15px;max-width:240px;color:var(--ink)}
   @keyframes tilt{0%,100%{transform:rotate(-12deg)}50%{transform:rotate(78deg)}}
   @media (orientation:portrait){.rotate{display:flex}}
-  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+  @media (prefers-reduced-motion:reduce){
+    *{transition:none!important;animation:none!important}
+    .view-toast,.view-toast.is-visible{transform:translate(-50%,0)}
+  }
 </style>
 </head>
 <body data-sa-route="studio">
@@ -201,16 +232,17 @@
     <button id="resetBtn" aria-label="Reset">↺</button>
   </div>
 
-  <div class="stage" id="stage">
+  <div class="stage" id="stage" data-view="face" data-ghost-anchor="impact">
     <canvas id="scene"></canvas>
+    <div class="view-toast" id="viewToast" role="status" aria-live="polite" aria-hidden="true" hidden></div>
     <div class="inset" id="inset">
       <div class="eyebrow"><span>STRIKE<span class="ez"> · CONTACT ZONE</span></span>
         <span class="st"><em id="insetQual">PURE</em>&nbsp;·&nbsp;<span id="insetMm">−20 mm</span></span></div>
       <canvas id="insetCv"></canvas>
-      <button id="insetMax" class="inset__max" aria-label="Inspiser kontaktsonen">⤢</button>
+      <button id="insetMax" class="inset__max" aria-label="Inspect contact zone">⤢</button>
     </div>
     <div class="rail">
-      <button class="orb" id="btnView" aria-label="Bytt kameravinkel">
+      <button class="orb" id="btnView" aria-label="Switch to Down the line">
         <svg viewBox="0 0 44 40" aria-hidden="true">
           <circle cx="22" cy="22" r="12.5" fill="none" stroke="rgba(157,139,255,.35)"
                   stroke-width="1.2" stroke-dasharray="2.5 3"/>
@@ -218,14 +250,14 @@
           <path d="M22 4.5 l-3 5 h6 z" fill="rgba(245,242,255,.55)"/>
           <circle cx="22" cy="22" r="3" fill="#F5F2FF"/>
           <g id="camG" style="transform-origin:22px 22px;transform:rotate(-90deg);
-                              transition:transform .35s cubic-bezier(.2,.8,.2,1)">
+                              transition:transform .24s cubic-bezier(.16,1,.3,1)">
             <g transform="translate(22 34.5)">
               <circle r="4.4" fill="#0D0A18" stroke="#9D8BFF" stroke-width="1.6"/>
               <circle r="1.6" fill="#9D8BFF"/>
             </g>
           </g>
         </svg>
-        <span class="cap" id="viewCap">FACE ON</span>
+        <span class="cap" id="viewCap">DTL</span>
       </button>
       <button class="orb" id="btnClub" aria-label="Bytt kølle">
         <svg viewBox="0 0 44 40" aria-hidden="true">
@@ -242,6 +274,16 @@
           </g>
         </svg>
         <span class="cap" id="clubCap">IRON</span>
+      </button>
+      <button class="orb" id="btnContact" aria-label="Inspect contact zone" aria-controls="inset" aria-expanded="false">
+        <svg viewBox="0 0 44 40" aria-hidden="true">
+          <line x1="6" y1="30" x2="38" y2="30" stroke="rgba(130,185,85,.72)" stroke-width="1.6"/>
+          <path d="M7 19 C14 23 17 31 22 31 C27 31 30 23 37 19" fill="none"
+                stroke="rgba(217,179,106,.9)" stroke-width="2" stroke-linecap="round"/>
+          <circle cx="22" cy="31" r="2.6" fill="#D9B36A"/>
+          <path d="M12 30 v4 M32 30 v4" stroke="rgba(217,179,106,.55)" stroke-width="1.2"/>
+        </svg>
+        <span class="cap">CONTACT</span>
       </button>
     </div>
   </div>
@@ -304,7 +346,7 @@ function project(p, b){
   const dot=(a,c)=>a.x*c.x+a.y*c.y+a.z*c.z;
   const xC=dot(rel,b.right), yC=dot(rel,b.upVec), zC=dot(rel,b.fwd);
   if (zC <= 0.01) return null;
-  return { x: b.w/2 + (xC/zC)*b.focal*(b.cam.xStretch||1), y: b.h/2 - (yC/zC)*b.focal,
+  return { x: b.w/2 + (b.cam.screenX || 0) + (xC/zC)*b.focal*(b.cam.xStretch||1), y: b.h/2 - (yC/zC)*b.focal,
            d: zC };                             /* camera-space depth for taper */
 }
 
@@ -350,6 +392,18 @@ function engineState(){
   return { radius:RADIUS, planeAngle:state.plane, swingDirection:state.dir,
            lowPoint:{ x:(LP_STANCE - state.low)/100, y:0,
                       z:(state.arc + ARC_Z0[state.club])/100 } };
+}
+/* Presentation-only anchor for the reference clubhead. When the sole enters
+   the turf before the ball, teach that entry point instead of leaving the
+   ghost at impact. Engine output remains untouched. */
+function ghostClubAnchor(s){
+  const t0g = groundCrossingTheta0(s);
+  if (t0g !== null){
+    const entry = arcPosition(-t0g, s);
+    if (entry.x < -0.001) return { mode:'entry', point:entry };
+  }
+  const contact = clubBallContact(s);
+  return { mode:'impact', point:{ x:0, y:0, z:contact.clubZ } };
 }
 const MINUS = '−';
 function fmtNum(v, dec){ const s = Math.abs(v).toFixed(dec); return (v < -1e-9 ? MINUS : '') + s; }
@@ -441,7 +495,7 @@ function crossViewHint(){
   if (btn.classList.contains('pulse')) return;
   btn.classList.add('pulse');
   clearTimeout(hintTimer);
-  hintTimer = setTimeout(() => btn.classList.remove('pulse'), 600);
+  hintTimer = setTimeout(() => btn.classList.remove('pulse'), 240);
 }
 
 /* ============================================================ SLIDER */
@@ -519,6 +573,10 @@ function setClub(c){
 }
 $('btnClub').addEventListener('click', () => { haptics.impact('light'); setClub(state.club === 'iron' ? 'driver' : 'iron'); });
 $('btnView').addEventListener('click', () => { haptics.impact('light'); setView(state.view === 'face' ? 'dtl' : 'face'); });
+$('btnContact').addEventListener('click', () => {
+  setInspect(!state.inspect);
+  haptics.impact('light');
+});
 /* maksimer: innsetet tar hele scenen (inspeksjonsmodus — lavpunkt/divot);
    chips + slider står urørt. Sentrert innramming skjer i drawInset. */
 $('insetMax').addEventListener('click', () => {
@@ -526,19 +584,41 @@ $('insetMax').addEventListener('click', () => {
   haptics.impact('light');
 });
 function setInspect(on){
+  if (on && state.view !== 'face') setView('face');
   state.inspect = on;
   $('inset').classList.toggle('inset--max', on);
   $('insetMax').textContent = on ? '⤡' : '⤢';
+  $('insetMax').setAttribute('aria-label', on ? 'Close contact zone' : 'Inspect contact zone');
+  $('btnContact').setAttribute('aria-expanded', String(on));
+  $('btnContact').setAttribute('aria-label', on ? 'Close contact zone' : 'Inspect contact zone');
+  $('btnContact').classList.toggle('contact-active', on);
   IW = 0;                                       // re-measure the inset canvas
   kick();
 }
+let viewToastTimer = 0, viewToastHideTimer = 0;
+function showViewToast(label){
+  const toast = $('viewToast');
+  clearTimeout(viewToastTimer); clearTimeout(viewToastHideTimer);
+  toast.textContent = label;
+  toast.hidden = false;
+  toast.setAttribute('aria-hidden', 'false');
+  requestAnimationFrame(() => toast.classList.add('is-visible'));
+  viewToastTimer = setTimeout(() => {
+    toast.classList.remove('is-visible');
+    toast.setAttribute('aria-hidden', 'true');
+    viewToastHideTimer = setTimeout(() => { toast.hidden = true; }, 190);
+  }, 620);
+}
 function setView(v){
+  const changed = state.view !== v;
   state.view = v;
   if (v === 'dtl' && state.inspect) setInspect(false);   // inspeksjon er Face On-eid
   /* camera dot orbits the ball: face-on = beside (3 o'clock), DTL = behind (6 o'clock) */
   $('camG').style.transform = v === 'face' ? 'rotate(-90deg)' : 'rotate(0deg)';
-  $('viewCap').textContent = v === 'face' ? 'FACE ON' : 'DTL';
-  $('inset').style.display = v === 'face' ? '' : 'none';
+  $('viewCap').textContent = v === 'face' ? 'DTL' : 'FO';
+  $('btnView').setAttribute('aria-label', v === 'face' ? 'Switch to Down the line' : 'Switch to Face on');
+  $('stage').dataset.view = v;
+  if (changed) showViewToast(v === 'face' ? 'FACE ON' : 'DOWN THE LINE');
   applyStageBg();
   vecFlashAt = performance.now();          // brief orientation flash on view switch
   kick();
@@ -563,8 +643,10 @@ let prevOrderKey = '', orderFlashAt = -1e9;
 
 function draw(t){
   ctx.clearRect(0, 0, W, H);
-  if (state.view === 'face'){ drawFace(t); drawInset(); }   // mini screen: Face On only
+  $('stage').dataset.ghostAnchor = ghostClubAnchor(engineState()).mode;
+  if (state.view === 'face') drawFace(t);
   else drawDtl(t);
+  drawInset();                                  // contact preview remains available in both views
 }
 
 /* transient outcome vectors + underground gold: full for ~900 ms after a
@@ -673,7 +755,7 @@ function sceneClipPath(){
   const i = document.getElementById('inset').getBoundingClientRect();
   const p = new Path2D();
   p.rect(0, 0, W, H);
-  if (i.width > 0)                            // inset hidden in DTL → no punch-out
+  if (i.width > 0)
     p.rect(i.left - r.left - 6, i.top - r.top - 6, i.width + 12, i.height + 12);
   return p;
 }
@@ -749,7 +831,7 @@ function drawInset(){
     ictx.strokeStyle = 'rgba(205,142,78,.85)'; ictx.lineWidth = 1.5; ictx.stroke();
   }
 
-  /* ghosted clubhead (under the gold arc and the ball — see drawFace) */
+  /* Reference clubhead: turf-before-ball moves it to ENTRY; otherwise impact. */
   {
     const hk = state.club === 'iron' ? 'ironHead' : 'driverHead';
     if (ready(hk)){
@@ -757,7 +839,8 @@ function drawInset(){
       const brH = BALL_R * sc;
       const hPxI = HEAD_MM[state.club] * (brH / (BALL_R * 1000));
       const wPxI = hPxI * (im.naturalWidth / im.naturalHeight);
-      const yBI = Y(ct.clubZ), xRI = X(0) - brH * 0.92;
+      const ghost = ghostClubAnchor(s);
+      const yBI = Y(ghost.point.z), xRI = X(ghost.point.x) - brH * 0.92;
       ictx.save(); ictx.globalAlpha = 0.5;
       ictx.translate(xRI, yBI); ictx.rotate(LEAN[state.club]);
       ictx.drawImage(im, -wPxI, -hPxI, wPxI, hPxI);
@@ -962,10 +1045,21 @@ function label(txt, x, y, color, size, align, mono, alpha){
 function plateLabel(txt, x, y, hue, size, align, alpha){
   ctx.save();
   const a = alpha == null ? 1 : alpha;
-  ctx.font = '700 ' + size + 'px ui-monospace,"SF Mono",Menlo,monospace';
+  ctx.font = '700 ' + size + 'px ' + CSS('--font-mono');
   const w = ctx.measureText(txt).width;
   const padX = size * 0.55, h = size * 1.75;
-  const lx = align === 'right' ? x - w : align === 'center' ? x - w / 2 : x;
+  let lx = align === 'right' ? x - w : align === 'center' ? x - w / 2 : x;
+  const rail = document.querySelector('.rail');
+  if (rail){
+    const stageRect = cv.getBoundingClientRect(), railRect = rail.getBoundingClientRect();
+    const railTop = railRect.top - stageRect.top, railBottom = railRect.bottom - stageRect.top;
+    const overlapsRailY = y + h / 2 > railTop - 4 && y - h / 2 < railBottom + 4;
+    if (getComputedStyle(rail).flexDirection === 'row' || overlapsRailY){
+      const rightLimit = railRect.left - stageRect.left - 6;
+      lx = Math.min(lx, rightLimit - w - padX);
+    }
+  }
+  lx = Math.max(6 + padX, lx);
   ctx.globalAlpha = a * 0.86;
   ctx.beginPath();
   ctx.roundRect(lx - padX, y - h / 2, w + padX * 2, h, h / 2 - 2);
@@ -975,6 +1069,7 @@ function plateLabel(txt, x, y, hue, size, align, alpha){
   ctx.fillStyle = hue; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
   ctx.fillText(txt, lx, y + 0.5);
   ctx.restore();
+  return { left:lx - padX, top:y - h / 2, right:lx + w + padX, bottom:y + h / 2 };
 }
 function arrowHead(x, y, ang, size, color, alpha){
   ctx.save();
@@ -1134,16 +1229,16 @@ function drawFace(t){
     ctx.restore();
   }
 
-  /* --- static ghosted clubhead at address: sole rides the arc, making the
-     sole-path → face-middle geometry legible. Reference, never a hero;
-     drawn under the arc and the ball. --- */
+  /* --- reference clubhead: at turf ENTRY when that happens before the ball,
+     otherwise at impact. Drawn under the arc and ball, never a hero. --- */
   {
     const hk = state.club === 'iron' ? 'ironHead' : 'driverHead';
     if (ready(hk)){
       const im = IMG[hk];
       const hPx = HEAD_MM[state.club] * (ballR / (BALL_R * 1000));
       const wPx = hPx * (im.naturalWidth / im.naturalHeight);
-      const yB = M.Y(ct.clubZ), xR = M.bx - ballR * 0.92;
+      const ghost = ghostClubAnchor(s);
+      const yB = M.Y(ghost.point.z), xR = M.X(ghost.point.x) - ballR * 0.92;
       ctx.save(); ctx.globalAlpha = 0.45;
       /* pivot at the leading-edge/sole corner so the lean delofts the head */
       ctx.translate(xR, yB); ctx.rotate(LEAN[state.club]);
@@ -1301,7 +1396,7 @@ function drawFace(t){
           W >= 700 ? 17 : 14, 'left', fa);
   }
 
-  /* --- low point: single plain marker (numbers/sequence live in the inset variant's inset) --- */
+  /* --- low point: raised plate stays clear of the white arc at every value. --- */
   {
     const alphaLP = state.sel === 'low' ? 1 : 0.55;
     const x = M.X(lpx), y = M.Y(s.lowPoint.z);
@@ -1310,10 +1405,12 @@ function drawFace(t){
     ctx.moveTo(x, y + 4); ctx.lineTo(x - 5, y + 13); ctx.lineTo(x + 5, y + 13);
     ctx.closePath(); ctx.fillStyle = A.gold; ctx.fill();
     ctx.restore();
-    const ly = Math.max(y + 24, gy + 24);       // keep the label in the ground band
-    label('LOW POINT', x, ly, A.gold, W >= 700 ? 12 : 10, 'center', false, alphaLP * 0.9);
-    if (state.sel === 'low')
-      label(fmtSigned(lpx * 100, 1) + ' cm', x, ly + 13, A.ink, 10, 'center', true, 1);
+    const txt = state.sel === 'low'
+      ? 'LOW POINT ' + fmtSigned(lpx * 100, 1) + ' cm'
+      : 'LOW POINT';
+    const bounds = plateLabel(txt, clamp(x, 108, W - 108), clamp(y - 64, 18, H - 18), A.gold,
+      W >= 700 ? 15 : 13, 'center', alphaLP * 0.96);
+    $('stage').dataset.lowPointPlate = [bounds.left,bounds.top,bounds.right,bounds.bottom].map(v => v.toFixed(1)).join(',');
   }
 
   /* (no path arrow in Face On — path is DTL's transient vector) */
@@ -1355,11 +1452,13 @@ function strokeArc(s, M, style, width){
 
 /* ============================================================ DOWN THE LINE */
 function dtlCam(){
-  /* stands slightly on the trail side of the line, hip height — gives an
-     asymmetric, more spatial DTL and pushes the scene toward the right */
-  /* camera stands on the RIGHT side of the line (viewer's right), hip height */
+  /* Same trail-side, hip-height perspective; responsive framing uses the
+     previously empty right half without changing the underlying geometry. */
+  const tallStage = W / Math.max(H, 1) < 2;
   return { pos:{ x:-2.2, y:-0.9, z:1.0 }, look:{ x:2.3, y:0.25, z:0.14 },
-           fov: d2r(H < 220 ? 36 : 32), xStretch: 1.1 };
+           fov:d2r(tallStage ? 44 : (H < 240 ? 37 : 34)),
+           xStretch:tallStage ? 0.92 : 1.02,
+           screenX:W * (tallStage ? 0.05 : 0.075) };
 }
 const DTL_SWEEP = d2r(78);                    // longer arc into the perspective
 function drawDtl(t){
@@ -1403,6 +1502,27 @@ function drawDtl(t){
     }
   }
 
+  /* Swing Direction is the chosen ground reference; Club Path remains the
+     measured cyan strike vector below. Keeping both visible explains cause
+     versus result instead of asking the glass to carry two meanings. */
+  {
+    const dr = d2r(s.swingDirection);
+    const v = { x:Math.cos(dr), y:Math.sin(dr) };
+    const a = P({ x:-0.25*v.x, y:-0.25*v.y, z:0.008 });
+    const b = P({ x:11*v.x, y:11*v.y, z:0.008 });
+    if (a && b){
+      const hero = state.sel === 'dir';
+      coreLine(a.x, a.y, b.x, b.y, A.sec, hero ? 2.8 : 1.35, [7,6], hero ? 0.9 : 0.35);
+      arrowHead(b.x, b.y, Math.atan2(b.y - a.y, b.x - a.x), hero ? 8 : 6, A.sec, hero ? 0.9 : 0.42);
+      if (hero){
+        const m = P({ x:6.4*v.x, y:6.4*v.y, z:0.008 });
+        if (m) plateLabel('SWING DIRECTION ' + fmtNum(s.swingDirection, 1) + '°',
+          clamp(m.x + 14, 12, W - 280), clamp(m.y - 20, 20, H - 20), A.sec,
+          W >= 700 ? 15 : 13, 'left', 1);
+      }
+    }
+  }
+
   /* soft contact shadow under the arc's low region — anchors it to the ground */
   {
     const lpw = lpWorld(s);
@@ -1424,16 +1544,17 @@ function drawDtl(t){
     }
   }
 
-  /* swing-plane glass: the ONLY illustration of plane + direction.
+  /* swing-plane glass: one job, showing plane.
      Extended along u into the perspective; density gradient toward the
      ground edge + rim light along the upper edge — no outline. */
   {
-    const heroG = state.sel === 'plane' || state.sel === 'dir';
+    const heroG = state.sel === 'plane';
     const alpha = heroG ? 1 : 0.45;
     const { u, m } = planeBasis(s.planeAngle, s.swingDirection);
     const lp = lpWorld(s);
     const pt = (a, b2) => ({ x: lp.x + a*u.x + b2*m.x, y: lp.y + a*u.y + b2*m.y, z: lp.z + a*u.z + b2*m.z });
-    const poly = [pt(-1.05, -0.04), pt(1.5, -0.04), pt(1.5, 1.0), pt(-1.05, 1.0)]
+    const a0 = -1.25, a1 = 3.2, b0 = -0.04, b1 = 1.15;
+    const poly = [pt(a0, b0), pt(a1, b0), pt(a1, b1), pt(a0, b1)]
       .map(P);
     if (poly.every(Boolean)){
       ctx.save(); ctx.globalAlpha = alpha;
@@ -1452,8 +1573,8 @@ function drawDtl(t){
       /* faint inner rungs instead of an outline */
       ctx.lineWidth = 1;
       for (const bf of [0.30, 0.65]){
-        const b2 = -0.04 + bf * 1.04;
-        const ra = P(pt(-1.05, b2)), rb = P(pt(1.5, b2));
+        const b2 = b0 + bf * (b1 - b0);
+        const ra = P(pt(a0, b2)), rb = P(pt(a1, b2));
         if (ra && rb){
           ctx.strokeStyle = 'rgba(147,164,242,' + (heroG ? 0.11 : 0.07) + ')';
           ctx.beginPath(); ctx.moveTo(ra.x, ra.y); ctx.lineTo(rb.x, rb.y); ctx.stroke();
@@ -1521,11 +1642,15 @@ function drawDtl(t){
       ctx.beginPath(); ctx.arc(lp.x, lp.y, 4.5, 0, Math.PI * 2);
       ctx.fillStyle = CSS('--gold'); ctx.fill();
       ctx.restore();
-      if (state.sel === 'low')
-        /* dodge below the arc tail so the label never crosses arc or ball */
-        label('LOW POINT ' + fmtSigned(effectiveLpx(s) * 100, 1) + ' cm',
-              clamp(lp.x - 24, Math.max(170, W * 0.19), W - 10), Math.min(lp.y + 40, H - 12),
-              A.gold, 11, 'right');
+      const txt = state.sel === 'low'
+        ? 'LOW POINT ' + fmtSigned(effectiveLpx(s) * 100, 1) + ' cm'
+        : 'LOW POINT';
+      const stageRect = cv.getBoundingClientRect();
+      const insetRect = $('inset').getBoundingClientRect();
+      const clearOfInset = insetRect.right - stageRect.left + 98;
+      const bounds = plateLabel(txt, clamp(lp.x, clearOfInset, W - 108),
+        clamp(lp.y - 64, 18, H - 18), A.gold, W >= 700 ? 15 : 13, 'center', alpha * 0.96);
+      $('stage').dataset.lowPointPlate = [bounds.left,bounds.top,bounds.right,bounds.bottom].map(v => v.toFixed(1)).join(',');
     }
   }
 
