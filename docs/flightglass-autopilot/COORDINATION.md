@@ -13,7 +13,6 @@ wait.
 
 | Agent | Branch | Working on | Since |
 |-------|--------|-----------|-------|
-| Claude Code | `agent/impact-kamera` | Impact-kamera (design/orders/impact-kamera.md): Økt A ferdig (docs/systemkontrakt.md), Økt B–F via scripts/impact-kamera-workflow.mjs. Files: impact.html, impact-camera.js, impact-outcome.js, impact-annotate.js, sa-p3.css | 2026-07-17 |
 
 ## Queue / free to take
 
@@ -30,6 +29,19 @@ wait.
   pair before build.
 
 ## Done / handed off
+
+- Codex `agent/page-overview` — completed the owner-directed Range instrument
+  redesign on 2026-08-07. 3D Range is now the default replayable lens, one
+  precision Vector Rail controls all five inputs, the left telemetry spine
+  keeps Spin Loft/Ball Speed/Backspin live, and SIDE uses honest Launch Angle /
+  Landing Angle endpoint readouts without distorted angle strokes. Focused
+  Chromium/WebKit contracts, the Range UX audit, brand/v1 checks, the level-B
+  change gate and Impeccable detector are green.
+
+- The stale `agent/impact-kamera` claim from 2026-07-17 was superseded on
+  2026-08-07 for the owner-directed Range redesign. No matching branch or
+  worktree exists, and the claimed shipping file has been clean since its
+  2026-07-22 commit.
 
 - Codex `agent/page-overview` — completed the Impact Studio teaching pass and
   prerequisite v1 gate repairs without touching active Impact/sa-p3 ownership.
