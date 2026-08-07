@@ -22,10 +22,10 @@ export const APP_ROUTES = Object.freeze([
   },
   {
     id: 'jarvis',
-    label: 'Jarvis',
+    label: 'Guide',
     href: './jarvis.html',
     file: 'jarvis.html',
-    icon: '<path d="M4 5h12v9H9l-4 3v-3H4z"/><path d="M7 9h6"/>',
+    icon: '<circle cx="10" cy="10" r="6"/><path d="M10 2v3M10 15v3M2 10h3M15 10h3"/><circle cx="10" cy="10" r="1.5"/>',
   },
 ]);
 

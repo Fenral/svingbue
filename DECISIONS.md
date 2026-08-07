@@ -1,6 +1,6 @@
 # Flightglass v1 Decisions
 
-Updated: 2026-08-06
+Updated: 2026-08-07
 
 This file records durable v1 decisions and assumptions that should not be
 re-decided inside an implementation phase.
@@ -121,3 +121,40 @@ system and shared Home/Range/Studio/Jarvis bottom navigation, then gives the
 screen one state-driven job: run the first shot when empty, or continue the
 latest shot with exactly one next experiment when context exists. The animated
 public landing is a separate surface and is not implemented inside app Home.
+
+## D-013: Jarvis becomes Flightglass Guide
+
+Status: owner-directed on 2026-08-07
+
+The visible product name is `Flightglass Guide`; the existing `jarvis.html`
+route and internal `jarvis` route id remain for compatibility. Guide is a
+button-led, outcome-first knowledge index with progressive depth, not a chat
+simulation. V1 begins with three intents, six topics and at least 20 concrete
+questions. Academy remains v2 and is not exposed as a route, progress system or
+lesson CTA.
+
+The intelligent feeling comes from retrieval speed, a resolving model lens,
+exact live deltas and honest causal structure. It does not come from typing
+dots, free text, a pulsing AI orb or pretend confidence scores.
+
+## D-014: Guide truth and engine-gap contract
+
+Status: accepted technical decision on 2026-08-07
+
+Guide answers and backlog questions use four capability classes:
+
+1. `answer-now`: supported by the shipping Range model;
+2. `bounded-model`: feasible only after a separately tested model is added;
+3. `external-data`: requires measured inputs, calibration or third-party data;
+4. `reject-false-precision`: no supported path to the requested certainty.
+
+Visible evidence labels distinguish `Range modelled`, `Studio geometry`,
+`Estimate` and `Not modelled`. Stored v1 context is called `Saved guided model
+setup`, never a current, latest or measured shot. Guide recomputes outcomes from
+face, path, attack, dynamic loft and speed, and ignores serialized results.
+
+The v1 lab changes one variable at a time and exposes the other four held
+constants. It may compare exact engine outputs but must not call a value ideal,
+optimal, personalized or club-calibrated. A universal optimal backspin-by-speed
+band is explicitly out of scope until a validated objective, club model and
+calibration dataset exist.

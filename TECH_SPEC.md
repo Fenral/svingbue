@@ -136,29 +136,48 @@ The adapter MUST:
 - allow Range, Studio and Jarvis to read the same optional shot context;
 - preserve current screen defaults when context is absent.
 
-## 5. Jarvis v1
+## 5. Flightglass Guide v1
 
-Jarvis is guided help, not generic chat.
+Flightglass Guide replaces the Jarvis product name. The route remains
+`jarvis.html` for compatibility. Guide is a guided index into the shipping
+Flightglass models, not generic chat, a measured-shot feed or an AI diagnosis.
 
 It MUST:
 
 - expose predefined question buttons only;
 - have no text field, keyboard composer or hidden free-text API path;
-- scope answers to the current or explicitly selected shot;
+- label stored onboarding context as a `Saved guided model setup`; it MUST NOT
+  be described as the user's current, latest or measured shot;
 - use deterministic answer templates and existing engine facts in v1;
-- distinguish hypotheses from diagnoses;
-- cite at least one visible input or observation when shot context exists;
-- end with exactly one recommended action;
+- distinguish Range-modelled output, Studio geometry, bounded estimates and
+  unsupported real-world variables with visible truth labels;
+- recompute every shown output from the five saved delivery inputs instead of
+  trusting a serialized result;
+- reject or disclose out-of-domain, no-flight and capped-spin states;
+- cite at least one visible input or model output when a saved setup exists;
+- end with exactly one next action or one bounded one-variable comparison;
 - deep-link to Range or Impact Studio with the context preserved.
 
-Initial question library:
+The initial library is outcome-first. It MUST provide the three entry intents
+`Saved setup`, `Explore a topic` and `Compare the model`, followed by the six
+topics Direction, Impact, Launch & spin, Distance, Conditions and Model limits.
+It MUST include at least 20 predefined questions covering the common start,
+curve, face/path, height, carry, strike, spin, speed and model-trust intents.
+Impact, weather, equipment and fitting questions may be indexed even when the
+shipping model cannot calculate them, but their answer MUST state the gap and
+classify it as one of:
 
-1. Why did it start right?
-2. Why did it curve right?
-3. What should I change first?
-4. Give me a 10-ball test.
-5. What does Impact Studio show here?
-6. What is one thing I can ignore for now?
+1. answerable by the shipping model now;
+2. feasible as a bounded new model;
+3. dependent on external data or calibration;
+4. rejected because a precise answer would be unsupported.
+
+Live Guide labs MUST expose all five Range inputs, change only one input at a
+time and name the other four held constants. They MUST show before/current
+values and exact deltas. The adapter MUST NOT claim that a candidate is
+recommended, improved, optimal, personalized or club-calibrated. A spin lab may
+show calculated backspin and true 3-D spin loft, but v1 has no validated
+optimal-spin-by-speed band.
 
 Jarvis answers MAY use a small comparison table or a conceptual illustration
 when that makes the relationship easier to understand. Tables MUST preserve
@@ -166,7 +185,7 @@ exact model values. Any illustration that suggests angles, path, face or ball
 flight MUST be rendered from deterministic data; generated imagery is allowed
 only for clearly non-metric concepts and MUST be labelled illustrative.
 
-OpenAI or another model MUST NOT be introduced for v1 Jarvis. Guided questions
+OpenAI or another model MUST NOT be introduced for v1 Guide. Guided questions
 can prove demand without latency, cost, privacy risk or invented golf advice.
 
 ## 6. Onboarding
@@ -382,18 +401,34 @@ therefore Phase 2 is not yet declared done.
 
 Stop condition: print `PHASE 2 DONE` and stop.
 
-### Phase 3: Contextual guided Jarvis
+### Phase 3: Flightglass Guide
 
-Objective: close the Range to explanation to experiment loop without free text.
+Objective: make the shipping engine's knowledge quickly discoverable, then
+close the saved-setup to explanation to bounded experiment loop without free
+text or false precision.
 
-- [ ] Jarvis offers only the six approved predefined questions.
-- [ ] There is no input/textarea/contenteditable or free-text request path.
-- [ ] Every question has tested empty-shot and current-shot answers.
-- [ ] Shot answers cite visible context, avoid certainty language and end with
-  one action.
-- [ ] Jarvis to Range/Studio navigation preserves context and defaults safely
+- [x] Guide offers three guided entry intents, six topics and at least 20
+  predefined questions based on researched golfer intents.
+- [x] There is no input/textarea/contenteditable or free-text request path.
+- [x] Every question has a truth tier and capability-gap classification; model
+  limits are visible instead of replaced with invented answers.
+- [x] Saved-setup answers cite recomputed engine values, avoid diagnosis and
+  optimization language and end with one action.
+- [x] At least one live lab exposes all five inputs, changes exactly one at a
+  time, names held constants and updates exact outcome deltas in real time.
+- [x] Guide to Range/Studio navigation preserves context and defaults safely
   when context is missing or corrupt.
-- [ ] All question/state combinations pass deterministic contract tests.
+- [x] Valid, empty, corrupt, out-of-domain, no-flight and capped-output states
+  pass deterministic adapter and browser tests in Chromium and WebKit.
+- [x] Mobile and desktop layouts provide 44 px targets, keyboard focus,
+  reduced-motion parity, chart text alternatives and no horizontal overflow.
+
+Fresh completion evidence (2026-08-07): 28 researched guided questions ship
+across the six topics; 30 deterministic Guide contracts and 22 Chromium/WebKit
+browser cases pass. The browser cases include empty/corrupt fallback, saved
+one-variable Range handoff, Studio navigation context persistence, 390x844 and
+1440x900 containment, reduced motion and target-size checks. The final fresh
+Impeccable/Terra review returned `REVIEW-READY` after the 10 px type-floor fix.
 
 Stop condition: print `PHASE 3 DONE` and stop.
 

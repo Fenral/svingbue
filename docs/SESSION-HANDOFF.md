@@ -1,6 +1,36 @@
 # Flightglass session handoff
 
-Updated: 2026-07-28
+Updated: 2026-08-07
+
+## Current state (2026-08-07) — Flightglass Guide complete
+
+The owner-directed v1 Guide phase is complete on `agent/page-overview`.
+`jarvis.html` remains the compatibility route, but the visible product is now
+**Flightglass Guide** and the shared navigation label is **Guide**. It contains
+three guided intents, six topic branches and 28 concrete questions; no text
+field, contenteditable surface or LLM path exists.
+
+The Guide recomputes values through `guide-engine.js` from the existing
+five-input Range model. Every catalog entry carries a truth tier, a visible
+model boundary and a quick addability verdict: available now, bounded model,
+external data/calibration, or reject false precision. Engine-backed questions
+may open a one-variable lab; four inputs remain explicitly held, exact outcomes
+and deltas update live, and one selected change can be handed to Range. Context
+also survives shared navigation to Studio and corrupt storage fails to the
+illustrative model.
+
+Fresh verification: Guide contracts 30/30, Chromium 11/11, WebKit 11/11,
+`verify:v1` 46/46 plus Home/brand checks, and the level-C change gate PASS. A
+fresh Impeccable/Terra review returned `REVIEW-READY`. Mobile/desktop evidence
+is under `outputs/guide/`; question research is in
+`docs/guide-question-research.md`; durable visual rules are in `DESIGN.md` and
+`.impeccable/design.json`.
+
+No protected physics output or Academy runtime changed. Academy remains v2.
+No push, deployment or store publication was performed. Exact next action is
+owner visual/product review of the three mobile Guide states; subsequent work
+should add an unsupported topic only after its new inputs, calibration source
+and deterministic regression fixtures are named.
 
 ## Current state (2026-07-28) — supersedes everything below
 

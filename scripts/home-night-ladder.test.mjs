@@ -24,7 +24,7 @@ test('Home has exactly one primary next action in each state', () => {
   assert.match(home, /id=["']resumeSetup["'][^>]+hidden/);
   assert.match(home, /id=["']tryExperiment["'][^>]*>\s*Try this in Range/i);
   assert.match(home, /id=["']shotTruth["'][^>]*>\s*Modelled shot/i);
-  assert.match(home, /href=["']\.\/jarvis\.html["'][^>]*>\s*Ask Jarvis/i);
+  assert.match(home, /href=["']\.\/jarvis\.html["'][^>]*>\s*Open Flightglass Guide/i);
 });
 
 test('the focused onboarding exposes four semantic, resumable steps', () => {

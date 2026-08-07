@@ -32,6 +32,7 @@ const RANGE_LIMITS = Object.freeze({
   dynamicLoft: Object.freeze([0, 50]),
   clubSpeed: Object.freeze([30, 150]),
 });
+const EXPERIMENT_KEYS = new Set(['faceAngle', 'clubPath', 'attackAngle', 'dynamicLoft', 'clubSpeed']);
 
 const roundOne = value => Math.round(Number(value) * 10) / 10;
 const isObject = value => Boolean(value) && typeof value === 'object' && !Array.isArray(value);
@@ -89,7 +90,7 @@ function validExperiment(value) {
   return isObject(value)
     && typeof value.id === 'string'
     && typeof value.sourceShotId === 'string'
-    && value.changeKey === 'faceAngle'
+    && EXPERIMENT_KEYS.has(value.changeKey)
     && typeof value.instruction === 'string'
     && isRangeInputs(value.inputs);
 }

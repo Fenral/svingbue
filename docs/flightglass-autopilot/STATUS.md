@@ -1,9 +1,38 @@
 # Flightglass autonomous execution status
 
-Updated: 2026-07-28
+Updated: 2026-08-07
 
 Release authorization: granted for GitHub, Vercel and configured Apple/Google
 publication after all Phase 8 gates pass. See `RELEASE-AUTHORIZATION.md`.
+
+## Flightglass Guide completion checkpoint (2026-08-07)
+
+Phase 3 is source-complete on `agent/page-overview`. The legacy Jarvis route is
+now the visible **Flightglass Guide**: a button-led Question Ladder with three
+entry intents, six topics and 28 researched golfer questions. Browse, Answer
+and Lab form one progressive path; there is no free-text or LLM request path.
+
+Every answer declares provenance and one of four capability outcomes. Missing
+engine knowledge is classified as available now, buildable with a bounded new
+model, dependent on external data/calibration, or unsafe false precision. Live
+labs use the unchanged Range outcome solver through a strict five-input adapter,
+hold four values constant, show exact deltas and hand exactly one selected
+change back to Range. Saved context is never described as a measured shot.
+
+Fresh evidence:
+
+- 30/30 deterministic engine/catalog/UI contracts pass;
+- 11/11 Chromium and 11/11 WebKit Guide cases pass, including corrupt context,
+  Range handoff, Studio navigation persistence, reduced motion and mobile/
+  desktop containment;
+- `npm run verify:v1` passes 46/46 v1 contracts plus Home/brand checks;
+- the level-C change gate passes with zero critical Chromium/WebKit findings;
+- final independent Impeccable/Terra review: `REVIEW-READY`;
+- research record: `docs/guide-question-research.md`;
+- portable design contract: `DESIGN.md` plus `.impeccable/design.json`.
+
+No protected physics output, Academy runtime, payment identity or account flow
+changed. No deployment or store publication was performed.
 
 > **Read `docs/SESSION-HANDOFF.md` first.** Its "Current state (2026-07-28)"
 > block supersedes the branch topology described throughout this file. In

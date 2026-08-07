@@ -3,106 +3,285 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#07060C">
+  <meta name="description" content="Explore the Flightglass model through guided golf questions and live comparisons.">
   <meta name="robots" content="noindex">
-  <title>Flightglass — Jarvis</title>
+  <title>Flightglass Guide</title>
   <link rel="icon" href="./assets/flightglass-mark-micro.svg" type="image/svg+xml">
   <link rel="stylesheet" href="./sa-p3.css">
   <link rel="stylesheet" href="./sa-app-shell.css">
-  <style>
-    * { box-sizing:border-box; }
-    html, body { margin:0; min-height:100%; background:var(--bg); color:var(--ink); }
-    body { font-family:var(--font-ui); -webkit-font-smoothing:antialiased; }
-    .jarvis-shell { --jarvis-panel:color-mix(in srgb,var(--surface) 88%,transparent); --jarvis-line:color-mix(in srgb,var(--secondary) 28%,transparent); min-height:100dvh; padding: max(18px,env(safe-area-inset-top)) max(18px,env(safe-area-inset-right)) max(30px,env(safe-area-inset-bottom)) max(18px,env(safe-area-inset-left)); background:radial-gradient(circle at 8% 0%,color-mix(in srgb,var(--secondary) 18%,transparent),transparent 34rem),radial-gradient(circle at 100% 80%,color-mix(in srgb,var(--accent) 12%,transparent),transparent 30rem),var(--bg); }
-    .jarvis-top { width:min(760px,100%); margin:0 auto; display:flex; justify-content:space-between; align-items:center; gap:16px; }
-    .back { display:inline-flex; align-items:center; min-height:44px; padding:8px 12px; border:1px solid var(--line-strong); border-radius:999px; color:var(--ink); text-decoration:none; font:600 12px/1 var(--font-mono); }
-    .back:hover,.back:focus-visible { border-color:var(--secondary-line); outline:0; }
-    .jarvis-mark { display:flex; align-items:center; gap:8px; color:var(--muted); font:700 11px/1 var(--font-mono); letter-spacing:.16em; text-transform:uppercase; }
-    .jarvis-mark::before { content:""; width:9px; height:9px; border-radius:50%; background:var(--secondary); box-shadow:0 0 16px var(--secondary); }
-    .hero { width:min(760px,100%); margin:clamp(48px,12vh,110px) auto 0; }
-    .kicker { margin:0 0 10px; color:var(--secondary); font:700 11px/1 var(--font-mono); letter-spacing:.18em; text-transform:uppercase; }
-    h1 { margin:0; max-width:10ch; font:600 clamp(46px,12vw,94px)/.9 var(--font-display); letter-spacing:-.05em; }
-    .lede { max-width:42ch; margin:18px 0 0; color:var(--muted); font-size:16px; line-height:1.5; }
-    .question-block { width:min(760px,100%); margin:42px auto 0; }
-    .section-label { margin:0 0 12px; color:var(--muted); font:700 10px/1 var(--font-mono); letter-spacing:.17em; text-transform:uppercase; }
-    .questions { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
-    .question { min-height:82px; padding:15px 16px; border:1px solid var(--line); border-radius:14px; background:var(--jarvis-panel); color:var(--ink); text-align:left; cursor:pointer; font:600 15px/1.25 var(--font-ui); transition:transform .16s var(--ease),border-color .16s var(--ease),background .16s var(--ease); }
-    .question:hover,.question:focus-visible { transform:translateY(-2px); border-color:var(--secondary-line); background:color-mix(in srgb,var(--surface) 86%,var(--secondary) 14%); outline:0; }
-    .question[aria-pressed="true"] { border-color:var(--accent); box-shadow:0 0 0 1px var(--accent); }
-    .question small { display:block; margin-bottom:8px; color:var(--muted); font:700 10px/1 var(--font-mono); letter-spacing:.14em; text-transform:uppercase; }
-    .answer { margin-top:18px; padding:20px; border:1px solid var(--jarvis-line); border-left:3px solid var(--accent); border-radius:16px; background:color-mix(in srgb,var(--plate-solid) 92%,transparent); }
-    .answer[hidden] { display:none; }
-    .answer__eyebrow { margin:0 0 10px; color:var(--accent); font:700 10px/1 var(--font-mono); letter-spacing:.17em; text-transform:uppercase; }
-    .answer h2 { margin:0; font:600 clamp(24px,6vw,38px)/1 var(--font-display); letter-spacing:-.03em; }
-    .answer p { max-width:58ch; margin:12px 0 0; color:var(--muted); font-size:15px; line-height:1.55; }
-    .answer__actions { display:flex; flex-wrap:wrap; gap:10px; margin-top:18px; }
-    .action { display:inline-flex; align-items:center; min-height:44px; padding:10px 15px; border-radius:999px; background:var(--accent); color:var(--bg); text-decoration:none; font:700 12px/1 var(--font-mono); }
-    .action.secondary { border:1px solid var(--line-strong); background:transparent; color:var(--ink); }
-    .action:hover,.action:focus-visible { filter:brightness(1.08); outline:0; }
-    .boundary { width:min(760px,100%); margin:28px auto 0; color:var(--muted); font-size:12px; }
-    @media (max-width:560px) { .questions { grid-template-columns:1fr; } .hero { margin-top:54px; } }
-    @media (orientation:landscape) and (max-height:500px) { .hero { margin-top:16px; } .hero h1 { font-size:44px; } .lede,.boundary { display:none; } .question-block { margin-top:18px; } .questions { grid-template-columns:repeat(4,minmax(0,1fr)); } .question { min-height:78px; padding:12px; font-size:13px; } }
-    @media (prefers-reduced-motion:reduce) { .question { transition:none; } }
-  </style>
+  <link rel="stylesheet" href="./jarvis.css">
 </head>
-<body data-sa-route="jarvis">
-  <main class="jarvis-shell">
-    <div class="jarvis-top">
-      <a class="back" href="./index.html" aria-label="Back to Home">← Home</a>
-      <div class="jarvis-mark">Jarvis / v1</div>
-    </div>
-    <section class="hero" aria-labelledby="jarvisTitle">
-      <p class="kicker">Your shot, explained</p>
-      <h1 id="jarvisTitle">Ask Jarvis.</h1>
-      <p class="lede">Choose a question and get a focused answer from the same Range and Impact Studio model. There is no free-text input in v1.</p>
-    </section>
-    <section class="question-block" aria-labelledby="questionTitle">
-      <p id="questionTitle" class="section-label">Choose a question</p>
-      <div class="questions" role="group" aria-label="Preset Jarvis questions">
-        <button class="question" type="button" data-question="curve" aria-pressed="false"><small>Flight shape</small>Why did my shot curve right?</button>
-        <button class="question" type="button" data-question="first" aria-pressed="false"><small>Next move</small>What should I change first?</button>
-        <button class="question" type="button" data-question="studio" aria-pressed="false"><small>Impact Studio</small>What does Impact Studio show?</button>
-        <button class="question" type="button" data-question="height" aria-pressed="false"><small>Trajectory</small>How do I make the flight higher?</button>
-      </div>
-      <article id="answer" class="answer" aria-live="polite" hidden>
-        <p id="answerEyebrow" class="answer__eyebrow"></p>
-        <h2 id="answerTitle"></h2>
-        <p id="answerBody"></p>
-        <div class="answer__actions">
-          <a id="answerPrimary" class="action" href="./impact.html">Open Range</a>
-          <a id="answerSecondary" class="action secondary" href="./impact-studio.html">Open Impact Studio</a>
+<body data-sa-route="jarvis" data-guide-view="browse">
+  <a class="guide-skip" href="#guideMain">Skip to Guide</a>
+
+  <main id="guideMain" class="guide-shell" tabindex="-1">
+    <header class="guide-header">
+      <a class="guide-brand" href="./index.html" aria-label="Flightglass Home">
+        <img src="./assets/flightglass-mark-micro.svg" alt="">
+        <span>Flightglass</span>
+      </a>
+      <div class="guide-title-row">
+        <div>
+          <h1>Flightglass Guide</h1>
+          <p>Choose the question. See what the model knows.</p>
         </div>
+        <span id="guideSource" class="guide-source">Illustrative model</span>
+      </div>
+
+      <figure class="guide-aperture" aria-labelledby="guideApertureTitle guideApertureDesc">
+        <svg viewBox="0 0 720 170" role="img">
+          <title id="guideApertureTitle">Flightglass model trajectory</title>
+          <desc id="guideApertureDesc">An illustrative model path. Exact values appear in the answer and live lab.</desc>
+          <path class="guide-aperture__axis" d="M28 144H692"></path>
+          <path class="guide-aperture__reference" d="M28 144C190 132 330 48 692 144"></path>
+          <path id="guideTraceLive" class="guide-aperture__live" d="M28 144C190 126 352 36 692 144" pathLength="1"></path>
+          <circle class="guide-aperture__origin" cx="28" cy="144" r="4"></circle>
+          <circle id="guideTracePoint" class="guide-aperture__point" cx="692" cy="144" r="5"></circle>
+        </svg>
+        <figcaption><span>Model signal</span><span id="guideApertureValue">Five inputs · one relationship</span></figcaption>
+      </figure>
+    </header>
+
+    <p id="guideStatus" class="guide-status" role="status" aria-live="polite"></p>
+
+    <section class="guide-panel guide-panel--browse" data-guide-panel="browse" aria-labelledby="guideBrowseTitle">
+      <div class="guide-browse-heading">
+        <h2 id="guideBrowseTitle">What do you want to understand?</h2>
+        <p>Start broad, then open one precise question.</p>
+      </div>
+
+      <div class="guide-intents" role="group" aria-label="Guide entry points">
+        <button type="button" class="guide-intent" data-guide-intent="saved-setup">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4h12v16l-6-4-6 4z"></path></svg>
+          <span><strong>Saved setup</strong><small>Explain the guided model you built</small></span>
+          <svg class="guide-chevron" viewBox="0 0 20 20" aria-hidden="true"><path d="m8 5 5 5-5 5"></path></svg>
+        </button>
+        <button type="button" class="guide-intent" data-guide-intent="explore-topic">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"></circle><path d="m15 9-2 4-4 2 2-4z"></path></svg>
+          <span><strong>Explore a topic</strong><small>Browse direction, impact, spin and more</small></span>
+          <svg class="guide-chevron" viewBox="0 0 20 20" aria-hidden="true"><path d="m8 5 5 5-5 5"></path></svg>
+        </button>
+        <button type="button" class="guide-intent" data-guide-intent="compare-model">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M8 3v8M5 17h14M16 13v8"></path></svg>
+          <span><strong>Compare the model</strong><small>Change one input and watch outcomes move</small></span>
+          <svg class="guide-chevron" viewBox="0 0 20 20" aria-hidden="true"><path d="m8 5 5 5-5 5"></path></svg>
+        </button>
+      </div>
+
+      <div class="guide-topic-heading">
+        <h2>Topics</h2>
+        <span id="guideQuestionCount">26 guided questions</span>
+      </div>
+
+      <div class="guide-topic-ladder" role="list">
+        <div class="guide-topic-branch" role="listitem">
+          <button type="button" class="guide-topic" data-guide-topic="direction" aria-expanded="false">
+            <span class="guide-topic__index">01</span>
+            <span><strong>Direction</strong><small>Start line, curve, face and path</small></span>
+            <svg viewBox="0 0 20 20" aria-hidden="true"><path d="m7 4 6 6-6 6"></path></svg>
+          </button>
+        </div>
+        <div class="guide-topic-branch" role="listitem">
+          <button type="button" class="guide-topic" data-guide-topic="impact" aria-expanded="false">
+            <span class="guide-topic__index">02</span>
+            <span><strong>Impact</strong><small>Low point, attack and contact boundaries</small></span>
+            <svg viewBox="0 0 20 20" aria-hidden="true"><path d="m7 4 6 6-6 6"></path></svg>
+          </button>
+        </div>
+        <div class="guide-topic-branch" role="listitem">
+          <button type="button" class="guide-topic" data-guide-topic="launch-spin" aria-expanded="false">
+            <span class="guide-topic__index">03</span>
+            <span><strong>Launch &amp; spin</strong><small>Height, spin loft, backspin and descent</small></span>
+            <svg viewBox="0 0 20 20" aria-hidden="true"><path d="m7 4 6 6-6 6"></path></svg>
+          </button>
+        </div>
+        <div class="guide-topic-branch" role="listitem">
+          <button type="button" class="guide-topic" data-guide-topic="distance" aria-expanded="false">
+            <span class="guide-topic__index">04</span>
+            <span><strong>Distance</strong><small>Ball speed, smash, carry and total</small></span>
+            <svg viewBox="0 0 20 20" aria-hidden="true"><path d="m7 4 6 6-6 6"></path></svg>
+          </button>
+        </div>
+        <div class="guide-topic-branch" role="listitem">
+          <button type="button" class="guide-topic" data-guide-topic="conditions" aria-expanded="false">
+            <span class="guide-topic__index">05</span>
+            <span><strong>Conditions</strong><small>Wind, altitude and missing inputs</small></span>
+            <svg viewBox="0 0 20 20" aria-hidden="true"><path d="m7 4 6 6-6 6"></path></svg>
+          </button>
+        </div>
+        <div class="guide-topic-branch" role="listitem">
+          <button type="button" class="guide-topic" data-guide-topic="model-limits" aria-expanded="false">
+            <span class="guide-topic__index">06</span>
+            <span><strong>Model limits</strong><small>What can be added, and what should not be guessed</small></span>
+            <svg viewBox="0 0 20 20" aria-hidden="true"><path d="m7 4 6 6-6 6"></path></svg>
+          </button>
+        </div>
+      </div>
+
+      <div id="guideQuestionList" class="guide-question-list" aria-live="polite" hidden></div>
+    </section>
+
+    <section class="guide-panel guide-panel--answer" data-guide-panel="answer" aria-labelledby="guideAnswerPrompt" hidden>
+      <button id="guideBackToBrowse" class="guide-back" type="button">
+        <svg viewBox="0 0 20 20" aria-hidden="true"><path d="m12 4-6 6 6 6"></path></svg>
+        All questions
+      </button>
+
+      <article class="guide-answer-lens">
+        <div class="guide-answer-meta">
+          <span id="guideAnswerTopic">Direction</span>
+          <span id="guideTruthTier" data-truth-tier="range-modelled">Range modelled</span>
+        </div>
+        <p id="guideAnswerPrompt" class="guide-answer-question">Why does the ball curve right?</p>
+        <h2 id="guideAnswerTitle">The short answer appears here.</h2>
+        <ul id="guideAnswerBullets" class="guide-evidence-list"></ul>
+
+        <figure class="guide-cause" aria-labelledby="guideCauseTitle guideCauseDesc">
+          <svg viewBox="0 0 720 180" role="img">
+            <title id="guideCauseTitle">Model relationship</title>
+            <desc id="guideCauseDesc">A deterministic relationship diagram. Exact values are also listed in the table.</desc>
+            <path class="guide-cause__target" d="M40 92H680"></path>
+            <path id="guideCauseStart" class="guide-cause__start" d="M48 92L248 74"></path>
+            <path id="guideCauseCurve" class="guide-cause__curve" d="M248 74Q466 18 672 92" pathLength="1"></path>
+            <circle class="guide-cause__ball" cx="48" cy="92" r="5"></circle>
+            <circle id="guideCauseFinish" class="guide-cause__finish" cx="672" cy="92" r="6"></circle>
+            <text id="guideCauseLabelStart" x="182" y="58">Start</text>
+            <text id="guideCauseLabelFinish" x="548" y="48">Outcome</text>
+          </svg>
+          <figcaption>Deterministic model diagram · exact values below</figcaption>
+        </figure>
+
+        <div class="guide-table-wrap" role="region" aria-labelledby="guideMetricHeading" tabindex="0">
+          <h3 id="guideMetricHeading">Evidence from the model</h3>
+          <table class="guide-metric-table">
+            <thead><tr><th scope="col">Measure</th><th scope="col">Value</th><th scope="col">Source</th></tr></thead>
+            <tbody id="guideMetricRows"></tbody>
+          </table>
+        </div>
+
+        <aside id="guideModelGap" class="guide-model-gap" data-model-gap="answer-now">
+          <div>
+            <strong id="guideGapTitle">Available now</strong>
+            <span id="guideGapCopy">The shipping model can answer this relationship.</span>
+          </div>
+          <span id="guideGapStatus">Now</span>
+        </aside>
+
+        <details class="guide-boundary">
+          <summary>Model limits</summary>
+          <p id="guideBoundaryCopy"></p>
+        </details>
+
+        <button type="button" id="guideOpenLab" class="guide-primary" data-open-lab>
+          <span id="guideActionLabel">Compare one change</span>
+          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="m7 4 6 6-6 6"></path></svg>
+        </button>
+        <a id="guideAnswerRoute" class="guide-primary" href="./impact.html" hidden>
+          <span>Open Range</span>
+          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="m7 4 6 6-6 6"></path></svg>
+        </a>
       </article>
     </section>
-    <p class="boundary">Jarvis v1 answers only the four questions above. It will not invent a diagnosis from an unstructured message.</p>
+
+    <section class="guide-panel guide-panel--lab" data-guide-panel="lab" aria-labelledby="guideLabTitle" hidden>
+      <button id="guideBackToAnswer" class="guide-back" type="button">
+        <svg viewBox="0 0 20 20" aria-hidden="true"><path d="m12 4-6 6 6 6"></path></svg>
+        Back to answer
+      </button>
+
+      <header class="guide-lab-heading">
+        <div>
+          <h2 id="guideLabTitle">Compare one variable</h2>
+          <p id="guideLabDescription">Move one input. Four stay held.</p>
+        </div>
+        <span id="guideLabSource">Illustrative model</span>
+      </header>
+
+      <div class="guide-lab-layout">
+        <section class="guide-lab-controls" aria-labelledby="guideInputHeading">
+          <div class="guide-lab-section-heading">
+            <h3 id="guideInputHeading">Model inputs</h3>
+            <span>Choose one to move</span>
+          </div>
+          <div class="guide-param-list">
+            <button type="button" class="guide-param" data-lab-param="speed">
+              <span><strong>Club speed</strong><small>Model input</small></span>
+              <span data-lab-value>85 mph</span>
+            </button>
+            <button type="button" class="guide-param" data-lab-param="face">
+              <span><strong>Face angle</strong><small>Model input</small></span>
+              <span data-lab-value>+2.0°</span>
+            </button>
+            <button type="button" class="guide-param" data-lab-param="path">
+              <span><strong>Club path</strong><small>Held constant</small></span>
+              <span data-lab-value>−1.0°</span>
+            </button>
+            <button type="button" class="guide-param" data-lab-param="attack">
+              <span><strong>Attack angle</strong><small>Held constant</small></span>
+              <span data-lab-value>−3.0°</span>
+            </button>
+            <button type="button" class="guide-param" data-lab-param="dynLoft">
+              <span><strong>Dynamic loft</strong><small>Held constant</small></span>
+              <span data-lab-value>25.0°</span>
+            </button>
+          </div>
+
+          <div class="guide-slider-block">
+            <div class="guide-slider-label">
+              <label id="guideSliderLabel" for="guideLabSlider">Face angle</label>
+              <output id="guideSliderOutput" for="guideLabSlider">+2.0°</output>
+            </div>
+            <input id="guideLabSlider" data-lab-slider type="range" min="-15" max="15" step="0.5" value="2" aria-describedby="guideHeldCopy">
+            <div class="guide-slider-scale" aria-hidden="true"><span id="guideSliderMin">−15°</span><span>0</span><span id="guideSliderMax">+15°</span></div>
+            <p id="guideHeldCopy">Path, attack, dynamic loft and speed are held constant.</p>
+          </div>
+        </section>
+
+        <section class="guide-lab-results" aria-labelledby="guideOutcomeHeading">
+          <div class="guide-lab-section-heading">
+            <h3 id="guideOutcomeHeading">Live outcomes</h3>
+            <span>Before · current · delta</span>
+          </div>
+          <div id="guideOutcomeChips" class="guide-outcome-chips">
+            <div class="guide-outcome" data-lab-outcome><span>Start</span><strong>–</strong><small>–</small></div>
+            <div class="guide-outcome" data-lab-outcome><span>Curve</span><strong>–</strong><small>–</small></div>
+            <div class="guide-outcome" data-lab-outcome><span>Carry</span><strong>–</strong><small>–</small></div>
+            <div class="guide-outcome" data-lab-outcome><span>Backspin</span><strong>–</strong><small>–</small></div>
+          </div>
+
+          <figure class="guide-chart" aria-labelledby="guideChartTitle guideChartDesc">
+            <svg viewBox="0 0 720 250" role="img">
+              <title id="guideChartTitle">Live one-variable comparison</title>
+              <desc id="guideChartDesc">The chart compares one model outcome while the selected input changes. Exact values are in the table.</desc>
+              <path class="guide-chart__axis" d="M52 204H684M52 28V204"></path>
+              <path id="guideChartLine" class="guide-chart__line" d="M52 176L210 146L368 112L526 78L684 42" pathLength="1"></path>
+              <circle id="guideChartPoint" class="guide-chart__point" cx="368" cy="112" r="6"></circle>
+            </svg>
+            <figcaption id="guideChartSummary">Move the slider to compare the model.</figcaption>
+          </figure>
+
+          <div class="guide-table-wrap" role="region" aria-labelledby="guideDeltaHeading" tabindex="0">
+            <h3 id="guideDeltaHeading">Exact comparison</h3>
+            <table class="guide-metric-table guide-delta-table">
+              <thead><tr><th scope="col">Outcome</th><th scope="col">Before</th><th scope="col">Current</th><th scope="col">Delta</th></tr></thead>
+              <tbody id="guideDeltaRows"></tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+
+      <div class="guide-lab-actions">
+        <button id="guideLabReset" class="guide-secondary" type="button">Reset comparison</button>
+        <a id="guideOpenRange" class="guide-primary" href="./impact.html">
+          <span>Open in Range</span>
+          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="m7 4 6 6-6 6"></path></svg>
+        </a>
+      </div>
+    </section>
   </main>
-  <script>
-    const answers = {
-      curve: { eyebrow:'Flight shape', title:'Face-to-path is the first place to look.', body:'A face that points right of the swing path sends the start line right. If the face-to-path gap stays open through impact, the ball curves right as well. Change one input in Range and watch the flight respond live.', primary:'Open Range', secondary:'Open Impact Studio', href:'./impact.html' },
-      first: { eyebrow:'Next move', title:'Change one input, then read the flight.', body:'Start with Face or Path — not both. Make a small change, replay the shot, and compare the new trace with the previous one. Impact Studio is the follow-up when you want to see the contact cause behind the result.', primary:'Open Range', secondary:'Open Impact Studio', href:'./impact.html' },
-      studio: { eyebrow:'Impact Studio', title:'It shows the cause before the outcome.', body:'Impact Studio puts attack angle, club path, low point and ball position in one impact scene. Use it to understand why the strike happened, then return to Range to test the next change.', primary:'Open Impact Studio', secondary:'Back to Range', href:'./impact-studio.html', secondaryHref:'./impact.html' },
-      height: { eyebrow:'Trajectory', title:'Start with delivered loft.', body:'More delivered loft generally raises launch and apex in this model. Change loft in Range, keep the other inputs stable, and compare the flight rather than guessing from a single number.', primary:'Open Range', secondary:'See the cause in Impact Studio', href:'./impact.html' }
-    };
-    const answer = document.querySelector('#answer');
-    const buttons = [...document.querySelectorAll('[data-question]')];
-    const eyebrow = document.querySelector('#answerEyebrow');
-    const title = document.querySelector('#answerTitle');
-    const body = document.querySelector('#answerBody');
-    const primary = document.querySelector('#answerPrimary');
-    const secondary = document.querySelector('#answerSecondary');
-    buttons.forEach(button => button.addEventListener('click', () => {
-      const item = answers[button.dataset.question];
-      if (!item) return;
-      buttons.forEach(other => other.setAttribute('aria-pressed', String(other === button)));
-      eyebrow.textContent = item.eyebrow;
-      title.textContent = item.title;
-      body.textContent = item.body;
-      primary.textContent = item.primary;
-      primary.href = item.href;
-      secondary.textContent = item.secondary;
-      secondary.href = item.secondaryHref || './impact-studio.html';
-      answer.hidden = false;
-    }));
-  </script>
+
+  <script type="module" src="./jarvis.js"></script>
   <script type="module" src="./sa-app-shell.js"></script>
 </body>
 </html>

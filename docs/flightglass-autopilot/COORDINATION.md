@@ -13,7 +13,6 @@ wait.
 
 | Agent | Branch | Working on | Since |
 |-------|--------|-----------|-------|
-| Codex | `agent/page-overview` | Owner-directed Range revision: restore dedicated SIDE/TOP controls and replace 3D Range tab with interactive OUTCOME LIVE. Files: impact.html, sa-range-context.js, scripts/impact-portrait-browser.test.mjs, scripts/phase2-context.test.mjs | 2026-08-07 |
 
 ## Queue / free to take
 
@@ -30,6 +29,14 @@ wait.
   pair before build.
 
 ## Done / handed off
+
+- Codex `agent/page-overview` — completed Flightglass Guide on 2026-08-07.
+  Jarvis is now a no-free-text Question Ladder with 28 researched questions,
+  explicit truth/addability boundaries and one-variable live Range labs across
+  all five delivery inputs. Thirty deterministic contracts, 22 Chromium/WebKit
+  browser cases, native copy parity, the level-C change gate and a fresh
+  Impeccable/Terra review pass. Academy remains v2 and protected physics output
+  is unchanged.
 
 - Codex `agent/page-overview` — completed the owner-directed Range instrument
   redesign on 2026-08-07. 3D Range is now the default replayable lens, one
