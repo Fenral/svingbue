@@ -833,12 +833,128 @@ button {
 }
 
 @media (max-width: 480px) {
+  .mechanics {
+    --portrait-telemetry-height: calc(112px + env(safe-area-inset-bottom));
+    --portrait-facts-height: 82px;
+  }
+
+  .mechanics[data-mechanics-mode="arc"] {
+    --portrait-facts-height: 118px;
+  }
+
+  .mechanics__workspace {
+    padding-bottom: calc(var(--portrait-telemetry-height) + var(--portrait-facts-height) + 16px);
+  }
+
   .instrument__lens .lens-heading {
     justify-content: flex-start;
   }
 
   .instrument__lens .lens-heading p {
     display: none;
+  }
+
+  .facts {
+    position: fixed;
+    z-index: 40;
+    left: 0;
+    right: 0;
+    bottom: var(--portrait-telemetry-height);
+    width: 100%;
+    height: var(--portrait-facts-height);
+    min-height: 0;
+    padding: 7px 12px 8px;
+    overflow: hidden;
+    border: 0;
+    border-top: 1px solid var(--secondary-line);
+    border-bottom: 1px solid var(--line);
+    border-radius: 0;
+    background: var(--plate-solid);
+    box-shadow: 0 -18px 42px -28px rgba(0, 0, 0, .92);
+  }
+
+  .facts__heading {
+    min-height: 17px;
+    padding: 0 0 4px;
+  }
+
+  .facts__heading h2 {
+    font-size: 11px;
+  }
+
+  .cause-copy {
+    max-width: none;
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.18;
+  }
+
+  .facts__divider,
+  #delivery-facts,
+  .facts__scope {
+    display: none !important;
+  }
+
+  #arc-facts {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0;
+    margin-top: 6px;
+    border-top: 1px solid rgba(255, 255, 255, .07);
+  }
+
+  #arc-facts .derived-grid__row {
+    min-width: 0;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    padding: 5px 8px 0;
+    border-left: 1px solid rgba(255, 255, 255, .07);
+  }
+
+  #arc-facts .derived-grid__row:first-child {
+    padding-left: 0;
+    border-left: 0;
+  }
+
+  #arc-facts .derived-grid__row dd {
+    font-size: 11px;
+    text-align: left;
+    white-space: nowrap;
+  }
+
+  .telemetry {
+    position: fixed;
+    z-index: 41;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: var(--portrait-telemetry-height);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-rows: repeat(2, minmax(0, 1fr));
+    padding: 0 max(8px, env(safe-area-inset-right)) max(6px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));
+    border-top: 0;
+    background: rgba(7, 6, 12, .98);
+  }
+
+  .telemetry__cell,
+  .telemetry__cell:nth-child(odd) {
+    min-height: 0;
+    padding: 5px 9px;
+    border-top: 1px solid rgba(255, 255, 255, .07);
+    border-left: 1px solid rgba(255, 255, 255, .07);
+  }
+
+  .telemetry__cell:nth-child(-n + 3) {
+    border-top: 0;
+  }
+
+  .telemetry__cell:nth-child(3n + 1) {
+    border-left: 0;
+  }
+
+  .telemetry output {
+    font-size: 18px;
   }
 }
 
