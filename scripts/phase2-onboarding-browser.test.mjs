@@ -147,16 +147,22 @@ async function open({
 
 async function finishSplash(page, { keyboard = false, clockAdvanceMs = 0 } = {}) {
   const splash = page.locator('#saSplash');
-  if (await splash.count() === 0) return false;
-  await splash.waitFor({ state: 'visible' });
   if (keyboard) {
+    await splash.waitFor({ state: 'visible' });
     assert.equal(
       await page.locator('#saSplashSkip').evaluate(element => element === document.activeElement),
       true,
     );
     await page.keyboard.press('Enter');
   } else {
-    await page.locator('#saSplashSkip').click();
+    const skipped = await page.evaluate(() => {
+      const currentSplash = document.getElementById('saSplash');
+      const skip = document.getElementById('saSplashSkip');
+      if (!currentSplash || !skip) return false;
+      skip.click();
+      return true;
+    });
+    if (!skipped) return false;
   }
   if (clockAdvanceMs) await page.clock.runFor(clockAdvanceMs);
   await splash.waitFor({ state: 'detached' });
@@ -177,6 +183,23 @@ async function capture(page, name) {
     fullPage: false,
     animations: 'disabled',
   });
+}
+
+async function settleStepEntry(page, step, timeoutMs = 1_000) {
+  const section = page.locator(`[data-onboarding-step="${step}"]:not([hidden])`);
+  await section.evaluate((element, timeout) => new Promise((resolveEntry, rejectEntry) => {
+    const timeoutId = setTimeout(
+      () => rejectEntry(new Error(`Onboarding step ${element.dataset.onboardingStep} did not settle within ${timeout} ms.`)),
+      timeout,
+    );
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      Promise.allSettled(element.getAnimations().map(animation => animation.finished))
+        .then(() => {
+          clearTimeout(timeoutId);
+          resolveEntry();
+        });
+    }));
+  }), timeoutMs);
 }
 
 async function assertNoPreValueFriction(page) {
@@ -295,6 +318,7 @@ test(`${ENGINE}: reduced-motion opening reaches the same returning Home without 
   await page.locator('#saSplash').waitFor({ state: 'detached', timeout: 750 });
   assert.equal(await page.locator('#onboarding').getAttribute('open'), null);
   assert.equal(await page.locator('#homeReturning').isVisible(), true);
+  await page.waitForFunction(() => document.activeElement?.id === 'homeMain');
   assert.equal(await page.locator('#homeMain').evaluate(element => element === document.activeElement), true);
   const running = await page.evaluate(() => document.getAnimations()
     .filter(animation => animation.playState === 'running').length);
@@ -360,6 +384,7 @@ test(`${ENGINE}: learning tour uses real product proof, a live engine lab, and n
   assert.equal(await page.locator('#onboardingLoft').inputValue(), '31');
   await page.locator('#continueFromLab').click();
   assert.equal(await currentStep(page), 4);
+  await settleStepEntry(page, 4);
   assert.deepEqual(
     await page.locator('.product-map__item strong').allTextContents(),
     ['Outcome', 'Studio', 'Guide'],
