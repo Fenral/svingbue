@@ -2,7 +2,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 const EXPECTED_SURFACES = [
-  'home', 'range', 'visualise', 'outcome', 'compare',
+  'home', 'range', 'mechanics-mvp', 'visualise', 'outcome', 'compare',
   'geometry-3d', 'strike-window-2d', 'academy-overview',
   'academy-lesson', 'paywall'
 ];

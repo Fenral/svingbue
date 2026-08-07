@@ -75,6 +75,30 @@
       "primaryJob": "Change one impact input and see the resulting ball flight immediately."
     },
     {
+      "id": "mechanics-mvp",
+      "label": "Mechanics Lab",
+      "phase": 2,
+      "baselineScore": 0,
+      "targetScore": 90,
+      "route": "impact-studio.html",
+      "sourceType": "shipping",
+      "viewportIds": [
+        "portrait-wide",
+        "portrait-compact",
+        "landscape-wide",
+        "landscape-compact"
+      ],
+      "requiredSelectors": [
+        "main.mechanics"
+      ],
+      "references": [
+        "app-mock-3.html",
+        "design/mocks/impact-studio.html",
+        "PRODUCT.md"
+      ],
+      "primaryJob": "Change one mechanics input and see the derived strike or flight outcome immediately."
+    },
+    {
       "id": "visualise",
       "label": "Visualise",
       "phase": 2,
