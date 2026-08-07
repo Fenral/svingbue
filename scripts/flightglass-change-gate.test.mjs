@@ -156,8 +156,10 @@ test('payment, native and protected release files are always level C', () => {
     'scripts/release-evidence-phone.test.mjs',
     'scripts/store-release-contract.test.mjs',
     'scripts/store-screenshots.mjs',
+    'scripts/web-release-contract.test.mjs',
     'tools/package-lock.json',
-    'tools/package.json'
+    'tools/package.json',
+    'vercel.json'
   ]) {
     assert.equal(classifyChanges([file]).level, 'C', file);
   }
@@ -183,10 +185,13 @@ test('the GitHub release workflow verifies the exact event candidate through the
   assert.match(releaseWorkflowSource, /npm-audit-all\.json/);
   assert.match(releaseWorkflowSource, /npm-audit-production\.json/);
   assert.match(releaseWorkflowSource, /npm-audit-tools\.json/);
-  assert.match(releaseWorkflowSource, /name: Write failure manifest[\s\S]*failure-manifest\.json/);
+  assert.match(releaseWorkflowSource, /name: Write immutable release evidence manifest[\s\S]*if: always\(\)[\s\S]*release-evidence-manifest\.json/);
   assert.match(releaseWorkflowSource, /steps:\s*\{[\s\S]*checkout: \$checkout[\s\S]*auditTools: \$auditTools/);
+  assert.match(releaseWorkflowSource, /name: Upload immutable release evidence[\s\S]*if: always\(\)/);
+  assert.match(releaseWorkflowSource, /name: flightglass-v1-release-evidence-\$\{\{ github\.run_id \}\}/);
   assert.match(releaseWorkflowSource, /path: \$\{\{ runner\.temp \}\}\/flightglass-v1-evidence\//);
   assert.match(releaseWorkflowSource, /if-no-files-found: error/);
+  assert.match(releaseWorkflowSource, /retention-days: 30/);
   assert.doesNotMatch(
     releaseWorkflowSource,
     /uses: actions\/(?:checkout|setup-node|upload-artifact)@v4/,
@@ -281,4 +286,16 @@ test('CLI dry-run explains shared-runtime level B as JSON', () => {
   assert.equal(payload.effectiveLevel, 'B');
   assert.ok(payload.reasons.some((reason) => reason.reason.includes('shared browser runtime')));
   assert.ok(payload.controls.some((control) => control.id === 'webkit-spot'));
+});
+
+test('successful CLI reports bind the evidence to exact candidate and base commits', () => {
+  const result = spawnSync(process.execPath, [
+    cli, '--json', '--no-report', '--level', 'A', '--file', 'docs/release-evidence.md'
+  ], { encoding: 'utf8' });
+  assert.equal(result.status, 0, result.stderr);
+  const payload = JSON.parse(result.stdout);
+  assert.match(payload.candidateSha, /^[0-9a-f]{40}$/);
+  assert.match(payload.resolvedBaseSha, /^[0-9a-f]{40}$/);
+  assert.ok(Array.isArray(payload.controls));
+  assert.equal(payload.status, 'PASS');
 });

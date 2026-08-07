@@ -19,6 +19,7 @@ const V1_ROUTES = [
 const NATIVE_HTML = [
   ...V1_ROUTES,
   'privacy.html',
+  'support.html',
   'terms.html',
 ].sort();
 
@@ -153,7 +154,7 @@ function assertNativeModuleClosure() {
   }
 }
 
-test('native HTML allowlist contains only v1 routes and legal pages', () => {
+test('native HTML allowlist contains only v1 routes, legal pages and support', () => {
   const source = readFileSync(join(SCRIPT_DIR, 'copy-web.mjs'), 'utf8');
   const allowlistBlock = source.match(/const ALLOWED_HTML_FILES = \[([\s\S]*?)\];/);
 

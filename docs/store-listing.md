@@ -287,7 +287,8 @@ Immediately before submission, verify:
 - subscription descriptions match the current Offering and entitlement;
 - Monthly and Annual descriptions remain within Apple's 45-character limit;
 - the RevenueCat Apple In-App Purchase Key and Issuer ID validate successfully;
-- Privacy, Terms and Support return HTTP 200 over HTTPS;
+- Privacy, Terms and Support return HTTP 200 over HTTPS and each response
+  contains its expected Flightglass title or page heading, not an auth page;
 - the privacy declarations still match every SDK in the final binary;
 - reviewer notes match the actual free limits and navigation;
 - release notes, version number and build number match the selected build.

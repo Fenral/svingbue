@@ -108,13 +108,20 @@ deployment ID has changed, update the exact record in PR #18 before proceeding.
 The Vercel project is currently CLI-deployed and has no Git repository link.
 Merging `main` does not publish it. Before promotion:
 
-1. create a non-production Vercel preview from the exact green commit;
-2. record its commit, deployment ID and preview URL in PR #18;
-3. verify Home, Privacy, Terms and Support over HTTPS on that preview;
-4. confirm the legal surface shows Monthly and Annual with live StoreKit prices,
-   no Lifetime sale and no percentage-savings claim; and
-5. promote that inspected deployment only after every mandatory external gate
-   is complete.
+1. assert a clean checkout whose `HEAD` equals the PR head and whose exact
+   GitHub release-gate run is green;
+2. create a non-production preview with `flightglassCandidateSha=<40-char SHA>`
+   as Vercel deployment metadata, then record SHA, deployment ID, run URL and
+   preview URL in PR #18;
+3. inspect the deployment metadata and use authenticated `vercel curl` checks
+   for the expected Flightglass title or heading on Home, Privacy, Terms and
+   Support; a Vercel login page returning 200 is a failed preview check;
+4. confirm Monthly and Annual use `Store price`, with no Lifetime sale or
+   percentage-savings claim, and confirm internal sentinel paths such as
+   `/codemagic.yaml` and `/scripts/store-screenshots.mjs` return 404; and
+5. after every mandatory external gate is complete, promote that exact
+   deployment and repeat the semantic route and sentinel checks against the
+   public alias without Vercel authentication.
 
 The public GitHub Pages site currently presents deferred Academy-v2 material
 and has no working Support, Privacy or Terms routes. Before public launch,
@@ -126,7 +133,8 @@ Web rollback procedure:
 
 1. Promote the pre-deploy production deployment recorded above (or the newer
    ID recorded in PR #18) back to the production alias in Vercel.
-2. Verify Home, Terms, Privacy and Support over HTTPS.
+2. Verify Home, Terms, Privacy and Support over HTTPS by expected Flightglass
+   title/content as well as HTTP status.
 3. Revert the release through a new GitHub PR. Do not force-push or reset
    `main`.
 
@@ -147,8 +155,8 @@ Native rollback boundary:
 - Monthly/Annual current Offering and legacy Lifetime restore mapping;
 - persistent Apple signing and a successful TestFlight archive;
 - Paid Apps Agreement, tax, banking and remaining App Store account fields;
-- real sandbox cancel, error, purchase, subscription restore and Lifetime
-  restore on the exact signed candidate;
+- localized StoreKit prices plus real sandbox cancel, error, purchase,
+  subscription restore and Lifetime restore on the exact signed candidate;
 - the 12-row physical-iPhone checklist;
 - ten moderated first-time onboarding sessions with at least 8/10 unassisted,
   median at most 90 seconds and no launch blocker;

@@ -97,6 +97,10 @@ function refExists(ref) {
   return runGit(['rev-parse', '--verify', '--quiet', ref], { allowFailure: true }).status === 0;
 }
 
+function resolveCommit(ref) {
+  return String(runGit(['rev-parse', `${ref}^{commit}`]).stdout || '').trim();
+}
+
 function detectBase(explicitBase) {
   if (explicitBase) {
     if (!refExists(explicitBase)) throw new Error(`Unknown Git base: ${explicitBase}`);
@@ -341,6 +345,8 @@ async function main() {
   const report = {
     schemaVersion: 1,
     generatedAt: new Date().toISOString(),
+    candidateSha: resolveCommit('HEAD'),
+    resolvedBaseSha: resolveCommit(baseRef),
     ...visiblePlan,
     controls,
     totalDurationMs: Math.round((performance.now() - started) * 100) / 100,

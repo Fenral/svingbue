@@ -32,8 +32,8 @@ const LEVEL_C_PATTERNS = [
   [/^tools\/package(?:-lock)?\.json$/, 'build and browser dependency lock'],
   [/^\.github\/workflows\//, 'CI/release workflow'],
   [/^(?:ios|android)\//, 'native platform source'],
-  [/^scripts\/(?:copy-web|android-landscape|ios-landscape)\.mjs$/, 'native packaging'],
-  [/^\.vercel$/, 'deployment configuration']
+  [/^scripts\/(?:copy-web|web-release-contract\.test|android-landscape|ios-landscape)\.mjs$/, 'shipping packaging'],
+  [/^(?:\.vercel|vercel\.json)$/, 'deployment configuration']
 ];
 
 function normalized(path) {

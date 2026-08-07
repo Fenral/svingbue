@@ -66,7 +66,11 @@ test('the release record names the exact evidence sink and a recoverable web bas
   assert.match(record, /184140a2ff5834f23510662f8c442b8a8c03d36c/);
   assert.match(record, /dpl_BKJgyzjJWn1QtSFrtgFGKS7b69dv/);
   assert.match(record, /npm audit --prefix tools --audit-level=high/);
-  assert.match(record, /non-production Vercel preview from the exact green commit/);
+  assert.match(record, /clean checkout whose `HEAD` equals the PR head/);
+  assert.match(record, /flightglassCandidateSha=<40-char SHA>/);
+  assert.match(record, /authenticated `vercel curl` checks/);
+  assert.match(record, /`\/codemagic\.yaml`[\s\S]*return 404/);
+  assert.match(record, /public alias without Vercel authentication/);
   assert.match(record, /Merging `main` does not publish it/);
   assert.match(record, /Do not force-push or reset/);
   assert.match(record, /SOURCE CANDIDATE IN PROGRESS/);

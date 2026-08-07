@@ -2,9 +2,9 @@
 
 Flightglass uses the same static source in two deliberately separate ways:
 
-1. Vercel serves the repository root as the public web app at
-   `https://svingbue.vercel.app`.
-2. Capacitor packages a small allowlisted copy as the native app. Codemagic
+1. Vercel builds and serves the explicit allowlisted `www/` artifact at
+   `https://svingbue.vercel.app`; it never publishes the repository root.
+2. Capacitor packages that same allowlisted artifact as the native app. Codemagic
    generates, signs and uploads the iOS project on a cloud Mac.
 
 Protected release identity:
@@ -29,17 +29,18 @@ the v1 app:
 - Outcome/Range: `impact.html`
 - Impact Studio: `impact-studio.html`
 - Flightglass Guide: `jarvis.html`
+- Support: `support.html`
 - Terms and Privacy
 - required top-level modules/styles plus an explicit allowlist from `vendor/`
   and `assets/`
 
 Academy v2, Geometry/`geo3d`, Three.js, historical mocks and development
 tooling are denied. `www/` is gitignored and recreated on every run. Capacitor
-points only to `www/`; Vercel continues to serve the repository root.
+and Vercel both point only to `www/`; `vercel.json` enforces the web boundary.
 
 `support.html` is the public support destination for App Store and Google Play
-listings. It is web-only and deliberately stays outside the native payload;
-the native app already exposes restore, Terms and Privacy where needed.
+listings. It also remains available locally in the native payload so users can
+reach the same support guidance without depending on a network request.
 
 ## Why `ios/` is not committed
 

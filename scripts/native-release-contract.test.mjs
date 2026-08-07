@@ -97,6 +97,7 @@ test('Codemagic is manual-only and refuses ambiguous billing or build-number sta
   assert.doesNotMatch(yaml, /capacitor-assets/);
   assert.match(yaml, /node scripts\/verify-generated-ios-assets\.mjs/);
   assert.match(yaml, /ios_signing:[\s\S]*distribution_type: app_store[\s\S]*bundle_identifier: \*bundle_id/);
+  assert.match(yaml, /^\s+node:\s+24\s*$/m);
   assert.match(yaml, /xcode: 26\.6/);
   assert.doesNotMatch(yaml, /openssl genrsa|fetch-signing-files|certificate-key|--create/);
   assert.doesNotMatch(yaml, /certificates delete|Revoke old Distribution certs/);
@@ -228,12 +229,14 @@ test('GitHub runs the exact candidate through the full risk gate without fabrica
   assert.match(workflow, /npm audit --audit-level=high/);
   assert.match(workflow, /npm audit --omit=dev --audit-level=high/);
   assert.match(workflow, /npm audit --prefix tools --audit-level=high/);
-  assert.match(workflow, /name: Write failure manifest[\s\S]*failure-manifest\.json/);
+  assert.match(workflow, /name: Write immutable release evidence manifest[\s\S]*if: always\(\)[\s\S]*release-evidence-manifest\.json/);
   assert.match(workflow, /npm-audit-all\.json/);
   assert.match(workflow, /npm-audit-production\.json/);
   assert.match(workflow, /npm-audit-tools\.json/);
   assert.match(workflow, /path: \$\{\{ runner\.temp \}\}\/flightglass-v1-evidence\//);
   assert.match(workflow, /if-no-files-found: error/);
+  assert.match(workflow, /name: Upload immutable release evidence[\s\S]*if: always\(\)/);
+  assert.match(workflow, /retention-days: 30/);
   assert.equal([...workflow.matchAll(/npm run verify:change/g)].length, 1);
   assert.doesNotMatch(workflow, /npm run test:gate/);
   assert.doesNotMatch(workflow, /npm run verify:v1:release/);

@@ -51,7 +51,7 @@ workflows:
         APP_STORE_APPLE_ID: 6768449250   # existing ASC app id; do not migrate
         XCODE_WORKSPACE: "ios/App/App.xcworkspace"
         XCODE_SCHEME: "App"
-      node: 20
+      node: 24
       # Apple requires the iOS 26 SDK for uploads after 28 April 2026. Pin the
       # accepted toolchain so a release cannot silently change under us.
       xcode: 26.6

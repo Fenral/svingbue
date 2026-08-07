@@ -1,7 +1,7 @@
 #!/usr/bin/env node
-// Assemble the smallest self-contained Capacitor payload for Flightglass v1.
+// Assemble the smallest self-contained shipping payload for Flightglass v1.
 // The repository root also hosts prototypes and v2 Academy source, so every
-// shipping file is explicitly allowlisted. Never point Capacitor at the root.
+// shipping file is explicitly allowlisted. Never publish the repository root.
 
 import { cpSync, existsSync, mkdirSync, rmSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -18,6 +18,7 @@ const ALLOWED_HTML_FILES = [
   'impact.html',
   'impact-studio.html',
   'jarvis.html',
+  'support.html',
   'terms.html',
   'privacy.html',
 ];

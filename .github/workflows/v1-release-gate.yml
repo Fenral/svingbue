@@ -117,11 +117,12 @@ jobs:
           set -o pipefail
           npm audit --prefix tools --audit-level=high --json | tee "$RUNNER_TEMP/flightglass-v1-evidence/npm-audit-tools.json"
 
-      - name: Write failure manifest
-        if: failure()
+      - name: Write immutable release evidence manifest
+        if: always()
         shell: bash
         env:
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          JOB_STATUS: ${{ job.status }}
           OUTCOME_CHECKOUT: ${{ steps.checkout.outcome }}
           OUTCOME_EVIDENCE_DIRECTORY: ${{ steps.evidence_directory.outcome }}
           OUTCOME_RELEASE_IDENTITY: ${{ steps.release_identity.outcome }}
@@ -146,6 +147,7 @@ jobs:
           jq -n \
             --arg generatedAt "$(date -u +'%Y-%m-%dT%H:%M:%SZ')" \
             --arg runUrl "$RUN_URL" \
+            --arg status "$JOB_STATUS" \
             --arg expectedCandidate "$EXPECTED_CANDIDATE_SHA" \
             --arg actualCandidate "$actual_candidate" \
             --arg expectedBase "$EXPECTED_BASE_SHA" \
@@ -164,6 +166,7 @@ jobs:
               schemaVersion: 1,
               generatedAt: $generatedAt,
               runUrl: $runUrl,
+              status: $status,
               candidate: { expected: $expectedCandidate, actual: $actualCandidate },
               base: { expected: $expectedBase, resolved: $resolvedBase },
               steps: {
@@ -184,13 +187,13 @@ jobs:
                 auditProduction: "npm-audit-production.json",
                 auditTools: "npm-audit-tools.json"
               }
-            }' > "$evidence_dir/failure-manifest.json"
+            }' > "$evidence_dir/release-evidence-manifest.json"
 
-      - name: Upload failure evidence
-        if: failure()
+      - name: Upload immutable release evidence
+        if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: flightglass-v1-failure-evidence
+          name: flightglass-v1-release-evidence-${{ github.run_id }}
           path: ${{ runner.temp }}/flightglass-v1-evidence/
           if-no-files-found: error
-          retention-days: 14
+          retention-days: 30
