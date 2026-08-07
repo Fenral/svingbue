@@ -21,6 +21,7 @@ const WEBKIT = process.env.FG_ENGINE === 'webkit' || process.argv.includes('--pr
 const ENGINE = WEBKIT ? 'webkit' : 'chromium';
 const FIXTURE = Object.freeze({ club: '7iron', start: 'right', curve: 'right', flight: 'neutral' });
 const EVIDENCE_DIR = join(ROOT, 'outputs', 'flightglass-gates', 'phase2-browser');
+const CONTROLLED_CLOCK_START_MS = Date.UTC(2026, 0, 1, 12);
 
 let server;
 let browser;
@@ -87,6 +88,7 @@ async function open({
   reducedMotion = 'no-preference',
   skipSplash = true,
   localStorageThrows = false,
+  controlSplashClock = false,
 } = {}) {
   const browserContext = await browser.newContext({
     viewport,
@@ -94,6 +96,10 @@ async function open({
     reducedMotion,
   });
   const page = await browserContext.newPage();
+  if (controlSplashClock) {
+    await page.clock.install({ time: CONTROLLED_CLOCK_START_MS });
+    await page.clock.pauseAt(CONTROLLED_CLOCK_START_MS + 1_000);
+  }
   const errors = [];
   page.on('pageerror', error => errors.push(`pageerror: ${error.message}`));
   page.on('console', message => {
@@ -131,13 +137,15 @@ async function open({
       localStorage.setItem(key, value);
     }, [CONTEXT_KEY, JSON.stringify(storedContext)]);
   }
-  await page.goto(`${baseUrl}/index.html`, { waitUntil: 'networkidle' });
+  await page.goto(`${baseUrl}/index.html`, {
+    waitUntil: controlSplashClock ? 'commit' : 'networkidle',
+  });
   if (skipSplash) await finishSplash(page);
-  await page.evaluate(() => document.fonts.ready);
+  if (!controlSplashClock) await page.evaluate(() => document.fonts.ready);
   return { browserContext, page, errors };
 }
 
-async function finishSplash(page, { keyboard = false } = {}) {
+async function finishSplash(page, { keyboard = false, clockAdvanceMs = 0 } = {}) {
   const splash = page.locator('#saSplash');
   if (await splash.count() === 0) return false;
   await splash.waitFor({ state: 'visible' });
@@ -150,6 +158,7 @@ async function finishSplash(page, { keyboard = false } = {}) {
   } else {
     await page.locator('#saSplashSkip').click();
   }
+  if (clockAdvanceMs) await page.clock.runFor(clockAdvanceMs);
   await splash.waitFor({ state: 'detached' });
   return true;
 }
@@ -237,21 +246,25 @@ test(`${ENGINE}: cold opening is keyboard-skippable, hands focus to onboarding, 
   const { browserContext, page, errors } = await open({
     viewport: { width: 390, height: 844 },
     skipSplash: false,
+    controlSplashClock: true,
   });
-  await page.locator('#saSplash[open]').waitFor();
+  await page.locator('#saSplash[open].is-running').waitFor();
+  await page.clock.runFor(20);
   assert.equal(await page.locator('#saSplash').count(), 1);
   assert.equal(await page.locator('#onboarding').getAttribute('open'), null);
   assert.equal(await page.locator('#saSplashSkip').getAttribute('aria-label'), 'Skip opening animation');
   const skipRect = await page.locator('#saSplashSkip').boundingBox();
   assert.ok(skipRect.width >= 44 && skipRect.height >= 44);
+  await page.evaluate(() => document.fonts.ready);
   await capture(page, 'opening--390x844');
-  await finishSplash(page, { keyboard: true });
+  await finishSplash(page, { keyboard: true, clockAdvanceMs: 200 });
   await page.locator('#onboarding[open]').waitFor();
   assert.equal(await currentStep(page), 1);
   await page.waitForFunction(() => document.activeElement?.id === 'stepOneTitle');
   assert.equal(await page.evaluate(() => sessionStorage.getItem('sa.opening.v1')), '1');
 
   await page.reload({ waitUntil: 'networkidle' });
+  await page.clock.runFor(20);
   await page.locator('#saSplash').waitFor({ state: 'detached' });
   await page.locator('#onboarding[open]').waitFor();
   assert.equal(await page.locator('#saSplash').count(), 0);
