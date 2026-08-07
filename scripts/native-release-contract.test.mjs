@@ -198,6 +198,19 @@ test('generated iOS assets are verified against the committed launch sources', a
 test('GitHub runs the exact candidate through the full risk gate without fabricating human evidence', () => {
   const workflow = read('.github/workflows/v1-release-gate.yml');
   const pkg = JSON.parse(read('package.json'));
+  assert.match(
+    workflow,
+    /uses: actions\/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7\.0\.1/,
+  );
+  assert.match(
+    workflow,
+    /uses: actions\/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7\.0\.0/,
+  );
+  assert.match(
+    workflow,
+    /uses: actions\/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7\.0\.1/,
+  );
+  assert.doesNotMatch(workflow, /uses: actions\/(?:checkout|setup-node|upload-artifact)@v4/);
   assert.match(workflow, /pull_request:[\s\S]*branches: \[main\]/);
   assert.match(workflow, /pull_request\.head\.sha \|\| github\.sha/);
   assert.match(workflow, /workflow_dispatch:[\s\S]*base_sha:[\s\S]*required: true[\s\S]*type: string/);
@@ -210,7 +223,17 @@ test('GitHub runs the exact candidate through the full risk gate without fabrica
   assert.doesNotMatch(workflow, /actual_candidate\}\^/);
   assert.match(workflow, /git fetch --no-tags origin "\$base_candidate"/);
   assert.match(workflow, /FLIGHTGLASS_BASE_SHA=\$resolved_base/);
-  assert.match(workflow, /npm run verify:change -- --base "\$FLIGHTGLASS_BASE_SHA" --level C --no-report/);
+  assert.match(workflow, /npm run verify:change -- --base "\$FLIGHTGLASS_BASE_SHA" --level C(?:\s|$)/);
+  assert.doesNotMatch(workflow, /verify:change[^\n]*--no-report/);
+  assert.match(workflow, /npm audit --audit-level=high/);
+  assert.match(workflow, /npm audit --omit=dev --audit-level=high/);
+  assert.match(workflow, /npm audit --prefix tools --audit-level=high/);
+  assert.match(workflow, /name: Write failure manifest[\s\S]*failure-manifest\.json/);
+  assert.match(workflow, /npm-audit-all\.json/);
+  assert.match(workflow, /npm-audit-production\.json/);
+  assert.match(workflow, /npm-audit-tools\.json/);
+  assert.match(workflow, /path: \$\{\{ runner\.temp \}\}\/flightglass-v1-evidence\//);
+  assert.match(workflow, /if-no-files-found: error/);
   assert.equal([...workflow.matchAll(/npm run verify:change/g)].length, 1);
   assert.doesNotMatch(workflow, /npm run test:gate/);
   assert.doesNotMatch(workflow, /npm run verify:v1:release/);

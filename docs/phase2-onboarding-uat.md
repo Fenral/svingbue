@@ -24,20 +24,46 @@ reaches the final screen after being coached.
 Do not mark Phase 2 complete from an automated run, an internal team walkthrough
 or fewer than ten valid first-time sessions.
 
+## Immutable template and evidence-record lifecycle
+
+This tracked document is an immutable `PENDING` template. Never enter participant
+results here and never change its top-level status to `PASS`.
+
+For each release candidate:
+
+1. Create a new untracked folder under
+   `outputs/release-evidence/onboarding/<full-candidate-sha>/`.
+2. Copy this template into that folder as `onboarding-uat.md`; place every local
+   screenshot, recording, text note or log below the same folder.
+3. Complete only the copied record. Keep this tracked template unchanged.
+4. Run the checker with explicit `--file` and `--evidence-root` paths. A passing
+   run writes a JSON attestation and matching `.sha256` checksum below
+   `outputs/release-evidence/onboarding/`.
+
+The checker refuses this tracked template, evidence records outside the supplied
+root, a dirty source tree, an older commit/build and a second attestation for the
+same candidate/build. Files ignored by Git (including the evidence root under
+`outputs/`) do not make the source tree dirty. Preserve the completed copy,
+evidence files, JSON attestation and checksum as one release-evidence set.
+
 ## Candidate record — fill before session P01
 
 Freeze one candidate for all ten sessions. If the build or onboarding changes,
-start a new ten-person run rather than combining results.
+start a new ten-person run rather than combining results. Record the study start
+and end as exactly two ISO 8601 timestamps with UTC offsets. The full candidate
+SHA must equal the checked-out `HEAD`; the semantic version must equal
+`package.json`, followed by a positive numeric build such as `1.0.0 (42)`.
 
 | Field | Required value |
 |---|---|
 | Study date(s) and timezone | PENDING |
 | Candidate commit SHA | PENDING |
+| GitHub release-gate run URL | PENDING |
 | App version and build number | PENDING |
 | Distribution source | PENDING — for example TestFlight or signed local build |
 | Default language / locale | PENDING |
 | Facilitator | PENDING — role or initials only |
-| Evidence folder or release-record link | PENDING |
+| Evidence folder or release-record link | PENDING — use `.` when the copied record is in the evidence root |
 
 Use participant IDs only (`P01`–`P10`). Do not put names, email addresses,
 Apple IDs, faces or other personal data in committed evidence.
@@ -154,11 +180,20 @@ voice by default.
 | P09 | PENDING | PENDING | PENDING | PENDING | PENDING | PENDING |
 | P10 | PENDING | PENDING | PENDING | PENDING | PENDING | PENDING |
 
+Every participant needs a unique evidence reference. Use either a relative path
+to an existing file inside `--evidence-root` or a credential-free public HTTPS
+URL without query parameters. The checker hashes local files and scans the whole
+Markdown record plus referenced `.txt`, `.log`, `.md`, `.json` and `.csv` files
+for account data, email addresses, keys, tokens, receipts and transaction IDs.
+When a referenced Markdown index links to more artifacts, or a JSON index has an
+`artifacts` string array, those files are resolved and hashed recursively. A
+record cannot reference itself, its attestation or its checksum.
+
 ## Result table
 
-Use only `Y`/`N`, integer seconds (or `180+` when the map was not reached), and
-`PASS`/`FAIL`. Keep notes free of the `|` character so the evidence checker can
-parse the table.
+Use only `Y`/`N`, integer seconds from 1 through 180 (`180+` when the map was not
+reached), and `PASS`/`FAIL`. `Map = Y` is invalid above 180 seconds. Keep notes
+free of the `|` character so the evidence checker can parse the table.
 
 | ID | Map | Seconds | Loft | Help | Truth | Result | First hesitation / comprehension / next destination |
 |---|---|---:|---|---|---|---|---|
@@ -178,25 +213,35 @@ parse the table.
 
 ## Calculation and verdict
 
-Run the deterministic checker after all ten rows are filled:
+Run the deterministic checker after all ten rows are filled. This example creates
+the required untracked copy first:
 
 ```powershell
 $flightglassCandidate = git rev-parse HEAD
-npm run verify:v1:onboarding-evidence -- --candidate $flightglassCandidate --build "1.0.0 (42)" --file docs/phase2-onboarding-uat.md
+$flightglassEvidenceRoot = "outputs/release-evidence/onboarding/$flightglassCandidate"
+New-Item -ItemType Directory -Force $flightglassEvidenceRoot
+Copy-Item docs/phase2-onboarding-uat.md "$flightglassEvidenceRoot/onboarding-uat.md"
+# Complete only the copied file and add each referenced evidence artifact.
+npm run verify:v1:onboarding-evidence -- --candidate $flightglassCandidate --build "1.0.0 (42)" --file "$flightglassEvidenceRoot/onboarding-uat.md" --evidence-root $flightglassEvidenceRoot
 ```
 
 Replace `1.0.0 (42)` with the exact version/build identity installed on every
-test phone. Both `--candidate` and `--build` are required. The checker resolves
-the explicitly supplied SHA in Git, rejects evidence from an older/different
-candidate, and requires the candidate record and all ten session rows to match
-that exact build identity. Do not reuse a successful evidence file for a newer
-commit or build.
+test phone. All four identity arguments are required. The checker resolves the
+explicitly supplied full SHA in Git, requires it to be `HEAD`, binds the GitHub
+Actions URL to the exact `origin` repository, and queries the `gh` API. The run
+must be the **Flightglass v1 release gate** workflow, `completed` with conclusion
+`success`; its `workflow_id` must resolve to the active
+`.github/workflows/v1-release-gate.yml` path; and its `head_sha` must equal the
+candidate. The package version is read from that committed candidate rather
+than mutable working-tree files. Do not reuse a successful evidence file for a
+newer commit or build.
 
-The checker also requires a complete candidate record plus timestamp, device,
-build and matching commit evidence for all ten IDs. It derives each row's
-result, rejects a manually entered result or quantitative verdict that
-disagrees, counts unassisted completions and calculates the median from the
-completion times of unassisted completers only.
+The checker also requires a complete candidate record plus coherent, non-future
+timestamps, device, build, full commit SHA and unique evidence for all ten IDs.
+It derives each row's result, valid-session count, unassisted count, sorted times,
+median and quantitative verdict, then rejects every summary value that disagrees.
+The reviewer must sign with initials/role and a timestamp at or after the final
+participant session.
 
 Manual cross-check:
 
@@ -221,15 +266,14 @@ of the median. Never enter a made-up completion time for a non-completer.
 | Unresolved launch-blocking defects | PENDING |
 | Quantitative verdict | PENDING |
 | Final release-gate verdict | **PENDING** |
+| Reviewer and review timestamp | PENDING |
 
-Before the final check, replace `Unresolved launch-blocking defects` with an
-integer count (`0` is required for a pass), replace `Quantitative verdict` with
-the derived `PASS` or `FAIL`, and replace `Final release-gate verdict` with
-`PASS` or `FAIL`. Exit code `0` is possible only when the explicitly expected
-candidate/build matches, the participant rows derive a quantitative `PASS`,
-the summary records `0` unresolved launch blockers, and the final release-gate
-verdict records `PASS`. Pending or contradictory summary fields are rejected;
-a truthful `FAIL` exits non-zero.
+Before the final check, replace every summary placeholder with the observed or
+derived value. `0` unresolved launch blockers, a quantitative `PASS`, a final
+`PASS` and reviewer signoff are mandatory. Exit code `0` is possible only when
+candidate, build, repository, release workflow, participant evidence and every
+derived summary value agree. Pending, contradictory or sensitive evidence is
+rejected without writing an attestation.
 
 ## Existing automated prerequisite evidence
 
@@ -244,4 +288,5 @@ They deliberately unit-test the evidence checker without pretending that empty
 human rows pass. This document remains pending until ten real participant
 records satisfy the release rule above and
 the identity-bound `npm run verify:v1:onboarding-evidence -- --candidate ...
---build ...` command exits successfully.
+--build ... --file ... --evidence-root ...` command exits successfully and its
+SHA-256 attestation is preserved with the copied evidence record.

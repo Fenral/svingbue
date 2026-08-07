@@ -65,9 +65,53 @@ test('the release record names the exact evidence sink and a recoverable web bas
   assert.match(record, /Flightglass v1 release gate/);
   assert.match(record, /184140a2ff5834f23510662f8c442b8a8c03d36c/);
   assert.match(record, /dpl_BKJgyzjJWn1QtSFrtgFGKS7b69dv/);
+  assert.match(record, /npm audit --prefix tools --audit-level=high/);
+  assert.match(record, /non-production Vercel preview from the exact green commit/);
+  assert.match(record, /Merging `main` does not publish it/);
   assert.match(record, /Do not force-push or reset/);
   assert.match(record, /SOURCE CANDIDATE IN PROGRESS/);
   assert.match(record, /Gates that remain external/);
+});
+
+test('physical-iPhone evidence uses an immutable template and external attested working copy', () => {
+  const checklist = read('docs/phase2-phone-checklist.md');
+  const releaseRecord = read('docs/v1-release-record.md');
+  const ignore = read('.gitignore');
+
+  assert.match(checklist, /^Status:\s*\*\*PENDING/m);
+  assert.match(checklist, /immutable `PENDING` template/i);
+  assert.match(checklist, /outputs\/release-evidence\/phone/);
+  assert.match(checklist, /--file\s+"\$phoneEvidenceRoot\/phone-release-evidence\.md"/);
+  assert.match(checklist, /--evidence-root\s+\$phoneEvidenceRoot/);
+  assert.match(checklist, /flightglass-phone-evidence-attestation-<candidate>-v<version>-b<build>\.json/);
+  assert.match(checklist, /refuses to overwrite an existing attestation/i);
+  assert.match(checklist, /SHA-256 payload binds the candidate, build,\s+verified GitHub run/i);
+  assert.match(checklist, /link all three from PR #18/i);
+
+  assert.match(releaseRecord, /immutable\s+`PENDING`\s+templates?/i);
+  assert.match(releaseRecord, /--file <evidence-root>\/phone-release-evidence\.md/);
+  assert.match(releaseRecord, /--evidence-root <evidence-root>/);
+  assert.match(releaseRecord, /flightglass-phone-evidence-attestation-<candidate>-v<version>-b<build>\.json/);
+  assert.match(releaseRecord, /cannot overwrite an earlier attestation/i);
+  assert.match(releaseRecord, /completed record,\s+media\/logs\s+and attestation\s+remain external to the candidate/i);
+  assert.match(ignore, /^outputs\/release-evidence\/phone\/$/m);
+});
+
+test('moderated onboarding evidence uses an immutable external attested working copy', () => {
+  const checklist = read('docs/phase2-onboarding-uat.md');
+  const releaseRecord = read('docs/v1-release-record.md');
+  const ignore = read('.gitignore');
+
+  assert.match(checklist, /immutable `PENDING` template/i);
+  assert.match(checklist, /outputs\/release-evidence\/onboarding/);
+  assert.match(checklist, /--file "\$flightglassEvidenceRoot\/onboarding-uat\.md"/);
+  assert.match(checklist, /--evidence-root \$flightglassEvidenceRoot/);
+  assert.match(checklist, /JSON attestation and matching `.sha256` checksum/i);
+  assert.match(releaseRecord, /verify:v1:onboarding-evidence[\s\S]*--file <evidence-root>\/onboarding-uat\.md/);
+  assert.match(releaseRecord, /onboarding-<candidate>-<build>\.attestation\.json/);
+  assert.match(releaseRecord, /timing report that records the inner control's result and\s+duration/i);
+  assert.doesNotMatch(releaseRecord, /verify:change[^`\n]*--no-report/);
+  assert.match(ignore, /^outputs\/release-evidence\/onboarding\/$/m);
 });
 
 test('Apple metadata fits store field limits and retains every purchase credential gate', () => {
@@ -109,7 +153,10 @@ test('Apple metadata fits store field limits and retains every purchase credenti
   }
   assert.match(reviewNotes, /Digital Services Act/i);
   assert.match(reviewNotes, /support\.html` returns 404/i);
+  assert.match(reviewNotes, /merging `main` does not deploy/i);
+  assert.match(reviewNotes, /GitHub Pages Academy gallery/i);
   assert.match(phoneChecklist, /public Support URL over HTTPS/i);
+  assert.match(phoneChecklist, /npm run verify:v1:phone-evidence/);
   assert.doesNotMatch(phoneChecklist, /Open Support, Privacy and Terms from the native/i);
 });
 

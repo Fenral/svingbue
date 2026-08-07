@@ -152,14 +152,46 @@ test('payment, native and protected release files are always level C', () => {
     'scripts/phase4-paywall-browser.test.mjs',
     'scripts/release-evidence-onboarding.mjs',
     'scripts/release-evidence-onboarding.test.mjs',
+    'scripts/release-evidence-phone.mjs',
+    'scripts/release-evidence-phone.test.mjs',
     'scripts/store-release-contract.test.mjs',
-    'scripts/store-screenshots.mjs'
+    'scripts/store-screenshots.mjs',
+    'tools/package-lock.json',
+    'tools/package.json'
   ]) {
     assert.equal(classifyChanges([file]).level, 'C', file);
   }
 });
 
 test('the GitHub release workflow verifies the exact event candidate through the real level-C gate', () => {
+  assert.match(
+    releaseWorkflowSource,
+    /uses: actions\/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7\.0\.1/
+  );
+  assert.match(
+    releaseWorkflowSource,
+    /uses: actions\/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7\.0\.0/
+  );
+  assert.match(
+    releaseWorkflowSource,
+    /uses: actions\/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7\.0\.1/
+  );
+  assert.match(releaseWorkflowSource, /node-version: 24/);
+  assert.match(releaseWorkflowSource, /npm audit --audit-level=high/);
+  assert.match(releaseWorkflowSource, /npm audit --omit=dev --audit-level=high/);
+  assert.match(releaseWorkflowSource, /npm audit --prefix tools --audit-level=high/);
+  assert.match(releaseWorkflowSource, /npm-audit-all\.json/);
+  assert.match(releaseWorkflowSource, /npm-audit-production\.json/);
+  assert.match(releaseWorkflowSource, /npm-audit-tools\.json/);
+  assert.match(releaseWorkflowSource, /name: Write failure manifest[\s\S]*failure-manifest\.json/);
+  assert.match(releaseWorkflowSource, /steps:\s*\{[\s\S]*checkout: \$checkout[\s\S]*auditTools: \$auditTools/);
+  assert.match(releaseWorkflowSource, /path: \$\{\{ runner\.temp \}\}\/flightglass-v1-evidence\//);
+  assert.match(releaseWorkflowSource, /if-no-files-found: error/);
+  assert.doesNotMatch(
+    releaseWorkflowSource,
+    /uses: actions\/(?:checkout|setup-node|upload-artifact)@v4/,
+    'the release gate must not return to the retired Node 20 action runtime'
+  );
   assert.match(
     releaseWorkflowSource,
     /EXPECTED_CANDIDATE_SHA: \$\{\{ github\.event_name == 'pull_request' && github\.event\.pull_request\.head\.sha \|\| github\.sha \}\}/
@@ -179,7 +211,12 @@ test('the GitHub release workflow verifies the exact event candidate through the
   assert.match(releaseWorkflowSource, /git fetch --no-tags origin "\$base_candidate"/);
   assert.match(
     releaseWorkflowSource,
-    /npm run verify:change -- --base "\$FLIGHTGLASS_BASE_SHA" --level C --no-report/
+    /npm run verify:change -- --base "\$FLIGHTGLASS_BASE_SHA" --level C(?:\s|$)/
+  );
+  assert.doesNotMatch(
+    releaseWorkflowSource,
+    /verify:change[^\n]*--no-report/,
+    'the failure artifact step requires the change gate to write its timing report'
   );
   assert.equal(
     [...releaseWorkflowSource.matchAll(/npm run verify:change/g)].length,

@@ -117,6 +117,11 @@ Contact: sivertskotvold@gmail.com
       `docs/store-listing.md`; do not use the legacy StrikeArc/Academy gallery.
 - [ ] Confirm Privacy, Terms and Support all return HTTP 200 over HTTPS. Do not
       submit while `https://svingbue.vercel.app/support.html` returns 404.
+- [ ] Create and inspect an exact-commit Vercel preview before promotion. Record
+      its deployment ID and URL; merging `main` does not deploy this CLI-linked
+      project automatically.
+- [ ] Disable, redirect or mark the stale public GitHub Pages Academy gallery
+      `noindex`; it is deferred v2 content and cannot represent Flightglass v1.
 - [ ] Complete App Privacy answers using the current binary and RevenueCat
       configuration. Recheck every answer if analytics, accounts or a new SDK is
       introduced.

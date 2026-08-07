@@ -37,6 +37,7 @@ const ALLOWED_TOP_LEVEL_FILES = [
   'sa-analytics.js',
   'sa-app-shell.css',
   'sa-app-shell.js',
+  'sa-view-transition-guard.js',
   'sa-haptics.js',
   'sa-home.css',
   'sa-home.js',

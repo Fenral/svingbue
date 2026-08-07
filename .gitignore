@@ -31,6 +31,13 @@ www/
 # Build outputs
 build/
 outputs/flightglass-gates/
+# Completed moderated-study records and attestations are release evidence, not
+# source-candidate contents.
+outputs/release-evidence/onboarding/
+# Completed physical-device records, media and SHA-256 attestations are release
+# evidence, never source-candidate contents. The explicit rule documents that
+# boundary even though the broader outputs/ rule below also covers it.
+outputs/release-evidence/phone/
 # ...but the vendored Three.js build is a dependency that must travel with the
 # repo (the native WKWebView has no CDN and loads it by relative path). The
 # generic build/ rule above was silently swallowing it, which left Geometry 3D

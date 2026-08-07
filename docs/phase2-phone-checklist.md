@@ -10,6 +10,29 @@ RevenueCat entitlement delivery or restore behavior.
 Android is outside the iPhone v1 release gate. An Android smoke test may be
 recorded separately, but it cannot substitute for the required iPhone run.
 
+## Immutable template and working copy
+
+This committed file is the immutable `PENDING` template. Never enter completed
+results, tester details or evidence paths here. For each signed candidate, copy
+it to an ignored working directory and place every local screenshot, video and
+log beneath the same evidence root:
+
+```powershell
+$candidateSha = git rev-parse HEAD
+$buildIdentity = "1.0.0 (42)"
+$phoneEvidenceRoot = "outputs/release-evidence/phone/$candidateSha-42"
+New-Item -ItemType Directory -Force -Path $phoneEvidenceRoot
+Copy-Item docs/phase2-phone-checklist.md "$phoneEvidenceRoot/phone-release-evidence.md"
+```
+
+Complete only the copied `phone-release-evidence.md`. Evidence cells accept one
+relative file beneath `$phoneEvidenceRoot` or one public HTTPS URL with no
+credentials, query string or fragment. Use an index file when a row needs
+multiple artifacts, and list each artifact as a Markdown link in that index.
+The validator recursively validates and hashes those linked files; it rejects
+missing files, its own generated attestation and paths that escape the evidence
+root.
+
 ## Pass rule
 
 This gate passes only when:
@@ -224,3 +247,28 @@ all 7 purchase/restore rows pass on the exact candidate, and no launch blocker
 remains. Link this record from the release PR. Keep
 `docs/phase2-onboarding-uat.md` separate: physical smoke does not replace the
 ten-person comprehension and completion-time gate.
+
+After completing every table, run the fail-closed evidence validator from the
+same repository checkout:
+
+```powershell
+npm run verify:v1:phone-evidence -- --candidate $candidateSha --build $buildIdentity --file "$phoneEvidenceRoot/phone-release-evidence.md" --evidence-root $phoneEvidenceRoot
+```
+
+Exit code `0` is required. The validator proves checked-out `HEAD`, the package
+version stored in that commit, git origin and the completed/successful
+`Flightglass v1 release gate` run from
+`.github/workflows/v1-release-gate.yml` all identify the same candidate. It
+also checks the immutable row text, all required results, evidence-file
+boundaries, timestamp coherence and accidental credential/account data in the
+full record and referenced UTF-8 text/log files.
+
+A successful run writes
+`flightglass-phone-evidence-attestation-<candidate>-v<version>-b<build>.json`
+beneath `$phoneEvidenceRoot`. Its SHA-256 payload binds the candidate, build,
+verified GitHub run, completed record and every referenced local evidence file.
+The validator refuses to overwrite an existing attestation; a new candidate or
+build receives a different filename. Keep the completed Markdown, media/logs
+and attestation outside the candidate commit. Upload them to the approved
+release-evidence store and link all three from PR #18. The attestation protects
+integrity; it does not replace the direct observations or reviewer.

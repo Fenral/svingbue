@@ -33,9 +33,11 @@ its old check is green.
 
 For a new candidate:
 
-1. Run `npm run verify:change -- --base <explicit-base-sha> --level C
-   --no-report` locally. Level C performs diff-integrity, added-secret and
-   protected-identifier checks before running `verify:v1:release` exactly once.
+1. Run `npm run verify:change -- --base <explicit-base-sha> --level C`
+   locally. Level C performs diff-integrity, added-secret and
+   protected-identifier checks before running `verify:v1:release` exactly once,
+   and writes a timing report that records the inner control's result and
+   duration.
 2. Push the exact commit and require its GitHub `verify` job to pass. For pull
    requests, the workflow checks out `github.event.pull_request.head.sha`; for
    push and manual dispatch it checks out `github.sha`. It fetches full history,
@@ -44,16 +46,45 @@ For a new candidate:
    Manual dispatch requires an explicit 40-character, non-zero `base_sha`
    input. Missing, truncated and all-zero base identities fail closed for every
    event; the workflow never substitutes `HEAD^`.
-3. Run `npm audit --audit-level=high` and `npm audit --omit=dev
-   --audit-level=high`, and record both results alongside the change-gate
-   controls.
+3. Run `npm audit --audit-level=high`, `npm audit --omit=dev
+   --audit-level=high` and `npm audit --prefix tools --audit-level=high`.
+   Record the full app, production app and build/browser-tool results separately
+   alongside the change-gate controls.
 4. Record the exact outputs in PR #18 before any release action.
 
-`npm run verify:v1:release` tests the evidence checker; it does not invent
-participant or device observations. The moderated onboarding checker must be
-run separately with the expected candidate SHA and signed build identity after
-all ten sessions are recorded. The physical-iPhone checklist must also be
-completed from direct observation.
+`npm run verify:v1:release` tests the evidence checkers; it does not invent
+participant or device observations. Keep both committed documents as immutable
+`PENDING` templates.
+
+After all ten moderated sessions, copy the onboarding template and evidence to
+an ignored `outputs/release-evidence/onboarding/<candidate>/` directory, then
+run:
+
+```powershell
+npm run verify:v1:onboarding-evidence -- --candidate <full-40-character-sha> --build "<package-version> (<build>)" --file <evidence-root>/onboarding-uat.md --evidence-root <evidence-root>
+```
+
+Exit code `0` emits an `onboarding-<candidate>-<build>.attestation.json` file
+and matching `.sha256` checksum bound to the clean candidate, successful GitHub
+run, completed study record and recursively referenced evidence. Preserve and
+link the record, evidence, attestation and checksum from PR #18.
+
+The physical-iPhone checklist must likewise be copied to an ignored
+`outputs/release-evidence/phone/<candidate>-<build>/` working directory,
+completed from direct observation and checked with:
+
+```powershell
+npm run verify:v1:phone-evidence -- --candidate <full-40-character-sha> --build "<package-version> (<build>)" --file <evidence-root>/phone-release-evidence.md --evidence-root <evidence-root>
+```
+
+Exit code `0` emits a candidate/build-specific
+`flightglass-phone-evidence-attestation-<candidate>-v<version>-b<build>.json`
+whose SHA-256 payload binds the exact candidate, build, successful GitHub
+release-gate run, completed record and recursively linked evidence-index files.
+It cannot overwrite an earlier attestation. The completed record, media/logs
+and attestation remain external to the candidate and MUST all be uploaded to
+the approved release-evidence store and linked in PR #18 before release
+authorization.
 
 ## Rollback record
 
@@ -73,6 +104,23 @@ Production web baseline inspected through the authenticated Vercel CLI on
 The alias still serves the older Night Ladder product, old legal copy and no
 `support.html`. Re-inspect the alias immediately before deployment. If its
 deployment ID has changed, update the exact record in PR #18 before proceeding.
+
+The Vercel project is currently CLI-deployed and has no Git repository link.
+Merging `main` does not publish it. Before promotion:
+
+1. create a non-production Vercel preview from the exact green commit;
+2. record its commit, deployment ID and preview URL in PR #18;
+3. verify Home, Privacy, Terms and Support over HTTPS on that preview;
+4. confirm the legal surface shows Monthly and Annual with live StoreKit prices,
+   no Lifetime sale and no percentage-savings claim; and
+5. promote that inspected deployment only after every mandatory external gate
+   is complete.
+
+The public GitHub Pages site currently presents deferred Academy-v2 material
+and has no working Support, Privacy or Terms routes. Before public launch,
+disable that Pages deployment or replace it with an owner-approved redirect or
+`noindex` holding surface. It must not be presented as the Flightglass v1 app or
+used for store URLs.
 
 Web rollback procedure:
 
@@ -101,9 +149,12 @@ Native rollback boundary:
 - Paid Apps Agreement, tax, banking and remaining App Store account fields;
 - real sandbox cancel, error, purchase, subscription restore and Lifetime
   restore on the exact signed candidate;
-- the 12-row physical-iPhone checklist; and
+- the 12-row physical-iPhone checklist;
 - ten moderated first-time onboarding sessions with at least 8/10 unassisted,
-  median at most 90 seconds and no launch blocker.
+  median at most 90 seconds and no launch blocker;
+- an exact-SHA Vercel preview with a green public URL matrix, followed by an
+  explicit promotion because merge does not deploy this project; and
+- retirement or containment of the stale public GitHub Pages Academy surface.
 
 The release remains pending until those rows contain evidence rather than
 `PENDING`.

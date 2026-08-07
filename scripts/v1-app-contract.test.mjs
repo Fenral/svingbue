@@ -27,6 +27,7 @@ const REQUIRED_LOCAL_DEPENDENCIES = [
   'sa.css',
   'sa-app-shell.css',
   'sa-app-shell.js',
+  'sa-view-transition-guard.js',
   'sa-home.css',
   'sa-home.js',
   'sa-opening.js',
@@ -162,6 +163,20 @@ test('native HTML allowlist contains only v1 routes and legal pages', () => {
     .sort();
 
   assert.deepEqual(entries, NATIVE_HTML);
+});
+
+test('every native document installs the early view-transition rejection guard', () => {
+  for (const file of NATIVE_HTML) {
+    const source = readFileSync(join(ROOT, file), 'utf8');
+    const guardIndex = source.indexOf('<script src="./sa-view-transition-guard.js"></script>');
+    const firstStylesheet = source.search(/<link\b[^>]*\brel=["']stylesheet["']/i);
+    const inlineStyle = source.search(/<style\b/i);
+    const firstStyle = [firstStylesheet, inlineStyle].filter(index => index >= 0)
+      .reduce((lowest, index) => Math.min(lowest, index), Number.POSITIVE_INFINITY);
+
+    assert.ok(guardIndex >= 0, `${file} must load the view-transition guard`);
+    assert.ok(guardIndex < firstStyle, `${file} must install the guard before transition CSS`);
+  }
 });
 
 test('Home exposes the learning tour and sends every next action to v1 routes', () => {
