@@ -498,8 +498,8 @@ Objective: charge after demonstrated value and preserve existing purchases.
   migrations are checked in, RLS is enabled and service-role credentials remain
   server-only. Otherwise Supabase remains out of this phase.
 
-Fresh source/test evidence (2026-08-07): 20/20 monetization/IAP contracts and
-7/7 Chromium plus 7/7 WebKit browser cases pass. The browser cases trigger the
+Fresh source/test evidence (2026-08-07): 23/23 monetization/IAP contracts and
+12/12 Chromium plus 12/12 WebKit browser cases pass. The browser cases trigger the
 11th Range comparison, second guided Studio experiment and sixth same-day Guide
 answer from the actual shipping pages; verify the distinct guided layer,
 automatic resumption of each gated action after unlock, no-cost re-pinning of a
@@ -538,6 +538,8 @@ record without making the deferred marketing landing a release dependency.
   revoking team certificates.
 - [ ] The iPhone-only native package receives a valid iOS RevenueCat public SDK
   key at build time; no real key exists in the committed source.
+- [ ] RevenueCat reports a valid Apple In-App Purchase Key and Issuer ID for
+  the App Store app; those credentials never enter Git or the native bundle.
 - [ ] Monthly and Annual grant `pro`, existing Lifetime restores, and a native
   sandbox purchase plus restore are recorded against the candidate build.
 - [ ] Current App Store metadata, privacy declarations, reviewer notes, support

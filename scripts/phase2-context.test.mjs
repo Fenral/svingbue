@@ -168,6 +168,37 @@ test('the guided fixture is deterministic and its visible result comes from solv
   assert.equal(first.result.shape, engine.shape);
 });
 
+test('persisted shot results are rebuilt from bounded inputs before Home can read them', () => {
+  const expected = buildGuidedShot(GUIDED_FIXTURE, FIXED_NOW);
+  const forged = structuredClone(expected);
+  forged.result = {
+    shape: 'forged',
+    carryM: 999999,
+    totalM: -999999,
+    offlineM: 123456,
+    curveM: -123456,
+    startDirectionDeg: 88,
+    launchAngleDeg: -88,
+    faceToPathDeg: 77,
+    // The labels and relationship Home renders are deliberately absent.
+  };
+
+  const storage = new MemoryStorage({
+    [CONTEXT_KEY]: JSON.stringify({
+      ...createDefaultContext(),
+      currentShot: forged,
+    }),
+  });
+
+  const safe = readContext(storage);
+  assert.deepEqual(safe.currentShot?.inputs, expected.inputs);
+  assert.deepEqual(safe.currentShot?.result, expected.result);
+  assert.equal(safe.currentShot?.result.startLabel, 'right');
+  assert.equal(safe.currentShot?.result.curveLabel, 'right');
+  assert.equal(safe.currentShot?.result.finishLabel, 'right');
+  assert.match(safe.currentShot?.result.relationship || '', /^This model starts right/);
+});
+
 test('the first experiment changes exactly one Range input', () => {
   const shot = buildGuidedShot(GUIDED_FIXTURE, FIXED_NOW);
   const experiment = deriveNextExperiment(shot);

@@ -4,12 +4,14 @@ import { spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import {
+  CHANGE_GATE_ROUTES,
   buildCommandPlan,
   classifyChanges,
   containsPotentialSecret,
   inspectTextIntegrity,
   resolveRequestedLevel
 } from './lib/flightglass-change-gate.mjs';
+import { controlInvocation } from './flightglass-change-gate.mjs';
 
 const ids = (assessment) => buildCommandPlan(assessment).map((control) => control.id);
 const cli = fileURLToPath(new URL('./flightglass-change-gate.mjs', import.meta.url));
@@ -17,6 +19,36 @@ const browserSpotSource = readFileSync(
   new URL('./flightglass-browser-spot.mjs', import.meta.url),
   'utf8'
 );
+const releaseWorkflowSource = readFileSync(
+  new URL('../.github/workflows/v1-release-gate.yml', import.meta.url),
+  'utf8'
+);
+
+test('Windows invokes npm controls through cmd instead of spawning npm.cmd directly', () => {
+  assert.deepEqual(controlInvocation({
+    bin: 'npm',
+    args: ['run', 'verify:v1:release']
+  }, {
+    platform: 'win32',
+    environment: { ComSpec: 'C:\\Windows\\System32\\cmd.exe' },
+    nodeExecutable: 'C:\\Program Files\\nodejs\\node.exe'
+  }), {
+    executable: 'C:\\Windows\\System32\\cmd.exe',
+    args: ['/d', '/s', '/c', 'npm.cmd', 'run', 'verify:v1:release']
+  });
+
+  assert.deepEqual(controlInvocation({
+    bin: 'npm',
+    args: ['run', 'verify:v1:release']
+  }, {
+    platform: 'linux',
+    environment: {},
+    nodeExecutable: '/usr/bin/node'
+  }), {
+    executable: 'npm',
+    args: ['run', 'verify:v1:release']
+  });
+});
 
 test('documentation-only changes stay at level A without runtime work', () => {
   const assessment = classifyChanges(['docs/notes.md']);
@@ -32,20 +64,47 @@ test('Home changes receive the focused level A contract and Chromium runtime spo
   assert.deepEqual(ids(assessment), ['home-contract', 'chromium-spot']);
 });
 
-test('shared browser runtime promotes to B and covers the four shipping routes in two engines', () => {
+test('shared browser runtime promotes to B and covers the actual four v1 routes in two engines', () => {
   const assessment = classifyChanges(['sa-p3.css']);
   assert.equal(assessment.level, 'B');
   assert.deepEqual(assessment.routes, [
-    'academy.html', 'geometry.html', 'impact.html', 'index.html'
+    'impact-studio.html', 'impact.html', 'index.html', 'jarvis.html'
   ]);
   assert.deepEqual(ids(assessment), ['home-contract', 'chromium-spot', 'webkit-spot']);
 });
 
-test('one non-Home shipping route is level B and remains focused', () => {
-  const assessment = classifyChanges(['academy.html']);
+test('Studio and Guide changes stay focused on their shipping routes', () => {
+  const assessment = classifyChanges([
+    'assets/impact-studio/turf.png',
+    'impact-studio.html',
+    'jarvis.css',
+    'jarvis.html'
+  ]);
   assert.equal(assessment.level, 'B');
-  assert.deepEqual(assessment.routes, ['academy.html']);
+  assert.deepEqual(assessment.routes, ['impact-studio.html', 'jarvis.html']);
   assert.deepEqual(ids(assessment), ['home-contract', 'chromium-spot', 'webkit-spot']);
+});
+
+test('the v1 route map excludes retired Geometry and Academy surfaces', () => {
+  assert.deepEqual(CHANGE_GATE_ROUTES, [
+    'index.html', 'impact.html', 'impact-studio.html', 'jarvis.html'
+  ]);
+
+  const assessment = classifyChanges([
+    'academy.html',
+    'geometry.html',
+    'geo3d/scene.js'
+  ]);
+  assert.equal(assessment.level, 'B');
+  assert.deepEqual(assessment.routes, []);
+  assert.ok(assessment.tags.includes('non-shipping'));
+  assert.deepEqual(ids(assessment), ['gate-contract']);
+});
+
+test('the protected geometry engine now maps only to shipping Impact Studio', () => {
+  const assessment = classifyChanges(['swing-parameters-and-impact.js']);
+  assert.equal(assessment.level, 'C');
+  assert.deepEqual(assessment.routes, ['impact-studio.html']);
 });
 
 test('control-system changes test the gate without running product browsers', () => {
@@ -70,15 +129,69 @@ test('browser inspection excludes targets covered by a blocking layer', () => {
 test('physics changes are C and use the complete current-main plan once', () => {
   const assessment = classifyChanges(['impact-flight.js']);
   assert.equal(assessment.level, 'C');
-  assert.deepEqual(ids(assessment), [
-    'gate-contract', 'home-contract', 'chromium-spot', 'webkit-spot', 'native-copy'
-  ]);
+  assert.deepEqual(ids(assessment), ['v1-release']);
+  assert.equal(buildCommandPlan(assessment)[0].display, 'npm run verify:v1:release');
 });
 
-test('native and protected release files are always level C', () => {
-  for (const file of ['capacitor.config.ts', 'sa-iap.js', 'codemagic.yaml', 'package-lock.json']) {
+test('payment, native and protected release files are always level C', () => {
+  for (const file of [
+    'capacitor.config.ts',
+    'codemagic.yaml',
+    'package-lock.json',
+    'sa-access.js',
+    'sa-iap.js',
+    'sa-iap-config.js',
+    'sa-paywall.css',
+    'sa-paywall.js',
+    'sa-shots.js',
+    'package.json',
+    'scripts/configure-native-iap.mjs',
+    'scripts/monetization-contract.test.mjs',
+    'scripts/native-release-contract.test.mjs',
+    'scripts/phase4-iap-contract.test.mjs',
+    'scripts/phase4-paywall-browser.test.mjs',
+    'scripts/release-evidence-onboarding.mjs',
+    'scripts/release-evidence-onboarding.test.mjs',
+    'scripts/store-release-contract.test.mjs',
+    'scripts/store-screenshots.mjs'
+  ]) {
     assert.equal(classifyChanges([file]).level, 'C', file);
   }
+});
+
+test('the GitHub release workflow verifies the exact event candidate through the real level-C gate', () => {
+  assert.match(
+    releaseWorkflowSource,
+    /EXPECTED_CANDIDATE_SHA: \$\{\{ github\.event_name == 'pull_request' && github\.event\.pull_request\.head\.sha \|\| github\.sha \}\}/
+  );
+  assert.match(
+    releaseWorkflowSource,
+    /EXPECTED_BASE_SHA: \$\{\{ github\.event_name == 'pull_request' && github\.event\.pull_request\.base\.sha \|\| github\.event_name == 'push' && github\.event\.before \|\| inputs\.base_sha \}\}/
+  );
+  assert.match(releaseWorkflowSource, /workflow_dispatch:[\s\S]*base_sha:[\s\S]*required: true[\s\S]*type: string/);
+  assert.match(releaseWorkflowSource, /ref: \$\{\{ github\.event_name == 'pull_request' && github\.event\.pull_request\.head\.sha \|\| github\.sha \}\}/);
+  assert.match(releaseWorkflowSource, /fetch-depth: 0/);
+  assert.match(releaseWorkflowSource, /actual_candidate="\$\(git rev-parse HEAD\)"/);
+  assert.match(releaseWorkflowSource, /\[\[ "\$actual_candidate" != "\$expected_candidate" \]\]/);
+  assert.match(releaseWorkflowSource, /\[\[ ! "\$base_candidate" =~ \^\[0-9a-f\]\{40\}\$ \|\| "\$base_candidate" =~ \^0\+\$ \]\]/);
+  assert.doesNotMatch(releaseWorkflowSource, /actual_candidate\}\^/);
+  assert.match(releaseWorkflowSource, /git cat-file -e "\$\{base_candidate\}\^\{commit\}"/);
+  assert.match(releaseWorkflowSource, /git fetch --no-tags origin "\$base_candidate"/);
+  assert.match(
+    releaseWorkflowSource,
+    /npm run verify:change -- --base "\$FLIGHTGLASS_BASE_SHA" --level C --no-report/
+  );
+  assert.equal(
+    [...releaseWorkflowSource.matchAll(/npm run verify:change/g)].length,
+    1,
+    'the workflow must invoke the complete risk gate exactly once'
+  );
+  assert.doesNotMatch(releaseWorkflowSource, /npm run test:gate/);
+  assert.doesNotMatch(
+    releaseWorkflowSource,
+    /npm run verify:v1:release/,
+    'the level-C change gate must be the only path to the complete release suite'
+  );
 });
 
 test('generated output evidence never raises the change level', () => {

@@ -85,15 +85,27 @@ Contact: sivertskotvold@gmail.com
       `REVENUECAT_IOS_PUBLIC_SDK_KEY` with the Flightglass public `appl_` key.
       Do not replace committed source placeholders and do not store the value in
       Git.
+- [ ] In App Store Connect, generate or reuse an active In-App Purchase Key.
+      Upload its `.p8` file and Issuer ID to the Flightglass App Store app in
+      RevenueCat, then require RevenueCat to report valid credentials. This is
+      separate from the public `appl_` SDK key and must never enter the app or
+      Git. Capacitor Purchases 11.x requires this store credential.
 - [ ] Configure the RevenueCat entitlement exactly as `pro`.
 - [ ] Configure the current Offering with Monthly and Annual packages using the
       exact protected product IDs. Both must grant `pro`.
 - [ ] Keep `strikearc_pro_lifetime` mapped to `pro` for existing-owner restore,
       but do not expose it as a package for new customers.
-- [ ] Create or verify Monthly and Annual in App Store Connect. Attach the
-      first-time subscription products to the same version submission as the
-      binary. Preserve the legacy Lifetime product.
+- [ ] Create or verify Monthly and Annual in App Store Connect. Put them in one
+      localized subscription group, keep their display names at 30 characters
+      or fewer and descriptions at 45 characters or fewer, and upload an App
+      Review Screenshot from the final native paywall for each product.
+- [ ] For the first auto-renewable subscription review, add the subscription
+      group and both products to the same submission as the v1 binary. Preserve
+      the legacy Lifetime product outside the new-customer Offering.
 - [ ] Confirm Paid Apps Agreement, tax and banking are active.
+- [ ] Complete the age-rating questionnaire, Digital Services Act status,
+      app price/tax category, availability, release mode and export-compliance
+      answer against the exact selected build.
 - [ ] Start the Codemagic `ios-testflight` workflow manually on the exact green
       release commit. Record its build number and successful signing identity.
 - [ ] On a native sandbox build, complete one Monthly or Annual purchase and
@@ -103,11 +115,24 @@ Contact: sivertskotvold@gmail.com
       gate. Automated browser checks do not replace these human/native gates.
 - [ ] Upload the final current-product screenshots in the order documented in
       `docs/store-listing.md`; do not use the legacy StrikeArc/Academy gallery.
+- [ ] Confirm Privacy, Terms and Support all return HTTP 200 over HTTPS. Do not
+      submit while `https://svingbue.vercel.app/support.html` returns 404.
 - [ ] Complete App Privacy answers using the current binary and RevenueCat
       configuration. Recheck every answer if analytics, accounts or a new SDK is
       introduced.
 - [ ] Paste the reviewer-notes block above, select the build, add review contact
       details and provide an active review phone number.
+- [ ] Before merging, require the GitHub `verify` check through branch
+      protection/rulesets, or explicitly record the green run and do not bypass
+      it. A workflow file by itself does not prevent an unverified merge.
+
+## Official owner references
+
+- [Apple required app and version properties](https://developer.apple.com/help/app-store-connect/reference/app-information/required-localizable-and-editable-properties)
+- [Apple first subscription submission](https://developer.apple.com/help/app-store-connect/manage-submissions-to-app-review/submit-an-in-app-purchase)
+- [Apple In-App Purchase metadata and review screenshot](https://developer.apple.com/help/app-store-connect/reference/in-app-purchases-and-subscriptions/in-app-purchase-information/)
+- [RevenueCat Apple In-App Purchase Key](https://www.revenuecat.com/docs/service-credentials/itunesconnect-app-specific-shared-secret/in-app-purchase-key-configuration)
+- [RevenueCat public versus secret API keys](https://www.revenuecat.com/docs/projects/authentication)
 
 ## Expected reviewer paths
 

@@ -45,6 +45,8 @@ Before native Apple submission, also require:
 - a manually triggered, successful iPhone-only archive signed with reusable
   Apple Distribution assets;
 - a valid build-time RevenueCat iOS public SDK key supplied outside Git;
+- an active Apple In-App Purchase Key and Issuer ID validated by RevenueCat,
+  stored only in App Store Connect/RevenueCat and never in the app bundle;
 - Monthly and Annual products in the current Offering granting `pro`;
 - legacy Lifetime still granting `pro` for existing-owner restoration;
 - active agreements, tax and banking;
@@ -72,3 +74,6 @@ boundary and request only the minimum external input.
 
 GitHub, Vercel and store publication are release operations, never shortcuts
 around verification.
+
+The exact candidate, CI and rollback ledger is
+`docs/v1-release-record.md`; PR #18 is its exact-SHA execution record.

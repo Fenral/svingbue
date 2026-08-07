@@ -34,9 +34,10 @@ geometry were not changed.
 
 Fresh evidence:
 
-- onboarding journeys: 9/9 Chromium and 9/9 WebKit;
+- onboarding journeys: 10/10 Chromium and 10/10 WebKit;
 - Studio marker/geometry journeys: 9/9 Chromium and 9/9 WebKit;
-- v1 shipping/native contracts: 48/48, including byte-identical registered
+- v1 shell/context/Guide contracts: 51/51;
+- native release contracts: 7/7, including byte-identical registered
   onboarding captures;
 - automated phone matrix: 4/4 Chromium and 4/4 WebKit;
 - level-C change gate: PASS with zero critical Chromium/WebKit findings;
@@ -65,19 +66,20 @@ continues the exact Range, Guide or Studio action that opened the paywall;
 dismissal returns a denied guided request to free direct Studio. Terms and
 Privacy match these promises.
 
-Fresh evidence: monetization/IAP contracts 20/20; Chromium 7/7; WebKit 7/7.
+Fresh evidence: monetization/IAP contracts 23/23; Chromium 12/12; WebKit 12/12.
 The browser matrix triggers all three gates through their shipping pages and
 covers automatic post-unlock action resumption, no-cost re-pinning of a counted
 setup, keyboard plan selection, successful purchase, cancel, pending, error,
 paywall/Home restore, focus return, axe WCAG A/AA, reduced motion, 375x812 and
 932x430. Supabase and account sync remain out of v1.
 
-Fresh full-repository evidence on 2026-08-07: the protected engine is 72/72
-PASS and the Academy UX/foundation suite is 242/244. The only two failures are
-the already documented D-010 Academy v2 voice debt: caption hashes for changed
-spoken copy and the production inventory expectation of 1546 words versus the
-current 1579. No phase-scoped v1 test fails; a release containing Academy is
-still blocked until those two voice controls are repaired.
+Fresh automated v1 prerequisite evidence on 2026-08-07: 315/315 tests pass in
+207 seconds, including the 72/72 protected engine suite, Chromium and WebKit,
+native/store contracts, the current four-route risk gate and the executable
+human-evidence checker. Academy is excluded from the v1 native allowlist, so
+its historical v2 voice debt is not part of this release gate. Human
+observations, physical-iPhone behavior and real store transactions remain
+separate gates.
 
 This is not production purchase acceptance. `sa-iap.js` deliberately contains
 placeholder public SDK keys, so native checkout remains unavailable until the

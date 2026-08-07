@@ -8,6 +8,21 @@ import sharp from 'sharp';
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const read = relativePath => readFileSync(join(ROOT, relativePath), 'utf8');
 
+function codeBlockAfter(markdown, heading) {
+  const start = markdown.indexOf(heading);
+  assert.notEqual(start, -1, `missing heading: ${heading}`);
+  const remainder = markdown.slice(start + heading.length);
+  const nextHeading = remainder.search(/\r?\n#{1,6}\s/);
+  const headingSection = remainder.slice(0, nextHeading < 0 ? remainder.length : nextHeading);
+  const match = headingSection.match(/```text\r?\n([\s\S]*?)\r?\n```/);
+  assert.ok(match, `missing text block after: ${heading}`);
+  return match[1].trim();
+}
+
+function tableCells(line) {
+  return line.split('|').slice(1, -1).map(cell => cell.trim());
+}
+
 async function assertImage(relativePath, width, height, { opaque = false } = {}) {
   const path = join(ROOT, relativePath);
   assert.equal(existsSync(path), true, `${relativePath} is missing`);
@@ -41,6 +56,61 @@ test('the store pack describes current v1 without claiming Academy or an Android
   assert.match(listing, /Android remains a separate release track/i);
   assert.match(listing, /https:\/\/svingbue\.vercel\.app\/support\.html/);
   assert.doesNotMatch(listing, /24 lessons|Academy is included|signed Android release/i);
+});
+
+test('the release record names the exact evidence sink and a recoverable web baseline', () => {
+  const record = read('docs/v1-release-record.md');
+  assert.match(record, /GitHub PR #18/);
+  assert.match(record, /full 40-character candidate commit/);
+  assert.match(record, /Flightglass v1 release gate/);
+  assert.match(record, /184140a2ff5834f23510662f8c442b8a8c03d36c/);
+  assert.match(record, /dpl_BKJgyzjJWn1QtSFrtgFGKS7b69dv/);
+  assert.match(record, /Do not force-push or reset/);
+  assert.match(record, /SOURCE CANDIDATE IN PROGRESS/);
+  assert.match(record, /Gates that remain external/);
+});
+
+test('Apple metadata fits store field limits and retains every purchase credential gate', () => {
+  const listing = read('docs/store-listing.md');
+  const reviewNotes = read('docs/app-review-notes.md');
+  const phoneChecklist = read('docs/phase2-phone-checklist.md');
+
+  assert.ok([...codeBlockAfter(listing, '### Name')].length <= 30, 'App name exceeds 30 characters');
+  assert.ok([...codeBlockAfter(listing, '### Subtitle')].length <= 30, 'Subtitle exceeds 30 characters');
+  assert.ok([...codeBlockAfter(listing, '### Promotional text')].length <= 170, 'Promotional text exceeds 170 characters');
+  assert.ok([...codeBlockAfter(listing, '### Description')].length <= 4000, 'Description exceeds 4000 characters');
+  assert.ok(Buffer.byteLength(codeBlockAfter(listing, '### Keywords'), 'utf8') <= 100, 'Keywords exceed 100 bytes');
+
+  const listingWithoutNameBlock = listing.replace(
+    /(### Name\r?\n\r?\n)```text\r?\n[\s\S]*?\r?\n```/,
+    '$1',
+  );
+  assert.throws(
+    () => codeBlockAfter(listingWithoutNameBlock, '### Name'),
+    /missing text block/,
+    'a missing Name block must not silently validate the Subtitle block',
+  );
+
+  for (const productId of ['strikearc_pro_monthly', 'strikearc_pro_annual']) {
+    const line = listing.split(/\r?\n/).find(candidate => tableCells(candidate)[0] === `\`${productId}\``);
+    assert.ok(line, `${productId} metadata row is missing`);
+    const [, , displayName, description] = tableCells(line);
+    assert.ok([...displayName].length <= 30, `${productId} display name exceeds 30 characters`);
+    assert.ok([...description].length <= 45, `${productId} description exceeds 45 characters`);
+  }
+
+  for (const source of [listing, reviewNotes, phoneChecklist]) {
+    assert.match(source, /In-App Purchase Key/i);
+    assert.match(source, /Issuer ID/i);
+  }
+  for (const source of [listing, reviewNotes]) {
+    assert.match(source, /App\s+Review Screenshot/i);
+    assert.match(source, /subscription group/i);
+  }
+  assert.match(reviewNotes, /Digital Services Act/i);
+  assert.match(reviewNotes, /support\.html` returns 404/i);
+  assert.match(phoneChecklist, /public Support URL over HTTPS/i);
+  assert.doesNotMatch(phoneChecklist, /Open Support, Privacy and Terms from the native/i);
 });
 
 test('the committed store gallery contains exactly five current upload candidates', async () => {

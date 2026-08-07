@@ -6,6 +6,11 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      base_sha:
+        description: Exact 40-character base commit SHA for the release diff
+        required: true
+        type: string
 
 concurrency:
   group: v1-release-${{ github.workflow }}-${{ github.ref }}
@@ -18,8 +23,50 @@ jobs:
   verify:
     runs-on: ubuntu-latest
     timeout-minutes: 35
+    env:
+      EXPECTED_CANDIDATE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+      EXPECTED_BASE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event_name == 'push' && github.event.before || inputs.base_sha }}
     steps:
-      - uses: actions/checkout@v4
+      - name: Check out the exact release candidate
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+
+      - name: Assert exact release identity and resolve the base
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [[ ! "$EXPECTED_CANDIDATE_SHA" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "Candidate identity is not a full Git commit SHA: $EXPECTED_CANDIDATE_SHA" >&2
+            exit 1
+          fi
+
+          actual_candidate="$(git rev-parse HEAD)"
+          expected_candidate="$(git rev-parse "${EXPECTED_CANDIDATE_SHA}^{commit}")"
+          if [[ "$actual_candidate" != "$expected_candidate" ]]; then
+            echo "Checked-out HEAD $actual_candidate does not equal expected candidate $expected_candidate" >&2
+            exit 1
+          fi
+
+          base_candidate="$EXPECTED_BASE_SHA"
+          if [[ ! "$base_candidate" =~ ^[0-9a-f]{40}$ || "$base_candidate" =~ ^0+$ ]]; then
+            echo "Release base must be a non-zero, full Git commit SHA: $base_candidate" >&2
+            exit 1
+          fi
+          if ! git cat-file -e "${base_candidate}^{commit}" 2>/dev/null; then
+            git fetch --no-tags origin "$base_candidate"
+          fi
+          resolved_base="$(git rev-parse "${base_candidate}^{commit}")"
+          if [[ "$resolved_base" == "$actual_candidate" ]]; then
+            echo "Release base must differ from the candidate commit" >&2
+            exit 1
+          fi
+
+          echo "FLIGHTGLASS_CANDIDATE_SHA=$actual_candidate" >> "$GITHUB_ENV"
+          echo "FLIGHTGLASS_BASE_SHA=$resolved_base" >> "$GITHUB_ENV"
+          echo "Verified exact candidate $actual_candidate against base $resolved_base"
 
       - uses: actions/setup-node@v4
         with:
@@ -34,8 +81,8 @@ jobs:
       - name: Install deterministic browser engines
         run: ./tools/node_modules/.bin/playwright-core install --with-deps chromium webkit
 
-      - name: Verify the complete shipping v1
-        run: npm run verify:v1:release
+      - name: Verify the exact candidate through the complete risk gate
+        run: npm run verify:change -- --base "$FLIGHTGLASS_BASE_SHA" --level C --no-report
 
       - name: Audit production dependencies
         run: npm audit --omit=dev --audit-level=high

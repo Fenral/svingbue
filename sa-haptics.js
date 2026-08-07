@@ -5,9 +5,10 @@
    Per Apple HIG: haptics mark physical events and detents, never decoration.
 
    Platform:
-     • window.Capacitor?.isNativePlatform() → lazy dynamic-import
-       '@capacitor/haptics' and call the real plugin (ImpactStyle /
-       NotificationType mapping).
+     • window.Capacitor?.isNativePlatform() → resolve Haptics through
+       Capacitor's native-injected registerPlugin bridge. The static www
+       payload has no bundler, so this module intentionally has no bare npm
+       imports.
      • otherwise → NO-OP that pushes {t, kind} into a ring buffer (sa._log,
        max 50) + console.debug('[haptic]', kind). NEVER calls navigator.vibrate.
      • Never throws if Capacitor is absent / not ready.
@@ -36,6 +37,42 @@ const STORAGE_KEY = 'sa_haptics';
 const MIN_TICK_MS = 70;
 const BAND_SUPPRESS_MS = 120;
 const LOG_MAX = 50;
+const IMPACT_STYLE = Object.freeze({
+  light: 'LIGHT',
+  medium: 'MEDIUM',
+  heavy: 'HEAVY',
+});
+const NOTIFICATION_TYPE = Object.freeze({
+  success: 'SUCCESS',
+  warning: 'WARNING',
+  error: 'ERROR',
+});
+
+function capacitorBridge() {
+  try {
+    return typeof window !== 'undefined' ? window.Capacitor : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+export function resolveHapticsPlugin(capacitor = capacitorBridge()) {
+  if (!capacitor) return null;
+  try {
+    const registered = capacitor.Plugins && capacitor.Plugins.Haptics;
+    if (registered) return registered;
+    if (typeof capacitor.isPluginAvailable === 'function'
+        && !capacitor.isPluginAvailable('Haptics')) {
+      return null;
+    }
+    if (typeof capacitor.registerPlugin === 'function') {
+      return capacitor.registerPlugin('Haptics') || null;
+    }
+  } catch (e) {
+    return null;
+  }
+  return null;
+}
 
 function safeGetItem(key) {
   try { return window.localStorage.getItem(key); } catch (e) { return null; }
@@ -49,8 +86,7 @@ class SAHaptics {
     const stored = safeGetItem(STORAGE_KEY);
     this.enabled = stored === null ? true : stored === '1';
     this._log = [];               // ring buffer, non-native no-op path
-    this._nativeMod = null;       // cached @capacitor/haptics module (lazy)
-    this._nativeLoading = null;   // in-flight import promise
+    this._nativePlugin = null;    // cached native-injected Capacitor proxy
     this._selectionOpen = false;  // selectionStart/selectionEnd session guard
     this._lastTick = Object.create(null);   // key -> timestamp of last tick
     this._lastBand = Object.create(null);   // key -> timestamp of last band pulse
@@ -63,17 +99,17 @@ class SAHaptics {
 
   // ── platform detection / native bridge ──────────────────────────────────
   _isNative() {
-    try { return !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()); }
+    try {
+      const capacitor = capacitorBridge();
+      return !!(capacitor && capacitor.isNativePlatform && capacitor.isNativePlatform());
+    }
     catch (e) { return false; }
   }
 
-  async _loadNative() {
-    if (this._nativeMod) return this._nativeMod;
-    if (this._nativeLoading) return this._nativeLoading;
-    this._nativeLoading = import('@capacitor/haptics')
-      .then(mod => { this._nativeMod = mod; return mod; })
-      .catch(() => null);
-    return this._nativeLoading;
+  _loadNative() {
+    if (this._nativePlugin) return this._nativePlugin;
+    this._nativePlugin = resolveHapticsPlugin();
+    return this._nativePlugin;
   }
 
   // logs into the ring buffer + console.debug (non-native path)
@@ -86,49 +122,41 @@ class SAHaptics {
   // ── core dispatch: never throws, never touches navigator.vibrate ───────
   async _fireImpact(style) {
     if (!this.enabled) return;
-    if (this._isNative()) {
-      try {
-        const mod = await this._loadNative();
-        if (mod && mod.Haptics) {
-          const map = { light: 'Light', medium: 'Medium', heavy: 'Heavy' };
-          const ImpactStyle = mod.ImpactStyle || {};
-          await mod.Haptics.impact({ style: ImpactStyle[map[style]] ?? map[style] });
-          return;
-        }
-      } catch (e) { /* never throw */ }
+    if (!this._isNative()) {
+      this._log_('impact:' + style);
+      return;
     }
-    this._log_('impact:' + style);
+    const plugin = this._loadNative();
+    if (!plugin || typeof plugin.impact !== 'function') return;
+    try {
+      await plugin.impact({ style: IMPACT_STYLE[style] });
+    } catch (e) { /* best-effort physical feedback: never throw */ }
   }
 
   async _fireNotify(type) {
     if (!this.enabled) return;
-    if (this._isNative()) {
-      try {
-        const mod = await this._loadNative();
-        if (mod && mod.Haptics) {
-          const map = { success: 'Success', warning: 'Warning', error: 'Error' };
-          const NotificationType = mod.NotificationType || {};
-          await mod.Haptics.notification({ type: NotificationType[map[type]] ?? map[type] });
-          return;
-        }
-      } catch (e) { /* never throw */ }
+    if (!this._isNative()) {
+      this._log_('notify:' + type);
+      return;
     }
-    this._log_('notify:' + type);
+    const plugin = this._loadNative();
+    if (!plugin || typeof plugin.notification !== 'function') return;
+    try {
+      await plugin.notification({ type: NOTIFICATION_TYPE[type] });
+    } catch (e) { /* best-effort physical feedback: never throw */ }
   }
 
   async _fireSelection(kind) {
     if (!this.enabled) return;
-    if (this._isNative()) {
-      try {
-        const mod = await this._loadNative();
-        if (mod && mod.Haptics) {
-          if (kind === 'selectionStart' && mod.Haptics.selectionStart) { await mod.Haptics.selectionStart(); return; }
-          if (kind === 'selectionChanged' && mod.Haptics.selectionChanged) { await mod.Haptics.selectionChanged(); return; }
-          if (kind === 'selectionEnd' && mod.Haptics.selectionEnd) { await mod.Haptics.selectionEnd(); return; }
-        }
-      } catch (e) { /* never throw */ }
+    if (!this._isNative()) {
+      this._log_(kind);
+      return;
     }
-    this._log_(kind);
+    const plugin = this._loadNative();
+    if (!plugin || typeof plugin[kind] !== 'function') return;
+    try {
+      await plugin[kind]();
+    } catch (e) { /* best-effort physical feedback: never throw */ }
   }
 
   // ── public API ───────────────────────────────────────────────────────────

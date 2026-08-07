@@ -195,11 +195,25 @@ test('generated iOS assets are verified against the committed launch sources', a
   }
 });
 
-test('GitHub runs the full v1 release gate before main can be treated as releasable', () => {
+test('GitHub runs the exact candidate through the full risk gate without fabricating human evidence', () => {
   const workflow = read('.github/workflows/v1-release-gate.yml');
   const pkg = JSON.parse(read('package.json'));
   assert.match(workflow, /pull_request:[\s\S]*branches: \[main\]/);
-  assert.match(workflow, /npm run verify:v1:release/);
+  assert.match(workflow, /pull_request\.head\.sha \|\| github\.sha/);
+  assert.match(workflow, /workflow_dispatch:[\s\S]*base_sha:[\s\S]*required: true[\s\S]*type: string/);
+  assert.match(workflow, /pull_request\.base\.sha \|\| github\.event_name == 'push' && github\.event\.before \|\| inputs\.base_sha/);
+  assert.match(workflow, /ref: \$\{\{ github\.event_name == 'pull_request' && github\.event\.pull_request\.head\.sha \|\| github\.sha \}\}/);
+  assert.match(workflow, /fetch-depth: 0/);
+  assert.match(workflow, /actual_candidate="\$\(git rev-parse HEAD\)"/);
+  assert.match(workflow, /\[\[ "\$actual_candidate" != "\$expected_candidate" \]\]/);
+  assert.match(workflow, /\[\[ ! "\$base_candidate" =~ \^\[0-9a-f\]\{40\}\$ \|\| "\$base_candidate" =~ \^0\+\$ \]\]/);
+  assert.doesNotMatch(workflow, /actual_candidate\}\^/);
+  assert.match(workflow, /git fetch --no-tags origin "\$base_candidate"/);
+  assert.match(workflow, /FLIGHTGLASS_BASE_SHA=\$resolved_base/);
+  assert.match(workflow, /npm run verify:change -- --base "\$FLIGHTGLASS_BASE_SHA" --level C --no-report/);
+  assert.equal([...workflow.matchAll(/npm run verify:change/g)].length, 1);
+  assert.doesNotMatch(workflow, /npm run test:gate/);
+  assert.doesNotMatch(workflow, /npm run verify:v1:release/);
   assert.match(workflow, /playwright-core install --with-deps chromium webkit/);
 
   const release = pkg.scripts['verify:v1:release'];
@@ -214,4 +228,25 @@ test('GitHub runs the full v1 release gate before main can be treated as releasa
     'test:phase4:chromium',
     'test:phase4:webkit',
   ]) assert.match(release, new RegExp(required.replaceAll(':', '\\:')));
+
+  const source = pkg.scripts['verify:v1:source'];
+  for (const required of [
+    'test:gate',
+    'test:native-release',
+    'test:store-release',
+    'test:release-evidence',
+  ]) assert.match(source, new RegExp(required.replaceAll(':', '\\:')));
+  assert.equal(
+    pkg.scripts['verify:v1:onboarding-evidence'],
+    'node scripts/release-evidence-onboarding.mjs',
+  );
+  assert.doesNotMatch(
+    release,
+    /verify:v1:onboarding-evidence/,
+    'automated CI must not imply that pending human observations passed',
+  );
+
+  const nativeGuide = read('NATIVE.md');
+  assert.match(nativeGuide, /Geometry\/`geo3d`[\s\S]*denied/);
+  assert.doesNotMatch(nativeGuide, /`vendor\/`, `assets\/`, `geo3d\/`/);
 });

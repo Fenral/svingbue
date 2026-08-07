@@ -31,9 +31,10 @@ changed.
 
 Fresh automated evidence:
 
-- onboarding: 9/9 Chromium and 9/9 WebKit;
+- onboarding: 10/10 Chromium and 10/10 WebKit;
 - Studio marker/geometry: 9/9 Chromium and 9/9 WebKit;
-- v1 shipping/native contracts: 48/48;
+- v1 shell/context/Guide contracts: 51/51;
+- native release contracts: 7/7;
 - automated phone matrix: 4/4 Chromium and 4/4 WebKit;
 - level-C change gate: PASS, zero critical Chromium/WebKit findings;
 - the three onboarding captures are registered and byte-identical in the
@@ -67,19 +68,20 @@ the shipping modal and design-system feature baseline is explicit.
 
 Fresh evidence:
 
-- monetization and IAP contracts: 20/20;
-- Chromium purchase/gate cases: 7/7;
-- WebKit purchase/gate cases: 7/7;
+- monetization and IAP contracts: 23/23;
+- Chromium purchase/gate cases: 12/12;
+- WebKit purchase/gate cases: 12/12;
 - actual Range, Studio and Guide gates, automatic post-purchase action resume,
   no-cost re-pinning of a counted Range setup, successful keyboard purchase,
   cancel/pending/error, Home/paywall restore, focus return, axe WCAG A/AA,
   reduced motion and both paywall orientations are covered.
 
-Fresh full-repository evidence on 2026-08-07: the protected engine is 72/72
-PASS and the Academy UX/foundation suite is 242/244. The only two failures are
-the D-010 Academy v2 voice-pack caption-hash mismatch and the production word
-inventory expectation of 1546 versus the current 1579. No phase-scoped v1 test
-fails; any release that includes Academy remains blocked on those controls.
+Fresh automated v1 prerequisite evidence on 2026-08-07: 315/315 tests pass in
+207 seconds, including the 72/72 protected engine suite, Chromium and WebKit,
+native/store contracts, the current four-route risk gate and the executable
+human-evidence checker. Academy is excluded from the v1 package, so its
+historical v2 voice debt is not part of this release gate. Human observations,
+physical-iPhone behavior and real store transactions remain separate gates.
 
 Do not declare `PHASE 4 DONE`. The real RevenueCat public keys are still
 placeholders. A current Monthly/Annual offering granting `pro`, store product

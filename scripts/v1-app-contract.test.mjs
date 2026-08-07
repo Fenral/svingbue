@@ -108,22 +108,34 @@ function filesBelow(directory) {
   });
 }
 
-function relativeModuleSpecifiers(source) {
+function moduleSpecifiers(source) {
   const specifiers = new Set();
   for (const pattern of [
-    /(?:import|export)\s+(?:[^'";]*?\sfrom\s*)?['"](\.[^'"]+)['"]/g,
-    /import\s*\(\s*['"](\.[^'"]+)['"]\s*\)/g,
+    /(?:import|export)\s+(?:[^'";]*?\sfrom\s*)?['"]([^'"]+)['"]/g,
+    /import\s*\(\s*['"]([^'"]+)['"]\s*\)/g,
   ]) {
     for (const match of source.matchAll(pattern)) specifiers.add(match[1]);
   }
   return [...specifiers];
 }
 
+function isBareModuleSpecifier(specifier) {
+  return !specifier.startsWith('.')
+    && !specifier.startsWith('/')
+    && !/^[a-z][a-z\d+.-]*:/i.test(specifier);
+}
+
 function assertNativeModuleClosure() {
   const wwwRoot = resolve(WWW);
   for (const importer of filesBelow(WWW).filter(path => path.endsWith('.js'))) {
     const source = readFileSync(importer, 'utf8');
-    for (const specifier of relativeModuleSpecifiers(source)) {
+    const specifiers = moduleSpecifiers(source);
+    for (const specifier of specifiers.filter(isBareModuleSpecifier)) {
+      assert.fail(
+        `${relative(wwwRoot, importer)} has a browser-unresolvable bare import: ${specifier}`,
+      );
+    }
+    for (const specifier of specifiers.filter(value => value.startsWith('.'))) {
       const requested = resolve(dirname(importer), specifier.split(/[?#]/, 1)[0]);
       assert.ok(
         requested === wwwRoot || requested.startsWith(`${wwwRoot}\\`) || requested.startsWith(`${wwwRoot}/`),

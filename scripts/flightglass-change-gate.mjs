@@ -196,16 +196,28 @@ function verifyProtectedIdentifiers() {
   }
 }
 
-function executableFor(bin) {
-  if (bin === 'node') return process.execPath;
-  if (bin === 'npm') return process.platform === 'win32' ? 'npm.cmd' : 'npm';
-  return bin;
+export function controlInvocation(item, {
+  platform = process.platform,
+  environment = process.env,
+  nodeExecutable = process.execPath
+} = {}) {
+  if (item.bin === 'node') {
+    return { executable: nodeExecutable, args: item.args };
+  }
+  if (item.bin === 'npm' && platform === 'win32') {
+    return {
+      executable: environment.ComSpec || 'cmd.exe',
+      args: ['/d', '/s', '/c', 'npm.cmd', ...item.args]
+    };
+  }
+  return { executable: item.bin, args: item.args };
 }
 
 function executeControl(item, level) {
   const started = performance.now();
   console.log(`\n[${level}] ${item.label}\n    ${item.display}`);
-  const result = spawnSync(executableFor(item.bin), item.args, {
+  const invocation = controlInvocation(item);
+  const result = spawnSync(invocation.executable, invocation.args, {
     cwd: ROOT,
     stdio: 'inherit',
     env: { ...process.env, FG_CHANGE_GATE_LEVEL: level }
@@ -345,7 +357,10 @@ async function main() {
   if (status !== 'PASS') process.exitCode = 1;
 }
 
-main().catch((error) => {
-  console.error(error.stack || error.message || error);
-  process.exit(1);
-});
+const currentFile = fileURLToPath(import.meta.url);
+if (process.argv[1] && resolve(process.argv[1]) === resolve(currentFile)) {
+  main().catch((error) => {
+    console.error(error.stack || error.message || error);
+    process.exit(1);
+  });
+}

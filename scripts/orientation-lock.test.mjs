@@ -2,8 +2,8 @@
 //
 // Acceptance: the app is portrait by default; geometry is the one landscape
 // screen. This is enforced at three layers, all asserted here:
-//   1. A shared runtime module (sa-orientation.js) wraps
-//      @capacitor/screen-orientation, guarded so the web build is a no-op.
+//   1. Shared runtime modules resolve native plugins through Capacitor's
+//      injected bridge, guarded so the web build is a no-op.
 //   2. Each shipping page locks its own orientation on load
 //      (index/impact/academy → portrait, geometry → landscape).
 //   3. Portrait pages carry a web fallback rotate-hint (browsers cannot be
@@ -32,17 +32,183 @@ const read = (rel) => readFileSync(join(ROOT, rel), 'utf8');
 
 const PORTRAIT_PAGES = ['index.html', 'impact.html', 'academy.html'];
 
+function moduleSpecifiers(source) {
+  const specifiers = [];
+  for (const pattern of [
+    /\b(?:import|export)\s+(?:[^'";]*?\sfrom\s*)?['"]([^'"]+)['"]/g,
+    /\bimport\s*\(\s*['"]([^'"]+)['"]\s*\)/g,
+  ]) {
+    for (const match of source.matchAll(pattern)) specifiers.push(match[1]);
+  }
+  return specifiers;
+}
+
+async function importSource(relativePath, { withoutAppShell = false } = {}) {
+  let source = read(relativePath);
+  if (withoutAppShell) source = source.replace("import './sa-app-shell.js';", '');
+  source += `\n//# sourceURL=${relativePath}?test=${Date.now()}-${Math.random()}`;
+  return import(`data:text/javascript;base64,${Buffer.from(source).toString('base64')}`);
+}
+
+async function withWindow(mockWindow, run) {
+  const hadWindow = Object.prototype.hasOwnProperty.call(globalThis, 'window');
+  const previousWindow = globalThis.window;
+  globalThis.window = mockWindow;
+  try {
+    return await run();
+  } finally {
+    if (hadWindow) globalThis.window = previousWindow;
+    else delete globalThis.window;
+  }
+}
+
 // ── Layer 1: shared runtime module ────────────────────────────────────────
-test('sa-orientation.js wraps @capacitor/screen-orientation and is web-safe', () => {
+test('shipping native helpers contain no browser-unresolvable bare imports', () => {
+  for (const file of ['sa-orientation.js', 'sa-haptics.js']) {
+    const specifiers = moduleSpecifiers(read(file));
+    assert.ok(
+      specifiers.every(specifier => specifier.startsWith('./') || specifier.startsWith('../') || specifier.startsWith('/')),
+      `${file} contains a bare browser import: ${specifiers.join(', ')}`,
+    );
+  }
+});
+
+test('sa-orientation.js resolves ScreenOrientation from the native-injected bridge', () => {
   const src = read('sa-orientation.js');
-  assert.match(src, /@capacitor\/screen-orientation/, 'must target the screen-orientation plugin');
+  assert.match(src, /registerPlugin\('ScreenOrientation'\)/, 'must target the ScreenOrientation plugin');
   assert.match(src, /isNativePlatform/, 'must guard on native so the web build is a no-op');
   assert.match(src, /export\s+(?:const|function|async function)\s+lockPortrait/, 'exports lockPortrait');
   assert.match(src, /export\s+(?:const|function|async function)\s+lockLandscape/, 'exports lockLandscape');
-  assert.match(src, /\.lock\(\s*\{\s*orientation/, 'calls ScreenOrientation.lock({ orientation })');
+  assert.match(src, /plugin\.lock\(\s*\{\s*orientation/, 'calls ScreenOrientation.lock({ orientation })');
+});
+
+test('native ScreenOrientation proxy receives portrait and landscape locks', async () => {
+  const registrations = [];
+  const availabilityChecks = [];
+  const calls = [];
+  const screenOrientation = {
+    async lock(options) { calls.push(options); },
+  };
+  const Capacitor = {
+    isNativePlatform: () => true,
+    isPluginAvailable(name) {
+      availabilityChecks.push(name);
+      return true;
+    },
+    registerPlugin(name) {
+      registrations.push(name);
+      return screenOrientation;
+    },
+  };
+
+  await withWindow({ Capacitor }, async () => {
+    const orientation = await importSource('sa-orientation.js', { withoutAppShell: true });
+    await orientation.lockPortrait();
+    await orientation.lockLandscape();
+  });
+
+  assert.deepEqual(availabilityChecks, ['ScreenOrientation']);
+  assert.deepEqual(registrations, ['ScreenOrientation'], 'native proxy is registered once and cached');
+  assert.deepEqual(calls, [
+    { orientation: 'portrait' },
+    { orientation: 'landscape' },
+  ]);
+});
+
+test('native Haptics proxy receives canonical Capacitor enum strings', async () => {
+  const registrations = [];
+  const availabilityChecks = [];
+  const calls = [];
+  const hapticsPlugin = {
+    async impact(options) { calls.push(['impact', options]); },
+    async notification(options) { calls.push(['notification', options]); },
+    async selectionStart() { calls.push(['selectionStart']); },
+    async selectionChanged() { calls.push(['selectionChanged']); },
+    async selectionEnd() { calls.push(['selectionEnd']); },
+  };
+  const Capacitor = {
+    isNativePlatform: () => true,
+    isPluginAvailable(name) {
+      availabilityChecks.push(name);
+      return true;
+    },
+    registerPlugin(name) {
+      registrations.push(name);
+      return hapticsPlugin;
+    },
+  };
+  const localStorage = {
+    getItem: () => null,
+    setItem: () => {},
+  };
+
+  await withWindow({ Capacitor, localStorage }, async () => {
+    const { default: haptics } = await importSource('sa-haptics.js');
+    haptics.impact('light');
+    haptics.impact('medium');
+    haptics.impact('heavy');
+    haptics.notify('success');
+    haptics.notify('warning');
+    haptics.notify('error');
+    haptics.selectionStart();
+    haptics.selectionChanged();
+    haptics.selectionEnd();
+    await Promise.resolve();
+  });
+
+  assert.deepEqual(availabilityChecks, ['Haptics']);
+  assert.deepEqual(registrations, ['Haptics'], 'native proxy is registered once and cached');
+  assert.deepEqual(calls, [
+    ['impact', { style: 'LIGHT' }],
+    ['impact', { style: 'MEDIUM' }],
+    ['impact', { style: 'HEAVY' }],
+    ['notification', { type: 'SUCCESS' }],
+    ['notification', { type: 'WARNING' }],
+    ['notification', { type: 'ERROR' }],
+    ['selectionStart'],
+    ['selectionChanged'],
+    ['selectionEnd'],
+  ]);
 });
 
 // ── Layer 2 + 3: per-screen wiring + web fallback ─────────────────────────
+test('web helpers remain honest no-ops and never register native plugins', async () => {
+  const registrations = [];
+  const debugCalls = [];
+  const originalDebug = console.debug;
+  let haptics;
+  const Capacitor = {
+    isNativePlatform: () => false,
+    registerPlugin(name) { registrations.push(name); },
+  };
+  const localStorage = {
+    getItem: () => null,
+    setItem: () => {},
+  };
+
+  console.debug = (...args) => debugCalls.push(args);
+  try {
+    await withWindow({ Capacitor, localStorage }, async () => {
+      const orientation = await importSource('sa-orientation.js', { withoutAppShell: true });
+      await orientation.lockPortrait();
+      await orientation.lockLandscape();
+      ({ default: haptics } = await importSource('sa-haptics.js'));
+      await haptics._fireImpact('light');
+      await haptics._fireNotify('success');
+      await haptics._fireSelection('selectionChanged');
+    });
+  } finally {
+    console.debug = originalDebug;
+  }
+
+  assert.deepEqual(registrations, []);
+  assert.deepEqual(
+    haptics._log.map(entry => entry.kind),
+    ['impact:light', 'notify:success', 'selectionChanged'],
+  );
+  assert.equal(debugCalls.length, 3, 'web no-ops remain observable to the test harness');
+});
+
 for (const page of PORTRAIT_PAGES) {
   test(`${page} locks portrait on load`, () => {
     const src = read(page);

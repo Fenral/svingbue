@@ -30,12 +30,12 @@ the v1 app:
 - Impact Studio: `impact-studio.html`
 - Flightglass Guide: `jarvis.html`
 - Terms and Privacy
-- required top-level modules/styles and the `vendor/`, `assets/`, `geo3d/`
-  directories
+- required top-level modules/styles plus an explicit allowlist from `vendor/`
+  and `assets/`
 
-Academy v2, historical mocks and development tooling are denied. `www/` is
-gitignored and recreated on every run. Capacitor points only to `www/`; Vercel
-continues to serve the repository root.
+Academy v2, Geometry/`geo3d`, Three.js, historical mocks and development
+tooling are denied. `www/` is gitignored and recreated on every run. Capacitor
+points only to `www/`; Vercel continues to serve the repository root.
 
 `support.html` is the public support destination for App Store and Google Play
 listings. It is web-only and deliberately stays outside the native payload;
@@ -67,6 +67,14 @@ The committed source intentionally contains placeholders in
 `sa-iap-config.js`. Public RevenueCat SDK keys are application identifiers, not
 secret API credentials, but a native build must still fail closed if the
 correct project key is absent.
+
+The public SDK key is not the Apple store credential. Flightglass currently
+uses Capacitor Purchases 11.x, so the RevenueCat App Store app also requires an
+active Apple In-App Purchase Key (`.p8`) plus Issuer ID. Generate or reuse the
+key under App Store Connect → Users and Access → Integrations → In-App
+Purchase, upload it only in RevenueCat, and require RevenueCat's credential
+validator to show valid. Never copy that `.p8` key into Codemagic variables,
+the app bundle or Git.
 
 For iOS:
 
@@ -121,6 +129,7 @@ Start `ios-testflight` in Codemagic only after all of these are true:
 
 - the GitHub release gate is green on the exact commit;
 - `revenuecat-flightglass` supplies a valid iOS public SDK key;
+- RevenueCat validates the Apple In-App Purchase Key and Issuer ID;
 - Monthly and Annual exist in App Store Connect and the current RevenueCat
   Offering grants `pro`;
 - legacy Lifetime still grants `pro` for existing-owner restore;
@@ -162,3 +171,4 @@ those external assets should be inferred from a green debug build.
 | `resources/icon.png`, `resources/splash.png` | Native icon and launch sources |
 | `codemagic.yaml` | Manual iOS verification, signing, archive and TestFlight workflow |
 | `docs/store-listing.md` | Store copy, privacy declarations and external checklist |
+| `docs/v1-release-record.md` | Exact-candidate evidence contract, rollback baseline and open external gates |

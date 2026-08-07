@@ -64,26 +64,26 @@ export function isRangeInputs(value) {
   ));
 }
 
-function validResult(value) {
-  return isObject(value)
-    && typeof value.shape === 'string'
-    && finite(value.carryM)
-    && finite(value.totalM)
-    && finite(value.offlineM)
-    && finite(value.curveM)
-    && finite(value.startDirectionDeg)
-    && finite(value.launchAngleDeg)
-    && finite(value.faceToPathDeg);
-}
-
 function validShot(value) {
   return isObject(value)
     && typeof value.id === 'string'
     && typeof value.createdAt === 'string'
     && value.source === 'guided-onboarding'
     && value.modelled === true
-    && isRangeInputs(value.inputs)
-    && validResult(value.result);
+    && isRangeInputs(value.inputs);
+}
+
+function normalizeShot(value) {
+  if (!validShot(value)) return null;
+  const shot = cloneJSON(value);
+  if (!shot) return null;
+
+  try {
+    shot.result = resultForInputs(shot.inputs);
+    return shot;
+  } catch (_) {
+    return null;
+  }
 }
 
 function validExperiment(value) {
@@ -159,7 +159,7 @@ export function validateContext(value) {
   const onboarding = isObject(value.onboarding) ? value.onboarding : {};
   const jarvis = isObject(value.jarvis) ? value.jarvis : {};
   const rawStep = Number(onboarding.step);
-  const currentShot = validShot(value.currentShot) ? cloneJSON(value.currentShot) : null;
+  const currentShot = normalizeShot(value.currentShot);
   const lastExperiment = currentShot
     && validExperiment(value.lastExperiment)
     && value.lastExperiment.sourceShotId === currentShot.id
@@ -290,6 +290,24 @@ function relationshipFor(engine) {
     + `The face is ${gap}, so it ${curveClause}.`;
 }
 
+function resultForInputs(inputs) {
+  const engine = solveFlight(inputs);
+  return {
+    shape: engine.shape,
+    carryM: roundOne(engine.carry * YARD_TO_METRE),
+    totalM: roundOne(engine.total * YARD_TO_METRE),
+    offlineM: roundOne(engine.offline * YARD_TO_METRE),
+    curveM: roundOne(engine.curve * YARD_TO_METRE),
+    startDirectionDeg: roundOne(engine.startDirection),
+    launchAngleDeg: roundOne(engine.launchAngle),
+    faceToPathDeg: roundOne(engine.faceToPath),
+    startLabel: sideLabel(engine.startDirection, 1),
+    curveLabel: sideLabel(engine.curve * YARD_TO_METRE, 0.75),
+    finishLabel: sideLabel(engine.offline * YARD_TO_METRE, 0.75),
+    relationship: relationshipFor(engine),
+  };
+}
+
 export function buildGuidedShot(selections, now = Date.now()) {
   const club = requireChoice(selections?.club, CLUBS, 'club');
   const start = requireChoice(selections?.start, STARTS, 'start');
@@ -306,23 +324,9 @@ export function buildGuidedShot(selections, now = Date.now()) {
     clubSpeed: preset.clubSpeed,
     club: preset.club,
   };
-  const engine = solveFlight(inputs);
   const timestamp = Number.isFinite(Number(now)) ? Number(now) : Date.now();
   const createdAt = new Date(timestamp).toISOString();
-  const result = {
-    shape: engine.shape,
-    carryM: roundOne(engine.carry * YARD_TO_METRE),
-    totalM: roundOne(engine.total * YARD_TO_METRE),
-    offlineM: roundOne(engine.offline * YARD_TO_METRE),
-    curveM: roundOne(engine.curve * YARD_TO_METRE),
-    startDirectionDeg: roundOne(engine.startDirection),
-    launchAngleDeg: roundOne(engine.launchAngle),
-    faceToPathDeg: roundOne(engine.faceToPath),
-    startLabel: sideLabel(engine.startDirection, 1),
-    curveLabel: sideLabel(engine.curve * YARD_TO_METRE, 0.75),
-    finishLabel: sideLabel(engine.offline * YARD_TO_METRE, 0.75),
-    relationship: relationshipFor(engine),
-  };
+  const result = resultForInputs(inputs);
 
   return {
     id: `guided-${timestamp.toString(36)}-${club}-${start}-${curve}-${flight}`,
@@ -336,11 +340,12 @@ export function buildGuidedShot(selections, now = Date.now()) {
 }
 
 export function deriveNextExperiment(shot) {
-  if (!validShot(shot)) throw new TypeError('A valid guided shot is required');
+  const safeShot = normalizeShot(shot);
+  if (!safeShot) throw new TypeError('A valid guided shot is required');
 
-  const inputs = { ...shot.inputs };
-  const start = shot.result.startDirectionDeg;
-  const gap = shot.result.faceToPathDeg;
+  const inputs = { ...safeShot.inputs };
+  const start = safeShot.result.startDirectionDeg;
+  const gap = safeShot.result.faceToPathDeg;
   let delta;
   let instruction;
 
@@ -357,8 +362,8 @@ export function deriveNextExperiment(shot) {
 
   inputs.faceAngle = roundOne(inputs.faceAngle + delta);
   return {
-    id: `${shot.id}:face:${inputs.faceAngle}`,
-    sourceShotId: shot.id,
+    id: `${safeShot.id}:face:${inputs.faceAngle}`,
+    sourceShotId: safeShot.id,
     changeKey: 'faceAngle',
     delta: roundOne(delta),
     instruction,

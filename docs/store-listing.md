@@ -89,6 +89,10 @@ Flightglass v1 introduces the live Outcome model, Impact Studio, the guided Flig
 | Secondary category | Education | Optional; confirm positioning |
 | Content rights | Does not contain third-party content | Reconfirm screenshot/assets ownership |
 | Age rating | Complete the questionnaire truthfully; no mature content exists in the current app | Store computes the rating |
+| Digital Services Act status | Declare trader/non-trader status truthfully | Required account-level decision for EU distribution |
+| App price / tax category | Free app; configure the correct tax category | Confirm before review |
+| Availability / release mode | Select countries and manual, automatic or phased release deliberately | Owner decision before submission |
+| Export compliance | Match the binary's non-exempt-encryption declaration | Confirm on the selected build |
 | Copyright | `© 2026 Sivert Skotvold` | Confirm preferred legal display |
 | Marketing URL | Leave blank for v1 | Landing page is deferred |
 
@@ -102,12 +106,41 @@ metadata. The visible app paywall must show the localized StoreKit prices.
 
 | Product | Reference name | Display name | Description |
 |---|---|---|---|
-| `strikearc_pro_monthly` | Flightglass Pro Monthly | Flightglass Pro Monthly | Unlimited Outcome comparisons and guided Guide/Studio exploration for one month. Renews automatically until cancelled. |
-| `strikearc_pro_annual` | Flightglass Pro Annual | Flightglass Pro Annual | Unlimited Outcome comparisons and guided Guide/Studio exploration for one year. Renews automatically until cancelled. |
+| `strikearc_pro_monthly` | Flightglass Pro Monthly | Flightglass Pro Monthly | Unlimited Outcome, Guide and Studio access. |
+| `strikearc_pro_annual` | Flightglass Pro Annual | Flightglass Pro Annual | Unlimited Outcome, Guide and Studio access. |
 | `strikearc_pro_lifetime` | Legacy Flightglass Pro Lifetime | Keep the existing customer-facing metadata | Legacy non-consumable preserved only for existing-owner restore; do not expose it to new customers. |
 
 Both current subscriptions and the legacy product must grant the exact
 RevenueCat entitlement `pro`.
+
+The two current descriptions are 43 characters. Keep every customer-facing
+product display name at 30 characters or fewer and every product description at
+45 characters or fewer. App Store Connect already displays the configured
+duration and renewal terms; do not try to fit those into the description field.
+
+Put Monthly and Annual in one subscription group, with a localized group
+display name such as `Flightglass Pro`. For the first auto-renewable
+subscription submission, add the subscription group and both subscriptions to
+the same submission as the v1 app version. Upload an App Review Screenshot from
+the final native paywall for each subscription. These screenshots are review
+evidence, not the five public product-page screenshots.
+
+### RevenueCat Apple credential contract
+
+Two different Apple/RevenueCat credentials are required and must not be
+confused:
+
+1. The release build receives only the app-specific public RevenueCat SDK key
+   beginning `appl_` through the protected Codemagic environment group.
+2. The RevenueCat App Store app must also have an active Apple In-App Purchase
+   Key (`.p8`) and Issuer ID uploaded in the RevenueCat dashboard, with its
+   credential validator showing valid. This key never enters the app bundle or
+   Git. RevenueCat requires it for Capacitor SDK 9.0.0 and newer; Flightglass
+   currently ships `@revenuecat/purchases-capacitor` 11.x.
+
+See RevenueCat's current
+[In-App Purchase Key configuration](https://www.revenuecat.com/docs/service-credentials/itunesconnect-app-specific-shared-secret/in-app-purchase-key-configuration)
+and [public-key guidance](https://www.revenuecat.com/docs/projects/authentication).
 
 ## Google Play — English metadata
 
@@ -231,7 +264,11 @@ Additional answers:
 | `1.0.0` version-train availability | Check in App Store Connect |
 | Persistent Apple Distribution certificate/profile | Configure and prove in Codemagic |
 | RevenueCat iOS public key and current Offering | Configure externally |
+| RevenueCat Apple In-App Purchase Key + Issuer ID | Upload outside Git and confirm valid credentials |
+| Subscription group, localizations and levels | Configure Monthly and Annual in one deliberate group |
 | Subscription review screenshots | Capture from the final native paywall |
+| Age rating, DSA status, app price/tax, availability and release mode | Complete in App Store Connect |
+| Export-compliance answer | Confirm against the selected binary |
 | Sandbox Monthly/Annual purchase evidence | Run on final native build |
 | Existing Lifetime restore evidence | Run with an entitled existing-owner account |
 | Agreements, tax and banking | Confirm active |
@@ -248,6 +285,8 @@ Immediately before submission, verify:
   release candidate, not Academy or legacy StrikeArc;
 - no copy claims measurement, diagnosis, AI, personalisation or optimisation;
 - subscription descriptions match the current Offering and entitlement;
+- Monthly and Annual descriptions remain within Apple's 45-character limit;
+- the RevenueCat Apple In-App Purchase Key and Issuer ID validate successfully;
 - Privacy, Terms and Support return HTTP 200 over HTTPS;
 - the privacy declarations still match every SDK in the final binary;
 - reviewer notes match the actual free limits and navigation;
