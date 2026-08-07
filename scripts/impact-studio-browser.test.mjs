@@ -293,3 +293,84 @@ for (const scenario of SCENARIOS) {
     }
   });
 }
+
+async function portraitViewportAudit(page) {
+  return page.evaluate(() => {
+    const viewport = { width: innerWidth, height: innerHeight };
+    const inspect = (element, name, boxElement = element) => {
+      const rect = boxElement.getBoundingClientRect();
+      const style = getComputedStyle(boxElement);
+      const inViewport = style.display !== 'none'
+        && style.visibility !== 'hidden'
+        && rect.width > 0
+        && rect.height > 0
+        && rect.left >= 0
+        && rect.top >= 0
+        && rect.right <= innerWidth
+        && rect.bottom <= innerHeight;
+      return {
+        name,
+        inViewport,
+        top: Math.round(rect.top),
+        bottom: Math.round(rect.bottom),
+      };
+    };
+
+    const items = [...document.querySelectorAll('[data-outcome]')].map(output => inspect(
+      output,
+      output.dataset.outcome,
+      output.closest('.telemetry__cell') || output,
+    ));
+    const cause = document.querySelector('[data-cause]');
+    items.push(inspect(cause, 'cause'));
+
+    return {
+      viewport,
+      items,
+      offscreen: items.filter(item => !item.inViewport),
+    };
+  });
+}
+
+function assertPortraitDockInViewport(audit, state) {
+  const positions = audit.offscreen
+    .map(item => `${item.name} top=${item.top} bottom=${item.bottom}`)
+    .join('; ');
+  assert.equal(audit.offscreen.length, 0,
+    `${state}: ${audit.offscreen.length} live items are outside the ${audit.viewport.width}×${audit.viewport.height} viewport (${positions})`);
+  assert.equal(audit.items.filter(item => item.name !== 'cause' && item.inViewport).length, OUTCOMES.length,
+    `${state}: all six live outcome boxes remain in the viewport`);
+}
+
+test('portrait keeps the live outcome dock and active cause above the fold', { timeout: 30_000 }, async () => {
+  const scenario = {
+    label: 'portrait live dock',
+    viewport: { width: 430, height: 932 },
+    reducedMotion: 'no-preference',
+  };
+  const { context, page, errors } = await open(scenario);
+
+  try {
+    await assertMode(page, 'delivery');
+    const start = page.locator('[data-outcome="start"]');
+    const initialStart = await trimmedText(start);
+    await page.locator('#delivery-face').fill('4');
+    assert.notEqual(await trimmedText(start), initialStart,
+      'a portrait Delivery slider updates its outcome live');
+    await page.evaluate(() => new Promise(requestAnimationFrame));
+    assertPortraitDockInViewport(await portraitViewportAudit(page), 'portrait Delivery after Face Angle input');
+
+    await page.getByRole('button', { name: 'Arc Inputs', exact: true }).click();
+    await page.locator('#arc-direction').fill('4');
+    await assertMode(page, 'arc');
+    assert.match(await trimmedText(page.locator('[data-derived="attack"]')), /\d/,
+      'derived Attack remains available in Arc Inputs');
+    assert.match(await trimmedText(page.locator('[data-derived="path"]')), /\d/,
+      'derived Path remains available in Arc Inputs');
+    await page.evaluate(() => new Promise(requestAnimationFrame));
+    assertPortraitDockInViewport(await portraitViewportAudit(page), 'portrait Arc after Swing Direction input');
+    assert.deepEqual(errors, [], 'portrait live dock has no page or console errors');
+  } finally {
+    await context.close();
+  }
+});
