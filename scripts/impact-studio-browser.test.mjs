@@ -112,8 +112,9 @@ async function currentView(page) {
 async function lowPointFacts(page) {
   return page.evaluate(() => {
     const canvas = document.querySelector('#scene');
-    const [view, xRaw, yRaw, opacityRaw] = document.querySelector('#stage')
-      .dataset.lowPointMarker.split(',');
+    const stage = document.querySelector('#stage');
+    const [view, xRaw, yRaw, opacityRaw] = stage.dataset.lowPointMarker.split(',');
+    const [instrumentView, surveyDepthRaw, instrumentKind] = stage.dataset.lowPointInstrument.split(',');
     const x = Number(xRaw), y = Number(yRaw), opacity = Number(opacityRaw);
     const scaleX = canvas.width / canvas.getBoundingClientRect().width;
     const scaleY = canvas.height / canvas.getBoundingClientRect().height;
@@ -121,7 +122,8 @@ async function lowPointFacts(page) {
       Math.round(x * scaleX), Math.round(y * scaleY), 1, 1,
     ).data];
     return { view, x, y, opacity, width:canvas.getBoundingClientRect().width,
-      height:canvas.getBoundingClientRect().height, pixel };
+      height:canvas.getBoundingClientRect().height, pixel, instrumentView,
+      surveyDepth:Number(surveyDepthRaw), instrumentKind };
   });
 }
 
@@ -134,6 +136,11 @@ function assertVisibleLowPoint(facts, expectedView) {
     `Low Point y is outside the scene: ${facts.y} / ${facts.height}`);
   assert.ok(facts.pixel[0] > 180 && facts.pixel[2] > 130 && facts.pixel[0] > facts.pixel[1] + 30,
     `Low Point centre is not visibly attack-pink: ${facts.pixel.join(',')}`);
+  assert.equal(facts.instrumentView, expectedView);
+  assert.equal(facts.instrumentKind, 'aperture-survey',
+    'Low Point must use the open aperture + turf survey instrument');
+  assert.ok(Number.isFinite(facts.surveyDepth) && facts.surveyDepth >= 0,
+    `Low Point turf survey depth is invalid: ${facts.surveyDepth}`);
 }
 
 test(`${ENGINE}: canvas outcome plates cannot cover the physical teaching geometry`, () => {

@@ -84,6 +84,7 @@ async function open({
   viewport = { width: 430, height: 932 },
   storedContext,
   reducedMotion = 'no-preference',
+  skipSplash = true,
 } = {}) {
   const browserContext = await browser.newContext({
     viewport,
@@ -102,8 +103,26 @@ async function open({
     }, [CONTEXT_KEY, JSON.stringify(storedContext)]);
   }
   await page.goto(`${baseUrl}/index.html`, { waitUntil: 'networkidle' });
+  if (skipSplash) await finishSplash(page);
   await page.evaluate(() => document.fonts.ready);
   return { browserContext, page, errors };
+}
+
+async function finishSplash(page, { keyboard = false } = {}) {
+  const splash = page.locator('#saSplash');
+  if (await splash.count() === 0) return false;
+  await splash.waitFor({ state: 'visible' });
+  if (keyboard) {
+    assert.equal(
+      await page.locator('#saSplashSkip').evaluate(element => element === document.activeElement),
+      true,
+    );
+    await page.keyboard.press('Enter');
+  } else {
+    await page.locator('#saSplashSkip').click();
+  }
+  await splash.waitFor({ state: 'detached' });
+  return true;
 }
 
 async function stored(page) {
@@ -112,12 +131,6 @@ async function stored(page) {
 
 async function currentStep(page) {
   return Number(await page.locator('#onboarding').getAttribute('data-current-step'));
-}
-
-async function checkChoice(page, name, value) {
-  const input = page.locator(`input[name="${name}"][value="${value}"]`);
-  await input.locator('..').click();
-  assert.equal(await input.isChecked(), true);
 }
 
 async function capture(page, name) {
@@ -140,7 +153,13 @@ async function assertNoSeriousAxe(page) {
   }));
   const serious = result.violations
     .filter(item => ['critical', 'serious'].includes(item.impact))
-    .map(item => item.id);
+    .map(item => ({
+      id: item.id,
+      nodes: item.nodes.map(node => ({
+        target: node.target,
+        summary: node.failureSummary,
+      })),
+    }));
   assert.deepEqual(serious, []);
 }
 
@@ -185,108 +204,161 @@ async function assertOnboardingAnchored(page) {
   assert.ok(position.topBarTop >= 0);
 }
 
-test(`${ENGINE}: cold launch resumes choices, returns an exact result, and hydrates Range`, async () => {
+test(`${ENGINE}: cold opening is keyboard-skippable, hands focus to onboarding, and does not replay in one app session`, async () => {
+  const { browserContext, page, errors } = await open({
+    viewport: { width: 390, height: 844 },
+    skipSplash: false,
+  });
+  await page.locator('#saSplash[open]').waitFor();
+  assert.equal(await page.locator('#saSplash').count(), 1);
+  assert.equal(await page.locator('#onboarding').getAttribute('open'), null);
+  assert.equal(await page.locator('#saSplashSkip').getAttribute('aria-label'), 'Skip opening animation');
+  const skipRect = await page.locator('#saSplashSkip').boundingBox();
+  assert.ok(skipRect.width >= 44 && skipRect.height >= 44);
+  await capture(page, 'opening--390x844');
+  await finishSplash(page, { keyboard: true });
+  await page.locator('#onboarding[open]').waitFor();
+  assert.equal(await currentStep(page), 1);
+  await page.waitForFunction(() => document.activeElement?.id === 'stepOneTitle');
+  assert.equal(await page.evaluate(() => sessionStorage.getItem('sa.opening.v1')), '1');
+
+  await page.reload({ waitUntil: 'networkidle' });
+  await page.locator('#saSplash').waitFor({ state: 'detached' });
+  await page.locator('#onboarding[open]').waitFor();
+  assert.equal(await page.locator('#saSplash').count(), 0);
+  assert.equal(await currentStep(page), 1);
+  assert.deepEqual(errors, []);
+  await browserContext.close();
+});
+
+test(`${ENGINE}: reduced-motion opening reaches the same returning Home without running animation`, async () => {
+  const shot = buildGuidedShot(FIXTURE, Date.parse('2026-08-06T12:00:00.000Z'));
+  const storedContext = {
+    ...createDefaultContext(),
+    onboarding: {
+      ...createDefaultContext().onboarding,
+      complete: true,
+      step: 4,
+      dismissed: true,
+      draftShot: { ...FIXTURE },
+    },
+    currentShot: shot,
+    lastExperiment: deriveNextExperiment(shot),
+  };
+  const { browserContext, page, errors } = await open({
+    storedContext,
+    reducedMotion: 'reduce',
+    skipSplash: false,
+  });
+  await page.locator('#saSplash').waitFor({ state: 'detached', timeout: 750 });
+  assert.equal(await page.locator('#onboarding').getAttribute('open'), null);
+  assert.equal(await page.locator('#homeReturning').isVisible(), true);
+  assert.equal(await page.locator('#homeMain').evaluate(element => element === document.activeElement), true);
+  const running = await page.evaluate(() => document.getAnimations()
+    .filter(animation => animation.playState === 'running').length);
+  assert.equal(running, 0);
+  assert.deepEqual(errors, []);
+  await browserContext.close();
+});
+
+test(`${ENGINE}: learning tour uses real product proof, a live engine lab, and no personal setup`, async () => {
   const { browserContext, page, errors } = await open();
   await page.locator('#onboarding[open]').waitFor();
   assert.equal(await currentStep(page), 1);
   assert.equal(await page.locator('#onboardingProgress').textContent(), 'Step 1 of 4');
   await assertNoPreValueFriction(page);
+  assert.equal(await page.locator('#onboarding input[type="radio"]').count(), 0);
+  assert.equal(await page.locator('.onboarding-lab__outcomes[aria-live]').count(), 0);
+  assert.equal(await page.locator('.onboarding-lab__status').textContent(), 'Modelled');
+  assert.deepEqual(
+    await page.locator('.onboarding-lab__outcomes dt small').allTextContents(),
+    ['Estimate', 'Geometry', 'Calculated'],
+  );
+  assert.equal(await page.locator('.product-proof--outcome img').evaluate(image => image.naturalWidth > 0), true);
   await capture(page, 'step-1--430x932');
 
   await page.locator('#beginOnboarding').click();
   assert.equal(await currentStep(page), 2);
-  await checkChoice(page, 'goal', 'straighter');
-  await checkChoice(page, 'handedness', 'right');
-  await checkChoice(page, 'experience', 'improving');
-  assert.equal((await stored(page)).onboarding.goal, 'straighter');
+  await page.waitForFunction(() => document.querySelector('.product-proof--studio img')?.naturalWidth > 0);
+  assert.equal(await page.locator('.product-proof--studio img').evaluate(image => image.naturalWidth > 0), true);
   await capture(page, 'step-2--430x932');
 
   await page.reload({ waitUntil: 'networkidle' });
   await page.locator('#onboarding[open]').waitFor();
   assert.equal(await currentStep(page), 2);
-  assert.equal(await page.locator('input[name="goal"][value="straighter"]').isChecked(), true);
-  await page.locator('#continueProfile').click();
+  await page.locator('#continueTour').click();
   assert.equal(await currentStep(page), 3);
 
-  for (const [name, value] of Object.entries(FIXTURE)) await checkChoice(page, name, value);
-  assert.deepEqual((await stored(page)).onboarding.draftShot, FIXTURE);
+  const before = await page.locator('.onboarding-lab__outcomes').innerText();
+  await page.locator('#onboardingLoft').evaluate(input => {
+    input.value = '30';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+  });
+  assert.equal(await page.locator('#labLoftValue').textContent(), '30.0°');
+  assert.notEqual(await page.locator('.onboarding-lab__outcomes').innerText(), before);
+  assert.match(await page.locator('#labBackspin').textContent(), /^\d+ rpm$/);
+  assert.equal((await stored(page)).currentShot, null);
+  await page.locator('#onboardingBack').click();
+  assert.equal(await currentStep(page), 2);
+  await page.locator('#continueTour').click();
+  assert.equal(await currentStep(page), 3);
+  assert.equal(await page.locator('#onboardingLoft').inputValue(), '30');
+  assert.equal((await stored(page)).onboarding.labLoft, 30);
   await capture(page, 'step-3--430x932');
 
   await page.reload({ waitUntil: 'networkidle' });
   await page.locator('#onboarding[open]').waitFor();
   assert.equal(await currentStep(page), 3);
-  for (const [name, value] of Object.entries(FIXTURE)) {
-    assert.equal(await page.locator(`input[name="${name}"][value="${value}"]`).isChecked(), true);
-  }
-
-  await page.locator('#showShot').click();
+  assert.equal(await page.locator('#onboardingLoft').inputValue(), '30');
+  assert.equal(await page.locator('#labLaunch').textContent(), '16.9°');
+  assert.equal(await page.locator('#labSpinLoft').textContent(), '27.1°');
+  assert.equal(await page.locator('#labBackspin').textContent(), '4593 rpm');
+  await page.locator('#labLoftUp').click();
+  assert.equal(await page.locator('#onboardingLoft').inputValue(), '31');
+  await page.locator('#continueFromLab').click();
   assert.equal(await currentStep(page), 4);
-  const resultContext = await stored(page);
-  assert.equal(resultContext.currentShot.modelled, true);
-  assert.equal(
-    await page.locator('#resultCarry').textContent(),
-    `${resultContext.currentShot.result.carryM.toFixed(1)} m`,
+  assert.deepEqual(
+    await page.locator('.product-map__item strong').allTextContents(),
+    ['Outcome', 'Studio', 'Guide'],
   );
-  assert.equal(
-    await page.locator('#resultFinish').textContent(),
-    resultContext.currentShot.result.offlineM > 0
-      ? `${resultContext.currentShot.result.offlineM.toFixed(1)} m right`
-      : `${Math.abs(resultContext.currentShot.result.offlineM).toFixed(1)} m left`,
-  );
+  assert.equal((await stored(page)).currentShot, null);
   await assertNoPreValueFriction(page);
   await assertNoSeriousAxe(page);
   await capture(page, 'step-4--430x932');
 
   await page.locator('#finishOnboarding').click();
   assert.equal(await page.locator('#onboarding').getAttribute('open'), null);
-  assert.equal(await page.locator('#homeReturning').isVisible(), true);
-  await capture(page, 'home-returning--430x932');
+  assert.equal(await page.locator('#homeEmpty').isVisible(), true);
+  assert.equal(await page.locator('#startFirstShot').textContent(), 'Open live Outcome');
+  await capture(page, 'home-learning--430x932');
 
   await page.reload({ waitUntil: 'networkidle' });
   assert.equal(await page.locator('#onboarding').getAttribute('open'), null);
-  assert.equal(await page.locator('#homeReturning').isVisible(), true);
-  await page.locator('#tryExperiment').click();
-  await page.waitForURL(/impact\.html\?guided=experiment/);
-  await page.waitForFunction(() => document.body.dataset.saGuidedRange === 'experiment');
-
-  const hydrated = await page.evaluate(() => ({
-    faceAngle: window.__impact.state.face,
-    clubPath: window.__impact.state.path,
-    attackAngle: window.__impact.state.attack,
-    dynamicLoft: window.__impact.state.dynLoft,
-    clubSpeed: window.__impact.state.speed,
-  }));
-  const { clubPath, faceAngle, attackAngle, dynamicLoft, clubSpeed } = resultContext.lastExperiment.inputs;
-  assert.deepEqual(hydrated, { clubPath, faceAngle, attackAngle, dynamicLoft, clubSpeed });
+  assert.equal(await page.locator('#homeEmpty').isVisible(), true);
+  await page.locator('#startFirstShot').click();
+  await page.waitForURL(/impact\.html$/);
+  await page.waitForFunction(() => Boolean(window.__impact));
   assert.deepEqual(errors, []);
   await browserContext.close();
 });
 
-test(`${ENGINE}: Not now preserves and resumes every onboarding step`, async () => {
+test(`${ENGINE}: Not now preserves and resumes every learning-tour step`, async () => {
   const { browserContext, page, errors } = await open({ viewport: { width: 375, height: 812 } });
   await page.locator('#onboarding[open]').waitFor();
 
-  for (const step of [1, 2, 3]) {
+  const advance = new Map([
+    [1, '#beginOnboarding'],
+    [2, '#continueTour'],
+    [3, '#continueFromLab'],
+  ]);
+
+  for (const step of [1, 2, 3, 4]) {
     assert.equal(await currentStep(page), step);
     await capture(page, `step-${step}--375x812`);
     const layout = await layoutFacts(page);
     assert.ok(layout.scrollWidth <= layout.clientWidth);
     assert.deepEqual(layout.smallTargets, []);
-    if (step === 2) {
-      const skipChoiceOverlaps = await page.evaluate(() => {
-        const overlaps = (first, second) => (
-          first.left < second.right && first.right > second.left
-          && first.top < second.bottom && first.bottom > second.top
-        );
-        return [...document.querySelectorAll('[data-context-field]')]
-          .filter(fieldset => {
-            const skip = fieldset.querySelector('.skip-answer').getBoundingClientRect();
-            return [...fieldset.querySelectorAll('.choice-grid label')]
-              .some(label => overlaps(skip, label.getBoundingClientRect()));
-          }).length;
-      });
-      assert.equal(skipChoiceOverlaps, 0);
-    }
     await page.locator('#onboardingLater').click();
     assert.equal(await page.locator('#onboarding').getAttribute('open'), null);
     if (step === 1) await capture(page, 'home-empty--375x812');
@@ -294,19 +366,15 @@ test(`${ENGINE}: Not now preserves and resumes every onboarding step`, async () 
     assert.equal(await page.locator('#onboarding').getAttribute('open'), null);
     await page.locator('#startFirstShot').click();
     assert.equal(await currentStep(page), step);
-    await page.locator(step === 1 ? '#beginOnboarding' : step === 2 ? '#continueProfile' : '#useNeutralShot').click();
+    if (advance.has(step)) await page.locator(advance.get(step)).click();
   }
 
   assert.equal(await currentStep(page), 4);
   await assertOnboardingAnchored(page);
-  await capture(page, 'step-4--375x812');
-  await page.locator('#onboardingLater').click();
-  await page.reload({ waitUntil: 'networkidle' });
-  assert.equal(await page.locator('#onboarding').getAttribute('open'), null);
-  assert.equal(await page.locator('#homeReturning').isVisible(), true);
-  assert.equal(await page.locator('#resumeReturningSetup').isVisible(), true);
-  await page.locator('#resumeReturningSetup').click();
-  assert.equal(await currentStep(page), 4);
+  await page.locator('#finishOnboarding').click();
+  assert.equal(await page.locator('#homeEmpty').isVisible(), true);
+  assert.equal((await stored(page)).currentShot, null);
+  assert.equal((await stored(page)).onboarding.complete, true);
   assert.deepEqual(errors, []);
   await browserContext.close();
 });
@@ -314,6 +382,7 @@ test(`${ENGINE}: Not now preserves and resumes every onboarding step`, async () 
 test(`${ENGINE}: onboarding is keyboard reachable and keeps focus in the modal task`, async () => {
   const { browserContext, page, errors } = await open({ viewport: { width: 375, height: 812 } });
   await page.locator('#onboarding[open]').waitFor();
+  await page.waitForFunction(() => document.activeElement?.id === 'stepOneTitle');
   assert.equal(await page.locator('#stepOneTitle').evaluate(element => element === document.activeElement), true);
   await page.keyboard.press('Tab');
   assert.equal(await page.locator('#beginOnboarding').evaluate(element => element === document.activeElement), true);

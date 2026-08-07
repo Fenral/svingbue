@@ -29,6 +29,13 @@ const REQUIRED_LOCAL_DEPENDENCIES = [
   'sa-app-shell.js',
   'sa-home.css',
   'sa-home.js',
+  'sa-opening.js',
+  'sa-access.js',
+  'sa-analytics.js',
+  'sa-shots.js',
+  'sa-iap.js',
+  'sa-paywall.js',
+  'sa-paywall.css',
   'sa-v1-context.js',
   'sa-range-context.js',
   'sa-orientation.js',
@@ -39,8 +46,12 @@ const REQUIRED_LOCAL_DEPENDENCIES = [
   'impact-flight.js',
   'swing-parameters-and-impact.js',
   'sa-haptics.js',
+  'vendor/revenuecat/purchases.esm.js',
   'assets/flightglass-mark-micro.svg',
   'assets/flightglass-lockup.svg',
+  'assets/onboarding/outcome.webp',
+  'assets/onboarding/studio.webp',
+  'assets/onboarding/guide.webp',
   'assets/range-night-3d-33.png',
   'assets/impact-studio/turf.png',
   'assets/impact-studio/sky-face.png',
@@ -77,15 +88,26 @@ test('native HTML allowlist contains only v1 routes and legal pages', () => {
   assert.deepEqual(entries, NATIVE_HTML);
 });
 
-test('Home exposes the first-shot loop and sends guided help to v1 routes', () => {
+test('Home exposes the learning tour and sends every next action to v1 routes', () => {
   const home = readFileSync(join(ROOT, 'index.html'), 'utf8');
 
   assert.match(home, /class="home-help sa-focus" href="\.\/jarvis\.html"/);
-  assert.match(home, /id="startFirstShot"[^>]+>Run your first shot</);
+  assert.match(home, /id="startFirstShot"[^>]+>See how Flightglass works</);
   assert.match(home, /id="tryExperiment"[^>]+href="\.\/impact\.html\?guided=experiment"/);
   assert.match(home, /class="home-jarvis-link sa-focus" href="\.\/jarvis\.html"/);
   assert.doesNotMatch(home, /href="\.\/(?:geometry|academy|impact-outcome[^"?]*)\.html/);
   assert.doesNotMatch(home, /place--v1-hidden/);
+  assert.match(home, /id="restoreHomePurchases"[^>]*>Restore purchases</);
+  assert.match(home, /href="\.\/terms\.html">Terms of Use</);
+  assert.match(home, /href="\.\/privacy\.html">Privacy Policy</);
+});
+
+test('shipping value surfaces load the canonical Pro purchase UI', () => {
+  for (const file of ['impact.html', 'impact-studio.html', 'jarvis.html']) {
+    const source = readFileSync(join(ROOT, file), 'utf8');
+    assert.match(source, /<link rel="stylesheet" href="\.\/sa-paywall\.css"/,
+      `${file} must style the shared paywall`);
+  }
 });
 
 test('copy-web produces a byte-identical v1 native payload', () => {

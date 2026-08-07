@@ -8,6 +8,7 @@
 <meta name="description" content="Flightglass terms of use / EULA: licence, subscription tiers, auto-renewal, refunds, and liability.">
 <link rel="icon" href="./assets/flightglass-mark-micro.svg" type="image/svg+xml">
 <style>
+  @view-transition { navigation:auto; }
   :root{
     --accent:#FF8A4D;
     --accent-soft:rgba(255,138,77,.14);
@@ -123,7 +124,6 @@
   .tier .t-sub{display:block;font-size:12px;color:var(--muted-2);margin-top:2px;font-weight:400;}
   .tier .t-price{font-weight:700;font-size:15px;white-space:nowrap;text-align:right;}
   .tier .t-price small{display:block;font-size:10.5px;font-weight:500;color:var(--muted-2);}
-  .save{color:var(--accent);font-weight:600;}
 
   .callout{
     background:var(--accent-soft);border:1px solid var(--accent-line);border-radius:var(--radius);
@@ -148,7 +148,10 @@
     .brand img{width:118px;}
     .tier{flex-wrap:wrap;}
   }
-  @media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important;}}
+  @media (prefers-reduced-motion:reduce){
+    *{transition:none!important;scroll-behavior:auto!important;}
+    ::view-transition-group(*),::view-transition-old(*),::view-transition-new(*){animation:none!important;}
+  }
 
   @media (prefers-contrast:more){
     :root{--muted:#d3ddf0;--muted-2:#c3cfe5;--line:rgba(255,255,255,.35);}
@@ -168,7 +171,7 @@
 <main id="main">
   <span class="eyebrow"><span class="dot" aria-hidden="true"></span> Legal</span>
   <h1>Terms of Use</h1>
-  <p class="updated">Last updated: 4 July 2026 · Effective: 4 July 2026</p>
+  <p class="updated">Last updated: 7 August 2026 · Effective: 7 August 2026</p>
   <p class="lede">These Terms of Use ("Terms") form an end-user licence agreement between you and Sivert
   Skotvold ("we", "us") for the Flightglass app. By downloading, installing, or using Flightglass you agree to
   these Terms.</p>
@@ -179,7 +182,7 @@
       <li><a href="#licence">Licence to use Flightglass</a></li>
       <li><a href="#tiers">Pro purchase tiers</a></li>
       <li><a href="#renewal">Auto-renewal &amp; cancellation</a></li>
-      <li><a href="#lifetime">Lifetime purchase</a></li>
+      <li><a href="#lifetime">Existing lifetime purchases</a></li>
       <li><a href="#refunds">Refunds</a></li>
       <li><a href="#warranty">No warranty</a></li>
       <li><a href="#liability">Limitation of liability</a></li>
@@ -200,25 +203,23 @@
 
   <section id="tiers">
     <h2><span class="num">2.</span>Pro purchase tiers</h2>
-    <p>Flightglass is free to try — the first 10 shots are unlocked at no cost. Continued use requires
-    <strong>Flightglass Pro</strong>, available in three tiers:</p>
+    <p>Flightglass is free to try. Native free use currently includes 10 distinct Range comparisons, five unique
+    Guide answers per local day, and one guided Studio experiment; unguided Studio exploration remains available.
+    A Pro offer appears only when you request the next protected use. <strong>Flightglass Pro</strong> is currently
+    offered through two auto-renewing tiers:</p>
     <div class="tiers">
       <div class="tier">
         <span><span class="t-name">Monthly</span><span class="t-sub">Billed every month</span></span>
-        <span class="t-price">kr 59<small>/ month</small></span>
+        <span class="t-price">Store price<small>/ month</small></span>
       </div>
       <div class="tier hero">
-        <span><span class="t-name">Annual</span><span class="t-sub"><span class="save">Save 79%</span> vs. monthly</span></span>
-        <span class="t-price">kr 149<small>/ year</small></span>
-      </div>
-      <div class="tier">
-        <span><span class="t-name">Lifetime</span><span class="t-sub">Pay once — yours forever</span></span>
-        <span class="t-price">kr 349<small>one-time</small></span>
+        <span><span class="t-name">Annual</span><span class="t-sub">Billed every year</span></span>
+        <span class="t-price">Store price<small>/ year</small></span>
       </div>
     </div>
-    <p class="dim">Prices are shown in NOK and may vary by region/currency as set by the App Store or Play
-    Store; the price shown at checkout is authoritative. All tiers unlock the same "Pro" entitlement: unlimited
-    shots and all features gated behind the free-shot limit.</p>
+    <p class="dim">Prices and currencies are supplied by the App Store or Google Play and may vary by region.
+    The localized price and billing period shown in the store confirmation are authoritative. Both tiers unlock
+    the same "Pro" entitlement: unlimited Range comparisons, guided Guide answers, and guided Studio experiments.</p>
   </section>
 
   <section id="renewal">
@@ -235,10 +236,10 @@
   </section>
 
   <section id="lifetime">
-    <h2><span class="num">4.</span>Lifetime purchase</h2>
-    <p><strong>Lifetime is a one-time, non-recurring purchase.</strong> It does not auto-renew and there is
-    nothing to cancel — once purchased, Pro access is unlocked for as long as Flightglass is available and
-    installed on your device(s) under the same app-store account.</p>
+    <h2><span class="num">4.</span>Existing lifetime purchases</h2>
+    <p>Lifetime is not offered to new customers in this version. If you previously bought the protected lifetime
+    product, Restore Purchases continues to recognize it through the same Pro entitlement. It remains a one-time,
+    non-recurring purchase with nothing to cancel.</p>
   </section>
 
   <section id="refunds">
@@ -299,10 +300,8 @@
   </nav>
 </footer>
 <script>
-  /* Progressive Back: when reached from within the app (e.g. the paywall's
-     legal link), the top "Back" link returns to the referring page via
-     history.back() — where sa-paywall.js re-opens the paywall it was on
-     (sa_pw_reopen flag). Direct hits / no-JS fall back to the href (index). */
+  /* Progressive Back: when reached from within the app, the top "Back" link
+     returns to the referring page. Direct hits / no-JS fall back to Home. */
   (function () {
     var back = document.querySelector('a.back');
     if (back && document.referrer && window.history.length > 1) {

@@ -2,6 +2,90 @@
 
 Updated: 2026-08-07
 
+## V1 app start, learning onboarding and Studio instrument checkpoint (2026-08-07)
+
+The shipping Home on `agent/page-overview` now starts with a short Flightglass
+instrument opening and a four-step launch-monitor understanding tour. This is
+the current v1 direction and supersedes the historical Night Ladder onboarding
+description later in this evidence ledger.
+
+The opening runs once per session, is immediately skippable by pointer, Enter
+or Escape, has a 150 ms reduced-motion equivalent and cannot strand the app when
+session storage is unavailable. The separate public landing page was not
+changed.
+
+The tour is product education, not personal golf intake:
+
+- real registered captures show Outcome, Impact Studio and Guide;
+- a fixed 7-iron/90 mph example changes Delivered Loft from 16–34 degrees;
+- Launch Angle, Spin Loft and Backspin update from the unchanged shipping
+  engine;
+- Back, `Not now`, resume and completion state are preserved;
+- the tour writes no profile answers and creates no `currentShot`.
+
+Impact Studio's Low Point is now an instrument marker rather than an outlined
+status dot. Its exact core, tangent aperture and optional turf datum are drawn
+after competing geometry and stay visible. A 280 ms update echo supplies live
+feedback; reduced motion removes only that echo. No physics or geometry output
+changed.
+
+Fresh automated evidence:
+
+- onboarding: 9/9 Chromium and 9/9 WebKit;
+- Studio marker/geometry: 9/9 Chromium and 9/9 WebKit;
+- v1 shipping/native contracts: 48/48;
+- automated phone matrix: 4/4 Chromium and 4/4 WebKit;
+- level-C change gate: PASS, zero critical Chromium/WebKit findings;
+- the three onboarding captures are registered and byte-identical in the
+  native web package.
+
+The source and automated evidence are complete, but Phase 2 is not
+release-accepted. Its formal human gate remains fail-closed: 10 first-time
+moderated sessions, at least 8 unassisted completions and median completion no
+greater than 90 seconds. The live protocol and empty evidence table are in
+`docs/phase2-onboarding-uat.md`.
+
+## V1 monetization readiness checkpoint (2026-08-07)
+
+Phase 4 source and browser evidence are ready, but native-store acceptance is
+still fail-closed. Native free access now ends only after 10 distinct Range
+comparisons, one completed guided Studio experiment, or five unique Guide
+answers in the same local day. The next real value action opens a source-aware
+Monthly/Annual paywall; browser preview remains ungated and no price appears on
+cold launch.
+
+The temporary Range action and purchase promise now both say comparisons rather
+than persistent saves. Guided Studio has an authorized instruction/completion
+layer that direct free Studio does not. Terms and Privacy remove stale prices,
+the stale savings claim and the new-customer lifetime offer. Existing lifetime
+remains mapped to the exact `pro` entitlement for restoration only. Supabase is
+intentionally absent.
+
+The legacy global `window.__saShots.setPro` entitlement hook is removed and
+forbidden by contract. Native CI raises both generated iOS targets to 16.4 so
+the shipping modal and design-system feature baseline is explicit.
+
+Fresh evidence:
+
+- monetization and IAP contracts: 20/20;
+- Chromium purchase/gate cases: 7/7;
+- WebKit purchase/gate cases: 7/7;
+- actual Range, Studio and Guide gates, automatic post-purchase action resume,
+  no-cost re-pinning of a counted Range setup, successful keyboard purchase,
+  cancel/pending/error, Home/paywall restore, focus return, axe WCAG A/AA,
+  reduced motion and both paywall orientations are covered.
+
+Fresh full-repository evidence on 2026-08-07: the protected engine is 72/72
+PASS and the Academy UX/foundation suite is 242/244. The only two failures are
+the D-010 Academy v2 voice-pack caption-hash mismatch and the production word
+inventory expectation of 1546 versus the current 1579. No phase-scoped v1 test
+fails; any release that includes Academy remains blocked on those controls.
+
+Do not declare `PHASE 4 DONE`. The real RevenueCat public keys are still
+placeholders. A current Monthly/Annual offering granting `pro`, store product
+and agreement setup, native sandbox purchase, and restoration evidence from an
+existing lifetime customer remain owner/external gates.
+
 Release authorization: granted for GitHub, Vercel and configured Apple/Google
 publication after all Phase 8 gates pass. See `RELEASE-AUTHORIZATION.md`.
 

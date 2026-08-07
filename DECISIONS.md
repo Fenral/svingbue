@@ -115,12 +115,13 @@ must never become evidence for a diagnosis or a degree-accurate claim.
 Status: owner-decided on 2026-08-06
 
 Phase 2 replaces the current Night Ladder Home composition rather than refining
-it. The background world, animated route trace and floating destination cards
-are not product constraints. The replacement keeps the Flightglass brand token
-system and shared Home/Range/Studio/Jarvis bottom navigation, then gives the
-screen one state-driven job: run the first shot when empty, or continue the
-latest shot with exactly one next experiment when context exists. The animated
-public landing is a separate surface and is not implemented inside app Home.
+it. The replacement keeps the Flightglass brand token system and shared
+Home/Range/Studio/Guide navigation, then gives the empty state one job:
+explain how launch-monitor inputs connect to outcomes. A four-step learning tour
+uses real app captures and a fixed 7-iron/90 mph model; it collects no personal
+golf profile and creates no `currentShot`. Returning Home is a compact product
+map. The animated public landing is a separate surface and is not implemented
+inside app Home.
 
 ## D-013: Jarvis becomes Flightglass Guide
 
@@ -158,3 +159,36 @@ constants. It may compare exact engine outputs but must not call a value ideal,
 optimal, personalized or club-calibrated. A universal optimal backspin-by-speed
 band is explicitly out of scope until a validated objective, club model and
 calibration dataset exist.
+
+## D-015: Free usage boundaries
+
+Status: implementation assumption on 2026-08-07
+
+Free access includes ten explicit, distinct Range comparisons, one guided Impact
+Studio experiment and five unique Guide answers per local calendar day.
+Reopening the same Guide answer on the same day does not consume another use.
+Slider movement, camera changes, cancelled work and failed renders never count.
+Range comparisons are temporary pins with at most three ghosts visible at once;
+neither the free nor paid copy describes them as persistent saves or history.
+The guided Studio allowance applies only to its labelled instruction/completion
+layer; direct Studio exploration remains available without that guided layer.
+
+Only the native app hard-gates; the browser remains an evaluation preview while
+store purchase is unavailable there. Usage is consumed after a completed
+result, never at task start. The 11th Range comparison, second guided Studio
+experiment and sixth unique Guide answer may present Pro only after the user has
+already completed at least one result. These numeric assumptions can be tuned
+from beta evidence without changing product identifiers or the RevenueCat
+entitlement contract.
+
+## D-016: Native iOS WebView baseline
+
+Status: safety assumption on 2026-08-07
+
+Flightglass v1 requires iOS 16.4 or later. The shipping design system and modal
+flows depend on native `<dialog>`, `color-mix()`, dynamic viewport units and the
+corresponding WKWebView behavior. Codemagic patches both the generated Xcode
+project and Podfile to 16.4 after `cap sync`, and tests the pure transforms.
+Supporting older iOS versions would require a separately tested modal and
+design-token fallback; silently building with Capacitor's lower default is not
+an acceptable compatibility claim.

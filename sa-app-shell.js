@@ -136,6 +136,17 @@ export function mountAppShell(doc = document) {
   doc.body.classList.add('sa-shell-ready');
   installOrientationGuard(doc, currentRoute);
 
+  // Passive and idempotent: entitlement state is ready before a protected
+  // value moment, but this never opens pricing or interrupts cold launch.
+  import('./sa-iap.js').then(({ init }) => init()).catch(() => {});
+
+  try {
+    const debug = new URLSearchParams(doc.location.search).get('sa_debug');
+    const local = ['localhost', '127.0.0.1'].includes(doc.location.hostname)
+      && doc.location.protocol === 'http:' && Boolean(doc.location.port);
+    if (local && debug === 'paywall') import('./sa-paywall.js').catch(() => {});
+  } catch (_) {}
+
   if (currentRoute === 'range') {
     import('./sa-range-context.js')
       .then(({ mountGuidedRangeContext }) => mountGuidedRangeContext(doc))

@@ -15,7 +15,7 @@
  *
  * WHAT IT CHECKS
  *
- *   1. Every image referenced from shipping Academy content is either
+ *   1. Every image referenced from shipping explanatory content is either
  *      registered in config/image-provenance.json or explicitly declared
  *      atmospheric.
  *   2. Every registered image's `state` is fed to solveFlight, and every
@@ -44,6 +44,7 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const REGISTRY = join(ROOT, 'config', 'image-provenance.json');
 
 const CONTENT = rel =>
+  rel === 'index.html' ||
   rel === 'academy.html' ||
   /^academy-[a-z0-9-]+-(content|experience)\.js$/.test(rel) ||
   rel === 'academy-native-lesson.js' ||
@@ -85,7 +86,7 @@ if (!existsSync(REGISTRY)) {
     console.log('\nCreate config/image-provenance.json. See scripts/verify-image-provenance.mjs for the shape.');
     process.exit(1);
   }
-  console.log('verify-image-provenance: no images referenced from Academy content, no registry needed.');
+  console.log('verify-image-provenance: no images referenced from shipping explanatory content, no registry needed.');
   process.exit(0);
 }
 

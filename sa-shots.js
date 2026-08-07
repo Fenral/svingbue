@@ -79,7 +79,5 @@ export function reset() {
   try { localStorage.removeItem(KEY); } catch (e) { /* ignore */ }
 }
 
-// Convenience for non-module callers / quick console testing.
-if (typeof window !== 'undefined') {
-  window.__saShots = { FREE_LIMIT, setPro, isPro, isWeb, shotsUsed, remaining, recordShot, shouldGate, shouldNudge, reset };
-}
+// Deliberately no window/global debug surface: entitlement mutation remains an
+// internal module path owned by the RevenueCat adapter.

@@ -4,9 +4,24 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#07060C">
-<meta name="description" content="Build a model of your golf shot, see why it flew, and test one change.">
+<meta name="description" content="Understand launch-monitor numbers, see their relationships, and explore what each input changes.">
 <meta name="robots" content="noindex">
-<title>Flightglass — First shot</title>
+<title>Flightglass — Understand the numbers</title>
+<script>
+  (() => {
+    const openingKey = 'sa.opening.v1';
+    let openingPending = true;
+    try { openingPending = sessionStorage.getItem(openingKey) !== '1'; } catch {}
+    if (!openingPending) return;
+    document.documentElement.dataset.saOpening = 'pending';
+    window.__saOpeningFallback = window.setTimeout(() => {
+      document.documentElement.removeAttribute('data-sa-opening');
+      const splash = document.getElementById('saSplash');
+      if (splash?.open) splash.close();
+      splash?.remove();
+    }, 1900);
+  })();
+</script>
 <link rel="icon" href="./assets/flightglass-mark-micro.svg" type="image/svg+xml">
 <link rel="stylesheet" href="./sa-p3.css">
 <link rel="stylesheet" href="./sa-app-shell.css">
@@ -16,8 +31,32 @@
   @media (orientation:landscape) and (max-height:480px){.rotate{display:flex}}
 </style>
 </head>
-<body data-home-experience="first-shot" data-sa-route="home">
+<body data-home-experience="learning-tour" data-sa-route="home">
 <a class="skip-link" href="#homeMain">Skip to main content</a>
+
+<dialog id="saSplash" class="opening-splash" aria-label="Flightglass opening" aria-describedby="saSplashDescription" tabindex="-1">
+  <button id="saSplashSkip" class="opening-splash__skip sa-focus" type="button" aria-label="Skip opening animation" autofocus>Skip</button>
+  <div class="opening-splash__stage">
+    <svg class="opening-splash__instrument" viewBox="0 0 390 560" role="img" aria-labelledby="saSplashTitle saSplashGraphicDescription">
+      <title id="saSplashTitle">Flightglass trajectory aperture</title>
+      <desc id="saSplashGraphicDescription">A modelled trajectory resolves through a measured aperture.</desc>
+      <g class="opening-splash__aperture">
+        <ellipse class="opening-splash__ring opening-splash__ring--outer" cx="195" cy="338" rx="150" ry="44"></ellipse>
+        <ellipse class="opening-splash__ring opening-splash__ring--middle" cx="195" cy="338" rx="82" ry="24"></ellipse>
+        <ellipse class="opening-splash__ring opening-splash__ring--inner" cx="195" cy="338" rx="36" ry="10"></ellipse>
+        <path class="opening-splash__dome" d="M45 338 A150 150 0 0 1 345 338"></path>
+        <path class="opening-splash__axis" d="M195 338V188"></path>
+      </g>
+      <path class="opening-splash__trajectory" pathLength="1" d="M195 338 C184 293 194 236 226 184 C251 144 276 111 303 82"></path>
+      <circle class="opening-splash__ball" cx="195" cy="338" r="7"></circle>
+    </svg>
+    <div class="opening-splash__identity">
+      <img src="./assets/flightglass-lockup.svg" alt="Flightglass">
+      <p>See why it flew.</p>
+    </div>
+  </div>
+  <p id="saSplashDescription" class="sr-only">Flightglass is opening. Activate Skip to continue immediately.</p>
+</dialog>
 
 <div class="home-atmosphere" aria-hidden="true">
   <div class="home-atmosphere__grid"></div>
@@ -27,24 +66,29 @@
 
 <header class="home-top">
   <img class="home-top__lockup" src="./assets/flightglass-lockup.svg" alt="Flightglass">
-  <a class="home-help sa-focus" href="./jarvis.html" aria-label="Open Flightglass Guide">?</a>
+  <div class="home-top__actions">
+    <button id="openAccessCenter" class="home-utility sa-focus" type="button" aria-label="Purchases and legal">
+      <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 3.5h10v13H5z"></path><path d="M7.5 7h5M7.5 10h5M7.5 13h3"></path></svg>
+    </button>
+    <a class="home-help sa-focus" href="./jarvis.html" aria-label="Open Flightglass Guide">?</a>
+  </div>
 </header>
 
 <main id="homeMain" class="home-main" data-home-main tabindex="-1">
   <section id="homeEmpty" class="home-state home-state--empty" aria-labelledby="emptyTitle">
     <div class="home-copy">
-      <p id="emptyEyebrow" class="home-eyebrow">Your first model</p>
-      <h1 id="emptyTitle">See why it flew.</h1>
-      <p id="emptyBody" class="home-lede">Choose a few things you noticed. Flightglass turns them into a shot model you can test.</p>
+      <p id="emptyEyebrow" class="home-eyebrow">Understand the numbers</p>
+      <h1 id="emptyTitle">See what every number changes.</h1>
+      <p id="emptyBody" class="home-lede">Explore how speed, face, path, attack and delivered loft shape the same shot.</p>
     </div>
 
     <div class="home-launch">
-      <button id="startFirstShot" class="home-primary sa-focus" type="button">Run your first shot</button>
+      <button id="startFirstShot" class="home-primary sa-focus" type="button">See how Flightglass works</button>
       <button id="resumeSetup" class="home-text-action sa-focus" type="button" hidden>Resume setup</button>
-      <p class="home-time">About a minute · no account needed</p>
+      <p class="home-time">Four quick steps · no account needed</p>
     </div>
 
-    <p class="home-truth">Flightglass is a learning model. It does not measure your swing or replace a human coach.</p>
+    <p class="home-truth">Flightglass is a learning model. It does not measure your swing or replace a launch monitor.</p>
   </section>
 
   <section id="homeReturning" class="home-state home-state--returning" aria-labelledby="returningTitle" hidden>
@@ -89,6 +133,22 @@
   </section>
 </main>
 
+<dialog id="accessCenter" class="access-center" aria-labelledby="accessCenterTitle" aria-describedby="accessCenterBody">
+  <form method="dialog" class="access-center__panel">
+    <button id="closeAccessCenter" class="access-center__close sa-focus" type="submit" value="close" aria-label="Close purchases and legal">
+      <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 5l10 10M15 5 5 15"></path></svg>
+    </button>
+    <h2 id="accessCenterTitle" tabindex="-1">Purchases &amp; legal</h2>
+    <p id="accessCenterBody">Restore an existing Flightglass Pro entitlement or review the terms that apply to the app.</p>
+    <button id="restoreHomePurchases" class="access-center__restore sa-focus" type="button">Restore purchases</button>
+    <p id="restoreHomeStatus" class="access-center__status" role="status" aria-live="polite"></p>
+    <nav class="access-center__legal" aria-label="Legal documents">
+      <a class="sa-focus" href="./terms.html">Terms of Use</a>
+      <a class="sa-focus" href="./privacy.html">Privacy Policy</a>
+    </nav>
+  </form>
+</dialog>
+
 <dialog id="onboarding" aria-labelledby="onboardingTitle" aria-describedby="onboardingLive">
   <form id="onboardingForm" class="onboarding-form">
     <header class="onboarding-top">
@@ -98,7 +158,7 @@
       <div class="onboarding-brand">
         <img src="./assets/flightglass-mark-micro.svg" alt="">
         <div>
-          <h1 id="onboardingTitle">First shot setup</h1>
+          <h1 id="onboardingTitle">Understand the shot</h1>
           <p id="onboardingProgress">Step 1 of 4</p>
         </div>
       </div>
@@ -109,139 +169,108 @@
 
     <div class="onboarding-scroll">
       <section class="onboarding-step" data-onboarding-step="1" aria-labelledby="stepOneTitle">
-        <div class="promise-mark" aria-hidden="true">
-          <span class="promise-mark__target"></span>
-          <span class="promise-mark__flight"></span>
-          <span class="promise-mark__ball"></span>
-        </div>
-        <p class="home-eyebrow">One useful relationship</p>
-        <h2 id="stepOneTitle" tabindex="-1">See why it flew.</h2>
-        <p class="onboarding-lede">Flightglass is a learning model, not a launch monitor or a human coach.</p>
+        <p class="home-eyebrow">From numbers to a picture</p>
+        <h2 id="stepOneTitle" tabindex="-1">The numbers tell the story.</h2>
+        <p class="onboarding-lede">A launch monitor reports the numbers. Flightglass makes the relationship between speed, face, path, attack and delivered loft visible.</p>
+
+        <figure class="product-proof product-proof--outcome">
+          <div class="product-proof__bar" aria-hidden="true"><span>Real app view</span><span>Outcome</span></div>
+          <div class="product-proof__viewport">
+            <img src="./assets/onboarding/outcome.webp" alt="Flightglass Outcome showing launch, spin and distance values above five editable delivery inputs" width="750" height="1624">
+          </div>
+          <figcaption>Inputs below. Outcomes above. Every value updates together.</figcaption>
+        </figure>
+
         <div class="onboarding-actions">
-          <button id="beginOnboarding" class="home-primary sa-focus" type="button">Set up my first shot</button>
+          <button id="beginOnboarding" class="home-primary sa-focus" type="button">Decode a shot</button>
         </div>
       </section>
 
       <section class="onboarding-step" data-onboarding-step="2" aria-labelledby="stepTwoTitle" hidden>
-        <p class="home-eyebrow">A useful starting point</p>
-        <h2 id="stepTwoTitle" tabindex="-1">What are you working on?</h2>
-        <p class="onboarding-lede">These choices only set a starting point. You can leave any of them blank.</p>
+        <p class="home-eyebrow">Cause → contact → outcome</p>
+        <h2 id="stepTwoTitle" tabindex="-1">See what the numbers change.</h2>
+        <p class="onboarding-lede">Attack and path describe how the club moves. Face and delivered loft help explain where the ball starts, curves and launches.</p>
 
-        <fieldset class="choice-question" data-context-field="goal">
-          <legend>Your goal</legend>
-          <button class="skip-answer sa-focus" type="button" data-skip-field="goal">Skip</button>
-          <div class="choice-grid choice-grid--two">
-            <label><input type="radio" name="goal" value="straighter"><span>Straighter shots</span></label>
-            <label><input type="radio" name="goal" value="distance"><span>More distance</span></label>
-            <label><input type="radio" name="goal" value="contact"><span>Better contact</span></label>
-            <label><input type="radio" name="goal" value="trajectory"><span>Higher / lower flight</span></label>
+        <figure class="product-proof product-proof--studio">
+          <div class="product-proof__bar" aria-hidden="true"><span>Real app view</span><span>Studio</span></div>
+          <div class="product-proof__viewport">
+            <img src="./assets/onboarding/studio.webp" alt="Flightglass Studio showing attack angle, club path, strike, entry, low point and exit" width="1624" height="750">
           </div>
-        </fieldset>
+          <figcaption>The values become visible geometry around impact.</figcaption>
+        </figure>
 
-        <fieldset class="choice-question" data-context-field="handedness">
-          <legend>Handedness</legend>
-          <button class="skip-answer sa-focus" type="button" data-skip-field="handedness">Skip</button>
-          <div class="choice-grid choice-grid--two">
-            <label><input type="radio" name="handedness" value="right"><span>Right-handed</span></label>
-            <label><input type="radio" name="handedness" value="left"><span>Left-handed</span></label>
-          </div>
-        </fieldset>
-
-        <fieldset class="choice-question" data-context-field="experience">
-          <legend>Experience</legend>
-          <button class="skip-answer sa-focus" type="button" data-skip-field="experience">Skip</button>
-          <div class="choice-grid">
-            <label><input type="radio" name="experience" value="new"><span>New to golf</span></label>
-            <label><input type="radio" name="experience" value="improving"><span>Improving</span></label>
-            <label><input type="radio" name="experience" value="experienced"><span>Experienced</span></label>
-          </div>
-        </fieldset>
+        <dl class="relationship-pairs">
+          <div><dt>Face + path</dt><dd>Start and curve</dd></div>
+          <div><dt>Attack + loft</dt><dd>Launch and spin</dd></div>
+        </dl>
 
         <div class="onboarding-actions">
-          <button id="continueProfile" class="home-primary sa-focus" type="button">Continue</button>
+          <button id="continueTour" class="home-primary sa-focus" type="button">Try one change</button>
         </div>
       </section>
 
       <section class="onboarding-step" data-onboarding-step="3" aria-labelledby="stepThreeTitle" hidden>
-        <p class="home-eyebrow">Closest match</p>
-        <h2 id="stepThreeTitle" tabindex="-1">What did you see?</h2>
-        <p class="onboarding-lede">Pick the closest description. This creates a model to explore.</p>
+        <p class="home-eyebrow">Interactive model</p>
+        <h2 id="stepThreeTitle" tabindex="-1">Change one number. Watch the chain.</h2>
+        <p class="onboarding-lede">This is a fixed example. Move delivered loft and watch three connected outcomes update from the same Flightglass engine.</p>
 
-        <fieldset class="choice-question">
-          <legend>Club</legend>
-          <div class="choice-grid choice-grid--three">
-            <label><input type="radio" name="club" value="driver"><span>Driver</span></label>
-            <label><input type="radio" name="club" value="7iron"><span>7-iron</span></label>
-            <label><input type="radio" name="club" value="wedge"><span>Wedge</span></label>
+        <section id="onboardingLab" class="onboarding-lab" aria-labelledby="labTitle">
+          <header class="onboarding-lab__header">
+            <div><span>Example shot</span><h3 id="labTitle">7-iron · 90 mph</h3></div>
+            <span class="onboarding-lab__status"><i aria-hidden="true"></i>Modelled</span>
+          </header>
+
+          <dl class="onboarding-lab__outcomes">
+            <div><dt><span>Launch angle</span><small>Estimate</small></dt><dd id="labLaunch">—</dd></div>
+            <div><dt><span>Spin loft</span><small>Geometry</small></dt><dd id="labSpinLoft">—</dd></div>
+            <div><dt><span>Backspin</span><small>Calculated</small></dt><dd id="labBackspin">—</dd></div>
+          </dl>
+
+          <div class="onboarding-lab__control">
+            <div class="onboarding-lab__label">
+              <label for="onboardingLoft">Delivered loft</label>
+              <output id="labLoftValue" for="onboardingLoft">24.0°</output>
+            </div>
+            <div class="onboarding-lab__slider-row">
+              <button id="labLoftDown" class="onboarding-lab__step sa-focus" type="button" aria-label="Decrease delivered loft">−</button>
+              <input id="onboardingLoft" type="range" min="16" max="34" step="1" value="24" aria-describedby="labBoundary">
+              <button id="labLoftUp" class="onboarding-lab__step sa-focus" type="button" aria-label="Increase delivered loft">+</button>
+            </div>
+            <div class="onboarding-lab__range" aria-hidden="true"><span>16°</span><span>24° reference</span><span>34°</span></div>
           </div>
-        </fieldset>
+          <p id="labBoundary" class="onboarding-lab__boundary">Only delivered loft changes. Speed, face, path and attack stay fixed.</p>
+        </section>
 
-        <fieldset class="choice-question">
-          <legend>Start direction</legend>
-          <div class="choice-grid choice-grid--three">
-            <label><input type="radio" name="start" value="left"><span>Left</span></label>
-            <label><input type="radio" name="start" value="straight"><span>Straight</span></label>
-            <label><input type="radio" name="start" value="right"><span>Right</span></label>
-          </div>
-        </fieldset>
-
-        <fieldset class="choice-question">
-          <legend>Curve</legend>
-          <div class="choice-grid choice-grid--three">
-            <label><input type="radio" name="curve" value="left"><span>Left</span></label>
-            <label><input type="radio" name="curve" value="straight"><span>Straight</span></label>
-            <label><input type="radio" name="curve" value="right"><span>Right</span></label>
-          </div>
-        </fieldset>
-
-        <fieldset class="choice-question">
-          <legend>Flight</legend>
-          <div class="choice-grid choice-grid--three">
-            <label><input type="radio" name="flight" value="low"><span>Low</span></label>
-            <label><input type="radio" name="flight" value="neutral"><span>About right</span></label>
-            <label><input type="radio" name="flight" value="high"><span>High / thin</span></label>
-          </div>
-        </fieldset>
-
-        <p id="guidedValidation" class="onboarding-validation" role="status" hidden>Choose one option in each row, or use a neutral model.</p>
         <div class="onboarding-actions">
-          <button id="showShot" class="home-primary sa-focus" type="button">Show my shot</button>
-          <button id="useNeutralShot" class="home-text-action sa-focus" type="button">Skip with a neutral model</button>
+          <button id="continueFromLab" class="home-primary sa-focus" type="button">See where to explore</button>
         </div>
       </section>
 
       <section class="onboarding-step" data-onboarding-step="4" aria-labelledby="stepFourTitle" hidden>
-        <p class="home-eyebrow">Your first result</p>
-        <h2 id="stepFourTitle" tabindex="-1">Here’s the relationship.</h2>
+        <p class="home-eyebrow">Your product map</p>
+        <h2 id="stepFourTitle" tabindex="-1">Three ways to understand a shot.</h2>
+        <p class="onboarding-lede">Start with the question you have. Each view shows a different layer of the same model.</p>
 
-        <div class="onboarding-result-visual">
-          <svg id="onboardingShotSvg" viewBox="0 0 320 190" role="img" aria-labelledby="onboardingShotTitle onboardingShotDescription">
-            <title id="onboardingShotTitle">Your modelled ball flight</title>
-            <desc id="onboardingShotDescription">A deterministic path drawn from the Flightglass engine result.</desc>
-            <path class="shot-gridline" d="M24 160H296"></path>
-            <path class="shot-targetline" d="M160 160V24"></path>
-            <path id="onboardingShotUnderlay" class="shot-trace-under" d="M50 160 C105 115 160 72 240 34"></path>
-            <path id="onboardingShotPath" class="shot-trace" d="M50 160 C105 115 160 72 240 34" pathLength="1"></path>
-            <circle id="onboardingShotBall" class="shot-ball" cx="240" cy="34" r="5"></circle>
-          </svg>
-          <span class="shot-scale-note">Deterministic · not to scale</span>
-        </div>
+        <nav class="product-map" aria-label="Flightglass product views">
+          <a class="product-map__item sa-focus" href="./impact.html" data-complete-onboarding>
+            <span class="product-map__thumb"><img src="./assets/onboarding/outcome.webp" alt="" width="750" height="1624" loading="lazy"></span>
+            <span><strong>Outcome</strong><small>Read launch, spin and distance.</small></span>
+            <span class="product-map__arrow" aria-hidden="true">→</span>
+          </a>
+          <a class="product-map__item sa-focus" href="./impact-studio.html" data-complete-onboarding>
+            <span class="product-map__thumb product-map__thumb--wide"><img src="./assets/onboarding/studio.webp" alt="" width="1624" height="750" loading="lazy"></span>
+            <span><strong>Studio</strong><small>See strike, low point and delivery.</small></span>
+            <span class="product-map__arrow" aria-hidden="true">→</span>
+          </a>
+          <a class="product-map__item sa-focus" href="./jarvis.html" data-complete-onboarding>
+            <span class="product-map__thumb"><img src="./assets/onboarding/guide.webp" alt="" width="750" height="1624" loading="lazy"></span>
+            <span><strong>Guide</strong><small>Choose a question and go deeper.</small></span>
+            <span class="product-map__arrow" aria-hidden="true">→</span>
+          </a>
+        </nav>
 
-        <p id="onboardingRelationship" class="onboarding-relationship">This model turns your observations into one relationship to test.</p>
-
-        <table id="onboardingResultTable" class="result-table">
-          <caption>Exact model result</caption>
-          <tbody>
-            <tr><th scope="row">Start</th><td id="resultStart">—</td></tr>
-            <tr><th scope="row">Curve</th><td id="resultCurve">—</td></tr>
-            <tr><th scope="row">Carry</th><td id="resultCarry">—</td></tr>
-            <tr><th scope="row">Finish</th><td id="resultFinish">—</td></tr>
-          </tbody>
-        </table>
-
-        <p id="firstExperiment" class="first-experiment"></p>
         <div class="onboarding-actions">
-          <a id="tryFirstChange" class="home-primary sa-focus" href="./impact.html?guided=experiment">Try one change</a>
+          <a id="openLiveModel" class="home-primary sa-focus" href="./impact.html" data-complete-onboarding>Open the live model</a>
           <button id="finishOnboarding" class="home-text-action sa-focus" type="button">Go to Home</button>
         </div>
       </section>

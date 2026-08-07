@@ -102,6 +102,7 @@ export function createDefaultContext() {
       complete: false,
       step: 1,
       dismissed: false,
+      labLoft: 24,
       goal: null,
       handedness: null,
       experience: null,
@@ -145,6 +146,11 @@ export function validateContext(value) {
         ? rawStep
         : defaults.onboarding.step,
       dismissed: onboarding.dismissed === true,
+      labLoft: Number.isInteger(onboarding.labLoft)
+        && onboarding.labLoft >= 16
+        && onboarding.labLoft <= 34
+        ? onboarding.labLoft
+        : defaults.onboarding.labLoft,
       goal: enumOrNull(onboarding.goal, GOALS),
       handedness: enumOrNull(onboarding.handedness, HANDEDNESS),
       experience: enumOrNull(onboarding.experience, EXPERIENCE),

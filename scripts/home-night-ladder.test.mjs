@@ -3,10 +3,12 @@ import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
 
 const home = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+const homeCss = readFileSync(new URL('../sa-home.css', import.meta.url), 'utf8');
+const opening = readFileSync(new URL('../sa-opening.js', import.meta.url), 'utf8');
 const manifest = JSON.parse(readFileSync(new URL('../config/flightglass-surfaces.json', import.meta.url), 'utf8'));
 
-test('shipping Home is the state-driven first-shot app, not Night Ladder', () => {
-  assert.match(home, /<body[^>]+data-home-experience=["']first-shot["']/);
+test('shipping Home is the state-driven learning entry, not Night Ladder', () => {
+  assert.match(home, /<body[^>]+data-home-experience=["']learning-tour["']/);
   assert.match(home, /<main[^>]+data-home-main/);
   assert.match(home, /id=["']homeEmpty["']/);
   assert.match(home, /id=["']homeReturning["'][^>]+hidden/);
@@ -20,7 +22,7 @@ test('shipping Home is the state-driven first-shot app, not Night Ladder', () =>
 });
 
 test('Home has exactly one primary next action in each state', () => {
-  assert.match(home, /id=["']startFirstShot["'][^>]*>\s*Run your first shot/i);
+  assert.match(home, /id=["']startFirstShot["'][^>]*>\s*See how Flightglass works/i);
   assert.match(home, /id=["']resumeSetup["'][^>]+hidden/);
   assert.match(home, /id=["']tryExperiment["'][^>]*>\s*Try this in Range/i);
   assert.match(home, /id=["']shotTruth["'][^>]*>\s*Modelled shot/i);
@@ -40,22 +42,36 @@ test('the focused onboarding exposes four semantic, resumable steps', () => {
   assert.doesNotMatch(home, /<textarea\b/i);
 });
 
-test('guided questions use buttons and radio groups without pre-value friction', () => {
-  for (const legend of [
-    'Your goal',
-    'Handedness',
-    'Experience',
-    'Club',
-    'Start direction',
-    'Curve',
-    'Flight',
-  ]) {
-    assert.match(home, new RegExp(`<legend[^>]*>\\s*${legend}\\s*<`, 'i'));
-  }
-  assert.match(home, /class=["'][^"']*skip-answer[^"']*["'][^>]*>\s*Skip/i);
-  assert.match(home, /id=["']showShot["'][^>]*>\s*Show my shot/i);
-  assert.match(home, /id=["']onboardingResultTable["']/);
+test('Home owns one local, skippable cold-start opening before onboarding', () => {
+  assert.equal([...home.matchAll(/id=["']saSplash["']/g)].length, 1);
+  assert.match(home, /id=["']saSplashSkip["'][^>]+aria-label=["']Skip opening animation["']/i);
+  assert.match(home, /class=["']opening-splash__instrument["'][^>]+viewBox=["']0 0 390 560["']/i);
+  assert.match(home, /class=["']opening-splash__trajectory["'][^>]+pathLength=["']1["']/i);
+  assert.match(home, /src=["']\.\/assets\/flightglass-lockup\.svg["']/i);
+  assert.doesNotMatch(home, /<video\b|https?:\/\//i);
 
+  assert.match(opening, /sessionStorage\.setItem\(OPENING_SESSION_KEY, '1'\)/);
+  assert.match(opening, /OPENING_DURATION_MS = 1450/);
+  assert.match(opening, /REDUCED_DURATION_MS = 150/);
+  assert.match(opening, /addEventListener\('cancel', cancel\)/);
+  assert.match(homeCss, /@media \(prefers-reduced-motion: reduce\)[\s\S]+\.opening-splash__trajectory/);
+});
+
+test('learning tour uses real product proof and one bounded model without personal intake', () => {
+  for (const asset of ['outcome.webp', 'studio.webp', 'guide.webp']) {
+    assert.match(home, new RegExp(`src=["']\\.\\/assets\\/onboarding\\/${asset}["']`, 'i'));
+  }
+  assert.match(home, /id=["']onboardingLoft["'][^>]+type=["']range["']/i);
+  assert.match(home, /id=["']labLaunch["']/);
+  assert.match(home, /id=["']labSpinLoft["']/);
+  assert.match(home, /id=["']labBackspin["']/);
+  assert.match(home, /onboarding-lab__status[^>]*>[\s\S]*Modelled/i);
+  assert.match(home, /Launch angle[\s\S]*Estimate[\s\S]*Spin loft[\s\S]*Geometry[\s\S]*Backspin[\s\S]*Calculated/i);
+  assert.doesNotMatch(home, /onboarding-lab__outcomes["'][^>]*aria-live/i);
+  assert.match(home, /id=["']openLiveModel["'][^>]+href=["']\.\/impact\.html["']/i);
+  assert.doesNotMatch(home, /type=["']radio["']|Your goal|Handedness|What did you see\?/i);
+  assert.doesNotMatch(home, /my first shot|my swing|show my shot/i);
+  assert.doesNotMatch(home, /Build a model of your golf shot|First shot/i);
   assert.doesNotMatch(home, /sign[ -]?in|create account|enable notifications|paywall|upgrade to pro/i);
 });
 
@@ -67,7 +83,12 @@ test('Home ships only local, canonical assets required by Phase 2', () => {
     '../sa-app-shell.css',
     '../sa-home.css',
     '../sa-home.js',
+    '../sa-opening.js',
     '../sa-v1-context.js',
+    '../impact-flight.js',
+    '../assets/onboarding/outcome.webp',
+    '../assets/onboarding/studio.webp',
+    '../assets/onboarding/guide.webp',
   ]) {
     assert.ok(existsSync(new URL(asset, import.meta.url)), `missing local asset ${asset}`);
   }
@@ -78,10 +99,10 @@ test('Home audit covers the two target portrait sizes and both motion modes', ()
   assert.ok(surface);
   assert.deepEqual(surface.viewportIds, ['portrait-wide', 'portrait-compact']);
   assert.deepEqual(surface.requiredSelectors, [
-    'body[data-home-experience="first-shot"]',
+    'body[data-home-experience="learning-tour"]',
     '[data-home-main]',
     '#homeEmpty',
     '#onboarding',
   ]);
-  assert.equal(surface.primaryJob, 'Run the first useful shot or continue one bounded experiment.');
+  assert.equal(surface.primaryJob, 'Understand familiar launch-monitor inputs, see one modelled relationship, and choose where to explore it.');
 });

@@ -13,6 +13,15 @@ import {
   resolveGuideContext,
 } from './guide-engine.js';
 import { readContext, updateContext } from './sa-v1-context.js';
+import { authorize, consume } from './sa-access.js';
+import * as saIap from './sa-iap.js';
+import { track } from './sa-analytics.js';
+import { lockPortrait } from './sa-orientation.js';
+
+lockPortrait();
+
+const iapReady = saIap.init();
+const showPaywall = async moment => (await import('./sa-paywall.js')).openPaywall(moment);
 
 const REDUCED_MOTION = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const ILLUSTRATIVE_INPUT = Object.freeze({
@@ -338,7 +347,7 @@ function renderAnswer(question) {
     dom.actionLabel.textContent = question.nextAction;
   } else {
     const geometry = question.truthTier === 'geometry-calculated' || question.topicId === 'impact';
-    dom.answerRoute.href = geometry ? './impact-studio.html' : './impact.html';
+    dom.answerRoute.href = geometry ? './impact-studio.html?guided=experiment' : './impact.html';
     dom.answerRoute.querySelector('span').textContent = geometry ? 'Open Impact Studio' : question.nextAction;
   }
 }
@@ -351,8 +360,15 @@ function persistQuestion(question) {
   }
 }
 
-function openQuestion(question, { historyMode = 'push', focus = true } = {}) {
+async function openQuestion(question, { historyMode = 'push', focus = true } = {}) {
   if (!question) return;
+  track('jarvis_question_selected', { questionId: question.id });
+  await iapReady;
+  const access = authorize('guide-answer', { pro: saIap.isPro(), identity: question.id });
+  if (!access.allowed) {
+    if (access.shouldPaywall) await showPaywall('guide-answer');
+    if (!saIap.isPro()) return false;
+  }
   if (!state.selectedTopic || state.selectedTopic.id !== question.topicId) {
     selectTopic(question.topicId, { historyMode: null, announceSelection: false });
   }
@@ -363,7 +379,10 @@ function openQuestion(question, { historyMode = 'push', focus = true } = {}) {
   if (historyMode) writeHistory(question.topicId, question.id, historyMode);
   setView('answer', { focus });
   announce(`${question.prompt} Answer ready. ${capabilityLabel(question.gapClass)}.`);
+  consume('guide-answer', { pro: saIap.isPro(), identity: question.id, completed: true });
+  track('jarvis_answer_seen', { questionId: question.id });
   emit('guide_answer_seen', { questionId: question.id, topicId: question.topicId, gapClass: question.gapClass });
+  return true;
 }
 
 function sourceCopy() {
@@ -608,11 +627,11 @@ function showBrowse({ historyMode = 'push', focus = true } = {}) {
   announce(state.selectedTopic ? `${state.selectedTopic.title} questions.` : 'Choose a guided entry point or topic.');
 }
 
-function handleIntent(intent) {
+async function handleIntent(intent) {
   if (intent === 'saved-setup') {
     selectTopic('direction', { historyMode: 'push' });
     if (hasSavedSetup) {
-      openQuestion(getGuideQuestion('face-path'), { historyMode: 'push' });
+      await openQuestion(getGuideQuestion('face-path'), { historyMode: 'push' });
     } else {
       announce('No saved guided setup yet. Explore the illustrative model or build one from Home.', { visible: true });
     }
@@ -621,15 +640,16 @@ function handleIntent(intent) {
   if (intent === 'compare-model') {
     const question = getGuideQuestion('backspin');
     selectTopic(question.topicId, { historyMode: null, announceSelection: false });
-    openQuestion(question, { historyMode: 'push', focus: false });
-    openLab({ historyMode: 'push' });
+    if (await openQuestion(question, { historyMode: 'push', focus: false })) {
+      openLab({ historyMode: 'push' });
+    }
     return;
   }
   selectTopic('direction', { historyMode: 'push' });
   dom.questionList.querySelector('button')?.focus();
 }
 
-function syncFromUrl({ focus = false } = {}) {
+async function syncFromUrl({ focus = false } = {}) {
   const params = new URLSearchParams(location.search);
   const topicId = params.get('topic');
   const questionId = params.get('question');
@@ -638,8 +658,8 @@ function syncFromUrl({ focus = false } = {}) {
 
   if (question && question.topicId === topicId) {
     selectTopic(topicId, { historyMode: null, announceSelection: false });
-    openQuestion(question, { historyMode: null, focus });
-    if (history.state?.view === 'lab' && question.lab && question.gapClass === 'answer-now') {
+    const opened = await openQuestion(question, { historyMode: null, focus });
+    if (opened && history.state?.view === 'lab' && question.lab && question.gapClass === 'answer-now') {
       openLab({ historyMode: null });
     }
     return;
@@ -682,7 +702,20 @@ dom.backToAnswer.addEventListener('click', () => {
 dom.openLab.addEventListener('click', () => openLab({ historyMode: 'push' }));
 dom.slider.addEventListener('input', event => applySliderValue(event.currentTarget.value));
 dom.reset.addEventListener('click', resetLab);
-window.addEventListener('popstate', () => syncFromUrl({ focus: true }));
+window.addEventListener('popstate', () => { void syncFromUrl({ focus: true }); });
+
+dom.answerRoute.addEventListener('click', async (event) => {
+  const href = dom.answerRoute.getAttribute('href') || '';
+  if (!href.includes('impact-studio.html?guided=experiment')) return;
+  event.preventDefault();
+  await iapReady;
+  const access = authorize('guided-experiment', { pro: saIap.isPro() });
+  if (access.allowed) window.location.assign(href);
+  else if (access.shouldPaywall) {
+    await showPaywall('guided-experiment');
+    if (saIap.isPro()) window.location.assign(href);
+  }
+});
 
 dom.questionCount.textContent = `${GUIDE_QUESTIONS.length} guided questions`;
 dom.source.textContent = sourceCopy();
@@ -691,7 +724,7 @@ if (!hasSavedSetup && storedResolution.status !== 'no-flight') {
   announce('The saved setup is outside the supported model state. An illustrative model is shown safely.', { visible: true });
 }
 updateAperture();
-syncFromUrl({ focus: false });
+await syncFromUrl({ focus: false });
 
 // Keep exported catalog imports visible to bundlers and contract checks while
 // making the topic count an honest runtime assertion.

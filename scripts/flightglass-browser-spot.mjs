@@ -29,7 +29,7 @@ const PHASE1_MOTIONS = Object.freeze([
 ]);
 const REQUIRED_SELECTORS = Object.freeze({
   'index.html': [
-    'body[data-home-experience="first-shot"]',
+    'body[data-home-experience="learning-tour"]',
     '[data-home-main]',
     '#homeEmpty',
     '#onboarding'

@@ -47,6 +47,7 @@ test('the v1 context starts valid, isolated and resumable at step one', () => {
       complete: false,
       step: 1,
       dismissed: false,
+      labLoft: 24,
       goal: null,
       handedness: null,
       experience: null,
@@ -90,6 +91,7 @@ test('updates merge known context fields and never touch Academy storage', () =>
     onboarding: {
       step: 2,
       dismissed: true,
+      labLoft: 30,
       goal: 'contact',
       draftShot: { club: '7iron' },
     },
@@ -97,11 +99,19 @@ test('updates merge known context fields and never touch Academy storage', () =>
 
   assert.equal(updated.onboarding.step, 2);
   assert.equal(updated.onboarding.dismissed, true);
+  assert.equal(updated.onboarding.labLoft, 30);
   assert.equal(updated.onboarding.goal, 'contact');
   assert.equal(updated.onboarding.draftShot.club, '7iron');
   assert.deepEqual(storage.writes, [CONTEXT_KEY]);
   assert.equal(storage.getItem('strikearc.academy.v1'), academyValue);
   assert.deepEqual(readContext(storage), updated);
+});
+
+test('the onboarding lab persists only values inside its shipping slider', () => {
+  const storage = new MemoryStorage();
+  assert.equal(updateContext({ onboarding: { labLoft: 30 } }, storage).onboarding.labLoft, 30);
+  assert.equal(updateContext({ onboarding: { labLoft: 35 } }, storage).onboarding.labLoft, 24);
+  assert.equal(updateContext({ onboarding: { labLoft: 20.5 } }, storage).onboarding.labLoft, 24);
 });
 
 test('the guided fixture is deterministic and its visible result comes from solveFlight', () => {

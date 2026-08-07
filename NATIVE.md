@@ -26,10 +26,11 @@ the repo root would ship every throwaway mock (`app-mock-*.html`,
 the App Store build, which we don't want. Instead:
 
 - `scripts/copy-web.mjs` (`npm run copy-web`) assembles a **disposable**
-  `www/` folder containing only: `index.html`, `geometry.html`,
-  `impact.html`, every top-level `*.js`/`*.css`, and the `vendor/`,
-  `assets/`, `geo3d/` directories. It deletes and recreates `www/` on every
-  run, so it's always a clean, current mirror of the shipping pages.
+  `www/` folder containing the v1 allowlist: `index.html`, `impact.html`,
+  `impact-studio.html`, `jarvis.html`, `terms.html`, `privacy.html`, required
+  top-level modules/styles, and the `vendor/`, `assets/`, `geo3d/`
+  directories. Academy and other mock/dev HTML are explicitly denied. It
+  deletes and recreates `www/` on every run.
 - `capacitor.config.ts` sets `webDir: 'www'` — Capacitor only ever sees that
   clean copy, never the repo root.
 - `www/` is gitignored; it's a build artifact, not source.
@@ -44,14 +45,16 @@ the first scripted step of the `ios-testflight` workflow in
 `codemagic.yaml`. The generated `ios/` project is never committed — every
 CI run regenerates it from scratch, then:
 
-1. Patches `ios/App/App/Info.plist` for portrait-default orientation
-   (portrait + both landscape rotations permitted; the geometry screen
-   rotates to landscape at runtime via `@capacitor/screen-orientation`) +
-   display name (`scripts/ios-landscape.mjs`).
-2. Generates app icons/launch images from `resources/icon.png` /
-   `resources/splash.png` via `npx @capacitor/assets generate --ios`.
-3. Runs `npx cap sync ios` + `pod install`.
-4. Sets the build number, signs, archives, and publishes to TestFlight.
+1. Runs `npx cap sync ios` so web assets and native plugins are current.
+2. Runs `scripts/ios-landscape.mjs` to patch `Info.plist` for portrait-default
+   orientation (with both landscape rotations permitted), full-screen display
+   and the Flightglass display name. The same script raises both the generated
+   Xcode project and Podfile deployment target to iOS 16.4, the tested WebView
+   baseline for v1 modal and design-system features.
+3. Injects the export-compliance answer and generates app icons/launch images
+   from `resources/icon.png` / `resources/splash.png`.
+4. Runs the final `pod install`, sets versions/build number, signs, archives,
+   and publishes to TestFlight only when the release workflow is authorized.
 
 ## Files in this scaffold
 
@@ -60,10 +63,10 @@ CI run regenerates it from scratch, then:
 | `package.json` | Capacitor CLI + core/ios/android/app/haptics/screen-orientation deps, `copy-web`/`sync`/`sync:android` scripts |
 | `capacitor.config.ts` | `appId`, `appName`, `webDir: 'www'`, no live-reload server |
 | `scripts/copy-web.mjs` | Assembles `www/` (allowlist HTML + dirs, denylist mocks/tooling) |
-| `scripts/ios-landscape.mjs` | Patches `Info.plist` post-`cap add ios` (portrait-default orientation, full screen, display name) |
+| `scripts/ios-landscape.mjs` | Post-sync patch for `Info.plist`, Xcode and Podfile (orientation, full screen, display name, iOS 16.4 minimum) |
 | `resources/icon.svg`, `resources/icon.png` (1024²) | App icon source (cyan swing-arc + ball on near-black field) |
 | `resources/splash.svg`, `resources/splash.png` (2732²) | Launch screen source |
-| `codemagic.yaml` | `ios-testflight` workflow: npm ci → copy-web → cap add ios → plist patch → assets generate → cap sync → pod install → build number → sign → build ipa → publish to TestFlight |
+| `codemagic.yaml` | `ios-testflight` workflow: npm ci → copy-web → cap add/sync ios → native config patch → assets → pod install → versions/build number → sign → build ipa → optional TestFlight publish |
 | `.gitignore` | Ignores `node_modules/`, `www/`, generated `ios/` artifacts, build outputs |
 
 ## Android (debug APK via GitHub Actions)
@@ -74,7 +77,7 @@ every push to `main` (`npx cap add android`), then:
 
 1. Patches `android/app/src/main/AndroidManifest.xml` for portrait-default
    orientation (`android:screenOrientation="portrait"` on `.MainActivity`;
-   the geometry screen rotates to landscape at runtime via
+   Impact Studio rotates to landscape at runtime via
    `@capacitor/screen-orientation`) via `scripts/android-landscape.mjs`.
 2. Generates icons/splash from `resources/` (`--assetPath resources` —
    required because the repo root's `assets/` dir is the tool's default).
@@ -85,11 +88,11 @@ Deliberately out of scope until launch: keystore signing, Play Console
 listing, release publish (Sivert-only external steps). iOS CI stays on
 Codemagic; Android CI is GitHub Actions to keep Codemagic minutes for iOS.
 
-## Setup status (2026-07-03) — nothing manual left
+## Setup status (updated 2026-08-07)
 
-Because this build **takes over the existing `no.strikearc.app` record**,
-every account-side resource already exists — there are no manual Apple or
-Codemagic setup steps remaining:
+The existing app record and signing path are available, but production billing
+is intentionally fail-closed. The repository is suitable for a draft review;
+it is not ready for store submission until the open items below are complete.
 
 1. ✅ **ASC API key integration** — reuses the existing team-level
    `ryddy-asc-key` (Key ID `JQVPW4D944`), already connected under Codemagic
@@ -102,16 +105,23 @@ Codemagic setup steps remaining:
 4. ✅ **App Store Connect app record** — already exists (Apple ID
    `6768449250`; store-name metadata is updated separately). Automatic signing
    (`fetch-signing-files … --create`) refreshes the cert/profile each run.
-5. **Trigger the `ios-testflight` workflow** — push to `main` (auto-trigger)
-   or start it manually from the Codemagic dashboard.
+5. ⬜ **RevenueCat configuration** — replace the public placeholder SDK keys,
+   configure a current Monthly/Annual offering granting entitlement `pro`, and
+   keep the protected lifetime product mapped for existing-owner restore only.
+6. ⬜ **Store readiness** — verify Monthly/Annual products, agreements, tax and
+   banking, then record a native sandbox purchase plus restoration of an
+   existing lifetime entitlement.
+7. **Trigger the `ios-testflight` workflow only after authorization** — push to
+   `main` or start it manually from Codemagic once the release gates above are
+   closed.
 
 The build number is set to **one above the latest TestFlight build** on the
 record (queried live via `get-latest-testflight-build-number`), so the
 native build always registers as the newest one for testers regardless of
 strikearc-3.0's separate build counter.
 
-Everything (dependency install, `www/` assembly, iOS project generation,
-orientation/display-name patch, export-compliance answer, icon/splash
-generation, pod install, build numbering, cert-quota maintenance, code
-signing, archive, and TestFlight upload) is fully automated by
-`codemagic.yaml`.
+Dependency install, `www/` assembly, iOS project generation, native baseline
+patching, export-compliance answer, icon/splash generation, pod install, build
+numbering, signing and archive are automated by `codemagic.yaml`. RevenueCat,
+store agreements/products and native sandbox acceptance remain external owner
+steps and are tracked in `TECH_SPEC.md` and `docs/app-review-notes.md`.

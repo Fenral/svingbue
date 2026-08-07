@@ -1,51 +1,34 @@
 import {
-  buildGuidedShot,
   deriveNextExperiment,
   readContext,
   updateContext,
 } from './sa-v1-context.js';
+import { solveFlight } from './impact-flight.js';
+import { runOpeningSplash } from './sa-opening.js';
+import * as saIap from './sa-iap.js';
+import { track } from './sa-analytics.js';
 
 const byId = id => document.getElementById(id);
 const onboarding = byId('onboarding');
 const onboardingScroll = onboarding.querySelector('.onboarding-scroll');
 const steps = [...onboarding.querySelectorAll('[data-onboarding-step]')];
-const form = byId('onboardingForm');
 const live = byId('onboardingLive');
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const labLoft = byId('onboardingLoft');
+const accessCenter = byId('accessCenter');
+const iapReady = saIap.init();
+const LAB_INPUT = Object.freeze({
+  clubSpeed: 90,
+  faceAngle: 2,
+  clubPath: 0,
+  attackAngle: 3,
+});
 let context = readContext();
+labLoft.value = String(context.onboarding.labLoft);
 
 function setContext(patch) {
   context = updateContext(patch);
   return context;
-}
-
-function selected(name) {
-  return form.elements.namedItem(name)?.value || null;
-}
-
-function setRadio(name, value) {
-  for (const input of form.querySelectorAll(`input[name="${name}"]`)) {
-    input.checked = input.value === value;
-  }
-}
-
-function restoreChoices() {
-  for (const field of ['goal', 'handedness', 'experience']) {
-    setRadio(field, context.onboarding[field]);
-  }
-  for (const field of ['club', 'start', 'curve', 'flight']) {
-    setRadio(field, context.onboarding.draftShot[field]);
-  }
-}
-
-function titleCase(value) {
-  return String(value || '').replace(/^./, character => character.toUpperCase());
-}
-
-function signed(value, suffix = '') {
-  const number = Number(value) || 0;
-  const sign = number < 0 ? '−' : number > 0 ? '+' : '';
-  return `${sign}${Math.abs(number).toFixed(1)}${suffix}`;
 }
 
 function lateral(value, unit = 'm') {
@@ -116,12 +99,23 @@ function renderHome() {
 
   if (!hasShot) {
     const resumable = context.onboarding.step > 1 && !context.onboarding.complete;
-    byId('emptyEyebrow').textContent = resumable ? 'Setup saved' : 'Your first model';
-    byId('emptyTitle').textContent = resumable ? 'Pick up where you left off.' : 'See why it flew.';
-    byId('emptyBody').textContent = resumable
-      ? 'Your choices are still here. Continue from the exact step you left.'
-      : 'Choose a few things you noticed. Flightglass turns them into a shot model you can test.';
-    byId('startFirstShot').textContent = resumable ? 'Continue your first shot' : 'Run your first shot';
+    const completed = context.onboarding.complete;
+    byId('emptyEyebrow').textContent = completed
+      ? 'Ready to explore'
+      : resumable ? 'Tour saved' : 'Understand the numbers';
+    byId('emptyTitle').textContent = completed
+      ? 'Read the whole shot.'
+      : resumable ? 'Pick up where you left off.' : 'See what every number changes.';
+    byId('emptyBody').textContent = completed
+      ? 'Open the live model and change speed, face, path, attack or delivered loft.'
+      : resumable
+        ? 'Continue from the exact product view you left.'
+        : 'Explore how speed, face, path, attack and delivered loft shape the same shot.';
+    byId('startFirstShot').textContent = completed
+      ? 'Open live Outcome'
+      : resumable ? 'Continue the tour' : 'See how Flightglass works';
+    byId('resumeSetup').hidden = !completed;
+    if (completed) byId('resumeSetup').textContent = 'Review how it works';
     return;
   }
 
@@ -138,37 +132,56 @@ function renderHome() {
   drawShot('home', shot, false);
 }
 
-function renderResult() {
-  const shot = context.currentShot;
-  if (!shot) return;
-  const result = shot.result;
-  const experiment = experimentFor(shot);
+function renderLab({ announce = false, persist = false } = {}) {
+  const dynamicLoft = Number(labLoft.value);
+  const result = solveFlight({ ...LAB_INPUT, dynamicLoft });
+  const progress = (dynamicLoft - Number(labLoft.min))
+    / (Number(labLoft.max) - Number(labLoft.min));
 
-  byId('onboardingRelationship').textContent = result.relationship;
-  byId('resultStart').textContent = `${signed(result.startDirectionDeg, '°')} · ${titleCase(result.startLabel)}`;
-  byId('resultCurve').textContent = lateral(result.curveM);
-  byId('resultCarry').textContent = `${result.carryM.toFixed(1)} m`;
-  byId('resultFinish').textContent = lateral(result.offlineM);
-  byId('firstExperiment').textContent = `First test: ${experiment.instruction}`;
-  drawShot('onboarding', shot);
+  byId('labLoftValue').textContent = `${dynamicLoft.toFixed(1)}°`;
+  byId('labLaunch').textContent = `${result.launchAngle.toFixed(1)}°`;
+  byId('labSpinLoft').textContent = `${result.spinLoft.toFixed(1)}°`;
+  byId('labBackspin').textContent = `${Math.round(result.backspin)} rpm`;
+  labLoft.style.setProperty('--lab-progress', `${(progress * 100).toFixed(1)}%`);
+  if (persist) {
+    setContext({ onboarding: { labLoft: dynamicLoft } });
+    track('onboarding_lab_changed', { changeKey: 'dynamicLoft', value: dynamicLoft });
+  }
+
+  const lab = byId('onboardingLab');
+  lab.classList.remove('is-updating');
+  if (!reducedMotion) requestAnimationFrame(() => lab.classList.add('is-updating'));
+
+  if (announce) {
+    live.textContent = `Delivered loft ${dynamicLoft.toFixed(0)} degrees. Launch ${result.launchAngle.toFixed(1)} degrees, spin loft ${result.spinLoft.toFixed(1)} degrees, backspin ${Math.round(result.backspin)} rpm.`;
+  }
+}
+
+function stepLab(delta) {
+  const next = Math.max(Number(labLoft.min), Math.min(Number(labLoft.max), Number(labLoft.value) + delta));
+  labLoft.value = String(next);
+  renderLab({ announce: true, persist: true });
 }
 
 function renderStep(step, { focus = true, announce = true } = {}) {
   const safeStep = Math.max(1, Math.min(4, Number(step) || 1));
-  if (safeStep === 4 && !context.currentShot) {
-    setContext({ onboarding: { step: 3 } });
-    return renderStep(3, { focus, announce });
-  }
-
   for (const section of steps) {
-    section.hidden = Number(section.dataset.onboardingStep) !== safeStep;
+    const active = Number(section.dataset.onboardingStep) === safeStep;
+    section.hidden = !active;
+    section.classList.remove('is-entering');
+    if (active && !reducedMotion) {
+      requestAnimationFrame(() => {
+        section.classList.add('is-entering');
+        section.addEventListener('animationend', () => section.classList.remove('is-entering'), { once: true });
+      });
+    }
   }
   byId('onboardingProgress').textContent = `Step ${safeStep} of 4`;
-  byId('onboardingProgressBar').style.width = `${safeStep * 25}%`;
+  byId('onboardingProgressBar').style.transform = `scaleX(${safeStep * .25})`;
   byId('onboardingBack').hidden = safeStep === 1;
   onboarding.dataset.currentStep = String(safeStep);
   onboardingScroll.scrollTop = 0;
-  if (safeStep === 4) renderResult();
+  if (safeStep === 3) renderLab();
 
   const heading = onboarding.querySelector(`[data-onboarding-step="${safeStep}"] h2`);
   if (announce) live.textContent = `Step ${safeStep} of 4. ${heading?.textContent || ''}`;
@@ -181,16 +194,15 @@ function goToStep(step) {
 }
 
 function openOnboarding() {
-  let step = context.onboarding.step;
-  if (step === 4 && !context.currentShot) step = 3;
+  const step = context.onboarding.step;
   setContext({ onboarding: { step, dismissed: false } });
-  restoreChoices();
   document.body.dataset.onboardingActive = 'true';
   if (!onboarding.open) {
     if (typeof onboarding.showModal === 'function') onboarding.showModal();
     else onboarding.setAttribute('open', '');
   }
   renderStep(step, { focus: true, announce: true });
+  track('onboarding_started', { step });
 }
 
 function closeOnboarding({ complete = false } = {}) {
@@ -204,81 +216,75 @@ function closeOnboarding({ complete = false } = {}) {
   requestAnimationFrame(() => focusTarget?.focus({ preventScroll: true }));
 }
 
-function draftShot() {
-  return {
-    club: selected('club'),
-    start: selected('start'),
-    curve: selected('curve'),
-    flight: selected('flight'),
-  };
-}
-
-function createShot(selections) {
-  const shot = buildGuidedShot(selections);
-  const experiment = deriveNextExperiment(shot);
-  context = updateContext({
-    onboarding: {
-      step: 4,
-      dismissed: false,
-      draftShot: selections,
-    },
-    currentShot: shot,
-    lastExperiment: experiment,
-  });
-  renderHome();
-  renderStep(4);
-}
-
-form.addEventListener('change', event => {
-  const input = event.target;
-  if (!(input instanceof HTMLInputElement) || input.type !== 'radio') return;
-
-  if (['goal', 'handedness', 'experience'].includes(input.name)) {
-    setContext({ onboarding: { [input.name]: input.value } });
-  }
-  if (['club', 'start', 'curve', 'flight'].includes(input.name)) {
-    setContext({ onboarding: { draftShot: { [input.name]: input.value } } });
-    byId('guidedValidation').hidden = true;
-  }
-});
-
-for (const button of form.querySelectorAll('[data-skip-field]')) {
-  button.addEventListener('click', () => {
-    const field = button.dataset.skipField;
-    setRadio(field, null);
-    setContext({ onboarding: { [field]: null } });
-    live.textContent = `${button.closest('fieldset').querySelector('legend').textContent.trim()} skipped.`;
-    button.closest('fieldset').nextElementSibling?.querySelector('input, button')?.focus();
-  });
-}
-
-byId('startFirstShot').addEventListener('click', openOnboarding);
-byId('resumeSetup').addEventListener('click', openOnboarding);
-byId('resumeReturningSetup').addEventListener('click', openOnboarding);
-byId('beginOnboarding').addEventListener('click', () => goToStep(2));
-byId('continueProfile').addEventListener('click', () => goToStep(3));
-byId('onboardingBack').addEventListener('click', () => goToStep(context.onboarding.step - 1));
-byId('onboardingLater').addEventListener('click', () => closeOnboarding({ complete: context.onboarding.complete }));
-byId('finishOnboarding').addEventListener('click', () => closeOnboarding({ complete: true }));
-
-byId('showShot').addEventListener('click', () => {
-  const selections = draftShot();
-  if (Object.values(selections).some(value => !value)) {
-    byId('guidedValidation').hidden = false;
-    byId('guidedValidation').focus?.();
+byId('startFirstShot').addEventListener('click', () => {
+  if (context.onboarding.complete) {
+    window.location.assign('./impact.html');
     return;
   }
-  createShot(selections);
+  openOnboarding();
+});
+byId('resumeSetup').addEventListener('click', () => {
+  setContext({ onboarding: { step: 1, dismissed: false } });
+  openOnboarding();
+});
+byId('resumeReturningSetup').addEventListener('click', openOnboarding);
+byId('beginOnboarding').addEventListener('click', () => goToStep(2));
+byId('continueTour').addEventListener('click', () => goToStep(3));
+byId('continueFromLab').addEventListener('click', () => goToStep(4));
+byId('onboardingBack').addEventListener('click', () => goToStep(context.onboarding.step - 1));
+byId('onboardingLater').addEventListener('click', () => closeOnboarding({ complete: context.onboarding.complete }));
+byId('finishOnboarding').addEventListener('click', () => {
+  track('onboarding_completed', { step: 4, completed: true });
+  closeOnboarding({ complete: true });
 });
 
-byId('useNeutralShot').addEventListener('click', () => {
-  const neutral = { club: '7iron', start: 'straight', curve: 'straight', flight: 'neutral' };
-  for (const [name, value] of Object.entries(neutral)) setRadio(name, value);
-  createShot(neutral);
-});
+labLoft.addEventListener('input', () => renderLab());
+labLoft.addEventListener('change', () => renderLab({ announce: true, persist: true }));
+byId('labLoftDown').addEventListener('click', () => stepLab(-1));
+byId('labLoftUp').addEventListener('click', () => stepLab(1));
 
-byId('tryFirstChange').addEventListener('click', () => {
-  setContext({ onboarding: { complete: true, dismissed: true } });
+for (const link of onboarding.querySelectorAll('[data-complete-onboarding]')) {
+  link.addEventListener('click', () => {
+    setContext({ onboarding: { complete: true, dismissed: true, step: 4 } });
+    track('onboarding_completed', { step: 4, completed: true });
+  });
+}
+
+let accessCenterOpener = null;
+byId('openAccessCenter').addEventListener('click', () => {
+  accessCenterOpener = document.activeElement;
+  byId('restoreHomeStatus').textContent = '';
+  accessCenter.showModal();
+  requestAnimationFrame(() => byId('accessCenterTitle').focus({ preventScroll: true }));
+});
+accessCenter.addEventListener('click', event => {
+  if (event.target === accessCenter) accessCenter.close();
+});
+accessCenter.addEventListener('close', () => {
+  const target = accessCenterOpener;
+  accessCenterOpener = null;
+  if (target?.isConnected) requestAnimationFrame(() => target.focus({ preventScroll: true }));
+});
+byId('restoreHomePurchases').addEventListener('click', async () => {
+  const button = byId('restoreHomePurchases');
+  const status = byId('restoreHomeStatus');
+  button.disabled = true;
+  status.textContent = 'Checking your store account…';
+  await iapReady;
+  const result = await saIap.restoreDetailed();
+  button.disabled = false;
+  if (result.status === saIap.PURCHASE_STATUS.SUCCESS) {
+    status.textContent = 'Flightglass Pro restored.';
+    track('restore_completed', { route: 'home', restored: true });
+  } else if (result.status === saIap.PURCHASE_STATUS.NOT_FOUND) {
+    status.textContent = 'No Flightglass Pro purchase was found for this store account.';
+  } else if (result.status === saIap.PURCHASE_STATUS.UNAVAILABLE) {
+    status.textContent = saIap.isNative()
+      ? 'Store access is unavailable in this build. Try again after the app store connection is configured.'
+      : 'Open the native iOS or Android app to restore purchases.';
+  } else {
+    status.textContent = 'The store could not check purchases. Check your connection and try again.';
+  }
 });
 
 onboarding.addEventListener('cancel', event => {
@@ -287,10 +293,13 @@ onboarding.addEventListener('cancel', event => {
 });
 
 renderHome();
-restoreChoices();
+renderLab();
+await runOpeningSplash();
 
 if (!context.onboarding.complete && !context.onboarding.dismissed) {
   requestAnimationFrame(openOnboarding);
+} else {
+  requestAnimationFrame(() => byId('homeMain')?.focus({ preventScroll: true }));
 }
 
 window.__flightglassHome = Object.freeze({

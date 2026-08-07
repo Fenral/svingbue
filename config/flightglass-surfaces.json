@@ -37,7 +37,7 @@
         "portrait-compact"
       ],
       "requiredSelectors": [
-        "body[data-home-experience=\"first-shot\"]",
+        "body[data-home-experience=\"learning-tour\"]",
         "[data-home-main]",
         "#homeEmpty",
         "#onboarding"
@@ -46,7 +46,7 @@
         "TECH_SPEC.md",
         "DECISIONS.md"
       ],
-      "primaryJob": "Run the first useful shot or continue one bounded experiment."
+      "primaryJob": "Understand familiar launch-monitor inputs, see one modelled relationship, and choose where to explore it."
     },
     {
       "id": "range",
@@ -237,23 +237,24 @@
     {
       "id": "paywall",
       "label": "Paywall",
-      "phase": 7,
+      "phase": 4,
       "baselineScore": 76,
       "targetScore": 90,
-      "route": "paywall-mock.html",
-      "sourceType": "reference",
+      "route": "impact.html?sa_debug=paywall&source=instrument-shot",
+      "sourceType": "shipping-state",
       "viewportIds": [
         "portrait-wide",
         "portrait-compact"
       ],
       "requiredSelectors": [
-        ".paywall",
-        "#pw-title"
+        ".sa-pw-scrim",
+        "#sa-pw-title",
+        ".sa-pw-plans"
       ],
       "references": [
-        "paywall-mock.html",
-        "docs/paywall-verdict.md",
-        "docs/monetization-strategy.md"
+        "TECH_SPEC.md",
+        "sa-paywall.js",
+        "sa-paywall.css"
       ],
       "primaryJob": "Understand Pro value before choosing monthly or annual access."
     }

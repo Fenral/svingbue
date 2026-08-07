@@ -9,6 +9,7 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2052%2052'%20fill='none'%3E%3Cpath%20d='M11%2045%20C%2016%2026,%2024%2018,%2035%2015%20M21%2039%20L%2030%2024%20L%2043%2045'%20stroke='%239D8BFF'%20stroke-width='4.2'%20stroke-linecap='round'%20stroke-linejoin='round'/%3E%3Ccircle%20cx='37'%20cy='15'%20r='5.2'%20fill='%23FF8A4D'/%3E%3C/svg%3E" />
 <link rel="stylesheet" href="./sa-p3.css" />
 <link rel="stylesheet" href="./sa.css" />
+<link rel="stylesheet" href="./sa-paywall.css" />
 <style>
   /* ══ IMPACT · KAMERA (Økt B) ══════════════════════════════════════
      Én scene, tre kamerastasjoner (design/orders/impact-kamera.md).
@@ -296,9 +297,10 @@
       </section>
       <div class="sr-only" id="fCarryLive" aria-live="polite" aria-atomic="true"></div>
 
-      <button type="button" class="pinfab" id="pinFab" aria-label="Save shot">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4Z"/></svg><span>Save shot</span>
+      <button type="button" class="pinfab" id="pinFab" aria-label="Pin comparison">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4Z"/></svg><span>Pin comparison</span>
       </button>
+      <div class="sr-only" id="saveShotStatus" role="status" aria-live="polite"></div>
 
       <!-- Outcome is the live cause/effect surface. Side and Top restore their
            dedicated teaching controls without changing the physics path. -->
@@ -323,6 +325,12 @@ import { fitZoom, gridStops, lateralStops, dollyRig } from './impact-framing.js'
 import { selectOutcome } from './impact-outcome.js';
 import { buildAnnotations, placeLabels, cometPoint, MEASURE_KEEPOUT } from './impact-annotate.js';
 import haptics from './sa-haptics.js';
+import { authorize, consume } from './sa-access.js';
+import * as saIap from './sa-iap.js';
+import { track } from './sa-analytics.js';
+
+const iapReady = saIap.init();
+const showPaywall = async moment => (await import('./sa-paywall.js')).openPaywall(moment);
 
 /* ══ state — docs/systemkontrakt.md §3.1. Parametrene er eneste input-
    sannhet; `station` er kamera, aldri parameter (§3.4): scrub re-solver
@@ -1100,10 +1108,51 @@ document.getElementById('topSpeedVal').addEventListener('keydown', event => {
 renderPane(0);
 
 /* ══ Pin pill — maks 3 ghosts, eldste ut (ordre §2, S7) ══ */
-document.getElementById('pinFab').addEventListener('click', () => {
+const pinFab = document.getElementById('pinFab');
+const saveShotStatus = document.getElementById('saveShotStatus');
+pinFab.addEventListener('click', async () => {
   const params = { face: state.face, path: state.path, attack: state.attack, dynLoft: state.dynLoft, speed: state.speed };
+  const identity = `shot:${PARAM_ORDER.map(key => Number(params[key]).toFixed(2)).join(':')}`;
+
+  const alreadyPinned = state.pins.some(pin => {
+    const pinIdentity = `shot:${PARAM_ORDER.map(key => Number(pin.params[key]).toFixed(2)).join(':')}`;
+    return pinIdentity === identity;
+  });
+  if (alreadyPinned) {
+    saveShotStatus.textContent = 'This setup is already pinned. Change an input to compare a new setup.';
+    return;
+  }
+
+  await iapReady;
+  const access = authorize('instrument-shot', { pro: saIap.isPro(), identity });
+  if (!access.allowed) {
+    if (access.shouldPaywall) await showPaywall('instrument-shot');
+    if (!saIap.isPro()) return;
+  }
+
   state.pins.push({ params, outcome: selectOutcome(params) });
   if (state.pins.length > 3) state.pins.shift();
+  const used = consume('instrument-shot', { pro: saIap.isPro(), identity, completed: true });
+  const remaining = Number.isInteger(used.remaining) ? used.remaining : null;
+  pinFab.querySelector('span').textContent = remaining !== null && remaining <= 2
+    ? remaining === 0 ? 'Pro next' : `${remaining} free left`
+    : 'Pin comparison';
+  pinFab.setAttribute('aria-label', remaining !== null
+    ? remaining === 0
+      ? 'Comparison pinned. Pro options open on the next new comparison'
+      : `Comparison pinned. ${remaining} free comparisons remaining`
+    : 'Comparison pinned');
+  saveShotStatus.textContent = remaining !== null
+    ? remaining === 0
+      ? 'Comparison pinned. Pro options open on the next new comparison.'
+      : `Comparison pinned. ${remaining} free comparisons remaining.`
+    : 'Comparison pinned.';
+  track('shot_saved', {
+    route: 'outcome',
+    count: used.used,
+    limit: used.limit,
+    remaining: remaining ?? 0,
+  });
 });
 
 let cometEpoch = performance.now();
@@ -1256,6 +1305,7 @@ const api = { state, setStation,
 window.__impact = api;
 
 const initialOutcome = selectOutcome(state);
+track('live_model_opened', { route: 'outcome' });
 updateStats(initialOutcome);
 renderMetricChips(initialOutcome);
 lastChipsOutcome = initialOutcome;

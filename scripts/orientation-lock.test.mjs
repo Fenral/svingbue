@@ -19,7 +19,12 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { patchPlist } from './ios-landscape.mjs';
+import {
+  IOS_DEPLOYMENT_TARGET,
+  patchPlist,
+  patchPodfileDeploymentTarget,
+  patchXcodeDeploymentTarget,
+} from './ios-landscape.mjs';
 import { patchManifest } from './android-landscape.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -90,6 +95,33 @@ test('iOS patch permits portrait (default) + landscape, not landscape-only', () 
   // Brand + full-screen invariants preserved.
   assert.match(out, /CFBundleDisplayName<\/key>\s*<string>Flightglass<\/string>/, 'display name preserved');
   assert.match(out, /UIRequiresFullScreen<\/key>\s*<true\/>/, 'full-screen preserved');
+});
+
+test('v1 Guide defaults to portrait and Studio locks landscape', () => {
+  const guide = read('jarvis.js');
+  assert.match(guide, /sa-orientation\.js/, 'Guide imports the orientation module');
+  assert.match(guide, /lockPortrait\s*\(/, 'Guide calls lockPortrait()');
+  const studio = read('impact-studio.html');
+  assert.match(studio, /sa-orientation\.js/, 'Studio imports the orientation module');
+  assert.match(studio, /lockLandscape\s*\(/, 'Studio calls lockLandscape()');
+});
+
+test('iOS build patch enforces the WebView baseline required by shipping v1 UI', () => {
+  assert.equal(IOS_DEPLOYMENT_TARGET, '16.4');
+  const project = [
+    'IPHONEOS_DEPLOYMENT_TARGET = 14.0;',
+    'IPHONEOS_DEPLOYMENT_TARGET = 15.0;',
+  ].join('\n');
+  const patchedProject = patchXcodeDeploymentTarget(project);
+  assert.doesNotMatch(patchedProject, /DEPLOYMENT_TARGET = (?:14|15)/);
+  assert.equal(
+    patchedProject.match(/IPHONEOS_DEPLOYMENT_TARGET = 16\.4;/g)?.length,
+    2,
+  );
+  assert.equal(
+    patchPodfileDeploymentTarget("platform :ios, '14.0'\nuse_frameworks!"),
+    "platform :ios, '16.4'\nuse_frameworks!",
+  );
 });
 
 test('Android patch defaults MainActivity to portrait, not sensorLandscape', () => {

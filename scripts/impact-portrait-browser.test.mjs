@@ -112,12 +112,12 @@ test('all thirteen outcomes are visible by default', { timeout: 60_000 }, async 
   await page.close();
 });
 
-test('the pin control reads Save shot', { timeout: 60_000 }, async () => {
+test('the pin control reads Pin comparison', { timeout: 60_000 }, async () => {
   const { page } = await open();
   await page.locator('#stage').waitFor();
-  const fab = page.getByRole('button', { name: /^Save shot$/i });
+  const fab = page.getByRole('button', { name: /^Pin comparison$/i });
   assert.equal(await fab.count(), 1);
-  assert.equal(await fab.getAttribute('aria-label'), 'Save shot');
+  assert.equal(await fab.getAttribute('aria-label'), 'Pin comparison');
   await page.close();
 });
 

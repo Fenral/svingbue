@@ -8,6 +8,7 @@
 <meta name="description" content="Flightglass privacy policy: what data is collected, how RevenueCat and the app stores process purchases, and your rights.">
 <link rel="icon" href="./assets/flightglass-mark-micro.svg" type="image/svg+xml">
 <style>
+  @view-transition { navigation:auto; }
   :root{
     --accent:#FF8A4D;
     --accent-soft:rgba(255,138,77,.14);
@@ -146,7 +147,10 @@
   @media (max-width:480px){
     .brand img{width:118px;}
   }
-  @media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important;}}
+  @media (prefers-reduced-motion:reduce){
+    *{transition:none!important;scroll-behavior:auto!important;}
+    ::view-transition-group(*),::view-transition-old(*),::view-transition-new(*){animation:none!important;}
+  }
 
   @media (prefers-contrast:more){
     :root{--muted:#d3ddf0;--muted-2:#c3cfe5;--line:rgba(255,255,255,.35);}
@@ -166,7 +170,7 @@
 <main id="main">
   <span class="eyebrow"><span class="dot" aria-hidden="true"></span> Legal</span>
   <h1>Privacy Policy</h1>
-  <p class="updated">Last updated: 4 July 2026 · Effective: 4 July 2026</p>
+  <p class="updated">Last updated: 7 August 2026 · Effective: 7 August 2026</p>
   <p class="lede">Flightglass is a golf swing-geometry and ball-flight visualizer. This policy explains what data is
   (and isn't) collected, who processes it, and the rights you have. It is written to be read in a few minutes,
   not a few hours.</p>
@@ -190,8 +194,8 @@
   <section id="anonymous">
     <h2><span class="num">1.</span>An anonymous app</h2>
     <p>Flightglass has <strong>no account, no login, and no sign-up</strong>. We do not collect your name, email
-    address, or any profile information through the app itself. Swing settings, shot history, and preferences
-    are stored <strong>locally on your device</strong> and are never uploaded to us.</p>
+    address, or any profile information through the app itself. Model settings, learning progress, local free-use
+    counters, and preferences are stored <strong>locally on your device</strong> and are never uploaded to us.</p>
     <p class="dim">The only data that leaves your device is described in the sections below — and it relates
     solely to processing a purchase, not to who you are.</p>
   </section>
@@ -199,8 +203,8 @@
   <section id="purchases">
     <h2><span class="num">2.</span>Purchases &amp; the app stores</h2>
     <p>Flightglass Pro is sold through <strong>Apple's App Store</strong> (iOS) and <strong>Google Play</strong>
-    (Android). When you buy a subscription or the lifetime unlock, your payment is handled entirely by Apple or
-    Google — Flightglass and its developer <strong>never see your card number, billing address, or other payment
+    (Android). When you buy a subscription or restore a previous lifetime unlock, your payment record is handled
+    entirely by Apple or Google — Flightglass and its developer <strong>never see your card number, billing address, or other payment
     details</strong>. Apple and Google act as the merchant of record and are governed by their own privacy
     policies (linked in the table below).</p>
   </section>
@@ -256,7 +260,7 @@
 
   <section id="retention">
     <h2><span class="num">6.</span>Data retention</h2>
-    <p>Local app data (settings, shot history) stays on your device until you delete the app or clear its data —
+    <p>Local app data (model settings, learning progress, free-use counters, and preferences) stays on your device until you delete the app or clear its data —
     we never receive a copy. Purchase-related records held by RevenueCat, Apple, and Google are retained by those
     processors for as long as needed for entitlement, accounting, tax, and fraud-prevention purposes, per their
     own retention policies.</p>
@@ -308,10 +312,8 @@
   </nav>
 </footer>
 <script>
-  /* Progressive Back: when reached from within the app (e.g. the paywall's
-     legal link), the top "Back" link returns to the referring page via
-     history.back() — where sa-paywall.js re-opens the paywall it was on
-     (sa_pw_reopen flag). Direct hits / no-JS fall back to the href (index). */
+  /* Progressive Back: when reached from within the app, the top "Back" link
+     returns to the referring page. Direct hits / no-JS fall back to Home. */
   (function () {
     var back = document.querySelector('a.back');
     if (back && document.referrer && window.history.length > 1) {
