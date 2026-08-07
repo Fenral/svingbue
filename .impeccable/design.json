@@ -1,0 +1,360 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-08-07T23:20:57.301Z",
+  "title": "Design System: Flightglass",
+  "extensions": {
+    "colorMeta": {
+      "arena-black": {
+        "role": "neutral",
+        "displayName": "Arena Black",
+        "description": "The app canvas and fixed telemetry field.",
+        "tonalRamp": ["oklch(15% 0.02 290)", "oklch(26% 0.02 290)", "oklch(37% 0.02 290)", "oklch(49% 0.02 290)", "oklch(61% 0.02 290)", "oklch(73% 0.02 290)", "oklch(84% 0.02 290)", "oklch(95% 0.02 290)"]
+      },
+      "raised-ultraviolet-black": {
+        "role": "neutral",
+        "displayName": "Raised Ultraviolet Black",
+        "description": "The first raised surface above the arena.",
+        "tonalRamp": ["oklch(15% 0.025 290)", "oklch(26% 0.025 290)", "oklch(37% 0.025 290)", "oklch(49% 0.025 290)", "oklch(61% 0.025 290)", "oklch(73% 0.025 290)", "oklch(84% 0.025 290)", "oklch(95% 0.025 290)"]
+      },
+      "solid-plate": {
+        "role": "neutral",
+        "displayName": "Solid Plate",
+        "description": "The opaque lens and panel surface.",
+        "tonalRamp": ["oklch(15% 0.025 290)", "oklch(26% 0.025 290)", "oklch(37% 0.025 290)", "oklch(49% 0.025 290)", "oklch(61% 0.025 290)", "oklch(73% 0.025 290)", "oklch(84% 0.025 290)", "oklch(95% 0.025 290)"]
+      },
+      "lens-violet-black": {
+        "role": "neutral",
+        "displayName": "Lens Violet Black",
+        "description": "The mixed ultraviolet-black field behind instrument canvases.",
+        "tonalRamp": ["oklch(15% 0.025 290)", "oklch(26% 0.025 290)", "oklch(37% 0.025 290)", "oklch(49% 0.025 290)", "oklch(61% 0.025 290)", "oklch(73% 0.025 290)", "oklch(84% 0.025 290)", "oklch(95% 0.025 290)"]
+      },
+      "ink-white": {
+        "role": "neutral",
+        "displayName": "Ink White",
+        "description": "Primary facts, live neutral values, and the keyboard focus ring.",
+        "tonalRamp": ["oklch(15% 0.01 290)", "oklch(26% 0.01 290)", "oklch(37% 0.01 290)", "oklch(49% 0.01 290)", "oklch(61% 0.01 290)", "oklch(73% 0.01 290)", "oklch(84% 0.01 290)", "oklch(95% 0.01 290)"]
+      },
+      "muted-lavender": {
+        "role": "neutral",
+        "displayName": "Muted Lavender",
+        "description": "Supporting copy and secondary facts.",
+        "tonalRamp": ["oklch(15% 0.035 290)", "oklch(26% 0.035 290)", "oklch(37% 0.035 290)", "oklch(49% 0.035 290)", "oklch(61% 0.035 290)", "oklch(73% 0.035 290)", "oklch(84% 0.035 290)", "oklch(95% 0.035 290)"]
+      },
+      "dim-lavender": {
+        "role": "neutral",
+        "displayName": "Dim Lavender",
+        "description": "Telemetry labels and low-emphasis instrument metadata.",
+        "tonalRamp": ["oklch(15% 0.035 290)", "oklch(26% 0.035 290)", "oklch(37% 0.035 290)", "oklch(49% 0.035 290)", "oklch(61% 0.035 290)", "oklch(73% 0.035 290)", "oklch(84% 0.035 290)", "oklch(95% 0.035 290)"]
+      },
+      "etched-hairline": {
+        "role": "neutral",
+        "displayName": "Etched Hairline",
+        "description": "Low-emphasis dividers and panel edges.",
+        "tonalRamp": ["oklch(15% 0 0)", "oklch(26% 0 0)", "oklch(37% 0 0)", "oklch(49% 0 0)", "oklch(61% 0 0)", "oklch(73% 0 0)", "oklch(84% 0 0)", "oklch(95% 0 0)"]
+      },
+      "etched-hairline-strong": {
+        "role": "neutral",
+        "displayName": "Strong Etched Hairline",
+        "description": "Interactive borders and deliberate dividers.",
+        "tonalRamp": ["oklch(15% 0 0)", "oklch(26% 0 0)", "oklch(37% 0 0)", "oklch(49% 0 0)", "oklch(61% 0 0)", "oklch(73% 0 0)", "oklch(84% 0 0)", "oklch(95% 0 0)"]
+      },
+      "ultraviolet-chrome": {
+        "role": "secondary",
+        "displayName": "Ultraviolet Chrome",
+        "description": "Active authority, glyphs, and causal progress.",
+        "tonalRamp": ["oklch(15% 0.15 290)", "oklch(26% 0.15 290)", "oklch(37% 0.15 290)", "oklch(49% 0.15 290)", "oklch(61% 0.15 290)", "oklch(73% 0.15 290)", "oklch(84% 0.15 290)", "oklch(95% 0.15 290)"]
+      },
+      "ultraviolet-soft": {
+        "role": "secondary",
+        "displayName": "Soft Ultraviolet",
+        "description": "Low-intensity selected and action fills.",
+        "tonalRamp": ["oklch(15% 0.15 290)", "oklch(26% 0.15 290)", "oklch(37% 0.15 290)", "oklch(49% 0.15 290)", "oklch(61% 0.15 290)", "oklch(73% 0.15 290)", "oklch(84% 0.15 290)", "oklch(95% 0.15 290)"]
+      },
+      "ultraviolet-line": {
+        "role": "secondary",
+        "displayName": "Ultraviolet Line",
+        "description": "Selected-state and lower-third boundary line.",
+        "tonalRamp": ["oklch(15% 0.15 290)", "oklch(26% 0.15 290)", "oklch(37% 0.15 290)", "oklch(49% 0.15 290)", "oklch(61% 0.15 290)", "oklch(73% 0.15 290)", "oklch(84% 0.15 290)", "oklch(95% 0.15 290)"]
+      },
+      "live-ember": {
+        "role": "primary",
+        "displayName": "Live Ember",
+        "description": "The scarce live-ball, trajectory, and selected-output signal.",
+        "tonalRamp": ["oklch(15% 0.161 46.76)", "oklch(26% 0.161 46.76)", "oklch(37% 0.161 46.76)", "oklch(49% 0.161 46.76)", "oklch(61% 0.161 46.76)", "oklch(73% 0.161 46.76)", "oklch(84% 0.161 46.76)", "oklch(95% 0.161 46.76)"]
+      },
+      "face-coral": {
+        "role": "tertiary",
+        "displayName": "Face Coral",
+        "description": "Face angle and start-line quantity.",
+        "tonalRamp": ["oklch(15% 0.20 20)", "oklch(26% 0.20 20)", "oklch(37% 0.20 20)", "oklch(49% 0.20 20)", "oklch(61% 0.20 20)", "oklch(73% 0.20 20)", "oklch(84% 0.20 20)", "oklch(95% 0.20 20)"]
+      },
+      "path-sky": {
+        "role": "tertiary",
+        "displayName": "Path Sky",
+        "description": "Club path, swing direction, and curve quantity.",
+        "tonalRamp": ["oklch(15% 0.1179 228.25)", "oklch(26% 0.1179 228.25)", "oklch(37% 0.1179 228.25)", "oklch(49% 0.1179 228.25)", "oklch(61% 0.1179 228.25)", "oklch(73% 0.1179 228.25)", "oklch(84% 0.1179 228.25)", "oklch(95% 0.1179 228.25)"]
+      },
+      "attack-pink": {
+        "role": "tertiary",
+        "displayName": "Attack Pink",
+        "description": "Attack angle and low-point locus quantity.",
+        "tonalRamp": ["oklch(15% 0.1793 348.62)", "oklch(26% 0.1793 348.62)", "oklch(37% 0.1793 348.62)", "oklch(49% 0.1793 348.62)", "oklch(61% 0.1793 348.62)", "oklch(73% 0.1793 348.62)", "oklch(84% 0.1793 348.62)", "oklch(95% 0.1793 348.62)"]
+      },
+      "loft-lavender": {
+        "role": "tertiary",
+        "displayName": "Loft Lavender",
+        "description": "Dynamic loft and backspin quantity.",
+        "tonalRamp": ["oklch(15% 0.12 295)", "oklch(26% 0.12 295)", "oklch(37% 0.12 295)", "oklch(49% 0.12 295)", "oklch(61% 0.12 295)", "oklch(73% 0.12 295)", "oklch(84% 0.12 295)", "oklch(95% 0.12 295)"]
+      },
+      "launch-citron": {
+        "role": "tertiary",
+        "displayName": "Launch Citron",
+        "description": "Launch-angle quantity.",
+        "tonalRamp": ["oklch(15% 0.10 105)", "oklch(26% 0.10 105)", "oklch(37% 0.10 105)", "oklch(49% 0.10 105)", "oklch(61% 0.10 105)", "oklch(73% 0.10 105)", "oklch(84% 0.10 105)", "oklch(95% 0.10 105)"]
+      },
+      "plane-periwinkle": {
+        "role": "tertiary",
+        "displayName": "Plane Periwinkle",
+        "description": "Swing-plane quantity.",
+        "tonalRamp": ["oklch(15% 0.1494 288.55)", "oklch(26% 0.1494 288.55)", "oklch(37% 0.1494 288.55)", "oklch(49% 0.1494 288.55)", "oklch(61% 0.1494 288.55)", "oklch(73% 0.1494 288.55)", "oklch(84% 0.1494 288.55)", "oklch(95% 0.1494 288.55)"]
+      },
+      "depth-orchid": {
+        "role": "tertiary",
+        "displayName": "Depth Orchid",
+        "description": "Strike-depth quantity.",
+        "tonalRamp": ["oklch(15% 0.15 310)", "oklch(26% 0.15 310)", "oklch(37% 0.15 310)", "oklch(49% 0.15 310)", "oklch(61% 0.15 310)", "oklch(73% 0.15 310)", "oklch(84% 0.15 310)", "oklch(95% 0.15 310)"]
+      },
+      "strike-gold": {
+        "role": "tertiary",
+        "displayName": "Strike Gold",
+        "description": "Contact quality and strike-height quantity.",
+        "tonalRamp": ["oklch(15% 0.1178 78.12)", "oklch(26% 0.1178 78.12)", "oklch(37% 0.1178 78.12)", "oklch(49% 0.1178 78.12)", "oklch(61% 0.1178 78.12)", "oklch(73% 0.1178 78.12)", "oklch(84% 0.1178 78.12)", "oklch(95% 0.1178 78.12)"]
+      }
+    },
+    "typographyMeta": {
+      "headline": {
+        "displayName": "Instrument Headline",
+        "purpose": "Screen identity and the highest local title."
+      },
+      "title": {
+        "displayName": "Panel Title",
+        "purpose": "Panel, lens, trajectory, and facts headings."
+      },
+      "body": {
+        "displayName": "Causal Sentence",
+        "purpose": "Short factual explanation of the active cause."
+      },
+      "label": {
+        "displayName": "Instrument Label",
+        "purpose": "Uppercase telemetry labels, causal steps, and metadata."
+      },
+      "data": {
+        "displayName": "Live Data",
+        "purpose": "Tabular live outcomes, values, and model output."
+      }
+    },
+    "shadows": [
+      {
+        "name": "instrument-lift",
+        "value": "0 18px 54px -34px rgba(0, 0, 0, .92)",
+        "purpose": "Separates control banks, facts panels, and instrument lenses from the arena."
+      },
+      {
+        "name": "thumb-contact",
+        "value": "0 3px 10px -3px rgba(0, 0, 0, .9)",
+        "purpose": "Gives range thumbs a compact contact shadow."
+      },
+      {
+        "name": "lower-third-separation",
+        "value": "0 -18px 42px -28px rgba(0, 0, 0, .92)",
+        "purpose": "Separates the compact Cause Trace lower third from content above."
+      },
+      {
+        "name": "ink-focus",
+        "value": "inset 0 0 0 1px rgba(0, 0, 0, .85), inset 0 0 0 3px var(--ink)",
+        "purpose": "Shared keyboard focus signal on controls."
+      },
+      {
+        "name": "lens-top-light",
+        "value": "inset 0 1px rgba(255, 255, 255, .075)",
+        "purpose": "Etches the upper edge of an instrument lens."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-standard",
+        "value": "cubic-bezier(.2,.8,.2,1)",
+        "purpose": "Shared incumbent easing for ordinary state change."
+      },
+      {
+        "name": "mechanics-press",
+        "value": "140ms cubic-bezier(.23, 1, .32, 1)",
+        "purpose": "Press and release feedback on controls."
+      },
+      {
+        "name": "mechanics-state",
+        "value": "180ms cubic-bezier(.23, 1, .32, 1)",
+        "purpose": "Border, color, background, and focus state transitions."
+      },
+      {
+        "name": "pressed-scale",
+        "value": "scale(.97)",
+        "purpose": "Tactile active state for buttons and authority segments."
+      },
+      {
+        "name": "reduced-motion",
+        "value": ".001ms; transform: none",
+        "purpose": "Static information-parity state for motion-sensitive users."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "compact-workspace",
+        "value": "820px"
+      },
+      {
+        "name": "portrait-lower-third",
+        "value": "480px"
+      },
+      {
+        "name": "narrow-instrument",
+        "value": "380px"
+      },
+      {
+        "name": "short-landscape",
+        "value": "(max-height: 500px) and (min-width: 821px)"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Icon Control",
+      "kind": "button",
+      "refersTo": "icon-control",
+      "description": "A 44px home or reset control for compact instrument chrome.",
+      "html": "<button class=\"ds-icon-control\" type=\"button\" aria-label=\"Reset active inputs\"><svg viewBox=\"0 0 24 24\" fill=\"none\" aria-hidden=\"true\"><path d=\"M6.3 8.2A7.2 7.2 0 1 1 5 14.6M6.3 8.2V3.8M6.3 8.2h4.4\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg></button>",
+      "css": ".ds-icon-control { width:44px; height:44px; min-width:44px; display:inline-grid; place-items:center; padding:0; border:1px solid var(--line,rgba(255,255,255,.10)); border-radius:var(--radius-control,12px); background:rgba(255,255,255,.035); color:var(--ink,#F5F2FF); cursor:pointer; transition:transform 140ms cubic-bezier(.23,1,.32,1),border-color 180ms cubic-bezier(.23,1,.32,1),background-color 180ms cubic-bezier(.23,1,.32,1); } .ds-icon-control svg { width:19px; height:19px; } .ds-icon-control:hover { border-color:var(--line-strong,rgba(255,255,255,.30)); background:rgba(255,255,255,.065); } .ds-icon-control:focus-visible { outline:none; box-shadow:inset 0 0 0 1px rgba(0,0,0,.85),inset 0 0 0 3px var(--ink,#F5F2FF); } .ds-icon-control:active { transform:scale(.97); } @media (prefers-reduced-motion:reduce) { .ds-icon-control { transition-duration:.001ms; } .ds-icon-control:active { transform:none; } }"
+    },
+    {
+      "name": "Authority Switch",
+      "kind": "nav",
+      "refersTo": "mode-segment-active",
+      "description": "A mutually exclusive two-segment authority selector.",
+      "html": "<div class=\"ds-authority-switch\" role=\"group\" aria-label=\"Input authority\"><button class=\"ds-authority-option\" type=\"button\" aria-pressed=\"true\">Impact Inputs</button><button class=\"ds-authority-option\" type=\"button\" aria-pressed=\"false\">Arc Inputs</button></div>",
+      "css": ".ds-authority-switch { min-width:0; height:48px; display:grid; grid-template-columns:repeat(2,minmax(120px,1fr)); gap:3px; padding:2px; border-radius:14px; background:rgba(255,255,255,.025); } .ds-authority-option { min-height:44px; padding:0 15px; border:0; border-radius:10px; background:transparent; color:var(--muted,#A79FC7); cursor:pointer; font-family:var(--font-ui,'Inter',sans-serif); font-size:12px; font-weight:700; letter-spacing:-.01em; transition:transform 140ms cubic-bezier(.23,1,.32,1),color 180ms cubic-bezier(.23,1,.32,1),background-color 180ms cubic-bezier(.23,1,.32,1),box-shadow 180ms cubic-bezier(.23,1,.32,1); } .ds-authority-option[aria-pressed='true'] { color:var(--ink,#F5F2FF); background:rgba(157,139,255,.15); box-shadow:inset 0 0 0 1px var(--secondary-line,rgba(157,139,255,.45)); } .ds-authority-option:hover:not([aria-pressed='true']) { color:var(--ink,#F5F2FF); background:rgba(255,255,255,.045); } .ds-authority-option:focus-visible { outline:none; box-shadow:inset 0 0 0 1px rgba(0,0,0,.85),inset 0 0 0 3px var(--ink,#F5F2FF); } .ds-authority-option:active { transform:scale(.97); } @media (prefers-reduced-motion:reduce) { .ds-authority-option { transition-duration:.001ms; } .ds-authority-option:active { transform:none; } }"
+    },
+    {
+      "name": "Causal Stepper",
+      "kind": "nav",
+      "refersTo": "causal-stepper",
+      "description": "A compact ordered chain from arc through flight.",
+      "html": "<nav class=\"ds-causal-stepper\" aria-label=\"Causal chain\"><span class=\"ds-causal-node\">Arc</span><svg class=\"ds-causal-link\" viewBox=\"0 0 28 10\" fill=\"none\" aria-hidden=\"true\"><path d=\"M1 5h23m-4-4 4 4-4 4\" stroke=\"currentColor\" stroke-width=\"1.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg><span class=\"ds-causal-node ds-is-active\">Delivery</span><svg class=\"ds-causal-link\" viewBox=\"0 0 28 10\" fill=\"none\" aria-hidden=\"true\"><path d=\"M1 5h23m-4-4 4 4-4 4\" stroke=\"currentColor\" stroke-width=\"1.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg><span class=\"ds-causal-node\">Strike</span><svg class=\"ds-causal-link\" viewBox=\"0 0 28 10\" fill=\"none\" aria-hidden=\"true\"><path d=\"M1 5h23m-4-4 4 4-4 4\" stroke=\"currentColor\" stroke-width=\"1.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg><span class=\"ds-causal-node\">Flight</span></nav>",
+      "css": ".ds-causal-stepper { min-width:0; min-height:31px; display:flex; align-items:center; justify-content:center; gap:clamp(6px,1.4vw,15px); padding:0 10px; border-bottom:1px solid rgba(255,255,255,.065); background:rgba(13,10,24,.72); color:var(--muted-2,#8E85A8); overflow:hidden; } .ds-causal-node { position:relative; display:inline-flex; align-items:center; min-height:28px; font-family:var(--font-ui,'Inter',sans-serif); font-size:10px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; white-space:nowrap; } .ds-causal-node::after { content:''; position:absolute; left:0; right:0; bottom:-1px; height:2px; border-radius:2px 2px 0 0; background:var(--secondary,#9D8BFF); opacity:0; } .ds-causal-node.ds-is-active { color:var(--ink,#F5F2FF); } .ds-causal-node.ds-is-active::after { opacity:1; } .ds-causal-link { width:27px; height:10px; color:rgba(245,242,255,.23); flex:0 1 27px; }"
+    },
+    {
+      "name": "Semantic Parameter Control",
+      "kind": "input",
+      "refersTo": "parameter-control",
+      "description": "A label, semantic range, and mono-value row for one physical quantity.",
+      "html": "<div class=\"ds-parameter-control ds-parameter-control--face\"><label class=\"ds-parameter-name\" for=\"ds-face\">Face Angle</label><input id=\"ds-face\" class=\"ds-parameter-range\" type=\"range\" min=\"-12\" max=\"12\" step=\"0.5\" value=\"0\"><output class=\"ds-parameter-value\" for=\"ds-face\">0.0°</output></div>",
+      "css": ".ds-parameter-control { --ds-parameter:var(--secondary,#9D8BFF); min-width:0; min-height:44px; display:grid; grid-template-columns:minmax(67px,.72fr) minmax(66px,1.28fr) minmax(49px,.55fr); align-items:center; gap:7px; border-top:1px solid rgba(255,255,255,.07); color:var(--ink,#F5F2FF); } .ds-parameter-control--face { --ds-parameter:var(--q-face,#FF5C6B); } .ds-parameter-name { min-width:0; color:color-mix(in srgb,var(--ds-parameter) 74%,var(--ink,#F5F2FF)); font-family:var(--font-ui,'Inter',sans-serif); font-size:10px; font-weight:700; line-height:1.12; } .ds-parameter-value { min-width:0; color:var(--ink,#F5F2FF); font-family:var(--font-mono,'IBM Plex Mono',monospace); font-size:11px; font-variant-numeric:tabular-nums; font-weight:550; text-align:right; white-space:nowrap; } .ds-parameter-range { width:100%; min-width:0; height:44px; margin:0; appearance:none; background:transparent; cursor:pointer; accent-color:var(--ds-parameter); } .ds-parameter-range::-webkit-slider-runnable-track { height:3px; border-radius:3px; background:linear-gradient(90deg,color-mix(in srgb,var(--ds-parameter) 72%,transparent) 0 50%,rgba(255,255,255,.16) 50% 100%); } .ds-parameter-range::-webkit-slider-thumb { width:17px; height:17px; margin-top:-7px; appearance:none; border:3px solid var(--plate-solid,#0D0A18); border-radius:50%; background:var(--ds-parameter); box-shadow:0 3px 10px -3px rgba(0,0,0,.9); } .ds-parameter-range:focus-visible { outline:none; box-shadow:inset 0 0 0 1px rgba(0,0,0,.85),inset 0 0 0 3px var(--ink,#F5F2FF); }"
+    },
+    {
+      "name": "Handoff Action",
+      "kind": "button",
+      "refersTo": "handoff-action",
+      "description": "The explicit action that transfers arc-derived values into impact inputs.",
+      "html": "<button class=\"ds-handoff-action\" type=\"button\"><span>Use in Impact Inputs</span><svg viewBox=\"0 0 24 24\" fill=\"none\" aria-hidden=\"true\"><path d=\"M4 12h15m-5-5 5 5-5 5\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg></button>",
+      "css": ".ds-handoff-action { width:100%; min-height:44px; display:inline-flex; align-items:center; justify-content:space-between; gap:10px; padding:0 12px; border:1px solid var(--secondary-line,rgba(157,139,255,.45)); border-radius:var(--radius-control,12px); background:var(--secondary-soft,rgba(157,139,255,.14)); color:var(--ink,#F5F2FF); cursor:pointer; font-family:var(--font-ui,'Inter',sans-serif); font-size:11px; font-weight:700; transition:transform 140ms cubic-bezier(.23,1,.32,1),background-color 180ms cubic-bezier(.23,1,.32,1),border-color 180ms cubic-bezier(.23,1,.32,1); } .ds-handoff-action svg { width:20px; height:20px; flex:0 0 auto; color:var(--secondary,#9D8BFF); } .ds-handoff-action:hover { border-color:var(--secondary,#9D8BFF); background:rgba(157,139,255,.21); } .ds-handoff-action:focus-visible { outline:none; box-shadow:inset 0 0 0 1px rgba(0,0,0,.85),inset 0 0 0 3px var(--ink,#F5F2FF); } .ds-handoff-action:active { transform:scale(.97); } @media (prefers-reduced-motion:reduce) { .ds-handoff-action { transition-duration:.001ms; } .ds-handoff-action:active { transform:none; } }"
+    },
+    {
+      "name": "Instrument Lens",
+      "kind": "card",
+      "refersTo": "instrument-lens",
+      "description": "A clipped data lens with an etched top light and live summary.",
+      "html": "<section class=\"ds-instrument-lens\" aria-label=\"Direction lens\"><div class=\"ds-lens-heading\"><h2>Direction</h2><p>Face 0.0° · Path 0.0°</p></div><canvas class=\"ds-lens-canvas\" aria-hidden=\"true\"></canvas><span class=\"ds-sr-only\">Face and path are neutral.</span></section>",
+      "css": ".ds-instrument-lens { position:relative; min-width:0; min-height:180px; overflow:hidden; border:1px solid var(--line,rgba(255,255,255,.10)); border-radius:var(--radius-lens,20px); background:color-mix(in srgb,var(--surface,#110D1C) 82%,var(--bg,#07060C)); box-shadow:0 18px 54px -34px rgba(0,0,0,.92),inset 0 1px rgba(255,255,255,.075); color:var(--ink,#F5F2FF); } .ds-lens-heading { position:absolute; z-index:2; top:9px; left:11px; right:11px; display:flex; align-items:baseline; justify-content:space-between; gap:8px; pointer-events:none; } .ds-lens-heading h2 { margin:0; font-family:var(--font-display,'Space Grotesk',sans-serif); font-size:11px; font-weight:650; line-height:1; letter-spacing:-.015em; } .ds-lens-heading p { max-width:68%; margin:0; overflow:hidden; color:var(--muted-2,#8E85A8); font-family:var(--font-mono,'IBM Plex Mono',monospace); font-size:10px; font-variant-numeric:tabular-nums; line-height:1.2; text-align:right; text-overflow:ellipsis; white-space:nowrap; } .ds-lens-canvas { position:absolute; inset:0; width:100%; height:100%; display:block; } .ds-sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }"
+    },
+    {
+      "name": "Cause Trace Panel",
+      "kind": "card",
+      "refersTo": "cause-trace-panel",
+      "description": "A factual causal sentence with compact scope metadata.",
+      "html": "<aside class=\"ds-cause-trace\" aria-label=\"What changed\"><div class=\"ds-cause-heading\"><h2>Cause trace</h2><span>Impact → flight</span></div><p class=\"ds-cause-copy\">Face Angle 0.0° sets the start line and contributes to curvature.</p><div class=\"ds-cause-divider\" aria-hidden=\"true\"></div><p class=\"ds-cause-scope\"><strong>Synthetic model output</strong> · 7-iron reference.</p></aside>",
+      "css": ".ds-cause-trace { min-width:0; min-height:172px; display:flex; flex-direction:column; overflow:hidden; padding:10px; border:1px solid var(--line,rgba(255,255,255,.10)); border-radius:var(--radius-card,16px); background:rgba(13,10,24,.82); box-shadow:0 18px 54px -34px rgba(0,0,0,.92); color:var(--ink,#F5F2FF); } .ds-cause-heading { min-height:25px; display:flex; align-items:baseline; justify-content:space-between; gap:8px; padding:0 2px 6px; } .ds-cause-heading h2 { margin:0; font-family:var(--font-display,'Space Grotesk',sans-serif); font-size:13px; font-weight:650; line-height:1; letter-spacing:-.02em; } .ds-cause-heading span { color:var(--muted-2,#8E85A8); font-family:var(--font-ui,'Inter',sans-serif); font-size:10px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; } .ds-cause-copy { margin:2px 0 0; color:var(--ink,#F5F2FF); font-family:var(--font-display,'Space Grotesk',sans-serif); font-size:clamp(13px,1.45vw,17px); font-weight:560; line-height:1.24; letter-spacing:-.025em; } .ds-cause-divider { width:34px; height:1px; margin:10px 0; background:var(--line-strong,rgba(255,255,255,.30)); } .ds-cause-scope { margin:auto 0 0; padding-top:10px; border-top:1px solid rgba(255,255,255,.07); color:var(--muted-2,#8E85A8); font-family:var(--font-ui,'Inter',sans-serif); font-size:10px; font-weight:600; line-height:1.35; } .ds-cause-scope strong { color:var(--muted,#A79FC7); font-weight:650; }"
+    },
+    {
+      "name": "Key-Value List",
+      "kind": "custom",
+      "refersTo": "key-value-list",
+      "description": "Compact derived facts with semantic mono values.",
+      "html": "<dl class=\"ds-key-value-list\"><div class=\"ds-key-value-row ds-key-value-row--attack\"><dt>Derived Attack</dt><dd>−4.1°</dd></div><div class=\"ds-key-value-row ds-key-value-row--path\"><dt>Derived Path</dt><dd>+2.9°</dd></div><div class=\"ds-key-value-row ds-key-value-row--strike\"><dt>Contact</dt><dd>Pure · +1.8 mm</dd></div></dl>",
+      "css": ".ds-key-value-list { display:grid; gap:8px; margin:0; color:var(--ink,#F5F2FF); } .ds-key-value-row { display:flex; align-items:baseline; justify-content:space-between; gap:8px; } .ds-key-value-row dt { color:var(--muted-2,#8E85A8); font-family:var(--font-ui,'Inter',sans-serif); font-size:10px; font-weight:700; line-height:1.2; letter-spacing:.07em; text-transform:uppercase; } .ds-key-value-row dd { margin:0; color:var(--ink,#F5F2FF); font-family:var(--font-mono,'IBM Plex Mono',monospace); font-size:11px; font-variant-numeric:tabular-nums; font-weight:550; text-align:right; } .ds-key-value-row--attack dd { color:var(--q-attack,oklch(72.34% .1793 348.62)); } .ds-key-value-row--path dd { color:var(--q-path,oklch(78.68% .1179 228.25)); } .ds-key-value-row--strike dd { color:var(--q-strike,oklch(78.73% .1178 78.12)); }"
+    },
+    {
+      "name": "Telemetry Strip",
+      "kind": "custom",
+      "refersTo": "telemetry-strip",
+      "description": "Six persistent modeled outcomes with semantic data color.",
+      "html": "<section class=\"ds-telemetry-strip\" aria-label=\"Live outcomes\"><div class=\"ds-telemetry-cell ds-telemetry-cell--start\"><span>Start</span><output>0.0°</output></div><div class=\"ds-telemetry-cell ds-telemetry-cell--curve\"><span>Curve</span><output>0.0 m</output></div><div class=\"ds-telemetry-cell ds-telemetry-cell--launch\"><span>Launch</span><output>15.4°</output></div><div class=\"ds-telemetry-cell ds-telemetry-cell--backspin\"><span>Backspin</span><output>6,623 rpm</output></div><div class=\"ds-telemetry-cell\"><span>Apex</span><output>25.1 m</output></div><div class=\"ds-telemetry-cell ds-telemetry-cell--carry\"><span>Carry</span><output>159.1 m</output></div></section>",
+      "css": ".ds-telemetry-strip { min-width:0; display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); border-top:1px solid var(--line,rgba(255,255,255,.10)); background:rgba(7,6,12,.95); color:var(--ink,#F5F2FF); } .ds-telemetry-cell { min-width:0; min-height:72px; display:flex; flex-direction:column; justify-content:center; gap:3px; padding:7px clamp(7px,1.1vw,14px) 8px; border-left:1px solid rgba(255,255,255,.07); } .ds-telemetry-cell:first-child { border-left:0; } .ds-telemetry-cell span { color:var(--muted-2,#8E85A8); font-family:var(--font-ui,'Inter',sans-serif); font-size:10px; font-weight:700; line-height:1; letter-spacing:.08em; text-transform:uppercase; white-space:nowrap; } .ds-telemetry-cell output { min-width:0; overflow:hidden; color:var(--ink,#F5F2FF); font-family:var(--font-mono,'IBM Plex Mono',monospace); font-size:clamp(15px,2.25vw,24px); font-variant-numeric:tabular-nums; font-weight:550; line-height:1; letter-spacing:-.035em; text-overflow:ellipsis; white-space:nowrap; } .ds-telemetry-cell--start output { color:var(--q-face,#FF5C6B); } .ds-telemetry-cell--curve output { color:var(--q-path,oklch(78.68% .1179 228.25)); } .ds-telemetry-cell--launch output { color:var(--q-launch,oklch(80% .10 105)); } .ds-telemetry-cell--backspin output { color:var(--q-loft,#B9A0FF); } .ds-telemetry-cell--carry output { color:var(--accent,#FF8A4D); } @media (max-width:820px) { .ds-telemetry-strip { grid-template-columns:repeat(2,minmax(0,1fr)); } .ds-telemetry-cell:nth-child(odd) { border-left:0; } .ds-telemetry-cell output { font-size:22px; } } @media (max-width:480px) { .ds-telemetry-strip { grid-template-columns:repeat(3,minmax(0,1fr)); grid-template-rows:repeat(2,minmax(0,1fr)); } .ds-telemetry-cell,.ds-telemetry-cell:nth-child(odd) { min-height:56px; padding:5px 9px; border-top:1px solid rgba(255,255,255,.07); border-left:1px solid rgba(255,255,255,.07); } .ds-telemetry-cell:nth-child(-n+3) { border-top:0; } .ds-telemetry-cell:nth-child(3n+1) { border-left:0; } .ds-telemetry-cell output { font-size:18px; } }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Ultraviolet Ballistics Bench",
+    "overview": "Flightglass is an ultraviolet-black arena arranged like a precision ballistics bench under restrained broadcast light. Dense controls, paired views, causal facts, and live outcomes read as one instrument: etched hairlines establish structure, semantic quantity hues preserve physical meaning, and mono numerals carry the live truth.\n\nThe system is factual, impersonal, and non-coaching. Sports-broadcast density is welcome when it keeps cause and effect visible together, but spectacle never outranks traceability. The shipped paired-lens Mechanics Lab is a proven composition for that surface, not a global mandate for every page.",
+    "keyCharacteristics": [
+      "Ultraviolet-black surfaces with cold violet chrome and etched hairlines.",
+      "Stable semantic hues that bind one color to one physical quantity.",
+      "IBM Plex Mono numerals for live values, units, and model output.",
+      "A scarce ember trace reserved for the ball, trajectory, and selected live data.",
+      "Compact broadcast density with factual text and immediate state continuity."
+    ],
+    "rules": [
+      {
+        "name": "The Restrained Ember Rule",
+        "body": "At rest, use no more than three ember elements: the ball or tracer, one live hero value, and one primary action. The logo ball remains the codified identity exception.",
+        "section": "colors"
+      },
+      {
+        "name": "The One Hue, One Quantity Rule",
+        "body": "A semantic data hue keeps exactly one physical meaning across controls, diagrams, and outputs; use the corresponding quantity role and never recycle that hue as status or decoration.",
+        "section": "colors"
+      },
+      {
+        "name": "The Mono Means Measured Rule",
+        "body": "IBM Plex Mono is for data values only. Labels, instructions, headings, and actions remain in the UI or display families.",
+        "section": "typography"
+      },
+      {
+        "name": "The Lower-Third Continuity Rule",
+        "body": "On compact live-instrument surfaces, keep causal explanation immediately above persistent telemetry and reserve its exact footprint in content. This is a responsive component rule, not a requirement that unrelated pages copy the Mechanics Lab composition.",
+        "section": "layout"
+      },
+      {
+        "name": "The Etched-Before-Floating Rule",
+        "body": "Establish hierarchy with tone, hairlines, and a one-pixel top light first; use cast shadow only when a surface must separate from moving or fixed content.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Radius Ladder Rule",
+        "body": "Keep controls, cards, and lenses on the 12/16/20px ladder; introduce a different radius only when a component's nesting or viewport attachment makes the hierarchy clearer.",
+        "section": "shapes"
+      }
+    ],
+    "dos": [
+      "Do bind every colored control, trace, and output to its established physical quantity.",
+      "Do keep live values tabular, use U+2212 for negative numbers, and mirror canvas facts in accessible DOM text.",
+      "Do preserve 44px minimum targets, the double ink focus ring, and full information parity under reduced motion.",
+      "Do use the compact Cause Trace lower third above persistent telemetry when a live instrument reaches 480px or narrower.",
+      "Do write factual causal sentences that describe model behavior without grading or coaching the golfer."
+    ],
+    "donts": [
+      "Don't use ember as generic accent, status, hover chrome, or decorative glow.",
+      "Don't reassign a semantic quantity hue or show it as an unlabeled status dot.",
+      "Don't turn the Mechanics Lab's paired-lens composition into a universal page template or a ban on other evidence-led layouts.",
+      "Don't introduce generic SaaS cards, decorative glassmorphism, dashboard clutter, or gamified scoring into mechanics surfaces.",
+      "Don't hide changing relationships behind animation; reduced motion must preserve every value and causal connection."
+    ]
+  }
+}
