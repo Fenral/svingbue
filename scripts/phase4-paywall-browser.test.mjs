@@ -147,6 +147,21 @@ async function capture(page, name) {
   await page.screenshot({ path: join(EVIDENCE_DIR, `${ENGINE}--${name}.png`), fullPage: false, animations: 'disabled' });
 }
 
+async function settleDocumentAnimations(page, timeoutMs = 1_500) {
+  await page.evaluate(timeout => new Promise((resolveAnimations, rejectAnimations) => {
+    const timeoutId = setTimeout(
+      () => rejectAnimations(new Error(`Document animations did not settle within ${timeout} ms.`)),
+      timeout,
+    );
+    new Promise(resolveFrame => requestAnimationFrame(() => requestAnimationFrame(resolveFrame)))
+      .then(() => Promise.allSettled(document.getAnimations().map(animation => animation.finished)))
+      .then(() => {
+        clearTimeout(timeoutId);
+        resolveAnimations();
+      });
+  }), timeoutMs);
+}
+
 async function assertNoSeriousAxe(page) {
   await page.addScriptTag({ content: AXE_SOURCE });
   const result = await page.evaluate(() => axe.run(document, {
@@ -493,28 +508,29 @@ test(`${ENGINE}: Home exposes keyboard-accessible restore and legal access witho
   });
   await page.locator('#onboarding[open]').waitFor();
   await page.getByRole('button', { name: 'Not now' }).click();
+  await page.locator('#onboarding').waitFor({ state: 'hidden' });
+  await page.waitForFunction(() => document.activeElement?.id === 'startFirstShot');
   const opener = page.getByRole('button', { name: 'Purchases and legal' });
-  await opener.focus();
-  await page.keyboard.press('Enter');
+  await opener.press('Enter');
   const center = page.locator('#accessCenter[open]');
   await center.waitFor();
+  await page.waitForFunction(() => document.activeElement?.id === 'accessCenterTitle');
   assert.equal(await center.getByRole('link').count(), 2);
   assert.doesNotMatch(await center.innerText(), /kr\s*\d|choose a plan/i);
   await center.getByRole('link', { name: 'Terms of Use' }).click();
   await page.waitForURL(/\/terms\.html$/);
   assert.match(await page.locator('h1').textContent(), /Terms of Use/);
-  await page.waitForTimeout(400);
+  await settleDocumentAnimations(page);
   await page.getByRole('link', { name: 'Back' }).click();
   await page.waitForURL(/\/index\.html$/);
-  await page.waitForTimeout(400);
+  await page.waitForFunction(() => document.activeElement?.id === 'homeMain');
   const returnedOpener = page.getByRole('button', { name: 'Purchases and legal' });
-  await returnedOpener.focus();
-  await page.keyboard.press('Enter');
+  await returnedOpener.press('Enter');
   await center.waitFor();
+  await page.waitForFunction(() => document.activeElement?.id === 'accessCenterTitle');
   await page.evaluate(() => { window.__iapMode = 'restore-success'; });
   const restore = center.getByRole('button', { name: 'Restore purchases' });
-  await restore.focus();
-  await page.keyboard.press('Enter');
+  await restore.press('Enter');
   await page.getByText('Flightglass Pro restored.').waitFor();
   assert.equal(await page.evaluate(() => window.__sa.iap.isPro()), true);
   await assertNoSeriousAxe(page);
