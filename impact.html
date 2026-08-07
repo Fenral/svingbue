@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <meta name="theme-color" content="#07060C" />
 <meta name="robots" content="noindex" />
-<title>See the Shot — One Scene, Three Camera Stations</title>
+<title>See the Shot — Live Outcome, Side and Top</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2052%2052'%20fill='none'%3E%3Cpath%20d='M11%2045%20C%2016%2026,%2024%2018,%2035%2015%20M21%2039%20L%2030%2024%20L%2043%2045'%20stroke='%239D8BFF'%20stroke-width='4.2'%20stroke-linecap='round'%20stroke-linejoin='round'/%3E%3Ccircle%20cx='37'%20cy='15'%20r='5.2'%20fill='%23FF8A4D'/%3E%3C/svg%3E" />
 <link rel="stylesheet" href="./sa-p3.css" />
 <link rel="stylesheet" href="./sa.css" />
@@ -55,6 +55,20 @@
   .ts-back:hover{border-color:var(--secondary-line)}
   .ts-back:active{transform:scale(.93)}
   .ts-back:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+  .speedctl{margin-left:auto;display:flex;align-items:center;gap:4px;padding:2px;
+    border:1px solid color-mix(in srgb,var(--secondary) 38%,transparent);border-radius:var(--radius-pill);
+    background:color-mix(in srgb,var(--surface) 62%,transparent)}
+  .speedctl[hidden]{display:none}
+  .speedctl button{appearance:none;width:44px;height:44px;border:0;border-radius:50%;cursor:pointer;
+    color:var(--secondary);background:color-mix(in srgb,var(--secondary) 12%,transparent);
+    font:700 17px/1 var(--font-ui)}
+  .speedctl button:active{background:color-mix(in srgb,var(--secondary) 26%,transparent)}
+  .speedctl button:focus-visible,.speedctl output:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+  .speedctl output{min-width:76px;min-height:44px;display:grid;place-items:center;border-radius:var(--radius-control);
+    color:var(--secondary);font:700 13px/1 var(--font-data);font-variant-numeric:tabular-nums}
+  body.sa-shell-ready[data-range-lens="side"] .topstrip,
+  body.sa-shell-ready[data-range-lens="top"] .topstrip{min-height:calc(48px + env(safe-area-inset-top));
+    padding-top:env(safe-area-inset-top)}
 
   /* ══ SCENE — ett canvas, kamerastyrt ══ */
   .scene{flex:1 1 auto;position:relative;min-height:0;overflow:hidden;isolation:isolate}
@@ -65,40 +79,32 @@
   .scene::after{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
     background:linear-gradient(90deg,color-mix(in srgb,var(--bg) 70%,transparent) 0%,transparent 38%),
       linear-gradient(0deg,color-mix(in srgb,var(--bg) 76%,transparent) 0%,transparent 42%)}
-  .scene[data-lens="range"]::before{opacity:.48;transform:scale(1)}
+  .scene[data-lens="outcome"]::before{opacity:.48;transform:scale(1)}
   .scene canvas{position:absolute;inset:0;z-index:1;width:100%;height:100%;display:block;touch-action:none;cursor:grab}
   .scene canvas:active{cursor:grabbing}
 
-  /* One causal telemetry spine: hero carry plus the three outcomes requested
-     for real-time experiments. It is a single instrument, not a card grid. */
-  .outcomeRail{position:absolute;left:max(14px,env(safe-area-inset-left));top:18px;z-index:5;
-    width:132px;padding:12px 12px 10px;border-radius:var(--radius-card);
-    background:color-mix(in srgb,var(--surface) 68%,transparent);
-    border:1px solid color-mix(in srgb,var(--q-measure) 18%,transparent);
-    backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
-  .outcomeRail::before{content:"LIVE";display:block;margin-bottom:9px;
-    font:700 8px/1 var(--font-ui);letter-spacing:.2em;color:var(--accent)}
-  .flightCarry{position:relative;pointer-events:none;padding-bottom:11px;border-bottom:1px solid var(--line)}
-  .flightCarry .num{font:700 36px/.95 var(--font-data);letter-spacing:-.025em;
-    font-variant-numeric:tabular-nums;color:var(--ink);
-    text-shadow:0 6px 24px color-mix(in srgb,var(--accent) 16%,transparent)}
-  .flightCarry .num .u{font:500 14px/1 var(--font-data);color:var(--muted);margin-left:2px}
-  .flightCarry .lab{font-size:8px;letter-spacing:.18em;color:var(--muted-2);margin-top:5px;text-transform:uppercase}
-  .telemetry{display:grid;gap:0;margin-top:5px}
-  .telemetryRow{display:grid;grid-template-columns:1fr auto;align-items:baseline;gap:8px;padding:7px 0;
-    border-bottom:1px solid color-mix(in srgb,var(--line) 72%,transparent)}
-  .telemetryRow:last-child{border-bottom:0}
-  .telemetryRow .k{font:600 8px/1.1 var(--font-ui);letter-spacing:.11em;color:var(--muted-2);text-transform:uppercase}
-  .telemetryRow .v{font:700 11px/1 var(--font-data);font-variant-numeric:tabular-nums;color:var(--ink);white-space:nowrap}
-  .telemetryRow[data-hot="true"] .v{color:var(--accent)}
-  .outcomeMore{appearance:none;width:100%;min-height:44px;margin-top:3px;border:0;background:transparent;
-    color:var(--secondary);font:700 8px/1 var(--font-ui);letter-spacing:.12em;cursor:pointer}
-  .outcomeMore:focus-visible{outline:2px solid var(--ink);outline-offset:2px;border-radius:var(--radius-control)}
+  /* Outcome uses the freed scene as a live data field, not a tracer canvas. */
+  .outcomeBoard{position:absolute;left:50%;top:64px;z-index:5;width:min(760px,calc(100% - 24px));
+    transform:translateX(-50%);display:none;pointer-events:none}
+  .scene[data-lens="outcome"] .outcomeBoard{display:block}
+  .outcomeBoardHead{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin:0 3px 14px}
+  .outcomeBoardHead h1{font:700 13px/1 var(--font-ui);letter-spacing:.14em;color:var(--accent)}
+  .outcomeBoardHead span{font:600 8px/1 var(--font-ui);letter-spacing:.1em;color:var(--muted-2)}
+  .outcomeGroup{margin-top:11px}
+  .outcomeGroup:first-of-type{margin-top:0}
+  .outcomeGroupTitle{margin:0 3px 6px;color:var(--muted-2);font:700 8px/1 var(--font-ui);letter-spacing:.16em}
+  .outcomeBoard .readouts{display:grid;gap:5px}
+  .outcomeBoard #ogDir,.outcomeBoard #ogLaunch{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .outcomeBoard #ogDist{grid-template-columns:repeat(5,minmax(0,1fr))}
+  .outcomeBoard .chip{min-width:0;padding:7px 7px 6px}
+  .outcomeBoard .chip .k{font-size:7.5px;letter-spacing:.06em;overflow:hidden;text-overflow:ellipsis}
+  .outcomeBoard .chip .v{font-size:14px;white-space:nowrap}
 
   /* Lens switch: camera is independent of the active input. */
-  .stations{display:grid;grid-template-columns:1.35fr 1fr 1fr;gap:4px;width:100%;margin:0 0 10px;padding:3px;
+  .stations{display:grid;grid-template-columns:1fr 1fr 1px 1.28fr;gap:4px;width:100%;margin:0 0 10px;padding:3px;
     border:1px solid color-mix(in srgb,var(--line) 72%,transparent);border-radius:var(--radius-control);
     background:color-mix(in srgb,var(--surface) 36%,transparent)}
+  .stdiv{width:1px;height:22px;align-self:center;background:var(--line-strong)}
   .stations button{appearance:none;border:0;background:transparent;color:var(--muted);
     font:700 9.5px/1 var(--font-ui);letter-spacing:.1em;min-height:44px;
     padding:0 10px;border-radius:var(--radius-control);cursor:pointer;position:relative;
@@ -107,18 +113,15 @@
   .stations button[aria-pressed="true"]{background:var(--secondary-soft);color:var(--secondary)}
 
   /* Top actions use SVG and true 44 px targets. */
-  .pinfab,.rangeReplay{position:absolute;top:12px;z-index:6;min-width:44px;min-height:44px;
+  .pinfab{position:absolute;top:12px;z-index:6;min-width:44px;min-height:44px;
     appearance:none;cursor:pointer;font:700 10px/1 var(--font-ui);letter-spacing:.04em;
     color:var(--secondary);background:var(--panel);border:1px solid color-mix(in srgb, var(--secondary) 45%, transparent);
     border-radius:var(--radius-control);padding:0 12px;display:flex;align-items:center;gap:7px;
     backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);transition:transform .15s}
   .pinfab{right:max(12px,env(safe-area-inset-right))}
-  .rangeReplay{left:158px;opacity:0;pointer-events:none;transform:translateY(-4px)}
-  .scene[data-lens="range"] .rangeReplay{opacity:1;pointer-events:auto;transform:none}
-  .rangeReplay[hidden]{display:none}
-  .pinfab svg,.rangeReplay svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+  .pinfab svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
   .pinfab:active{transform:scale(.95)}
-  .pinfab:focus-visible,.rangeReplay:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+  .pinfab:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 
   /* Compact, centred control deck — no desktop-wide 1400 px sliders. */
   .card{position:absolute;left:50%;width:min(760px,calc(100% - 20px));z-index:6;transform:translateX(-50%);
@@ -127,16 +130,26 @@
     backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
     box-shadow:0 18px 46px color-mix(in srgb,var(--bg) 48%,transparent);
     padding:10px 12px 12px;pointer-events:auto}
-  .scene[data-lens="range"] .card{
+  .scene[data-lens="outcome"] .card{
     border-color:color-mix(in srgb,var(--secondary) 28%,var(--line));
     background:linear-gradient(180deg,color-mix(in srgb,var(--surface) 88%,transparent),color-mix(in srgb,var(--plate-solid) 94%,transparent));
     box-shadow:0 22px 54px color-mix(in srgb,var(--bg) 58%,transparent)}
   .panewrap{overflow:visible}
+  .panehead{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 3px 8px}
+  .panehead .h-title{color:var(--secondary);font:700 10px/1 var(--font-ui);letter-spacing:.18em}
+  .panehead .h-title.live{color:var(--accent)}
+  .pane{min-height:118px}
   .parameterRail{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:3px;margin-bottom:10px}
-  .parameterRail button{appearance:none;min-width:0;min-height:44px;padding:0 4px;border:0;border-radius:var(--radius-control);
-    color:var(--muted);background:transparent;font:700 8.5px/1 var(--font-ui);letter-spacing:.07em;cursor:pointer}
+  .parameterRail button{--control-color:var(--secondary);appearance:none;min-width:0;min-height:52px;padding:6px 3px 5px;
+    display:grid;place-items:center;align-content:center;gap:4px;border:1px solid color-mix(in srgb,var(--control-color) 18%,transparent);
+    border-radius:var(--radius-control);color:var(--muted);background:transparent;cursor:pointer}
   .parameterRail button[aria-pressed="true"]{color:var(--ink);background:color-mix(in srgb,var(--control-color) 16%,transparent)}
   .parameterRail button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+  .paramName{display:flex;align-items:center;justify-content:center;gap:4px;min-width:0;
+    font:700 7.5px/1 var(--font-ui);letter-spacing:.06em;white-space:nowrap}
+  .paramName::before{content:"";width:5px;height:5px;flex:0 0 auto;border-radius:50%;background:var(--control-color)}
+  .paramValue{font:700 12px/1 var(--font-data);font-variant-numeric:tabular-nums;white-space:nowrap}
+  .parameterRail button[aria-pressed="true"] .paramValue{color:var(--control-color)}
   .activeControl{--control-color:var(--secondary);--value-pct:50%;--ref-pct:50%;--fill-left:50%;--fill-width:0%;--ghost-pct:50%}
   .controlHead{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin:0 4px 4px}
   .controlName{font:700 10px/1 var(--font-ui);letter-spacing:.13em;color:var(--muted)}
@@ -169,48 +182,48 @@
   .controlScale #controlReference{color:var(--ink)}
   .controlCause{min-height:12px;margin:6px 4px 0;color:var(--muted-2);font:500 9.5px/1.25 var(--font-ui)}
 
+  /* Restored analytical panes: two wide, truthful controls per camera. */
+  .planeSliders{display:grid;gap:11px}
+  .sl{--c:var(--secondary);--value-pct:50%;--ref-pct:50%;--fill-left:50%;--fill-width:0%}
+  .sl .head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin:0 3px 2px}
+  .sl .name{display:flex;align-items:center;gap:7px;color:var(--muted);
+    font:700 10px/1 var(--font-ui);letter-spacing:.12em}
+  .sl .name i{width:7px;height:7px;border-radius:50%;background:var(--c)}
+  .sl .val{color:var(--c);font:700 16px/1 var(--font-data);font-variant-numeric:tabular-nums}
+  .slMeter{position:relative;padding-bottom:12px}
+  .slMeter .railVisual{left:8px;right:8px;top:19px}
+  .sl input[type="range"]{-webkit-appearance:none;appearance:none;position:relative;display:block;width:100%;height:44px;
+    margin:0;background:transparent;touch-action:none;cursor:pointer}
+  .sl input[type="range"]:focus-visible{outline:2px solid var(--ink);outline-offset:2px;border-radius:var(--radius-control)}
+  .sl input[type="range"]::-webkit-slider-runnable-track{height:5px;background:transparent}
+  .sl input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:26px;height:26px;
+    margin-top:-10.5px;border-radius:50%;background:var(--plate-solid);border:3px solid var(--c);
+    box-shadow:0 0 0 5px color-mix(in srgb,var(--c) 15%,transparent),0 6px 12px color-mix(in srgb,var(--bg) 48%,transparent)}
+  .sl input[type="range"]::-moz-range-track{height:5px;background:transparent}
+  .sl input[type="range"]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:var(--plate-solid);border:3px solid var(--c)}
+  .slScale{position:absolute;left:8px;right:8px;bottom:0;display:grid;grid-template-columns:1fr auto 1fr;
+    color:var(--muted-2);font:500 8px/1 var(--font-data);font-variant-numeric:tabular-nums;pointer-events:none}
+  .slScale span:nth-child(2){color:var(--ink)}
+  .slScale span:last-child{text-align:right}
+
   /* ══ READOUT-CHIPS — dashed = avlesning, ingen unntak (ordre §2) ══ */
   .readouts{display:flex;gap:8px;flex-wrap:wrap}
   .chip{border-radius:12px;padding:8px 11px;min-width:74px;flex:1;
-    background:color-mix(in srgb, var(--surface) 62%, transparent)}
+    background:color-mix(in srgb, var(--surface) 62%, transparent);
+    transition:transform .14s var(--ease),background .14s var(--ease),border-color .14s var(--ease),box-shadow .14s var(--ease)}
   .chip.read{border:1px dashed color-mix(in srgb, var(--q-measure) 40%, transparent)}
   .chip .k{font-size:9px;letter-spacing:.18em;color:var(--muted-2);white-space:nowrap}
   .chip .v{font-size:15px;font-weight:700;margin-top:2px;font-variant-numeric:tabular-nums}
   .chip .v em{font-style:normal;font-size:10px;font-weight:500;color:var(--muted)}
+  .chip .delta{display:block;min-height:8px;margin-top:3px;color:var(--muted);
+    font:600 7.5px/1 var(--font-data);font-variant-numeric:tabular-nums}
+  .chip[data-changed="true"]{transform:translateY(-2px);
+    border-color:color-mix(in srgb,var(--accent) 78%,transparent);
+    background:color-mix(in srgb,var(--accent) 13%,var(--surface));
+    box-shadow:0 8px 20px color-mix(in srgb,var(--accent) 16%,transparent)}
+  .chip[data-changed="true"] .v{color:var(--accent)}
   /* mini-rad og utfoldet grid trenger mindre typografi enn en generisk chip
      for å unngå avkutting ved fire-i-rad på smale skjermer (mock-presedens) */
-  #ogMini .chip{flex:1;min-width:0;padding:8px 9px}
-  #ogMini .chip .k{font-size:8.5px;letter-spacing:.13em}
-  #ogMini .chip .v{font-size:15px}
-  .ogrid .readouts .chip{flex:1;min-width:0;padding:7px 8px}
-  .ogrid .chip .k{font-size:8px;letter-spacing:.12em}
-  .ogrid .chip .v{font-size:14px}
-  .ogrid .chip .v em{font-size:9.5px}
-
-  /* ══ ALL METRICS — utfold/fold, gruppehopp ══ */
-  .ogexp{appearance:none;border:0;background:transparent;cursor:pointer;font:inherit;
-    display:flex;align-items:center;gap:6px;margin:9px auto 0;padding:6px 12px;
-    font-size:9.5px;letter-spacing:.2em;font-weight:700;color:var(--muted)}
-  .ogexp:focus-visible{outline:2px solid var(--ink);outline-offset:2px;border-radius:8px}
-  .ogexp .chev{transition:transform .3s;font-size:11px}
-  .ogexp[aria-pressed="true"] .chev{transform:rotate(180deg)}
-  .ogrid[hidden]{display:none}
-  .ogrid{padding-top:2px}
-  .ogroup{appearance:none;border:0;background:transparent;cursor:pointer;font:inherit;
-    display:flex;align-items:center;gap:6px;margin:13px 0 7px;padding:2px 0;width:100%}
-  .ogrid .ogroup:first-child{margin-top:4px}
-  .ogroup .glab{font-size:9.5px;letter-spacing:.2em;color:var(--muted-2);font-weight:700}
-  .ogroup:not(.static) .glab{color:var(--secondary)}
-  .ogroup .garr{font-size:12px;color:var(--secondary);line-height:1;opacity:.85}
-  .ogroup.static{cursor:default}
-  .ogroup:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
-
-  .outcomeDrawer{position:absolute;right:max(12px,env(safe-area-inset-right));top:64px;z-index:7;width:min(286px,calc(100% - 28px));
-    max-height:calc(100% - 310px);overflow:auto;padding:12px;border:1px solid var(--line);border-radius:var(--radius-card);
-    background:color-mix(in srgb,var(--plate-solid) 94%,transparent);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
-  .outcomeDrawer[hidden]{display:none}
-  .outcomeDrawer .ogroup{margin-top:9px}
-
   .sr-only{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;
     clip:rect(0 0 0 0);white-space:nowrap;border:0}
 
@@ -232,18 +245,18 @@
   .annoLabel[hidden]{display:none}
 
   @media (prefers-reduced-motion:reduce){
-    .stations button,.pinfab,.rangeReplay,.scene::before{transition:none}
+    .stations button,.pinfab,.scene::before,.chip{transition:none}
+    .chip[data-changed="true"]{transform:none;box-shadow:none}
   }
-  @media (min-width:780px){
-    .outcomeRail{width:176px;padding:15px}.flightCarry .num{font-size:48px}.telemetryRow .v{font-size:13px}
-    .rangeReplay{left:206px}.card{padding-inline:16px}
-  }
+  @media (min-width:780px){.card{padding-inline:16px}}
   @media (max-width:390px){
-    .outcomeRail{left:10px;width:118px;padding:10px}.outcomeRail::before{margin-bottom:7px}.flightCarry .num{font-size:31px}
-    .telemetryRow{padding:6px 0}.telemetryRow .k{font-size:7px}.telemetryRow .v{font-size:10px}
-    .rangeReplay{left:138px;padding-inline:10px}
     .pinfab{padding-inline:10px}.pinfab span{display:none}
-    .parameterRail button{font-size:7.8px;letter-spacing:.04em}
+    .card{padding-inline:9px}
+    .paramName{font-size:7px;letter-spacing:.03em}.paramValue{font-size:11px}
+    .outcomeBoard{top:66px}.outcomeBoardHead{margin-bottom:11px}
+    .outcomeBoard .chip{padding:6px 5px}.outcomeBoard .chip .k{font-size:6.8px;letter-spacing:.03em}
+    .outcomeBoard .chip .v{font-size:12px}.outcomeBoard .chip .v em{font-size:8px}
+    .controlCause{display:none}
   }
 </style>
 </head>
@@ -255,6 +268,11 @@
       <a class="ts-back" href="./index.html" aria-label="Back to menu">
         <svg width="21" height="21" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M15 5 L8 12 L15 19" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </a>
+      <div class="speedctl" id="sideTopSpeed" hidden aria-label="Club speed">
+        <button type="button" id="spMinus" aria-label="Decrease club speed">−</button>
+        <output id="topSpeedVal" tabindex="0" role="slider" aria-label="Club speed" aria-valuemin="30" aria-valuemax="150" aria-valuenow="90" aria-valuetext="90 mph">90 mph</output>
+        <button type="button" id="spPlus" aria-label="Increase club speed">+</button>
+      </div>
     </div>
 
     <!-- ══ SCENE — én scene, tre kamerastasjoner ══ -->
@@ -264,56 +282,36 @@
            #fCarryLive under er den ENESTE live-regionen. Etiketter hører til
            DOM-laget (Økt D), aldri canvas. -->
       <canvas id="scene" aria-hidden="true" role="img"
-        aria-label="Ball-flight scene seen from a travelling camera: top-down direction plane, side-on launch plane, and a perspective flight view behind the ball."></canvas>
+        aria-label="Live shot outcome scene with top-down direction and side-on launch views."></canvas>
 
       <!-- Annotasjonsetiketter (Økt D) — DOM, ikke canvas (§5.4). Samme
            a11y-kontrakt som scenen: aria-hidden, ren visuell detalj. -->
       <div class="annoLabels" id="annoLabels" aria-hidden="true"></div>
 
-      <section class="outcomeRail" id="outcomeRail" aria-label="Live shot outcomes">
-        <div class="flightCarry" id="fCarryStack" aria-hidden="true">
-          <div class="num"><span id="fCarryNum">0</span><span class="u">m</span></div>
-          <div class="lab">Carry</div>
-        </div>
-        <div class="telemetry" aria-hidden="true">
-          <div class="telemetryRow" data-outcome="spinLoft"><span class="k">Spin Loft</span><span class="v" id="liveSpinLoft">0.0°</span></div>
-          <div class="telemetryRow" data-outcome="ballSpeed"><span class="k">Ball Speed</span><span class="v" id="liveBallSpeed">0 mph</span></div>
-          <div class="telemetryRow" data-outcome="backspin"><span class="k">Backspin</span><span class="v" id="liveBackspin">0 rpm</span></div>
-        </div>
-        <button type="button" class="outcomeMore" id="outcomeToggle" aria-expanded="false" aria-controls="outcomeDrawer">ALL OUTCOMES</button>
+      <section class="outcomeBoard" id="outcomeBoard" aria-label="All live shot outcomes">
+        <div class="outcomeBoardHead"><h1>LIVE OUTCOME</h1><span>UPDATES INSTANTLY</span></div>
+        <div class="outcomeGroup"><h2 class="outcomeGroupTitle">DIRECTION</h2><div class="readouts" id="ogDir"></div></div>
+        <div class="outcomeGroup"><h2 class="outcomeGroupTitle">LAUNCH</h2><div class="readouts" id="ogLaunch"></div></div>
+        <div class="outcomeGroup"><h2 class="outcomeGroupTitle">DISTANCE</h2><div class="readouts" id="ogDist"></div></div>
       </section>
       <div class="sr-only" id="fCarryLive" aria-live="polite" aria-atomic="true"></div>
 
-      <button type="button" class="rangeReplay" id="replayFlight" aria-label="Replay ball flight">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 7H4v-4"/><path d="M4.6 7.2A8 8 0 1 1 4 16"/><path d="m10 9 6 3-6 3Z"/></svg><span>Replay flight</span>
-      </button>
-      <button type="button" class="pinfab" id="pinFab">
+      <button type="button" class="pinfab" id="pinFab" aria-label="Save shot">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4Z"/></svg><span>Save shot</span>
       </button>
 
-      <aside class="outcomeDrawer" id="outcomeDrawer" hidden aria-label="All shot outcomes">
-        <div class="ogroup static"><span class="glab">DIRECTION</span></div><div class="readouts" id="ogDir"></div>
-        <div class="ogroup static"><span class="glab">LAUNCH</span></div><div class="readouts" id="ogLaunch"></div>
-        <div class="ogroup static"><span class="glab">DISTANCE</span></div><div class="readouts" id="ogDist"></div>
-      </aside>
-
-      <!-- One camera lens row + one active Vector Rail. Inputs and camera are
-           deliberately independent so every change remains live in 3D Range. -->
+      <!-- Outcome is the live cause/effect surface. Side and Top restore their
+           dedicated teaching controls without changing the physics path. -->
       <div class="card" id="panel">
         <div class="stations" id="stseg" role="group" aria-label="Camera station">
-          <button type="button" data-s="0" aria-pressed="false">3D RANGE</button>
-          <button type="button" data-s="1" aria-pressed="false">SIDE</button>
           <button type="button" data-s="2" aria-pressed="false">TOP</button>
+          <button type="button" data-s="1" aria-pressed="false">SIDE</button>
+          <span class="stdiv" aria-hidden="true"></span>
+          <button type="button" data-s="0" aria-pressed="false">OUTCOME</button>
         </div>
         <div class="panewrap">
-          <div class="parameterRail" id="parameterRail" role="group" aria-label="Impact parameter">
-            <button type="button" data-param="speed" aria-pressed="true">SPEED</button>
-            <button type="button" data-param="face" aria-pressed="false">FACE</button>
-            <button type="button" data-param="path" aria-pressed="false">PATH</button>
-            <button type="button" data-param="attack" aria-pressed="false">ATTACK</button>
-            <button type="button" data-param="dynLoft" aria-pressed="false">LOFT</button>
-          </div>
-          <div class="activeControl" id="activeControl"></div>
+          <div class="panehead"><span class="h-title" id="paneTitle">EDIT INPUT</span></div>
+          <div class="pane" id="pane"></div>
         </div>
       </div>
     </main>
@@ -324,13 +322,14 @@ import { rigAt, buildBasis, project } from './impact-camera.js';
 import { fitZoom, gridStops, lateralStops, dollyRig } from './impact-framing.js';
 import { selectOutcome } from './impact-outcome.js';
 import { buildAnnotations, placeLabels, cometPoint, MEASURE_KEEPOUT } from './impact-annotate.js';
+import haptics from './sa-haptics.js';
 
 /* ══ state — docs/systemkontrakt.md §3.1. Parametrene er eneste input-
    sannhet; `station` er kamera, aldri parameter (§3.4): scrub re-solver
    aldri fysikk, parameterendring rører aldri kamera. */
 const state = {
   face: 2.0, path: 0.0, attack: 3.0, dynLoft: 24, speed: 90,
-  station: 0,            // kontinuerlig 0=FLIGHT · 1=SIDE · 2=TOP (§3.2)
+  station: 0,            // kontinuerlig 0=OUTCOME · 1=SIDE · 2=TOP (§3.2)
   pins: [],              // maks 3, eldste ut
   allMetrics: false,
   collapsed: false,
@@ -768,54 +767,68 @@ function pulseHot(key, ms = 700) {
   hotTimer = setTimeout(() => { if (hotKey === key) hotKey = null; }, ms);
 }
 
-/* ══ Camera lenses — 3D Range is the product's default, SIDE/TOP remain
-   analytical lenses. Camera never mutates impact inputs. ══ */
+/* ══ Camera lenses — Outcome is the default cause/effect surface. SIDE/TOP
+   retain their analytical cameras. Camera never mutates impact inputs. ══ */
 let stationTarget = 0;
 let scrubbing = false;
 
 const segButtons = [...document.querySelectorAll('#stseg button')];
-const replayButton = document.getElementById('replayFlight');
+const sideTopSpeed = document.getElementById('sideTopSpeed');
 function syncSeg() {
   const snapped = Math.round(stationTarget);
   for (const b of segButtons) b.setAttribute('aria-pressed', String(+b.dataset.s === snapped && !scrubbing));
-  stage.dataset.lens = snapped === 0 ? 'range' : snapped === 1 ? 'side' : 'top';
-  replayButton.hidden = snapped !== 0;
+  const lens = snapped === 0 ? 'outcome' : snapped === 1 ? 'side' : 'top';
+  stage.dataset.lens = lens;
+  stage.dataset.tracer = lens === 'outcome' ? 'off' : 'on';
+  document.body.dataset.rangeLens = lens;
+  sideTopSpeed.hidden = snapped === 0;
 }
 function setStation(s, animate = true) {
   stationTarget = clamp(s, 0, 2);
   if (!animate || reduceMotion) state.station = stationTarget;
   syncSeg();
+  const snapped = Math.round(stationTarget);
+  if (snapped !== activePaneStation) renderPane(snapped);
 }
 for (const b of segButtons) b.addEventListener('click', () => setStation(+b.dataset.s));
 
-/* ══ VECTOR RAIL — one active, discoverable native range. Signed parameters
-   grow from a true 0° datum; loft and speed use honest midpoint references. */
+/* ══ INPUTS — all five values stay visible in Outcome; the active value gets
+   one precise Vector Rail. Side/Top render only their two teaching controls. */
 const fmtDeg = v => (v >= 0 ? '+' : '−') + Math.abs(v).toFixed(1) + '°';
 
 const SLDEF = {
-  speed:   { name:'CLUB SPEED', token:'--secondary', min:30, max:150, step:1, ref:90,
+  speed:   { name:'CLUB SPEED', short:'SPEED', token:'--secondary', min:30, max:150, step:1, ref:90,
     fmt:v => Math.round(v) + ' mph', minLabel:'30', maxLabel:'150', refLabel:'90 mph reference',
     cause:'More club speed raises ball speed and carry.' },
-  face:    { name:'CLUB FACE', token:'--q-face', min:-15, max:15, step:.1, ref:0,
+  face:    { name:'CLUB FACE', short:'FACE', token:'--q-face', min:-15, max:15, step:.1, ref:0,
     fmt:fmtDeg, minLabel:'−15°', maxLabel:'+15°', refLabel:'0°',
     cause:'Face changes the start line and spin-axis relationship.' },
-  path:    { name:'CLUB PATH', token:'--q-path', min:-15, max:15, step:.1, ref:0,
+  path:    { name:'CLUB PATH', short:'PATH', token:'--q-path', min:-15, max:15, step:.1, ref:0,
     fmt:fmtDeg, minLabel:'−15°', maxLabel:'+15°', refLabel:'0°',
     cause:'Path reshapes launch direction and curvature in real time.' },
-  attack:  { name:'ATTACK ANGLE', token:'--q-attack', min:-15, max:15, step:.1, ref:0,
+  attack:  { name:'ATTACK ANGLE', short:'ATTACK', token:'--q-attack', min:-15, max:15, step:.1, ref:0,
     fmt:fmtDeg, minLabel:'−15°', maxLabel:'+15°', refLabel:'0°',
     cause:'Attack angle changes delivery, launch and spin loft.' },
-  dynLoft: { name:'DYNAMIC LOFT', token:'--q-loft', min:0, max:50, step:.1, ref:25,
+  dynLoft: { name:'DYNAMIC LOFT', short:'LOFT', token:'--q-loft', min:0, max:50, step:.1, ref:25,
     fmt:v => v.toFixed(1) + '°', minLabel:'0°', maxLabel:'50°', refLabel:'25° reference',
     cause:'Delivered loft changes launch and spin loft.' },
 };
 
-const parameterRail = document.getElementById('parameterRail');
-const activeControl = document.getElementById('activeControl');
+const PARAM_ORDER = ['speed', 'face', 'path', 'attack', 'dynLoft'];
+const paneTitleEl = document.getElementById('paneTitle');
+const paneEl = document.getElementById('pane');
+let parameterRail = null;
+let activeControl = null;
 let activeParam = 'speed';
+let activePaneStation = null;
+let lastChipsOutcome = null;
+let interactionBaselineOutcome = null;
+let interactionSettleTimer = null;
+let inputUiSignature = '';
 
 function pct(v, d) { return ((clamp(v, d.min, d.max) - d.min) / (d.max - d.min)) * 100; }
 function syncActiveControl() {
+  if (!activeControl) return;
   const d = SLDEF[activeParam];
   const value = state[activeParam];
   const valuePct = pct(value, d), refPct = pct(d.ref, d), ghostPct = pct(seedParams[activeParam], d);
@@ -835,49 +848,94 @@ function syncActiveControl() {
   }
 }
 
+function syncParameterButtons() {
+  if (!parameterRail) return;
+  for (const button of parameterRail.querySelectorAll('button[data-param]')) {
+    const key = button.dataset.param;
+    const value = button.querySelector('.paramValue');
+    if (value) value.textContent = SLDEF[key].fmt(state[key]);
+    button.setAttribute('aria-label', `${SLDEF[key].name}, ${SLDEF[key].fmt(state[key])}`);
+  }
+}
+
+function syncTopSpeed() {
+  const output = document.getElementById('topSpeedVal');
+  if (!output) return;
+  output.textContent = `${Math.round(state.speed)} mph`;
+  output.setAttribute('aria-valuenow', String(Math.round(state.speed)));
+  output.setAttribute('aria-valuetext', `${Math.round(state.speed)} mph`);
+}
+
+function beginOutcomeInteraction() {
+  if (!interactionBaselineOutcome) interactionBaselineOutcome = selectOutcome(state);
+  clearTimeout(interactionSettleTimer);
+}
+
+function settleOutcomeInteraction() {
+  clearTimeout(interactionSettleTimer);
+  interactionSettleTimer = setTimeout(() => {
+    interactionBaselineOutcome = null;
+    renderMetricChips(selectOutcome(state));
+  }, 650);
+}
+
 function setParamValue(key, raw) {
   const d = SLDEF[key];
   const decimals = d.step < 1 ? 1 : 0;
-  state[key] = clamp(Number(Number(raw).toFixed(decimals)), d.min, d.max);
+  const next = clamp(Number(Number(raw).toFixed(decimals)), d.min, d.max);
+  const previous = state[key];
+  if (next !== previous) {
+    beginOutcomeInteraction();
+    const detent = key === 'speed' ? 5 : 1;
+    if (Math.floor((previous - d.min) / detent) !== Math.floor((next - d.min) / detent)) {
+      haptics.tick(`range-${key}`);
+    }
+  }
+  state[key] = next;
   if (key === 'speed') pulseHot('speed');
-  syncActiveControl();
+  syncAllInputUI();
+  settleOutcomeInteraction();
 }
 
-function bindHold(btn, dir) {
+function bindHold(btn, dir, fixedKey = null) {
   let delay = null, repeat = null;
   const end = () => { clearTimeout(delay); clearInterval(repeat); delay = repeat = null; };
   btn.addEventListener('pointerdown', e => {
     e.stopPropagation(); btn.setPointerCapture(e.pointerId);
-    const step = SLDEF[activeParam].step;
-    setParamValue(activeParam, state[activeParam] + dir * step);
-    delay = setTimeout(() => { repeat = setInterval(() => setParamValue(activeParam, state[activeParam] + dir * step), 90); }, 420);
+    const key = fixedKey || activeParam;
+    const step = SLDEF[key].step;
+    setParamValue(key, state[key] + dir * step);
+    delay = setTimeout(() => { repeat = setInterval(() => setParamValue(key, state[key] + dir * step), 90); }, 420);
   });
   btn.addEventListener('pointerup', end);btn.addEventListener('pointercancel', end);btn.addEventListener('lostpointercapture', end);
   // Keyboard activation dispatches click with detail=0; pointer clicks already
   // stepped on pointerdown and must not increment twice.
   btn.addEventListener('click', event => {
-    if (event.detail === 0) setParamValue(activeParam, state[activeParam] + dir * SLDEF[activeParam].step);
+    if (event.detail === 0) {
+      const key = fixedKey || activeParam;
+      setParamValue(key, state[key] + dir * SLDEF[key].step);
+    }
   });
 }
 
 function renderActiveControl(key) {
+  if (!activeControl || !parameterRail) return;
   activeParam = key;
   const d = SLDEF[key], id = `sl-${key}`;
   activeControl.style.setProperty('--control-color', `var(${d.token})`);
-  parameterRail.style.setProperty('--control-color', `var(${d.token})`);
   for (const b of parameterRail.querySelectorAll('button')) b.setAttribute('aria-pressed', String(b.dataset.param === key));
   activeControl.innerHTML = `
     <div class="controlHead"><label class="controlName" for="${id}">${d.name}</label>
-      <output class="controlValue" ${key === 'speed' ? 'id="spVal"' : ''} aria-label="Current ${d.name.toLowerCase()}" aria-valuenow="${state[key]}">${d.fmt(state[key])}</output></div>
+      <output class="controlValue" aria-label="Current ${d.name.toLowerCase()}" aria-valuenow="${state[key]}">${d.fmt(state[key])}</output></div>
     <div class="controlBody">
       <button type="button" class="stepControl" id="controlMinus" aria-label="Decrease ${d.name.toLowerCase()}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/></svg></button>
       <div class="controlMeter">
         <div class="railVisual" aria-hidden="true"><span class="railFill"></span><span class="railRef"></span><span class="railGhost"></span></div>
-        <input type="range" id="${id}" min="${d.min}" max="${d.max}" step="${d.step}" value="${state[key]}" aria-label="${d.name}" aria-describedby="controlCause">
+        <input type="range" id="${id}" min="${d.min}" max="${d.max}" step="${d.step}" value="${state[key]}" aria-label="${d.name}" aria-describedby="controlCause-${key}">
         <div class="controlScale"><span>${d.minLabel}</span><span id="controlReference">${d.refLabel}</span><span>${d.maxLabel}</span></div>
       </div>
       <button type="button" class="stepControl" id="controlPlus" aria-label="Increase ${d.name.toLowerCase()}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
-    </div><p class="controlCause" id="controlCause">${d.cause}</p>`;
+    </div><p class="controlCause" id="controlCause-${key}">${d.cause}</p>`;
   const input = activeControl.querySelector('input');
   input.addEventListener('input', () => setParamValue(key, input.value));
   input.addEventListener('pointerdown', () => { hotKey = key; });
@@ -886,43 +944,160 @@ function renderActiveControl(key) {
   bindHold(document.getElementById('controlMinus'), -1);bindHold(document.getElementById('controlPlus'), 1);
   syncActiveControl();
 }
-for (const b of parameterRail.querySelectorAll('button')) b.addEventListener('click', () => renderActiveControl(b.dataset.param));
 
-const chipHTML = (k, v, em) =>
-  `<div class="chip read"><div class="k">${k}</div><div class="v">${v}${em ? ` <em>${em}</em>` : ''}</div></div>`;
-function renderMetricChips(outcome) {
-  document.getElementById('liveSpinLoft').textContent = outcome.deg.spinLoft.toFixed(1) + '°';
-  document.getElementById('liveBallSpeed').textContent = Math.round(outcome.misc.ballSpeed) + ' mph';
-  document.getElementById('liveBackspin').textContent = Math.round(outcome.misc.backspin) + ' rpm';
-  const axis = (outcome.deg.spinAxis >= 0 ? '+' : '−') + Math.abs(Math.round(outcome.deg.spinAxis)) + '°';
-  document.getElementById('ogDir').innerHTML =
-    chipHTML('LAUNCH DIRECTION', fmtDeg(outcome.deg.launchDir)) +
-    chipHTML('SPIN AXIS', axis) +
-    chipHTML('CURVE', Math.abs(Math.round(outcome.m.curve)), 'm') +
-    chipHTML('SIDE', Math.abs(Math.round(outcome.m.side)), 'm ' + (outcome.m.side >= 0 ? 'R' : 'L'));
-  document.getElementById('ogLaunch').innerHTML =
-    chipHTML('LAUNCH ANGLE', outcome.deg.launchAng.toFixed(1) + '°') +
-    chipHTML('SPIN LOFT', outcome.deg.spinLoft.toFixed(1) + '°') +
-    chipHTML('BACKSPIN', Math.round(outcome.misc.backspin), 'rpm') +
-    chipHTML('LANDING ANGLE', Math.round(outcome.deg.landAng) + '°');
-  document.getElementById('ogDist').innerHTML =
-    chipHTML('SMASH', outcome.misc.smash.toFixed(2)) +
-    chipHTML('BALL SPEED', Math.round(outcome.misc.ballSpeed), 'mph') +
-    chipHTML('CARRY', Math.round(outcome.m.carry), 'm') +
-    chipHTML('TOTAL', Math.round(outcome.m.total), 'm');
+function syncPlaneSlider(wrap, key) {
+  if (!wrap) return;
+  const d = SLDEF[key];
+  const value = state[key];
+  const valuePct = pct(value, d), refPct = pct(d.ref, d), ghostPct = pct(seedParams[key], d);
+  wrap.style.setProperty('--value-pct', valuePct + '%');
+  wrap.style.setProperty('--ref-pct', refPct + '%');
+  wrap.style.setProperty('--fill-left', Math.min(valuePct, refPct) + '%');
+  wrap.style.setProperty('--fill-width', Math.abs(valuePct - refPct) + '%');
+  wrap.style.setProperty('--ghost-pct', ghostPct + '%');
+  const input = wrap.querySelector('input');
+  if (input && +input.value !== value) input.value = String(value);
+  if (input) input.setAttribute('aria-valuetext', d.fmt(value));
+  const output = wrap.querySelector('.val');
+  if (output) output.textContent = d.fmt(value);
 }
 
-const outcomeToggle = document.getElementById('outcomeToggle');
-const outcomeDrawer = document.getElementById('outcomeDrawer');
-outcomeToggle.addEventListener('click', () => {
-  const open = outcomeDrawer.hidden;
-  outcomeDrawer.hidden = !open;
-  outcomeToggle.setAttribute('aria-expanded', String(open));
-  outcomeToggle.textContent = open ? 'CLOSE OUTCOMES' : 'ALL OUTCOMES';
-});
+function syncPlaneControls() {
+  paneEl.querySelectorAll('.sl[data-param]').forEach(wrap => syncPlaneSlider(wrap, wrap.dataset.param));
+}
 
-let lastChipsOutcome = null;
-renderActiveControl(activeParam);
+function syncAllInputUI(force = false) {
+  const signature = PARAM_ORDER.map(key => state[key]).join('|');
+  if (!force && signature === inputUiSignature) return;
+  inputUiSignature = signature;
+  syncActiveControl();
+  syncParameterButtons();
+  syncTopSpeed();
+  syncPlaneControls();
+}
+
+function buildSlider(container, key) {
+  const d = SLDEF[key];
+  const id = `sl-${key}`;
+  const wrap = document.createElement('div');
+  wrap.className = 'sl';
+  wrap.dataset.param = key;
+  wrap.style.setProperty('--c', `var(${d.token})`);
+  wrap.innerHTML = `
+    <div class="head"><label class="name" for="${id}"><i aria-hidden="true"></i>${d.name}</label>
+      <output class="val" id="${id}-val">${d.fmt(state[key])}</output></div>
+    <div class="slMeter">
+      <div class="railVisual" aria-hidden="true"><span class="railFill"></span><span class="railRef"></span><span class="railGhost"></span></div>
+      <input type="range" id="${id}" min="${d.min}" max="${d.max}" step="${d.step}" value="${state[key]}" aria-label="${d.name}">
+      <div class="slScale"><span>${d.minLabel}</span><span>${d.refLabel}</span><span>${d.maxLabel}</span></div>
+    </div>`;
+  container.appendChild(wrap);
+  const input = wrap.querySelector('input');
+  input.addEventListener('input', () => setParamValue(key, input.value));
+  input.addEventListener('pointerdown', () => { hotKey = key; });
+  const clearHot = () => { if (hotKey === key) hotKey = null; };
+  input.addEventListener('pointerup', clearHot);input.addEventListener('pointercancel', clearHot);
+  syncPlaneSlider(wrap, key);
+}
+
+const METRICS = {
+  launchDir:{ label:'LAUNCH DIR', get:o=>o.deg.launchDir, format:v=>[fmtDeg(v),''], decimals:1, deltaUnit:'°' },
+  spinAxis:{ label:'SPIN AXIS', get:o=>o.deg.spinAxis, format:v=>[(v >= 0 ? '+' : '−') + Math.abs(Math.round(v)) + '°',''], decimals:0, deltaUnit:'°' },
+  curve:{ label:'CURVE', get:o=>o.m.curve, format:v=>[Math.abs(Math.round(v)),`m ${Math.abs(v) < .5 ? 'C' : v >= 0 ? 'R' : 'L'}`], decimals:0, deltaUnit:'m' },
+  side:{ label:'SIDE', get:o=>o.m.side, format:v=>[Math.abs(Math.round(v)),`m ${Math.abs(v) < .5 ? 'C' : v >= 0 ? 'R' : 'L'}`], decimals:0, deltaUnit:'m' },
+  launchAng:{ label:'LAUNCH ANGLE', get:o=>o.deg.launchAng, format:v=>[v.toFixed(1) + '°',''], decimals:1, deltaUnit:'°' },
+  spinLoft:{ label:'SPIN LOFT', get:o=>o.deg.spinLoft, format:v=>[v.toFixed(1) + '°',''], decimals:1, deltaUnit:'°' },
+  backspin:{ label:'BACKSPIN', get:o=>o.misc.backspin, format:v=>[Math.round(v),'rpm'], decimals:0, deltaUnit:'rpm' },
+  landingAng:{ label:'LANDING ANGLE', get:o=>o.deg.landAng, format:v=>[Math.round(v) + '°',''], decimals:0, deltaUnit:'°' },
+  smash:{ label:'SMASH', get:o=>o.misc.smash, format:v=>[v.toFixed(2),''], decimals:2, deltaUnit:'' },
+  ballSpeed:{ label:'BALL SPEED', get:o=>o.misc.ballSpeed, format:v=>[Math.round(v),'mph'], decimals:0, deltaUnit:'mph' },
+  carry:{ label:'CARRY', get:o=>o.m.carry, format:v=>[Math.round(v),'m'], decimals:0, deltaUnit:'m' },
+  total:{ label:'TOTAL', get:o=>o.m.total, format:v=>[Math.round(v),'m'], decimals:0, deltaUnit:'m' },
+  apex:{ label:'APEX', get:o=>o.m.apex, format:v=>[Math.round(v),'m'], decimals:0, deltaUnit:'m' },
+};
+
+function deltaText(def, value) {
+  if (!interactionBaselineOutcome) return '';
+  const delta = value - def.get(interactionBaselineOutcome);
+  const threshold = def.decimals === 2 ? .005 : def.decimals === 1 ? .05 : .5;
+  if (Math.abs(delta) < threshold) return '';
+  const abs = Math.abs(delta).toFixed(def.decimals);
+  return `${delta > 0 ? '+' : '−'}${abs}${def.deltaUnit ? ` ${def.deltaUnit}` : ''}`;
+}
+
+function metricChip(key, outcome, live = false) {
+  const def = METRICS[key];
+  const raw = def.get(outcome);
+  const [value, unit] = def.format(raw);
+  const delta = live ? deltaText(def, raw) : '';
+  return `<div class="chip read" data-metric="${key}" data-changed="${delta ? 'true' : 'false'}">
+    <div class="k">${def.label}</div><div class="v">${value}${unit ? ` <em>${unit}</em>` : ''}</div>
+    ${live ? `<span class="delta">${delta || '&nbsp;'}</span>` : ''}</div>`;
+}
+
+function renderMetricChips(outcome) {
+  const groups = {
+    ogDir:['launchDir', 'spinAxis', 'curve', 'side'],
+    ogLaunch:['launchAng', 'spinLoft', 'backspin', 'landingAng'],
+    ogDist:['smash', 'ballSpeed', 'carry', 'total', 'apex'],
+  };
+  for (const [id, keys] of Object.entries(groups)) {
+    const group = document.getElementById(id);
+    if (group) group.innerHTML = keys.map(key => metricChip(key, outcome, true)).join('');
+  }
+}
+
+function outcomePaneHTML() {
+  const buttons = PARAM_ORDER.map(key => {
+    const d = SLDEF[key];
+    return `<button type="button" data-param="${key}" aria-pressed="${key === activeParam}" style="--control-color:var(${d.token})">
+      <span class="paramName">${d.short}</span><span class="paramValue" ${key === 'speed' ? 'id="spVal"' : ''}>${d.fmt(state[key])}</span></button>`;
+  }).join('');
+  return `<div class="parameterRail" id="parameterRail" role="group" aria-label="Impact parameter">${buttons}</div>
+    <div class="activeControl" id="activeControl"></div>`;
+}
+
+function renderPane(station) {
+  activePaneStation = station;
+  parameterRail = null;
+  activeControl = null;
+  if (station === 0) {
+    paneTitleEl.textContent = 'EDIT INPUT';
+    paneTitleEl.className = 'h-title';
+    paneEl.innerHTML = outcomePaneHTML();
+    parameterRail = document.getElementById('parameterRail');
+    activeControl = document.getElementById('activeControl');
+    for (const button of parameterRail.querySelectorAll('button')) button.addEventListener('click', () => {
+      haptics.tick('outcome-parameter');
+      renderActiveControl(button.dataset.param);
+    });
+    renderActiveControl(activeParam);
+    syncAllInputUI(true);
+    renderMetricChips(selectOutcome(state));
+    return;
+  }
+  paneTitleEl.className = 'h-title';
+  paneTitleEl.textContent = station === 1 ? 'INPUT · LAUNCH PLANE' : 'INPUT · DIRECTION PLANE';
+  paneEl.innerHTML = `<div class="planeSliders" id="${station === 1 ? 'slSide' : 'slTop'}"></div>`;
+  const container = paneEl.firstElementChild;
+  if (station === 1) { buildSlider(container, 'dynLoft'); buildSlider(container, 'attack'); }
+  else { buildSlider(container, 'face'); buildSlider(container, 'path'); }
+  syncAllInputUI(true);
+}
+
+bindHold(document.getElementById('spMinus'), -1, 'speed');
+bindHold(document.getElementById('spPlus'), 1, 'speed');
+document.getElementById('topSpeedVal').addEventListener('keydown', event => {
+  const keyValues = {
+    ArrowLeft: state.speed - 1, ArrowDown: state.speed - 1,
+    ArrowRight: state.speed + 1, ArrowUp: state.speed + 1,
+    Home: SLDEF.speed.min, End: SLDEF.speed.max,
+  };
+  if (!(event.key in keyValues)) return;
+  event.preventDefault();
+  setParamValue('speed', keyValues[event.key]);
+});
+renderPane(0);
 
 /* ══ Pin pill — maks 3 ghosts, eldste ut (ordre §2, S7) ══ */
 document.getElementById('pinFab').addEventListener('click', () => {
@@ -932,13 +1107,6 @@ document.getElementById('pinFab').addEventListener('click', () => {
 });
 
 let cometEpoch = performance.now();
-let replayCount = 0;
-function replayFlight(record = true) {
-  setStation(0);
-  cometEpoch = performance.now();
-  if (record) replayCount += 1;
-}
-replayButton.addEventListener('click', () => replayFlight());
 
 // vertikal drag i scenen = kontinuerlig skalar; slipp = snap til nærmeste
 let pan = null;
@@ -963,7 +1131,6 @@ cv.addEventListener('pointerup', endPan);
 cv.addEventListener('pointercancel', endPan);
 
 /* Stable telemetry DOM; it updates only when the memoised Outcome changes. */
-const fCarryNum = document.getElementById('fCarryNum');
 const fCarryLive = document.getElementById('fCarryLive');
 let lastHud = '';
 let liveAnnounceTimer = null;
@@ -974,7 +1141,6 @@ function updateStats(outcome) {
   if (hud === lastHud) return;
   lastHud = hud;
 
-  fCarryNum.textContent = carry;
   const announcement =
     `Carry ${carry} metres, spin loft ${outcome.deg.spinLoft.toFixed(1)} degrees, ` +
     `ball speed ${Math.round(outcome.misc.ballSpeed)} miles per hour, backspin ${Math.round(outcome.misc.backspin)} rpm.`;
@@ -1026,7 +1192,7 @@ function frameForShot(rig, outcome, aspectFix) {
   };
 }
 
-// FLIGHT-lengdereferanse: tre kandidater eieren skal velge mellom.
+// OUTCOME-lengdereferanse: tre kandidater for støttescenen.
 //   'ladder' (A) — høydestige + ett landingstall (standard-anbefaling)
 //   'gates'  (B) — vertikale distanseporter inne i scenen
 //   'strip'  (C) — flat 2D distansestripe nederst
@@ -1055,19 +1221,21 @@ function frame(now) {
   const framed = frameForShot(rig0, liveOutcome, aspectFix);
   basis = buildBasis(framed.rig, { w: W, h: H });
   ctx.clearRect(0, 0, W, H);
-  drawGrid(state.station, framed.extent, framed.halfWidth, framed.sideSigned);
-  drawLandingContact(liveOutcome, state.station);
-  for (const pin of state.pins) drawTraj(pin.outcome, 'ghost');
-  drawTraj(liveOutcome, 'active');
+  const tracerVisible = stage.dataset.tracer === 'on';
+  if (tracerVisible) {
+    drawGrid(state.station, framed.extent, framed.halfWidth, framed.sideSigned);
+    drawLandingContact(liveOutcome, state.station);
+    for (const pin of state.pins) drawTraj(pin.outcome, 'ghost');
+    drawTraj(liveOutcome, 'active');
+  }
   updateStats(liveOutcome);
 
-  // annotasjonslaget (ordre §3, Økt D): buildAnnotations kjører hver frame —
-  // den er ikke bak lastHud-vakten, for den avhenger kontinuerlig av
-  // state.station under scrub/reise, ikke bare av utfallstallene.
-  const placed = placeLabels(buildAnnotations(liveOutcome, state.station, basis, hotKey), MEASURE_KEEPOUT, { w: W, h: H });
-  drawAnnotationPrimitives(placed);
+  const placed = tracerVisible
+    ? placeLabels(buildAnnotations(liveOutcome, state.station, basis, hotKey), MEASURE_KEEPOUT, { w: W, h: H })
+    : [];
+  if (tracerVisible) drawAnnotationPrimitives(placed);
   renderAnnotationLabels(placed);
-  if (!reduceMotion) {
+  if (tracerVisible && !reduceMotion) {
     const cp = cometPoint(liveOutcome, now - cometEpoch);
     if (cp) drawComet(cp, basis);
   }
@@ -1076,13 +1244,13 @@ function frame(now) {
     renderMetricChips(liveOutcome);
     lastChipsOutcome = liveOutcome;
   }
-  syncActiveControl();
+  syncAllInputUI();
   requestAnimationFrame(frame);
 }
 
 // instrumenteringskrok for evidens (K1/K6: logget skalarverdi per frame når
 // `capture` er på) og for senere økter/dommer
-const api = { state, setStation, replayFlight, get replayCount() { return replayCount; },
+const api = { state, setStation,
   get stationTarget() { return stationTarget; }, setFlightRef(m) { flightRef = m; },
   get flightRef() { return flightRef; }, capture: false, trace: [] };
 window.__impact = api;

@@ -22,8 +22,6 @@ export function applyRangeInputs(state, inputs, doc = globalThis.document) {
   const speed = doc?.getElementById?.('spVal');
   if (speed) {
     speed.textContent = `${state.speed} mph`;
-    speed.setAttribute('aria-valuenow', String(state.speed));
-    speed.setAttribute('aria-valuetext', `${state.speed} mph`);
   }
 
   for (const [inputKey, stateKey] of Object.entries(INPUT_MAP)) {

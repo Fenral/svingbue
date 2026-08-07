@@ -13,6 +13,7 @@ wait.
 
 | Agent | Branch | Working on | Since |
 |-------|--------|-----------|-------|
+| Codex | `agent/page-overview` | Owner-directed Range revision: restore dedicated SIDE/TOP controls and replace 3D Range tab with interactive OUTCOME LIVE. Files: impact.html, sa-range-context.js, scripts/impact-portrait-browser.test.mjs, scripts/phase2-context.test.mjs | 2026-08-07 |
 
 ## Queue / free to take
 

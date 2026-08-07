@@ -167,7 +167,7 @@ test('the stored experiment hydrates the five existing Range inputs', () => {
     station: 2,
   });
   assert.equal(speed.textContent, `${inputs.clubSpeed} mph`);
-  assert.equal(speed.values['aria-valuenow'], String(inputs.clubSpeed));
+  assert.deepEqual(speed.values, {}, 'plain visible text does not receive invalid range ARIA');
 });
 
 test('persisted Range inputs outside the shipping control domains are rejected', () => {
