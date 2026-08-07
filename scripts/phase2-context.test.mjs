@@ -83,6 +83,43 @@ test('malformed, unavailable and wrong-version storage fail safely', () => {
   }
 });
 
+test('consecutive updates retain validated in-memory state when storage throws', () => {
+  const disabled = {
+    getItem() { throw new Error('storage disabled'); },
+    setItem() { throw new Error('storage disabled'); },
+  };
+  const first = updateContext({ onboarding: { step: 2, goal: 'contact' } }, disabled);
+  const second = updateContext({ onboarding: { dismissed: true } }, disabled);
+
+  assert.equal(first.onboarding.goal, 'contact');
+  assert.equal(second.onboarding.step, 2);
+  assert.equal(second.onboarding.goal, 'contact');
+  assert.equal(second.onboarding.dismissed, true);
+  assert.deepEqual(readContext(disabled), second);
+});
+
+test('a stale readable value cannot roll back volatile state after writes fail', () => {
+  const stale = createDefaultContext();
+  stale.onboarding.goal = 'distance';
+  const readableButUnwritable = {
+    getItem(key) {
+      return key === CONTEXT_KEY ? JSON.stringify(stale) : null;
+    },
+    setItem() {
+      throw new Error('storage became read-only');
+    },
+  };
+
+  const first = updateContext({ onboarding: { step: 2, goal: 'contact' } }, readableButUnwritable);
+  const second = updateContext({ onboarding: { dismissed: true } }, readableButUnwritable);
+
+  assert.equal(first.onboarding.goal, 'contact');
+  assert.equal(second.onboarding.step, 2);
+  assert.equal(second.onboarding.goal, 'contact');
+  assert.equal(second.onboarding.dismissed, true);
+  assert.deepEqual(readContext(readableButUnwritable), second);
+});
+
 test('updates merge known context fields and never touch Academy storage', () => {
   const academyValue = JSON.stringify({ xp: 420 });
   const storage = new MemoryStorage({ 'strikearc.academy.v1': academyValue });

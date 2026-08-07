@@ -11,15 +11,9 @@ node_modules/
 
 # The iOS platform project itself is generated fresh on Codemagic's Mac
 # (`npx cap add ios`) — it cannot be produced on this Windows dev machine
-# (needs Xcode/CocoaPods), so it is never committed. NOTE: this repo
-# intentionally does NOT have a committed ios/ directory at all; the
-# entries below just make sure CI-generated artifacts inside it (if it
-# ever exists locally, e.g. on a future Mac dev machine) don't get committed.
-ios/App/Pods/
-ios/App/App/public/
-ios/DerivedData/
-ios/App/build/
-ios/App/Podfile.lock
+# (needs Xcode/CocoaPods), so the entire generated root is ignored. This also
+# prevents a future local `cap add ios` from accidentally being committed.
+ios/
 
 # The Android platform project is generated FRESH in CI on every run
 # (.github/workflows/android-debug.yml → `npx cap add android`) — it is

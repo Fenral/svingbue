@@ -65,7 +65,8 @@ test.before(async () => {
   if (WEBKIT) browser = await webkit.launch({ headless: true });
   else {
     browser = await chromium.launch({ channel: 'msedge', headless: true })
-      .catch(() => chromium.launch({ channel: 'chrome', headless: true }));
+      .catch(() => chromium.launch({ channel: 'chrome', headless: true }))
+      .catch(() => chromium.launch({ headless: true }));
   }
 });
 

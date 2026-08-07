@@ -110,13 +110,20 @@ test('iOS build patch enforces the WebView baseline required by shipping v1 UI',
   assert.equal(IOS_DEPLOYMENT_TARGET, '16.4');
   const project = [
     'IPHONEOS_DEPLOYMENT_TARGET = 14.0;',
+    'TARGETED_DEVICE_FAMILY = "1,2";',
     'IPHONEOS_DEPLOYMENT_TARGET = 15.0;',
+    'TARGETED_DEVICE_FAMILY = "1,2";',
   ].join('\n');
   const patchedProject = patchXcodeDeploymentTarget(project);
   assert.doesNotMatch(patchedProject, /DEPLOYMENT_TARGET = (?:14|15)/);
   assert.equal(
     patchedProject.match(/IPHONEOS_DEPLOYMENT_TARGET = 16\.4;/g)?.length,
     2,
+  );
+  assert.equal(
+    patchedProject.match(/TARGETED_DEVICE_FAMILY = 1;/g)?.length,
+    2,
+    'the v1 App Store binary is phone-only',
   );
   assert.equal(
     patchPodfileDeploymentTarget("platform :ios, '14.0'\nuse_frameworks!"),

@@ -122,6 +122,34 @@ export function createDefaultContext() {
   };
 }
 
+// Safari private mode and embedded WebViews can expose localStorage while
+// throwing on reads or writes. Preserve validated state for the lifetime of
+// the current document so consecutive onboarding choices do not erase one
+// another. WeakMap keeps injected/test storage owners isolated and collectible.
+const volatileContexts = new WeakMap();
+const dirtyStorageTargets = new WeakSet();
+let fallbackContext = createDefaultContext();
+
+const weakTarget = target => Boolean(target)
+  && (typeof target === 'object' || typeof target === 'function');
+
+function cachedContext(target) {
+  if (weakTarget(target)) {
+    return volatileContexts.get(target) || null;
+  }
+  return fallbackContext;
+}
+
+function rememberContext(target, value) {
+  const safe = validateContext(value);
+  if (weakTarget(target)) {
+    volatileContexts.set(target, safe);
+  } else {
+    fallbackContext = safe;
+  }
+  return safe;
+}
+
 export function validateContext(value) {
   if (!isObject(value) || value.version !== CONTEXT_VERSION) {
     return createDefaultContext();
@@ -174,13 +202,24 @@ export function validateContext(value) {
 
 export function readContext(storage) {
   const target = storageOrNull(storage);
-  if (!target || typeof target.getItem !== 'function') return createDefaultContext();
+  if (!target || typeof target.getItem !== 'function') {
+    return validateContext(cachedContext(target));
+  }
+
+  // Once a write fails, the persisted value is older than the validated
+  // in-memory context. Keep reading that volatile owner until a later write
+  // succeeds; otherwise a readable-but-unwritable store can roll back the
+  // user's next onboarding choice to stale disk state.
+  if (weakTarget(target) && dirtyStorageTargets.has(target)) {
+    return validateContext(cachedContext(target));
+  }
 
   try {
     const raw = target.getItem(CONTEXT_KEY);
-    return raw ? validateContext(JSON.parse(raw)) : createDefaultContext();
+    if (raw) return rememberContext(target, JSON.parse(raw));
+    return validateContext(cachedContext(target));
   } catch (_) {
-    return createDefaultContext();
+    return validateContext(cachedContext(target));
   }
 }
 
@@ -207,15 +246,19 @@ function mergeContext(current, patch) {
 
 export function updateContext(patch, storage) {
   const target = storageOrNull(storage);
-  const next = mergeContext(readContext(target), patch);
+  const next = rememberContext(target, mergeContext(readContext(target), patch));
 
   if (target && typeof target.setItem === 'function') {
     try {
       target.setItem(CONTEXT_KEY, JSON.stringify(next));
+      if (weakTarget(target)) dirtyStorageTargets.delete(target);
     } catch (_) {
       // Private mode and embedded browsers may disable storage. The validated
       // in-memory result still keeps the current interaction usable.
+      if (weakTarget(target)) dirtyStorageTargets.add(target);
     }
+  } else if (weakTarget(target)) {
+    dirtyStorageTargets.add(target);
   }
 
   return next;

@@ -111,26 +111,57 @@ function storageOrNull(storage) {
   }
 }
 
+// A native WebView may expose readable localStorage while rejecting writes
+// (quota, privacy mode, or a transient platform failure). Keep one validated
+// in-memory owner so a failed write cannot silently reset the free allowance
+// on the next authorization check in the same app session.
+const volatileStates = new WeakMap();
+const dirtyStorageTargets = new WeakSet();
+let fallbackState = null;
+const weakTarget = target => Boolean(target)
+  && (typeof target === 'object' || typeof target === 'function');
+
+function cachedState(target, day) {
+  const value = weakTarget(target) ? volatileStates.get(target) : fallbackState;
+  return value ? normalizeState(value, day) : null;
+}
+
+function rememberState(target, state, day) {
+  const safe = normalizeState(state, day);
+  if (weakTarget(target)) volatileStates.set(target, safe);
+  else fallbackState = safe;
+  return safe;
+}
+
 function readState(storage, day) {
   const target = storageOrNull(storage);
-  if (!target || typeof target.getItem !== 'function') return defaultState(day);
+  const cached = cachedState(target, day);
+  if (weakTarget(target) && dirtyStorageTargets.has(target)) {
+    return cached || defaultState(day);
+  }
+  if (!target || typeof target.getItem !== 'function') return cached || defaultState(day);
   try {
     const raw = target.getItem(ACCESS_STATE_KEY);
-    return raw ? normalizeState(JSON.parse(raw), day) : defaultState(day);
+    return rememberState(target, raw ? JSON.parse(raw) : (cached || defaultState(day)), day);
   } catch (_) {
-    return defaultState(day);
+    return cached || defaultState(day);
   }
 }
 
-function writeState(storage, state) {
+function writeState(storage, state, day) {
   const target = storageOrNull(storage);
-  if (!target || typeof target.setItem !== 'function') return false;
+  const safe = rememberState(target, state, day);
+  if (!target || typeof target.setItem !== 'function') {
+    if (weakTarget(target)) dirtyStorageTargets.add(target);
+    return 'volatile';
+  }
   try {
-    target.setItem(ACCESS_STATE_KEY, JSON.stringify(state));
-    return true;
+    target.setItem(ACCESS_STATE_KEY, JSON.stringify(safe));
+    if (weakTarget(target)) dirtyStorageTargets.delete(target);
+    return 'persistent';
   } catch (_) {
-    // Local usage is deliberately fail-soft. Store entitlement still owns Pro.
-    return false;
+    if (weakTarget(target)) dirtyStorageTargets.add(target);
+    return 'volatile';
   }
 }
 
@@ -315,7 +346,7 @@ export function consume(moment, options = {}) {
     }
   }
   next.completedResults += 1;
-  writeState(env.storage, next);
+  const persistence = writeState(env.storage, next, env.day);
 
   return {
     moment,
@@ -327,6 +358,7 @@ export function consume(moment, options = {}) {
     remaining: Math.max(0, FREE_LIMITS[moment] - usedFor(moment, next)),
     consumeAfterCompletion: false,
     consumed: true,
+    persistence,
     state: viewOf(next, env),
   };
 }

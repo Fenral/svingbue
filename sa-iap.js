@@ -9,19 +9,13 @@ import {
   PURCHASES_ERROR_CODE,
 } from './vendor/revenuecat/purchases.esm.js';
 import * as saShots from './sa-shots.js';
+import { REVENUECAT_PUBLIC_SDK_KEYS } from './sa-iap-config.js';
 
 export const ENTITLEMENT_ID = 'pro';
 export const PRODUCT_IDS = Object.freeze({
   monthly: 'strikearc_pro_monthly',
   annual: 'strikearc_pro_annual',
   lifetime: 'strikearc_pro_lifetime',
-});
-
-// Public app-specific SDK keys only. These placeholders deliberately keep a
-// native build purchase-disabled until the real RevenueCat project is wired.
-const PUBLIC_KEYS = Object.freeze({
-  ios: 'appl_REPLACE_ME',
-  android: 'goog_REPLACE_ME',
 });
 
 export const PURCHASE_STATUS = Object.freeze({
@@ -62,7 +56,7 @@ export function isNative() {
 
 function configuredKey(platform, adapter) {
   if (isTestAdapter(adapter)) return 'test_public_sdk_key';
-  return PUBLIC_KEYS[platform] || '';
+  return REVENUECAT_PUBLIC_SDK_KEYS[platform] || '';
 }
 
 function keyIsReady(key) {
@@ -129,7 +123,14 @@ async function initialize() {
 
 /** Idempotent native setup; safe to await from every shipping route. */
 export function init() {
-  if (!initPromise) initPromise = initialize();
+  if (!initPromise) {
+    initPromise = initialize().finally(() => {
+      // A transient native SDK/configure failure must not disable purchasing
+      // until the next app launch. Keep concurrent callers deduplicated, then
+      // allow the next explicit store action to retry initialization.
+      if (configurationStatus === 'sdk-error') initPromise = null;
+    });
+  }
   return initPromise;
 }
 

@@ -1,0 +1,217 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { cpSync, existsSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { join, resolve } from 'node:path';
+import { tmpdir } from 'node:os';
+import { dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+import {
+  PLACEHOLDER_KEYS,
+  configureNativeIap,
+  configuredForPlatform,
+  renderConfig,
+  validPublicSdkKey,
+} from './configure-native-iap.mjs';
+import { GENERATED_IOS_ASSETS, generateIosAssets } from './generate-ios-assets.mjs';
+import { verifyGeneratedIosAssets } from './verify-generated-ios-assets.mjs';
+
+const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const read = relativePath => readFileSync(join(ROOT, relativePath), 'utf8');
+
+function scriptStepOffset(yaml, name) {
+  const offset = yaml.indexOf(`- name: ${name}`);
+  assert.notEqual(offset, -1, `Codemagic is missing the ${name} step`);
+  return offset;
+}
+
+function assertStepOrder(yaml, names) {
+  const offsets = names.map(name => scriptStepOffset(yaml, name));
+  for (let index = 1; index < offsets.length; index += 1) {
+    assert.ok(
+      offsets[index - 1] < offsets[index],
+      `Codemagic must run ${names[index - 1]} before ${names[index]}`,
+    );
+  }
+}
+
+test('RevenueCat public-key injection validates platform prefixes and placeholders', () => {
+  assert.equal(validPublicSdkKey('ios', 'appl_release_public_12345'), true);
+  assert.equal(validPublicSdkKey('android', 'goog_release_public_12345'), true);
+  assert.equal(validPublicSdkKey('ios', PLACEHOLDER_KEYS.ios), false);
+  assert.equal(validPublicSdkKey('ios', 'goog_wrong_platform_12345'), false);
+  assert.equal(configuredForPlatform(renderConfig({
+    ios: 'appl_release_public_12345',
+    android: PLACEHOLDER_KEYS.android,
+  }), 'ios'), true);
+});
+
+test('native package configuration fails closed, then injects only the requested platform', () => {
+  const root = mkdtempSync(join(tmpdir(), 'flightglass-native-iap-'));
+  const www = join(root, 'www');
+  mkdirSync(www);
+  const target = join(www, 'sa-iap-config.js');
+  writeFileSync(target, renderConfig(PLACEHOLDER_KEYS), 'utf8');
+
+  try {
+    assert.throws(
+      () => configureNativeIap({ platform: 'ios', key: '', root }),
+      /refusing to create a purchase-disabled release build/,
+    );
+    configureNativeIap({
+      platform: 'ios',
+      key: 'appl_release_public_12345',
+      root,
+    });
+    const configured = readFileSync(target, 'utf8');
+    assert.equal(configuredForPlatform(configured, 'ios'), true);
+    assert.equal(configuredForPlatform(configured, 'android'), false);
+    assert.doesNotThrow(() => configureNativeIap({ platform: 'ios', root, checkOnly: true }));
+    assert.throws(
+      () => configureNativeIap({ platform: 'android', root, checkOnly: true }),
+      /android RevenueCat public SDK key is missing/,
+    );
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('shipping IAP module reads generated configuration instead of embedding release keys', () => {
+  const sourceConfig = read('sa-iap-config.js');
+  const iap = read('sa-iap.js');
+  assert.match(sourceConfig, /appl_REPLACE_ME/);
+  assert.match(sourceConfig, /goog_REPLACE_ME/);
+  assert.match(iap, /from '\.\/sa-iap-config\.js'/);
+  assert.doesNotMatch(iap, /const PUBLIC_KEYS/);
+});
+
+test('Codemagic is manual-only and refuses ambiguous billing or build-number state', () => {
+  const yaml = read('codemagic.yaml');
+  const pkg = JSON.parse(read('package.json'));
+  assert.doesNotMatch(yaml, /^\s+triggering:/m, 'TestFlight must be started manually');
+  assert.match(yaml, /- revenuecat-flightglass/);
+  assert.match(yaml, /npm run verify:v1:source/);
+  assert.match(yaml, /npm run configure:iap:ios/);
+  assert.match(yaml, /npm run verify:iap:ios/);
+  assert.match(yaml, /node scripts\/generate-ios-assets\.mjs/);
+  assert.doesNotMatch(yaml, /capacitor-assets/);
+  assert.match(yaml, /node scripts\/verify-generated-ios-assets\.mjs/);
+  assert.match(yaml, /ios_signing:[\s\S]*distribution_type: app_store[\s\S]*bundle_identifier: \*bundle_id/);
+  assert.match(yaml, /xcode: 26\.6/);
+  assert.doesNotMatch(yaml, /openssl genrsa|fetch-signing-files|certificate-key|--create/);
+  assert.doesNotMatch(yaml, /certificates delete|Revoke old Distribution certs/);
+  assert.doesNotMatch(yaml, /falling back to 0|LATEST=0/);
+  assert.match(yaml, /refusing an ambiguous upload[\s\S]*?exit 1/);
+  assert.match(read('.gitignore'), /^ios\/$/m);
+  assert.match(pkg.devDependencies.typescript, /^\^5\.9\./,
+    'capacitor.config.ts requires TypeScript on a clean native build machine');
+});
+
+test('Codemagic preserves configured www through sync, patching, asset verification, and build', () => {
+  const yaml = read('codemagic.yaml');
+  const steps = [
+    'Assemble www/ from web source (denylist mocks/tooling)',
+    'Inject and verify the RevenueCat iOS public key',
+    'Add the iOS platform',
+    'Sync web assets + plugins into the iOS project',
+    'Patch iOS orientation, display name, and minimum OS',
+    'Inject Info.plist export-compliance answer',
+    'Generate app icons/splash from resources/',
+    'Verify generated app icons/splash',
+    'Build .ipa',
+  ];
+  assertStepOrder(yaml, steps);
+
+  const configureOffset = scriptStepOffset(yaml, 'Inject and verify the RevenueCat iOS public key');
+  const syncOffset = scriptStepOffset(yaml, 'Sync web assets + plugins into the iOS project');
+  const configuredWwwInterval = yaml.slice(configureOffset, syncOffset);
+  assert.doesNotMatch(
+    configuredWwwInterval,
+    /npm run copy-web|\bnpx cap copy\b|\brm\s+-rf\s+www\b/i,
+    'www must not be regenerated after RevenueCat configuration and before cap sync',
+  );
+});
+
+test('generated iOS assets are verified against the committed launch sources', async () => {
+  const { IOS_ASSETS, meanAbsolutePixelDifference } = await import('./verify-generated-ios-assets.mjs');
+  assert.deepEqual(IOS_ASSETS.map(asset => asset.source), [
+    'resources/icon.png',
+    'resources/splash.png',
+    'resources/splash.png',
+    'resources/splash.png',
+  ]);
+  assert.equal(meanAbsolutePixelDifference(Buffer.from([0, 20]), Buffer.from([2, 18])), 2);
+  assert.equal(
+    meanAbsolutePixelDifference(Buffer.from([0]), Buffer.from([0, 1])),
+    Number.POSITIVE_INFINITY,
+  );
+  assert.deepEqual(GENERATED_IOS_ASSETS.splash, [
+    'ios/App/App/Assets.xcassets/Splash.imageset/Default@1x~universal~anyany.png',
+    'ios/App/App/Assets.xcassets/Splash.imageset/Default@2x~universal~anyany.png',
+    'ios/App/App/Assets.xcassets/Splash.imageset/Default@3x~universal~anyany.png',
+  ]);
+
+  const root = mkdtempSync(join(tmpdir(), 'flightglass-ios-assets-'));
+  try {
+    mkdirSync(join(root, 'resources'));
+    cpSync(join(ROOT, 'resources', 'icon.png'), join(root, 'resources', 'icon.png'));
+    cpSync(join(ROOT, 'resources', 'splash.png'), join(root, 'resources', 'splash.png'));
+    const generated = await generateIosAssets(root);
+    const iconDirectory = join(root, 'ios/App/App/Assets.xcassets/AppIcon.appiconset');
+    const splashDirectory = join(root, 'ios/App/App/Assets.xcassets/Splash.imageset');
+
+    assert.deepEqual(generated.icon, join(root, GENERATED_IOS_ASSETS.icon));
+    assert.deepEqual(
+      generated.splash,
+      GENERATED_IOS_ASSETS.splash.map(path => join(root, path)),
+    );
+    for (const path of [generated.icon, ...generated.splash]) {
+      assert.ok(existsSync(path), `asset generator did not write ${path}`);
+    }
+
+    assert.deepEqual(JSON.parse(readFileSync(join(iconDirectory, 'Contents.json'), 'utf8')), {
+      images: [{
+        filename: 'AppIcon-512@2x.png',
+        idiom: 'universal',
+        platform: 'ios',
+        size: '1024x1024',
+      }],
+      info: { author: 'xcode', version: 1 },
+    });
+    assert.deepEqual(JSON.parse(readFileSync(join(splashDirectory, 'Contents.json'), 'utf8')), {
+      images: GENERATED_IOS_ASSETS.splash.map((path, index) => ({
+        filename: path.split('/').at(-1),
+        idiom: 'universal',
+        scale: `${index + 1}x`,
+      })),
+      info: { author: 'xcode', version: 1 },
+    });
+
+    const results = await verifyGeneratedIosAssets(root);
+    assert.equal(results.length, 4);
+    assert.ok(results.every(result => result.difference <= 3));
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('GitHub runs the full v1 release gate before main can be treated as releasable', () => {
+  const workflow = read('.github/workflows/v1-release-gate.yml');
+  const pkg = JSON.parse(read('package.json'));
+  assert.match(workflow, /pull_request:[\s\S]*branches: \[main\]/);
+  assert.match(workflow, /npm run verify:v1:release/);
+  assert.match(workflow, /playwright-core install --with-deps chromium webkit/);
+
+  const release = pkg.scripts['verify:v1:release'];
+  for (const required of [
+    'verify:v1:source',
+    'test:phase2:chromium',
+    'test:phase2:webkit',
+    'test:phase2:phone',
+    'test:guide:chromium',
+    'test:guide:webkit',
+    'test:studio',
+    'test:phase4:chromium',
+    'test:phase4:webkit',
+  ]) assert.match(release, new RegExp(required.replaceAll(':', '\\:')));
+});

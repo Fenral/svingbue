@@ -25,18 +25,33 @@ export const PURCHASE_STATUS = Object.freeze({
   ERROR: 'error', UNAVAILABLE: 'unavailable', NOT_FOUND: 'not-found',
 });
 let pro = false;
+let offeringCallCount = 0;
 export const init = async () => 'ready';
 export const isNative = () => true;
 export const isPro = () => pro;
 export const getConfigurationStatus = () => 'ready';
-export const getOfferings = async () => ({
-  monthly: { product: { identifier: PRODUCT_IDS.monthly, priceString: 'kr 99' } },
-  annual: { product: { identifier: PRODUCT_IDS.annual, priceString: 'kr 590', pricePerMonthString: 'kr 49' } },
-  lifetime: { product: { identifier: PRODUCT_IDS.lifetime, priceString: 'kr 1 490' } },
-});
+export async function getOfferings() {
+  const call = offeringCallCount++;
+  const spec = window.__iapOfferingsSequence?.[call] || {};
+  if (spec.delayMs) await new Promise(resolve => setTimeout(resolve, spec.delayMs));
+  if (spec.reject) throw new Error('simulated offerings failure');
+  const monthlyPrice = Object.hasOwn(spec, 'monthlyPrice') ? spec.monthlyPrice : 'kr 99';
+  const annualPrice = Object.hasOwn(spec, 'annualPrice') ? spec.annualPrice : 'kr 590';
+  const annualMonthlyPrice = Object.hasOwn(spec, 'annualMonthlyPrice') ? spec.annualMonthlyPrice : 'kr 49';
+  return {
+    monthly: monthlyPrice ? { product: { identifier: PRODUCT_IDS.monthly, priceString: monthlyPrice } } : null,
+    annual: annualPrice ? { product: { identifier: PRODUCT_IDS.annual, priceString: annualPrice, pricePerMonthString: annualMonthlyPrice } } : null,
+    lifetime: { product: { identifier: PRODUCT_IDS.lifetime, priceString: 'kr 1 490' } },
+  };
+}
 export async function purchaseDetailed(tier) {
   if (!['monthly', 'annual'].includes(tier)) return { status: PURCHASE_STATUS.UNAVAILABLE };
   const mode = window.__iapMode;
+  if (mode === 'delayed-success') {
+    await new Promise(resolve => setTimeout(resolve, window.__iapDelayMs || 150));
+    pro = true;
+    return { status: PURCHASE_STATUS.SUCCESS };
+  }
   if (mode === 'success') { pro = true; return { status: PURCHASE_STATUS.SUCCESS }; }
   if (mode === 'cancelled') return { status: PURCHASE_STATUS.CANCELLED };
   if (mode === 'pending') return { status: PURCHASE_STATUS.PENDING };
@@ -45,6 +60,11 @@ export async function purchaseDetailed(tier) {
 }
 export async function restoreDetailed() {
   const mode = window.__iapMode;
+  if (mode === 'delayed-restore-success') {
+    await new Promise(resolve => setTimeout(resolve, window.__iapDelayMs || 150));
+    pro = true;
+    return { status: PURCHASE_STATUS.SUCCESS };
+  }
   if (mode === 'restore-success') { pro = true; return { status: PURCHASE_STATUS.SUCCESS }; }
   if (mode === 'restore-not-found') return { status: PURCHASE_STATUS.NOT_FOUND };
   if (mode === 'restore-unavailable') return { status: PURCHASE_STATUS.UNAVAILABLE };
@@ -74,11 +94,13 @@ async function open({
   waitForPaywall = true,
   accessUsage = null,
   skipOpening = false,
+  offeringsSequence = null,
 } = {}) {
   const context = await browser.newContext({ viewport, deviceScaleFactor: 1, reducedMotion });
   const page = await context.newPage();
-  await page.addInitScript(({ accessUsage: usage, skipOpening: skip }) => {
+  await page.addInitScript(({ accessUsage: usage, skipOpening: skip, offeringsSequence: offeringSpecs }) => {
     window.__iapMode = 'cancelled';
+    window.__iapOfferingsSequence = offeringSpecs;
     if (skip) sessionStorage.setItem('sa.opening.v1', '1');
     if (usage) {
       const now = new Date();
@@ -106,7 +128,7 @@ async function open({
     // supplies a test-only IAP module instead of mutating shipping source.
     window.Capacitor = { isNativePlatform: () => true, getPlatform: () => 'ios' };
     window.CapacitorCustomPlatform = { name: 'ios' };
-  }, { accessUsage, skipOpening });
+  }, { accessUsage, skipOpening, offeringsSequence });
   const errors = [];
   page.on('pageerror', error => errors.push(`pageerror: ${error.message} @ ${page.url()}`));
   page.on('console', message => { if (message.type() === 'error') errors.push(`console: ${message.text()}`); });
@@ -170,7 +192,11 @@ test.before(async () => {
   });
   await new Promise((resolveListen, reject) => { server.once('error', reject); server.listen(0, '127.0.0.1', resolveListen); });
   baseUrl = `http://127.0.0.1:${server.address().port}`;
-  browser = WEBKIT ? await webkit.launch({ headless: true }) : await chromium.launch({ channel: 'msedge', headless: true }).catch(() => chromium.launch({ channel: 'chrome', headless: true }));
+  browser = WEBKIT
+    ? await webkit.launch({ headless: true })
+    : await chromium.launch({ channel: 'msedge', headless: true })
+      .catch(() => chromium.launch({ channel: 'chrome', headless: true }))
+      .catch(() => chromium.launch({ headless: true }));
 });
 test.after(async () => { await browser?.close(); await new Promise(resolveClose => server?.close(resolveClose)); });
 
@@ -315,6 +341,146 @@ test(`${ENGINE}: keyboard plan selection and a successful purchase unlock Pro an
   await dialog.waitFor({ state: 'hidden' });
   await page.waitForFunction(() => document.activeElement?.id === 'purchase-opener');
   assert.equal(await page.evaluate(() => window.__sa.iap.isPro()), true);
+  assert.deepEqual(errors, []);
+  await context.close();
+});
+
+test(`${ENGINE}: a delayed store confirmation cannot dismiss or lose the gated action`, async () => {
+  const { context, page, errors } = await open({
+    route: 'impact.html',
+    waitForPaywall: false,
+    accessUsage: { shots: 10 },
+  });
+  const dialog = page.locator('.sa-pw-scrim');
+  await page.getByRole('button', { name: 'Pin comparison' }).click();
+  await page.locator('.sa-pw-scrim[open]').waitFor();
+  await page.waitForFunction(() => !document.querySelector('.sa-pw-cta')?.disabled);
+  await page.evaluate(() => {
+    window.__iapMode = 'delayed-success';
+    window.__iapDelayMs = 1_000;
+  });
+  await page.locator('.sa-pw-cta').click();
+  await page.waitForFunction(() => window.__sa.paywall.state().busy === true);
+
+  assert.equal(await page.getByRole('button', { name: 'Close Pro options' }).isDisabled(), true);
+  await page.keyboard.press('Escape');
+  assert.equal(await dialog.isVisible(), true);
+  assert.equal(await page.evaluate(() => window.__sa.paywall.close()), false);
+  assert.match(await page.locator('.sa-pw-status').textContent(), /store confirmation is still open/i);
+
+  await dialog.waitFor({ state: 'hidden' });
+  await page.getByText(/Comparison pinned\./).waitFor();
+  assert.equal(await page.evaluate(() => window.__sa.iap.isPro()), true);
+  assert.deepEqual(errors, []);
+  await context.close();
+});
+
+test(`${ENGINE}: delayed restore owns the dialog until unlock, then resumes the gated action and returns focus`, async () => {
+  const { context, page, errors } = await open({
+    route: 'impact.html',
+    waitForPaywall: false,
+    accessUsage: { shots: 10 },
+  });
+  const pin = page.getByRole('button', { name: 'Pin comparison' });
+  const dialog = page.locator('.sa-pw-scrim');
+  await pin.focus();
+  await page.keyboard.press('Enter');
+  await page.locator('.sa-pw-scrim[open]').waitFor();
+  await page.waitForFunction(() => !document.querySelector('.sa-pw-link')?.disabled);
+  await page.evaluate(() => {
+    window.__iapMode = 'delayed-restore-success';
+    window.__iapDelayMs = 1_000;
+  });
+  await page.getByRole('button', { name: 'Restore purchases' }).click();
+  await page.waitForFunction(() => window.__sa.paywall.state().busy === true);
+
+  assert.equal(await page.getByRole('button', { name: 'Close Pro options' }).isDisabled(), true);
+  await page.keyboard.press('Escape');
+  assert.equal(await dialog.isVisible(), true);
+  assert.equal(await page.evaluate(() => window.__sa.paywall.close()), false);
+  assert.match(await page.locator('.sa-pw-status').textContent(), /store confirmation is still open/i);
+
+  await dialog.waitFor({ state: 'hidden' });
+  await page.getByText(/Comparison pinned\./).waitFor();
+  await page.waitForFunction(() => document.activeElement?.id === 'pinFab');
+  assert.equal(await page.evaluate(() => window.__sa.iap.isPro()), true);
+  assert.equal(await page.evaluate(() => window.__sa.paywall.state().busy), false);
+  assert.deepEqual(errors, []);
+  await context.close();
+});
+
+for (const [firstMode, expectedCopy] of [
+  ['cancelled', 'Purchase cancelled. Nothing was charged.'],
+  ['error', 'The store could not complete the purchase. Check your connection and try again.'],
+]) {
+  test(`${ENGINE}: ${firstMode} purchase can retry and resume the original gated action`, async () => {
+    const { context, page, errors } = await open({
+      route: 'impact.html',
+      waitForPaywall: false,
+      accessUsage: { shots: 10 },
+    });
+    const pin = page.getByRole('button', { name: 'Pin comparison' });
+    const dialog = page.locator('.sa-pw-scrim');
+    await pin.focus();
+    await page.keyboard.press('Enter');
+    await page.locator('.sa-pw-scrim[open]').waitFor();
+    await page.waitForFunction(() => !document.querySelector('.sa-pw-cta')?.disabled);
+
+    await page.evaluate(mode => { window.__iapMode = mode; }, firstMode);
+    await page.locator('.sa-pw-cta').click();
+    assert.equal(await page.locator('.sa-pw-status').textContent(), expectedCopy);
+    assert.equal(await dialog.isVisible(), true);
+    assert.equal(await page.evaluate(() => window.__sa.iap.isPro()), false);
+    assert.equal(await page.evaluate(() => window.__sa.paywall.state().source), 'instrument-shot');
+    assert.equal(await page.getByText(/Comparison pinned\./).count(), 0);
+
+    await page.evaluate(() => { window.__iapMode = 'success'; });
+    await page.locator('.sa-pw-cta').click();
+    await dialog.waitFor({ state: 'hidden' });
+    await page.getByText(/Comparison pinned\./).waitFor();
+    await page.waitForFunction(() => document.activeElement?.id === 'pinFab');
+    assert.equal(await page.evaluate(() => window.__sa.iap.isPro()), true);
+    assert.deepEqual(errors, []);
+    await context.close();
+  });
+}
+
+test(`${ENGINE}: a stale delayed offering cannot overwrite a newly opened paywall session`, async () => {
+  const { context, page, errors } = await open({
+    offeringsSequence: [
+      { delayMs: 800, monthlyPrice: 'OLD MONTHLY', annualPrice: 'OLD ANNUAL', annualMonthlyPrice: 'OLD MONTH' },
+      { monthlyPrice: 'NEW MONTHLY', annualPrice: null },
+    ],
+  });
+  const dialog = page.locator('.sa-pw-scrim');
+  await page.getByRole('button', { name: 'Close Pro options' }).click();
+  await dialog.waitFor({ state: 'hidden' });
+
+  await page.evaluate(() => {
+    const opener = document.createElement('button');
+    opener.id = 'fresh-session-opener';
+    opener.textContent = 'Open new session';
+    document.body.append(opener);
+    opener.focus();
+    void window.__sa.paywall.open('guide-answer');
+  });
+  await page.locator('.sa-pw-scrim[open]').waitFor();
+  const monthly = page.getByRole('radio', { name: /Monthly/i });
+  const annual = page.getByRole('radio', { name: /Annual/i });
+  await page.waitForFunction(() => !document.querySelector('input[value="monthly"]')?.disabled);
+  assert.equal(await monthly.isChecked(), true);
+  assert.equal(await monthly.isDisabled(), false);
+  assert.equal(await annual.isDisabled(), true);
+  assert.match(await page.locator('#sa-pw-title').textContent(), /Keep digging into the model/i);
+  assert.match(await page.locator('.sa-pw-cta').textContent(), /NEW MONTHLY per month/i);
+
+  await page.waitForTimeout(1_000);
+  assert.equal(await monthly.isChecked(), true);
+  assert.equal(await monthly.isDisabled(), false);
+  assert.equal(await annual.isDisabled(), true);
+  assert.match(await page.locator('.sa-pw-cta').textContent(), /NEW MONTHLY per month/i);
+  assert.doesNotMatch(await dialog.innerText(), /OLD MONTHLY|OLD ANNUAL|OLD MONTH/);
+  assert.equal(await page.evaluate(() => window.__sa.paywall.state().source), 'guide-answer');
   assert.deepEqual(errors, []);
   await context.close();
 });

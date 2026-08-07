@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { existsSync, readFileSync, readdirSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
+import { dirname, extname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 
@@ -34,6 +34,7 @@ const REQUIRED_LOCAL_DEPENDENCIES = [
   'sa-analytics.js',
   'sa-shots.js',
   'sa-iap.js',
+  'sa-iap-config.js',
   'sa-paywall.js',
   'sa-paywall.css',
   'sa-v1-context.js',
@@ -44,9 +45,24 @@ const REQUIRED_LOCAL_DEPENDENCIES = [
   'impact-outcome.js',
   'impact-annotate.js',
   'impact-flight.js',
+  'flightglass-3d-spin-model.js',
   'swing-parameters-and-impact.js',
   'sa-haptics.js',
+  'jarvis.css',
+  'jarvis.js',
+  'guide-engine.js',
+  'guide-knowledge.js',
   'vendor/revenuecat/purchases.esm.js',
+  'vendor/fonts/IBMPlexMono-Medium.woff2',
+  'vendor/fonts/IBMPlexMono-Regular.woff2',
+  'vendor/fonts/IBMPlexMono-SemiBold.woff2',
+  'vendor/fonts/Inter-Bold.woff2',
+  'vendor/fonts/Inter-Medium.woff2',
+  'vendor/fonts/Inter-Regular.woff2',
+  'vendor/fonts/Inter-SemiBold.woff2',
+  'vendor/fonts/SpaceGrotesk-Bold.woff2',
+  'vendor/fonts/SpaceGrotesk-Medium.woff2',
+  'vendor/fonts/SpaceGrotesk-SemiBold.woff2',
   'assets/flightglass-mark-micro.svg',
   'assets/flightglass-lockup.svg',
   'assets/onboarding/outcome.webp',
@@ -74,6 +90,54 @@ function assertByteIdentical(relativePath) {
     readFileSync(sourcePath),
     `native copy differs from root: ${relativePath}`,
   );
+}
+
+function treeSize(directory) {
+  let total = 0;
+  for (const entry of readdirSync(directory, { withFileTypes: true })) {
+    const path = join(directory, entry.name);
+    total += entry.isDirectory() ? treeSize(path) : statSync(path).size;
+  }
+  return total;
+}
+
+function filesBelow(directory) {
+  return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+    const path = join(directory, entry.name);
+    return entry.isDirectory() ? filesBelow(path) : [path];
+  });
+}
+
+function relativeModuleSpecifiers(source) {
+  const specifiers = new Set();
+  for (const pattern of [
+    /(?:import|export)\s+(?:[^'";]*?\sfrom\s*)?['"](\.[^'"]+)['"]/g,
+    /import\s*\(\s*['"](\.[^'"]+)['"]\s*\)/g,
+  ]) {
+    for (const match of source.matchAll(pattern)) specifiers.add(match[1]);
+  }
+  return [...specifiers];
+}
+
+function assertNativeModuleClosure() {
+  const wwwRoot = resolve(WWW);
+  for (const importer of filesBelow(WWW).filter(path => path.endsWith('.js'))) {
+    const source = readFileSync(importer, 'utf8');
+    for (const specifier of relativeModuleSpecifiers(source)) {
+      const requested = resolve(dirname(importer), specifier.split(/[?#]/, 1)[0]);
+      assert.ok(
+        requested === wwwRoot || requested.startsWith(`${wwwRoot}\\`) || requested.startsWith(`${wwwRoot}/`),
+        `${relative(wwwRoot, importer)} imports outside the native bundle: ${specifier}`,
+      );
+      const candidates = extname(requested)
+        ? [requested]
+        : [requested, `${requested}.js`, join(requested, 'index.js')];
+      assert.ok(
+        candidates.some(candidate => existsSync(candidate)),
+        `${relative(wwwRoot, importer)} has a missing native import: ${specifier}`,
+      );
+    }
+  }
 }
 
 test('native HTML allowlist contains only v1 routes and legal pages', () => {
@@ -129,5 +193,20 @@ test('copy-web produces a byte-identical v1 native payload', () => {
 
   for (const relativePath of [...V1_ROUTES, ...REQUIRED_LOCAL_DEPENDENCIES]) {
     assertByteIdentical(relativePath);
+  }
+  assertNativeModuleClosure();
+
+  const bundleBytes = treeSize(WWW);
+  assert.ok(
+    bundleBytes <= 12 * 1024 * 1024,
+    `native v1 payload is ${(bundleBytes / 1024 / 1024).toFixed(2)} MiB; budget is 12 MiB`,
+  );
+  for (const forbidden of [
+    'geo3d',
+    'assets/audio',
+    'assets/palette-previews',
+    'vendor/three',
+  ]) {
+    assert.equal(existsSync(join(WWW, forbidden)), false, `${forbidden} must not ship in v1`);
   }
 });

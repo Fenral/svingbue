@@ -85,11 +85,45 @@ test('usage is consumed only after a completed result', () => {
 
   const finished = consume('instrument-shot', { ...options, completed: true });
   assert.equal(finished.consumed, true);
+  assert.equal(finished.persistence, 'persistent');
   assert.equal(finished.used, 1);
   assert.equal(finished.remaining, 9);
   assert.equal(finished.shouldPaywall, false, 'a completed free result never opens a paywall');
   assert.equal(snapshot(options).demonstratedValue, true);
   assert.equal(authorize('pro-history', options).shouldPaywall, true);
+});
+
+test('native quota remains enforced in volatile memory when storage writes fail', () => {
+  const seeded = {
+    version: ACCESS_STATE_VERSION,
+    usage: {
+      'instrument-shot': 9,
+      'instrument-identifiers': [],
+      'guided-experiment': 0,
+      'guide-answer': { localDay: localDayKey(DAY_ONE), count: 0, identifiers: [] },
+    },
+    completedResults: 9,
+  };
+  const storage = {
+    getItem(key) {
+      return key === ACCESS_STATE_KEY ? JSON.stringify(seeded) : null;
+    },
+    setItem() {
+      throw new Error('storage became read-only');
+    },
+  };
+  const options = nativeFree(storage);
+
+  const tenth = consume('instrument-shot', { ...options, completed: true });
+  assert.equal(tenth.consumed, true);
+  assert.equal(tenth.persistence, 'volatile');
+  assert.equal(tenth.used, 10);
+
+  const eleventh = authorize('instrument-shot', options);
+  assert.equal(eleventh.allowed, false);
+  assert.equal(eleventh.used, 10);
+  assert.equal(eleventh.shouldPaywall, true);
+  assert.equal(snapshot(options).completedResults, 10);
 });
 
 test('native free users receive exactly ten Range comparisons before the eleventh gate', () => {

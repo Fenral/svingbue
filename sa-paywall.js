@@ -188,6 +188,8 @@ function updateCta() {
 function setBusy(next) {
   busy = next;
   ui.purchase.setAttribute('aria-busy', String(next));
+  ui.close.disabled = next;
+  ui.close.setAttribute('aria-disabled', String(next));
   ui.restore.disabled = next;
   for (const [plan, input] of Object.entries(ui.inputs)) input.disabled = next || !availablePlans[plan];
   updateCta();
@@ -284,6 +286,16 @@ export function openPaywall(nextSource = 'default') {
 
 export function closePaywall(outcome = { status: 'dismissed' }) {
   if (!ui.dialog.open) return;
+  // A store sheet can settle after the user returns to this dialog. Resolving
+  // the caller as dismissed while that request is in flight loses the gated
+  // action even when RevenueCat grants Pro a moment later. Keep one owner for
+  // the outcome until the store returns success, cancellation, pending or an
+  // error. The close control is disabled too; this guard also covers Escape,
+  // scrim clicks and programmatic close attempts.
+  if (busy && outcome?.status === 'dismissed') {
+    ui.status.textContent = 'Your store confirmation is still open. Finish or cancel it before closing.';
+    return false;
+  }
   offeringGeneration += 1;
   ui.dialog.close();
   ui.status.textContent = '';
@@ -295,6 +307,7 @@ export function closePaywall(outcome = { status: 'dismissed' }) {
   outcomePromise = null;
   resolveOutcome = null;
   settle?.(outcome);
+  return true;
 }
 
 ui.cta.addEventListener('click', async () => {

@@ -139,7 +139,8 @@ test.before(async () => {
   browser = WEBKIT
     ? await webkit.launch({ headless: true })
     : await chromium.launch({ channel: 'msedge', headless: true })
-      .catch(() => chromium.launch({ channel: 'chrome', headless: true }));
+      .catch(() => chromium.launch({ channel: 'chrome', headless: true }))
+      .catch(() => chromium.launch({ headless: true }));
 });
 
 test.after(async () => {

@@ -23,10 +23,10 @@ function installNative(adapter) {
   globalThis.__SA_IAP_NODE_TEST_ADAPTER__ = adapter;
 }
 
-function adapter({ offerings = [], purchase, restore } = {}) {
+function adapter({ offerings = [], purchase, restore, configure } = {}) {
   return {
     isConfigured: async () => ({ isConfigured: false }),
-    configure: async () => {},
+    configure: configure || (async () => {}),
     setLogLevel: async () => {},
     addCustomerInfoUpdateListener: async () => {},
     getCustomerInfo: async () => entitlement(false),
@@ -104,6 +104,33 @@ test('purchase and restore APIs expose cancellation, pending, error, and not-fou
   assert.deepEqual(await iap.restoreDetailed(), { status: iap.PURCHASE_STATUS.NOT_FOUND });
 });
 
+test('a cancelled or failed purchase can retry against the same offering and eventually unlock Pro', async () => {
+  const monthly = { product: { identifier: 'strikearc_pro_monthly', priceString: 'kr 99' } };
+  let attempts = 0;
+  let offeringFetches = 0;
+  const iap = await freshIap('purchase-retry', {
+    offerings: [monthly],
+    purchase: async ({ aPackage }) => {
+      assert.equal(aPackage, monthly);
+      attempts += 1;
+      if (attempts === 1) throw { readableErrorCode: 'PURCHASE_CANCELLED_ERROR' };
+      if (attempts === 2) throw new Error('transient store failure');
+      return entitlement(true);
+    },
+  });
+  globalThis.__SA_IAP_NODE_TEST_ADAPTER__.getOfferings = async () => {
+    offeringFetches += 1;
+    return { current: { availablePackages: [monthly] } };
+  };
+
+  assert.deepEqual(await iap.purchaseDetailed('monthly'), { status: iap.PURCHASE_STATUS.CANCELLED });
+  assert.deepEqual(await iap.purchaseDetailed('monthly'), { status: iap.PURCHASE_STATUS.ERROR });
+  assert.deepEqual(await iap.purchaseDetailed('monthly'), { status: iap.PURCHASE_STATUS.SUCCESS });
+  assert.equal(iap.isPro(), true);
+  assert.equal(attempts, 3);
+  assert.equal(offeringFetches, 1);
+});
+
 test('placeholder production keys are an explicit external configuration blocker, never a fake store capability', async () => {
   globalThis.window = { Capacitor: { isNativePlatform: () => true, getPlatform: () => 'ios' } };
   delete globalThis.__SA_IAP_NODE_TEST_ADAPTER__;
@@ -113,6 +140,19 @@ test('placeholder production keys are an explicit external configuration blocker
   assert.equal(await iap.getOfferings(), null);
   assert.deepEqual(await iap.purchaseDetailed('annual'), { status: iap.PURCHASE_STATUS.UNAVAILABLE });
   assert.deepEqual(await iap.restoreDetailed(), { status: iap.PURCHASE_STATUS.UNAVAILABLE });
+});
+
+test('a transient RevenueCat initialization failure can retry without an app restart', async () => {
+  let attempts = 0;
+  const iap = await freshIap('retry-sdk', {
+    configure: async () => {
+      attempts += 1;
+      if (attempts === 1) throw new Error('native bridge starting');
+    },
+  });
+  assert.equal(await iap.init(), 'sdk-error');
+  assert.equal(await iap.init(), 'ready');
+  assert.equal(attempts, 2);
 });
 
 test('access quotas are native-only, completion-bound, and bypassed only by an active Pro entitlement', async () => {

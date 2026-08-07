@@ -23,7 +23,8 @@
 //   4. Sets CFBundleDisplayName to "Flightglass" (the name shown under the
 //      home-screen icon; separate from CFBundleName).
 //   5. Raises the generated Xcode project's iOS deployment target to 16.4.
-//   6. Raises the generated Podfile platform to the same iOS target.
+//   6. Restricts the generated app target to iPhone (device family 1).
+//   7. Raises the generated Podfile platform to the same iOS target.
 //
 // Implementation notes / assumptions:
 //   - This is a plain-text/regex plist editor, not a full plist parser —
@@ -121,10 +122,17 @@ export function patchXcodeDeploymentTarget(project) {
     throw new Error('[ios-landscape] Xcode project has no IPHONEOS_DEPLOYMENT_TARGET setting.');
   }
   targetPattern.lastIndex = 0;
-  return project.replace(
+  let patched = project.replace(
     targetPattern,
     `IPHONEOS_DEPLOYMENT_TARGET = ${IOS_DEPLOYMENT_TARGET};`,
   );
+  const familyPattern = /TARGETED_DEVICE_FAMILY\s*=\s*[^;]+;/g;
+  if (!familyPattern.test(patched)) {
+    throw new Error('[ios-landscape] Xcode project has no TARGETED_DEVICE_FAMILY setting.');
+  }
+  familyPattern.lastIndex = 0;
+  patched = patched.replace(familyPattern, 'TARGETED_DEVICE_FAMILY = 1;');
+  return patched;
 }
 
 export function patchPodfileDeploymentTarget(podfile) {
@@ -190,6 +198,7 @@ function runCli() {
   log('set UIRequiresFullScreen -> true');
   log('set CFBundleDisplayName -> Flightglass');
   log(`set iOS deployment target -> ${IOS_DEPLOYMENT_TARGET}`);
+  log('set targeted device family -> iPhone only');
 
   if (plist === original) {
     log('no changes needed (already patched) — plist untouched on disk.');

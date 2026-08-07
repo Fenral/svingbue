@@ -71,7 +71,8 @@ test.before(async () => {
   if (WEBKIT) browser = await webkit.launch({ headless: true });
   else {
     browser = await chromium.launch({ channel: 'msedge', headless: true })
-      .catch(() => chromium.launch({ channel: 'chrome', headless: true }));
+      .catch(() => chromium.launch({ channel: 'chrome', headless: true }))
+      .catch(() => chromium.launch({ headless: true }));
   }
 });
 
@@ -85,6 +86,7 @@ async function open({
   storedContext,
   reducedMotion = 'no-preference',
   skipSplash = true,
+  localStorageThrows = false,
 } = {}) {
   const browserContext = await browser.newContext({
     viewport,
@@ -97,6 +99,33 @@ async function open({
   page.on('console', message => {
     if (message.type() === 'error') errors.push(`console: ${message.text()}`);
   });
+  if (localStorageThrows) {
+    await page.addInitScript(() => {
+      const calls = { getItem: 0, setItem: 0, removeItem: 0 };
+      const blockedStorage = Object.freeze({
+        getItem() {
+          calls.getItem += 1;
+          throw new DOMException('Local storage is unavailable', 'SecurityError');
+        },
+        setItem() {
+          calls.setItem += 1;
+          throw new DOMException('Local storage is unavailable', 'SecurityError');
+        },
+        removeItem() {
+          calls.removeItem += 1;
+          throw new DOMException('Local storage is unavailable', 'SecurityError');
+        },
+      });
+      Object.defineProperty(window, 'localStorage', {
+        configurable: true,
+        value: blockedStorage,
+      });
+      Object.defineProperty(window, '__blockedStorageCalls', {
+        configurable: false,
+        value: calls,
+      });
+    });
+  }
   if (storedContext !== undefined) {
     await page.addInitScript(([key, value]) => {
       localStorage.setItem(key, value);
@@ -339,6 +368,67 @@ test(`${ENGINE}: learning tour uses real product proof, a live engine lab, and n
   await page.locator('#startFirstShot').click();
   await page.waitForURL(/impact\.html$/);
   await page.waitForFunction(() => Boolean(window.__impact));
+  assert.deepEqual(errors, []);
+  await browserContext.close();
+});
+
+test(`${ENGINE}: onboarding remains usable with throwing localStorage and completes in volatile state`, async () => {
+  const { browserContext, page, errors } = await open({
+    viewport: { width: 390, height: 844 },
+    localStorageThrows: true,
+  });
+
+  await page.locator('#onboarding[open]').waitFor();
+  assert.equal(await currentStep(page), 1);
+  assert.equal(await page.locator('#stepOneTitle').isVisible(), true);
+
+  const storageErrors = await page.evaluate(() => {
+    const calls = [
+      () => localStorage.getItem('probe'),
+      () => localStorage.setItem('probe', 'value'),
+      () => localStorage.removeItem('probe'),
+    ];
+    return calls.map(call => {
+      try {
+        call();
+        return null;
+      } catch (error) {
+        return error.name;
+      }
+    });
+  });
+  assert.deepEqual(storageErrors, ['SecurityError', 'SecurityError', 'SecurityError']);
+
+  await page.locator('#beginOnboarding').click();
+  assert.equal(await currentStep(page), 2);
+  await page.locator('#continueTour').click();
+  assert.equal(await currentStep(page), 3);
+  await page.locator('#labLoftUp').click();
+  assert.equal(await page.locator('#onboardingLoft').inputValue(), '25');
+  await page.locator('#continueFromLab').click();
+  assert.equal(await currentStep(page), 4);
+
+  const beforeCompletion = await page.evaluate(() => window.__flightglassHome.getContext());
+  assert.equal(beforeCompletion.onboarding.step, 4);
+  assert.equal(beforeCompletion.onboarding.labLoft, 25);
+  assert.equal(beforeCompletion.onboarding.complete, false);
+
+  await page.locator('#finishOnboarding').click();
+  assert.equal(await page.locator('#onboarding').getAttribute('open'), null);
+  assert.equal(await page.locator('#homeEmpty').isVisible(), true);
+  assert.equal(await page.locator('#startFirstShot').textContent(), 'Open live Outcome');
+
+  const afterCompletion = await page.evaluate(() => ({
+    context: window.__flightglassHome.getContext(),
+    calls: { ...window.__blockedStorageCalls },
+  }));
+  assert.equal(afterCompletion.context.onboarding.complete, true);
+  assert.equal(afterCompletion.context.onboarding.dismissed, true);
+  assert.equal(afterCompletion.context.onboarding.step, 4);
+  assert.equal(afterCompletion.context.onboarding.labLoft, 25);
+  assert.ok(afterCompletion.calls.getItem > 0);
+  assert.ok(afterCompletion.calls.setItem > 0);
+  assert.ok(afterCompletion.calls.removeItem > 0);
   assert.deepEqual(errors, []);
   await browserContext.close();
 });

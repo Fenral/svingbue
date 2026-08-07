@@ -71,12 +71,14 @@ The following boundaries remain protected:
 
 ### Public web
 
-- `landing.html`: animated marketing landing page, web-only.
-- The landing page has one job: explain **See why it flew** and open the app.
-- Motion MUST support hierarchy, use at most two signature sequences and have a
-  complete `prefers-reduced-motion` state.
-- Generated media is not required. Existing assets, CSS, SVG and Canvas are the
-  first implementation path.
+- A public animated marketing landing page is explicitly deferred by the owner.
+  It is not a blocker for the native v1 release and MUST NOT be added to the
+  Capacitor payload by implication.
+- `privacy.html`, `terms.html` and `support.html` remain public web destinations
+  for store listing, legal and customer-support requirements.
+- When the marketing landing is resumed after v1, it has one job: explain
+  **See why it flew** and open the app. Motion MUST support hierarchy, use at
+  most two signature sequences and provide complete reduced-motion parity.
 
 ### App shell
 
@@ -514,24 +516,39 @@ real RevenueCat public SDK keys, a current Monthly/Annual offering granting the
 exact `pro` entitlement, configured store products/agreements, and native
 sandbox proof for purchase plus restoration of an existing lifetime customer.
 
+The committed browser/source configuration MUST remain fail-closed. Native
+release builds MUST inject the platform-specific public RevenueCat SDK key into
+the disposable `www/` package after `copy-web`, using a protected CI
+environment variable. A real key MUST NOT be committed to source. Missing or
+malformed configuration MUST fail the build before the native platform is
+packaged.
+
 Stop condition: print `PHASE 4 DONE` and stop.
 
-### Phase 5: Animated landing and release convergence
+### Phase 5: Native release convergence
 
-Objective: separate marketing from the deterministic app Home and prove the
-complete v1.
+Objective: prove the complete iPhone v1 and prepare the existing App Store
+record without making the deferred marketing landing a release dependency.
 
-- [ ] `landing.html` communicates the product and one CTA in five seconds.
-- [ ] Motion has at most two signature sequences and full reduced-motion parity.
-- [ ] Landing is excluded from the Capacitor app payload unless explicitly
-  required by native navigation.
 - [ ] All protected identifiers and physics fixtures remain unchanged.
-- [ ] All route, accessibility, orientation, copy, purchase and browser gates
-  pass from a clean clone.
-- [ ] A final before/after contact sheet and manual device checklist exist.
+- [ ] Source, route, accessibility, orientation, copy, purchase and browser
+  release gates pass on the exact candidate commit.
+- [ ] Codemagic is manual-only, uses the `resources/` asset sources, refuses an
+  ambiguous build number and reuses persistent Apple signing assets without
+  revoking team certificates.
+- [ ] The iPhone-only native package receives a valid iOS RevenueCat public SDK
+  key at build time; no real key exists in the committed source.
+- [ ] Monthly and Annual grant `pro`, existing Lifetime restores, and a native
+  sandbox purchase plus restore are recorded against the candidate build.
+- [ ] Current App Store metadata, privacy declarations, reviewer notes, support
+  URL and current-product screenshots are ready.
+- [ ] A final current-product contact sheet, physical-iPhone checklist and the
+  Phase 2 moderated onboarding evidence exist.
+- [ ] The marketing landing remains deferred and outside the Capacitor payload.
 
 Stop condition: print `PHASE 5 DONE`; do not publish without the repository's
-release gates and authorization.
+release gates and authorization. A green source tree alone cannot close the
+native signing, store-account, sandbox-purchase or human gates.
 
 ## 12. Explicit v1 cuts
 

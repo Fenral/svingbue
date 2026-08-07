@@ -2,34 +2,73 @@
 
 Owner approval: granted on 2026-07-13.
 
-The owner explicitly authorizes the autonomous release workflow to:
+The owner authorized the autonomous release workflow to:
 
-- push the completed Flightglass work to GitHub;
+- push completed Flightglass work to GitHub;
 - deploy the completed web build through Vercel;
-- submit or publish the completed native app through the configured Apple and
+- submit or publish the completed native app through configured Apple and
   Google release workflows.
 
-No second publication approval is required when every condition below is met.
+No second publication approval is required when every mandatory condition below
+is proven. This authorization does not convert an unverified or externally
+incomplete candidate into a releasable build.
+
+## How the historical Phase 8 gate maps to v1
+
+The original master plan calls the final global gate **Phase 8 — Convergence
+and release QA**. The current v1 specification calls the native/store portion
+**Phase 5 — Native release convergence**. Both names refer to one release
+decision: all applicable global gates and all current v1 release conditions
+must be green for the exact commit and native build being published.
+
+The owner's explicit deferral of the public marketing landing page means that a
+missing `landing.html` is not a native v1 release blocker. Support, Privacy,
+Terms and store metadata remain required. This scope clarification does not
+waive any product, payment, privacy, native-device or store requirement.
 
 ## Mandatory release conditions
 
-All Phase 8 gates must pass before any external publication. In particular:
+Before GitHub/Vercel production publication or store submission:
 
-- every named surface has a recorded score of 90+ with no critical failure;
-- the complete test, brand, UX, native and store-reviewer workflows pass;
-- the clean `www/` build is the artifact being released;
-- the protected bundle, store, RevenueCat and Academy identifiers remain
+- the complete current v1 source, UX, accessibility, browser, orientation,
+  native-package and protected-identifier gates pass on the candidate commit;
+- the clean `www/` allowlist is the artifact packaged by Capacitor;
+- bundle, store, RevenueCat product and Academy storage identifiers remain
   unchanged;
-- release evidence and rollback information are recorded in `STATUS.md`.
+- protected golf-physics fixtures and hashes remain unchanged;
+- the current App Store/Play metadata, screenshots, support URL, legal URLs and
+  privacy declarations match the actual candidate;
+- release evidence and rollback information are recorded.
+
+Before native Apple submission, also require:
+
+- a manually triggered, successful iPhone-only archive signed with reusable
+  Apple Distribution assets;
+- a valid build-time RevenueCat iOS public SDK key supplied outside Git;
+- Monthly and Annual products in the current Offering granting `pro`;
+- legacy Lifetime still granting `pro` for existing-owner restoration;
+- active agreements, tax and banking;
+- native sandbox proof for purchase, cancellation/error and restore, including
+  an existing Lifetime entitlement;
+- the physical-iPhone smoke checklist and the moderated onboarding acceptance
+  gate required by `TECH_SPEC.md`.
+
+Android publication requires its own signed AAB, upload-key custody, Play
+Console listing/data-safety answers, RevenueCat Android mapping and release
+track proof. A debug APK is not release evidence.
 
 ## Boundaries
 
 This approval does not authorize changing golf-physics outputs, protected
 identifiers, production customer data, billing configuration or credentials.
-It does not authorize purchasing services or exposing secrets. If credentials
-are unavailable, a platform requires an irreversible account-level choice, or
-the release target differs materially from Flightglass, stop and request the
-minimum additional input.
+It does not authorize purchasing services, exposing secrets, revoking team
+certificates, or making irreversible account-level choices on the owner's
+behalf.
+
+If credentials or persistent signing assets are unavailable, a store requires
+an irreversible owner choice, the release target differs materially from
+Flightglass, or required human/native evidence is missing, stop at the release
+boundary and request only the minimum external input.
 
 GitHub, Vercel and store publication are release operations, never shortcuts
-around local verification.
+around verification.

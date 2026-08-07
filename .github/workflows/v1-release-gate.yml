@@ -1,0 +1,50 @@
+name: Flightglass v1 release gate
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: v1-release-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install app and browser-test dependencies
+        run: |
+          npm ci
+          npm ci --prefix tools
+
+      - name: Install deterministic browser engines
+        run: ./tools/node_modules/.bin/playwright-core install --with-deps chromium webkit
+
+      - name: Verify the complete shipping v1
+        run: npm run verify:v1:release
+
+      - name: Audit production dependencies
+        run: npm audit --omit=dev --audit-level=high
+
+      - name: Upload failure evidence
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: flightglass-v1-failure-evidence
+          path: outputs/flightglass-gates/
+          if-no-files-found: ignore
+          retention-days: 14
