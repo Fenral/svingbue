@@ -13,7 +13,6 @@ wait.
 
 | Agent | Branch | Working on | Since |
 |-------|--------|-----------|-------|
-| Codex | `agent/mechanics-mvp-codex` | Impact Studio mechanics MVP: `impact-studio.html`, `impact-studio.css`, `impact-mechanics-model.js`, `design/mocks/impact-studio.html`, focused tests/manifest, `PRODUCT.md`, `DESIGN.md`, implementation plan; protected physics and Claude's claimed Impact files remain untouched | 2026-08-08 |
 | Claude Code | `agent/impact-kamera` | Impact-kamera (design/orders/impact-kamera.md): Økt A ferdig (docs/systemkontrakt.md), Økt B–F via scripts/impact-kamera-workflow.mjs. Files: impact.html, impact-camera.js, impact-outcome.js, impact-annotate.js, sa-p3.css | 2026-07-17 |
 
 ## Queue / free to take
@@ -31,6 +30,17 @@ wait.
   pair before build.
 
 ## Done / handed off
+
+- Impact Mechanics Lab MVP — `agent/mechanics-mvp-codex`; a sellable two-authority
+  cause→effect instrument now links direct Face/Path/Attack/Loft inputs to modeled
+  flight and Arc/Low Point/Plane inputs to derived delivery and contact. The
+  responsive broadcast lower-third keeps cause and all six outcomes live in
+  portrait. Focused tests are 33/33, engine 72/72, UX 8/8 with zero critical
+  findings, Level-B Chromium/WebKit spots are 12/12 each, root/`www` hashes match,
+  and protected physics is unchanged. Root `PRODUCT.md`, `DESIGN.md`, the
+  Impeccable sidecar and executable plan capture the product/design contract.
+  The local branch is ready for owner review and was intentionally not pushed;
+  the unrelated documented Academy Voice `claude:ready` hold remains 242/244.
 
 - Academy complete analysis pack — `agent/academy-codex`; one tracked module
   description and 15 visual contact sheets cover Academy Home plus all 84
