@@ -1,193 +1,242 @@
-/* ══════════════════════════════════════════════════════════════════════════
-   sa-iap.js — Flightglass in-app-purchase module (RevenueCat, ESM).
-   Imported with `<script type="module">` from the paywall UI.
+/* Flightglass RevenueCat adapter.
+   This module is the only place that knows about the native purchase SDK.
+   Shipping UI consumes structured outcomes so cancellation is never presented
+   as an error and missing store configuration never becomes a fake purchase. */
 
-   Ported from Ryddy's src/lib/iap.js (repo Fenral/ukeplan-olufsborg7), adapted
-   to Flightglass's 3-tier freemium design (monthly / annual / lifetime, no
-   trial) and to this repo's no-bundler / vendored-import conventions.
-
-   Platform:
-     • web (no window.Capacitor.isNativePlatform()) → NEVER calls
-       Purchases.configure. init() just pushes pro=false into sa-shots and
-       returns. This keeps the Vercel preview build free of any RC traffic.
-     • native (Capacitor iOS/Android) → Purchases.configure() with a
-       platform-specific API key, a customerInfo listener keeps sa-shots'
-       `_pro` flag (and a localStorage cache) in sync with the "pro"
-       entitlement at all times — including renewals/expiries that happen
-       while the app is in the background.
-
-   Imports are RELATIVE ONLY (never a bare specifier / import map) — a bare
-   import crashes the native Capacitor WKWebView. See vendor/revenuecat/.
-
-   Public API (contract — see NATIVE.md / task spec):
-     ENTITLEMENT_ID          'pro'
-     init()                  async, idempotent-ish (safe to call once at boot)
-     isPro()                 boolean, mirrors sa-shots.isPro()
-     getOfferings()          async → {monthly?, annual?, lifetime?} | null
-     purchase(tier)          async → boolean (true iff 'pro' active after)
-     restore()               async → boolean (true iff 'pro' active after)
-
-   window.__sa.iap exposes the same 5 functions for console testing.
-   ══════════════════════════════════════════════════════════════════════════ */
-
-import { Purchases, LOG_LEVEL } from './vendor/revenuecat/purchases.esm.js';
+import {
+  Purchases as RevenueCatPurchases,
+  LOG_LEVEL,
+  PURCHASES_ERROR_CODE,
+} from './vendor/revenuecat/purchases.esm.js';
 import * as saShots from './sa-shots.js';
+import { REVENUECAT_PUBLIC_SDK_KEYS } from './sa-iap-config.js';
 
 export const ENTITLEMENT_ID = 'pro';
-
-// RevenueCat public SDK keys — PLACEHOLDERS. The RevenueCat "Flightglass"
-// project does not exist yet; replace these once it's created (RevenueCat
-// dashboard → Project settings → API keys → Public app-specific key).
-// NEVER put a secret/private RevenueCat key here — only the public SDK key.
-const API_KEY_IOS = 'appl_REPLACE_ME';
-const API_KEY_ANDROID = 'goog_REPLACE_ME';
-
-// Product identifiers as configured in App Store Connect / Play Console and
-// mirrored in the RevenueCat offering.
-const PRODUCT_ID = {
+export const PRODUCT_IDS = Object.freeze({
   monthly: 'strikearc_pro_monthly',
   annual: 'strikearc_pro_annual',
   lifetime: 'strikearc_pro_lifetime',
-};
+});
 
-const CACHE_KEY = 'sa_pro_v1';
+export const PURCHASE_STATUS = Object.freeze({
+  SUCCESS: 'success',
+  CANCELLED: 'cancelled',
+  PENDING: 'pending',
+  ERROR: 'error',
+  UNAVAILABLE: 'unavailable',
+  NOT_FOUND: 'not-found',
+});
 
-let _pluginReady = false;
-let _cachedOfferings = null;
+let pluginReady = false;
+let initPromise = null;
+let configurationStatus = 'not-initialized';
+let cachedPackages = null;
 
-function isNative() {
-  return !!(typeof window !== 'undefined' && window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+// Node contract tests may inject a purchase adapter. Browsers and Capacitor do
+// not expose Node's process.versions.node, so this seam cannot become a native
+// entitlement path in a shipping WebView.
+function purchaseAdapter() {
+  const nodeRuntime = typeof process !== 'undefined' && Boolean(process.versions?.node);
+  if (nodeRuntime && globalThis.__SA_IAP_NODE_TEST_ADAPTER__) {
+    return globalThis.__SA_IAP_NODE_TEST_ADAPTER__;
+  }
+  return RevenueCatPurchases;
 }
 
-function cachePro(active) {
-  try {
-    localStorage.setItem(CACHE_KEY, JSON.stringify({ active: !!active, t: Date.now() }));
-  } catch (e) { /* storage full/blocked → ignore, in-memory state still correct */ }
+function isTestAdapter(adapter) {
+  return adapter !== RevenueCatPurchases;
 }
 
-/** true iff the RevenueCat entitlements payload has ENTITLEMENT_ID active. */
-function entitlementActive(customerInfo) {
-  return !!customerInfo?.entitlements?.active?.[ENTITLEMENT_ID];
+export function isNative() {
+  return Boolean(
+    typeof window !== 'undefined'
+    && window.Capacitor?.isNativePlatform?.(),
+  );
+}
+
+function configuredKey(platform, adapter) {
+  if (isTestAdapter(adapter)) return 'test_public_sdk_key';
+  return REVENUECAT_PUBLIC_SDK_KEYS[platform] || '';
+}
+
+function keyIsReady(key) {
+  return Boolean(key && !key.includes('REPLACE_ME'));
+}
+
+/** True when the RevenueCat payload grants the protected Pro entitlement.
+ * Lifetime owners restore through the same entitlement; the product itself
+ * remains hidden from the v1 paywall rather than being deleted here. */
+export function entitlementActive(customerInfo) {
+  return Boolean(customerInfo?.entitlements?.active?.[ENTITLEMENT_ID]);
 }
 
 function applyCustomerInfo(customerInfo) {
   const active = entitlementActive(customerInfo);
   saShots.setPro(active);
-  cachePro(active);
   return active;
 }
 
-/**
- * init — call once at app boot. Web: no-op fallback (pro=false, no RC
- * traffic). Native: configure RevenueCat with the platform's public SDK key,
- * wire a customerInfo listener so entitlement changes (purchase, renewal,
- * expiry, restore from another device) always flow into sa-shots, and fetch
- * the current customerInfo once to establish known state at launch. Never
- * throws — any RC/plugin failure degrades gracefully to pro=false.
- */
-export async function init() {
+async function initialize() {
   if (!isNative()) {
+    configurationStatus = 'web-preview';
     saShots.setPro(false);
-    return;
+    return configurationStatus;
+  }
+
+  const adapter = purchaseAdapter();
+  const platform = window.Capacitor?.getPlatform?.() || 'web';
+  const apiKey = configuredKey(platform, adapter);
+  if (!keyIsReady(apiKey)) {
+    configurationStatus = 'configuration-missing';
+    pluginReady = false;
+    saShots.setPro(false);
+    return configurationStatus;
   }
 
   try {
-    const platform = window.Capacitor.getPlatform ? window.Capacitor.getPlatform() : 'web';
-    const apiKey = platform === 'ios' ? API_KEY_IOS : API_KEY_ANDROID;
+    let alreadyConfigured = false;
+    try { alreadyConfigured = Boolean((await adapter.isConfigured?.())?.isConfigured); } catch (_) {}
+    if (!alreadyConfigured) await adapter.configure({ apiKey });
+    pluginReady = true;
+    configurationStatus = 'ready';
 
-    await Purchases.configure({ apiKey });
-    _pluginReady = true;
+    try { await adapter.setLogLevel?.({ level: LOG_LEVEL.WARN }); } catch (_) {}
+    try {
+      await adapter.addCustomerInfoUpdateListener?.((info) => applyCustomerInfo(info));
+    } catch (_) {}
 
     try {
-      await Purchases.setLogLevel({ level: LOG_LEVEL.WARN });
-    } catch (e) { /* older platform without setLogLevel — non-fatal */ }
-
-    try {
-      await Purchases.addCustomerInfoUpdateListener((info) => {
-        applyCustomerInfo(info);
-      });
-    } catch (e) { /* listener registration failed — entitlement still checked below/on purchase/restore */ }
-
-    try {
-      const { customerInfo } = await Purchases.getCustomerInfo();
-      applyCustomerInfo(customerInfo);
-    } catch (e) {
-      // Keep whatever cached pro-state sa-shots already has rather than
-      // forcing false — a transient network failure shouldn't lock out an
-      // already-entitled user.
+      const result = await adapter.getCustomerInfo();
+      applyCustomerInfo(result?.customerInfo);
+    } catch (_) {
+      // RevenueCat maintains its own customer-info cache. A transient fetch
+      // failure must not overwrite an entitlement already delivered by its
+      // listener during this session.
     }
-  } catch (e) {
-    _pluginReady = false;
+  } catch (_) {
+    pluginReady = false;
+    configurationStatus = 'sdk-error';
     saShots.setPro(false);
   }
+  return configurationStatus;
 }
 
-/** Mirrors sa-shots' current pro flag — the single source of truth. */
+/** Idempotent native setup; safe to await from every shipping route. */
+export function init() {
+  if (!initPromise) {
+    initPromise = initialize().finally(() => {
+      // A transient native SDK/configure failure must not disable purchasing
+      // until the next app launch. Keep concurrent callers deduplicated, then
+      // allow the next explicit store action to retry initialization.
+      if (configurationStatus === 'sdk-error') initPromise = null;
+    });
+  }
+  return initPromise;
+}
+
+export function getConfigurationStatus() {
+  return configurationStatus;
+}
+
 export function isPro() {
   return saShots.isPro();
 }
 
-/**
- * getOfferings — fetch the current RevenueCat offering and map its packages
- * to {monthly, annual, lifetime} by product identifier. Returns null on web,
- * if RC isn't configured, or on any fetch error.
- */
+export function mapOfferings(response) {
+  const packages = response?.current?.availablePackages || [];
+  const mapped = {};
+  for (const [tier, productId] of Object.entries(PRODUCT_IDS)) {
+    mapped[tier] = packages.find((item) => item?.product?.identifier === productId);
+  }
+  return mapped;
+}
+
+/** Returns RevenueCat packages for all protected IDs, including lifetime for
+ * entitlement continuity. UI is responsible for rendering only monthly and
+ * annual. */
 export async function getOfferings() {
-  if (!isNative() || !_pluginReady) return null;
+  await init();
+  if (!isNative() || !pluginReady) return null;
   try {
-    const res = await Purchases.getOfferings();
-    _cachedOfferings = res;
-    const pkgs = res?.current?.availablePackages || [];
-    const out = {};
-    for (const [tier, productId] of Object.entries(PRODUCT_ID)) {
-      out[tier] = pkgs.find((p) => p?.product?.identifier === productId) || undefined;
-    }
-    return out;
-  } catch (e) {
+    cachedPackages = mapOfferings(await purchaseAdapter().getOfferings());
+    return cachedPackages;
+  } catch (_) {
     return null;
   }
 }
 
-async function findPackage(tier) {
-  const offerings = await getOfferings();
-  return offerings ? offerings[tier] : null;
+function isCancellation(error) {
+  const code = String(error?.code ?? error?.errorCode ?? '');
+  const readable = String(error?.readableErrorCode ?? '');
+  return error?.userCancelled === true
+    || code === String(PURCHASES_ERROR_CODE.PURCHASE_CANCELLED_ERROR)
+    || readable === 'PURCHASE_CANCELLED_ERROR';
 }
 
-/**
- * purchase — buy the given tier ('monthly'|'annual'|'lifetime'). Resolves to
- * whether the 'pro' entitlement is active afterwards. Never throws — a
- * cancelled purchase or any RC error resolves to `false` rather than
- * rejecting, so callers never need a try/catch around this.
- */
+function isPending(error) {
+  const code = String(error?.code ?? error?.errorCode ?? '');
+  const readable = String(error?.readableErrorCode ?? '');
+  return code === String(PURCHASES_ERROR_CODE.PAYMENT_PENDING_ERROR)
+    || readable === 'PAYMENT_PENDING_ERROR';
+}
+
+export async function purchaseDetailed(tier) {
+  await init();
+  if (!['monthly', 'annual'].includes(tier) || !isNative() || !pluginReady) {
+    return { status: PURCHASE_STATUS.UNAVAILABLE };
+  }
+
+  const offerings = cachedPackages || await getOfferings();
+  const aPackage = offerings?.[tier];
+  if (!aPackage) return { status: PURCHASE_STATUS.UNAVAILABLE };
+
+  try {
+    const result = await purchaseAdapter().purchasePackage({ aPackage });
+    if (applyCustomerInfo(result?.customerInfo)) {
+      return { status: PURCHASE_STATUS.SUCCESS };
+    }
+    return { status: PURCHASE_STATUS.ERROR };
+  } catch (error) {
+    if (isCancellation(error)) return { status: PURCHASE_STATUS.CANCELLED };
+    if (isPending(error)) return { status: PURCHASE_STATUS.PENDING };
+    return { status: PURCHASE_STATUS.ERROR };
+  }
+}
+
+export async function restoreDetailed() {
+  await init();
+  if (!isNative() || !pluginReady) {
+    return { status: PURCHASE_STATUS.UNAVAILABLE };
+  }
+  try {
+    const result = await purchaseAdapter().restorePurchases();
+    return applyCustomerInfo(result?.customerInfo)
+      ? { status: PURCHASE_STATUS.SUCCESS }
+      : { status: PURCHASE_STATUS.NOT_FOUND };
+  } catch (_) {
+    return { status: PURCHASE_STATUS.ERROR };
+  }
+}
+
+// Backwards-compatible boolean methods for the legacy non-v1 geometry page.
 export async function purchase(tier) {
-  if (!isNative() || !_pluginReady) return false;
-  try {
-    const aPackage = await findPackage(tier);
-    if (!aPackage) return false;
-    const res = await Purchases.purchasePackage({ aPackage });
-    return applyCustomerInfo(res?.customerInfo);
-  } catch (e) {
-    // User cancellation or store error — must not throw uncaught.
-    return isPro();
-  }
+  return (await purchaseDetailed(tier)).status === PURCHASE_STATUS.SUCCESS;
 }
 
-/**
- * restore — restore prior purchases. Resolves to whether 'pro' is active
- * afterwards. Never throws.
- */
 export async function restore() {
-  if (!isNative() || !_pluginReady) return false;
-  try {
-    const res = await Purchases.restorePurchases();
-    return applyCustomerInfo(res?.customerInfo);
-  } catch (e) {
-    return isPro();
-  }
+  return (await restoreDetailed()).status === PURCHASE_STATUS.SUCCESS;
 }
 
-// Convenience for testing from the console / native debug builds.
 if (typeof window !== 'undefined') {
   window.__sa = window.__sa || {};
-  window.__sa.iap = { init, isPro, getOfferings, purchase, restore };
+  window.__sa.iap = {
+    init,
+    isPro,
+    getOfferings,
+    purchase,
+    purchaseDetailed,
+    restore,
+    restoreDetailed,
+    getConfigurationStatus,
+  };
 }

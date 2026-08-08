@@ -1,0 +1,99 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-08-07T00:00:00+02:00",
+  "title": "Design System: Flightglass",
+  "extensions": {
+    "colorMeta": {
+      "background": { "role": "neutral", "displayName": "Night Field", "canonical": "#07060C", "tonalRamp": ["oklch(15% 0.02 300)", "oklch(27% 0.02 300)", "oklch(39% 0.02 300)", "oklch(51% 0.02 300)", "oklch(63% 0.02 300)", "oklch(75% 0.02 300)", "oklch(87% 0.02 300)", "oklch(95% 0.02 300)"] },
+      "surface": { "role": "neutral", "displayName": "Raised Instrument Surface", "canonical": "#110D1C", "tonalRamp": ["oklch(15% 0.035 300)", "oklch(27% 0.035 300)", "oklch(39% 0.035 300)", "oklch(51% 0.035 300)", "oklch(63% 0.035 300)", "oklch(75% 0.035 300)", "oklch(87% 0.035 300)", "oklch(95% 0.035 300)"] },
+      "violet": { "role": "secondary", "displayName": "Structural Violet", "canonical": "#9D8BFF", "tonalRamp": ["oklch(15% 0.12 290)", "oklch(27% 0.12 290)", "oklch(39% 0.12 290)", "oklch(51% 0.12 290)", "oklch(63% 0.12 290)", "oklch(75% 0.12 290)", "oklch(87% 0.12 290)", "oklch(95% 0.12 290)"] },
+      "ember": { "role": "primary", "displayName": "Living Ember", "canonical": "#FF8A4D", "tonalRamp": ["oklch(15% 0.15 47)", "oklch(27% 0.15 47)", "oklch(39% 0.15 47)", "oklch(51% 0.15 47)", "oklch(63% 0.15 47)", "oklch(75% 0.15 47)", "oklch(87% 0.15 47)", "oklch(95% 0.15 47)"] },
+      "model-cyan": { "role": "tertiary", "displayName": "Truthful Model Cyan", "canonical": "oklch(78.68% 0.1179 228.25)", "tonalRamp": ["oklch(15% 0.1179 228.25)", "oklch(27% 0.1179 228.25)", "oklch(39% 0.1179 228.25)", "oklch(51% 0.1179 228.25)", "oklch(63% 0.1179 228.25)", "oklch(75% 0.1179 228.25)", "oklch(87% 0.1179 228.25)", "oklch(95% 0.1179 228.25)"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Instrument Conclusion", "purpose": "Guide titles and direct answer conclusions." },
+      "body": { "displayName": "Curious-Golfer Reading", "purpose": "Questions, explanations, and boundaries." },
+      "label": { "displayName": "Exact Readout", "purpose": "Measurements, provenance, labels, and tabular values." }
+    },
+    "shadows": [
+      { "name": "answer-lens", "value": "0 18px 42px color-mix(in srgb, var(--bg) 64%, transparent)", "purpose": "One soft offset shadow for the answer lens." }
+    ],
+    "motion": [
+      { "name": "instrument-ease", "value": "cubic-bezier(.2,.8,.2,1)", "purpose": "State changes and the single causal resolving trace." },
+      { "name": "reduced-motion", "value": "prefers-reduced-motion: reduce", "purpose": "Static, fully functional information parity; no lost content or controls." }
+    ],
+    "breakpoints": [
+      { "name": "guide-mobile", "value": "760px" },
+      { "name": "app-navigation-wide", "value": "780px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Guide Action",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The one ember action that opens a controlled comparison.",
+      "html": "<button class=\"ds-guide-primary\">Compare one change <span aria-hidden=\"true\">›</span></button>",
+      "css": ".ds-guide-primary{width:100%;min-height:48px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;border:0;border-radius:12px;background:var(--accent);color:var(--bg);font:700 14px/1 var(--font-ui);cursor:pointer;transition:filter .18s var(--ease)}.ds-guide-primary:hover{filter:brightness(1.06)}.ds-guide-primary:focus-visible{outline:none;box-shadow:inset 0 0 0 1px var(--bg),inset 0 0 0 3px var(--ink)}"
+    },
+    {
+      "name": "Secondary Guide Action",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "A quiet reset or supporting action with equal target size.",
+      "html": "<button class=\"ds-guide-secondary\">Reset comparison</button>",
+      "css": ".ds-guide-secondary{width:100%;min-height:48px;padding:12px 16px;border:1px solid var(--line-strong);border-radius:12px;background:transparent;color:var(--ink);font:700 14px/1 var(--font-ui);cursor:pointer;transition:background .18s var(--ease)}.ds-guide-secondary:hover{background:color-mix(in srgb,var(--secondary) 10%,transparent)}.ds-guide-secondary:focus-visible{outline:none;box-shadow:inset 0 0 0 1px var(--bg),inset 0 0 0 3px var(--ink)}"
+    },
+    {
+      "name": "Question Ladder Row",
+      "kind": "custom",
+      "description": "A full-width topic row that opens one precise branch.",
+      "html": "<button class=\"ds-topic\"><span class=\"ds-topic-index\">01</span><span><strong>Direction</strong><small>Start line, curve, face and path</small></span><span aria-hidden=\"true\">›</span></button>",
+      "css": ".ds-topic{width:100%;min-height:76px;padding:12px 8px;display:grid;grid-template-columns:34px minmax(0,1fr) 20px;align-items:center;gap:12px;border:0;border-bottom:1px solid var(--line);background:transparent;color:var(--ink);text-align:left;font-family:var(--font-ui);cursor:pointer;transition:background .18s var(--ease),color .18s var(--ease)}.ds-topic strong,.ds-topic small{display:block}.ds-topic strong{font-size:15px;line-height:1.25}.ds-topic small{margin-top:4px;color:var(--muted);font-size:12px;line-height:1.35}.ds-topic-index{color:var(--secondary);font:500 10px/1 var(--font-data)}.ds-topic:hover{background:color-mix(in srgb,var(--secondary) 10%,transparent)}.ds-topic:focus-visible{outline:none;box-shadow:inset 0 0 0 1px var(--bg),inset 0 0 0 3px var(--ink)}"
+    },
+    {
+      "name": "Truth Label",
+      "kind": "chip",
+      "description": "A labelled provenance pill for a model boundary.",
+      "html": "<span class=\"ds-truth\">RANGE MODELLED</span>",
+      "css": ".ds-truth{display:inline-block;padding:7px 9px;border:1px solid var(--path);border-radius:999px;color:var(--path);font:600 10px/1 var(--font-data);letter-spacing:.08em;white-space:nowrap}"
+    },
+    {
+      "name": "Answer Lens",
+      "kind": "card",
+      "refersTo": "answer-lens",
+      "description": "The dominant answer container, ordered from conclusion to evidence to action.",
+      "html": "<article class=\"ds-answer-lens\"><span class=\"ds-answer-kicker\">DIRECTION</span><h2>One direct answer first.</h2><p>Then show bounded evidence and an exact comparison.</p></article>",
+      "css": ".ds-answer-lens{padding:clamp(18px,4vw,34px);border-radius:20px;background:linear-gradient(180deg,color-mix(in srgb,var(--surface) 94%,transparent),color-mix(in srgb,var(--plate-solid) 96%,transparent));box-shadow:0 18px 42px color-mix(in srgb,var(--bg) 64%,transparent);color:var(--ink);font-family:var(--font-ui)}.ds-answer-kicker{color:var(--secondary);font:600 10px/1 var(--font-data);letter-spacing:.08em}.ds-answer-lens h2{max-width:24ch;margin:12px 0 0;font:600 clamp(24px,4vw,38px)/1 var(--font-display);letter-spacing:-.035em}.ds-answer-lens p{margin:14px 0 0;color:var(--muted);font-size:14px;line-height:1.45}"
+    },
+    {
+      "name": "Model Boundary",
+      "kind": "custom",
+      "refersTo": "model-boundary",
+      "description": "A visible statement of what the shipping model can answer now.",
+      "html": "<aside class=\"ds-boundary\"><span><strong>Available now</strong><small>The shipping model can answer this bounded relationship.</small></span><b>NOW</b></aside>",
+      "css": ".ds-boundary{min-height:64px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:16px;border:1px solid var(--secondary-line);border-radius:12px;background:color-mix(in srgb,var(--secondary) 7%,transparent);color:var(--ink);font-family:var(--font-ui)}.ds-boundary strong,.ds-boundary small{display:block}.ds-boundary strong{font-size:13px}.ds-boundary small{margin-top:5px;color:var(--muted);font-size:12px;line-height:1.4}.ds-boundary b{color:var(--secondary);font:600 10px/1 var(--font-data);letter-spacing:.06em}"
+    },
+    {
+      "name": "Active App Navigation Link",
+      "kind": "nav",
+      "refersTo": "app-navigation-active",
+      "description": "The shared four-route bottom navigation’s selected route.",
+      "html": "<a class=\"ds-nav-link\" href=\"#guide\" aria-current=\"page\"><span aria-hidden=\"true\">◎</span><span>Guide</span></a>",
+      "css": ".ds-nav-link{position:relative;min-width:44px;min-height:44px;display:grid;place-items:center;align-content:center;gap:2px;border-radius:12px;background:color-mix(in srgb,var(--secondary) 12%,transparent);color:var(--secondary);font:600 10px/1 var(--font-ui);letter-spacing:.03em;text-decoration:none}.ds-nav-link::after{content:\"\";position:absolute;left:25%;right:25%;bottom:1px;height:2px;border-radius:999px;background:var(--secondary)}.ds-nav-link:hover{background:var(--secondary-soft)}.ds-nav-link:focus-visible{outline:none;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--bg) 85%,transparent),inset 0 0 0 3px var(--ink)}"
+    }
+  ],
+  "narrative": {
+    "northStar": "Flightglass Field Instrument / Question Ladder",
+    "overview": "Flightglass is a cold, precise field instrument for explaining a bounded golf model. The system gives a question, its evidence, deterministic geometry, and exact comparison a single vertical chain rather than breaking them into decorative dashboard cards. It is dense enough for real measurements but calm enough for a golfer asking one practical question.\n\nThe portable visual contract complements, and never replaces, the technical authority in `docs/DESIGN-SYSTEM.md`; `sa-p3.css` remains the token and law source of truth. Dark solid lenses, thin hairlines, tonal layering, violet structure, cyan model traces, and a single rare ember action make model boundaries visible as part of the interface itself.",
+    "keyCharacteristics": ["A Browse → Answer → Lab progression: answer first, evidence and controlled comparison on demand.", "One dominant panel on a phone; a narrow ladder may sit beside the evidence lens on desktop.", "Truth labels, held constants, and model limits are first-class UI, not decorative badges.", "No fake chat, assistant orb, typewriter theatre, FAQ grid, marketing hero, or ornamental glass."],
+    "rules": [
+      { "name": "The One Ember Rule", "body": "Ember is reserved for a live point or the single primary action; it must not become general-purpose emphasis.", "section": "colors" },
+      { "name": "The One Hue, One Meaning Rule", "body": "A physical quantity keeps its labelled semantic hue across views; colour never supplies meaning without its text label.", "section": "colors" },
+      { "name": "The Exact Readout Rule", "body": "Use IBM Plex Mono with tabular numerals for measurements only; keep the existing unit grammar and never render text below 10px.", "section": "typography" },
+      { "name": "The Lens, Not Glass Rule", "body": "Prefer a dark solid answer lens and hairline separators over translucent decorative glass or repeated floating cards.", "section": "elevation" }
+    ],
+    "dos": ["Do use violet hairlines and tonal fills to show question hierarchy and active model state.", "Do show the short answer before deeper evidence, then offer the live lab as one controlled change.", "Do pair labelled cyan traces with deterministic geometry and exact values in accessible HTML.", "Do retain visible focus, 44px minimum targets, and complete reduced-motion information parity.", "Do state provenance, held constants, estimates, and unsupported variables directly at the claim."],
+    "donts": ["Don't use ember for generic decoration, multiple competing actions, or a focus ring.", "Don't turn the Guide into a chatbot, assistant-avatar experience, typewriter simulation, or FAQ card grid.", "Don't use decorative frosted glass, heavy shadows, or card-dashboard drift to create hierarchy.", "Don't imply diagnosis, personal fitting, or precision outside the shipping model’s stated boundaries."]
+  }
+}

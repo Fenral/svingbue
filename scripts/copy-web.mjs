@@ -1,144 +1,134 @@
 #!/usr/bin/env node
-// scripts/copy-web.mjs
-//
-// Assembles the clean `www/` directory that Capacitor packages into the
-// native iOS app. This repo's root doubles as the live Vercel site (which
-// must keep serving index.html/geometry.html/impact.html and every sibling
-// dev-mock file exactly as-is), so we do NOT point Capacitor at the repo
-// root. Instead this script copies only the "shipping" web assets into a
-// disposable `www/` folder that mirrors the three real app pages + the
-// paywall's terms/privacy pages.
-//
-// Run: node scripts/copy-web.mjs   (also wired as `npm run copy-web`)
-//
-// Strategy: explicit ALLOWLIST of top-level HTML entry points (only the
-// three real app pages — every *-mock.html / *-glass.html / design-system
-// / presentation / calibration variant is deliberately left out), plus an
-// allowlist of asset directories, plus a DENYLIST-by-extension/name sweep
-// over remaining top-level files (all *.js and *.css at the repo root,
-// excluding anything on the denylist).
+// Assemble the smallest self-contained shipping payload for Flightglass v1.
+// The repository root also hosts prototypes and v2 Academy source, so every
+// shipping file is explicitly allowlisted. Never publish the repository root.
 
-import { readdirSync, statSync, rmSync, mkdirSync, cpSync, existsSync } from 'node:fs';
-import { join, dirname, extname, basename } from 'node:path';
+import { cpSync, existsSync, mkdirSync, rmSync } from 'node:fs';
+import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const ROOT = join(__dirname, '..');
+const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
+const ROOT = join(SCRIPT_DIR, '..');
 const WWW = join(ROOT, 'www');
 
-// --- 1. Explicit allowlist: the only HTML pages that ship in the native app.
-// terms.html + privacy.html: linked from the paywall's legal row
-// (sa-paywall.js → ./terms.html / ./privacy.html) — Apple requires these to
-// resolve inside the native app, so they ship alongside the three app pages.
+// Only these app surfaces are reachable in the native v1 bundle. Legal pages
+// remain local so the purchase sheet never depends on network availability.
 const ALLOWED_HTML_FILES = [
   'index.html',
-  'geometry.html',
   'impact.html',
   'impact-studio.html',
-  'academy.html',
+  'jarvis.html',
+  'support.html',
   'terms.html',
-  'privacy.html'
+  'privacy.html',
 ];
 
-// --- 2. Explicit allowlist: asset/module directories copied wholesale.
-const ALLOWED_DIRS = ['vendor', 'assets', 'geo3d'];
+const ALLOWED_TOP_LEVEL_FILES = [
+  'guide-engine.js',
+  'guide-knowledge.js',
+  'flightglass-3d-spin-model.js',
+  'impact-annotate.js',
+  'impact-camera.js',
+  'impact-flight.js',
+  'impact-framing.js',
+  'impact-outcome.js',
+  'jarvis.css',
+  'jarvis.js',
+  'sa-access.js',
+  'sa-analytics.js',
+  'sa-app-shell.css',
+  'sa-app-shell.js',
+  'sa-view-transition-guard.js',
+  'sa-haptics.js',
+  'sa-home.css',
+  'sa-home.js',
+  'sa-iap-config.js',
+  'sa-iap.js',
+  'sa-opening.js',
+  'sa-orientation.js',
+  'sa-p3.css',
+  'sa-paywall.css',
+  'sa-paywall.js',
+  'sa-range-context.js',
+  'sa-shots.js',
+  'sa-v1-context.js',
+  'sa.css',
+  'swing-parameters-and-impact.js',
+];
 
-// --- 3. Top-level directories that must NEVER be copied into www/, even if
-//     they happen to contain .js/.css files at some depth (defense in depth —
-//     none of these are in ALLOWED_DIRS above, but this also stops us from
-//     accidentally recursing into them from the root sweep below).
-const DENYLIST_DIRS = new Set([
-  'node_modules', 'ios', 'android', 'www', 'tools', 'docs', 'scripts',
-  '.git', '.sa-backups', '.vercel', 'resources', 'store-assets',
-]);
+const ALLOWED_ASSET_FILES = [
+  'assets/flightglass-lockup.svg',
+  'assets/flightglass-mark-micro.svg',
+  'assets/onboarding/guide.webp',
+  'assets/onboarding/outcome.webp',
+  'assets/onboarding/studio.webp',
+  'assets/range-night-3d-33.png',
+  'assets/impact-studio/ball.png',
+  'assets/impact-studio/bg-dtl.png',
+  'assets/impact-studio/driver-head.png',
+  'assets/impact-studio/glint.png',
+  'assets/impact-studio/iron-head.png',
+  'assets/impact-studio/sky-face.png',
+  'assets/impact-studio/tee.png',
+  'assets/impact-studio/turf.png',
+];
 
-// --- 4. Top-level files that must NEVER be copied, matched by exact name,
-//     suffix pattern, or extension. This is what keeps throwaway mocks and
-//     tooling config out of the native bundle.
-const DENYLIST_EXACT_FILES = new Set([
-  'capacitor.config.ts',
-  'capacitor.config.js',
-  'codemagic.yaml',
-  'package.json',
-  'package-lock.json',
-  'NATIVE.md',
-]);
+const ALLOWED_VENDOR_FILES = [
+  'vendor/fonts/IBMPlexMono-Medium.woff2',
+  'vendor/fonts/IBMPlexMono-Regular.woff2',
+  'vendor/fonts/IBMPlexMono-SemiBold.woff2',
+  'vendor/fonts/Inter-Bold.woff2',
+  'vendor/fonts/Inter-Medium.woff2',
+  'vendor/fonts/Inter-Regular.woff2',
+  'vendor/fonts/Inter-SemiBold.woff2',
+  'vendor/fonts/SpaceGrotesk-Bold.woff2',
+  'vendor/fonts/SpaceGrotesk-Medium.woff2',
+  'vendor/fonts/SpaceGrotesk-SemiBold.woff2',
+  'vendor/revenuecat/purchases.esm.js',
+];
 
-function isDenylistedFile(name) {
-  const lower = name.toLowerCase();
-  if (DENYLIST_EXACT_FILES.has(name)) return true;
-  if (lower.endsWith('.md')) return true;
-  if (lower.startsWith('package') && lower.endsWith('.json')) return true;
-  if (lower === 'capacitor.config.ts' || lower === 'capacitor.config.js') return true;
-  if (lower === 'codemagic.yaml' || lower === 'codemagic.yml') return true;
-  // Throwaway HTML mock/demo files — never ship these to the native app.
-  if (lower.endsWith('.mock.html')) return true;
-  if (lower.endsWith('-mock.html')) return true;
-  if (lower === 'club-calibration.html') return true;
-  return false;
+function log(message) {
+  console.log(`[copy-web] ${message}`);
 }
 
-function log(msg) {
-  console.log(`[copy-web] ${msg}`);
+function copyRequired(relativePath) {
+  const source = join(ROOT, relativePath);
+  const target = join(WWW, relativePath);
+  if (!existsSync(source)) throw new Error(`[copy-web] required file missing: ${relativePath}`);
+  mkdirSync(dirname(target), { recursive: true });
+  cpSync(source, target);
 }
 
-// --- Step 1: wipe and recreate www/ so stale files never linger.
 if (existsSync(WWW)) {
   rmSync(WWW, { recursive: true, force: true });
   log('removed existing www/');
 }
 mkdirSync(WWW, { recursive: true });
-log('created fresh www/');
 
-// --- Step 2: copy the allowed HTML entry points.
-for (const file of ALLOWED_HTML_FILES) {
-  const src = join(ROOT, file);
-  if (!existsSync(src)) {
-    throw new Error(`[copy-web] required file missing: ${file}`);
-  }
-  cpSync(src, join(WWW, file));
-  log(`copied ${file}`);
+const groups = [
+  ['HTML', ALLOWED_HTML_FILES],
+  ['app source', ALLOWED_TOP_LEVEL_FILES],
+  ['assets', ALLOWED_ASSET_FILES],
+  ['vendor dependencies', ALLOWED_VENDOR_FILES],
+];
+for (const [label, files] of groups) {
+  for (const file of files) copyRequired(file);
+  log(`copied ${files.length} allowlisted ${label} file(s)`);
 }
 
-// --- Step 3: copy the allowed asset/module directories wholesale.
-for (const dir of ALLOWED_DIRS) {
-  const src = join(ROOT, dir);
-  if (!existsSync(src)) {
-    throw new Error(`[copy-web] required directory missing: ${dir}`);
-  }
-  cpSync(src, join(WWW, dir), { recursive: true });
-  log(`copied ${dir}/`);
-}
-
-// --- Step 4: sweep top-level *.js and *.css files (denylist-filtered).
-const topLevelEntries = readdirSync(ROOT);
-let jsAndCssCount = 0;
-for (const name of topLevelEntries) {
-  const full = join(ROOT, name);
-  const stat = statSync(full);
-
-  if (stat.isDirectory()) continue; // directories are handled explicitly above
-  if (ALLOWED_HTML_FILES.includes(name)) continue; // already copied
-
-  const ext = extname(name).toLowerCase();
-  if (ext !== '.js' && ext !== '.css') continue; // only sweep JS/CSS at root
-
-  if (isDenylistedFile(name)) {
-    log(`skipped (denylisted): ${name}`);
-    continue;
-  }
-
-  cpSync(full, join(WWW, name));
-  jsAndCssCount += 1;
-  log(`copied ${name}`);
-}
-log(`copied ${jsAndCssCount} top-level *.js/*.css file(s)`);
-
-// --- Step 5: sanity guards — never let known-bad things slip into www/.
-const forbiddenInWww = ['node_modules', 'ios', 'android', 'tools', 'docs', 'scripts', '.git'];
-for (const bad of forbiddenInWww) {
-  if (existsSync(join(WWW, bad))) {
-    throw new Error(`[copy-web] SANITY CHECK FAILED: www/${bad} exists and must not.`);
+for (const forbidden of [
+  'academy.html',
+  'geometry.html',
+  'geo3d',
+  'node_modules',
+  'scripts',
+  'tools',
+  'assets/audio',
+  'assets/palette-previews',
+  'vendor/three',
+]) {
+  if (existsSync(join(WWW, forbidden))) {
+    throw new Error(`[copy-web] sanity check failed: www/${forbidden} must not ship.`);
   }
 }
 

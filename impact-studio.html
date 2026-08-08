@@ -5,19 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <meta name="theme-color" content="#07060C" />
 <title>Impact Studio</title>
+<script src="./sa-view-transition-guard.js"></script>
+<link rel="icon" href="./assets/flightglass-mark-micro.svg" type="image/svg+xml" />
+<link rel="stylesheet" href="./sa-p3.css" />
+<link rel="stylesheet" href="./sa-app-shell.css" />
+<link rel="stylesheet" href="./sa-paywall.css" />
 <style>
-  /* P3 "Ultraviolet Ember" tokens mirrored locally (source: sa-p3.css) */
-  :root{
-    --bg:#07060C; --surface:#110D1C; --plate:rgba(8,5,14,.86); --plate-solid:#0D0A18;
-    --ink:#F5F2FF; --muted:#A79FC7; --muted-2:#8E85A8;
-    --accent:#FF8A4D; --secondary:#9D8BFF; --gold:#D9B36A; --strike:#e3b05c;
-    --attack:#f470b8; --path:#5bc8f5; --plane:#9c8df5; --depth:#C98AE6;
-    --good:#58E6A8; --warn:#FFD056; --bad:#FF7B8A; --soil:#8a5a2b;
-    --line:rgba(255,255,255,.10); --line-strong:rgba(255,255,255,.30);
-    --font-ui:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-    --font-mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
-    --ease:cubic-bezier(.2,.8,.2,1);
-  }
+  html{--studio-soil:#8a5a2b}
   *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
   html,body{height:100%;overflow:hidden;overscroll-behavior:none}
   body{
@@ -42,9 +36,9 @@
   .card .val{font-family:var(--font-mono);font-variant-numeric:tabular-nums;
     font-size:18px;font-weight:700;color:var(--ink);line-height:1;white-space:nowrap}
   .card .qual{font-size:10px;font-weight:800;letter-spacing:.08em;line-height:1;margin-top:1px}
-  .card.attack{--card-hue:var(--attack);--card-line:rgba(244,112,184,.22)}
-  .card.path{--card-hue:var(--path);--card-line:rgba(91,200,245,.22)}
-  .card.strike{--card-hue:var(--strike);--card-line:rgba(227,176,92,.22)}
+  .card.attack{--card-hue:var(--q-attack);--card-line:color-mix(in srgb,var(--q-attack) 22%,transparent)}
+  .card.path{--card-hue:var(--q-path);--card-line:color-mix(in srgb,var(--q-path) 22%,transparent)}
+  .card.strike{--card-hue:var(--q-strike);--card-line:color-mix(in srgb,var(--q-strike) 22%,transparent)}
   .card::after{content:"";position:absolute;left:14%;right:14%;bottom:-1px;height:2px;
     border-radius:2px;background:var(--card-hue);opacity:0;transition:opacity .3s var(--ease)}
   .card.hit::after{opacity:1}
@@ -63,38 +57,55 @@
   }
   #resetBtn:active{color:var(--ink);border-color:var(--line-strong)}
 
+  .guided-cue{flex:0 0 auto;min-height:40px;display:grid;grid-template-columns:auto minmax(0,1fr);
+    align-items:center;gap:12px;margin:0 10px 4px;padding:7px 12px;border:1px solid var(--secondary-line);
+    border-radius:var(--radius-control);background:var(--secondary-soft);color:var(--ink)}
+  .guided-cue[hidden]{display:none}
+  .guided-cue__state{font:600 10px/1 var(--font-mono);letter-spacing:.08em;color:var(--secondary);
+    white-space:nowrap}
+  .guided-cue__copy{min-width:0;font-size:14px;line-height:1.3;white-space:nowrap;overflow:hidden;
+    text-overflow:ellipsis}
+
   /* ---------- stage ---------- */
   /* impact-skjermens normative dusk-bakteppe (sa-p3.css --dusk-scene-bg),
      glodefokus flyttet ned mot kontaktsonen */
   .stage{position:relative;flex:1 1 auto;min-height:0;margin:0 10px;border-radius:14px;
     overflow:hidden;border:1px solid var(--line);
-    background:
-      radial-gradient(120% 55% at 50% 62%, #3B2A55 0%, transparent 60%),
-      linear-gradient(180deg, #0E0A18 0%, #120D1E 34%, #241536 58%, #17102A 74%, #0F0B1C 100%)}
+    background:var(--dusk-scene-bg)}
   #scene{position:absolute;inset:0;width:100%;height:100%;display:block}
-  /* right rail: two glyph toggles — camera orbit (view) and ball lie (club).
-     State lives in the little drawing, not in paired pill buttons. */
+  /* right rail: next view, club, and the MVP contact-zone inspector. */
   .rail{position:absolute;top:8px;right:8px;display:flex;flex-direction:column;gap:6px;z-index:5}
   .orb{
     width:58px;min-height:60px;padding:4px 2px 6px;border-radius:14px;cursor:pointer;
     background:var(--plate);border:1px solid var(--line);color:var(--muted);
     font-family:inherit;backdrop-filter:blur(3px);position:relative;
     display:flex;flex-direction:column;align-items:center;gap:1px;
+    transition:transform .16s cubic-bezier(.16,1,.3,1),border-color .18s cubic-bezier(.16,1,.3,1);
   }
-  .orb:active{border-color:var(--line-strong)}
+  .orb:active{border-color:var(--line-strong);transform:scale(.96)}
   .orb svg{width:40px;height:36px;display:block}
   .orb .cap{font-size:10px;font-weight:700;letter-spacing:.03em;line-height:1;color:var(--ink)}
-  .orb.pulse::before{content:"";position:absolute;inset:-3px;border-radius:17px;
-    border:2px solid var(--secondary);animation:ringPulse .55s var(--ease) 1;pointer-events:none}
-  @keyframes ringPulse{0%{opacity:.9;transform:scale(.96)}100%{opacity:0;transform:scale(1.12)}}
+  .orb::before{content:"";position:absolute;inset:-3px;border-radius:17px;
+    border:2px solid var(--secondary);opacity:0;transform:scale(.97);pointer-events:none;
+    transition:opacity .18s cubic-bezier(.16,1,.3,1),transform .18s cubic-bezier(.16,1,.3,1)}
+  .orb.pulse::before{opacity:.9;transform:scale(1.06)}
+  .orb.contact-active{border-color:color-mix(in srgb,var(--gold) 62%,transparent)}
+  .view-toast{position:absolute;top:10px;left:50%;z-index:7;transform:translate(-50%,-4px);
+    min-height:36px;padding:9px 14px;border-radius:12px;background:var(--plate);
+    border:1px solid color-mix(in srgb,var(--secondary) 46%,transparent);
+    box-shadow:0 14px 34px -18px color-mix(in srgb,var(--bg) 88%,transparent);
+    color:var(--ink);font-size:11px;font-weight:800;letter-spacing:.12em;white-space:nowrap;
+    opacity:0;transition:opacity .18s cubic-bezier(.16,1,.3,1),transform .18s cubic-bezier(.16,1,.3,1);
+    pointer-events:none}
+  .view-toast.is-visible{opacity:1;transform:translate(-50%,0)}
 
   /* miniskjerm: zoomed contact-zone inset (pattern: impact-inset-mock.html, P3-toned) */
   .inset{
     position:absolute;top:8px;left:8px;z-index:4;
     width:min(32%,240px);border-radius:14px;overflow:hidden;
-    background:linear-gradient(180deg, rgba(13,10,24,.96), rgba(8,5,14,.96));
-    border:1px solid rgba(217,179,106,.30);
-    box-shadow:0 18px 50px -20px rgba(0,0,0,.85), inset 0 0 0 1px rgba(255,255,255,.02);
+    background:linear-gradient(180deg,color-mix(in srgb,var(--plate-solid) 96%,transparent),color-mix(in srgb,var(--bg) 96%,transparent));
+    border:1px solid color-mix(in srgb,var(--gold) 30%,transparent);
+    box-shadow:0 18px 50px -20px color-mix(in srgb,var(--bg) 85%,transparent),inset 0 0 0 1px color-mix(in srgb,var(--ink) 2%,transparent);
     backdrop-filter:blur(3px);
   }
   .inset .eyebrow{
@@ -115,13 +126,14 @@
   @media (max-width:620px){ #insetCv{height:76px}
     .inset .eyebrow{font-size:9px;padding:5px 8px 2px} }
   /* maksimer: innsetet blir inspeksjonsmodus i full scene (lavpunkt + divot) */
-  .inset__max{position:absolute;right:2px;top:0;width:36px;height:26px;border:0;cursor:pointer;
+  .inset__max{position:absolute;right:0;top:0;width:44px;height:44px;border:0;cursor:pointer;
     background:transparent;color:var(--gold);font-size:15px;line-height:1;opacity:.85;padding:0;z-index:6;
-    font-family:inherit}
+    font-family:inherit;transition:transform .16s cubic-bezier(.16,1,.3,1),opacity .16s cubic-bezier(.16,1,.3,1)}
+  .inset__max:active{transform:scale(.92);opacity:1}
   .inset--max{top:8px;left:8px;right:8px;bottom:8px;width:auto;max-width:none;
     display:flex;flex-direction:column}
   /* i maksimert modus: klar av høyre-railen (view/club-toggles beholdes) */
-  .inset--max .inset__max{right:72px;top:6px;width:44px;height:36px;font-size:17px}
+  .inset--max .inset__max{right:72px;top:2px;width:44px;height:44px;font-size:17px}
   .inset--max #insetCv{flex:1 1 auto;height:auto!important;min-height:0}
   .inset--max .eyebrow{font-size:13px;padding:10px 132px 4px 14px}
   .inset--max .eyebrow .ez{display:inline}
@@ -144,14 +156,14 @@
   .chip.active{border-color:var(--chip-hue);color:var(--ink);
     box-shadow:inset 0 0 0 1px var(--chip-hue), 0 0 18px -8px var(--chip-hue)}
   .chip.active .cl{color:var(--chip-hue)}
-  .chip[data-p="plane"]{--chip-hue:var(--plane)}
-  .chip[data-p="dir"]{--chip-hue:var(--secondary)}
+  .chip[data-p="plane"]{--chip-hue:var(--q-plane)}
+  .chip[data-p="dir"]{--chip-hue:var(--q-path)}
   .chip[data-p="low"]{--chip-hue:var(--accent)}   /* Ball Position: live ball → ember */
-  .chip[data-p="arc"]{--chip-hue:var(--depth)}
+  .chip[data-p="arc"]{--chip-hue:var(--q-depth)}
 
   .sliderZone{position:relative;height:36px;display:flex;align-items:center}
   .track{position:absolute;left:13px;right:13px;top:50%;height:4px;margin-top:-2px;
-    border-radius:2px;background:rgba(255,255,255,.14)}
+    border-radius:2px;background:color-mix(in srgb,var(--ink) 14%,transparent)}
   .fill{position:absolute;top:50%;height:4px;margin-top:-2px;border-radius:2px;
     background:var(--slider-hue,var(--secondary))}
   .notch{position:absolute;top:50%;width:2px;height:12px;margin-top:-6px;
@@ -164,7 +176,7 @@
   #range::-webkit-slider-thumb{
     -webkit-appearance:none;width:26px;height:26px;border-radius:50%;margin-top:5px;
     background:var(--ink);border:3px solid var(--slider-hue,var(--secondary));
-    box-shadow:0 2px 10px rgba(0,0,0,.6);
+    box-shadow:0 2px 10px color-mix(in srgb,var(--bg) 60%,transparent);
   }
   #range::-moz-range-track{height:36px;background:transparent}
   #range::-moz-range-thumb{width:22px;height:22px;border-radius:50%;
@@ -180,6 +192,24 @@
     .orb{width:52px;min-height:54px}
     .orb svg{width:34px;height:30px}
   }
+  @media (max-height:480px){
+    .rail{gap:5px}
+    .orb{width:52px;min-height:48px;height:48px;padding:2px 2px 4px;border-radius:12px}
+    .orb svg{width:31px;height:27px}
+    .orb .cap{font-size:9px}
+    .view-toast{top:8px;min-height:32px;padding:7px 12px;font-size:10px}
+  }
+  @media (max-height:340px){
+    .rail{top:5px;right:5px;flex-direction:row;gap:4px}
+    .orb{width:44px;min-height:44px;height:44px;padding:1px;border-radius:11px}
+    .orb svg{width:27px;height:23px}
+    .orb .cap{font-size:8px;letter-spacing:0}
+    .inset--max .inset__max{right:152px}
+    .guided-cue{min-height:32px;padding-block:4px}
+  }
+  @media (hover:hover) and (pointer:fine){
+    .orb:hover,.inset__max:hover{border-color:var(--line-strong)}
+  }
 
   /* portrait gate (pattern: impact-viz-mock.html) */
   .rotate{position:fixed;inset:0;z-index:60;display:none;flex-direction:column;align-items:center;
@@ -188,10 +218,13 @@
   .rotate p{font-size:15px;max-width:240px;color:var(--ink)}
   @keyframes tilt{0%,100%{transform:rotate(-12deg)}50%{transform:rotate(78deg)}}
   @media (orientation:portrait){.rotate{display:flex}}
-  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+  @media (prefers-reduced-motion:reduce){
+    *{transition:none!important;animation:none!important}
+    .view-toast,.view-toast.is-visible{transform:translate(-50%,0)}
+  }
 </style>
 </head>
-<body>
+<body data-sa-route="studio">
 
   <div class="top">
     <a class="ts-back" href="./index.html" aria-label="Back to menu">
@@ -212,16 +245,22 @@
     <button id="resetBtn" aria-label="Reset">↺</button>
   </div>
 
-  <div class="stage" id="stage">
+  <aside id="guidedExperimentCue" class="guided-cue" role="status" aria-live="polite" hidden>
+    <span id="guidedExperimentState" class="guided-cue__state">GUIDED · 1 OF 1</span>
+    <p id="guidedExperimentCopy" class="guided-cue__copy">Change one geometry control, then release the slider to compare the result.</p>
+  </aside>
+
+  <div class="stage" id="stage" data-view="face" data-ghost-anchor="impact">
     <canvas id="scene"></canvas>
+    <div class="view-toast" id="viewToast" role="status" aria-live="polite" aria-hidden="true" hidden></div>
     <div class="inset" id="inset">
       <div class="eyebrow"><span>STRIKE<span class="ez"> · CONTACT ZONE</span></span>
         <span class="st"><em id="insetQual">PURE</em>&nbsp;·&nbsp;<span id="insetMm">−20 mm</span></span></div>
       <canvas id="insetCv"></canvas>
-      <button id="insetMax" class="inset__max" aria-label="Inspiser kontaktsonen">⤢</button>
+      <button id="insetMax" class="inset__max" aria-label="Inspect contact zone">⤢</button>
     </div>
     <div class="rail">
-      <button class="orb" id="btnView" aria-label="Bytt kameravinkel">
+      <button class="orb" id="btnView" aria-label="Switch to Down the line">
         <svg viewBox="0 0 44 40" aria-hidden="true">
           <circle cx="22" cy="22" r="12.5" fill="none" stroke="rgba(157,139,255,.35)"
                   stroke-width="1.2" stroke-dasharray="2.5 3"/>
@@ -229,14 +268,14 @@
           <path d="M22 4.5 l-3 5 h6 z" fill="rgba(245,242,255,.55)"/>
           <circle cx="22" cy="22" r="3" fill="#F5F2FF"/>
           <g id="camG" style="transform-origin:22px 22px;transform:rotate(-90deg);
-                              transition:transform .35s cubic-bezier(.2,.8,.2,1)">
+                              transition:transform .24s cubic-bezier(.16,1,.3,1)">
             <g transform="translate(22 34.5)">
               <circle r="4.4" fill="#0D0A18" stroke="#9D8BFF" stroke-width="1.6"/>
               <circle r="1.6" fill="#9D8BFF"/>
             </g>
           </g>
         </svg>
-        <span class="cap" id="viewCap">FACE ON</span>
+        <span class="cap" id="viewCap">DTL</span>
       </button>
       <button class="orb" id="btnClub" aria-label="Bytt kølle">
         <svg viewBox="0 0 44 40" aria-hidden="true">
@@ -253,6 +292,16 @@
           </g>
         </svg>
         <span class="cap" id="clubCap">IRON</span>
+      </button>
+      <button class="orb" id="btnContact" aria-label="Inspect contact zone" aria-controls="inset" aria-expanded="false">
+        <svg viewBox="0 0 44 40" aria-hidden="true">
+          <line x1="6" y1="30" x2="38" y2="30" stroke="rgba(130,185,85,.72)" stroke-width="1.6"/>
+          <path d="M7 19 C14 23 17 31 22 31 C27 31 30 23 37 19" fill="none"
+                stroke="rgba(217,179,106,.9)" stroke-width="2" stroke-linecap="round"/>
+          <circle cx="22" cy="31" r="2.6" fill="#D9B36A"/>
+          <path d="M12 30 v4 M32 30 v4" stroke="rgba(217,179,106,.55)" stroke-width="1.2"/>
+        </svg>
+        <span class="cap">CONTACT</span>
       </button>
     </div>
   </div>
@@ -287,6 +336,45 @@ import { RADIUS, BALL_RADIUS_M as BALL_R, SWEEP_RAD, LP_IDEAL,
          tangentAt, deriveImpact, clubBallContact, strikeQuality }
   from './swing-parameters-and-impact.js';
 import haptics from './sa-haptics.js';
+import { authorize, consume } from './sa-access.js';
+import * as saIap from './sa-iap.js';
+import { track } from './sa-analytics.js';
+
+const guidedExperimentRequested = new URLSearchParams(location.search).get('guided') === 'experiment';
+const iapReady = saIap.init();
+const showPaywall = async moment => (await import('./sa-paywall.js')).openPaywall(moment);
+let guidedExperimentCompleted = false;
+let guidedBaseline = null;
+const guidedExperimentPreparation = (async () => {
+  if (!guidedExperimentRequested) return true;
+  await iapReady;
+  const access = authorize('guided-experiment', { pro: saIap.isPro() });
+  if (!access.allowed) {
+    if (access.shouldPaywall) await showPaywall('guided-experiment');
+    if (!saIap.isPro()) {
+      history.replaceState(history.state, '', './impact-studio.html');
+      return false;
+    }
+  }
+  document.body.dataset.guidedExperiment = 'active';
+  document.getElementById('guidedExperimentCue').hidden = false;
+  track('experiment_started', { route: 'studio' });
+  return true;
+})();
+
+async function completeGuidedExperiment() {
+  if (!guidedExperimentRequested || guidedExperimentCompleted) return;
+  if (!await guidedExperimentPreparation) return;
+  guidedExperimentCompleted = true;
+  consume('guided-experiment', { pro: saIap.isPro(), completed: true });
+  track('experiment_completed', { route: 'studio', completed: true });
+  const labels = { plane:'Swing plane', dir:'Swing direction', low:'Ball position', arc:'Arc height' };
+  const before = guidedBaseline?.[state.sel] ?? PARAMS[state.sel].def;
+  document.body.dataset.guidedExperiment = 'complete';
+  document.getElementById('guidedExperimentState').textContent = 'EXPERIMENT COMPLETE';
+  document.getElementById('guidedExperimentCopy').textContent =
+    `${labels[state.sel]}: ${PARAMS[state.sel].fmt(before)} → ${PARAMS[state.sel].fmt(state[state.sel])}. Compare the arc and outcome readouts.`;
+}
 const d2r = d => d * Math.PI / 180, r2d = r => r * 180 / Math.PI;
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 
@@ -315,15 +403,15 @@ function project(p, b){
   const dot=(a,c)=>a.x*c.x+a.y*c.y+a.z*c.z;
   const xC=dot(rel,b.right), yC=dot(rel,b.upVec), zC=dot(rel,b.fwd);
   if (zC <= 0.01) return null;
-  return { x: b.w/2 + (xC/zC)*b.focal*(b.cam.xStretch||1), y: b.h/2 - (yC/zC)*b.focal,
+  return { x: b.w/2 + (b.cam.screenX || 0) + (xC/zC)*b.focal*(b.cam.xStretch||1), y: b.h/2 - (yC/zC)*b.focal,
            d: zC };                             /* camera-space depth for taper */
 }
 
 /* ============================================================ STATE */
 const PARAMS = {
-  plane: { min:30,  max:80, step:0.5, def:60,   bipolar:false, hue:'var(--plane)',
+  plane: { min:30,  max:80, step:0.5, def:60,   bipolar:false, hue:'var(--q-plane)',
            fmt:v=>fmtNum(v,0)+'°' },
-  dir:   { min:-12, max:12, step:0.1, def:0,    bipolar:true,  hue:'var(--secondary)',
+  dir:   { min:-12, max:12, step:0.1, def:0,    bipolar:true,  hue:'var(--q-path)',
            fmt:v=>fmtNum(v,1)+'°' },
   /* Ball Position i stance: 0 = midt, + = frem (mot target), − = bak.
    * Arcens naturlige lavpunkt ligger fast i stance ved LP_STANCE foran
@@ -331,7 +419,7 @@ const PARAMS = {
    * lowPoint.x (motorinput, ball-relativ) = LP_STANCE − b. */
   low:   { min:-20, max:20, step:0.1, def:0,    bipolar:true,  hue:'var(--accent)',
            fmt:v=>fmtSigned(v,1)+' cm' },
-  arc:   { min:-5,  max:5,  step:0.1, def:0,    bipolar:true,  hue:'var(--depth)',
+  arc:   { min:-5,  max:5,  step:0.1, def:0,    bipolar:true,  hue:'var(--q-depth)',
            fmt:v=>fmtSigned(v,1)+' cm' },
 };
 const LP_STANCE = LP_IDEAL * 100;             // cm foran stance-senter (motorens Pure-ideal)
@@ -356,11 +444,24 @@ const HEAD_MM = { iron: 102, driver: 96 };
 const LEAN = { iron: 6 * Math.PI / 180, driver: 0 };
 const TEE_H = 0.030;                          // tee height, metres
 const state = { view:'face', sel:'low', plane:60, dir:0, low:0, arc:0, club:'iron', inspect:false };
+guidedBaseline = Object.freeze({ plane:state.plane, dir:state.dir, low:state.low, arc:state.arc });
 const ballLift = () => state.club === 'driver' ? TEE_H : 0;
 function engineState(){
   return { radius:RADIUS, planeAngle:state.plane, swingDirection:state.dir,
            lowPoint:{ x:(LP_STANCE - state.low)/100, y:0,
                       z:(state.arc + ARC_Z0[state.club])/100 } };
+}
+/* Presentation-only anchor for the reference clubhead. When the sole enters
+   the turf before the ball, teach that entry point instead of leaving the
+   ghost at impact. Engine output remains untouched. */
+function ghostClubAnchor(s){
+  const t0g = groundCrossingTheta0(s);
+  if (t0g !== null){
+    const entry = arcPosition(-t0g, s);
+    if (entry.x < -0.001) return { mode:'entry', point:entry };
+  }
+  const contact = clubBallContact(s);
+  return { mode:'impact', point:{ x:0, y:0, z:contact.clubZ } };
 }
 const MINUS = '−';
 function fmtNum(v, dec){ const s = Math.abs(v).toFixed(dec); return (v < -1e-9 ? MINUS : '') + s; }
@@ -452,7 +553,7 @@ function crossViewHint(){
   if (btn.classList.contains('pulse')) return;
   btn.classList.add('pulse');
   clearTimeout(hintTimer);
-  hintTimer = setTimeout(() => btn.classList.remove('pulse'), 600);
+  hintTimer = setTimeout(() => btn.classList.remove('pulse'), 240);
 }
 
 /* ============================================================ SLIDER */
@@ -503,6 +604,7 @@ range.addEventListener('input', () => {
   vecFlashAt = performance.now();
   updateChipValues(); layoutSlider(); updateOutcomes(); crossViewHint(); kick();
 });
+range.addEventListener('change', () => { void completeGuidedExperiment(); });
 function updateChipValues(){
   $('cvPlane').textContent = PARAMS.plane.fmt(state.plane);
   $('cvDir').textContent = PARAMS.dir.fmt(state.dir);
@@ -514,6 +616,7 @@ $('resetBtn').addEventListener('click', () => {
   state.plane = PLANE_PRESET[state.club];
   range.value = state[state.sel];
   haptics.impact('light');
+  vecFlashAt = performance.now();
   updateChipValues(); layoutSlider(); updateOutcomes(); kick();
 });
 function setClub(c){
@@ -530,6 +633,10 @@ function setClub(c){
 }
 $('btnClub').addEventListener('click', () => { haptics.impact('light'); setClub(state.club === 'iron' ? 'driver' : 'iron'); });
 $('btnView').addEventListener('click', () => { haptics.impact('light'); setView(state.view === 'face' ? 'dtl' : 'face'); });
+$('btnContact').addEventListener('click', () => {
+  setInspect(!state.inspect);
+  haptics.impact('light');
+});
 /* maksimer: innsetet tar hele scenen (inspeksjonsmodus — lavpunkt/divot);
    chips + slider står urørt. Sentrert innramming skjer i drawInset. */
 $('insetMax').addEventListener('click', () => {
@@ -537,19 +644,41 @@ $('insetMax').addEventListener('click', () => {
   haptics.impact('light');
 });
 function setInspect(on){
+  if (on && state.view !== 'face') setView('face');
   state.inspect = on;
   $('inset').classList.toggle('inset--max', on);
   $('insetMax').textContent = on ? '⤡' : '⤢';
+  $('insetMax').setAttribute('aria-label', on ? 'Close contact zone' : 'Inspect contact zone');
+  $('btnContact').setAttribute('aria-expanded', String(on));
+  $('btnContact').setAttribute('aria-label', on ? 'Close contact zone' : 'Inspect contact zone');
+  $('btnContact').classList.toggle('contact-active', on);
   IW = 0;                                       // re-measure the inset canvas
   kick();
 }
+let viewToastTimer = 0, viewToastHideTimer = 0;
+function showViewToast(label){
+  const toast = $('viewToast');
+  clearTimeout(viewToastTimer); clearTimeout(viewToastHideTimer);
+  toast.textContent = label;
+  toast.hidden = false;
+  toast.setAttribute('aria-hidden', 'false');
+  requestAnimationFrame(() => toast.classList.add('is-visible'));
+  viewToastTimer = setTimeout(() => {
+    toast.classList.remove('is-visible');
+    toast.setAttribute('aria-hidden', 'true');
+    viewToastHideTimer = setTimeout(() => { toast.hidden = true; }, 190);
+  }, 620);
+}
 function setView(v){
+  const changed = state.view !== v;
   state.view = v;
   if (v === 'dtl' && state.inspect) setInspect(false);   // inspeksjon er Face On-eid
   /* camera dot orbits the ball: face-on = beside (3 o'clock), DTL = behind (6 o'clock) */
   $('camG').style.transform = v === 'face' ? 'rotate(-90deg)' : 'rotate(0deg)';
-  $('viewCap').textContent = v === 'face' ? 'FACE ON' : 'DTL';
-  $('inset').style.display = v === 'face' ? '' : 'none';
+  $('viewCap').textContent = v === 'face' ? 'DTL' : 'FO';
+  $('btnView').setAttribute('aria-label', v === 'face' ? 'Switch to Down the line' : 'Switch to Face on');
+  $('stage').dataset.view = v;
+  if (changed) showViewToast(v === 'face' ? 'FACE ON' : 'DOWN THE LINE');
   applyStageBg();
   vecFlashAt = performance.now();          // brief orientation flash on view switch
   kick();
@@ -574,8 +703,10 @@ let prevOrderKey = '', orderFlashAt = -1e9;
 
 function draw(t){
   ctx.clearRect(0, 0, W, H);
-  if (state.view === 'face'){ drawFace(t); drawInset(); }   // mini screen: Face On only
+  $('stage').dataset.ghostAnchor = ghostClubAnchor(engineState()).mode;
+  if (state.view === 'face') drawFace(t);
   else drawDtl(t);
+  drawInset();                                  // contact preview remains available in both views
 }
 
 /* transient outcome vectors + underground gold: full for ~900 ms after a
@@ -684,7 +815,7 @@ function sceneClipPath(){
   const i = document.getElementById('inset').getBoundingClientRect();
   const p = new Path2D();
   p.rect(0, 0, W, H);
-  if (i.width > 0)                            // inset hidden in DTL → no punch-out
+  if (i.width > 0)
     p.rect(i.left - r.left - 6, i.top - r.top - 6, i.width + 12, i.height + 12);
   return p;
 }
@@ -705,7 +836,7 @@ function drawInset(){
   if (!IW) resizeInset();
   const s = engineState();
   const ct = clubBallContact(s), t0g = groundCrossingTheta0(s), lpx = effectiveLpx(s);
-  const GOLD = '#e8b45a', WARM = '#ff9a3d';
+  const GOLD = '#e8b45a', WARM = '#ff9a3d', LOW = CSS('--q-attack');
   ictx.clearRect(0, 0, IW, IH);
 
   /* world window: adaptive — always frames the whole contact zone */
@@ -760,7 +891,7 @@ function drawInset(){
     ictx.strokeStyle = 'rgba(205,142,78,.85)'; ictx.lineWidth = 1.5; ictx.stroke();
   }
 
-  /* ghosted clubhead (under the gold arc and the ball — see drawFace) */
+  /* Reference clubhead: turf-before-ball moves it to ENTRY; otherwise impact. */
   {
     const hk = state.club === 'iron' ? 'ironHead' : 'driverHead';
     if (ready(hk)){
@@ -768,7 +899,8 @@ function drawInset(){
       const brH = BALL_R * sc;
       const hPxI = HEAD_MM[state.club] * (brH / (BALL_R * 1000));
       const wPxI = hPxI * (im.naturalWidth / im.naturalHeight);
-      const yBI = Y(ct.clubZ), xRI = X(0) - brH * 0.92;
+      const ghost = ghostClubAnchor(s);
+      const yBI = Y(ghost.point.z), xRI = X(ghost.point.x) - brH * 0.92;
       ictx.save(); ictx.globalAlpha = 0.5;
       ictx.translate(xRI, yBI); ictx.rotate(LEAN[state.club]);
       ictx.drawImage(im, -wPxI, -hPxI, wPxI, hPxI);
@@ -938,14 +1070,14 @@ function drawInset(){
       iLabel(t2[1], tx, gy + 47, CSS('--muted'), 9);
     }
   }
-  /* low point: small gold dot on the arc bottom */
+  /* low point keeps the same attack-pink semantic as the main scene */
   {
     const px = X(lpx), py = Y(s.lowPoint.z);
     if (px > 16 && px < IW - 16){
       ictx.beginPath(); ictx.arc(px, py, 3.2, 0, Math.PI * 2);
-      ictx.fillStyle = GOLD; ictx.fill();
+      ictx.fillStyle = LOW; ictx.fill();
       if (t0g !== null && Math.abs(px - X(arcPosition(-t0g, s).x)) > 30)
-        iLabel('LOW', px, gy + 16, '#eec07a', 9);
+        iLabel('LOW', px, gy + 16, LOW, 9);
     }
   }
   /* (mm/quality readout in the eyebrow is owned by updateOutcomes) */
@@ -973,10 +1105,21 @@ function label(txt, x, y, color, size, align, mono, alpha){
 function plateLabel(txt, x, y, hue, size, align, alpha){
   ctx.save();
   const a = alpha == null ? 1 : alpha;
-  ctx.font = '700 ' + size + 'px ui-monospace,"SF Mono",Menlo,monospace';
+  ctx.font = '700 ' + size + 'px ' + CSS('--font-mono');
   const w = ctx.measureText(txt).width;
   const padX = size * 0.55, h = size * 1.75;
-  const lx = align === 'right' ? x - w : align === 'center' ? x - w / 2 : x;
+  let lx = align === 'right' ? x - w : align === 'center' ? x - w / 2 : x;
+  const rail = document.querySelector('.rail');
+  if (rail){
+    const stageRect = cv.getBoundingClientRect(), railRect = rail.getBoundingClientRect();
+    const railTop = railRect.top - stageRect.top, railBottom = railRect.bottom - stageRect.top;
+    const overlapsRailY = y + h / 2 > railTop - 4 && y - h / 2 < railBottom + 4;
+    if (getComputedStyle(rail).flexDirection === 'row' || overlapsRailY){
+      const rightLimit = railRect.left - stageRect.left - 6;
+      lx = Math.min(lx, rightLimit - w - padX);
+    }
+  }
+  lx = Math.max(6 + padX, lx);
   ctx.globalAlpha = a * 0.86;
   ctx.beginPath();
   ctx.roundRect(lx - padX, y - h / 2, w + padX * 2, h, h / 2 - 2);
@@ -986,6 +1129,93 @@ function plateLabel(txt, x, y, hue, size, align, alpha){
   ctx.fillStyle = hue; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
   ctx.fillText(txt, lx, y + 0.5);
   ctx.restore();
+  return { left:lx - padX, top:y - h / 2, right:lx + w + padX, bottom:y + h / 2 };
+}
+function lowPointMarker(x, y, hue, view, ground, tangent){
+  /* A survey instrument, not a badge: the opaque pin is the exact physical
+     point; the open aperture registers it to the local arc and the hairline
+     registers its true depth against turf. Drawn last so teaching vectors can
+     never obscure the geometry. */
+  const tLen = Math.hypot(tangent?.x || 0, tangent?.y || 0) || 1;
+  const tx = (tangent?.x || 1) / tLen, ty = (tangent?.y || 0) / tLen;
+  const gdx = (ground?.x ?? x) - x, gdy = (ground?.y ?? y) - y;
+  const gLen = Math.hypot(gdx, gdy);
+  const gx = gLen > 0.01 ? gdx / gLen : -ty;
+  const gy = gLen > 0.01 ? gdy / gLen : tx;
+  const age = performance.now() - vecFlashAt;
+  const pulse = !REDUCED && age >= 0 && age < 280 ? 1 - age / 280 : 0;
+
+  ctx.save();
+  ctx.lineCap = 'round';
+
+  /* Exact elevation/depth relationship: pin to the projected turf datum. */
+  if (ground && gLen > 0.75){
+    const inset = Math.min(5.5, gLen * 0.35);
+    ctx.globalAlpha = 0.42;
+    ctx.strokeStyle = hue; ctx.lineWidth = 0.8;
+    ctx.setLineDash([1.5, 2.5]);
+    ctx.beginPath();
+    ctx.moveTo(x + gx * inset, y + gy * inset);
+    ctx.lineTo(ground.x, ground.y);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.globalAlpha = 0.62;
+    ctx.beginPath();
+    ctx.moveTo(ground.x - tx * 3.5, ground.y - ty * 3.5);
+    ctx.lineTo(ground.x + tx * 3.5, ground.y + ty * 3.5);
+    ctx.stroke();
+  }
+
+  ctx.translate(x, y);
+  ctx.rotate(Math.atan2(ty, tx));
+
+  /* Soft lens bloom stays subordinate to the white swing arc. */
+  const halo = ctx.createRadialGradient(0, 0, 1, 0, 0, 13);
+  halo.addColorStop(0, 'rgba(255,255,255,.08)');
+  halo.addColorStop(0.26, hue);
+  halo.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.save();
+  ctx.globalCompositeOperation = 'screen';
+  ctx.globalAlpha = 0.13;
+  ctx.fillStyle = halo;
+  ctx.beginPath(); ctx.arc(0, 0, 13, 0, Math.PI * 2); ctx.fill();
+  ctx.restore();
+
+  /* Open opposing apertures align the point to the local arc without making
+     another circular UI ring. The split tangent is the fine survey reticle. */
+  ctx.strokeStyle = hue; ctx.lineWidth = 1;
+  ctx.globalAlpha = 0.72;
+  ctx.beginPath();
+  ctx.ellipse(0, 0, 8.5, 5.5, 0, -Math.PI * 0.28, Math.PI * 0.28);
+  ctx.ellipse(0, 0, 8.5, 5.5, 0, Math.PI * 0.72, Math.PI * 1.28);
+  ctx.stroke();
+  ctx.globalAlpha = 0.58;
+  ctx.lineWidth = 0.8;
+  ctx.beginPath();
+  ctx.moveTo(-13, 0); ctx.lineTo(-8, 0);
+  ctx.moveTo(8, 0); ctx.lineTo(13, 0);
+  ctx.stroke();
+
+  /* One short response to a model update. Reduced motion keeps the settled
+     aperture and all measurement information, omitting only this echo. */
+  if (pulse > 0){
+    const p = 1 - pulse;
+    ctx.globalAlpha = pulse * 0.24;
+    ctx.lineWidth = 0.8;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 10 + p * 7, 6.5 + p * 4, 0, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+
+  /* The 3 px solid core is the sole exact point and remains fully opaque. */
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = hue;
+  ctx.beginPath(); ctx.arc(0, 0, 3.2, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,.72)'; ctx.lineWidth = 0.65; ctx.stroke();
+  ctx.restore();
+
+  $('stage').dataset.lowPointMarker = [view, x.toFixed(1), y.toFixed(1), '1'].join(',');
+  $('stage').dataset.lowPointInstrument = [view, gLen.toFixed(1), 'aperture-survey'].join(',');
 }
 function arrowHead(x, y, ang, size, color, alpha){
   ctx.save();
@@ -1021,9 +1251,9 @@ const PED_K = 1.7, PED_Z0 = 0.055;
 const pedF  = z => PED_K * z - (PED_K - 1) * PED_Z0 * Math.tanh(z / PED_Z0);
 const pedKz = z => PED_K - (PED_K - 1) / Math.cosh(z / PED_Z0) ** 2;
 function faceMap(){
-  const winM = W >= 700 ? 0.80 : 0.70;          // tight window: the teaching zone fills the frame
+  const winM = W >= 700 ? 0.90 : 0.82;          // wide enough to keep Low Point visible at both extremes
   const scale = W / winM;                       // px per metre
-  const bx = W * 0.62, gy = H * 0.71;           // action lives right of the mini screen
+  const bx = W * 0.57, gy = H * 0.71;           // action stays clear of the mini screen and right rail
   return { scale, bx, gy, K: PED_K, Kz: pedKz,
     X: xm => bx + xm * scale,
     Y: zm => gy - pedF(zm) * scale };
@@ -1031,15 +1261,15 @@ function faceMap(){
 function drawFace(t){
   const s = engineState();
   const M = faceMap();
-  const imp = deriveImpact(s), ct = clubBallContact(s);
+  const ct = clubBallContact(s);
   const t0g = groundCrossingTheta0(s);
   const thImp = thetaAtImpact(s);
   const lpx = effectiveLpx(s);
   const ballR = BALL_R * M.scale;
-  const A = { attack: CSS('--attack'), gold: CSS('--gold'), ink: CSS('--ink'),
-              muted: CSS('--muted'), soil: CSS('--soil'), sec: CSS('--secondary'),
-              plane: CSS('--plane'), depth: CSS('--depth'), accent: CSS('--accent'),
-              warn: CSS('--warn'), pathC: CSS('--path') };
+  const A = { attack: CSS('--q-attack'), ink: CSS('--ink'),
+              muted: CSS('--muted'), soil: CSS('--studio-soil'), sec: CSS('--secondary'),
+              plane: CSS('--q-plane'), depth: CSS('--q-depth'), accent: CSS('--accent'),
+              warn: CSS('--warn'), pathC: CSS('--q-path') };
   const fa = flashAlpha();                    // transient vectors + underground gold
 
   ctx.save();
@@ -1090,7 +1320,7 @@ function drawFace(t){
       ctx.fillStyle = CSS('--ghost'); ctx.fill();
       ctx.restore();
     }
-    /* the swing's low point is FIXED in the stance: a gold baseline between
+    /* the swing's low point is FIXED in the stance: an attack-pink baseline between
        the feet with a notch at LP_STANCE anchors it there — the ball just
        stands where you put it */
     {
@@ -1098,7 +1328,7 @@ function drawFace(t){
       const x0a = M.X(stanceC - 0.20), x1a = M.X(stanceC + 0.20);
       const nx = M.X(stanceC + LP_STANCE / 100);
       ctx.save(); ctx.globalAlpha = aB;
-      ctx.strokeStyle = 'rgba(217,179,106,.9)'; ctx.lineWidth = 1.2;
+      ctx.strokeStyle = A.attack; ctx.lineWidth = 1.2;
       ctx.beginPath(); ctx.moveTo(x0a, gy + 9); ctx.lineTo(x1a, gy + 9); ctx.stroke();
       ctx.lineWidth = 2;
       ctx.beginPath(); ctx.moveTo(nx, gy + 5); ctx.lineTo(nx, gy + 13); ctx.stroke();
@@ -1107,7 +1337,7 @@ function drawFace(t){
     if (selBall){
       for (const t2 of [[-0.11,'BACK'], [0,'MID'], [0.11,'FWD']]){
         const tx = M.X(stanceC + t2[0]);
-        if (Math.abs(tx - M.X(lpx)) < 36) continue;   // dodge the LOW POINT label
+        if (Math.abs(tx - M.X(lpx)) < 18) continue;   // keep the permanent marker clear
         coreLine(tx, gy + 12, tx, gy + 17, CSS('--muted'), 1.5, null, 0.75);
         label(t2[1], tx, gy + 26, CSS('--muted'), 9, 'center', false, 0.8);
       }
@@ -1145,16 +1375,16 @@ function drawFace(t){
     ctx.restore();
   }
 
-  /* --- static ghosted clubhead at address: sole rides the arc, making the
-     sole-path → face-middle geometry legible. Reference, never a hero;
-     drawn under the arc and the ball. --- */
+  /* --- reference clubhead: at turf ENTRY when that happens before the ball,
+     otherwise at impact. Drawn under the arc and ball, never a hero. --- */
   {
     const hk = state.club === 'iron' ? 'ironHead' : 'driverHead';
     if (ready(hk)){
       const im = IMG[hk];
       const hPx = HEAD_MM[state.club] * (ballR / (BALL_R * 1000));
       const wPx = hPx * (im.naturalWidth / im.naturalHeight);
-      const yB = M.Y(ct.clubZ), xR = M.bx - ballR * 0.92;
+      const ghost = ghostClubAnchor(s);
+      const yB = M.Y(ghost.point.z), xR = M.X(ghost.point.x) - ballR * 0.92;
       ctx.save(); ctx.globalAlpha = 0.45;
       /* pivot at the leading-edge/sole corner so the lean delofts the head */
       ctx.translate(xR, yB); ctx.rotate(LEAN[state.club]);
@@ -1306,25 +1536,6 @@ function drawFace(t){
       ctx.drawImage(IMG.glint, contactPt.x - 27, contactPt.y - 27, 54, 54);
       ctx.restore();
     }
-    const pe = segPts[segPts.length - 1];
-    plateLabel('ATTACK ANGLE ' + fmtNum(imp.attackAngle, 1) + '°',
-          Math.min(pe.x + 16, W - 250), Math.max(pe.y - 22, 20), A.attack,
-          W >= 700 ? 17 : 14, 'left', fa);
-  }
-
-  /* --- low point: single plain marker (numbers/sequence live in the inset variant's inset) --- */
-  {
-    const alphaLP = state.sel === 'low' ? 1 : 0.55;
-    const x = M.X(lpx), y = M.Y(s.lowPoint.z);
-    ctx.save(); ctx.globalAlpha = alphaLP;
-    ctx.beginPath();
-    ctx.moveTo(x, y + 4); ctx.lineTo(x - 5, y + 13); ctx.lineTo(x + 5, y + 13);
-    ctx.closePath(); ctx.fillStyle = A.gold; ctx.fill();
-    ctx.restore();
-    const ly = Math.max(y + 24, gy + 24);       // keep the label in the ground band
-    label('LOW POINT', x, ly, A.gold, W >= 700 ? 12 : 10, 'center', false, alphaLP * 0.9);
-    if (state.sel === 'low')
-      label(fmtSigned(lpx * 100, 1) + ' cm', x, ly + 13, A.ink, 10, 'center', true, 1);
   }
 
   /* (no path arrow in Face On — path is DTL's transient vector) */
@@ -1346,6 +1557,16 @@ function drawFace(t){
 
   /* (swing plane has no label — the glass is its illustration) */
 
+  /* Permanent physical low point, above every transient teaching vector. */
+  {
+    const before = arcPosition(-0.015, s), after = arcPosition(0.015, s);
+    const lp = { x:M.X(lpx), y:M.Y(s.lowPoint.z) };
+    const ground = { x:lp.x, y:gy };
+    const tangent = { x:M.X(after.x) - M.X(before.x),
+                      y:M.Y(after.z) - M.Y(before.z) };
+    lowPointMarker(lp.x, lp.y, A.attack, 'face', ground, tangent);
+  }
+
   ctx.restore();                              // close the inset punch-out clip
 }
 function strokeArc(s, M, style, width){
@@ -1366,20 +1587,22 @@ function strokeArc(s, M, style, width){
 
 /* ============================================================ DOWN THE LINE */
 function dtlCam(){
-  /* stands slightly on the trail side of the line, hip height — gives an
-     asymmetric, more spatial DTL and pushes the scene toward the right */
-  /* camera stands on the RIGHT side of the line (viewer's right), hip height */
+  /* Same trail-side, hip-height perspective; responsive framing uses the
+     previously empty right half without changing the underlying geometry. */
+  const tallStage = W / Math.max(H, 1) < 2;
   return { pos:{ x:-2.2, y:-0.9, z:1.0 }, look:{ x:2.3, y:0.25, z:0.14 },
-           fov: d2r(H < 220 ? 36 : 32), xStretch: 1.1 };
+           fov:d2r(tallStage ? 44 : (H < 240 ? 37 : 34)),
+           xStretch:tallStage ? 0.92 : 1.02,
+           screenX:W * (tallStage ? 0.05 : 0.075) };
 }
 const DTL_SWEEP = d2r(78);                    // longer arc into the perspective
 function drawDtl(t){
   const s = engineState();
   const B = buildCamera(dtlCam(), W, H);
   const P = p => project(p, B);
-  const A = { path: CSS('--path'), sec: CSS('--secondary'), plane: CSS('--plane'),
-              gold: CSS('--gold'), ink: CSS('--ink'), muted: CSS('--muted'),
-              accent: CSS('--accent'), depth: CSS('--depth') };
+  const A = { path: CSS('--q-path'), attack: CSS('--q-attack'), sec: CSS('--secondary'), plane: CSS('--q-plane'),
+              ink: CSS('--ink'), muted: CSS('--muted'),
+              accent: CSS('--accent'), depth: CSS('--q-depth') };
   const fa = flashAlpha();
 
   ctx.save();
@@ -1414,6 +1637,27 @@ function drawDtl(t){
     }
   }
 
+  /* Swing Direction is the chosen ground reference; Club Path remains the
+     measured cyan strike vector below. Keeping both visible explains cause
+     versus result instead of asking the glass to carry two meanings. */
+  {
+    const dr = d2r(s.swingDirection);
+    const v = { x:Math.cos(dr), y:Math.sin(dr) };
+    const a = P({ x:-0.25*v.x, y:-0.25*v.y, z:0.008 });
+    const b = P({ x:11*v.x, y:11*v.y, z:0.008 });
+    if (a && b){
+      const hero = state.sel === 'dir';
+      coreLine(a.x, a.y, b.x, b.y, A.sec, hero ? 2.8 : 1.35, [7,6], hero ? 0.9 : 0.35);
+      arrowHead(b.x, b.y, Math.atan2(b.y - a.y, b.x - a.x), hero ? 8 : 6, A.sec, hero ? 0.9 : 0.42);
+      if (hero){
+        const m = P({ x:6.4*v.x, y:6.4*v.y, z:0.008 });
+        if (m) plateLabel('SWING DIRECTION ' + fmtNum(s.swingDirection, 1) + '°',
+          clamp(m.x + 14, 12, W - 280), clamp(m.y - 20, 20, H - 20), A.sec,
+          W >= 700 ? 15 : 13, 'left', 1);
+      }
+    }
+  }
+
   /* soft contact shadow under the arc's low region — anchors it to the ground */
   {
     const lpw = lpWorld(s);
@@ -1435,16 +1679,17 @@ function drawDtl(t){
     }
   }
 
-  /* swing-plane glass: the ONLY illustration of plane + direction.
+  /* swing-plane glass: one job, showing plane.
      Extended along u into the perspective; density gradient toward the
      ground edge + rim light along the upper edge — no outline. */
   {
-    const heroG = state.sel === 'plane' || state.sel === 'dir';
+    const heroG = state.sel === 'plane';
     const alpha = heroG ? 1 : 0.45;
     const { u, m } = planeBasis(s.planeAngle, s.swingDirection);
     const lp = lpWorld(s);
     const pt = (a, b2) => ({ x: lp.x + a*u.x + b2*m.x, y: lp.y + a*u.y + b2*m.y, z: lp.z + a*u.z + b2*m.z });
-    const poly = [pt(-1.05, -0.04), pt(1.5, -0.04), pt(1.5, 1.0), pt(-1.05, 1.0)]
+    const a0 = -1.25, a1 = 3.2, b0 = -0.04, b1 = 1.15;
+    const poly = [pt(a0, b0), pt(a1, b0), pt(a1, b1), pt(a0, b1)]
       .map(P);
     if (poly.every(Boolean)){
       ctx.save(); ctx.globalAlpha = alpha;
@@ -1463,8 +1708,8 @@ function drawDtl(t){
       /* faint inner rungs instead of an outline */
       ctx.lineWidth = 1;
       for (const bf of [0.30, 0.65]){
-        const b2 = -0.04 + bf * 1.04;
-        const ra = P(pt(-1.05, b2)), rb = P(pt(1.5, b2));
+        const b2 = b0 + bf * (b1 - b0);
+        const ra = P(pt(a0, b2)), rb = P(pt(a1, b2));
         if (ra && rb){
           ctx.strokeStyle = 'rgba(147,164,242,' + (heroG ? 0.11 : 0.07) + ')';
           ctx.beginPath(); ctx.moveTo(ra.x, ra.y); ctx.lineTo(rb.x, rb.y); ctx.stroke();
@@ -1520,23 +1765,6 @@ function drawDtl(t){
         }
       }
       ctx.restore();
-    }
-  }
-
-  /* low point marker on the arc (hero when low selected) */
-  {
-    const alpha = state.sel === 'low' ? 1 : 0.45;
-    const lp = P(arcPosition(0, s));
-    if (lp){
-      ctx.save(); ctx.globalAlpha = alpha;
-      ctx.beginPath(); ctx.arc(lp.x, lp.y, 4.5, 0, Math.PI * 2);
-      ctx.fillStyle = CSS('--gold'); ctx.fill();
-      ctx.restore();
-      if (state.sel === 'low')
-        /* dodge below the arc tail so the label never crosses arc or ball */
-        label('LOW POINT ' + fmtSigned(effectiveLpx(s) * 100, 1) + ' cm',
-              clamp(lp.x - 24, Math.max(170, W * 0.19), W - 10), Math.min(lp.y + 40, H - 12),
-              A.gold, 11, 'right');
     }
   }
 
@@ -1640,18 +1868,23 @@ function drawDtl(t){
       ctx.drawImage(IMG.glint, impP.x - 24, impP.y - 24, 48, 48);
       ctx.restore();
     }
-    if (segPts.length){
-      const pe = segPts[segPts.length - 1];
-      plateLabel('CLUB PATH ' + fmtNum(deriveImpact(s).clubPath, 1) + '°',
-            clamp(pe.x + 16, 10, W - 250), clamp(pe.y - 10, 22, H - 20), A.path,
-            W >= 700 ? 17 : 14, 'left', fa);
-    }
+  }
+
+  /* Draw last so neither Club Path nor another transient can cover it. */
+  {
+    const lowWorld = arcPosition(0, s);
+    const lp = P(lowWorld);
+    const ground = P({ x:lowWorld.x, y:lowWorld.y, z:0 });
+    const before = P(arcPosition(-0.015, s)), after = P(arcPosition(0.015, s));
+    if (lp) lowPointMarker(lp.x, lp.y, A.attack, 'dtl', ground,
+      before && after ? { x:after.x - before.x, y:after.y - before.y } : { x:1, y:0 });
   }
 
   ctx.restore();                              // close the inset punch-out clip
 }
 
 /* ============================================================ boot */
+track('impact_opened', { route: 'studio' });
 updateChipValues();
 selectParam('low');
 updateOutcomes();
@@ -1660,5 +1893,7 @@ vecFlashAt = performance.now();     // one orientation flash on load, then fade
 applyStageBg();
 resize();
 </script>
+<script type="module" src="./sa-app-shell.js"></script>
+<script type="module">import { lockLandscape } from './sa-orientation.js'; lockLandscape();</script>
 </body>
 </html>

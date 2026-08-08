@@ -1,9 +1,124 @@
 # Flightglass autonomous execution status
 
-Updated: 2026-07-28
+Updated: 2026-08-07
+
+## V1 app start, learning onboarding and Studio instrument checkpoint (2026-08-07)
+
+The shipping Home on `agent/page-overview` now starts with a short Flightglass
+instrument opening and a four-step launch-monitor understanding tour. This is
+the current v1 direction and supersedes the historical Night Ladder onboarding
+description later in this evidence ledger.
+
+The opening runs once per session, is immediately skippable by pointer, Enter
+or Escape, has a 150 ms reduced-motion equivalent and cannot strand the app when
+session storage is unavailable. The separate public landing page was not
+changed.
+
+The tour is product education, not personal golf intake:
+
+- real registered captures show Outcome, Impact Studio and Guide;
+- a fixed 7-iron/90 mph example changes Delivered Loft from 16–34 degrees;
+- Launch Angle, Spin Loft and Backspin update from the unchanged shipping
+  engine;
+- Back, `Not now`, resume and completion state are preserved;
+- the tour writes no profile answers and creates no `currentShot`.
+
+Impact Studio's Low Point is now an instrument marker rather than an outlined
+status dot. Its exact core, tangent aperture and optional turf datum are drawn
+after competing geometry and stay visible. A 280 ms update echo supplies live
+feedback; reduced motion removes only that echo. No physics or geometry output
+changed.
+
+Fresh automated evidence:
+
+- onboarding: 10/10 Chromium and 10/10 WebKit;
+- Studio marker/geometry: 9/9 Chromium and 9/9 WebKit;
+- v1 shell/context/Guide contracts: 51/51;
+- native release contracts: 7/7;
+- automated phone matrix: 4/4 Chromium and 4/4 WebKit;
+- level-C change gate: PASS, zero critical Chromium/WebKit findings;
+- the three onboarding captures are registered and byte-identical in the
+  native web package.
+
+The source and automated evidence are complete, but Phase 2 is not
+release-accepted. Its formal human gate remains fail-closed: 10 first-time
+moderated sessions, at least 8 unassisted completions and median completion no
+greater than 90 seconds. The live protocol and empty evidence table are in
+`docs/phase2-onboarding-uat.md`.
+
+## V1 monetization readiness checkpoint (2026-08-07)
+
+Phase 4 source and browser evidence are ready, but native-store acceptance is
+still fail-closed. Native free access now ends only after 10 distinct Range
+comparisons, one completed guided Studio experiment, or five unique Guide
+answers in the same local day. The next real value action opens a source-aware
+Monthly/Annual paywall; browser preview remains ungated and no price appears on
+cold launch.
+
+The temporary Range action and purchase promise now both say comparisons rather
+than persistent saves. Guided Studio has an authorized instruction/completion
+layer that direct free Studio does not. Terms and Privacy remove stale prices,
+the stale savings claim and the new-customer lifetime offer. Existing lifetime
+remains mapped to the exact `pro` entitlement for restoration only. Supabase is
+intentionally absent.
+
+The legacy global `window.__saShots.setPro` entitlement hook is removed and
+forbidden by contract. Native CI raises both generated iOS targets to 16.4 so
+the shipping modal and design-system feature baseline is explicit.
+
+Fresh evidence:
+
+- monetization and IAP contracts: 23/23;
+- Chromium purchase/gate cases: 12/12;
+- WebKit purchase/gate cases: 12/12;
+- actual Range, Studio and Guide gates, automatic post-purchase action resume,
+  no-cost re-pinning of a counted Range setup, successful keyboard purchase,
+  cancel/pending/error, Home/paywall restore, focus return, axe WCAG A/AA,
+  reduced motion and both paywall orientations are covered.
+
+Fresh automated v1 prerequisite evidence on 2026-08-07: 315/315 tests pass in
+207 seconds, including the 72/72 protected engine suite, Chromium and WebKit,
+native/store contracts, the current four-route risk gate and the executable
+human-evidence checker. Academy is excluded from the v1 package, so its
+historical v2 voice debt is not part of this release gate. Human observations,
+physical-iPhone behavior and real store transactions remain separate gates.
+
+Do not declare `PHASE 4 DONE`. The real RevenueCat public keys are still
+placeholders. A current Monthly/Annual offering granting `pro`, store product
+and agreement setup, native sandbox purchase, and restoration evidence from an
+existing lifetime customer remain owner/external gates.
 
 Release authorization: granted for GitHub, Vercel and configured Apple/Google
 publication after all Phase 8 gates pass. See `RELEASE-AUTHORIZATION.md`.
+
+## Flightglass Guide completion checkpoint (2026-08-07)
+
+Phase 3 is source-complete on `agent/page-overview`. The legacy Jarvis route is
+now the visible **Flightglass Guide**: a button-led Question Ladder with three
+entry intents, six topics and 28 researched golfer questions. Browse, Answer
+and Lab form one progressive path; there is no free-text or LLM request path.
+
+Every answer declares provenance and one of four capability outcomes. Missing
+engine knowledge is classified as available now, buildable with a bounded new
+model, dependent on external data/calibration, or unsafe false precision. Live
+labs use the unchanged Range outcome solver through a strict five-input adapter,
+hold four values constant, show exact deltas and hand exactly one selected
+change back to Range. Saved context is never described as a measured shot.
+
+Fresh evidence:
+
+- 30/30 deterministic engine/catalog/UI contracts pass;
+- 11/11 Chromium and 11/11 WebKit Guide cases pass, including corrupt context,
+  Range handoff, Studio navigation persistence, reduced motion and mobile/
+  desktop containment;
+- `npm run verify:v1` passes 46/46 v1 contracts plus Home/brand checks;
+- the level-C change gate passes with zero critical Chromium/WebKit findings;
+- final independent Impeccable/Terra review: `REVIEW-READY`;
+- research record: `docs/guide-question-research.md`;
+- portable design contract: `DESIGN.md` plus `.impeccable/design.json`.
+
+No protected physics output, Academy runtime, payment identity or account flow
+changed. No deployment or store publication was performed.
 
 > **Read `docs/SESSION-HANDOFF.md` first.** Its "Current state (2026-07-28)"
 > block supersedes the branch topology described throughout this file. In

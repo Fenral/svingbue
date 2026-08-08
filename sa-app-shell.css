@@ -1,0 +1,136 @@
+/* Flightglass v1 app shell.
+   Canonical colours and type come from sa-p3.css; this file owns only the
+   shared four-route navigation and its layout reservation. */
+
+.sa-app-nav {
+  position: fixed;
+  z-index: 50;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  width: min(400px, calc(100% - max(24px, env(safe-area-inset-left)) - max(24px, env(safe-area-inset-right))));
+  min-height: calc(52px + env(safe-area-inset-bottom));
+  padding: 4px 4px max(4px, env(safe-area-inset-bottom));
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  align-items: start;
+  border: 1px solid var(--line-strong);
+  border-bottom: 0;
+  border-radius: var(--radius-card) var(--radius-card) 0 0;
+  background: color-mix(in srgb, var(--plate-solid) 92%, transparent);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  view-transition-name: sa-nav;
+}
+
+.sa-app-nav__link {
+  position: relative;
+  min-width: 44px;
+  min-height: 44px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 2px;
+  border-radius: var(--radius-control);
+  color: var(--muted);
+  text-decoration: none;
+  font: 600 10px/1 var(--font-ui);
+  letter-spacing: .03em;
+  -webkit-tap-highlight-color: transparent;
+  transition: color .18s var(--ease), background .18s var(--ease), transform .12s var(--ease);
+}
+
+.sa-app-nav__link svg {
+  width: 18px;
+  height: 18px;
+  display: block;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.sa-app-nav__link:hover {
+  color: var(--ink);
+  background: var(--secondary-soft);
+}
+
+.sa-app-nav__link:active {
+  transform: translateY(1px) scale(.98);
+}
+
+.sa-app-nav__link[aria-current="page"] {
+  color: var(--secondary);
+  background: color-mix(in srgb, var(--secondary) 12%, transparent);
+}
+
+.sa-app-nav__link[aria-current="page"]::after {
+  content: "";
+  position: absolute;
+  left: 25%;
+  right: 25%;
+  bottom: 1px;
+  height: 2px;
+  border-radius: var(--radius-pill);
+  background: var(--secondary);
+}
+
+.sa-app-nav__link:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--bg) 85%, transparent),
+    inset 0 0 0 3px var(--ink);
+}
+
+/* The nav reserves space instead of covering each screen's primary controls. */
+body[data-sa-route="home"].sa-shell-ready .footnote {
+  bottom: max(68px, calc(env(safe-area-inset-bottom) + 60px));
+}
+
+body[data-sa-route="range"].sa-shell-ready .card {
+  bottom: calc(66px + env(safe-area-inset-bottom));
+}
+
+body[data-sa-route="range"].sa-shell-ready .topstrip > .ts-back,
+body[data-sa-route="studio"].sa-shell-ready .top > .ts-back,
+body[data-sa-route="jarvis"].sa-shell-ready .jarvis-top > .back {
+  display: none;
+}
+
+body[data-sa-route="studio"].sa-shell-ready {
+  padding-bottom: calc(56px + env(safe-area-inset-bottom));
+}
+
+body[data-sa-route="jarvis"].sa-shell-ready .jarvis-shell {
+  height: calc(100dvh - 52px - env(safe-area-inset-bottom));
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  padding-bottom: max(30px, env(safe-area-inset-bottom));
+}
+
+body[data-sa-route="jarvis"].sa-shell-ready > .sa-app-nav {
+  position: relative;
+  left: auto;
+  bottom: auto;
+  transform: none;
+  margin: 0 auto;
+}
+
+@media (min-width: 780px) {
+  .sa-app-nav {
+    width: min(520px, calc(100% - max(32px, env(safe-area-inset-left)) - max(32px, env(safe-area-inset-right))));
+  }
+
+  .sa-app-nav__link {
+    grid-template-columns: 18px auto;
+    gap: 7px;
+    font-size: 10px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sa-app-nav__link {
+    transition: none;
+  }
+}

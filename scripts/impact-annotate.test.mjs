@@ -165,16 +165,22 @@ test('buildAnnotations · TOP-elementer er fraværende under skalar ~1.25, til s
   assert.ok(byKind(atTop, 'arc').some(a => a.label === null), 'retningsbuen (uten etikett) til stede i TOP');
 });
 
-test('buildAnnotations · SIDE-elementer (launch/land-buer) er til stede rundt skalar 1, fraværende ved 0 og 2', () => {
+test('buildAnnotations · SIDE uses honest endpoint readouts, not distorted launch/landing angle strokes', () => {
   const atFlight = annotationsAt(0);
   const atSide = annotationsAt(1);
   const atTop = annotationsAt(2);
-  const sideArcs = a => byKind(a, 'arc').filter(x => typeof x.label === 'string');
-  assert.equal(sideArcs(atFlight).length, 0);
-  assert.equal(sideArcs(atTop).length, 0);
-  assert.ok(sideArcs(atSide).length >= 1, 'Launch/Land-buer til stede ved SIDE');
-  assert.ok(sideArcs(atSide).some(a => a.label.startsWith('Launch ')));
-  assert.ok(sideArcs(atSide).some(a => a.label.startsWith('Land ')));
+  const angleLabels = a => byKind(a, 'label').filter(x => /^(Launch|Landing) Angle\b/.test(x.label || ''));
+  assert.equal(angleLabels(atFlight).length, 0);
+  assert.equal(angleLabels(atTop).length, 0);
+  assert.deepEqual(angleLabels(atSide).map(x => x.label), [
+    `Launch Angle ${selectOutcome(DEFAULTS).deg.launchAng.toFixed(1)}°`,
+    `Landing Angle ${Math.round(selectOutcome(DEFAULTS).deg.landAng)}°`,
+  ]);
+  assert.equal(byKind(atSide, 'arc').length, 0,
+    'SIDE must not imply grade-accurate angles with camera-distorted arcs or strokes');
+  assert.deepEqual(angleLabels(atSide).map(x => x.tone), ['launch', 'measure'],
+    'launch and landing retain distinct semantic tones');
+  assert.ok(angleLabels(atSide).every(x => x.labelAnchor && Number.isFinite(x.labelAnchor.x) && Number.isFinite(x.labelAnchor.y)));
 });
 
 test('buildAnnotations · kurvemål skjules når |curve| < 3 m', () => {

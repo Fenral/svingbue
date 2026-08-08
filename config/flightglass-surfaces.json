@@ -27,29 +27,26 @@
     {
       "id": "home",
       "label": "Home",
-      "phase": 1,
+      "phase": 2,
       "baselineScore": 67,
       "targetScore": 90,
       "route": "index.html",
       "sourceType": "shipping",
       "viewportIds": [
         "portrait-wide",
-        "portrait-compact",
-        "landscape-wide",
-        "landscape-compact"
+        "portrait-compact"
       ],
       "requiredSelectors": [
-        "body[data-home-direction=\"night-ladder\"]",
-        ".scene",
-        ".flight",
-        ".place--primary"
+        "body[data-home-experience=\"learning-tour\"]",
+        "[data-home-main]",
+        "#homeEmpty",
+        "#onboarding"
       ],
       "references": [
-        "home-portrait-1.html",
-        "home-concept-1.html",
-        "docs/home-creative-concepts.md"
+        "TECH_SPEC.md",
+        "DECISIONS.md"
       ],
-      "primaryJob": "Choose the next Flightglass territory from a night driving range."
+      "primaryJob": "Understand familiar launch-monitor inputs, see one modelled relationship, and choose where to explore it."
     },
     {
       "id": "range",
@@ -240,23 +237,24 @@
     {
       "id": "paywall",
       "label": "Paywall",
-      "phase": 7,
+      "phase": 4,
       "baselineScore": 76,
       "targetScore": 90,
-      "route": "paywall-mock.html",
-      "sourceType": "reference",
+      "route": "impact.html?sa_debug=paywall&source=instrument-shot",
+      "sourceType": "shipping-state",
       "viewportIds": [
         "portrait-wide",
         "portrait-compact"
       ],
       "requiredSelectors": [
-        ".paywall",
-        "#pw-title"
+        ".sa-pw-scrim",
+        "#sa-pw-title",
+        ".sa-pw-plans"
       ],
       "references": [
-        "paywall-mock.html",
-        "docs/paywall-verdict.md",
-        "docs/monetization-strategy.md"
+        "TECH_SPEC.md",
+        "sa-paywall.js",
+        "sa-paywall.css"
       ],
       "primaryJob": "Understand Pro value before choosing monthly or annual access."
     }

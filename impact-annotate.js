@@ -184,26 +184,27 @@ export function buildAnnotations(outcome, station, basis, hotKey = null) {
     }
   }
 
-  // ── SIDE · launchplanet (ordre §3 SIDE, bell rundt skalar 1) ──
+  // ── SIDE · ærlige endepunkt-readouts (bell rundt skalar 1) ──
+  // Kameraet forvrenger skjermromsvinkler, så launch/landing skal ikke tegnes
+  // som gradnøyaktige buer eller referansestreker. Tallene er autoritative og
+  // forankres i stedet nær banens faktiske start- og sluttpunkt.
   const sideA = smoothstep(clamp(1 - Math.abs(s - 1) * 1.7, 0, 1));
   if (sideA > 0.03) {
-    const launchArc = buildArc(basis,
-      (a, m) => ({ x: Math.cos(a) * 24 * m, y: 0, z: Math.sin(a) * 24 * m }),
-      launchAng);
-    if (launchArc) primitives.push({
-      kind: 'arc', points: launchArc.points, tick: launchArc.tick,
-      tone: 'measure', alpha: sideA, hot: hotLaunch,
-      label: `Launch ${launchAng.toFixed(1)}°`, labelAnchor: launchArc.labelAnchor,
-    });
-
+    const p0 = path[0] || { x: 0, y: 0, z: 0 };
     const p2 = path[path.length - 1];
-    const landArc = buildArc(basis,
-      (a, m) => ({ x: p2.x - Math.cos(a) * 18 * m, y: p2.y, z: Math.sin(a) * 18 * m }),
-      landAng);
-    if (landArc) primitives.push({
-      kind: 'arc', points: landArc.points, tick: landArc.tick,
-      tone: 'measure', alpha: sideA * 0.95, hot: hotLaunch,
-      label: `Land ${Math.round(landAng)}°`, labelAnchor: landArc.labelAnchor,
+    const launchEnd = P(p0.x, p0.y, p0.z);
+    const landingEnd = p2 ? P(p2.x, p2.y, p2.z) : null;
+    const inward = launchEnd && landingEnd ? sign(landingEnd.x - launchEnd.x) : 1;
+
+    if (launchEnd) primitives.push({
+      kind: 'label', points: [launchEnd], tone: 'launch', alpha: sideA, hot: hotLaunch,
+      label: `Launch Angle ${launchAng.toFixed(1)}°`,
+      labelAnchor: { x: launchEnd.x + inward * 58, y: launchEnd.y - 26 },
+    });
+    if (landingEnd) primitives.push({
+      kind: 'label', points: [landingEnd], tone: 'measure', alpha: sideA * 0.95, hot: hotLaunch,
+      label: `Landing Angle ${Math.round(landAng)}°`,
+      labelAnchor: { x: landingEnd.x - inward * 64, y: landingEnd.y - 32 },
     });
   }
 

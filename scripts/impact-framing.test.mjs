@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { fitZoom, gridStops, lateralStops, dollyRig } from '../impact-framing.js';
+import { RANGE_HOME_FIT, fitZoom, gridStops, lateralStops, dollyRig } from '../impact-framing.js';
 import { rigAt, buildBasis, project } from '../impact-camera.js';
 import { solveFlight } from '../impact-flight.js';
 
@@ -35,19 +35,16 @@ test('the zoom range actually covers the current engine envelope', () => {
     'the required zoom must be inside the clamp, not truncated by it');
 });
 
-/* Hybrid-innramming (eierens valg): en fast "hjemme"-ramme for hele det normale
-   slag-spennet, fit-to-shot zoomer KUN ut for ekstremene. Låst her som
-   fitZoom(max(maxDist, HOME)) — måten frameForShot i impact.html bruker den på. */
-test('home-clamped zoom holds one stable frame across the bag, only extremes zoom out', () => {
-  const HOME = 150;
-  const z = md => fitZoom(Math.max(md, HOME));
-  // kile (~62), jern (~92) og en realistisk driver (~140) ligger alle under HOME,
-  // så de deler NØYAKTIG samme målestokk — ingen skifter når du drar i sliderne.
-  assert.equal(z(62), z(140), 'wedge and driver share the home frame');
-  assert.equal(z(92), z(140), 'iron and driver share the home frame');
-  assert.equal(z(150), z(62), 'the whole normal range is one flat zoom');
-  // bare ekte ekstremer (maxDist > HOME) zoomer lenger ut.
-  assert.ok(z(250) < z(140), 'a 358 m / 242 m offline extreme zooms out');
+/* The portrait stage uses a stock-iron home frame. Shorter shots stay stable;
+   longer shots fit outward continuously so the live tracer uses the canvas
+   without overrunning it. Exercise the exported production constant. */
+test('home-clamped zoom is stable through a stock iron, then fits longer shots outward', () => {
+  const z = md => fitZoom(Math.max(md, RANGE_HOME_FIT));
+  assert.equal(RANGE_HOME_FIT, 90);
+  assert.equal(z(50), z(90), 'wedge and stock iron share the home frame');
+  assert.ok(z(92) < z(90), 'fit begins continuously beyond the home frame');
+  assert.ok(z(140) < z(92), 'a long iron or driver keeps fitting outward');
+  assert.ok(z(250) < z(140), 'the 242 m-offline envelope zooms out farther');
   assert.ok(z(250) > 0.40, 'and still clears the min clamp');
 });
 

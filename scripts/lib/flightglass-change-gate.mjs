@@ -4,14 +4,19 @@ const SECRET_PATTERN = /AKIA[0-9A-Z]{16}|gh[pousr]_[A-Za-z0-9]{30,}|sk_(?:live|t
 const SHIPPING_ROUTES = Object.freeze([
   'index.html',
   'impact.html',
-  'geometry.html',
-  'academy.html'
+  'impact-studio.html',
+  'jarvis.html'
+]);
+
+const NON_SHIPPING_ROUTE_PATTERNS = Object.freeze([
+  /^academy\.html$/,
+  /^geometry\.html$/,
+  /^geo3d\//
 ]);
 
 const CONTROL_FILES = new Set([
   'AGENTS.md',
   '.gitignore',
-  'package.json',
   'docs/IMPLEMENTERING-TIL-KONTROLL-PROSESS.md'
 ]);
 
@@ -19,13 +24,16 @@ const LEVEL_C_PATTERNS = [
   [/^impact-flight\.js$/, 'golf physics'],
   [/^swing-parameters-and-impact\.js$/, 'swing geometry physics'],
   [/^capacitor\.config\.ts$/, 'native application identity'],
-  [/^sa-iap\.js$/, 'billing and protected products'],
+  [/^sa-(?:access|iap(?:-config)?|paywall|shots)\.(?:css|js)$/, 'billing and protected products'],
+  [/^scripts\/(?:configure-native-iap|monetization-contract\.test|native-release-contract\.test|phase4-iap-contract\.test|phase4-paywall-browser\.test|release-evidence-(?:onboarding|phone)(?:\.test)?|vercel-preview-evidence(?:\.test)?|store-release-contract\.test|store-screenshots)\.mjs$/, 'billing and native release controls'],
+  [/^package\.json$/, 'release command graph'],
   [/^codemagic\.ya?ml$/, 'store release workflow'],
   [/^package-lock\.json$/, 'dependency lock'],
+  [/^tools\/package(?:-lock)?\.json$/, 'build and browser dependency lock'],
   [/^\.github\/workflows\//, 'CI/release workflow'],
   [/^(?:ios|android)\//, 'native platform source'],
-  [/^scripts\/(?:copy-web|android-landscape|ios-landscape)\.mjs$/, 'native packaging'],
-  [/^\.vercel$/, 'deployment configuration']
+  [/^scripts\/(?:copy-web|web-release-contract\.test|android-landscape|ios-landscape)\.mjs$/, 'shipping packaging'],
+  [/^(?:\.vercel|vercel\.json)$/, 'deployment configuration']
 ];
 
 function normalized(path) {
@@ -53,11 +61,17 @@ export function inspectTextIntegrity(text) {
 
 function routesFor(file) {
   if (file === 'index.html' || file === 'scripts/home-night-ladder.test.mjs'
-      || /^assets\/range-night-/.test(file)) return ['index.html'];
-  if (file === 'impact.html' || file === 'impact-flight.js') return ['impact.html'];
-  if (file === 'swing-parameters-and-impact.js') return ['geometry.html', 'impact.html'];
-  if (file === 'geometry.html' || /^geo3d\//.test(file)) return ['geometry.html'];
-  if (file === 'academy.html') return ['academy.html'];
+      || /^assets\/onboarding\//.test(file)) return ['index.html'];
+  if (/^assets\/range-night-/.test(file)) return ['index.html', 'impact.html'];
+  if (file === 'impact.html' || file === 'impact-flight.js'
+      || file === 'flightglass-3d-spin-model.js'
+      || /^impact-(?:annotate|camera|framing)\.js$/.test(file)) return ['impact.html'];
+  if (file === 'impact-outcome.js') return ['impact.html', 'jarvis.html'];
+  if (file === 'impact-studio.html' || file === 'swing-parameters-and-impact.js'
+      || /^assets\/impact-studio\//.test(file)) return ['impact-studio.html'];
+  if (/^(?:jarvis\.(?:css|html|js)|guide-(?:engine|knowledge)\.js)$/.test(file)) {
+    return ['jarvis.html'];
+  }
   if (/^(?:privacy|terms)\.html$/.test(file)) return [file];
   return [];
 }
@@ -67,6 +81,15 @@ function analyzeFile(file) {
     if (pattern.test(file)) {
       return { level: 'C', reason, tags: ['milestone'], routes: routesFor(file) };
     }
+  }
+
+  if (NON_SHIPPING_ROUTE_PATTERNS.some((pattern) => pattern.test(file))) {
+    return {
+      level: 'B',
+      reason: 'legacy surface excluded from the native v1 bundle',
+      tags: ['non-shipping'],
+      routes: []
+    };
   }
 
   if (file === 'scripts/flightglass-browser-spot.mjs') {
@@ -203,6 +226,10 @@ function testControl(id, file, label) {
   return nodeControl(id, ['--test', file], label);
 }
 
+function npmControl(id, script, label) {
+  return control(id, 'npm', ['run', script], label);
+}
+
 function browserControl(id, engine, routes) {
   const args = ['scripts/flightglass-browser-spot.mjs', '--engine', engine];
   for (const route of routes) args.push('--route', route);
@@ -216,11 +243,7 @@ export function buildCommandPlan(assessment) {
 
   if (level === 'C') {
     return [
-      testControl('gate-contract', 'scripts/flightglass-change-gate.test.mjs', 'Risk-gate contract'),
-      testControl('home-contract', 'scripts/home-night-ladder.test.mjs', 'Home contract'),
-      browserControl('chromium-spot', 'chromium', SHIPPING_ROUTES),
-      browserControl('webkit-spot', 'webkit', SHIPPING_ROUTES),
-      nodeControl('native-copy', ['scripts/copy-web.mjs'], 'Native web package')
+      npmControl('v1-release', 'verify:v1:release', 'Complete automated v1 release prerequisite gate')
     ];
   }
 
@@ -243,6 +266,10 @@ export function buildCommandPlan(assessment) {
   }
 
   if (tags.has('control-system') && !tags.has('browser') && !tags.has('shared-ui')) {
+    return [testControl('gate-contract', 'scripts/flightglass-change-gate.test.mjs', 'Risk-gate contract')];
+  }
+
+  if (tags.has('non-shipping') && !routes.length) {
     return [testControl('gate-contract', 'scripts/flightglass-change-gate.test.mjs', 'Risk-gate contract')];
   }
 
