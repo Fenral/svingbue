@@ -158,6 +158,45 @@ test('Side and Top restore their dedicated D-plane controls', { timeout: 60_000 
   await page.close();
 });
 
+for (const viewport of [{ width: 390, height: 844 }, { width: 375, height: 812 }]) {
+  test(`Side and Top reserve the editor footprint at ${viewport.width}×${viewport.height}`, { timeout: 60_000 }, async () => {
+    const { page, errors } = await open(viewport);
+    await page.locator('#stage').waitFor();
+
+    for (const name of ['SIDE', 'TOP']) {
+      await station(page, name);
+      await page.waitForTimeout(150);
+      const geometry = await page.evaluate(() => {
+        const panel = document.querySelector('#panel').getBoundingClientRect();
+        const canvas = document.querySelector('#scene').getBoundingClientRect();
+        const labelLayer = document.querySelector('#annoLabels').getBoundingClientRect();
+        const labelsBehindPanel = [...document.querySelectorAll('#annoLabels .annoLabel:not([hidden])')]
+          .map(label => ({ text: label.textContent, rect: label.getBoundingClientRect().toJSON() }))
+          .filter(({ rect }) => rect.bottom > panel.top - 1);
+        return {
+          panelTop: panel.top,
+          canvasBottom: canvas.bottom,
+          labelLayerBottom: labelLayer.bottom,
+          labelsBehindPanel,
+        };
+      });
+
+      assert.ok(
+        geometry.canvasBottom <= geometry.panelTop - 1,
+        `${name}: tracer canvas must stop above the editor (${geometry.canvasBottom} > ${geometry.panelTop})`,
+      );
+      assert.ok(
+        geometry.labelLayerBottom <= geometry.panelTop - 1,
+        `${name}: annotation layer must stop above the editor`,
+      );
+      assert.deepEqual(geometry.labelsBehindPanel, [], `${name}: measurement labels clear the editor`);
+    }
+
+    assert.deepEqual(noFavicon(errors), []);
+    await page.close();
+  });
+}
+
 test('guided experiment hydration refreshes all five visible values', { timeout: 60_000 }, async () => {
   const { page } = await open();
   const shot = buildGuidedShot({ club: '7iron', start: 'right', curve: 'left', flight: 'high' }, Date.UTC(2026, 7, 7));
