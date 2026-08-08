@@ -327,37 +327,39 @@ test(`${ENGINE}: reduced-motion opening reaches the same returning Home without 
   await browserContext.close();
 });
 
-test(`${ENGINE}: Outcome proof keeps every outcome row in the phone crop`, async () => {
-  const { browserContext, page, errors } = await open({ viewport: { width: 390, height: 844 } });
-  await page.locator('#onboarding[open]').waitFor();
-  const crop = await page.locator('.product-proof--outcome').evaluate(figure => {
-    const viewport = figure.querySelector('.product-proof__viewport');
-    const image = figure.querySelector('img');
-    const viewportRect = viewport.getBoundingClientRect();
-    const scale = Math.max(
-      viewportRect.width / image.naturalWidth,
-      viewportRect.height / image.naturalHeight,
-    );
-    const visibleSourceHeight = viewportRect.height / scale;
-    const yPercent = Number.parseFloat(getComputedStyle(image).objectPosition.split(/\s+/).at(-1)) / 100;
-    const sourceTop = (image.naturalHeight - visibleSourceHeight) * yPercent;
-    return {
-      naturalWidth: image.naturalWidth,
-      naturalHeight: image.naturalHeight,
-      sourceTop,
-      sourceBottom: sourceTop + visibleSourceHeight,
-    };
+for (const viewport of [{ width: 390, height: 844 }, { width: 390, height: 700 }]) {
+  test(`${ENGINE}: Outcome proof keeps every outcome row at ${viewport.width}×${viewport.height}`, async () => {
+    const { browserContext, page, errors } = await open({ viewport });
+    await page.locator('#onboarding[open]').waitFor();
+    const crop = await page.locator('.product-proof--outcome').evaluate(figure => {
+      const viewportElement = figure.querySelector('.product-proof__viewport');
+      const image = figure.querySelector('img');
+      const viewportRect = viewportElement.getBoundingClientRect();
+      const scale = Math.max(
+        viewportRect.width / image.naturalWidth,
+        viewportRect.height / image.naturalHeight,
+      );
+      const visibleSourceHeight = viewportRect.height / scale;
+      const yPercent = Number.parseFloat(getComputedStyle(image).objectPosition.split(/\s+/).at(-1)) / 100;
+      const sourceTop = (image.naturalHeight - visibleSourceHeight) * yPercent;
+      return {
+        naturalWidth: image.naturalWidth,
+        naturalHeight: image.naturalHeight,
+        sourceTop,
+        sourceBottom: sourceTop + visibleSourceHeight,
+      };
+    });
+    assert.equal(crop.naturalWidth, 750);
+    assert.equal(crop.naturalHeight, 1624);
+    // DPR2 source boundaries in the canonical 375×812 capture: Outcome starts
+    // at y=148 and ends at y=630; the input deck does not start until y=988.
+    assert.ok(crop.sourceTop <= 148, `Outcome heading clipped: ${JSON.stringify(crop)}`);
+    assert.ok(crop.sourceBottom >= 630, `Distance outcomes clipped: ${JSON.stringify(crop)}`);
+    assert.ok(crop.sourceBottom < 988, `Input panel steals proof focus: ${JSON.stringify(crop)}`);
+    assert.deepEqual(errors, []);
+    await browserContext.close();
   });
-  assert.equal(crop.naturalWidth, 750);
-  assert.equal(crop.naturalHeight, 1624);
-  // DPR2 source boundaries in the canonical 375×812 capture: Outcome starts
-  // at y=148 and ends at y=630; the input deck does not start until y=988.
-  assert.ok(crop.sourceTop <= 148, `Outcome heading clipped: ${JSON.stringify(crop)}`);
-  assert.ok(crop.sourceBottom >= 630, `Distance outcomes clipped: ${JSON.stringify(crop)}`);
-  assert.ok(crop.sourceBottom < 988, `Input panel steals proof focus: ${JSON.stringify(crop)}`);
-  assert.deepEqual(errors, []);
-  await browserContext.close();
-});
+}
 
 test(`${ENGINE}: learning tour uses real product proof, a live engine lab, and no personal setup`, async () => {
   const { browserContext, page, errors } = await open();

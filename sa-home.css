@@ -1503,11 +1503,11 @@ body[data-onboarding-active="true"] > .sa-app-nav {
   }
 
   .product-proof--outcome .product-proof__viewport {
-    height: 220px;
+    height: 226px;
   }
 
   .product-proof--outcome .product-proof__viewport img {
-    object-position: center 12%;
+    object-position: center 12.9%;
   }
 
 }

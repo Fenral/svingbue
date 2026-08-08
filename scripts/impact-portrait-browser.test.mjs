@@ -158,7 +158,11 @@ test('Side and Top restore their dedicated D-plane controls', { timeout: 60_000 
   await page.close();
 });
 
-for (const viewport of [{ width: 390, height: 844 }, { width: 375, height: 812 }]) {
+for (const viewport of [
+  { width: 390, height: 844 },
+  { width: 375, height: 812 },
+  { width: 800, height: 1280 },
+]) {
   test(`Side and Top reserve the editor footprint at ${viewport.width}×${viewport.height}`, { timeout: 60_000 }, async () => {
     const { page, errors } = await open(viewport);
     await page.locator('#stage').waitFor();
@@ -191,6 +195,23 @@ for (const viewport of [{ width: 390, height: 844 }, { width: 375, height: 812 }
       );
       assert.deepEqual(geometry.labelsBehindPanel, [], `${name}: measurement labels clear the editor`);
     }
+
+    await station(page, 'OUTCOME');
+    await page.waitForTimeout(150);
+    const restored = await page.evaluate(() => {
+      const stage = document.querySelector('#stage').getBoundingClientRect();
+      const canvas = document.querySelector('#scene').getBoundingClientRect();
+      const labelLayer = document.querySelector('#annoLabels').getBoundingClientRect();
+      return {
+        stageBottom: stage.bottom,
+        canvasBottom: canvas.bottom,
+        labelLayerBottom: labelLayer.bottom,
+        tracer: document.querySelector('#stage').dataset.tracer,
+      };
+    });
+    assert.equal(restored.tracer, 'off');
+    assert.ok(Math.abs(restored.canvasBottom - restored.stageBottom) <= 1, 'Outcome restores the full canvas');
+    assert.ok(Math.abs(restored.labelLayerBottom - restored.stageBottom) <= 1, 'Outcome restores the full label layer');
 
     assert.deepEqual(noFavicon(errors), []);
     await page.close();
