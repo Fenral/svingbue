@@ -154,6 +154,8 @@ test('payment, native and protected release files are always level C', () => {
     'scripts/release-evidence-onboarding.test.mjs',
     'scripts/release-evidence-phone.mjs',
     'scripts/release-evidence-phone.test.mjs',
+    'scripts/vercel-preview-evidence.mjs',
+    'scripts/vercel-preview-evidence.test.mjs',
     'scripts/store-release-contract.test.mjs',
     'scripts/store-screenshots.mjs',
     'scripts/web-release-contract.test.mjs',

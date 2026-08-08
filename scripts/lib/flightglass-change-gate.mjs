@@ -25,7 +25,7 @@ const LEVEL_C_PATTERNS = [
   [/^swing-parameters-and-impact\.js$/, 'swing geometry physics'],
   [/^capacitor\.config\.ts$/, 'native application identity'],
   [/^sa-(?:access|iap(?:-config)?|paywall|shots)\.(?:css|js)$/, 'billing and protected products'],
-  [/^scripts\/(?:configure-native-iap|monetization-contract\.test|native-release-contract\.test|phase4-iap-contract\.test|phase4-paywall-browser\.test|release-evidence-(?:onboarding|phone)(?:\.test)?|store-release-contract\.test|store-screenshots)\.mjs$/, 'billing and native release controls'],
+  [/^scripts\/(?:configure-native-iap|monetization-contract\.test|native-release-contract\.test|phase4-iap-contract\.test|phase4-paywall-browser\.test|release-evidence-(?:onboarding|phone)(?:\.test)?|vercel-preview-evidence(?:\.test)?|store-release-contract\.test|store-screenshots)\.mjs$/, 'billing and native release controls'],
   [/^package\.json$/, 'release command graph'],
   [/^codemagic\.ya?ml$/, 'store release workflow'],
   [/^package-lock\.json$/, 'dependency lock'],

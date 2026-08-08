@@ -109,16 +109,45 @@ The Vercel project is currently CLI-deployed and has no Git repository link.
 Merging `main` does not publish it. Before promotion:
 
 1. assert a clean checkout whose `HEAD` equals the PR head and whose exact
-   GitHub release-gate run is green;
-2. create a non-production preview with `flightglassCandidateSha=<40-char SHA>`
-   as Vercel deployment metadata, then record SHA, deployment ID, run URL and
-   preview URL in PR #18;
-3. inspect the deployment metadata and use authenticated `vercel curl` checks
-   for the expected Flightglass title or heading on Home, Privacy, Terms and
-   Support; a Vercel login page returning 200 is a failed preview check;
+   `pull_request` GitHub release-gate run is green and reports the same PR base
+   and head SHAs;
+2. export a local `VERCEL_TOKEN` and an existing
+   `VERCEL_AUTOMATION_BYPASS_SECRET` without committing or printing either,
+   confirm ignored `.vercel/project.json` names project
+   `prj_ghY32ypKS3kXfmTM3BCRzfl5ptqC`, and create the preview only through the
+   fail-closed command below. The confirmation value MUST exactly equal the
+   full candidate SHA:
+
+   ```powershell
+   npm run verify:v1:vercel-preview -- --deploy --candidate <full-40-character-sha> --base <full-distinct-ancestor-sha> --run-id <successful-github-run-id> --confirm-preview-deploy <same-full-candidate-sha>
+   ```
+
+   The command runs `npm run build:web`, rechecks clean exact `HEAD`, and calls
+   a non-production `vercel deploy` with
+   `flightglassCandidateSha=<40-char SHA>`, base, run URL, repository and
+   workflow metadata. It never passes `--prod`, `--target production`,
+   `--skip-domain`, `promote` or a token on the command line.
+3. verify an existing preview without creating another deployment by naming
+   both immutable identities explicitly:
+
+   ```powershell
+   npm run verify:v1:vercel-preview -- --verify --candidate <full-40-character-sha> --base <full-distinct-ancestor-sha> --run-id <successful-github-run-id> --deployment-id <dpl_id> --url <https://exact-preview.vercel.app>
+   ```
+
+   The verifier reads deployment ID, URL, project, `READY` state, non-production
+   target and every metadata value from Vercel's authenticated v13 deployment
+   API. It then uses the existing bypass secret for authenticated, read-only
+   `vercel curl` checks for exact Flightglass
+   content on Home, Privacy, Terms, Support and `sa-paywall.js`; a Vercel login
+   or protection page returning 200 is a failed preview check. Successful
+   verification exclusively creates a candidate/deployment-specific JSON
+   attestation and `.sha256` checksum under ignored
+   `outputs/release-evidence/vercel-preview/`. Existing evidence is never
+   overwritten; link both files from PR #18.
 4. confirm Monthly and Annual use `Store price`, with no Lifetime sale or
-   percentage-savings claim, and confirm internal sentinel paths such as
-   `/codemagic.yaml` and `/scripts/store-screenshots.mjs` return 404; and
+   percentage-savings claim. The verifier requires `/codemagic.yaml`,
+   `/package.json`, `/vercel.json`, `/scripts/store-screenshots.mjs`,
+   `/academy.html` and `/geometry.html` to return 404; and
 5. after every mandatory external gate is complete, promote that exact
    deployment and repeat the semantic route and sentinel checks against the
    public alias without Vercel authentication.

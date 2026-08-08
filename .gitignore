@@ -38,6 +38,9 @@ outputs/release-evidence/onboarding/
 # evidence, never source-candidate contents. The explicit rule documents that
 # boundary even though the broader outputs/ rule below also covers it.
 outputs/release-evidence/phone/
+# Exact Vercel preview observations and immutable SHA-256 attestations are
+# generated after the candidate commit exists; they remain external evidence.
+outputs/release-evidence/vercel-preview/
 # ...but the vendored Three.js build is a dependency that must travel with the
 # repo (the native WKWebView has no CDN and loads it by relative path). The
 # generic build/ rule above was silently swallowing it, which left Geometry 3D

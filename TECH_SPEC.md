@@ -530,8 +530,8 @@ Stop condition: print `PHASE 4 DONE` and stop.
 Objective: prove the complete iPhone v1 and prepare the existing App Store
 record without making the deferred marketing landing a release dependency.
 
-- [ ] All protected identifiers and physics fixtures remain unchanged.
-- [ ] Source, route, accessibility, orientation, copy, purchase and browser
+- [x] All protected identifiers and physics fixtures remain unchanged.
+- [x] Source, route, accessibility, orientation, copy, purchase and browser
   release gates pass on the exact candidate commit.
 - [ ] Codemagic is manual-only, uses the `resources/` asset sources, refuses an
   ambiguous build number and reuses persistent Apple signing assets without
@@ -546,7 +546,14 @@ record without making the deferred marketing landing a release dependency.
   URL and current-product screenshots are ready.
 - [ ] A final current-product contact sheet, physical-iPhone checklist and the
   Phase 2 moderated onboarding evidence exist.
-- [ ] The marketing landing remains deferred and outside the Capacitor payload.
+- [x] The marketing landing remains deferred and outside the Capacitor payload.
+
+Fresh internal verification record (2026-08-08): exact candidate
+`6a1d742b47a35af24c430c10b431d2f66a985f72` passed the complete Level-C gate
+locally in 276.6 seconds and in GitHub run `31227779080` in 4m36s. The immutable
+CI artifact binds the same candidate and base and contains all three zero-finding
+dependency audits. These checks close only the three marked source/scope rows;
+the signing, account, native purchase, physical-device and human rows remain open.
 
 Stop condition: print `PHASE 5 DONE`; do not publish without the repository's
 release gates and authorization. A green source tree alone cannot close the

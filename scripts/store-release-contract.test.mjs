@@ -60,6 +60,8 @@ test('the store pack describes current v1 without claiming Academy or an Android
 
 test('the release record names the exact evidence sink and a recoverable web baseline', () => {
   const record = read('docs/v1-release-record.md');
+  const packageManifest = JSON.parse(read('package.json'));
+  const ignore = read('.gitignore');
   assert.match(record, /GitHub PR #18/);
   assert.match(record, /full 40-character candidate commit/);
   assert.match(record, /Flightglass v1 release gate/);
@@ -67,9 +69,21 @@ test('the release record names the exact evidence sink and a recoverable web bas
   assert.match(record, /dpl_BKJgyzjJWn1QtSFrtgFGKS7b69dv/);
   assert.match(record, /npm audit --prefix tools --audit-level=high/);
   assert.match(record, /clean checkout whose `HEAD` equals the PR head/);
+  assert.match(record, /`pull_request` GitHub release-gate run[\s\S]*same PR base\s+and head SHAs/);
   assert.match(record, /flightglassCandidateSha=<40-char SHA>/);
-  assert.match(record, /authenticated `vercel curl` checks/);
-  assert.match(record, /`\/codemagic\.yaml`[\s\S]*return 404/);
+  assert.match(record, /v13 deployment\s+API/);
+  assert.match(record, /VERCEL_TOKEN/);
+  assert.match(record, /VERCEL_AUTOMATION_BYPASS_SECRET/);
+  assert.match(record, /authenticated, read-only\s+`vercel curl` checks/);
+  assert.match(record, /prj_ghY32ypKS3kXfmTM3BCRzfl5ptqC/);
+  assert.match(record, /--deploy[\s\S]*--confirm-preview-deploy <same-full-candidate-sha>/);
+  assert.match(record, /--verify[\s\S]*--deployment-id <dpl_id>[\s\S]*--url <https:\/\/exact-preview\.vercel\.app>/);
+  assert.match(record, /never passes `--prod`, `--target production`,\s+`--skip-domain`, `promote` or a token on the command line/);
+  assert.match(record, /`\/codemagic\.yaml`[\s\S]*`\/package\.json`[\s\S]*`\/vercel\.json`[\s\S]*`\/scripts\/store-screenshots\.mjs`[\s\S]*`\/academy\.html`[\s\S]*`\/geometry\.html`[\s\S]*return 404/);
+  assert.match(record, /outputs\/release-evidence\/vercel-preview/);
+  assert.match(ignore, /^outputs\/release-evidence\/vercel-preview\/$/m);
+  assert.equal(packageManifest.scripts['verify:v1:vercel-preview'], 'node scripts/vercel-preview-evidence.mjs');
+  assert.match(packageManifest.scripts['test:release-evidence'], /vercel-preview-evidence\.test\.mjs/);
   assert.match(record, /public alias without Vercel authentication/);
   assert.match(record, /Merging `main` does not publish it/);
   assert.match(record, /Do not force-push or reset/);
