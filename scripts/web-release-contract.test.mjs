@@ -37,15 +37,15 @@ function filesBelow(directory, prefix = '') {
   });
 }
 
-test('Vercel publishes only the explicit Flightglass v1 artifact', () => {
+test('Vercel publishes only the explicit Flightglass v1 artifact', () => withCopyWebLock(() => {
   const config = JSON.parse(readFileSync(join(root, 'vercel.json'), 'utf8'));
   assert.equal(config.buildCommand, 'npm run build:web');
   assert.equal(config.outputDirectory, 'www');
 
-  const build = withCopyWebLock(() => spawnSync(process.execPath, ['scripts/copy-web.mjs'], {
+  const build = spawnSync(process.execPath, ['scripts/copy-web.mjs'], {
     cwd: root,
     encoding: 'utf8'
-  }));
+  });
   assert.equal(build.status, 0, `${build.stdout}\n${build.stderr}`);
 
   for (const required of [
@@ -91,7 +91,7 @@ test('Vercel publishes only the explicit Flightglass v1 artifact', () => {
     assert.equal(files.includes(forbidden), false, `${forbidden} must stay private`);
   }
   assert.equal(files.some((file) => /^(?:docs|scripts|tools|\.github)\//.test(file)), false);
-});
+}));
 
 test('public web responses receive the minimum anti-embedding and privacy headers', () => {
   const config = JSON.parse(readFileSync(join(root, 'vercel.json'), 'utf8'));

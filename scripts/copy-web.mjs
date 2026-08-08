@@ -27,11 +27,14 @@ const ALLOWED_TOP_LEVEL_FILES = [
   'guide-engine.js',
   'guide-knowledge.js',
   'flightglass-3d-spin-model.js',
+  'geometry-controller.js',
   'impact-annotate.js',
   'impact-camera.js',
   'impact-flight.js',
   'impact-framing.js',
+  'impact-mechanics-model.js',
   'impact-outcome.js',
+  'impact-studio.css',
   'jarvis.css',
   'jarvis.js',
   'sa-access.js',
@@ -63,14 +66,6 @@ const ALLOWED_ASSET_FILES = [
   'assets/onboarding/outcome.webp',
   'assets/onboarding/studio.webp',
   'assets/range-night-3d-33.png',
-  'assets/impact-studio/ball.png',
-  'assets/impact-studio/bg-dtl.png',
-  'assets/impact-studio/driver-head.png',
-  'assets/impact-studio/glint.png',
-  'assets/impact-studio/iron-head.png',
-  'assets/impact-studio/sky-face.png',
-  'assets/impact-studio/tee.png',
-  'assets/impact-studio/turf.png',
 ];
 
 const ALLOWED_VENDOR_FILES = [
@@ -124,6 +119,7 @@ for (const forbidden of [
   'scripts',
   'tools',
   'assets/audio',
+  'assets/impact-studio',
   'assets/palette-previews',
   'vendor/three',
 ]) {

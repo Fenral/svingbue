@@ -110,9 +110,7 @@ test('the protected geometry engine now maps only to shipping Impact Studio', ()
 test('Mechanics presentation is level B while model and controller semantics are level C', () => {
   const presentation = classifyChanges(['impact-studio.css']);
   assert.equal(presentation.level, 'B');
-  assert.deepEqual(presentation.routes, [
-    'impact-studio.html', 'impact.html', 'index.html', 'jarvis.html',
-  ]);
+  assert.deepEqual(presentation.routes, ['impact-studio.html']);
 
   for (const file of ['impact-mechanics-model.js', 'geometry-controller.js']) {
     const assessment = classifyChanges([file]);

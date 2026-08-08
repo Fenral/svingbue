@@ -22,6 +22,7 @@ const CONTROL_FILES = new Set([
 
 const LEVEL_C_PATTERNS = [
   [/^impact-flight\.js$/, 'golf physics'],
+  [/^(?:geometry-controller|impact-mechanics-model)\.js$/, 'Mechanics model semantics'],
   [/^swing-parameters-and-impact\.js$/, 'swing geometry physics'],
   [/^capacitor\.config\.ts$/, 'native application identity'],
   [/^sa-(?:access|iap(?:-config)?|paywall|shots)\.(?:css|js)$/, 'billing and protected products'],
@@ -67,7 +68,9 @@ function routesFor(file) {
       || file === 'flightglass-3d-spin-model.js'
       || /^impact-(?:annotate|camera|framing)\.js$/.test(file)) return ['impact.html'];
   if (file === 'impact-outcome.js') return ['impact.html', 'jarvis.html'];
-  if (file === 'impact-studio.html' || file === 'swing-parameters-and-impact.js'
+  if (file === 'impact-studio.html' || file === 'impact-studio.css'
+      || file === 'impact-mechanics-model.js' || file === 'geometry-controller.js'
+      || file === 'swing-parameters-and-impact.js'
       || /^assets\/impact-studio\//.test(file)) return ['impact-studio.html'];
   if (/^(?:jarvis\.(?:css|html|js)|guide-(?:engine|knowledge)\.js)$/.test(file)) {
     return ['jarvis.html'];

@@ -226,11 +226,11 @@ test('shipping value surfaces load the canonical Pro purchase UI', () => {
   }
 });
 
-test('copy-web produces a byte-identical v1 native payload', () => {
-  const result = withCopyWebLock(() => spawnSync(process.execPath, [join(SCRIPT_DIR, 'copy-web.mjs')], {
+test('copy-web produces a byte-identical v1 native payload', () => withCopyWebLock(() => {
+  const result = spawnSync(process.execPath, [join(SCRIPT_DIR, 'copy-web.mjs')], {
     cwd: ROOT,
     encoding: 'utf8',
-  }));
+  });
 
   assert.equal(
     result.status,
@@ -262,4 +262,4 @@ test('copy-web produces a byte-identical v1 native payload', () => {
   ]) {
     assert.equal(existsSync(join(WWW, forbidden)), false, `${forbidden} must not ship in v1`);
   }
-});
+}));
