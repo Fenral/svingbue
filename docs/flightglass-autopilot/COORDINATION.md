@@ -13,10 +13,13 @@ wait.
 
 | Agent | Branch | Working on | Since |
 |-------|--------|-----------|-------|
-| Codex `/root` | `agent/mechanics-v1-convergence` | Converge the completed Mechanics Lab into the exact PR #18 release candidate; owns Mechanics runtime, v1 shell/gating integration, packaging, product/release docs and exact-SHA evidence until handoff. | 2026-08-08 |
-| Codex runtime worker | `agent/mechanics-v1-runtime` | Mechanics runtime, adaptive orientation, Studio browser coverage and guided/paywall integration; owns only the Task 3 file set. | 2026-08-08 |
-| Codex packaging worker | `agent/mechanics-v1-packaging` | Explicit web/native payload, risk routing and release-contract closure; owns only the Task 4 file set. | 2026-08-08 |
-| Codex product worker | `agent/mechanics-v1-product` | Product/design, Home/Range/Guide/commerce/legal/store truth and capture generators; owns only the Task 5 file set. | 2026-08-08 |
+| Codex `/root` | `agent/mechanics-v1-convergence` | Owns draft release execution PR #19, exact-SHA evidence and the consolidated owner-authorization boundary. PR #18 is inherited source only. | 2026-08-08 |
+
+Execution identities: reviewed code-and-asset checkpoint
+`c47113bb23a3fb274277fe869dea925a6fa0a928`; inherited source PR #18 at
+`3abbd4fcc65c939cc2d0e35ea03866add3540aa5`; `origin/main` at
+`184140a2ff5834f23510662f8c442b8a8c03d36c`. The final candidate SHA and run
+are recorded in PR #19 after the release-record commit, never predicted here.
 
 ## Queue / free to take
 
@@ -33,6 +36,11 @@ wait.
   pair before build.
 
 ## Done / handed off
+
+- Mechanics convergence runtime, packaging and product workers completed their
+  isolated Task 3-5 ownership and handed their commits to
+  `agent/mechanics-v1-convergence`. Their work is reviewed in checkpoint
+  `c47113b`; no worker branch is a release execution record.
 
 - Impact Mechanics Lab MVP — `agent/mechanics-mvp-codex`; the two-authority
   cause → strike → flight instrument links direct Face/Path/Attack/Loft inputs

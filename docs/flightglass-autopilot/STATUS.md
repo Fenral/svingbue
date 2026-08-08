@@ -1,6 +1,43 @@
 # Flightglass autonomous execution status
 
-Updated: 2026-08-07
+Updated: 2026-08-08
+
+## Mechanics v1 execution checkpoint (2026-08-08)
+
+Release execution is active in draft
+[PR #19](https://github.com/Fenral/svingbue/pull/19) on
+`agent/mechanics-v1-convergence`. The green inherited source is
+[PR #18](https://github.com/Fenral/svingbue/pull/18) at
+`3abbd4fcc65c939cc2d0e35ea03866add3540aa5`; it is not the canonical execution
+record. `origin/main` is still
+`184140a2ff5834f23510662f8c442b8a8c03d36c`.
+
+Reviewed code-and-asset checkpoint:
+`c47113bb23a3fb274277fe869dea925a6fa0a928`. Because this status update creates
+a later commit, final candidate SHA, exact-head GitHub run and deployment are
+bound only in PR #19 and immutable attestations after the documentation commit.
+
+Automated checkpoint evidence is green: finish reviewer `PASS` with scores
+98/96/94/95/96/97/96 for Product fit, causal legibility, hierarchy, responsive
+integrity, accessibility, brand and non-generic craft; engine 72/72; Mechanics
+10/10 plus Chromium 9/9 and WebKit 9/9; latest Range/Phase 2 67/67;
+release-evidence 204/204; images 4/4; store 8/8; three dependency audits at 0
+vulnerabilities; protected diff empty; 32 captures and 0 critical UX findings.
+
+The expanded preview contract covers Home, Mechanics Lab, Range / Outcome,
+Flightglass Guide, Privacy, Terms, Support and paywall semantics, with ten
+private source/deferred routes required to return `404`. Preview deployment is
+`PENDING`: `VERCEL_TOKEN` and `VERCEL_AUTOMATION_BYPASS_SECRET` are absent. The
+public GitHub Pages Academy surface remains stale and uncontained.
+
+All real native/payment/device/human gates remain `PENDING`, including
+RevenueCat/App Store setup, signed TestFlight, sandbox and real paid flows,
+physical-iPhone evidence and moderated onboarding. Local exact-head Level C,
+the fresh GitHub run, preview attestation, `main` merge, production promotion,
+Pages containment and submission are also `PENDING` after this record commit.
+One consolidated owner authorization is required immediately before merge,
+promotion, Pages containment, TestFlight upload, any RevenueCat/App Store
+mutation, real purchase/paid action or App Store submission.
 
 ## V1 app start, learning onboarding and Studio instrument checkpoint (2026-08-07)
 

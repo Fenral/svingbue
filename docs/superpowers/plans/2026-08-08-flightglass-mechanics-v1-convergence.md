@@ -2,9 +2,12 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use `superpowers:executing-plans` task-by-task and `superpowers:dispatching-parallel-agents` only for disjoint worktrees. Preserve the RED → GREEN order and commit each cohesive slice.
 
-**Goal:** Converge the completed Mechanics Lab into the exact PR #18 release candidate so Flightglass v1 has one sellable, non-coaching cause→strike→flight instrument while retaining the native shell, access policy, release boundary and exact-SHA evidence controls.
+**Goal:** Converge the completed Mechanics Lab into release execution PR #19,
+inheriting the stable PR #18 source, so Flightglass v1 has one sellable,
+non-coaching cause→strike→flight instrument while retaining the native shell,
+access policy, release boundary and exact-SHA evidence controls.
 
-**Architecture:** `impact-studio.html` remains the compatibility route and internal `studio` route id, but its visible product is Mechanics Lab. The pure `impact-mechanics-model.js` composes the unchanged flight and rigid-arc authorities behind mutually exclusive Impact Inputs and Arc Inputs. The PR #18 shell, native-only access, RevenueCat, analytics, Guide handoff and release tooling wrap that instrument. `scripts/copy-web.mjs` remains the only native/Vercel packaging authority and gains the complete recursive Mechanics closure.
+**Architecture:** `impact-studio.html` remains the compatibility route and internal `studio` route id, but its visible product is Mechanics Lab. The pure `impact-mechanics-model.js` composes the unchanged flight and rigid-arc authorities behind mutually exclusive Impact Inputs and Arc Inputs. The inherited PR #18 shell, native-only access, RevenueCat, analytics, Guide handoff and release tooling wrap that instrument; PR #19 owns release execution. `scripts/copy-web.mjs` remains the only native/Vercel packaging authority and gains the complete recursive Mechanics closure.
 
 **Tech Stack:** Static HTML/CSS/ES modules, Node test runner, Playwright Core (Chromium and WebKit), Canvas, Capacitor 7, RevenueCat, GitHub Actions and Vercel CLI/evidence API.
 
@@ -215,11 +218,11 @@ node C:\Users\siver\.agents\skills\impeccable\scripts\detect.mjs --json impact-s
 
 **Files generated or refreshed:** `assets/onboarding/studio.webp`, `appstore/` screenshots/gallery/contact sheet and tracked release/product records.
 
-- [ ] Run `npm run shots:onboarding` only after the reviewer fixes; update provenance to the exact default Mechanics state, inspect the real image and run `npm run verify:images`.
-- [ ] Run `npm run shots`; inspect the final Mechanics store set and commit only current-product artifacts.
-- [ ] Push the review-ready branch and open the new draft PR to obtain its number. This provisional push is not the exact release candidate.
-- [ ] Update `docs/SESSION-HANDOFF.md`, `docs/flightglass-autopilot/STATUS.md`, `docs/v1-release-record.md`, PR-number references and coordination state with fresh counts and pending external gates. Preserve `08a47a3` preview tooling and mark PR #18 as the superseded baseline.
-- [ ] Commit all remaining tracked files. From this point, any tracked change invalidates the candidate and requires repeating Tasks 9–10.
+- [x] Run `npm run shots:onboarding` only after the reviewer fixes; update provenance to the exact default Mechanics state, inspect the real image and run `npm run verify:images`.
+- [x] Run `npm run shots`; inspect the final Mechanics store set and commit only current-product artifacts.
+- [x] Push the review-ready branch and open the new draft PR to obtain its number. This provisional push is not the exact release candidate.
+- [x] Update `docs/SESSION-HANDOFF.md`, `docs/flightglass-autopilot/STATUS.md`, `docs/v1-release-record.md`, PR-number references and coordination state with fresh counts and pending external gates. Preserve the inherited preview tooling and mark PR #18 as source while PR #19 is the execution record.
+- [x] Commit all remaining tracked files. From this point, any tracked change invalidates the candidate and requires repeating Tasks 9–10.
 
 ### Task 9: Prove the frozen exact candidate locally and in GitHub
 

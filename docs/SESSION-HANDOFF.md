@@ -1,6 +1,52 @@
 # Flightglass session handoff
 
-Updated: 2026-08-07
+Updated: 2026-08-08
+
+## Current state (2026-08-08) - Mechanics v1 release execution
+
+[PR #19](https://github.com/Fenral/svingbue/pull/19) is the draft release
+execution PR on `agent/mechanics-v1-convergence`. It inherits the stable source
+release from [PR #18](https://github.com/Fenral/svingbue/pull/18) at
+`3abbd4fcc65c939cc2d0e35ea03866add3540aa5`; PR #18 is no longer the canonical
+execution record. `origin/main` remains
+`184140a2ff5834f23510662f8c442b8a8c03d36c`.
+
+The reviewed code-and-asset checkpoint is
+`c47113bb23a3fb274277fe869dea925a6fa0a928`. The documentation commit that
+contains this handoff changes `HEAD`; therefore the final exact candidate SHA,
+matching GitHub run and preview deployment must be recorded later in PR #19
+and immutable attestations rather than guessed here.
+
+Mechanics Lab is now the sole cause-to-strike-to-flight instrument. Impact
+Inputs link Face Angle, Club Path, Attack Angle and Dynamic Loft to Start,
+Curve, Launch, Backspin, Apex and Carry. Arc Inputs link Low Point X, Low Point
+Height, Swing Direction and Swing Plane to Contact, Attack and Path, then to
+the same six outcomes. Club speed remains a visible fixed 90 mph reference.
+Range / Outcome supports replay and comparison; Flightglass Guide supports
+bounded questions. No surface analyzes personal golf or prescribes technique.
+
+Current automated evidence at the reviewed checkpoint:
+
+- finish reviewer `PASS`: Product fit 98, causal legibility 96, hierarchy 94,
+  responsive integrity 95, accessibility 96, brand 97, non-generic craft 96;
+- protected engine 72/72 and protected diff empty;
+- Mechanics contracts 10/10, Chromium 9/9 and WebKit 9/9;
+- latest Range plus Phase 2 67/67; release evidence 204/204;
+- image provenance 4/4, store release 8/8, three dependency audits at 0
+  vulnerabilities, 32 captures and 0 critical UX findings.
+
+The exact-head Level C run, GitHub run and Vercel preview are still `PENDING`
+after this documentation commit. Preview verification now covers Home,
+Mechanics, Range / Outcome, Guide, Privacy, Terms, Support and paywall semantics
+plus ten private `404` sentinels, but local `VERCEL_TOKEN` and
+`VERCEL_AUTOMATION_BYPASS_SECRET` are missing. The public GitHub Pages surface
+still exposes stale Academy material.
+
+Real RevenueCat/App Store configuration, signed TestFlight upload, sandbox and
+real paid flows, physical-iPhone rows, moderated sessions, Pages containment,
+production promotion and App Store submission remain `PENDING`, not `PASS`.
+Immediately before `main` merge or any of those externally visible actions,
+obtain one consolidated owner authorization.
 
 ## Current state (2026-08-07) — app opening, learning tour and Studio marker
 

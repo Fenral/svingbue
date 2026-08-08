@@ -9,9 +9,21 @@ prove. A green source gate is necessary, but it is not App Store authorization.
 
 ## Exact candidate record
 
-The canonical exact-SHA record is [GitHub PR #18](https://github.com/Fenral/svingbue/pull/18).
-Before any production deploy, Codemagic archive or App Store submission, its
-body MUST name all of the following from the same candidate:
+The release execution record is
+[GitHub PR #19](https://github.com/Fenral/svingbue/pull/19). The inherited
+source release is [GitHub PR #18](https://github.com/Fenral/svingbue/pull/18),
+green and stable at `3abbd4fcc65c939cc2d0e35ea03866add3540aa5`. PR #18 is
+source evidence, not the canonical execution record for this release.
+
+The reviewed Mechanics code-and-asset checkpoint is
+`c47113bb23a3fb274277fe869dea925a6fa0a928`. This document commit necessarily
+changes `HEAD`, so it MUST NOT claim its own commit as the final candidate.
+The final exact candidate SHA, its matching GitHub run and deployment identity
+must be bound after this documentation commit in the PR #19 body and in the
+immutable evidence attestations.
+
+Before any production deploy, Codemagic archive or App Store submission, the
+PR #19 body MUST name all of the following from the same candidate:
 
 - the full 40-character candidate commit;
 - the successful `Flightglass v1 release gate` run URL for that commit;
@@ -19,6 +31,24 @@ body MUST name all of the following from the same candidate:
 - production and full dependency-audit results;
 - changed-file credential-scan result; and
 - every external gate that is still pending.
+
+Automated proof recorded for the reviewed `c47113b` checkpoint:
+
+- independent finish reviewer: `PASS`; Product fit 98, causal legibility 96,
+  hierarchy 94, responsive integrity 95, accessibility 96, brand 97 and
+  non-generic craft 96;
+- protected engine: 72/72; protected-physics diff is empty;
+- Mechanics Lab: 10/10 source contracts, 9/9 Chromium and 9/9 WebKit;
+- Range plus Phase 2: latest 67/67;
+- release-evidence contracts: 204/204;
+- image provenance: 4/4; store release: 8/8;
+- dependency audits: 0 vulnerabilities for the full app, production-only app
+  and browser/build tools; and
+- 32 Mechanics viewport/mode/motion captures with 0 critical UX findings.
+
+These results do not turn the later documentation commit into an exact green
+candidate. Local Level C, the exact-head GitHub run and external attestations
+remain `PENDING` until they are repeated and bound to the final SHA in PR #19.
 
 The previous workflow run associated with source checkpoint
 `5999da325a0060e9d8abaa43f4aff78d0008d9d0` reported 269/269 passing tests in
@@ -50,7 +80,7 @@ For a new candidate:
    --audit-level=high` and `npm audit --prefix tools --audit-level=high`.
    Record the full app, production app and build/browser-tool results separately
    alongside the change-gate controls.
-4. Record the exact outputs in PR #18 before any release action.
+4. Record the exact outputs in PR #19 before any release action.
 
 `npm run verify:v1:release` tests the evidence checkers; it does not invent
 participant or device observations. Keep both committed documents as immutable
@@ -67,7 +97,7 @@ npm run verify:v1:onboarding-evidence -- --candidate <full-40-character-sha> --b
 Exit code `0` emits an `onboarding-<candidate>-<build>.attestation.json` file
 and matching `.sha256` checksum bound to the clean candidate, successful GitHub
 run, completed study record and recursively referenced evidence. Preserve and
-link the record, evidence, attestation and checksum from PR #18.
+link the record, evidence, attestation and checksum from PR #19.
 
 The physical-iPhone checklist must likewise be copied to an ignored
 `outputs/release-evidence/phone/<candidate>-<build>/` working directory,
@@ -83,15 +113,17 @@ whose SHA-256 payload binds the exact candidate, build, successful GitHub
 release-gate run, completed record and recursively linked evidence-index files.
 It cannot overwrite an earlier attestation. The completed record, media/logs
 and attestation remain external to the candidate and MUST all be uploaded to
-the approved release-evidence store and linked in PR #18 before release
+the approved release-evidence store and linked in PR #19 before release
 authorization.
 
 ## Rollback record
 
-Repository baseline recorded on 2026-08-07:
+Repository baseline recorded on 2026-08-08:
 
 - `origin/main`: `184140a2ff5834f23510662f8c442b8a8c03d36c`
-- open release work: `agent/page-overview`, PR #18
+- release execution work: `agent/mechanics-v1-convergence`, PR #19
+- inherited source release: `agent/page-overview`, PR #18 at
+  `3abbd4fcc65c939cc2d0e35ea03866add3540aa5`
 
 Production web baseline inspected through the authenticated Vercel CLI on
 2026-08-07:
@@ -103,7 +135,7 @@ Production web baseline inspected through the authenticated Vercel CLI on
 
 The alias still serves the older Night Ladder product, old legal copy and no
 `support.html`. Re-inspect the alias immediately before deployment. If its
-deployment ID has changed, update the exact record in PR #18 before proceeding.
+deployment ID has changed, update the exact record in PR #19 before proceeding.
 
 The Vercel project is currently CLI-deployed and has no Git repository link.
 Merging `main` does not publish it. Before promotion:
@@ -143,14 +175,26 @@ Merging `main` does not publish it. Before promotion:
    verification exclusively creates a candidate/deployment-specific JSON
    attestation and `.sha256` checksum under ignored
    `outputs/release-evidence/vercel-preview/`. Existing evidence is never
-   overwritten; link both files from PR #18.
-4. confirm Monthly and Annual use `Store price`, with no Lifetime sale or
+   overwritten; link both files from PR #19.
+4. require semantic `200` checks for Home, Mechanics Lab, Range / Outcome,
+   Flightglass Guide, Privacy, Terms, Support and the paywall script. Require
+   `404` for the private sentinels `/codemagic.yaml`, `/package.json`,
+   `/vercel.json`, `/scripts/store-screenshots.mjs`, `/academy.html`,
+   `/geometry.html`, `/page-overview.html`,
+   `/design/mocks/impact-studio.html`, `/docs/v1-release-record.md` and
+   `/tools/package.json`;
+5. confirm Monthly and Annual use `Store price`, with no Lifetime sale or
    percentage-savings claim. The verifier requires `/codemagic.yaml`,
    `/package.json`, `/vercel.json`, `/scripts/store-screenshots.mjs`,
    `/academy.html` and `/geometry.html` to return 404; and
-5. after every mandatory external gate is complete, promote that exact
+6. after every mandatory external gate is complete, promote that exact
    deployment and repeat the semantic route and sentinel checks against the
    public alias without Vercel authentication.
+
+Preview status at this documentation checkpoint: `PENDING`. The project ID is
+known, but neither `VERCEL_TOKEN` nor `VERCEL_AUTOMATION_BYPASS_SECRET` is
+available in the local environment. No preview deployment, deployment ID,
+public URL result or preview attestation is claimed.
 
 The public GitHub Pages site currently presents deferred Academy-v2 material
 and has no working Support, Privacy or Terms routes. Before public launch,
@@ -161,7 +205,7 @@ used for store URLs.
 Web rollback procedure:
 
 1. Promote the pre-deploy production deployment recorded above (or the newer
-   ID recorded in PR #18) back to the production alias in Vercel.
+   ID recorded in PR #19) back to the production alias in Vercel.
 2. Verify Home, Terms, Privacy and Support over HTTPS by expected Flightglass
    title/content as well as HTTP status.
 3. Revert the release through a new GitHub PR. Do not force-push or reset
@@ -193,5 +237,18 @@ Native rollback boundary:
   explicit promotion because merge does not deploy this project; and
 - retirement or containment of the stale public GitHub Pages Academy surface.
 
-The release remains pending until those rows contain evidence rather than
-`PENDING`.
+All real native/payment/device/human rows remain `PENDING`: RevenueCat and App
+Store account mutation, signed TestFlight archive/upload, sandbox purchase and
+restore paths, real purchase or other paid action, physical-iPhone checks and
+moderated onboarding sessions. The stale GitHub Pages surface, Vercel preview,
+production promotion and App Store submission also remain `PENDING`, not
+`PASS`.
+
+One consolidated owner authorization is required immediately before any of
+these irreversible or externally visible actions: merge to `main`, production
+promotion, GitHub Pages containment, TestFlight upload, RevenueCat/App Store
+mutation, real purchase or paid action, and App Store submission. Source tests,
+draft-PR evidence and read-only checks do not grant that authorization.
+
+The release remains pending until every required row contains real evidence
+rather than `PENDING`.

@@ -63,7 +63,15 @@ test('the release record names the exact evidence sink and a recoverable web bas
   const record = read('docs/v1-release-record.md');
   const packageManifest = JSON.parse(read('package.json'));
   const ignore = read('.gitignore');
-  assert.match(record, /GitHub PR #18/);
+  assert.match(record, /release execution record is[\s\S]*GitHub PR #19/i);
+  assert.match(record, /inherited[\s\S]*GitHub PR #18/i);
+  assert.match(record, /3abbd4fcc65c939cc2d0e35ea03866add3540aa5/);
+  assert.match(record, /c47113bb23a3fb274277fe869dea925a6fa0a928/);
+  assert.doesNotMatch(record, /canonical exact-SHA record is[\s\S]{0,100}GitHub PR #18/i);
+  assert.match(record, /final exact candidate SHA[\s\S]*PR #19 body[\s\S]*immutable evidence attestations/i);
+  assert.match(record, /Mechanics Lab/);
+  assert.match(record, /Range plus Phase 2: latest 67\/67/);
+  assert.match(record, /release-evidence contracts: 204\/204/);
   assert.match(record, /full 40-character candidate commit/);
   assert.match(record, /Flightglass v1 release gate/);
   assert.match(record, /184140a2ff5834f23510662f8c442b8a8c03d36c/);
@@ -90,6 +98,9 @@ test('the release record names the exact evidence sink and a recoverable web bas
   assert.match(record, /Do not force-push or reset/);
   assert.match(record, /SOURCE CANDIDATE IN PROGRESS/);
   assert.match(record, /Gates that remain external/);
+  assert.match(record, /Preview status[\s\S]*`PENDING`/i);
+  assert.match(record, /neither `VERCEL_TOKEN` nor `VERCEL_AUTOMATION_BYPASS_SECRET`/i);
+  assert.match(record, /One consolidated owner authorization[\s\S]*merge to `main`[\s\S]*App Store submission/i);
 });
 
 test('physical-iPhone evidence uses an immutable template and external attested working copy', () => {
@@ -105,7 +116,7 @@ test('physical-iPhone evidence uses an immutable template and external attested 
   assert.match(checklist, /flightglass-phone-evidence-attestation-<candidate>-v<version>-b<build>\.json/);
   assert.match(checklist, /refuses to overwrite an existing attestation/i);
   assert.match(checklist, /SHA-256 payload binds the candidate, build,\s+verified GitHub run/i);
-  assert.match(checklist, /link all three from PR #18/i);
+  assert.match(checklist, /link all three from PR #\d+/i);
 
   assert.match(releaseRecord, /immutable\s+`PENDING`\s+templates?/i);
   assert.match(releaseRecord, /--file <evidence-root>\/phone-release-evidence\.md/);
@@ -113,6 +124,7 @@ test('physical-iPhone evidence uses an immutable template and external attested 
   assert.match(releaseRecord, /flightglass-phone-evidence-attestation-<candidate>-v<version>-b<build>\.json/);
   assert.match(releaseRecord, /cannot overwrite an earlier attestation/i);
   assert.match(releaseRecord, /completed record,\s+media\/logs\s+and attestation\s+remain external to the candidate/i);
+  assert.match(releaseRecord, /linked in PR #19 before release\s+authorization/i);
   assert.match(ignore, /^outputs\/release-evidence\/phone\/$/m);
 });
 
