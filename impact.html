@@ -359,6 +359,7 @@ const ctx = cv.getContext('2d');
 const editorPanel = document.getElementById('panel');
 const VISUAL_PANEL_GAP = 8;
 let W = 0, H = 0;
+let resizePending = false;
 function resize() {
   const dpr = Math.min(devicePixelRatio || 1, 2);
   const stageRect = stage.getBoundingClientRect();
@@ -371,8 +372,9 @@ function resize() {
   cv.height = Math.max(1, Math.round(H * dpr));
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 }
-addEventListener('resize', resize);
-if ('ResizeObserver' in window) new ResizeObserver(resize).observe(editorPanel);
+function scheduleResize() { resizePending = true; }
+addEventListener('resize', scheduleResize);
+if ('ResizeObserver' in window) new ResizeObserver(scheduleResize).observe(editorPanel);
 resize();
 
 /* ══ farger — kun via tokens (K4). Leses computed én gang; alpha legges
@@ -799,7 +801,7 @@ function syncSeg() {
   stage.dataset.tracer = lens === 'outcome' ? 'off' : 'on';
   document.body.dataset.rangeLens = lens;
   sideTopSpeed.hidden = snapped === 0;
-  requestAnimationFrame(resize);
+  scheduleResize();
 }
 function setStation(s, animate = true) {
   stationTarget = clamp(s, 0, 2);
@@ -1240,7 +1242,11 @@ function frameForShot(rig, outcome, aspectFix, station, pins = []) {
   // The compact portrait stage uses a stock-iron home frame. Wedges and the
   // default iron stay visually stable; longer shots zoom out continuously so
   // their tracer keeps using the available canvas instead of clipping.
-  const k = fitZoom(Math.max(maxDist, RANGE_HOME_FIT));
+  const targetScale = fitZoom(Math.max(maxDist, RANGE_HOME_FIT));
+  // FLIGHT is perspective and starts close to the ball. Blend the portrait
+  // dolly in with orthographic weight so Outcome→Side/Top never pulls the
+  // camera through impact during the animated orbit.
+  const k = 1 + (targetScale - 1) * rig.orthoK;
   const homeScale = fitZoom(RANGE_HOME_FIT);
   const screenBiasCompensation = homeScale / k;
   // The shorter tracer canvas needs an off-centre camera target: SIDE keeps
@@ -1263,6 +1269,29 @@ function frameForShot(rig, outcome, aspectFix, station, pins = []) {
   };
 }
 
+function buildVisibleBasis(rig, vbox, keepImpactVisible) {
+  const initial = buildBasis(rig, vbox);
+  if (!keepImpactVisible) return initial;
+  const impact = project({ x: 0, y: 0, z: 0 }, initial);
+  if (!impact) return initial;
+  const safeY = clamp(impact.y, 32, vbox.h - 32);
+  if (Math.abs(safeY - impact.y) < 0.5) return initial;
+  const zDiv = impact.depth + (initial.refDist - impact.depth) * rig.orthoK;
+  const shift = (safeY - impact.y) * zDiv / initial.focal;
+  const offset = {
+    x: initial.upVec.x * shift,
+    y: initial.upVec.y * shift,
+    z: initial.upVec.z * shift,
+  };
+  // Equal pos/look translation is a screen-space camera shift: orientation,
+  // orthographic truth and measured angles stay unchanged during the orbit.
+  return buildBasis({
+    ...rig,
+    pos: { x: rig.pos.x + offset.x, y: rig.pos.y + offset.y, z: rig.pos.z + offset.z },
+    look: { x: rig.look.x + offset.x, y: rig.look.y + offset.y, z: rig.look.z + offset.z },
+  }, vbox);
+}
+
 // OUTCOME-lengdereferanse: tre kandidater for støttescenen.
 //   'ladder' (A) — høydestige + ett landingstall (standard-anbefaling)
 //   'gates'  (B) — vertikale distanseporter inne i scenen
@@ -1270,6 +1299,13 @@ function frameForShot(rig, outcome, aspectFix, station, pins = []) {
 let flightRef = 'gates';
 
 function frame(now) {
+  // Resize the bitmap inside the render frame, immediately before drawing it.
+  // A ResizeObserver callback that resizes independently can clear the canvas
+  // after paint, which caused a one-frame blank tracer during lens changes.
+  if (resizePending) {
+    resizePending = false;
+    resize();
+  }
   const dt = Math.min((now - lastT) / 1000 || 0, 0.25);
   lastT = now;
   if (!scrubbing) {
@@ -1290,9 +1326,9 @@ function frame(now) {
   // rundt det. selectOutcome er memoisert, så å hente den før basis er gratis.
   const liveOutcome = selectOutcome(state);
   const framed = frameForShot(rig0, liveOutcome, aspectFix, state.station, state.pins);
-  basis = buildBasis(framed.rig, { w: W, h: H });
-  ctx.clearRect(0, 0, W, H);
   const tracerVisible = stage.dataset.tracer === 'on';
+  basis = buildVisibleBasis(framed.rig, { w: W, h: H }, tracerVisible);
+  ctx.clearRect(0, 0, W, H);
   if (tracerVisible) {
     drawGrid(state.station, framed.extent, framed.halfWidth, framed.sideSigned);
     drawLandingContact(liveOutcome, state.station);
@@ -1323,7 +1359,9 @@ function frame(now) {
 // `capture` er på) og for senere økter/dommer
 const api = { state, setStation,
   get stationTarget() { return stationTarget; }, setFlightRef(m) { flightRef = m; },
-  get flightRef() { return flightRef; }, capture: false, trace: [] };
+  get flightRef() { return flightRef; },
+  projectPoint(point) { return basis ? project(point, basis) : null; },
+  capture: false, trace: [] };
 window.__impact = api;
 
 const initialOutcome = selectOutcome(state);

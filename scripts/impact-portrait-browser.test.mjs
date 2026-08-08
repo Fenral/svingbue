@@ -15,6 +15,7 @@ import { fileURLToPath } from 'node:url';
 import {
   CONTEXT_KEY, buildGuidedShot, createDefaultContext, deriveNextExperiment,
 } from '../sa-v1-context.js';
+import { selectOutcome } from '../impact-outcome.js';
 
 const require = createRequire(import.meta.url);
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -290,6 +291,80 @@ test('Side and Top remain framed from 60 to 150 mph', { timeout: 60_000 }, async
       }
       if (bounds.bottomGapRatio > 0.14) {
         failures.push(`${id}: tracer sits too high ${JSON.stringify(bounds)}`);
+      }
+    }
+  }
+
+  assert.deepEqual(failures, []);
+  assert.deepEqual(noFavicon(errors), []);
+  await page.close();
+});
+
+test('animated Outcome travel keeps the tracer visible into Side and Top', { timeout: 60_000 }, async () => {
+  const { page, errors } = await open({ width: 390, height: 844 });
+  await page.locator('#stage').waitFor();
+  const failures = [];
+
+  for (const lens of [{ name: 'SIDE', station: 1 }, { name: 'TOP', station: 2 }]) {
+    await page.evaluate(() => window.__impact.setStation(0, false));
+    await page.waitForTimeout(50);
+    const immediate = await page.evaluate(stationValue => {
+      window.__impact.setStation(stationValue);
+      return {
+        tracer: document.querySelector('#stage').dataset.tracer,
+        impact: window.__impact.projectPoint({ x: 0, y: 0, z: 0 }),
+      };
+    }, lens.station);
+    if (immediate.tracer !== 'on' || !immediate.impact) {
+      failures.push(`${lens.name}: impact is missing when tracer turns on ${JSON.stringify(immediate)}`);
+    }
+    for (let frame = 0; frame < 12; frame++) {
+      await page.waitForTimeout(24);
+      const bounds = await renderedTracerBounds(page);
+      const impact = await page.evaluate(() => window.__impact.projectPoint({ x: 0, y: 0, z: 0 }));
+      if (bounds.widthRatio < 0.05 || bounds.heightRatio < 0.05) {
+        failures.push(`${lens.name} frame ${frame}: tracer disappeared ${JSON.stringify(bounds)}`);
+      }
+      if (!impact || impact.x < 0 || impact.x > bounds.canvasWidth || impact.y < 0 || impact.y > bounds.canvasHeight) {
+        failures.push(`${lens.name} frame ${frame}: impact left the canvas ${JSON.stringify(impact)}`);
+      }
+    }
+  }
+
+  assert.deepEqual(failures, []);
+  assert.deepEqual(noFavicon(errors), []);
+  await page.close();
+});
+
+test('extreme live trajectories remain projected inside Side and Top', { timeout: 60_000 }, async () => {
+  const { page, errors } = await open({ width: 390, height: 844 });
+  await page.locator('#stage').waitFor();
+  const failures = [];
+  const scenarios = [
+    { name: 'historical overflow', speed: 130, dynLoft: 24, attack: 3, face: 2.2, path: -12.4 },
+    { name: 'wide miss', speed: 150, dynLoft: 24, attack: 3, face: 15, path: -15 },
+    { name: 'high apex', speed: 150, dynLoft: 50, attack: -15, face: 0, path: 0 },
+  ];
+
+  for (const scenario of scenarios) {
+    await page.evaluate(values => Object.assign(window.__impact.state, values), scenario);
+    const outcome = selectOutcome(scenario);
+    for (const lens of [{ name: 'SIDE', station: 1 }, { name: 'TOP', station: 2 }]) {
+      await page.evaluate(stationValue => window.__impact.setStation(stationValue, false), lens.station);
+      await page.waitForTimeout(100);
+      const projection = await page.evaluate(points => {
+        const canvas = document.querySelector('#scene');
+        return {
+          width: canvas.clientWidth,
+          height: canvas.clientHeight,
+          points: points.map(point => window.__impact.projectPoint(point)),
+        };
+      }, outcome.path);
+      const outside = projection.points.filter(point => !point
+        || point.x < 8 || point.x > projection.width - 8
+        || point.y < 8 || point.y > projection.height - 8);
+      if (outside.length) {
+        failures.push(`${scenario.name} ${lens.name}: ${outside.length}/${projection.points.length} path points outside`);
       }
     }
   }
