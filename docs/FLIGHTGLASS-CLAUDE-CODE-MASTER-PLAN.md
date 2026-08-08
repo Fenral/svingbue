@@ -1,15 +1,17 @@
 # Flightglass — autonomous Claude Code master plan
 
-**Status:** Design and execution decisions are locked. This document is the
-handoff source of truth for autonomous implementation. New image generation is
-paused until the code and existing assets prove that a new image is necessary.
+**Status:** V1 Mechanics convergence is locked. Sections 1-6 describe the
+current product boundary. Sections 7 onward are retained as historical design
+exploration and do not override the v1 contract in `PRODUCT.md`, `TECH_SPEC.md`
+or `DESIGN.md`. Final capture generation waits for the approved candidate UI.
 
-**Primary objective:** Raise every named product surface to defensible
-instrument-grade quality without changing the golf physics, purchase continuity
-or existing user progress. Acceptance is measured by evidence gates — zero
-critical defects, every category floor cleared, all critical checks pass, and
-pairwise-blind won against the previous generation — not by reaching a score.
-The derived UX scores below are byproducts and tripwires, never the target.
+**Primary objective:** Ship Flightglass v1 as an instrument-grade mechanics
+product without changing golf physics, purchase continuity or existing user
+progress. Mechanics Lab is the sole cause-to-strike-to-flight authority;
+Range/Outcome supports replay and comparison; Guide supports bounded questions
+and handoff. Acceptance is measured by evidence gates — zero critical defects,
+every category floor cleared, all critical checks pass, and pairwise-blind won
+against the previous generation — not by reaching a score.
 
 **Execution model:** Claude Code works through the phases below in order,
 implements and verifies one independently testable surface at a time, and does
@@ -126,13 +128,13 @@ be introduced without a concrete product need.
 
 When documents disagree, use this order:
 
-1. this master plan;
-2. current owner requirements recorded in the conversation;
-3. `docs/mocks-normative/FABLE-ORDRE-strikearc-design.md`;
-4. screen-specific consensus/spec documents listed below;
-5. mocks created during the last week;
-6. existing shipping code;
-7. older historical plans and mocks.
+1. current owner requirements recorded in `PRODUCT.md` and `TECH_SPEC.md`;
+2. the current design contract in `DESIGN.md` and `.impeccable/design.json`;
+3. this master plan's sections 1-6;
+4. `docs/mocks-normative/FABLE-ORDRE-strikearc-design.md`;
+5. screen-specific consensus/spec documents listed below;
+6. current shipping code and tested contracts;
+7. older historical plans, phases and mocks.
 
 Mocks are inspiration unless a document explicitly calls one normative. Never
 copy a mock merely because it is visually complete.
@@ -178,30 +180,43 @@ or a changed compatibility identifier.
 
 ---
 
-## 6. Locked information architecture
+## 6. Locked v1 information architecture
 
-Flightglass has three product territories:
+Flightglass v1 has four directly reachable destinations:
 
-- **Range:** experiment with impact inputs and see ball flight immediately;
-- **Academy:** learn one physical relationship at a time through guided play;
-- **Lab:** Geometry, Strike Window and Compare tools for deeper inspection.
+- **Home** orients the golfer and preserves the bounded four-step tour.
+- **Range / Outcome** replays a modelled setup, supports explicit comparisons
+  and retains Side/Top inspection. It is not a second causal explainer.
+- **Mechanics Lab** is the sole cause-to-strike-to-flight authority.
+- **Flightglass Guide** answers predefined questions and hands off to a bounded
+  Range or Mechanics experiment. It has no free-text prompt.
 
-Screen ownership:
+Mechanics has two mutually exclusive authorities:
 
-- **Range / Impact** owns live ball flight and input experimentation.
-- **Visualise** is a Range lens/perspective, not a second competing simulator.
-- **Outcome** owns the read-only explanation after the shot.
-- **Compare / Ghosts** owns deltas against one selected reference.
-- **Geometry 3D** owns spatial delivery geometry.
-- **Strike Window 2D** owns contact diagnosis and sequence.
-- **Academy** owns paced teaching and mastery.
+1. Impact Inputs: Face Angle, Club Path, Attack Angle and Dynamic Loft map to
+   Start, Curve, Launch, Backspin, Apex and Carry. Club speed is a visible held
+   reference at 90 mph.
+2. Arc Inputs: Low Point X, Low Point Height (`lowPoint.z`), Swing Direction and
+   Swing Plane map to contact/Ballstrike, Attack and Path, then to the same six
+   flight outcomes.
 
-Outcome chips do not sit permanently over the active Range model. They appear
-after a shot, on request, or in Academy where the relationship is being taught.
+The visible destination name is Mechanics or Mechanics Lab. The route filename,
+access key, analytics route and Guide recommendation remain internally named
+`studio`; Guide retains `?guided=experiment`. Mechanics works in portrait and
+landscape without a forced-rotate overlay. The first completed guided Mechanics
+experiment is free in native; later guided experiments require Pro. Browser
+preview never consumes access. Lifetime remains restore-only.
+
+V1 explains deterministic model mechanics. It never stores personal swing
+data, diagnoses technique, prescribes a fix or claims an optimal result.
 
 ---
 
-## 7. Autonomous implementation phases
+## 7. Historical redesign phase archive
+
+The phase material below predates the locked v1 Mechanics architecture. Keep it
+only as provenance for earlier visual decisions; do not ship its Academy,
+diagnosis or multi-Lab navigation as v1 product scope.
 
 **Owner-directed execution override (2026-07-13):** The owner explicitly
 resumed the Academy work after reviewing its latest implementation state.

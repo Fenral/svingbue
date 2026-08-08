@@ -27,29 +27,26 @@
     {
       "id": "home",
       "label": "Home",
-      "phase": 1,
+      "phase": 2,
       "baselineScore": 67,
       "targetScore": 90,
       "route": "index.html",
       "sourceType": "shipping",
       "viewportIds": [
         "portrait-wide",
-        "portrait-compact",
-        "landscape-wide",
-        "landscape-compact"
+        "portrait-compact"
       ],
       "requiredSelectors": [
-        "body[data-home-direction=\"night-ladder\"]",
-        ".scene",
-        ".flight",
-        ".place--primary"
+        "body[data-home-experience=\"learning-tour\"]",
+        "[data-home-main]",
+        "#homeEmpty",
+        "#onboarding"
       ],
       "references": [
-        "home-portrait-1.html",
-        "home-concept-1.html",
-        "docs/home-creative-concepts.md"
+        "TECH_SPEC.md",
+        "DECISIONS.md"
       ],
-      "primaryJob": "Choose the next Flightglass territory from a night driving range."
+      "primaryJob": "Understand familiar launch-monitor inputs, see one modelled relationship, and choose where to explore it."
     },
     {
       "id": "range",
@@ -72,7 +69,31 @@
         "design/mocks/impact-kamera.html",
         "design/orders/impact-kamera.md"
       ],
-      "primaryJob": "Change one impact input and see the resulting ball flight immediately."
+      "primaryJob": "Replay or compare a named setup and inspect its modelled ball-flight result."
+    },
+    {
+      "id": "mechanics-mvp",
+      "label": "Mechanics Lab",
+      "phase": 2,
+      "baselineScore": 0,
+      "targetScore": 90,
+      "route": "impact-studio.html",
+      "sourceType": "shipping",
+      "viewportIds": [
+        "portrait-wide",
+        "portrait-compact",
+        "landscape-wide",
+        "landscape-compact"
+      ],
+      "requiredSelectors": [
+        "main.mechanics"
+      ],
+      "references": [
+        "app-mock-3.html",
+        "design/mocks/impact-studio.html",
+        "PRODUCT.md"
+      ],
+      "primaryJob": "Change one mechanics input and see the derived strike or flight outcome immediately."
     },
     {
       "id": "visualise",
@@ -115,7 +136,7 @@
       "references": [
         "impact-outcome-mock.html"
       ],
-      "primaryJob": "Explain the shot result and its cause before revealing supporting metrics."
+      "primaryJob": "Summarize a named shot result for replay without becoming a second causal explainer."
     },
     {
       "id": "compare",
@@ -240,23 +261,24 @@
     {
       "id": "paywall",
       "label": "Paywall",
-      "phase": 7,
+      "phase": 4,
       "baselineScore": 76,
       "targetScore": 90,
-      "route": "paywall-mock.html",
-      "sourceType": "reference",
+      "route": "impact.html?sa_debug=paywall&source=instrument-shot",
+      "sourceType": "shipping-state",
       "viewportIds": [
         "portrait-wide",
         "portrait-compact"
       ],
       "requiredSelectors": [
-        ".paywall",
-        "#pw-title"
+        ".sa-pw-scrim",
+        "#sa-pw-title",
+        ".sa-pw-plans"
       ],
       "references": [
-        "paywall-mock.html",
-        "docs/paywall-verdict.md",
-        "docs/monetization-strategy.md"
+        "TECH_SPEC.md",
+        "sa-paywall.js",
+        "sa-paywall.css"
       ],
       "primaryJob": "Understand Pro value before choosing monthly or annual access."
     }

@@ -1,7 +1,7 @@
 # Codemagic iOS workflow for Flightglass — NATIVE (svingbue) build.
 #
-# Wraps the static web app (index/geometry/impact + geo3d/vendor/assets)
-# in a Capacitor 7 iOS shell, landscape-locked, and ships it to TestFlight
+# Wraps the v1 Home/Range/Studio/Guide package in a Capacitor 7 iOS shell
+# and ships a manually triggered, verified build to TestFlight
 # on the existing App Store record (ASC Apple ID 6768449250, bundle
 # no.strikearc.app, team PL9G26C26C). This build supersedes the React/Vite
 # strikearc-3.0 build on TestFlight — chosen by Sivert 2026-07-03.
@@ -14,7 +14,8 @@
 #   1. ASC API key integration `ryddy-asc-key` (Key JQVPW4D944) — ✅ reused.
 #   2. GitHub repo Fenral/svingbue connected as iOS app — ✅ done.
 #   3. App record no.strikearc.app (Apple ID 6768449250) — ✅ already exists.
-#   → No manual Apple steps remain. Push to main (or run manually) to build.
+#   4. RevenueCat public key + store offering — required before this workflow.
+#   → Manual-only; the workflow fails closed when billing is not configured.
 
 definitions:
   bundle_id: &bundle_id no.strikearc.app
@@ -35,32 +36,44 @@ workflows:
       app_store_connect: ryddy-asc-key
 
     environment:
+      # Fetch one persistent, uploaded Apple Distribution certificate and its
+      # matching App Store profile. The workflow never creates or revokes team
+      # certificates during a build.
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: *bundle_id
+      groups:
+        # Create this Codemagic group with the public
+        # REVENUECAT_IOS_PUBLIC_SDK_KEY value from Flightglass in RevenueCat.
+        - revenuecat-flightglass
       vars:
         BUNDLE_ID: *bundle_id
         APP_STORE_APPLE_ID: 6768449250   # existing ASC app id; do not migrate
         XCODE_WORKSPACE: "ios/App/App.xcworkspace"
         XCODE_SCHEME: "App"
-      node: 20
-      xcode: latest
+      node: 24
+      # Apple requires the iOS 26 SDK for uploads after 28 April 2026. Pin the
+      # accepted toolchain so a release cannot silently change under us.
+      xcode: 26.6
       cocoapods: default
-
-    triggering:
-      events:
-        - push
-      branch_patterns:
-        - pattern: main
-          include: true
-          source: true
-      cancel_previous_builds: true
 
     scripts:
       - name: Install npm dependencies
         script: |
           npm ci
 
+      - name: Verify shipping source and native release contracts
+        script: |
+          npm run verify:v1:source
+
       - name: Assemble www/ from web source (denylist mocks/tooling)
         script: |
           npm run copy-web
+
+      - name: Inject and verify the RevenueCat iOS public key
+        script: |
+          npm run configure:iap:ios
+          npm run verify:iap:ios
 
       # ios/ is never committed (Windows dev machine can't generate it —
       # needs Xcode/CocoaPods), so every CI run creates it fresh here.
@@ -74,7 +87,7 @@ workflows:
         script: |
           npx cap sync ios
 
-      - name: Patch Info.plist for portrait-default orientation + display name
+      - name: Patch iOS orientation, display name, and minimum OS
         script: |
           # Must run AFTER cap sync (cap add/sync own Info.plist). Idempotent.
           node scripts/ios-landscape.mjs
@@ -93,9 +106,13 @@ workflows:
       - name: Generate app icons/splash from resources/
         script: |
           # resources/icon.png (1024²) + resources/splash.png (2732²) are the
-          # sources — capacitor-assets fans them out to every iOS size after
-          # the platform exists.
-          npx capacitor-assets generate --ios --iconBackgroundColor "#07060C"
+          # only sources. The project-owned generator writes the universal iOS
+          # catalogs after the platform exists and then verifies their pixels.
+          node scripts/generate-ios-assets.mjs
+
+      - name: Verify generated app icons/splash
+        script: |
+          node scripts/verify-generated-ios-assets.mjs
 
       - name: CocoaPods install
         script: |
@@ -116,12 +133,10 @@ workflows:
           # so a fixed offset can't guarantee we beat the existing highest
           # CFBundleVersion on no.strikearc.app. Query ASC for the latest and
           # add 1 — bulletproof regardless of which pipeline built last.
-          set +e
-          LATEST=$(app-store-connect get-latest-testflight-build-number "$APP_STORE_APPLE_ID" 2>/dev/null)
-          set -e
+          LATEST=$(app-store-connect get-latest-testflight-build-number "$APP_STORE_APPLE_ID")
           if ! printf '%s' "$LATEST" | grep -Eq '^[0-9]+$'; then
-            echo "Could not read latest build number (got '$LATEST') — falling back to 0."
-            LATEST=0
+            echo "Could not read a numeric latest TestFlight build number; refusing an ambiguous upload."
+            exit 1
           fi
           NEXT=$((LATEST + 1))
           echo "Latest TestFlight build: $LATEST → setting CFBundleVersion=$NEXT"
@@ -131,43 +146,6 @@ workflows:
       - name: Initialize keychain
         script: |
           keychain initialize
-
-      - name: Generate certificate private key
-        script: |
-          set -ex
-          openssl genrsa -out /tmp/cert_private_key.pem 2048
-
-      - name: Revoke old Distribution certs (cert-quota maintenance)
-        script: |
-          set +e
-          # Apple's quota is 2 active Distribution certs per team. Codemagic
-          # generates a NEW private key each build → existing certs have no
-          # matching local key → unusable → quota fills up. Auto-revoke so
-          # `fetch-signing-files --create` always has headroom. Safe: App
-          # Store IPAs stay valid post-revoke (cert only signs new IPAs).
-          for CERT_TYPE in DISTRIBUTION IOS_DISTRIBUTION; do
-            echo "==== Listing $CERT_TYPE certs ===="
-            JSON=$(app-store-connect certificates list --type "$CERT_TYPE" --json 2>/dev/null || echo "[]")
-            CERT_IDS=$(echo "$JSON" | jq -r '.[]? | .id // empty' 2>/dev/null || true)
-            if [ -z "$CERT_IDS" ]; then
-              echo "No $CERT_TYPE certs to revoke."
-              continue
-            fi
-            for CERT_ID in $CERT_IDS; do
-              echo "Revoking $CERT_TYPE cert: $CERT_ID"
-              app-store-connect certificates delete "$CERT_ID" --ignore-not-found || true
-            done
-          done
-          set -e
-
-      - name: Fetch signing files (create cert + profile)
-        script: |
-          set -ex
-          app-store-connect fetch-signing-files "$BUNDLE_ID" \
-            --certificate-key=@file:/tmp/cert_private_key.pem \
-            --type IOS_APP_STORE \
-            --create \
-            --verbose
 
       - name: Add certificates to keychain
         script: |

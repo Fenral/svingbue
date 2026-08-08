@@ -1,9 +1,164 @@
 # Flightglass autonomous execution status
 
-Updated: 2026-07-28
+Updated: 2026-08-08
+
+## Mechanics v1 execution checkpoint (2026-08-08)
+
+Release execution is active in draft
+[PR #19](https://github.com/Fenral/svingbue/pull/19) on
+`agent/mechanics-v1-convergence`. The green inherited source is
+[PR #18](https://github.com/Fenral/svingbue/pull/18) at
+`3abbd4fcc65c939cc2d0e35ea03866add3540aa5`; it is not the canonical execution
+record. `origin/main` is still
+`184140a2ff5834f23510662f8c442b8a8c03d36c`.
+
+Reviewed code-and-asset checkpoint:
+`c47113bb23a3fb274277fe869dea925a6fa0a928`. Integration, design, local Level C
+and exact-head GitHub proof are complete for frozen checkpoints. Because this
+tracked status update creates a later commit, the authoritative final candidate
+SHA, base, run and artifact digest are bound post-commit in the PR #19 body and
+an immutable PR comment backed by the matching GitHub artifact. This file does
+not guess or self-reference its own commit identity.
+
+Automated checkpoint evidence is green: finish reviewer `PASS` with scores
+98/96/94/95/96/97/96 for Product fit, causal legibility, hierarchy, responsive
+integrity, accessibility, brand and non-generic craft; engine 72/72; Mechanics
+10/10 plus Chromium 9/9 and WebKit 9/9; latest Range/Phase 2 67/67;
+release-evidence 204/204; images 4/4; store 8/8; three dependency audits at 0
+vulnerabilities; protected diff empty; 32 captures and 0 critical UX findings.
+
+The expanded preview contract covers Home, Mechanics Lab, Range / Outcome,
+Flightglass Guide, Privacy, Terms, Support and paywall semantics, with ten
+private source/deferred routes required to return `404`. Preview deployment is
+`PENDING`: `VERCEL_TOKEN` and `VERCEL_AUTOMATION_BYPASS_SECRET` are absent. The
+public GitHub Pages Academy surface remains stale and uncontained.
+
+All real native/payment/device/human gates remain `PENDING`, including
+RevenueCat/App Store setup, signed TestFlight, sandbox and real paid flows,
+physical-iPhone evidence and moderated onboarding. The exact-SHA Vercel preview
+attestation, `main` merge, production promotion, Pages containment and
+submission are also `PENDING` after this record commit.
+One consolidated owner authorization is required immediately before merge,
+promotion, Pages containment, TestFlight upload, any RevenueCat/App Store
+mutation, real purchase/paid action or App Store submission.
+
+## V1 app start, learning onboarding and Studio instrument checkpoint (2026-08-07)
+
+The shipping Home on `agent/page-overview` now starts with a short Flightglass
+instrument opening and a four-step launch-monitor understanding tour. This is
+the current v1 direction and supersedes the historical Night Ladder onboarding
+description later in this evidence ledger.
+
+The opening runs once per session, is immediately skippable by pointer, Enter
+or Escape, has a 150 ms reduced-motion equivalent and cannot strand the app when
+session storage is unavailable. The separate public landing page was not
+changed.
+
+The tour is product education, not personal golf intake:
+
+- real registered captures show Outcome, Impact Studio and Guide;
+- a fixed 7-iron/90 mph example changes Delivered Loft from 16–34 degrees;
+- Launch Angle, Spin Loft and Backspin update from the unchanged shipping
+  engine;
+- Back, `Not now`, resume and completion state are preserved;
+- the tour writes no profile answers and creates no `currentShot`.
+
+Impact Studio's Low Point is now an instrument marker rather than an outlined
+status dot. Its exact core, tangent aperture and optional turf datum are drawn
+after competing geometry and stay visible. A 280 ms update echo supplies live
+feedback; reduced motion removes only that echo. No physics or geometry output
+changed.
+
+Fresh automated evidence:
+
+- onboarding: 10/10 Chromium and 10/10 WebKit;
+- Studio marker/geometry: 9/9 Chromium and 9/9 WebKit;
+- v1 shell/context/Guide contracts: 51/51;
+- native release contracts: 7/7;
+- automated phone matrix: 4/4 Chromium and 4/4 WebKit;
+- level-C change gate: PASS, zero critical Chromium/WebKit findings;
+- the three onboarding captures are registered and byte-identical in the
+  native web package.
+
+The source and automated evidence are complete, but Phase 2 is not
+release-accepted. Its formal human gate remains fail-closed: 10 first-time
+moderated sessions, at least 8 unassisted completions and median completion no
+greater than 90 seconds. The live protocol and empty evidence table are in
+`docs/phase2-onboarding-uat.md`.
+
+## V1 monetization readiness checkpoint (2026-08-07)
+
+Phase 4 source and browser evidence are ready, but native-store acceptance is
+still fail-closed. Native free access now ends only after 10 distinct Range
+comparisons, one completed guided Studio experiment, or five unique Guide
+answers in the same local day. The next real value action opens a source-aware
+Monthly/Annual paywall; browser preview remains ungated and no price appears on
+cold launch.
+
+The temporary Range action and purchase promise now both say comparisons rather
+than persistent saves. Guided Studio has an authorized instruction/completion
+layer that direct free Studio does not. Terms and Privacy remove stale prices,
+the stale savings claim and the new-customer lifetime offer. Existing lifetime
+remains mapped to the exact `pro` entitlement for restoration only. Supabase is
+intentionally absent.
+
+The legacy global `window.__saShots.setPro` entitlement hook is removed and
+forbidden by contract. Native CI raises both generated iOS targets to 16.4 so
+the shipping modal and design-system feature baseline is explicit.
+
+Fresh evidence:
+
+- monetization and IAP contracts: 23/23;
+- Chromium purchase/gate cases: 12/12;
+- WebKit purchase/gate cases: 12/12;
+- actual Range, Studio and Guide gates, automatic post-purchase action resume,
+  no-cost re-pinning of a counted Range setup, successful keyboard purchase,
+  cancel/pending/error, Home/paywall restore, focus return, axe WCAG A/AA,
+  reduced motion and both paywall orientations are covered.
+
+Fresh automated v1 prerequisite evidence on 2026-08-07: 315/315 tests pass in
+207 seconds, including the 72/72 protected engine suite, Chromium and WebKit,
+native/store contracts, the current four-route risk gate and the executable
+human-evidence checker. Academy is excluded from the v1 package, so its
+historical v2 voice debt is not part of this release gate. Human observations,
+physical-iPhone behavior and real store transactions remain separate gates.
+
+Do not declare `PHASE 4 DONE`. The real RevenueCat public keys are still
+placeholders. A current Monthly/Annual offering granting `pro`, store product
+and agreement setup, native sandbox purchase, and restoration evidence from an
+existing lifetime customer remain owner/external gates.
 
 Release authorization: granted for GitHub, Vercel and configured Apple/Google
 publication after all Phase 8 gates pass. See `RELEASE-AUTHORIZATION.md`.
+
+## Flightglass Guide completion checkpoint (2026-08-07)
+
+Phase 3 is source-complete on `agent/page-overview`. The legacy Jarvis route is
+now the visible **Flightglass Guide**: a button-led Question Ladder with three
+entry intents, six topics and 28 researched golfer questions. Browse, Answer
+and Lab form one progressive path; there is no free-text or LLM request path.
+
+Every answer declares provenance and one of four capability outcomes. Missing
+engine knowledge is classified as available now, buildable with a bounded new
+model, dependent on external data/calibration, or unsafe false precision. Live
+labs use the unchanged Range outcome solver through a strict five-input adapter,
+hold four values constant, show exact deltas and hand exactly one selected
+change back to Range. Saved context is never described as a measured shot.
+
+Fresh evidence:
+
+- 30/30 deterministic engine/catalog/UI contracts pass;
+- 11/11 Chromium and 11/11 WebKit Guide cases pass, including corrupt context,
+  Range handoff, Studio navigation persistence, reduced motion and mobile/
+  desktop containment;
+- `npm run verify:v1` passes 46/46 v1 contracts plus Home/brand checks;
+- the level-C change gate passes with zero critical Chromium/WebKit findings;
+- final independent Impeccable/Terra review: `REVIEW-READY`;
+- research record: `docs/guide-question-research.md`;
+- portable design contract: `DESIGN.md` plus `.impeccable/design.json`.
+
+No protected physics output, Academy runtime, payment identity or account flow
+changed. No deployment or store publication was performed.
 
 > **Read `docs/SESSION-HANDOFF.md` first.** Its "Current state (2026-07-28)"
 > block supersedes the branch topology described throughout this file. In

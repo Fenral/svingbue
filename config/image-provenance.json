@@ -1,5 +1,5 @@
 {
-  "$comment": "Provenance for every image referenced from shipping Academy content. Shape is defined by scripts/verify-image-provenance.mjs. An image that depicts a physical quantity carries `state` (solveFlight inputs) and `shows` (the numbers on the picture); an image that depicts none is `atmospheric` and must not describe geometry.",
+  "$comment": "Provenance for images used as explanatory product content. Shape is defined by scripts/verify-image-provenance.mjs. An image that depicts a physical quantity carries `state` (solveFlight inputs) and `shows` (the numbers on the picture); an image that depicts none is `atmospheric` and must not describe geometry.",
   "images": [
     {
       "path": "assets/rw-backspin-green-bite.jpg",
@@ -11,6 +11,89 @@
       ],
       "visualCheck": "2026-07-29 — opened the file and looked at it. Ball sitting in a fresh scar in dew-covered turf at dusk, debris airborne behind it. Nothing in the frame is a measurement the engine could contradict, so there is no state to re-derive.",
       "altFinding": "The shipped alt says 'on a green'. The pixels show longer dew-covered turf at dusk with no hole, flag or green surround, and the ball is at rest in the mark it made rather than visibly checking. The alt describes a scene the image does not show, and it does not tell the reader what to take from it. Proposed replacement (needs an edit to academy-native-lesson.js, out of scope for this task): 'A golf ball at rest in the fresh mark it tore in dew-covered turf, soil still in the air behind it — it stopped where it landed instead of running on.'"
+    },
+    {
+      "path": "assets/onboarding/outcome.webp",
+      "state": {
+        "clubSpeed": 90,
+        "faceAngle": 2,
+        "clubPath": 0,
+        "attackAngle": 3,
+        "dynamicLoft": 24
+      },
+      "shows": {
+        "clubSpeed": 90,
+        "faceAngle": 2,
+        "clubPath": 0,
+        "attackAngle": 3,
+        "dynamicLoft": 24,
+        "startDirection": 1.56,
+        "spinAxis": 5.076549826581551,
+        "curve": 5.8629131846006235,
+        "offline": 10.991865469432575,
+        "launchAngle": 14.003017767130947,
+        "spinLoft": 21.088673579856664,
+        "backspin": 3510.5899927683545,
+        "ballSpeed": 129.94984164625276,
+        "landingAngle": 46.755867766476946,
+        "smash": 1.4438871294028084,
+        "carry": 188.399763155694,
+        "total": 195.43954607491628,
+        "apex": 31.457140656241222
+      },
+      "alt": "Flightglass Outcome showing launch, spin and distance values above five editable delivery inputs",
+      "usedIn": [
+        "index.html — learning tour, Range/Outcome replay proof and product map"
+      ],
+      "visualCheck": "2026-08-07 — captured from shipping impact.html at 375 × 812 CSS px and 2× device scale. Visible values match the declared engine state after the UI's documented yard-to-metre conversion and display rounding."
+    },
+    {
+      "path": "assets/onboarding/studio.webp",
+      "sha256": "c1fbf2196961d40d44f9994901ba67a6971fdfd0550832c9c1aca1d436af5a9c",
+      "state": {
+        "clubSpeed": 90,
+        "faceAngle": 0,
+        "clubPath": 0,
+        "attackAngle": -3,
+        "dynamicLoft": 30
+      },
+      "shows": {
+        "clubSpeed": 90,
+        "faceAngle": 0,
+        "clubPath": 0,
+        "attackAngle": -3,
+        "dynamicLoft": 30,
+        "startDirection": 0,
+        "curve": 0,
+        "launchAngle": 15.382746047638626,
+        "backspin": 6623.095880188069,
+        "apex": 31.02114110454145,
+        "carry": 173.99911891890417
+      },
+      "alt": "Flightglass Mechanics Lab showing four Impact Inputs, direction and height instruments, a cause trace, trajectory and six flight outcomes",
+      "usedIn": [
+        "index.html — learning tour, Mechanics product proof and product map"
+      ],
+      "visualCheck": "2026-08-08 — final reviewed Mechanics Lab capture from shipping impact-studio.html at 812 × 375 CSS px and 2× device scale. Impact Inputs are Face Angle 0.0°, Club Path 0.0°, Attack Angle −3.0° and Dynamic Loft 30.0°; Start 0.0°, Curve 0.0 m, Launch 15.4°, Backspin 6,623 rpm, Apex 28.4 m and Carry 159.1 m match the declared engine state after display rounding and yard-to-metre conversion. SHA-256 c1fbf2196961d40d44f9994901ba67a6971fdfd0550832c9c1aca1d436af5a9c."
+    },
+    {
+      "path": "assets/onboarding/guide.webp",
+      "state": {
+        "clubSpeed": 85,
+        "faceAngle": 2,
+        "clubPath": -1,
+        "attackAngle": -3,
+        "dynamicLoft": 25
+      },
+      "shows": {
+        "carry": 166.80634903048184,
+        "launchAngle": 12.922848961184492
+      },
+      "alt": "Flightglass Guide showing its illustrative model and guided paths for exploring golf questions",
+      "usedIn": [
+        "index.html — learning tour product map"
+      ],
+      "visualCheck": "2026-08-07 — captured from shipping jarvis.html at 375 × 812 CSS px and 2× device scale. The Guide converts engine carry from yards to 152.5 metres and rounds launch to 12.9 degrees."
     }
   ]
 }
