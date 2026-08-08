@@ -95,6 +95,9 @@ function options(mode = 'verify') {
 function routeResponse(pathname, override = {}) {
   const bodies = {
     '/': '<!doctype html><title>Flightglass — Understand the numbers</title><h1>See what every number changes.</h1>',
+    '/impact-studio.html': '<!doctype html><title>Flightglass · Mechanics Lab</title><body data-sa-route="studio"><button>Impact Inputs</button><button>Arc Inputs</button><section aria-label="Live outcomes"></section>',
+    '/impact.html': '<!doctype html><title>Range Replay — Outcome, Side and Top</title><section id="outcomeBoard" aria-label="All live shot outcomes"><h1>LIVE OUTCOME</h1><span>REPLAY &amp; COMPARE</span></section><button aria-label="Pin comparison">Pin comparison</button>',
+    '/jarvis.html': '<!doctype html><title>Flightglass Guide</title><body data-sa-route="jarvis"><p>Choose the question. See what the model knows.</p><section data-guide-panel="browse"><h2>What do you want to understand?</h2><p>Start broad, then open one precise question.</p></section>',
     '/privacy.html': '<title>Privacy Policy — Flightglass</title>',
     '/terms.html': '<title>Terms of Use — Flightglass</title><p>Store price</p><p>Lifetime is not offered to new customers in this version.</p>',
     '/support.html': '<title>Support — Flightglass</title><h1>How can we help?</h1><strong>Contact Flightglass</strong>',
@@ -498,6 +501,31 @@ test('vercel curl uses curl flags and checks every public route and private sent
   ]);
 });
 
+test('preview route inventory covers every v1 public surface and representative private source sentinel', () => {
+  assert.deepEqual(PUBLIC_ROUTE_CONTRACTS.map(contract => contract.path), [
+    '/',
+    '/impact-studio.html',
+    '/impact.html',
+    '/jarvis.html',
+    '/privacy.html',
+    '/terms.html',
+    '/support.html',
+    '/sa-paywall.js',
+  ]);
+  assert.deepEqual(PRIVATE_SENTINEL_PATHS, [
+    '/codemagic.yaml',
+    '/package.json',
+    '/vercel.json',
+    '/scripts/store-screenshots.mjs',
+    '/academy.html',
+    '/geometry.html',
+    '/page-overview.html',
+    '/design/mocks/impact-studio.html',
+    '/docs/v1-release-record.md',
+    '/tools/package.json',
+  ]);
+});
+
 test('HTTP parser and semantic checks reject missing status, login bodies and weak 200 responses', () => {
   assert.deepEqual(parseCurlResponse('hello\n__FLIGHTGLASS_HTTP_STATUS__:200\n'), { status: 200, body: 'hello' });
   assert.throws(() => parseCurlResponse('hello'), /status marker/i);
@@ -506,6 +534,28 @@ test('HTTP parser and semantic checks reject missing status, login bodies and we
   assert.throws(() => validateHttpCheck(home, { status: 200, body: '<title>Log in to Vercel</title> Deployment Protection' }), /login\/protection/i);
   assert.throws(() => validateHttpCheck(home, { status: 200, body: '<title>Something else</title>' }), /missing required/i);
   assert.throws(() => validateHttpCheck(home, { status: 200, body: '<title>Flightglass — Old page</title>See what every number changes.' }), /missing required/i);
+  for (const pathname of ['/impact-studio.html', '/impact.html', '/jarvis.html']) {
+    const contract = PUBLIC_ROUTE_CONTRACTS.find(candidate => candidate.path === pathname);
+    assert.ok(contract, `${pathname} has a semantic preview contract`);
+    assert.throws(
+      () => validateHttpCheck(contract, { status: 200, body: '<!doctype html><title>Flightglass</title><main>OK</main>' }),
+      /missing required/i,
+      `${pathname} rejects a generic 200 fallback`,
+    );
+  }
+  const guide = PUBLIC_ROUTE_CONTRACTS.find(contract => contract.path === '/jarvis.html');
+  const guideBody = parseCurlResponse(routeResponse('/jarvis.html')).body;
+  for (const forbidden of [
+    '<textarea aria-label="Ask"></textarea>',
+    '<div contenteditable="true"></div>',
+    '<input type="text">',
+    '<input type="search">',
+  ]) {
+    assert.throws(
+      () => validateHttpCheck(guide, { status: 200, body: `${guideBody}${forbidden}` }),
+      /forbidden release (?:copy|UI)/i,
+    );
+  }
   const paywall = PUBLIC_ROUTE_CONTRACTS.find(contract => contract.path === '/sa-paywall.js');
   const paywallBody = parseCurlResponse(routeResponse('/sa-paywall.js')).body;
   for (const forbidden of ['Lifetime purchase', 'Save with Annual', '20% off']) {
@@ -555,7 +605,7 @@ test('successful evidence is immutable, exclusive and SHA-256-bound to candidate
   assert.equal(payload.baseCommit, BASE);
   assert.equal(payload.releaseGate.id, RUN_ID);
   assert.equal(payload.deployment.id, DEPLOYMENT_ID);
-  assert.equal(payload.httpChecks.length, 11);
+  assert.equal(payload.httpChecks.length, 18);
   assert.equal(jsonText.includes(TOKEN), false);
   const checksum = createHash('sha256').update(jsonText).digest('hex');
   assert.equal(readFileSync(result.attestation.checksumPath, 'utf8'), `${checksum}  ${result.attestation.jsonPath.split(/[\\/]/).at(-1)}\n`);

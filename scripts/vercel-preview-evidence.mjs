@@ -19,6 +19,44 @@ const PROTECTION_PATTERN = /(?:Vercel\s+Authentication|Authentication\s+Required
 
 export const PUBLIC_ROUTE_CONTRACTS = Object.freeze([
   Object.freeze({ path: '/', status: 200, patterns: [/<title[^>]*>\s*Flightglass\s*[—-]\s*Understand the numbers\s*<\/title>/i, /See what every number changes\./i] }),
+  Object.freeze({
+    path: '/impact-studio.html',
+    status: 200,
+    patterns: [
+      /<title[^>]*>\s*Flightglass\s*(?:·|&middot;)\s*Mechanics Lab\s*<\/title>/i,
+      /<body\b(?=[^>]*\bdata-sa-route=["']studio["'])[^>]*>/i,
+      /Impact Inputs/i,
+      /Arc Inputs/i,
+      /aria-label=["']Live outcomes["']/i,
+    ],
+  }),
+  Object.freeze({
+    path: '/impact.html',
+    status: 200,
+    patterns: [
+      /<title[^>]*>\s*Range Replay\s*[—-]\s*Outcome,\s*Side and Top\s*<\/title>/i,
+      /<(?:section|div)\b(?=[^>]*\bid=["']outcomeBoard["'])(?=[^>]*\baria-label=["']All live shot outcomes["'])[^>]*>/i,
+      /LIVE OUTCOME/i,
+      /REPLAY\s*(?:&amp;|&)\s*COMPARE/i,
+      /Pin comparison/i,
+    ],
+  }),
+  Object.freeze({
+    path: '/jarvis.html',
+    status: 200,
+    patterns: [
+      /<title[^>]*>\s*Flightglass Guide\s*<\/title>/i,
+      /<body\b(?=[^>]*\bdata-sa-route=["']jarvis["'])[^>]*>/i,
+      /Choose the question\.\s*See what the model knows\./i,
+      /data-guide-panel=["']browse["']/i,
+      /What do you want to understand\?/i,
+    ],
+    forbiddenPatterns: [
+      /<textarea\b/i,
+      /\bcontenteditable(?:\s*=|\s|>)/i,
+      /<input\b[^>]*\btype\s*=\s*(?:["'](?:text|search)["']|(?:text|search))(?=[\s>])/i,
+    ],
+  }),
   Object.freeze({ path: '/privacy.html', status: 200, patterns: [/<title[^>]*>\s*Privacy Policy\s*[—-]\s*Flightglass/i] }),
   Object.freeze({ path: '/terms.html', status: 200, patterns: [/<title[^>]*>\s*Terms of Use\s*[—-]\s*Flightglass/i, /Store price/i, /Lifetime is not offered to new customers in this version\./i] }),
   Object.freeze({ path: '/support.html', status: 200, patterns: [/How can we help\?/i, /Contact Flightglass/i] }),
@@ -37,6 +75,10 @@ export const PRIVATE_SENTINEL_PATHS = Object.freeze([
   '/scripts/store-screenshots.mjs',
   '/academy.html',
   '/geometry.html',
+  '/page-overview.html',
+  '/design/mocks/impact-studio.html',
+  '/docs/v1-release-record.md',
+  '/tools/package.json',
 ]);
 
 export class PreviewEvidenceError extends Error {
