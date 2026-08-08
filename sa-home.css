@@ -1002,7 +1002,7 @@ body[data-onboarding-active="true"] > .sa-app-nav {
 }
 
 .product-proof--outcome .product-proof__viewport img {
-  object-position: top center;
+  object-position: center 7%;
 }
 
 .product-proof--studio .product-proof__viewport {
@@ -1505,6 +1505,11 @@ body[data-onboarding-active="true"] > .sa-app-nav {
   .product-proof--outcome .product-proof__viewport {
     height: 220px;
   }
+
+  .product-proof--outcome .product-proof__viewport img {
+    object-position: center 12%;
+  }
+
 }
 
 @media (max-height: 640px) and (orientation: portrait) {

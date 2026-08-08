@@ -82,7 +82,7 @@
     background:linear-gradient(90deg,color-mix(in srgb,var(--bg) 70%,transparent) 0%,transparent 38%),
       linear-gradient(0deg,color-mix(in srgb,var(--bg) 76%,transparent) 0%,transparent 42%)}
   .scene[data-lens="outcome"]::before{opacity:.48;transform:scale(1)}
-  .scene canvas{position:absolute;inset:0;z-index:1;width:100%;height:100%;display:block;touch-action:none;cursor:grab}
+  .scene canvas{position:absolute;top:0;left:0;z-index:1;width:100%;height:var(--range-visual-height,100%);display:block;touch-action:none;cursor:grab}
   .scene canvas:active{cursor:grabbing}
 
   /* Outcome uses the freed scene as a live data field, not a tracer canvas. */
@@ -233,7 +233,7 @@
      Måle-etiketter i ravfamilien (ordre §3, --q-measure — A10). Laget er
      aria-hidden: #fCarryLive forblir eneste annonseringskanal (§5.4, uendret
      kontrakt) — disse er supplerende visuell detalj, ikke ny data. */
-  .annoLabels{position:absolute;inset:0;pointer-events:none;z-index:4}
+  .annoLabels{position:absolute;top:0;left:0;width:100%;height:var(--range-visual-height,100%);overflow:hidden;pointer-events:none;z-index:4}
   .annoLabel{position:absolute;top:0;left:0;transform:translate(-50%,-50%);
     padding:2px 9px;border-radius:8px;font-size:10.5px;font-weight:600;
     white-space:nowrap;font-variant-numeric:tabular-nums;
@@ -356,15 +356,23 @@ const TAU = Math.PI * 2;
 const stage = document.getElementById('stage');
 const cv = document.getElementById('scene');
 const ctx = cv.getContext('2d');
+const editorPanel = document.getElementById('panel');
+const VISUAL_PANEL_GAP = 8;
 let W = 0, H = 0;
 function resize() {
   const dpr = Math.min(devicePixelRatio || 1, 2);
-  W = stage.clientWidth; H = stage.clientHeight;
+  const stageRect = stage.getBoundingClientRect();
+  const panelRect = editorPanel.getBoundingClientRect();
+  const panelSafeHeight = Math.max(1, Math.floor(panelRect.top - stageRect.top - VISUAL_PANEL_GAP));
+  const visualHeight = stage.dataset.tracer === 'on' ? panelSafeHeight : stage.clientHeight;
+  stage.style.setProperty('--range-visual-height', `${visualHeight}px`);
+  W = cv.clientWidth; H = cv.clientHeight;
   cv.width = Math.max(1, Math.round(W * dpr));
   cv.height = Math.max(1, Math.round(H * dpr));
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 }
 addEventListener('resize', resize);
+if ('ResizeObserver' in window) new ResizeObserver(resize).observe(editorPanel);
 resize();
 
 /* ══ farger — kun via tokens (K4). Leses computed én gang; alpha legges
@@ -791,6 +799,7 @@ function syncSeg() {
   stage.dataset.tracer = lens === 'outcome' ? 'off' : 'on';
   document.body.dataset.rangeLens = lens;
   sideTopSpeed.hidden = snapped === 0;
+  requestAnimationFrame(resize);
 }
 function setStation(s, animate = true) {
   stationTarget = clamp(s, 0, 2);
