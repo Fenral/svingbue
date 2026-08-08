@@ -49,22 +49,32 @@
     },
     {
       "path": "assets/onboarding/studio.webp",
+      "sha256": "c1fbf2196961d40d44f9994901ba67a6971fdfd0550832c9c1aca1d436af5a9c",
       "state": {
         "clubSpeed": 90,
         "faceAngle": 0,
-        "clubPath": 2.5,
-        "attackAngle": -4.3,
-        "dynamicLoft": 24
+        "clubPath": 0,
+        "attackAngle": -3,
+        "dynamicLoft": 30
       },
       "shows": {
-        "clubPath": 2.5,
-        "attackAngle": -4.3
+        "clubSpeed": 90,
+        "faceAngle": 0,
+        "clubPath": 0,
+        "attackAngle": -3,
+        "dynamicLoft": 30,
+        "startDirection": 0,
+        "curve": 0,
+        "launchAngle": 15.382746047638626,
+        "backspin": 6623.095880188069,
+        "apex": 31.02114110454145,
+        "carry": 173.99911891890417
       },
-      "alt": "Flightglass Mechanics Lab reference showing attack angle, club path, strike, entry, low point and exit",
+      "alt": "Flightglass Mechanics Lab showing four Impact Inputs, direction and height instruments, a cause trace, trajectory and six flight outcomes",
       "usedIn": [
         "index.html — learning tour, Mechanics product proof and product map"
       ],
-      "visualCheck": "2026-08-07 — pre-convergence reference captured from shipping impact-studio.html at 812 × 375 CSS px and 2× device scale. The image hash is intentionally unchanged during product reconciliation. Regenerate it from the final main.mechanics DOM after visual approval; it is not final release evidence."
+      "visualCheck": "2026-08-08 — final reviewed Mechanics Lab capture from shipping impact-studio.html at 812 × 375 CSS px and 2× device scale. Impact Inputs are Face Angle 0.0°, Club Path 0.0°, Attack Angle −3.0° and Dynamic Loft 30.0°; Start 0.0°, Curve 0.0 m, Launch 15.4°, Backspin 6,623 rpm, Apex 28.4 m and Carry 159.1 m match the declared engine state after display rounding and yard-to-metre conversion. SHA-256 c1fbf2196961d40d44f9994901ba67a6971fdfd0550832c9c1aca1d436af5a9c."
     },
     {
       "path": "assets/onboarding/guide.webp",
