@@ -152,6 +152,153 @@ test('the pin control reads Pin comparison', { timeout: 60_000 }, async () => {
   await page.close();
 });
 
+test('Carry is a permanent large left-side readout in every lens', { timeout: 60_000 }, async () => {
+  const { page, errors } = await open({ width: 430, height: 932 });
+  await page.locator('#stage').waitFor();
+  const expected = Math.round(selectOutcome({
+    speed: 90, face: 2, path: 0, attack: 3, dynLoft: 24,
+  }).m.carry);
+
+  for (const lens of [
+    { name: 'OUTCOME', station: 0 },
+    { name: 'SIDE', station: 1 },
+    { name: 'TOP', station: 2 },
+  ]) {
+    await page.evaluate(value => window.__impact.setStation(value, false), lens.station);
+    await page.waitForTimeout(80);
+    const readout = await page.locator('#fCarryStack').evaluate(node => {
+      const stage = document.querySelector('#stage').getBoundingClientRect();
+      const rect = node.getBoundingClientRect();
+      const value = node.querySelector('#fCarryNum');
+      return {
+        text: value.textContent.trim(),
+        fontSize: Number.parseFloat(getComputedStyle(value).fontSize),
+        left: rect.left - stage.left,
+        visible: rect.width > 0 && rect.height > 0,
+      };
+    });
+    assert.equal(readout.visible, true, `${lens.name}: Carry must remain visible`);
+    assert.equal(readout.text, String(expected), `${lens.name}: Carry must show the live outcome`);
+    assert.ok(readout.fontSize >= 36, `${lens.name}: Carry must be a large readout`);
+    assert.ok(readout.left >= 8 && readout.left <= 20, `${lens.name}: Carry must stay on the left`);
+  }
+
+  await page.evaluate(() => { window.__impact.state.speed = 95; });
+  await page.waitForTimeout(80);
+  const updated = Math.round(selectOutcome({
+    speed: 95, face: 2, path: 0, attack: 3, dynLoft: 24,
+  }).m.carry);
+  assert.equal(await page.locator('#fCarryNum').textContent(), String(updated));
+  assert.deepEqual(noFavicon(errors), []);
+  await page.close();
+});
+
+test('Pin comparison crosses to the left without covering Carry when a tracer reaches it', { timeout: 60_000 }, async () => {
+  // The in-app browser's visible content area is substantially shorter than
+  // the physical phone screen once its address and action bars are present.
+  const { page, errors } = await open({ width: 430, height: 740 });
+  await page.locator('#stage').waitFor();
+
+  const setTopShot = values => page.evaluate(next => {
+    Object.assign(window.__impact.state, next);
+    window.__impact.setStation(2, false);
+  }, values);
+  const layout = () => page.evaluate(() => {
+    const pin = document.querySelector('#pinFab');
+    const carry = document.querySelector('#fCarryStack');
+    const pinRect = pin.getBoundingClientRect();
+    const carryRect = carry.getBoundingClientRect();
+    return {
+      side: pin.dataset.side,
+      overlapsCarry: pinRect.left < carryRect.right && pinRect.right > carryRect.left
+        && pinRect.top < carryRect.bottom && pinRect.bottom > carryRect.top,
+    };
+  });
+
+  await setTopShot({ speed: 95, dynLoft: 24, attack: 3, face: -15, path: 0 });
+  await page.waitForTimeout(160);
+  assert.equal((await layout()).side, 'right', 'a left tracer leaves the right-side Pin clear');
+
+  await setTopShot({ speed: 95, dynLoft: 24, attack: 3, face: 15, path: 0 });
+  await page.waitForTimeout(240);
+  const moved = await layout();
+  const rightShot = selectOutcome({ speed: 95, dynLoft: 24, attack: 3, face: 15, path: 0 });
+  const evidence = await page.evaluate(points => {
+    const stage = document.querySelector('#stage').getBoundingClientRect();
+    const pin = document.querySelector('#pinFab').getBoundingClientRect();
+    const projected = points.map(point => window.__impact.projectPoint(point)).filter(Boolean);
+    return {
+      rightZone: { x: stage.width - 12 - pin.width, y: 12, w: pin.width, h: pin.height },
+      tracer: {
+        minX: Math.min(...projected.map(point => point.x)),
+        maxX: Math.max(...projected.map(point => point.x)),
+        minY: Math.min(...projected.map(point => point.y)),
+        maxY: Math.max(...projected.map(point => point.y)),
+      },
+      labels: [...document.querySelectorAll('#annoLabels .annoLabel:not([hidden])')].map(label => {
+        const rect = label.getBoundingClientRect();
+        return {
+          text: label.textContent,
+          x: rect.left - stage.left,
+          y: rect.top - stage.top,
+          w: rect.width,
+          h: rect.height,
+        };
+      }),
+    };
+  }, rightShot.path);
+  assert.equal(moved.side, 'left', `a right tracer moves Pin to the opposite side ${JSON.stringify(evidence)}`);
+  assert.equal(moved.overlapsCarry, false, 'the left Pin position must sit clear of Carry');
+
+  const relocated = await page.evaluate(points => {
+    const stage = document.querySelector('#stage').getBoundingClientRect();
+    const pin = document.querySelector('#pinFab').getBoundingClientRect();
+    const zone = {
+      x0: pin.left - stage.left - 6,
+      y0: pin.top - stage.top - 6,
+      x1: pin.right - stage.left + 6,
+      y1: pin.bottom - stage.top + 6,
+    };
+    return points.map(point => window.__impact.projectPoint(point)).filter(Boolean)
+      .some(point => point.x >= zone.x0 && point.x <= zone.x1
+        && point.y >= zone.y0 && point.y <= zone.y1);
+  }, rightShot.path);
+  assert.equal(relocated, false, 'the relocated Pin must clear the active tracer');
+
+  await setTopShot({ speed: 95, dynLoft: 24, attack: 3, face: -15, path: 0 });
+  let returned = await layout();
+  for (let waited = 0; returned.side !== 'right' && waited < 900; waited += 60) {
+    await page.waitForTimeout(60);
+    returned = await layout();
+  }
+  assert.equal(returned.side, 'right', 'Pin returns right within 900 ms after the collision clears');
+
+  // A pinned comparison is drawn as a ghost tracer and must reserve the same
+  // HUD space as the active shot. Keep the live shot clear on the left while
+  // the ghost alone crosses the canonical right-hand Pin position.
+  await page.setViewportSize({ width: 430, height: 650 });
+  await page.evaluate(({ active, ghostParams, ghostOutcome }) => {
+    Object.assign(window.__impact.state, active);
+    window.__impact.state.pins.splice(0, window.__impact.state.pins.length, {
+      params: ghostParams,
+      outcome: ghostOutcome,
+    });
+    window.__impact.setStation(2, false);
+  }, {
+    active: { speed: 95, dynLoft: 24, attack: 3, face: -15, path: 0 },
+    ghostParams: { speed: 95, dynLoft: 24, attack: 3, face: 15, path: 0 },
+    ghostOutcome: rightShot,
+  });
+  await page.waitForTimeout(240);
+  const ghostMoved = await layout();
+  assert.equal(ghostMoved.side, 'left', 'a ghost tracer also moves Pin to the opposite side');
+  assert.equal(ghostMoved.overlapsCarry, false, 'the ghost-triggered fallback must sit clear of Carry');
+
+  await page.evaluate(() => { window.__impact.state.pins.splice(0); });
+  assert.deepEqual(noFavicon(errors), []);
+  await page.close();
+});
+
 test('Outcome is the default lens and replaces Flight / 3D Range', { timeout: 60_000 }, async () => {
   const { page, errors } = await open();
   await page.locator('#stage').waitFor();
@@ -480,7 +627,11 @@ test('no TARGET label appears in any lens', { timeout: 60_000 }, async () => {
   await page.close();
 });
 
-for (const viewport of [{ width: 390, height: 844 }, { width: 375, height: 812 }]) {
+for (const viewport of [
+  { width: 390, height: 844 },
+  { width: 375, height: 812 },
+  { width: 430, height: 740 },
+]) {
   test(`primary controls stay contained at ${viewport.width}×${viewport.height}`, { timeout: 60_000 }, async () => {
     const { page, errors } = await open(viewport);
     await page.locator('#stage').waitFor();
@@ -489,7 +640,7 @@ for (const viewport of [{ width: 390, height: 844 }, { width: 375, height: 812 }
       await page.waitForTimeout(100);
       const result = await page.evaluate(() => {
         const visible = [...document.querySelectorAll(
-          '#panel, #panel input[type="range"], #outcomeBoard, #outcomeBoard .chip',
+          '#panel, #panel input[type="range"], #outcomeBoard, #outcomeBoard .chip, #fCarryStack, #pinFab',
         )].filter(element => {
           const style = getComputedStyle(element);
           const rect = element.getBoundingClientRect();

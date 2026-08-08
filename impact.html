@@ -102,6 +102,17 @@
   .outcomeBoard .chip .k{font-size:7.5px;letter-spacing:.06em;overflow:hidden;text-overflow:ellipsis}
   .outcomeBoard .chip .v{font-size:14px;white-space:nowrap}
 
+  /* Carry is the permanent outcome anchor. It never yields its left edge to
+     the shot; secondary scene actions move around it instead. */
+  .carryHero{position:absolute;left:max(12px,env(safe-area-inset-left));top:12px;z-index:5;
+    min-width:104px;pointer-events:none;color:var(--ink);font-variant-numeric:tabular-nums}
+  .carryHero .num{display:flex;align-items:baseline;gap:3px;
+    font:600 40px/.94 var(--font-data);letter-spacing:-.03em;
+    text-shadow:0 7px 18px color-mix(in srgb,var(--bg) 78%,transparent)}
+  .carryHero .unit{color:var(--muted);font:600 14px/1 var(--font-data);letter-spacing:0}
+  .carryHero .label{margin-top:5px;color:var(--muted-2);
+    font:600 10px/1 var(--font-data);letter-spacing:.16em}
+
   /* Lens switch: camera is independent of the active input. */
   .stations{display:grid;grid-template-columns:1fr 1fr 1px 1.28fr;gap:4px;width:100%;margin:0 0 10px;padding:3px;
     border:1px solid color-mix(in srgb,var(--line) 72%,transparent);border-radius:var(--radius-control);
@@ -119,8 +130,10 @@
     appearance:none;cursor:pointer;font:700 10px/1 var(--font-ui);letter-spacing:.04em;
     color:var(--secondary);background:var(--panel);border:1px solid color-mix(in srgb, var(--secondary) 45%, transparent);
     border-radius:var(--radius-control);padding:0 12px;display:flex;align-items:center;gap:7px;
-    backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);transition:transform .15s}
+    backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    transition:transform .15s,left .24s var(--ease),top .24s var(--ease)}
   .pinfab{right:max(12px,env(safe-area-inset-right))}
+  .pinfab[data-side]{right:auto;left:var(--pin-x);top:var(--pin-y)}
   .pinfab svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
   .pinfab:active{transform:scale(.95)}
   .pinfab:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
@@ -296,6 +309,10 @@
         <div class="outcomeGroup"><h2 class="outcomeGroupTitle">LAUNCH</h2><div class="readouts" id="ogLaunch"></div></div>
         <div class="outcomeGroup"><h2 class="outcomeGroupTitle">DISTANCE</h2><div class="readouts" id="ogDist"></div></div>
       </section>
+      <div class="carryHero" id="fCarryStack" aria-hidden="true">
+        <div class="num"><span id="fCarryNum">0</span><span class="unit">m</span></div>
+        <div class="label">CARRY</div>
+      </div>
       <div class="sr-only" id="fCarryLive" aria-live="polite" aria-atomic="true"></div>
 
       <button type="button" class="pinfab" id="pinFab" aria-label="Pin comparison">
@@ -357,9 +374,13 @@ const stage = document.getElementById('stage');
 const cv = document.getElementById('scene');
 const ctx = cv.getContext('2d');
 const editorPanel = document.getElementById('panel');
+const pinFab = document.getElementById('pinFab');
+const fCarryStack = document.getElementById('fCarryStack');
+const fCarryNum = document.getElementById('fCarryNum');
 const VISUAL_PANEL_GAP = 8;
 let W = 0, H = 0;
 let resizePending = false;
+let overlayMetricsDirty = true;
 function resize() {
   const dpr = Math.min(devicePixelRatio || 1, 2);
   const stageRect = stage.getBoundingClientRect();
@@ -371,6 +392,7 @@ function resize() {
   cv.width = Math.max(1, Math.round(W * dpr));
   cv.height = Math.max(1, Math.round(H * dpr));
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  overlayMetricsDirty = true;
 }
 function scheduleResize() { resizePending = true; }
 addEventListener('resize', scheduleResize);
@@ -1120,7 +1142,6 @@ document.getElementById('topSpeedVal').addEventListener('keydown', event => {
 renderPane(0);
 
 /* ══ Pin pill — maks 3 ghosts, eldste ut (ordre §2, S7) ══ */
-const pinFab = document.getElementById('pinFab');
 const saveShotStatus = document.getElementById('saveShotStatus');
 pinFab.addEventListener('click', async () => {
   const params = { face: state.face, path: state.path, attack: state.attack, dynLoft: state.dynLoft, speed: state.speed };
@@ -1149,6 +1170,7 @@ pinFab.addEventListener('click', async () => {
   pinFab.querySelector('span').textContent = remaining !== null && remaining <= 2
     ? remaining === 0 ? 'Pro next' : `${remaining} free left`
     : 'Pin comparison';
+  overlayMetricsDirty = true;
   pinFab.setAttribute('aria-label', remaining !== null
     ? remaining === 0
       ? 'Comparison pinned. Pro options open on the next new comparison'
@@ -1202,11 +1224,142 @@ function updateStats(outcome) {
   if (hud === lastHud) return;
   lastHud = hud;
 
+  fCarryNum.textContent = String(carry);
   const announcement =
     `Carry ${carry} metres, spin loft ${outcome.deg.spinLoft.toFixed(1)} degrees, ` +
     `ball speed ${Math.round(outcome.misc.ballSpeed)} miles per hour, backspin ${Math.round(outcome.misc.backspin)} rpm.`;
   clearTimeout(liveAnnounceTimer);
   liveAnnounceTimer = setTimeout(() => { fCarryLive.textContent = announcement; }, 300);
+}
+
+/* Scene HUD collision: Carry owns the left anchor. Pin owns the right anchor
+   until a projected active/ghost tracer or measurement label reaches it, then
+   it crosses left below Carry. Right-side return is delayed to avoid chatter
+   while the camera is still moving. */
+const PIN_INSET = 12;
+const PIN_ACTIVE_GAP = 14;
+const PIN_GHOST_GAP = 8;
+const PIN_LABEL_GAP = 8;
+// Wait longer than the 240 ms position transition before returning to the
+// canonical side, so a tracer skimming the boundary cannot make the control
+// visibly bounce between anchors.
+const PIN_RETURN_DELAY = 320;
+let overlayMetrics = null;
+let pinSide = 'right';
+let pinRightClearSince = null;
+
+function getOverlayMetrics() {
+  if (!overlayMetricsDirty && overlayMetrics) return overlayMetrics;
+  overlayMetrics = {
+    pinW: pinFab.offsetWidth,
+    pinH: pinFab.offsetHeight,
+    carryBottom: fCarryStack.offsetTop + fCarryStack.offsetHeight,
+  };
+  overlayMetricsDirty = false;
+  return overlayMetrics;
+}
+
+function pointInRect(point, rect) {
+  return point.x >= rect.x && point.x <= rect.x + rect.w
+    && point.y >= rect.y && point.y <= rect.y + rect.h;
+}
+
+function segmentIntersectsRect(a, b, rect) {
+  if (pointInRect(a, rect) || pointInRect(b, rect)) return true;
+  const dx = b.x - a.x;
+  const dy = b.y - a.y;
+  let lo = 0;
+  let hi = 1;
+  for (const [p, q] of [
+    [-dx, a.x - rect.x],
+    [dx, rect.x + rect.w - a.x],
+    [-dy, a.y - rect.y],
+    [dy, rect.y + rect.h - a.y],
+  ]) {
+    if (Math.abs(p) < 1e-9) {
+      if (q < 0) return false;
+      continue;
+    }
+    const t = q / p;
+    if (p < 0) lo = Math.max(lo, t);
+    else hi = Math.min(hi, t);
+    if (lo > hi) return false;
+  }
+  return true;
+}
+
+function tracerIntersectsRect(projectedPath, rect, gap) {
+  const expanded = {
+    x: rect.x - gap, y: rect.y - gap,
+    w: rect.w + gap * 2, h: rect.h + gap * 2,
+  };
+  let previous = null;
+  for (const current of projectedPath) {
+    if (!current) { previous = null; continue; }
+    if (pointInRect(current, expanded)
+      || (previous && segmentIntersectsRect(previous, current, expanded))) return true;
+    previous = current;
+  }
+  return false;
+}
+
+function rectsOverlap(a, b, gap = 0) {
+  return a.x < b.x + b.w + gap && a.x + a.w + gap > b.x
+    && a.y < b.y + b.h + gap && a.y + a.h + gap > b.y;
+}
+
+function sceneHudBlocked(rect, projectedTraces, labelRects) {
+  if (projectedTraces.some(trace => tracerIntersectsRect(trace.points, rect, trace.gap))) return true;
+  return labelRects.some(labelRect => rectsOverlap(rect, labelRect, PIN_LABEL_GAP));
+}
+
+function syncSceneHud(liveOutcome, pins, placed, now, tracerVisible) {
+  const metrics = getOverlayMetrics();
+  // Projection is the costly part. Build each path once per render frame and
+  // reuse it while evaluating the right anchor and any left fallback slots.
+  const projectedTraces = tracerVisible ? [
+    { points: liveOutcome.path.map(point => project(point, basis)), gap: PIN_ACTIVE_GAP },
+    ...pins.map(pin => ({
+      points: pin.outcome.path.map(point => project(point, basis)), gap: PIN_GHOST_GAP,
+    })),
+  ] : [];
+  const labelRects = placed.flatMap(item => {
+    if (!item.label || !item.labelPos || (item.alpha ?? 1) < .08) return [];
+    const width = Math.max(30, item.label.length * 6.3 + 16);
+    return [{ x: item.labelPos.x - width / 2, y: item.labelPos.y - 10, w: width, h: 20 }];
+  });
+  const rightRect = {
+    x: W - PIN_INSET - metrics.pinW, y: PIN_INSET,
+    w: metrics.pinW, h: metrics.pinH,
+  };
+  const rightBlocked = tracerVisible && sceneHudBlocked(rightRect, projectedTraces, labelRects);
+
+  if (rightBlocked) {
+    pinSide = 'left';
+    pinRightClearSince = null;
+  } else if (pinSide === 'left') {
+    if (pinRightClearSince == null) pinRightClearSince = now;
+    if (now - pinRightClearSince >= PIN_RETURN_DELAY) {
+      pinSide = 'right';
+      pinRightClearSince = null;
+    }
+  }
+
+  let target = rightRect;
+  if (pinSide === 'left') {
+    const maxY = Math.max(PIN_INSET, H - metrics.pinH - PIN_INSET);
+    const startY = Math.min(maxY, Math.ceil(metrics.carryBottom + 10));
+    target = { x: PIN_INSET, y: startY, w: metrics.pinW, h: metrics.pinH };
+    for (let y = startY; y <= maxY; y += 8) {
+      const candidate = { ...target, y };
+      target = candidate;
+      if (!sceneHudBlocked(candidate, projectedTraces, labelRects)) break;
+    }
+  }
+
+  pinFab.dataset.side = pinSide;
+  pinFab.style.setProperty('--pin-x', `${Math.round(target.x)}px`);
+  pinFab.style.setProperty('--pin-y', `${Math.round(target.y)}px`);
 }
 
 /* ══ render-løkke ══
@@ -1342,6 +1495,7 @@ function frame(now) {
     : [];
   if (tracerVisible) drawAnnotationPrimitives(placed);
   renderAnnotationLabels(placed);
+  syncSceneHud(liveOutcome, state.pins, placed, now, tracerVisible);
   if (tracerVisible && !reduceMotion) {
     const cp = cometPoint(liveOutcome, now - cometEpoch);
     if (cp) drawComet(cp, basis);
