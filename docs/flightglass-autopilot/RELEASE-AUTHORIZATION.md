@@ -28,6 +28,8 @@ waive any product, payment, privacy, native-device or store requirement.
 
 ## Mandatory release conditions
 
+All Phase 8 gates must pass before any external publication.
+
 Before GitHub/Vercel production publication or store submission:
 
 - the complete current v1 source, UX, accessibility, browser, orientation,
@@ -48,10 +50,12 @@ Before native Apple submission, also require:
 - an active Apple In-App Purchase Key and Issuer ID validated by RevenueCat,
   stored only in App Store Connect/RevenueCat and never in the app bundle;
 - Monthly and Annual products in the current Offering granting `pro`;
-- legacy Lifetime still granting `pro` for existing-owner restoration;
+- the hidden Lifetime compatibility product remains attached to `pro` outside
+  Offering; the owner confirmed on 2026-08-09 that no buyer cohort exists;
 - active agreements, tax and banking;
-- native sandbox proof for purchase, cancellation/error and restore, including
-  an existing Lifetime entitlement;
+- native sandbox proof for purchase, cancellation/error and subscription
+  restore; if a historic Lifetime transaction is discovered, its restore proof
+  becomes mandatory before review;
 - the physical-iPhone smoke checklist and the moderated onboarding acceptance
   gate required by `TECH_SPEC.md`.
 

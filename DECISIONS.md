@@ -52,9 +52,10 @@ shipping routes one phase at a time.
 Status: existing product decision with truth safeguard
 
 RevenueCat and the protected product IDs remain. V1 shows Monthly and Annual;
-Annual is recommended; lifetime remains restorable but hidden. Current fallback
-prices are kr 99 monthly and kr 590 annually. No savings claim ships unless it
-matches the live store arithmetic.
+Annual is recommended; Lifetime remains hidden and attached to `pro` outside
+the Offering. The owner confirmed on 2026-08-09 that no Lifetime buyers exist.
+Apple and fallback prices are kr 99 monthly and kr 499 annually. Live StoreKit
+prices remain authoritative, and no fixed savings claim ships.
 
 ## D-007: Supabase timing
 

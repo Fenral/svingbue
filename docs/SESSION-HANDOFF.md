@@ -1,6 +1,6 @@
 # Flightglass session handoff
 
-Updated: 2026-08-07
+Updated: 2026-08-09
 
 ## Current state (2026-08-07) — app opening, learning tour and Studio marker
 
@@ -48,7 +48,7 @@ moderated protocol in `docs/phase2-onboarding-uat.md` still requires 10
 first-time participants, at least 8 unassisted completions and a median of 90
 seconds or less. Do not declare `PHASE 2 DONE` until those rows are observed.
 
-## Current state (2026-08-07) — monetization source/test ready, store blocked
+## Current state (2026-08-09) — monetization account configured, native proof blocked
 
 The native-only value gates are implemented at three named moments: the 11th
 distinct Range comparison, the second guided Studio experiment and the sixth
@@ -58,7 +58,8 @@ another allowance. Browser preview remains ungated.
 
 The paywall renders only Monthly and Annual, uses live RevenueCat price strings
 when available, calculates no unverified savings claim and keeps the protected
-lifetime product mapped only for existing-entitlement restoration. Range now
+Lifetime product mapped to `pro` outside Offering. The owner confirmed there is
+no Lifetime buyer cohort. Range now
 truthfully calls its temporary three-ghost action `Pin comparison`; the paid
 promise is unlimited comparisons, not persistent save history. Guided Studio
 has a distinct instruction/completion layer. A successful purchase or restore
@@ -66,26 +67,32 @@ continues the exact Range, Guide or Studio action that opened the paywall;
 dismissal returns a denied guided request to free direct Studio. Terms and
 Privacy match these promises.
 
-Fresh evidence: monetization/IAP contracts 23/23; Chromium 12/12; WebKit 12/12.
+Fresh evidence: monetization/IAP contracts 23/23; Chromium 13/13; WebKit 13/13.
 The browser matrix triggers all three gates through their shipping pages and
 covers automatic post-unlock action resumption, no-cost re-pinning of a counted
 setup, keyboard plan selection, successful purchase, cancel, pending, error,
 paywall/Home restore, focus return, axe WCAG A/AA, reduced motion, 375x812 and
 932x430. Supabase and account sync remain out of v1.
 
-Fresh automated v1 prerequisite evidence on 2026-08-07: 315/315 tests pass in
-207 seconds, including the 72/72 protected engine suite, Chromium and WebKit,
-native/store contracts, the current four-route risk gate and the executable
-human-evidence checker. Academy is excluded from the v1 native allowlist, so
-its historical v2 voice debt is not part of this release gate. Human
-observations, physical-iPhone behavior and real store transactions remain
-separate gates.
+Fresh complete working-tree evidence on 2026-08-09: `npm run
+verify:v1:release` passes in 550.4 seconds. It includes the protected engine,
+source/native/store/release-evidence contracts, both onboarding/Guide engines,
+the 8-case automated phone matrix, Range 22/22, Studio 18/18 and paywall 26/26.
+The first full run exposed a Range lens-resize race; the fix then passed at
+390x844, 375x812 and 800x1280 inside the complete green rerun. Academy is
+excluded from the v1 native allowlist, so its historical v2 voice debt is not
+part of this release gate. Human observations, physical-iPhone behavior and
+real store transactions remain separate gates.
 
-This is not production purchase acceptance. `sa-iap.js` deliberately contains
-placeholder public SDK keys, so native checkout remains unavailable until the
-owner supplies the RevenueCat project configuration, current offering and store
-setup. Native sandbox purchase and an existing lifetime-customer restore must
-then be recorded before Phase 4 can close.
+This is not production purchase acceptance. `sa-iap.js` deliberately keeps
+fail-closed public SDK placeholders in Git; Codemagic now holds the real public
+iOS key outside source. Apple Monthly NOK 99 and Annual NOK 499, valid Apple IAP
+credentials, RevenueCat `pro`, the default Monthly/Annual Offering and hidden
+Lifetime compatibility are configured. The optional RevenueCat App Store
+Connect API key is absent by design because products were entered manually.
+The exact TestFlight candidate must still prove key injection, purchase,
+cancellation/error and subscription restore. Apple also reports a blocked
+payout account, and native IAP Review Screenshots are missing.
 
 The shipping bundle exposes no global entitlement mutator; the legacy
 `window.__saShots.setPro` console hook was removed and is contract-tested.

@@ -15,7 +15,7 @@ export const CANONICAL_PRECONDITIONS = Object.freeze([
   "RevenueCat has Apple's In-App Purchase Key (.p8) and matching Issuer ID; neither value is committed or bundled in the app.",
   'App Store Connect Monthly and Annual products are available to the sandbox.',
   "RevenueCat's current Offering maps Monthly and Annual to entitlement pro.",
-  'The legacy Lifetime product still maps to pro for an existing owner, but is not offered for sale.',
+  'The hidden legacy Lifetime compatibility mapping to pro is present, Lifetime is absent from the Offering, and no buyer cohort is known.',
   'Paid Apps Agreement, tax and banking are active for the candidate account.',
 ]);
 
@@ -47,7 +47,6 @@ const EXPECTED_PURCHASE_FLOWS = Object.freeze([
   'Purchase',
   'Relaunch persistence',
   'Clean-install restore',
-  'Legacy restore',
 ]);
 const EXPECTED_ENGINES = Object.freeze(['Chromium', 'WebKit']);
 const REQUIRED_CANDIDATE_FIELDS = Object.freeze([
@@ -67,7 +66,7 @@ const REQUIRED_CANDIDATE_FIELDS = Object.freeze([
   'RevenueCat entitlement identifier',
   'Storefront country',
   'Fresh subscription tester alias',
-  'Existing Lifetime tester alias',
+  'Lifetime buyer cohort status',
   'Evidence folder or release-record link',
 ]);
 const REQUIRED_SUMMARY_FIELDS = Object.freeze([
@@ -756,15 +755,18 @@ function validateCandidate(markdown, cwd, context) {
     throw new EvidenceError('invalid', 'RevenueCat entitlement identifier must be exactly "pro".');
   }
   const freshAlias = normalized(record.get('Fresh subscription tester alias'));
-  const lifetimeAlias = normalized(record.get('Existing Lifetime tester alias'));
-  if (!validAlias(freshAlias) || !validAlias(lifetimeAlias)) {
+  if (!validAlias(freshAlias)) {
     throw new EvidenceError(
       'invalid',
-      'Sandbox tester aliases must be 2-32 non-identifying letters, numbers, underscores, or hyphens.',
+      'Fresh subscription tester alias must be 2-32 non-identifying letters, numbers, underscores, or hyphens.',
     );
   }
-  if (freshAlias.toLowerCase() === lifetimeAlias.toLowerCase()) {
-    throw new EvidenceError('invalid', 'Fresh and Lifetime sandbox tester aliases must be different.');
+  const lifetimeCohortStatus = normalized(record.get('Lifetime buyer cohort status'));
+  if (lifetimeCohortStatus !== 'NONE - owner confirmed 2026-08-09') {
+    throw new EvidenceError(
+      'invalid',
+      'Lifetime buyer cohort status must be exactly "NONE - owner confirmed 2026-08-09".',
+    );
   }
   validateEvidenceReference(
     record.get('Evidence folder or release-record link'),
@@ -777,7 +779,7 @@ function validateCandidate(markdown, cwd, context) {
     buildIdentity: candidateBuild,
     releaseRun,
     freshAlias,
-    lifetimeAlias,
+    lifetimeCohortStatus,
     testTimestamp,
     commitTimestamp,
   };
@@ -835,9 +837,8 @@ function validatePurchaseRows(markdown, candidate, context) {
     timestamps.push(requireIsoTimestamp(timestamp, `${flow} Timestamp`));
     validateEvidenceReference(deviceEvidence, `${flow} Device evidence`, context);
     validateEvidenceReference(corroboration, `${flow} RevenueCat / App Store corroboration`, context);
-    const expectedAlias = flow === 'Legacy restore' ? candidate.lifetimeAlias : candidate.freshAlias;
-    if (normalized(alias) !== expectedAlias) {
-      throw new EvidenceError('invalid', `${flow} tester alias must match candidate alias "${expectedAlias}".`);
+    if (normalized(alias) !== candidate.freshAlias) {
+      throw new EvidenceError('invalid', `${flow} tester alias must match candidate alias "${candidate.freshAlias}".`);
     }
   }
   const plans = new Map(rows.map(row => [row[0], normalized(row[2])]));
@@ -860,9 +861,6 @@ function validatePurchaseRows(markdown, candidate, context) {
   }
   if (!/^Current subscription (?:to|→) pro$/.test(plans.get('Clean-install restore'))) {
     throw new EvidenceError('invalid', 'Clean-install restore must record exactly Current subscription to pro.');
-  }
-  if (!/^Lifetime (?:to|→) pro$/.test(plans.get('Legacy restore'))) {
-    throw new EvidenceError('invalid', 'Legacy restore must record exactly Lifetime to pro.');
   }
   return { count: rows.length, timestamps };
 }
@@ -914,8 +912,8 @@ function validateFinalHandoff(markdown) {
   if (!/^12\s*\/\s*12$/.test(normalized(summary.get('Required core-smoke rows passed')))) {
     throw new EvidenceError('invalid', 'Required core-smoke rows passed must be recorded as 12 / 12.');
   }
-  if (!/^7\s*\/\s*7$/.test(normalized(summary.get('Required purchase/restore rows passed')))) {
-    throw new EvidenceError('invalid', 'Required purchase/restore rows passed must be recorded as 7 / 7.');
+  if (!/^6\s*\/\s*6$/.test(normalized(summary.get('Required purchase/restore rows passed')))) {
+    throw new EvidenceError('invalid', 'Required purchase/restore rows passed must be recorded as 6 / 6.');
   }
   if (normalized(summary.get('Unresolved launch-blocking defects')) !== '0') {
     throw new EvidenceError('incomplete', 'Unresolved launch-blocking defects must be 0.');
@@ -1357,7 +1355,7 @@ export function runCli({
     stdout(`Verified release-gate run: ${summary.releaseRun.url}`);
     stdout(`Preconditions: ${summary.preconditionsPassed}/9 PASS`);
     stdout(`Physical-iPhone core smoke: ${summary.smokeRowsPassed}/12 PASS`);
-    stdout(`Apple sandbox purchase/restore: ${summary.purchaseRowsPassed}/7 PASS`);
+    stdout(`Apple sandbox purchase/restore: ${summary.purchaseRowsPassed}/6 PASS`);
     stdout(`Automated phone matrix: ${summary.automatedCellsPassed}/8 PASS`);
     stdout(`Unresolved launch-blocking defects: ${summary.unresolvedBlockers}`);
     stdout(`Attestation: ${attestationPath}`);

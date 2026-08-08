@@ -420,8 +420,8 @@ Locked direction:
 - connect Pro to Range experimentation, Academy mastery and deeper Lab tools;
 - annual is the recommended plan;
 - monthly remains available;
-- display `kr 99` monthly and `kr 590` annually with “2 months free”, never a
-  percentage claim;
+- display live StoreKit prices, currently `kr 99` monthly and `kr 499`
+  annually; do not show fixed months-free or percentage copy;
 - lifetime is removed from the visible paywall but its existing RevenueCat ID
   remains preserved for compatibility;
 - restore purchases, legal links and dismissal/eligibility behavior remain

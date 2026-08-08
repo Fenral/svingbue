@@ -80,7 +80,10 @@ async function finishOpening(page, reducedMotion) {
   }
 
   await splash.waitFor({ state: 'visible' });
-  await page.locator('#saSplashSkip').click();
+  // The opening intentionally moves and removes its own controls. Dispatch the
+  // same click without Playwright waiting for CSS stability until the element
+  // completes naturally and detaches.
+  await page.locator('#saSplashSkip').dispatchEvent('click');
   await splash.waitFor({ state: 'detached' });
   assert.equal(await page.evaluate(() => sessionStorage.getItem('sa.opening.v1')), '1');
 }

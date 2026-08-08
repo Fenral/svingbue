@@ -36,8 +36,8 @@ export async function getOfferings() {
   if (spec.delayMs) await new Promise(resolve => setTimeout(resolve, spec.delayMs));
   if (spec.reject) throw new Error('simulated offerings failure');
   const monthlyPrice = Object.hasOwn(spec, 'monthlyPrice') ? spec.monthlyPrice : 'kr 99';
-  const annualPrice = Object.hasOwn(spec, 'annualPrice') ? spec.annualPrice : 'kr 590';
-  const annualMonthlyPrice = Object.hasOwn(spec, 'annualMonthlyPrice') ? spec.annualMonthlyPrice : 'kr 49';
+  const annualPrice = Object.hasOwn(spec, 'annualPrice') ? spec.annualPrice : 'kr 499';
+  const annualMonthlyPrice = Object.hasOwn(spec, 'annualMonthlyPrice') ? spec.annualMonthlyPrice : 'kr 42';
   return {
     monthly: monthlyPrice ? { product: { identifier: PRODUCT_IDS.monthly, priceString: monthlyPrice } } : null,
     annual: annualPrice ? { product: { identifier: PRODUCT_IDS.annual, priceString: annualPrice, pricePerMonthString: annualMonthlyPrice } } : null,
@@ -223,7 +223,7 @@ for (const viewport of [{ width: 375, height: 812 }, { width: 932, height: 430 }
     assert.equal(await page.locator('input[name="sa-pw-plan"]').count(), 2);
     const planText = await page.locator('.sa-pw-plan').allTextContents().then(items => items.join(' '));
     assert.match(planText, /Monthly[\s\S]*kr 99/i);
-    assert.match(planText, /Annual[\s\S]*kr 49 per month[\s\S]*kr 590/i);
+    assert.match(planText, /Annual[\s\S]*kr 42 per month[\s\S]*kr 499/i);
     assert.equal(await page.locator('.sa-pw-scrim').innerText().then(text => /lifetime/i.test(text)), false);
     assert.equal(await page.getByRole('dialog', { name: /keep comparing what you learn/i }).count(), 1);
     assert.equal(await page.getByRole('radio').count(), 2);
@@ -235,6 +235,41 @@ for (const viewport of [{ width: 375, height: 812 }, { width: 932, height: 430 }
     assert.deepEqual(errors, []); await context.close();
   });
 }
+
+test(`${ENGINE}: failed offerings keep shipping fallback prices visible without enabling a fake purchase`, async () => {
+  const { context, page, errors } = await open({
+    offeringsSequence: [{ reject: true }],
+  });
+  await page.getByText(
+    'Store pricing is unavailable. Check your connection or try Restore.',
+    { exact: true },
+  ).waitFor();
+
+  assert.deepEqual(await page.locator('.sa-pw-plan').evaluateAll(plans => plans.map(plan => {
+    const input = plan.querySelector('input[name="sa-pw-plan"]');
+    const price = plan.querySelector('.sa-pw-price__amount');
+    return {
+      id: input.value,
+      price: price.textContent,
+      source: price.dataset.priceSource,
+      disabled: input.disabled,
+    };
+  })), [
+    { id: 'monthly', price: 'kr 99', source: 'fallback', disabled: true },
+    { id: 'annual', price: 'kr 499', source: 'fallback', disabled: true },
+  ]);
+
+  const cta = page.locator('.sa-pw-cta');
+  assert.equal(await cta.isDisabled(), true);
+  await page.evaluate(() => { window.__iapMode = 'success'; });
+  await cta.dispatchEvent('click');
+  assert.equal(await page.evaluate(() => window.__sa.iap.isPro()), false);
+  assert.equal(await page.evaluate(() => window.__sa.paywall.state().busy), false);
+  assert.equal(await cta.isDisabled(), true);
+  assert.equal(await page.locator('.sa-pw-scrim').isVisible(), true);
+  assert.deepEqual(errors, []);
+  await context.close();
+});
 
 test(`${ENGINE}: the three shipping value moments gate after the free allowance and resume after unlock`, async () => {
   const range = await open({

@@ -63,7 +63,7 @@ function makeEvidenceRoot() {
   }
   for (const flow of [
     'Live Offering', 'Cancel', 'Error + recovery', 'Purchase',
-    'Relaunch persistence', 'Clean-install restore', 'Legacy restore',
+    'Relaunch persistence', 'Clean-install restore',
   ]) {
     const name = slug(flow);
     writeFileSync(join(root, `${name}-device.png`), `device-placeholder-${name}`);
@@ -94,7 +94,7 @@ function completedEvidence({
     ['RevenueCat entitlement identifier', 'pro'],
     ['Storefront country', 'Norway'],
     ['Fresh subscription tester alias', 'SUB-A'],
-    ['Existing Lifetime tester alias', 'LIFE-B'],
+    ['Lifetime buyer cohort status', 'NONE - owner confirmed 2026-08-09'],
     ['Evidence folder or release-record link', 'record-index.md'],
   ];
   const preconditions = CANONICAL_PRECONDITIONS.map((requirement, index) =>
@@ -110,7 +110,6 @@ function completedEvidence({
     ['Purchase', 'SUB-A', 'Annual to pro'],
     ['Relaunch persistence', 'SUB-A', 'pro'],
     ['Clean-install restore', 'SUB-A', 'Current subscription to pro'],
-    ['Legacy restore', 'LIFE-B', 'Lifetime to pro'],
   ].map(([flow, alias, plan], index) => {
     const name = slug(flow);
     return `| ${flow} | ${alias} | ${plan} | PASS | 2026-08-08T10:${20 + index}:00+02:00 | ${name}-device.png | ${name}-store.log | Observed as expected |`;
@@ -157,7 +156,7 @@ ${purchaseRows.join('\n')}
 |---|---|
 | Exact candidate identity verified | PASS |
 | Required core-smoke rows passed | 12 / 12 |
-| Required purchase/restore rows passed | 7 / 7 |
+| Required purchase/restore rows passed | 6 / 6 |
 | Unresolved launch-blocking defects | 0 |
 | Physical-iPhone gate verdict | PASS |
 | Reviewer and review timestamp | RK - 2026-08-08T11:00:00+02:00 |
@@ -285,10 +284,10 @@ test('accepts a complete exact-candidate physical-iPhone record', () => {
   assert.equal(result.candidateBuild, BUILD);
   assert.equal(result.preconditionsPassed, 9);
   assert.equal(result.smokeRowsPassed, 12);
-  assert.equal(result.purchaseRowsPassed, 7);
+  assert.equal(result.purchaseRowsPassed, 6);
   assert.equal(result.automatedCellsPassed, 8);
   assert.equal(result.verdict, 'PASS');
-  assert.equal(result.referencedFiles.length, 37);
+  assert.equal(result.referencedFiles.length, 35);
 });
 
 test('CLI requires explicit candidate, build, completed file, and evidence root', () => {
@@ -411,6 +410,21 @@ test('rejects edited precondition and smoke requirement text', () => {
     'invalid',
     /Core-smoke row 10 requirement text/,
   );
+});
+
+test('binds the release record to the owner-confirmed zero Lifetime buyer cohort', () => {
+  const fix = fixture();
+  const changed = replaceOnce(
+    fix.markdown,
+    '| Lifetime buyer cohort status | NONE - owner confirmed 2026-08-09 |',
+    '| Lifetime buyer cohort status | Existing buyer LIFE-B |',
+  );
+  expectEvidenceError(
+    () => evaluate(changed, fix.root),
+    'invalid',
+    /Lifetime buyer cohort status/,
+  );
+  assert.doesNotMatch(fix.markdown, /Existing Lifetime tester alias|Legacy restore/);
 });
 
 test('rejects duplicate canonical headings and any second global Status line', async (t) => {
@@ -539,7 +553,6 @@ test('rejects negated or ambiguous purchase and restore outcomes', async (t) => 
     ['Purchase', 'Annual to pro', 'Annual did not grant pro', /Purchase plan/],
     ['Relaunch', '| Relaunch persistence | SUB-A | pro |', '| Relaunch persistence | SUB-A | pro missing |', /Relaunch persistence entitlement/],
     ['Clean restore', 'Current subscription to pro', 'Current subscription denied pro', /Clean-install restore/],
-    ['Legacy restore', 'Lifetime to pro', 'Lifetime denied pro', /Legacy restore/],
   ];
   for (const [name, from, to, pattern] of cases) {
     await t.test(name, () => {
@@ -745,6 +758,8 @@ test('keeps the committed checklist PENDING and rejects it as a completed record
   for (const [field, value] of candidateRows) {
     if (field === 'RevenueCat entitlement identifier') {
       assert.equal(value.replace(/[*`]/g, ''), 'pro — verify, do not edit');
+    } else if (field === 'Lifetime buyer cohort status') {
+      assert.equal(value, 'NONE - owner confirmed 2026-08-09');
     } else {
       assert.match(value, /PENDING/, `candidate template field ${field} must stay PENDING`);
     }
@@ -761,7 +776,7 @@ test('keeps the committed checklist PENDING and rejects it as a completed record
     assert.deepEqual([result, timestamp, evidence], ['PENDING', 'PENDING', 'PENDING'], `smoke ${id} must stay PENDING`);
   }
   const purchaseRows = templateTableRows(template, '## Purchase evidence record');
-  assert.equal(purchaseRows.length, 7);
+  assert.equal(purchaseRows.length, 6);
   for (const [flow, , , result, timestamp, device, store, notes] of purchaseRows) {
     assert.deepEqual(
       [result, timestamp, device, store, notes],
@@ -825,7 +840,7 @@ test('CLI emits a SHA-256 attestation bound to candidate, build, run, record, an
   assert.equal(attestation.releaseGate.id, RUN_ID);
   assert.match(attestation.evidence.record.sha256, /^[0-9a-f]{64}$/);
   assert.match(attestation.evidenceBundleSha256, /^[0-9a-f]{64}$/);
-  assert.equal(attestation.evidence.files.length, 37);
+  assert.equal(attestation.evidence.files.length, 35);
 
   const { attestationSha256, ...payload } = attestation;
   assert.equal(

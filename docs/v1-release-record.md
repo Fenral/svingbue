@@ -176,16 +176,28 @@ Native rollback boundary:
   submit a corrected incremented build. Do not mutate product identifiers or
   revoke shared signing certificates as a rollback shortcut.
 
+## Store configuration completed on 2026-08-09
+
+- Apple Monthly is NOK 99 and Annual is NOK 499 in the StrikeArc Premium
+  subscription group;
+- RevenueCat has the App Store app, valid Apple IAP credentials, `pro`, the
+  default Monthly/Annual Offering and the hidden Lifetime-to-`pro` mapping;
+- Codemagic app environment group `revenuecat-flightglass` contains the
+  protected public iOS SDK key; and
+- the optional RevenueCat App Store Connect API key is absent by design because
+  products and prices were configured manually.
+
 ## Gates that remain external
 
 - `main` currently has no branch-protection rule or ruleset; do not merge
   without explicitly confirming the exact candidate's green `verify` check;
-- RevenueCat public iOS key, Apple In-App Purchase Key and Issuer ID;
-- Monthly/Annual current Offering and legacy Lifetime restore mapping;
 - persistent Apple signing and a successful TestFlight archive;
-- Paid Apps Agreement, tax, banking and remaining App Store account fields;
-- localized StoreKit prices plus real sandbox cancel, error, purchase,
-  subscription restore and Lifetime restore on the exact signed candidate;
+- proof from the build log that the configured public iOS key reached the exact
+  native package;
+- the blocked Apple payout account plus remaining App Store account fields;
+- real sandbox cancel, error, purchase and subscription restore on the exact
+  signed candidate;
+- native per-product IAP Review Screenshots;
 - the 12-row physical-iPhone checklist;
 - ten moderated first-time onboarding sessions with at least 8/10 unassisted,
   median at most 90 seconds and no launch blocker;

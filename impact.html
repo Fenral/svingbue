@@ -389,8 +389,14 @@ function resize() {
   const visualHeight = stage.dataset.tracer === 'on' ? panelSafeHeight : stage.clientHeight;
   stage.style.setProperty('--range-visual-height', `${visualHeight}px`);
   W = cv.clientWidth; H = cv.clientHeight;
-  cv.width = Math.max(1, Math.round(W * dpr));
-  cv.height = Math.max(1, Math.round(H * dpr));
+  const bitmapWidth = Math.max(1, Math.round(W * dpr));
+  const bitmapHeight = Math.max(1, Math.round(H * dpr));
+  // Assigning either bitmap dimension clears the canvas. Avoid a late
+  // ResizeObserver callback blanking a frame whose geometry did not change.
+  if (cv.width !== bitmapWidth || cv.height !== bitmapHeight) {
+    cv.width = bitmapWidth;
+    cv.height = bitmapHeight;
+  }
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   overlayMetricsDirty = true;
 }
@@ -831,6 +837,11 @@ function setStation(s, animate = true) {
   syncSeg();
   const snapped = Math.round(stationTarget);
   if (snapped !== activePaneStation) renderPane(snapped);
+  // The lens and editor footprint changed synchronously. Resize before the
+  // next paint so no frame can reuse the full-height Outcome canvas behind the
+  // Side/Top input panel under a busy WebKit or Chromium event loop.
+  resizePending = false;
+  resize();
 }
 for (const b of segButtons) b.addEventListener('click', () => setStation(+b.dataset.s));
 
@@ -1524,6 +1535,8 @@ updateStats(initialOutcome);
 renderMetricChips(initialOutcome);
 lastChipsOutcome = initialOutcome;
 syncSeg();
+resizePending = false;
+resize();
 requestAnimationFrame(frame);
 </script>
 <!-- Portrait lock (see sa-orientation.js): the native app holds portrait; this

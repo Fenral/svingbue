@@ -30,6 +30,14 @@ wait.
 
 ## Done / handed off
 
+- Codex `agent/travel-sync` — completed the RevenueCat/App Store configuration
+  checkpoint on 2026-08-09. Apple Monthly/Annual are NOK 99/499, RevenueCat's
+  default Offering exposes only those subscriptions, the protected Codemagic
+  iOS public key is configured outside Git, and the zero-Lifetime-buyer release
+  contract is executable. The complete v1 working-tree gate passed in 550.4
+  seconds. Native TestFlight/sandbox evidence, two IAP review screenshots and
+  the blocked Apple payout account remain external release gates.
+
 - Codex `agent/page-overview` — completed Flightglass Guide on 2026-08-07.
   Jarvis is now a no-free-text Question Ladder with 28 researched questions,
   explicit truth/addability boundaries and one-variable live Range labs across

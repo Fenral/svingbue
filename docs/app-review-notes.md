@@ -59,9 +59,7 @@ IN-APP PURCHASES
 - strikearc_pro_annual — auto-renewable subscription, 1 year
 - Monthly and Annual are the only products offered to new customers. Prices are
   localized StoreKit prices and no percentage-savings claim is shown.
-- strikearc_pro_lifetime is a legacy non-consumable retained only so existing
-  owners can restore the same `pro` entitlement. It is not offered or displayed
-  to new customers.
+- No Lifetime plan is offered, displayed or submitted in v1.
 - Restore Purchases is available on the paywall and from Home.
 - Terms of Use and Privacy Policy are available in-app without purchase. The
   public Support URL below also requires no purchase or account.
@@ -81,28 +79,35 @@ Contact: sivertskotvold@gmail.com
       `IOS_APP_STORE` provisioning profile for `no.strikearc.app`. Confirm the
       workflow reuses it and neither revokes team certificates nor creates a
       new certificate for every build.
-- [ ] Create the Codemagic environment group `revenuecat-flightglass` and add
+- [x] Create the Codemagic environment group `revenuecat-flightglass` and add
       `REVENUECAT_IOS_PUBLIC_SDK_KEY` with the Flightglass public `appl_` key.
       Do not replace committed source placeholders and do not store the value in
       Git.
-- [ ] In App Store Connect, generate or reuse an active In-App Purchase Key.
+- [x] In App Store Connect, generate or reuse an active In-App Purchase Key.
       Upload its `.p8` file and Issuer ID to the Flightglass App Store app in
       RevenueCat, then require RevenueCat to report valid credentials. This is
       separate from the public `appl_` SDK key and must never enter the app or
       Git. Capacitor Purchases 11.x requires this store credential.
-- [ ] Configure the RevenueCat entitlement exactly as `pro`.
-- [ ] Configure the current Offering with Monthly and Annual packages using the
+      RevenueCat reports valid credentials. Its optional App Store Connect API
+      key is absent; products and prices were configured manually, so this is
+      not a transaction blocker.
+- [x] Configure the RevenueCat entitlement exactly as `pro`.
+- [x] Configure the default current Offering with Monthly and Annual packages using the
       exact protected product IDs. Both must grant `pro`.
-- [ ] Keep `strikearc_pro_lifetime` mapped to `pro` for existing-owner restore,
-      but do not expose it as a package for new customers.
-- [ ] Create or verify Monthly and Annual in App Store Connect. Put them in one
-      localized subscription group, keep their display names at 30 characters
-      or fewer and descriptions at 45 characters or fewer, and upload an App
-      Review Screenshot from the final native paywall for each product.
+- [x] Keep the hidden `strikearc_pro_lifetime` RevenueCat compatibility ID
+      mapped to `pro` and outside the Offering. The owner confirmed no buyer
+      cohort exists.
+- [x] Create Monthly at NOK 99 and Annual at NOK 499 in one localized App Store
+      subscription group, with display names and descriptions inside Apple's
+      limits.
+- [ ] Upload an App Review Screenshot from the final native paywall for each
+      product.
 - [ ] For the first auto-renewable subscription review, add the subscription
-      group and both products to the same submission as the v1 binary. Preserve
-      the legacy Lifetime product outside the new-customer Offering.
-- [ ] Confirm Paid Apps Agreement, tax and banking are active.
+      group and both products to the same submission as the v1 binary. Do not
+      attach or submit the hidden Lifetime compatibility ID.
+- [x] Confirm Paid Apps Agreement and tax are active.
+- [ ] Resolve the Apple banking alert: the payout account is currently blocked
+      and Apple reports a returned payout.
 - [ ] Complete the age-rating questionnaire, Digital Services Act status,
       app price/tax category, availability, release mode and export-compliance
       answer against the exact selected build.
@@ -110,7 +115,9 @@ Contact: sivertskotvold@gmail.com
       release commit. Record its build number and successful signing identity.
 - [ ] On a native sandbox build, complete one Monthly or Annual purchase and
       verify purchase, cancellation and restore behavior.
-- [ ] Restore an actual existing Lifetime entitlement and capture the evidence.
+- [x] Record the owner's 2026-08-09 confirmation that no Lifetime buyers exist.
+      Keep the protected product attached to `pro`; if a historic transaction
+      is later discovered, its native restore proof becomes mandatory.
 - [ ] Complete the physical-iPhone smoke checklist and the moderated onboarding
       gate. Automated browser checks do not replace these human/native gates.
 - [ ] Upload the final current-product screenshots in the order documented in

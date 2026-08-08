@@ -1,6 +1,6 @@
 # Flightglass autonomous execution status
 
-Updated: 2026-08-07
+Updated: 2026-08-09
 
 ## V1 app start, learning onboarding and Studio instrument checkpoint (2026-08-07)
 
@@ -46,10 +46,10 @@ moderated sessions, at least 8 unassisted completions and median completion no
 greater than 90 seconds. The live protocol and empty evidence table are in
 `docs/phase2-onboarding-uat.md`.
 
-## V1 monetization readiness checkpoint (2026-08-07)
+## V1 monetization readiness checkpoint (2026-08-09)
 
-Phase 4 source and browser evidence are ready, but native-store acceptance is
-still fail-closed. Native free access now ends only after 10 distinct Range
+Phase 4 source, browser and store-account setup are ready, but native-store
+acceptance is still fail-closed. Native free access now ends only after 10 distinct Range
 comparisons, one completed guided Studio experiment, or five unique Guide
 answers in the same local day. The next real value action opens a source-aware
 Monthly/Annual paywall; browser preview remains ungated and no price appears on
@@ -58,9 +58,9 @@ cold launch.
 The temporary Range action and purchase promise now both say comparisons rather
 than persistent saves. Guided Studio has an authorized instruction/completion
 layer that direct free Studio does not. Terms and Privacy remove stale prices,
-the stale savings claim and the new-customer lifetime offer. Existing lifetime
-remains mapped to the exact `pro` entitlement for restoration only. Supabase is
-intentionally absent.
+the stale savings claim and the new-customer Lifetime offer. The protected
+Lifetime compatibility product is mapped to `pro` outside Offering; the owner
+confirmed that no Lifetime buyers exist. Supabase is intentionally absent.
 
 The legacy global `window.__saShots.setPro` entitlement hook is removed and
 forbidden by contract. Native CI raises both generated iOS targets to 16.4 so
@@ -69,24 +69,30 @@ the shipping modal and design-system feature baseline is explicit.
 Fresh evidence:
 
 - monetization and IAP contracts: 23/23;
-- Chromium purchase/gate cases: 12/12;
-- WebKit purchase/gate cases: 12/12;
+- Chromium purchase/gate cases: 13/13;
+- WebKit purchase/gate cases: 13/13;
 - actual Range, Studio and Guide gates, automatic post-purchase action resume,
   no-cost re-pinning of a counted Range setup, successful keyboard purchase,
   cancel/pending/error, Home/paywall restore, focus return, axe WCAG A/AA,
   reduced motion and both paywall orientations are covered.
 
-Fresh automated v1 prerequisite evidence on 2026-08-07: 315/315 tests pass in
-207 seconds, including the 72/72 protected engine suite, Chromium and WebKit,
-native/store contracts, the current four-route risk gate and the executable
-human-evidence checker. Academy is excluded from the v1 package, so its
-historical v2 voice debt is not part of this release gate. Human observations,
-physical-iPhone behavior and real store transactions remain separate gates.
+Fresh complete working-tree evidence on 2026-08-09: `npm run
+verify:v1:release` passes in 550.4 seconds. This includes the protected engine,
+source/native/store/release-evidence contracts, both onboarding/Guide engines,
+the 8-case automated phone matrix, Range 22/22, Studio 18/18 and paywall 26/26.
+A lens-change resize race found by the first full run was fixed and then passed
+at 390x844, 375x812 and 800x1280 inside the green rerun. Academy is excluded
+from the v1 package, so its historical v2 voice debt is not part of this
+release gate. Human observations, physical-iPhone behavior and real store
+transactions remain separate gates.
 
-Do not declare `PHASE 4 DONE`. The real RevenueCat public keys are still
-placeholders. A current Monthly/Annual offering granting `pro`, store product
-and agreement setup, native sandbox purchase, and restoration evidence from an
-existing lifetime customer remain owner/external gates.
+Do not declare `PHASE 4 DONE`. Committed RevenueCat keys remain intentional
+fail-closed placeholders. Apple Monthly NOK 99 and Annual NOK 499, RevenueCat
+`pro`, the default Monthly/Annual Offering, hidden Lifetime compatibility,
+valid IAP credentials and the protected Codemagic public iOS key are configured.
+An exact TestFlight build must still prove key injection, purchase,
+cancellation/error and subscription restore. Apple also reports a blocked
+payout account, and native IAP Review Screenshots are missing.
 
 Release authorization: granted for GitHub, Vercel and configured Apple/Google
 publication after all Phase 8 gates pass. See `RELEASE-AUTHORIZATION.md`.

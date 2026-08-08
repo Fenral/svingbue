@@ -261,11 +261,11 @@ The v1 model is freemium with value before price.
 - unlimited guided Impact Studio experiments;
 - later cross-device sync when that phase exists.
 
-Current product pricing remains `kr 99` monthly and `kr 590` annually, with
-Annual visually recommended. The UI MUST NOT display a savings statement that
-is mathematically inconsistent with live store prices. Existing lifetime
-buyers remain entitled; the lifetime product ID is preserved but the tier is
-not shown on the v1 paywall.
+Apple pricing is `kr 99` monthly and `kr 499` annually, with Annual visually
+recommended. Live StoreKit prices are authoritative. The UI MUST NOT display a
+fixed savings statement that can diverge from the store. The protected Lifetime
+product ID remains hidden and mapped for compatibility; the owner confirmed on
+2026-08-09 that there are no Lifetime buyers to migrate or restore.
 
 The paywall MUST appear only after one of these value moments:
 
@@ -489,17 +489,20 @@ Stop condition: print `PHASE 3 DONE` and stop.
 Objective: charge after demonstrated value and preserve existing purchases.
 
 - [x] Free/Pro entitlements are enforced at named value moments only.
-- [ ] Monthly/Annual offerings come from RevenueCat; fallbacks are truthful.
+- [x] Monthly/Annual offerings come from RevenueCat; fallbacks are truthful.
 - [x] Savings copy is mathematically consistent with live prices.
-- [ ] Existing lifetime entitlement restores even though lifetime is hidden.
+- [x] The hidden Lifetime compatibility product grants `pro`; the owner
+  confirmed that no Lifetime buyer cohort exists.
 - [x] Purchase, cancel, error and restore paths are keyboard/screen-reader
   accessible and browser-tested.
+- [ ] Exact-candidate native sandbox purchase, cancellation/error and current-
+  subscription restore are recorded on a physical iPhone.
 - [x] If cross-device sync is included, a Supabase project reference is set,
   migrations are checked in, RLS is enabled and service-role credentials remain
   server-only. Otherwise Supabase remains out of this phase.
 
-Fresh source/test evidence (2026-08-07): 23/23 monetization/IAP contracts and
-12/12 Chromium plus 12/12 WebKit browser cases pass. The browser cases trigger the
+Fresh source/test evidence (2026-08-09): 23/23 monetization/IAP contracts and
+13/13 Chromium plus 13/13 WebKit browser cases pass. The browser cases trigger the
 11th Range comparison, second guided Studio experiment and sixth same-day Guide
 answer from the actual shipping pages; verify the distinct guided layer,
 automatic resumption of each gated action after unlock, no-cost re-pinning of a
@@ -511,10 +514,12 @@ sync and Supabase are intentionally absent. No global browser setter can grant
 the protected entitlement, and the iOS 16.4 native baseline is enforced by
 tested CI transforms.
 
-Phase 4 remains open and must not be labelled done. Production still requires
-real RevenueCat public SDK keys, a current Monthly/Annual offering granting the
-exact `pro` entitlement, configured store products/agreements, and native
-sandbox proof for purchase plus restoration of an existing lifetime customer.
+Phase 4 remains open and must not be labelled done. Apple Monthly (`kr 99`) and
+Annual (`kr 499`), RevenueCat `pro`, the default Monthly/Annual Offering, the
+hidden Lifetime compatibility mapping, valid Apple IAP credentials and the
+Codemagic public iOS SDK key are configured. Production still requires an exact
+candidate native build plus sandbox purchase, cancellation/error and
+subscription restore evidence.
 
 The committed browser/source configuration MUST remain fail-closed. Native
 release builds MUST inject the platform-specific public RevenueCat SDK key into
@@ -536,12 +541,15 @@ record without making the deferred marketing landing a release dependency.
 - [ ] Codemagic is manual-only, uses the `resources/` asset sources, refuses an
   ambiguous build number and reuses persistent Apple signing assets without
   revoking team certificates.
-- [ ] The iPhone-only native package receives a valid iOS RevenueCat public SDK
-  key at build time; no real key exists in the committed source.
-- [ ] RevenueCat reports a valid Apple In-App Purchase Key and Issuer ID for
+- [ ] A native build log proves that the iPhone-only package received the
+  configured iOS RevenueCat public SDK key; no real key exists in committed
+  source.
+- [x] RevenueCat reports a valid Apple In-App Purchase Key and Issuer ID for
   the App Store app; those credentials never enter Git or the native bundle.
-- [ ] Monthly and Annual grant `pro`, existing Lifetime restores, and a native
-  sandbox purchase plus restore are recorded against the candidate build.
+- [x] Apple Monthly/Annual products and RevenueCat's default Offering grant
+  `pro`; hidden Lifetime compatibility is attached to `pro` outside Offering.
+- [ ] Native sandbox purchase, cancellation/error and subscription restore are
+  recorded against the exact candidate build.
 - [ ] Current App Store metadata, privacy declarations, reviewer notes, support
   URL and current-product screenshots are ready.
 - [ ] A final current-product contact sheet, physical-iPhone checklist and the

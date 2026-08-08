@@ -14,7 +14,7 @@ TestFlight/AAB candidate before submission.
 | RevenueCat entitlement | `pro` |
 | Monthly product | `strikearc_pro_monthly` |
 | Annual product | `strikearc_pro_annual` |
-| Legacy restore-only product | `strikearc_pro_lifetime` |
+| Hidden RevenueCat compatibility ID | `strikearc_pro_lifetime` — no buyer cohort; never offered |
 | Support URL | `https://svingbue.vercel.app/support.html` |
 | Privacy URL | `https://svingbue.vercel.app/privacy.html` |
 | Terms URL | `https://svingbue.vercel.app/terms.html` |
@@ -108,10 +108,14 @@ metadata. The visible app paywall must show the localized StoreKit prices.
 |---|---|---|---|
 | `strikearc_pro_monthly` | Flightglass Pro Monthly | Flightglass Pro Monthly | Unlimited Outcome, Guide and Studio access. |
 | `strikearc_pro_annual` | Flightglass Pro Annual | Flightglass Pro Annual | Unlimited Outcome, Guide and Studio access. |
-| `strikearc_pro_lifetime` | Legacy Flightglass Pro Lifetime | Keep the existing customer-facing metadata | Legacy non-consumable preserved only for existing-owner restore; do not expose it to new customers. |
 
-Both current subscriptions and the legacy product must grant the exact
-RevenueCat entitlement `pro`.
+Both current subscriptions must grant the exact RevenueCat entitlement `pro`.
+RevenueCat also retains the hidden `strikearc_pro_lifetime` compatibility ID
+attached to `pro`, outside the current Offering. The owner confirmed on
+2026-08-09 that no buyer cohort exists, so it has no customer-facing StoreKit
+metadata and requires no restore transaction. If the owner later discovers a
+historic purchase, native compatibility restore becomes mandatory before App
+Review.
 
 The two current descriptions are 43 characters. Keep every customer-facing
 product display name at 30 characters or fewer and every product description at
@@ -270,7 +274,7 @@ Additional answers:
 | Age rating, DSA status, app price/tax, availability and release mode | Complete in App Store Connect |
 | Export-compliance answer | Confirm against the selected binary |
 | Sandbox Monthly/Annual purchase evidence | Run on final native build |
-| Existing Lifetime restore evidence | Run with an entitled existing-owner account |
+| Conditional Lifetime compatibility restore | Not required while the owner-confirmed buyer cohort is zero; required before review only if a historic purchase is discovered |
 | Agreements, tax and banking | Confirm active |
 | Moderated onboarding results | Complete `docs/phase2-onboarding-uat.md` |
 | Physical-iPhone release smoke | Record against exact TestFlight candidate |

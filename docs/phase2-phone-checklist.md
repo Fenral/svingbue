@@ -44,8 +44,9 @@ This gate passes only when:
   entitlement `pro`;
 - cancellation and a store/network error remain locked and recover cleanly;
 - Restore Purchases recovers a current subscription after a clean install;
-- Restore Purchases recovers an existing Lifetime owner while Lifetime remains
-  absent from the v1 paywall; and
+- the hidden Lifetime compatibility mapping remains attached to `pro` and
+  absent from the v1 paywall; do not require a Lifetime restore transaction
+  while the owner-confirmed buyer cohort is zero; and
 - no unresolved crash, data-loss, purchase, accessibility or layout blocker
   remains.
 
@@ -72,13 +73,14 @@ entry alone or a green automated test.
 | RevenueCat entitlement identifier | `pro` — verify, do not edit |
 | Storefront country | PENDING |
 | Fresh subscription tester alias | PENDING — non-identifying label only |
-| Existing Lifetime tester alias | PENDING — non-identifying label only |
+| Lifetime buyer cohort status | NONE - owner confirmed 2026-08-09 |
 | Evidence folder or release-record link | PENDING |
 
 Never record an Apple ID, password, public SDK key, receipt, transaction ID,
-order number or full RevenueCat customer identifier in the repository. Use
-aliases such as `SUB-A` and `LIFE-B`; keep credentials in the approved secret
-manager.
+order number or full RevenueCat customer identifier in the repository. Use an
+alias such as `SUB-A`; keep credentials in the approved secret manager. If the
+owner later discovers a historic Lifetime purchase, pause release and add a
+non-identifying compatibility tester alias plus a real restore row.
 
 ## Preconditions — stop if any fail
 
@@ -94,7 +96,7 @@ mock.
 | 5 | RevenueCat has Apple's In-App Purchase Key (`.p8`) and matching Issuer ID; neither value is committed or bundled in the app. | PENDING | PENDING |
 | 6 | App Store Connect Monthly and Annual products are available to the sandbox. | PENDING | PENDING |
 | 7 | RevenueCat's current Offering maps Monthly and Annual to entitlement `pro`. | PENDING | PENDING |
-| 8 | The legacy Lifetime product still maps to `pro` for an existing owner, but is not offered for sale. | PENDING | PENDING |
+| 8 | The hidden legacy Lifetime compatibility mapping to `pro` is present, Lifetime is absent from the Offering, and no buyer cohort is known. | PENDING | PENDING |
 | 9 | Paid Apps Agreement, tax and banking are active for the candidate account. | PENDING | PENDING |
 
 Any `FAIL` leaves the gate pending and must be resolved before purchase testing.
@@ -126,12 +128,10 @@ Use genuine named value moments. Do not use `sa_debug`, a browser purchase
 adapter, direct storage edits or a RevenueCat dashboard override in candidate
 evidence.
 
-Use at least two non-identifying sandbox tester aliases:
+Use one non-identifying sandbox tester alias:
 
 - `SUB-A`: no pre-existing Flightglass entitlement; used for cancellation,
-  error, purchase and current-subscription restore;
-- `LIFE-B`: an account that already owns the legacy Lifetime product; used only
-  for compatibility restore.
+  error, purchase and current-subscription restore.
 
 If switching sandbox accounts does not produce a clean RevenueCat identity,
 delete the app and reinstall the exact same TestFlight build, or use a second
@@ -181,14 +181,16 @@ cancelled transaction as an error.
 4. Success means `pro` returns, the success state is announced, Pro access works
    after relaunch and no duplicate charge is created.
 
-### E. Existing Lifetime restore — `LIFE-B`
+### E. Lifetime compatibility — no buyer cohort
 
-1. Use a clean install/identity with the same candidate and the existing
-   Lifetime sandbox owner.
-2. Confirm Lifetime is still absent from the paywall.
-3. Use **Restore purchases** from Home.
-4. Success means the legacy purchase grants the same active `pro` entitlement,
-   Pro surfaces unlock, and Lifetime remains absent as a purchasable plan.
+The owner confirmed on 2026-08-09 that no customer has purchased Lifetime.
+Verify configuration only: the hidden `strikearc_pro_lifetime` compatibility
+product remains attached to entitlement `pro` in RevenueCat and is absent from
+the current Offering. Do not fabricate a transaction or tester.
+
+If the owner later discovers a historic Lifetime purchase, this assumption is
+invalid. Add a real clean-install restore row and require it to pass before App
+Review.
 
 ## Purchase evidence record
 
@@ -204,7 +206,6 @@ replace the observed device result.
 | Purchase | SUB-A | PENDING Monthly or Annual → `pro` | PENDING | PENDING | PENDING | PENDING | PENDING |
 | Relaunch persistence | SUB-A | `pro` | PENDING | PENDING | PENDING | PENDING | PENDING |
 | Clean-install restore | SUB-A | Current subscription → `pro` | PENDING | PENDING | PENDING | PENDING | PENDING |
-| Legacy restore | LIFE-B | Lifetime → `pro` | PENDING | PENDING | PENDING | PENDING | PENDING |
 
 For purchase evidence, capture the app state immediately before the Apple sheet,
 the app result immediately afterward, and the entitlement state timestamp. Do
@@ -237,13 +238,13 @@ This automated matrix is prerequisite evidence, not physical-device evidence.
 |---|---|
 | Exact candidate identity verified | PENDING |
 | Required core-smoke rows passed | PENDING / 12 |
-| Required purchase/restore rows passed | PENDING / 7 |
+| Required purchase/restore rows passed | PENDING / 6 |
 | Unresolved launch-blocking defects | PENDING |
 | Physical-iPhone gate verdict | **PENDING** |
 | Reviewer and review timestamp | PENDING |
 
 The verdict is `PASS` only when every prerequisite, all 12 core-smoke rows and
-all 7 purchase/restore rows pass on the exact candidate, and no launch blocker
+all 6 purchase/restore rows pass on the exact candidate, and no launch blocker
 remains. Link this record from the release PR. Keep
 `docs/phase2-onboarding-uat.md` separate: physical smoke does not replace the
 ten-person comprehension and completion-time gate.

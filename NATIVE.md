@@ -133,7 +133,9 @@ Start `ios-testflight` in Codemagic only after all of these are true:
 - RevenueCat validates the Apple In-App Purchase Key and Issuer ID;
 - Monthly and Annual exist in App Store Connect and the current RevenueCat
   Offering grants `pro`;
-- legacy Lifetime still grants `pro` for existing-owner restore;
+- the hidden `strikearc_pro_lifetime` compatibility product remains attached to
+  `pro` outside Offering; the owner confirmed on 2026-08-09 that no Lifetime
+  buyer cohort exists;
 - Paid Apps Agreement, tax and banking are active;
 - persistent signing is available;
 - the `1.0.0` App Store version train is confirmed or deliberately updated;
@@ -145,7 +147,8 @@ After upload, do not submit for App Review until a native sandbox build proves:
 - one Monthly or Annual purchase;
 - cancellation/error behavior;
 - Restore Purchases;
-- restoration of an existing Lifetime entitlement;
+- subscription restoration; if any historic Lifetime transaction is later
+  discovered, its `pro` restoration must also be proven before review;
 - core Home, Outcome, Studio and Guide flows on a physical iPhone.
 
 See `docs/app-review-notes.md` for reviewer copy and

@@ -7,7 +7,7 @@ import { track } from './sa-analytics.js';
 
 const PLANS = Object.freeze([
   Object.freeze({ id: 'monthly', name: 'Monthly', fallback: 'kr 99', period: 'per month' }),
-  Object.freeze({ id: 'annual', name: 'Annual', fallback: 'kr 590', period: 'per year', recommended: true }),
+  Object.freeze({ id: 'annual', name: 'Annual', fallback: 'kr 499', period: 'per year', recommended: true }),
 ]);
 
 const SOURCE_COPY = Object.freeze({
