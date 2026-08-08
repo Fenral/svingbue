@@ -30,7 +30,7 @@ wait.
 
 ## Done / handed off
 
-- Codex `agent/travel-sync` — completed the RevenueCat/App Store configuration
+- Codex `agent/revenuecat-499` — completed the RevenueCat/App Store configuration
   checkpoint on 2026-08-09. Apple Monthly/Annual are NOK 99/499, RevenueCat's
   default Offering exposes only those subscriptions, the protected Codemagic
   iOS public key is configured outside Git, and the zero-Lifetime-buyer release
