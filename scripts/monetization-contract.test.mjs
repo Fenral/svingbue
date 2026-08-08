@@ -1,5 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { dirname, join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import {
   ACCESS_STATE_KEY,
@@ -16,6 +19,9 @@ import {
   ANALYTICS_STATE_VERSION,
   createAnalytics,
 } from '../sa-analytics.js';
+
+const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const read = relativePath => readFileSync(join(ROOT, relativePath), 'utf8');
 
 class MemoryStorage {
   constructor(seed = {}) {
@@ -40,6 +46,15 @@ class MemoryStorage {
 const DAY_ONE = new Date(2026, 7, 7, 12, 0, 0);
 const DAY_TWO = new Date(2026, 7, 8, 0, 1, 0);
 const nativeFree = (storage, now = DAY_ONE) => ({ storage, now, native: true, pro: false });
+
+test('the paywall defers every unresolved amount to the localized store price', () => {
+  const paywall = read('sa-paywall.js');
+
+  assert.match(paywall, /const STORE_PRICE_PLACEHOLDER = 'Store price';/);
+  assert.match(paywall, /product\?\.priceString \|\| STORE_PRICE_PLACEHOLDER/);
+  assert.match(paywall, /product\?\.priceString \? 'store' : 'unresolved'/);
+  assert.doesNotMatch(paywall, /\b(?:NOK|kr)\s*[\d.,]/i);
+});
 
 test('cold native state exposes value before price and does not mutate on authorize', () => {
   const storage = new MemoryStorage();

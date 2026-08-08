@@ -1,23 +1,22 @@
-# Store screenshot captions — StrikeArc
+# Store screenshot captions — Flightglass v1
 
-Generated set lives in `store-assets/` after `npm run shots`
-(scripts/store-screenshots.mjs). The folder is gitignored — regenerate before
-each upload so shots reflect the current UI. Sizes: iOS 6.9" 2868×1320, iOS
-6.5" 2688×1242, Play phone 1920×1080, Play feature graphic 1024×500 (all
-landscape).
+The committed upload set lives in `appstore/` and is regenerated with
+`npm run shots` (`scripts/store-screenshots.mjs`). Apple uses five 1290 × 2796 portrait
+screenshots. Google Play uses the matching five 1080 × 1920 portrait screenshots in
+`appstore/play/`; its feature graphic is 1024 × 500.
 
-Paste these one-liners into App Store Connect promotional text / Google Play
-listing alt-captions (one per shot, order shown):
+Use these one-line captions in the order shown by `appstore/index.html`:
 
-| File | Caption (alt / promo text) |
-|------|-----------------------------|
-| `01-impact-flight-ghosts.png` | Compare shots side by side — the live ball flight in cyan against grey "ghosts" of your previous swings, with the exact carry, curve and apex difference called out. |
-| `02-impact-instrument.png` | The live D-plane instrument: drag face, path, attack and loft and watch launch direction, spin axis, curve and carry update instantly across two lenses. |
-| `03-geometry-front.png` | See the swing arc in true 3D — the club, ball and low point rendered so you can read exactly where the strike happens. |
-| `04-geometry-dtl.png` | Down-the-line view of the swing plane and low point, with the strike-detail inset dimensioning the ball-to-low-point distance in centimetres. |
-| `05-home.png` | StrikeArc — a premium, landscape golf instrument that makes every ball-flight law visible. |
-| `feature-graphic.png` (Play) | StrikeArc — see the shot before you hit it. |
+| Apple / Play file | Surface | Caption (alt / promo text) |
+|---|---|---|
+| `01.png` | Range / Outcome | **Replay the setup. Compare the outcome.** — Range keeps a modelled setup and its flight values together. |
+| `02.png` | Mechanics Lab | **Trace cause to strike. Watch flight respond.** — Impact or Arc Inputs update contact and six outcomes. |
+| `03.png` | Flightglass Guide | **Ask a precise golf question.** — Get a short answer, evidence and model limits. |
+| `04.png` | Home | **See how the numbers connect.** — One model connects impact, launch and flight. |
+| `05.png` | Interactive onboarding | **Learn by changing one number.** — Watch launch, spin loft and backspin move together. |
+| `feature-graphic.png` (Play only) | Mechanics Lab | **Flightglass. See why it flew.** — Trace cause to strike and watch flight respond. |
 
-Note: verify the current ASC / Play required pixel sizes before uploading; if
-they change, edit only the `SETS` matrix in `scripts/store-screenshots.mjs`
-and re-run `npm run shots`.
+Before upload, compare this file with `appstore/index.html`, verify every image
+against the release candidate, and confirm the current store specifications.
+If required sizes change, update the output dimensions in
+`scripts/store-screenshots.mjs` and regenerate with `npm run shots`.

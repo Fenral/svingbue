@@ -235,6 +235,30 @@ test('the committed store gallery contains exactly five current upload candidate
   assert.doesNotMatch(generator, /eyebrow:\s*['"]IMPACT STUDIO['"]/);
 });
 
+test('store screenshot captions match the five-image Flightglass v1 portrait set', () => {
+  const captions = read('docs/store-screenshot-captions.md');
+  const gallery = read('appstore/index.html');
+  const expected = [
+    ['01.png', 'Replay the setup. Compare the outcome.', 'Range keeps a modelled setup and its flight values together.'],
+    ['02.png', 'Trace cause to strike. Watch flight respond.', 'Impact or Arc Inputs update contact and six outcomes.'],
+    ['03.png', 'Ask a precise golf question.', 'Get a short answer, evidence and model limits.'],
+    ['04.png', 'See how the numbers connect.', 'One model connects impact, launch and flight.'],
+    ['05.png', 'Learn by changing one number.', 'Watch launch, spin loft and backspin move together.'],
+  ];
+
+  assert.match(captions, /^# Store screenshot captions — Flightglass v1$/m);
+  assert.match(captions, /Apple[^\n]*1290\s*×\s*2796[^\n]*portrait/i);
+  assert.match(captions, /Google Play[^\n]*1080\s*×\s*1920[^\n]*portrait/i);
+  for (const [file, headline, detail] of expected) {
+    for (const source of [captions, gallery]) {
+      assert.ok(source.includes(file), `${file} is missing from the current store narrative`);
+      assert.ok(source.includes(headline), `${file} headline drifted from the generated gallery`);
+      assert.ok(source.includes(detail), `${file} detail drifted from the generated gallery`);
+    }
+  }
+  assert.doesNotMatch(captions, /StrikeArc|geometry-(?:front|dtl)|store-assets\/|all landscape/i);
+});
+
 test('public support and legal pages respect safe areas and retain 44px navigation targets', () => {
   for (const page of ['support.html', 'privacy.html', 'terms.html']) {
     const source = read(page);

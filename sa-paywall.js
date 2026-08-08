@@ -5,9 +5,10 @@
 import * as saIap from './sa-iap.js';
 import { track } from './sa-analytics.js';
 
+const STORE_PRICE_PLACEHOLDER = 'Store price';
 const PLANS = Object.freeze([
-  Object.freeze({ id: 'monthly', name: 'Monthly', fallback: 'kr 99', period: 'per month' }),
-  Object.freeze({ id: 'annual', name: 'Annual', fallback: 'kr 590', period: 'per year', recommended: true }),
+  Object.freeze({ id: 'monthly', name: 'Monthly', period: 'per month' }),
+  Object.freeze({ id: 'annual', name: 'Annual', period: 'per year', recommended: true }),
 ]);
 
 const SOURCE_COPY = Object.freeze({
@@ -124,7 +125,7 @@ function buildPaywall() {
     copy.append(name, note);
     const price = el('span', 'sa-pw-price');
     const amount = el('strong', 'sa-pw-price__amount');
-    amount.textContent = plan.fallback;
+    amount.textContent = STORE_PRICE_PLACEHOLDER;
     const period = el('small', 'sa-pw-price__period');
     period.textContent = plan.period;
     price.append(amount, period);
@@ -171,7 +172,7 @@ function contentFor(value) {
 }
 
 function priceFor(plan) {
-  return ui.prices[plan]?.textContent || PLANS.find((item) => item.id === plan)?.fallback || '';
+  return ui.prices[plan]?.textContent || STORE_PRICE_PLACEHOLDER;
 }
 
 function updateCta() {
@@ -204,8 +205,8 @@ function applyOfferings(offerings) {
   for (const plan of PLANS) {
     const product = packageProduct(offerings?.[plan.id]);
     availablePlans[plan.id] = Boolean(product?.priceString);
-    ui.prices[plan.id].textContent = product?.priceString || plan.fallback;
-    ui.prices[plan.id].dataset.priceSource = product?.priceString ? 'store' : 'fallback';
+    ui.prices[plan.id].textContent = product?.priceString || STORE_PRICE_PLACEHOLDER;
+    ui.prices[plan.id].dataset.priceSource = product?.priceString ? 'store' : 'unresolved';
     if (!product?.priceString) {
       ui.planNotes[plan.id].textContent = plan.id === 'annual'
         ? 'Billed yearly · store price shown at checkout'

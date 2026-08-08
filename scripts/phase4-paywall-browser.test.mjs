@@ -236,6 +236,35 @@ for (const viewport of [{ width: 375, height: 812 }, { width: 932, height: 430 }
   });
 }
 
+test(`${ENGINE}: unresolved offerings stay neutral while localized StoreKit prices pass through`, async () => {
+  const unresolved = await open({
+    offeringsSequence: [{ monthlyPrice: null, annualPrice: null }],
+  });
+  assert.deepEqual(
+    await unresolved.page.locator('.sa-pw-price__amount').allTextContents(),
+    ['Store price', 'Store price'],
+  );
+  assert.deepEqual(
+    await unresolved.page.locator('.sa-pw-price__amount').evaluateAll(nodes => nodes.map(node => node.dataset.priceSource)),
+    ['unresolved', 'unresolved'],
+  );
+  assert.doesNotMatch(await unresolved.page.locator('.sa-pw-scrim').innerText(), /\b(?:NOK|kr)\s*[\d.,]/i);
+  assert.equal(await unresolved.page.locator('.sa-pw-cta').textContent(), 'Store price unavailable');
+  assert.deepEqual(unresolved.errors, []);
+  await unresolved.context.close();
+
+  const localized = await open({
+    offeringsSequence: [{ monthlyPrice: '€11.99', annualPrice: null }],
+  });
+  assert.deepEqual(
+    await localized.page.locator('.sa-pw-price__amount').allTextContents(),
+    ['€11.99', 'Store price'],
+  );
+  assert.equal(await localized.page.locator('.sa-pw-cta').textContent(), 'Continue — €11.99 per month');
+  assert.deepEqual(localized.errors, []);
+  await localized.context.close();
+});
+
 test(`${ENGINE}: the three shipping value moments gate after the free allowance and resume after unlock`, async () => {
   const range = await open({
     route: 'impact.html',
