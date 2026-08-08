@@ -31,6 +31,14 @@ wait.
 
 ## Done / handed off
 
+- Impact Mechanics Lab MVP — `agent/mechanics-mvp-codex`; the two-authority
+  cause → strike → flight instrument links direct Face/Path/Attack/Loft inputs
+  to the shared six flight outcomes and Arc/Low Point/Plane inputs to derived
+  delivery and contact. Its focused source branch passed 33/33 mechanics tests,
+  72/72 engine tests, 8/8 UX checks and 12/12 Chromium plus 12/12 WebKit spots;
+  protected physics remained unchanged. It is now the source being converged
+  into the v1 release candidate, not a separately shipping branch.
+
 - Codex `agent/page-overview` — completed Flightglass Guide on 2026-08-07.
   Jarvis is now a no-free-text Question Ladder with 28 researched questions,
   explicit truth/addability boundaries and one-variable live Range labs across

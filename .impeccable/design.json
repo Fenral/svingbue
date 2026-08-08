@@ -1,99 +1,434 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-08-07T00:00:00+02:00",
+  "generatedAt": "2026-08-07T23:20:57.301Z",
   "title": "Design System: Flightglass",
   "extensions": {
     "colorMeta": {
-      "background": { "role": "neutral", "displayName": "Night Field", "canonical": "#07060C", "tonalRamp": ["oklch(15% 0.02 300)", "oklch(27% 0.02 300)", "oklch(39% 0.02 300)", "oklch(51% 0.02 300)", "oklch(63% 0.02 300)", "oklch(75% 0.02 300)", "oklch(87% 0.02 300)", "oklch(95% 0.02 300)"] },
-      "surface": { "role": "neutral", "displayName": "Raised Instrument Surface", "canonical": "#110D1C", "tonalRamp": ["oklch(15% 0.035 300)", "oklch(27% 0.035 300)", "oklch(39% 0.035 300)", "oklch(51% 0.035 300)", "oklch(63% 0.035 300)", "oklch(75% 0.035 300)", "oklch(87% 0.035 300)", "oklch(95% 0.035 300)"] },
-      "violet": { "role": "secondary", "displayName": "Structural Violet", "canonical": "#9D8BFF", "tonalRamp": ["oklch(15% 0.12 290)", "oklch(27% 0.12 290)", "oklch(39% 0.12 290)", "oklch(51% 0.12 290)", "oklch(63% 0.12 290)", "oklch(75% 0.12 290)", "oklch(87% 0.12 290)", "oklch(95% 0.12 290)"] },
-      "ember": { "role": "primary", "displayName": "Living Ember", "canonical": "#FF8A4D", "tonalRamp": ["oklch(15% 0.15 47)", "oklch(27% 0.15 47)", "oklch(39% 0.15 47)", "oklch(51% 0.15 47)", "oklch(63% 0.15 47)", "oklch(75% 0.15 47)", "oklch(87% 0.15 47)", "oklch(95% 0.15 47)"] },
-      "model-cyan": { "role": "tertiary", "displayName": "Truthful Model Cyan", "canonical": "oklch(78.68% 0.1179 228.25)", "tonalRamp": ["oklch(15% 0.1179 228.25)", "oklch(27% 0.1179 228.25)", "oklch(39% 0.1179 228.25)", "oklch(51% 0.1179 228.25)", "oklch(63% 0.1179 228.25)", "oklch(75% 0.1179 228.25)", "oklch(87% 0.1179 228.25)", "oklch(95% 0.1179 228.25)"] }
+      "arena-black": {
+        "role": "neutral",
+        "displayName": "Arena Black",
+        "description": "The app canvas and fixed telemetry field.",
+        "tonalRamp": ["oklch(15% 0.02 290)", "oklch(26% 0.02 290)", "oklch(37% 0.02 290)", "oklch(49% 0.02 290)", "oklch(61% 0.02 290)", "oklch(73% 0.02 290)", "oklch(84% 0.02 290)", "oklch(95% 0.02 290)"]
+      },
+      "raised-ultraviolet-black": {
+        "role": "neutral",
+        "displayName": "Raised Ultraviolet Black",
+        "description": "The first raised surface above the arena.",
+        "tonalRamp": ["oklch(15% 0.025 290)", "oklch(26% 0.025 290)", "oklch(37% 0.025 290)", "oklch(49% 0.025 290)", "oklch(61% 0.025 290)", "oklch(73% 0.025 290)", "oklch(84% 0.025 290)", "oklch(95% 0.025 290)"]
+      },
+      "solid-plate": {
+        "role": "neutral",
+        "displayName": "Solid Plate",
+        "description": "The opaque lens and panel surface.",
+        "tonalRamp": ["oklch(15% 0.025 290)", "oklch(26% 0.025 290)", "oklch(37% 0.025 290)", "oklch(49% 0.025 290)", "oklch(61% 0.025 290)", "oklch(73% 0.025 290)", "oklch(84% 0.025 290)", "oklch(95% 0.025 290)"]
+      },
+      "lens-violet-black": {
+        "role": "neutral",
+        "displayName": "Lens Violet Black",
+        "description": "The mixed ultraviolet-black field behind instrument canvases.",
+        "tonalRamp": ["oklch(15% 0.025 290)", "oklch(26% 0.025 290)", "oklch(37% 0.025 290)", "oklch(49% 0.025 290)", "oklch(61% 0.025 290)", "oklch(73% 0.025 290)", "oklch(84% 0.025 290)", "oklch(95% 0.025 290)"]
+      },
+      "ink-white": {
+        "role": "neutral",
+        "displayName": "Ink White",
+        "description": "Primary facts, live neutral values, and the keyboard focus ring.",
+        "tonalRamp": ["oklch(15% 0.01 290)", "oklch(26% 0.01 290)", "oklch(37% 0.01 290)", "oklch(49% 0.01 290)", "oklch(61% 0.01 290)", "oklch(73% 0.01 290)", "oklch(84% 0.01 290)", "oklch(95% 0.01 290)"]
+      },
+      "muted-lavender": {
+        "role": "neutral",
+        "displayName": "Muted Lavender",
+        "description": "Supporting copy and secondary facts.",
+        "tonalRamp": ["oklch(15% 0.035 290)", "oklch(26% 0.035 290)", "oklch(37% 0.035 290)", "oklch(49% 0.035 290)", "oklch(61% 0.035 290)", "oklch(73% 0.035 290)", "oklch(84% 0.035 290)", "oklch(95% 0.035 290)"]
+      },
+      "dim-lavender": {
+        "role": "neutral",
+        "displayName": "Dim Lavender",
+        "description": "Telemetry labels and low-emphasis instrument metadata.",
+        "tonalRamp": ["oklch(15% 0.035 290)", "oklch(26% 0.035 290)", "oklch(37% 0.035 290)", "oklch(49% 0.035 290)", "oklch(61% 0.035 290)", "oklch(73% 0.035 290)", "oklch(84% 0.035 290)", "oklch(95% 0.035 290)"]
+      },
+      "etched-hairline": {
+        "role": "neutral",
+        "displayName": "Etched Hairline",
+        "description": "Low-emphasis dividers and panel edges.",
+        "tonalRamp": ["oklch(15% 0 0)", "oklch(26% 0 0)", "oklch(37% 0 0)", "oklch(49% 0 0)", "oklch(61% 0 0)", "oklch(73% 0 0)", "oklch(84% 0 0)", "oklch(95% 0 0)"]
+      },
+      "etched-hairline-strong": {
+        "role": "neutral",
+        "displayName": "Strong Etched Hairline",
+        "description": "Interactive borders and deliberate dividers.",
+        "tonalRamp": ["oklch(15% 0 0)", "oklch(26% 0 0)", "oklch(37% 0 0)", "oklch(49% 0 0)", "oklch(61% 0 0)", "oklch(73% 0 0)", "oklch(84% 0 0)", "oklch(95% 0 0)"]
+      },
+      "ultraviolet-chrome": {
+        "role": "secondary",
+        "displayName": "Ultraviolet Chrome",
+        "description": "Active authority, glyphs, and causal progress.",
+        "tonalRamp": ["oklch(15% 0.15 290)", "oklch(26% 0.15 290)", "oklch(37% 0.15 290)", "oklch(49% 0.15 290)", "oklch(61% 0.15 290)", "oklch(73% 0.15 290)", "oklch(84% 0.15 290)", "oklch(95% 0.15 290)"]
+      },
+      "ultraviolet-soft": {
+        "role": "secondary",
+        "displayName": "Soft Ultraviolet",
+        "description": "Low-intensity selected and action fills.",
+        "tonalRamp": ["oklch(15% 0.15 290)", "oklch(26% 0.15 290)", "oklch(37% 0.15 290)", "oklch(49% 0.15 290)", "oklch(61% 0.15 290)", "oklch(73% 0.15 290)", "oklch(84% 0.15 290)", "oklch(95% 0.15 290)"]
+      },
+      "ultraviolet-line": {
+        "role": "secondary",
+        "displayName": "Ultraviolet Line",
+        "description": "Selected-state and lower-third boundary line.",
+        "tonalRamp": ["oklch(15% 0.15 290)", "oklch(26% 0.15 290)", "oklch(37% 0.15 290)", "oklch(49% 0.15 290)", "oklch(61% 0.15 290)", "oklch(73% 0.15 290)", "oklch(84% 0.15 290)", "oklch(95% 0.15 290)"]
+      },
+      "live-ember": {
+        "role": "primary",
+        "displayName": "Live Ember",
+        "description": "The scarce live-ball, trajectory, and selected-output signal.",
+        "tonalRamp": ["oklch(15% 0.161 46.76)", "oklch(26% 0.161 46.76)", "oklch(37% 0.161 46.76)", "oklch(49% 0.161 46.76)", "oklch(61% 0.161 46.76)", "oklch(73% 0.161 46.76)", "oklch(84% 0.161 46.76)", "oklch(95% 0.161 46.76)"]
+      },
+      "face-coral": {
+        "role": "tertiary",
+        "displayName": "Face Coral",
+        "description": "Face angle and start-line quantity.",
+        "tonalRamp": ["oklch(15% 0.20 20)", "oklch(26% 0.20 20)", "oklch(37% 0.20 20)", "oklch(49% 0.20 20)", "oklch(61% 0.20 20)", "oklch(73% 0.20 20)", "oklch(84% 0.20 20)", "oklch(95% 0.20 20)"]
+      },
+      "path-sky": {
+        "role": "tertiary",
+        "displayName": "Path Sky",
+        "description": "Club path, swing direction, and curve quantity.",
+        "tonalRamp": ["oklch(15% 0.1179 228.25)", "oklch(26% 0.1179 228.25)", "oklch(37% 0.1179 228.25)", "oklch(49% 0.1179 228.25)", "oklch(61% 0.1179 228.25)", "oklch(73% 0.1179 228.25)", "oklch(84% 0.1179 228.25)", "oklch(95% 0.1179 228.25)"]
+      },
+      "attack-pink": {
+        "role": "tertiary",
+        "displayName": "Attack Pink",
+        "description": "Attack angle and low-point locus quantity.",
+        "tonalRamp": ["oklch(15% 0.1793 348.62)", "oklch(26% 0.1793 348.62)", "oklch(37% 0.1793 348.62)", "oklch(49% 0.1793 348.62)", "oklch(61% 0.1793 348.62)", "oklch(73% 0.1793 348.62)", "oklch(84% 0.1793 348.62)", "oklch(95% 0.1793 348.62)"]
+      },
+      "loft-lavender": {
+        "role": "tertiary",
+        "displayName": "Loft Lavender",
+        "description": "Dynamic loft and backspin quantity.",
+        "tonalRamp": ["oklch(15% 0.12 295)", "oklch(26% 0.12 295)", "oklch(37% 0.12 295)", "oklch(49% 0.12 295)", "oklch(61% 0.12 295)", "oklch(73% 0.12 295)", "oklch(84% 0.12 295)", "oklch(95% 0.12 295)"]
+      },
+      "launch-citron": {
+        "role": "tertiary",
+        "displayName": "Launch Citron",
+        "description": "Launch-angle quantity.",
+        "tonalRamp": ["oklch(15% 0.10 105)", "oklch(26% 0.10 105)", "oklch(37% 0.10 105)", "oklch(49% 0.10 105)", "oklch(61% 0.10 105)", "oklch(73% 0.10 105)", "oklch(84% 0.10 105)", "oklch(95% 0.10 105)"]
+      },
+      "plane-periwinkle": {
+        "role": "tertiary",
+        "displayName": "Plane Periwinkle",
+        "description": "Swing-plane quantity.",
+        "tonalRamp": ["oklch(15% 0.1494 288.55)", "oklch(26% 0.1494 288.55)", "oklch(37% 0.1494 288.55)", "oklch(49% 0.1494 288.55)", "oklch(61% 0.1494 288.55)", "oklch(73% 0.1494 288.55)", "oklch(84% 0.1494 288.55)", "oklch(95% 0.1494 288.55)"]
+      },
+      "depth-orchid": {
+        "role": "tertiary",
+        "displayName": "Depth Orchid",
+        "description": "Strike-depth quantity.",
+        "tonalRamp": ["oklch(15% 0.15 310)", "oklch(26% 0.15 310)", "oklch(37% 0.15 310)", "oklch(49% 0.15 310)", "oklch(61% 0.15 310)", "oklch(73% 0.15 310)", "oklch(84% 0.15 310)", "oklch(95% 0.15 310)"]
+      },
+      "strike-gold": {
+        "role": "tertiary",
+        "displayName": "Strike Gold",
+        "description": "Contact quality and strike-height quantity.",
+        "tonalRamp": ["oklch(15% 0.1178 78.12)", "oklch(26% 0.1178 78.12)", "oklch(37% 0.1178 78.12)", "oklch(49% 0.1178 78.12)", "oklch(61% 0.1178 78.12)", "oklch(73% 0.1178 78.12)", "oklch(84% 0.1178 78.12)", "oklch(95% 0.1178 78.12)"]
+      }
     },
     "typographyMeta": {
-      "display": { "displayName": "Instrument Conclusion", "purpose": "Guide titles and direct answer conclusions." },
-      "body": { "displayName": "Curious-Golfer Reading", "purpose": "Questions, explanations, and boundaries." },
-      "label": { "displayName": "Exact Readout", "purpose": "Measurements, provenance, labels, and tabular values." }
+      "headline": {
+        "displayName": "Instrument Headline",
+        "purpose": "Screen identity and the highest local title."
+      },
+      "title": {
+        "displayName": "Panel Title",
+        "purpose": "Panel, lens, trajectory, and facts headings."
+      },
+      "body": {
+        "displayName": "Causal Sentence",
+        "purpose": "Short factual explanation of the active cause."
+      },
+      "label": {
+        "displayName": "Instrument Label",
+        "purpose": "Uppercase telemetry labels, causal steps, and metadata."
+      },
+      "data": {
+        "displayName": "Live Data",
+        "purpose": "Tabular live outcomes, values, and model output."
+      },
+      "display": {
+        "displayName": "Guide Display",
+        "purpose": "Concise question and answer headings outside live instrument panels."
+      },
+      "reading": {
+        "displayName": "Guide Reading",
+        "purpose": "Progressive-depth explanations, tables and model boundaries."
+      }
     },
     "shadows": [
-      { "name": "answer-lens", "value": "0 18px 42px color-mix(in srgb, var(--bg) 64%, transparent)", "purpose": "One soft offset shadow for the answer lens." }
+      {
+        "name": "instrument-lift",
+        "value": "0 18px 54px -34px rgba(0, 0, 0, .92)",
+        "purpose": "Separates control banks, facts panels, and instrument lenses from the arena."
+      },
+      {
+        "name": "thumb-contact",
+        "value": "0 3px 10px -3px rgba(0, 0, 0, .9)",
+        "purpose": "Gives range thumbs a compact contact shadow."
+      },
+      {
+        "name": "lower-third-separation",
+        "value": "0 -18px 42px -28px rgba(0, 0, 0, .92)",
+        "purpose": "Separates the compact Cause Trace lower third from content above."
+      },
+      {
+        "name": "ink-focus",
+        "value": "inset 0 0 0 1px rgba(0, 0, 0, .85), inset 0 0 0 3px var(--ink)",
+        "purpose": "Shared keyboard focus signal on controls."
+      },
+      {
+        "name": "lens-top-light",
+        "value": "inset 0 1px rgba(255, 255, 255, .075)",
+        "purpose": "Etches the upper edge of an instrument lens."
+      }
     ],
     "motion": [
-      { "name": "instrument-ease", "value": "cubic-bezier(.2,.8,.2,1)", "purpose": "State changes and the single causal resolving trace." },
-      { "name": "reduced-motion", "value": "prefers-reduced-motion: reduce", "purpose": "Static, fully functional information parity; no lost content or controls." }
+      {
+        "name": "ease-standard",
+        "value": "cubic-bezier(.2,.8,.2,1)",
+        "purpose": "Shared incumbent easing for ordinary state change."
+      },
+      {
+        "name": "mechanics-press",
+        "value": "140ms cubic-bezier(.23, 1, .32, 1)",
+        "purpose": "Press and release feedback on controls."
+      },
+      {
+        "name": "mechanics-state",
+        "value": "180ms cubic-bezier(.23, 1, .32, 1)",
+        "purpose": "Border, color, background, and focus state transitions."
+      },
+      {
+        "name": "pressed-scale",
+        "value": "scale(.97)",
+        "purpose": "Tactile active state for buttons and authority segments."
+      },
+      {
+        "name": "reduced-motion",
+        "value": ".001ms; transform: none",
+        "purpose": "Static information-parity state for motion-sensitive users."
+      }
     ],
     "breakpoints": [
-      { "name": "guide-mobile", "value": "760px" },
-      { "name": "app-navigation-wide", "value": "780px" }
+      {
+        "name": "compact-workspace",
+        "value": "820px"
+      },
+      {
+        "name": "portrait-lower-third",
+        "value": "480px"
+      },
+      {
+        "name": "narrow-instrument",
+        "value": "380px"
+      },
+      {
+        "name": "short-landscape",
+        "value": "(max-height: 500px) and (min-width: 821px)"
+      },
+      {
+        "name": "guide-mobile",
+        "value": "640px"
+      },
+      {
+        "name": "app-navigation-wide",
+        "value": "768px"
+      }
     ]
   },
   "components": [
     {
+      "name": "Icon Control",
+      "kind": "button",
+      "refersTo": "icon-control",
+      "description": "A 44px home or reset control for compact instrument chrome.",
+      "html": "<button class=\"ds-icon-control\" type=\"button\" aria-label=\"Reset active inputs\"><svg viewBox=\"0 0 24 24\" fill=\"none\" aria-hidden=\"true\"><path d=\"M6.3 8.2A7.2 7.2 0 1 1 5 14.6M6.3 8.2V3.8M6.3 8.2h4.4\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg></button>",
+      "css": ".ds-icon-control { width:44px; height:44px; min-width:44px; display:inline-grid; place-items:center; padding:0; border:1px solid var(--line,rgba(255,255,255,.10)); border-radius:var(--radius-control,12px); background:rgba(255,255,255,.035); color:var(--ink,#F5F2FF); cursor:pointer; transition:transform 140ms cubic-bezier(.23,1,.32,1),border-color 180ms cubic-bezier(.23,1,.32,1),background-color 180ms cubic-bezier(.23,1,.32,1); } .ds-icon-control svg { width:19px; height:19px; } .ds-icon-control:hover { border-color:var(--line-strong,rgba(255,255,255,.30)); background:rgba(255,255,255,.065); } .ds-icon-control:focus-visible { outline:none; box-shadow:inset 0 0 0 1px rgba(0,0,0,.85),inset 0 0 0 3px var(--ink,#F5F2FF); } .ds-icon-control:active { transform:scale(.97); } @media (prefers-reduced-motion:reduce) { .ds-icon-control { transition-duration:.001ms; } .ds-icon-control:active { transform:none; } }"
+    },
+    {
+      "name": "Authority Switch",
+      "kind": "nav",
+      "refersTo": "mode-segment-active",
+      "description": "A mutually exclusive two-segment authority selector.",
+      "html": "<div class=\"ds-authority-switch\" role=\"group\" aria-label=\"Input authority\"><button class=\"ds-authority-option\" type=\"button\" aria-pressed=\"true\">Impact Inputs</button><button class=\"ds-authority-option\" type=\"button\" aria-pressed=\"false\">Arc Inputs</button></div>",
+      "css": ".ds-authority-switch { min-width:0; height:48px; display:grid; grid-template-columns:repeat(2,minmax(120px,1fr)); gap:3px; padding:2px; border-radius:14px; background:rgba(255,255,255,.025); } .ds-authority-option { min-height:44px; padding:0 15px; border:0; border-radius:10px; background:transparent; color:var(--muted,#A79FC7); cursor:pointer; font-family:var(--font-ui,'Inter',sans-serif); font-size:12px; font-weight:700; letter-spacing:-.01em; transition:transform 140ms cubic-bezier(.23,1,.32,1),color 180ms cubic-bezier(.23,1,.32,1),background-color 180ms cubic-bezier(.23,1,.32,1),box-shadow 180ms cubic-bezier(.23,1,.32,1); } .ds-authority-option[aria-pressed='true'] { color:var(--ink,#F5F2FF); background:rgba(157,139,255,.15); box-shadow:inset 0 0 0 1px var(--secondary-line,rgba(157,139,255,.45)); } .ds-authority-option:hover:not([aria-pressed='true']) { color:var(--ink,#F5F2FF); background:rgba(255,255,255,.045); } .ds-authority-option:focus-visible { outline:none; box-shadow:inset 0 0 0 1px rgba(0,0,0,.85),inset 0 0 0 3px var(--ink,#F5F2FF); } .ds-authority-option:active { transform:scale(.97); } @media (prefers-reduced-motion:reduce) { .ds-authority-option { transition-duration:.001ms; } .ds-authority-option:active { transform:none; } }"
+    },
+    {
+      "name": "Causal Stepper",
+      "kind": "nav",
+      "refersTo": "causal-stepper",
+      "description": "A compact ordered chain from arc through flight.",
+      "html": "<nav class=\"ds-causal-stepper\" aria-label=\"Causal chain\"><span class=\"ds-causal-node\">Arc</span><svg class=\"ds-causal-link\" viewBox=\"0 0 28 10\" fill=\"none\" aria-hidden=\"true\"><path d=\"M1 5h23m-4-4 4 4-4 4\" stroke=\"currentColor\" stroke-width=\"1.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg><span class=\"ds-causal-node ds-is-active\">Delivery</span><svg class=\"ds-causal-link\" viewBox=\"0 0 28 10\" fill=\"none\" aria-hidden=\"true\"><path d=\"M1 5h23m-4-4 4 4-4 4\" stroke=\"currentColor\" stroke-width=\"1.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg><span class=\"ds-causal-node\">Strike</span><svg class=\"ds-causal-link\" viewBox=\"0 0 28 10\" fill=\"none\" aria-hidden=\"true\"><path d=\"M1 5h23m-4-4 4 4-4 4\" stroke=\"currentColor\" stroke-width=\"1.2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg><span class=\"ds-causal-node\">Flight</span></nav>",
+      "css": ".ds-causal-stepper { min-width:0; min-height:31px; display:flex; align-items:center; justify-content:center; gap:clamp(6px,1.4vw,15px); padding:0 10px; border-bottom:1px solid rgba(255,255,255,.065); background:rgba(13,10,24,.72); color:var(--muted-2,#8E85A8); overflow:hidden; } .ds-causal-node { position:relative; display:inline-flex; align-items:center; min-height:28px; font-family:var(--font-ui,'Inter',sans-serif); font-size:10px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; white-space:nowrap; } .ds-causal-node::after { content:''; position:absolute; left:0; right:0; bottom:-1px; height:2px; border-radius:2px 2px 0 0; background:var(--secondary,#9D8BFF); opacity:0; } .ds-causal-node.ds-is-active { color:var(--ink,#F5F2FF); } .ds-causal-node.ds-is-active::after { opacity:1; } .ds-causal-link { width:27px; height:10px; color:rgba(245,242,255,.23); flex:0 1 27px; }"
+    },
+    {
+      "name": "Semantic Parameter Control",
+      "kind": "input",
+      "refersTo": "parameter-control",
+      "description": "A label, semantic range, and mono-value row for one physical quantity.",
+      "html": "<div class=\"ds-parameter-control ds-parameter-control--face\"><label class=\"ds-parameter-name\" for=\"ds-face\">Face Angle</label><input id=\"ds-face\" class=\"ds-parameter-range\" type=\"range\" min=\"-12\" max=\"12\" step=\"0.5\" value=\"0\"><output class=\"ds-parameter-value\" for=\"ds-face\">0.0°</output></div>",
+      "css": ".ds-parameter-control { --ds-parameter:var(--secondary,#9D8BFF); min-width:0; min-height:44px; display:grid; grid-template-columns:minmax(67px,.72fr) minmax(66px,1.28fr) minmax(49px,.55fr); align-items:center; gap:7px; border-top:1px solid rgba(255,255,255,.07); color:var(--ink,#F5F2FF); } .ds-parameter-control--face { --ds-parameter:var(--q-face,#FF5C6B); } .ds-parameter-name { min-width:0; color:color-mix(in srgb,var(--ds-parameter) 74%,var(--ink,#F5F2FF)); font-family:var(--font-ui,'Inter',sans-serif); font-size:10px; font-weight:700; line-height:1.12; } .ds-parameter-value { min-width:0; color:var(--ink,#F5F2FF); font-family:var(--font-mono,'IBM Plex Mono',monospace); font-size:11px; font-variant-numeric:tabular-nums; font-weight:550; text-align:right; white-space:nowrap; } .ds-parameter-range { width:100%; min-width:0; height:44px; margin:0; appearance:none; background:transparent; cursor:pointer; accent-color:var(--ds-parameter); } .ds-parameter-range::-webkit-slider-runnable-track { height:3px; border-radius:3px; background:linear-gradient(90deg,color-mix(in srgb,var(--ds-parameter) 72%,transparent) 0 50%,rgba(255,255,255,.16) 50% 100%); } .ds-parameter-range::-webkit-slider-thumb { width:17px; height:17px; margin-top:-7px; appearance:none; border:3px solid var(--plate-solid,#0D0A18); border-radius:50%; background:var(--ds-parameter); box-shadow:0 3px 10px -3px rgba(0,0,0,.9); } .ds-parameter-range:focus-visible { outline:none; box-shadow:inset 0 0 0 1px rgba(0,0,0,.85),inset 0 0 0 3px var(--ink,#F5F2FF); }"
+    },
+    {
+      "name": "Handoff Action",
+      "kind": "button",
+      "refersTo": "handoff-action",
+      "description": "The explicit action that transfers arc-derived values into impact inputs.",
+      "html": "<button class=\"ds-handoff-action\" type=\"button\"><span>Use in Impact Inputs</span><svg viewBox=\"0 0 24 24\" fill=\"none\" aria-hidden=\"true\"><path d=\"M4 12h15m-5-5 5 5-5 5\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg></button>",
+      "css": ".ds-handoff-action { width:100%; min-height:44px; display:inline-flex; align-items:center; justify-content:space-between; gap:10px; padding:0 12px; border:1px solid var(--secondary-line,rgba(157,139,255,.45)); border-radius:var(--radius-control,12px); background:var(--secondary-soft,rgba(157,139,255,.14)); color:var(--ink,#F5F2FF); cursor:pointer; font-family:var(--font-ui,'Inter',sans-serif); font-size:11px; font-weight:700; transition:transform 140ms cubic-bezier(.23,1,.32,1),background-color 180ms cubic-bezier(.23,1,.32,1),border-color 180ms cubic-bezier(.23,1,.32,1); } .ds-handoff-action svg { width:20px; height:20px; flex:0 0 auto; color:var(--secondary,#9D8BFF); } .ds-handoff-action:hover { border-color:var(--secondary,#9D8BFF); background:rgba(157,139,255,.21); } .ds-handoff-action:focus-visible { outline:none; box-shadow:inset 0 0 0 1px rgba(0,0,0,.85),inset 0 0 0 3px var(--ink,#F5F2FF); } .ds-handoff-action:active { transform:scale(.97); } @media (prefers-reduced-motion:reduce) { .ds-handoff-action { transition-duration:.001ms; } .ds-handoff-action:active { transform:none; } }"
+    },
+    {
+      "name": "Instrument Lens",
+      "kind": "card",
+      "refersTo": "instrument-lens",
+      "description": "A clipped data lens with an etched top light and live summary.",
+      "html": "<section class=\"ds-instrument-lens\" aria-label=\"Direction lens\"><div class=\"ds-lens-heading\"><h2>Direction</h2><p>Face 0.0° · Path 0.0°</p></div><canvas class=\"ds-lens-canvas\" aria-hidden=\"true\"></canvas><span class=\"ds-sr-only\">Face and path are neutral.</span></section>",
+      "css": ".ds-instrument-lens { position:relative; min-width:0; min-height:180px; overflow:hidden; border:1px solid var(--line,rgba(255,255,255,.10)); border-radius:var(--radius-lens,20px); background:color-mix(in srgb,var(--surface,#110D1C) 82%,var(--bg,#07060C)); box-shadow:0 18px 54px -34px rgba(0,0,0,.92),inset 0 1px rgba(255,255,255,.075); color:var(--ink,#F5F2FF); } .ds-lens-heading { position:absolute; z-index:2; top:9px; left:11px; right:11px; display:flex; align-items:baseline; justify-content:space-between; gap:8px; pointer-events:none; } .ds-lens-heading h2 { margin:0; font-family:var(--font-display,'Space Grotesk',sans-serif); font-size:11px; font-weight:650; line-height:1; letter-spacing:-.015em; } .ds-lens-heading p { max-width:68%; margin:0; overflow:hidden; color:var(--muted-2,#8E85A8); font-family:var(--font-mono,'IBM Plex Mono',monospace); font-size:10px; font-variant-numeric:tabular-nums; line-height:1.2; text-align:right; text-overflow:ellipsis; white-space:nowrap; } .ds-lens-canvas { position:absolute; inset:0; width:100%; height:100%; display:block; } .ds-sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }"
+    },
+    {
+      "name": "Cause Trace Panel",
+      "kind": "card",
+      "refersTo": "cause-trace-panel",
+      "description": "A factual causal sentence with compact scope metadata.",
+      "html": "<aside class=\"ds-cause-trace\" aria-label=\"What changed\"><div class=\"ds-cause-heading\"><h2>Cause trace</h2><span>Impact → flight</span></div><p class=\"ds-cause-copy\">Face Angle 0.0° sets the start line and contributes to curvature.</p><div class=\"ds-cause-divider\" aria-hidden=\"true\"></div><p class=\"ds-cause-scope\"><strong>Synthetic model output</strong> · 7-iron reference.</p></aside>",
+      "css": ".ds-cause-trace { min-width:0; min-height:172px; display:flex; flex-direction:column; overflow:hidden; padding:10px; border:1px solid var(--line,rgba(255,255,255,.10)); border-radius:var(--radius-card,16px); background:rgba(13,10,24,.82); box-shadow:0 18px 54px -34px rgba(0,0,0,.92); color:var(--ink,#F5F2FF); } .ds-cause-heading { min-height:25px; display:flex; align-items:baseline; justify-content:space-between; gap:8px; padding:0 2px 6px; } .ds-cause-heading h2 { margin:0; font-family:var(--font-display,'Space Grotesk',sans-serif); font-size:13px; font-weight:650; line-height:1; letter-spacing:-.02em; } .ds-cause-heading span { color:var(--muted-2,#8E85A8); font-family:var(--font-ui,'Inter',sans-serif); font-size:10px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; } .ds-cause-copy { margin:2px 0 0; color:var(--ink,#F5F2FF); font-family:var(--font-display,'Space Grotesk',sans-serif); font-size:clamp(13px,1.45vw,17px); font-weight:560; line-height:1.24; letter-spacing:-.025em; } .ds-cause-divider { width:34px; height:1px; margin:10px 0; background:var(--line-strong,rgba(255,255,255,.30)); } .ds-cause-scope { margin:auto 0 0; padding-top:10px; border-top:1px solid rgba(255,255,255,.07); color:var(--muted-2,#8E85A8); font-family:var(--font-ui,'Inter',sans-serif); font-size:10px; font-weight:600; line-height:1.35; } .ds-cause-scope strong { color:var(--muted,#A79FC7); font-weight:650; }"
+    },
+    {
+      "name": "Key-Value List",
+      "kind": "custom",
+      "refersTo": "key-value-list",
+      "description": "Compact derived facts with semantic mono values.",
+      "html": "<dl class=\"ds-key-value-list\"><div class=\"ds-key-value-row ds-key-value-row--attack\"><dt>Derived Attack</dt><dd>−4.1°</dd></div><div class=\"ds-key-value-row ds-key-value-row--path\"><dt>Derived Path</dt><dd>+2.9°</dd></div><div class=\"ds-key-value-row ds-key-value-row--strike\"><dt>Contact</dt><dd>Pure · +1.8 mm</dd></div></dl>",
+      "css": ".ds-key-value-list { display:grid; gap:8px; margin:0; color:var(--ink,#F5F2FF); } .ds-key-value-row { display:flex; align-items:baseline; justify-content:space-between; gap:8px; } .ds-key-value-row dt { color:var(--muted-2,#8E85A8); font-family:var(--font-ui,'Inter',sans-serif); font-size:10px; font-weight:700; line-height:1.2; letter-spacing:.07em; text-transform:uppercase; } .ds-key-value-row dd { margin:0; color:var(--ink,#F5F2FF); font-family:var(--font-mono,'IBM Plex Mono',monospace); font-size:11px; font-variant-numeric:tabular-nums; font-weight:550; text-align:right; } .ds-key-value-row--attack dd { color:var(--q-attack,oklch(72.34% .1793 348.62)); } .ds-key-value-row--path dd { color:var(--q-path,oklch(78.68% .1179 228.25)); } .ds-key-value-row--strike dd { color:var(--q-strike,oklch(78.73% .1178 78.12)); }"
+    },
+    {
+      "name": "Telemetry Strip",
+      "kind": "custom",
+      "refersTo": "telemetry-strip",
+      "description": "Six persistent modeled outcomes with semantic data color.",
+      "html": "<section class=\"ds-telemetry-strip\" aria-label=\"Live outcomes\"><div class=\"ds-telemetry-cell ds-telemetry-cell--start\"><span>Start</span><output>0.0°</output></div><div class=\"ds-telemetry-cell ds-telemetry-cell--curve\"><span>Curve</span><output>0.0 m</output></div><div class=\"ds-telemetry-cell ds-telemetry-cell--launch\"><span>Launch</span><output>15.4°</output></div><div class=\"ds-telemetry-cell ds-telemetry-cell--backspin\"><span>Backspin</span><output>6,623 rpm</output></div><div class=\"ds-telemetry-cell\"><span>Apex</span><output>25.1 m</output></div><div class=\"ds-telemetry-cell ds-telemetry-cell--carry\"><span>Carry</span><output>159.1 m</output></div></section>",
+      "css": ".ds-telemetry-strip { min-width:0; display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); border-top:1px solid var(--line,rgba(255,255,255,.10)); background:rgba(7,6,12,.95); color:var(--ink,#F5F2FF); } .ds-telemetry-cell { min-width:0; min-height:72px; display:flex; flex-direction:column; justify-content:center; gap:3px; padding:7px clamp(7px,1.1vw,14px) 8px; border-left:1px solid rgba(255,255,255,.07); } .ds-telemetry-cell:first-child { border-left:0; } .ds-telemetry-cell span { color:var(--muted-2,#8E85A8); font-family:var(--font-ui,'Inter',sans-serif); font-size:10px; font-weight:700; line-height:1; letter-spacing:.08em; text-transform:uppercase; white-space:nowrap; } .ds-telemetry-cell output { min-width:0; overflow:hidden; color:var(--ink,#F5F2FF); font-family:var(--font-mono,'IBM Plex Mono',monospace); font-size:clamp(15px,2.25vw,24px); font-variant-numeric:tabular-nums; font-weight:550; line-height:1; letter-spacing:-.035em; text-overflow:ellipsis; white-space:nowrap; } .ds-telemetry-cell--start output { color:var(--q-face,#FF5C6B); } .ds-telemetry-cell--curve output { color:var(--q-path,oklch(78.68% .1179 228.25)); } .ds-telemetry-cell--launch output { color:var(--q-launch,oklch(80% .10 105)); } .ds-telemetry-cell--backspin output { color:var(--q-loft,#B9A0FF); } .ds-telemetry-cell--carry output { color:var(--accent,#FF8A4D); } @media (max-width:820px) { .ds-telemetry-strip { grid-template-columns:repeat(2,minmax(0,1fr)); } .ds-telemetry-cell:nth-child(odd) { border-left:0; } .ds-telemetry-cell output { font-size:22px; } } @media (max-width:480px) { .ds-telemetry-strip { grid-template-columns:repeat(3,minmax(0,1fr)); grid-template-rows:repeat(2,minmax(0,1fr)); } .ds-telemetry-cell,.ds-telemetry-cell:nth-child(odd) { min-height:56px; padding:5px 9px; border-top:1px solid rgba(255,255,255,.07); border-left:1px solid rgba(255,255,255,.07); } .ds-telemetry-cell:nth-child(-n+3) { border-top:0; } .ds-telemetry-cell:nth-child(3n+1) { border-left:0; } .ds-telemetry-cell output { font-size:18px; } }"
+    },
+    {
+      "name": "App Shell Navigation",
+      "kind": "nav",
+      "description": "The shared opaque Home, Range, Mechanics and Guide route bar with safe-area ownership.",
+      "html": "<nav class=\"ds-app-shell\" aria-label=\"Primary\"><a href=\"./index.html\">Home</a><a href=\"./impact.html\">Range</a><a href=\"./impact-studio.html\" aria-current=\"page\">Mechanics</a><a href=\"./jarvis.html\">Guide</a></nav>",
+      "css": ".ds-app-shell { min-height:calc(56px + env(safe-area-inset-bottom)); display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); padding:4px 8px env(safe-area-inset-bottom); border-top:1px solid var(--line,rgba(255,255,255,.10)); background:rgba(7,6,12,.98); } .ds-app-shell a { min-height:44px; display:grid; place-items:center; border-radius:12px; color:var(--muted,#A79FC7); font:700 10px/1 var(--font-ui,'Inter',sans-serif); text-decoration:none; } .ds-app-shell a[aria-current='page'] { color:var(--ink,#F5F2FF); background:var(--secondary-soft,rgba(157,139,255,.14)); } .ds-app-shell a:focus-visible { outline:none; box-shadow:inset 0 0 0 1px rgba(0,0,0,.85),inset 0 0 0 3px var(--ink,#F5F2FF); }"
+    },
+    {
+      "name": "Question Ladder Row",
+      "kind": "button",
+      "description": "A bounded Guide choice with no free-text implication.",
+      "html": "<button class=\"ds-question-row\" type=\"button\"><span>What changes start direction?</span><small>Face angle · modelled</small></button>",
+      "css": ".ds-question-row { width:100%; min-height:52px; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:8px 12px; border:1px solid var(--line,rgba(255,255,255,.10)); border-radius:12px; background:var(--surface,#110D1C); color:var(--ink,#F5F2FF); font:650 13px/1.25 var(--font-ui,'Inter',sans-serif); text-align:left; } .ds-question-row small { color:var(--muted-2,#8E85A8); font:700 10px/1.2 var(--font-ui,'Inter',sans-serif); } .ds-question-row:focus-visible { outline:none; box-shadow:inset 0 0 0 1px rgba(0,0,0,.85),inset 0 0 0 3px var(--ink,#F5F2FF); }"
+    },
+    {
+      "name": "Truth Label",
+      "kind": "custom",
+      "description": "A text-first classification for modelled facts, geometry, estimates and unsupported variables.",
+      "html": "<span class=\"ds-truth-label\">Modelled outcome</span>",
+      "css": ".ds-truth-label { display:inline-flex; min-height:24px; align-items:center; padding:0 8px; border:1px solid var(--secondary-line,rgba(157,139,255,.45)); border-radius:999px; color:var(--muted,#A79FC7); font:700 10px/1 var(--font-ui,'Inter',sans-serif); letter-spacing:.08em; text-transform:uppercase; }"
+    },
+    {
+      "name": "Model Boundary",
+      "kind": "card",
+      "description": "A neutral, persistent statement of what Flightglass does not measure or prescribe.",
+      "html": "<aside class=\"ds-model-boundary\"><strong>Model boundary</strong><p>This instrument models mechanics; it does not measure or diagnose your swing.</p></aside>",
+      "css": ".ds-model-boundary { padding:12px; border-left:2px solid var(--secondary,#9D8BFF); background:rgba(157,139,255,.08); color:var(--muted,#A79FC7); font:560 13px/1.4 var(--font-ui,'Inter',sans-serif); } .ds-model-boundary strong { display:block; margin-bottom:4px; color:var(--ink,#F5F2FF); font-size:10px; letter-spacing:.08em; text-transform:uppercase; } .ds-model-boundary p { margin:0; }"
+    },
+    {
       "name": "Primary Guide Action",
       "kind": "button",
-      "refersTo": "button-primary",
-      "description": "The one ember action that opens a controlled comparison.",
-      "html": "<button class=\"ds-guide-primary\">Compare one change <span aria-hidden=\"true\">›</span></button>",
-      "css": ".ds-guide-primary{width:100%;min-height:48px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;border:0;border-radius:12px;background:var(--accent);color:var(--bg);font:700 14px/1 var(--font-ui);cursor:pointer;transition:filter .18s var(--ease)}.ds-guide-primary:hover{filter:brightness(1.06)}.ds-guide-primary:focus-visible{outline:none;box-shadow:inset 0 0 0 1px var(--bg),inset 0 0 0 3px var(--ink)}"
+      "description": "The one ember action that advances a bounded Guide answer or opens its live experiment.",
+      "html": "<button class=\"ds-guide-primary\" type=\"button\">Open Mechanics Lab</button>",
+      "css": ".ds-guide-primary { min-height:44px; padding:0 16px; border:1px solid var(--accent,#FF8A4D); border-radius:12px; background:var(--accent,#FF8A4D); color:#07060C; font:750 12px/1 var(--font-ui,'Inter',sans-serif); } .ds-guide-primary:focus-visible { outline:none; box-shadow:inset 0 0 0 1px rgba(0,0,0,.85),inset 0 0 0 3px var(--ink,#F5F2FF); }"
     },
     {
       "name": "Secondary Guide Action",
       "kind": "button",
-      "refersTo": "button-secondary",
-      "description": "A quiet reset or supporting action with equal target size.",
-      "html": "<button class=\"ds-guide-secondary\">Reset comparison</button>",
-      "css": ".ds-guide-secondary{width:100%;min-height:48px;padding:12px 16px;border:1px solid var(--line-strong);border-radius:12px;background:transparent;color:var(--ink);font:700 14px/1 var(--font-ui);cursor:pointer;transition:background .18s var(--ease)}.ds-guide-secondary:hover{background:color-mix(in srgb,var(--secondary) 10%,transparent)}.ds-guide-secondary:focus-visible{outline:none;box-shadow:inset 0 0 0 1px var(--bg),inset 0 0 0 3px var(--ink)}"
-    },
-    {
-      "name": "Question Ladder Row",
-      "kind": "custom",
-      "description": "A full-width topic row that opens one precise branch.",
-      "html": "<button class=\"ds-topic\"><span class=\"ds-topic-index\">01</span><span><strong>Direction</strong><small>Start line, curve, face and path</small></span><span aria-hidden=\"true\">›</span></button>",
-      "css": ".ds-topic{width:100%;min-height:76px;padding:12px 8px;display:grid;grid-template-columns:34px minmax(0,1fr) 20px;align-items:center;gap:12px;border:0;border-bottom:1px solid var(--line);background:transparent;color:var(--ink);text-align:left;font-family:var(--font-ui);cursor:pointer;transition:background .18s var(--ease),color .18s var(--ease)}.ds-topic strong,.ds-topic small{display:block}.ds-topic strong{font-size:15px;line-height:1.25}.ds-topic small{margin-top:4px;color:var(--muted);font-size:12px;line-height:1.35}.ds-topic-index{color:var(--secondary);font:500 10px/1 var(--font-data)}.ds-topic:hover{background:color-mix(in srgb,var(--secondary) 10%,transparent)}.ds-topic:focus-visible{outline:none;box-shadow:inset 0 0 0 1px var(--bg),inset 0 0 0 3px var(--ink)}"
-    },
-    {
-      "name": "Truth Label",
-      "kind": "chip",
-      "description": "A labelled provenance pill for a model boundary.",
-      "html": "<span class=\"ds-truth\">RANGE MODELLED</span>",
-      "css": ".ds-truth{display:inline-block;padding:7px 9px;border:1px solid var(--path);border-radius:999px;color:var(--path);font:600 10px/1 var(--font-data);letter-spacing:.08em;white-space:nowrap}"
+      "description": "A violet structural action for progressive depth without competing with the primary action.",
+      "html": "<button class=\"ds-guide-secondary\" type=\"button\">See supporting values</button>",
+      "css": ".ds-guide-secondary { min-height:44px; padding:0 14px; border:1px solid var(--secondary-line,rgba(157,139,255,.45)); border-radius:12px; background:var(--secondary-soft,rgba(157,139,255,.14)); color:var(--ink,#F5F2FF); font:700 12px/1 var(--font-ui,'Inter',sans-serif); } .ds-guide-secondary:focus-visible { outline:none; box-shadow:inset 0 0 0 1px rgba(0,0,0,.85),inset 0 0 0 3px var(--ink,#F5F2FF); }"
     },
     {
       "name": "Answer Lens",
       "kind": "card",
-      "refersTo": "answer-lens",
-      "description": "The dominant answer container, ordered from conclusion to evidence to action.",
-      "html": "<article class=\"ds-answer-lens\"><span class=\"ds-answer-kicker\">DIRECTION</span><h2>One direct answer first.</h2><p>Then show bounded evidence and an exact comparison.</p></article>",
-      "css": ".ds-answer-lens{padding:clamp(18px,4vw,34px);border-radius:20px;background:linear-gradient(180deg,color-mix(in srgb,var(--surface) 94%,transparent),color-mix(in srgb,var(--plate-solid) 96%,transparent));box-shadow:0 18px 42px color-mix(in srgb,var(--bg) 64%,transparent);color:var(--ink);font-family:var(--font-ui)}.ds-answer-kicker{color:var(--secondary);font:600 10px/1 var(--font-data);letter-spacing:.08em}.ds-answer-lens h2{max-width:24ch;margin:12px 0 0;font:600 clamp(24px,4vw,38px)/1 var(--font-display);letter-spacing:-.035em}.ds-answer-lens p{margin:14px 0 0;color:var(--muted);font-size:14px;line-height:1.45}"
-    },
-    {
-      "name": "Model Boundary",
-      "kind": "custom",
-      "refersTo": "model-boundary",
-      "description": "A visible statement of what the shipping model can answer now.",
-      "html": "<aside class=\"ds-boundary\"><span><strong>Available now</strong><small>The shipping model can answer this bounded relationship.</small></span><b>NOW</b></aside>",
-      "css": ".ds-boundary{min-height:64px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:16px;border:1px solid var(--secondary-line);border-radius:12px;background:color-mix(in srgb,var(--secondary) 7%,transparent);color:var(--ink);font-family:var(--font-ui)}.ds-boundary strong,.ds-boundary small{display:block}.ds-boundary strong{font-size:13px}.ds-boundary small{margin-top:5px;color:var(--muted);font-size:12px;line-height:1.4}.ds-boundary b{color:var(--secondary);font:600 10px/1 var(--font-data);letter-spacing:.06em}"
+      "description": "One concise Guide conclusion with progressive supporting evidence.",
+      "html": "<article class=\"ds-answer-lens\"><span class=\"ds-truth-label\">Modelled fact</span><h2>Face angle leads start direction.</h2><p>Club path changes the face-to-path relationship and therefore curve.</p></article>",
+      "css": ".ds-answer-lens { padding:16px; border:1px solid var(--line,rgba(255,255,255,.10)); border-radius:16px; background:var(--surface,#110D1C); box-shadow:0 18px 54px -34px rgba(0,0,0,.92); color:var(--ink,#F5F2FF); } .ds-answer-lens h2 { margin:12px 0 6px; font:650 17px/1.15 var(--font-display,'Space Grotesk',sans-serif); } .ds-answer-lens p { margin:0; color:var(--muted,#A79FC7); font:560 13px/1.45 var(--font-ui,'Inter',sans-serif); }"
     },
     {
       "name": "Active App Navigation Link",
       "kind": "nav",
-      "refersTo": "app-navigation-active",
-      "description": "The shared four-route bottom navigation’s selected route.",
-      "html": "<a class=\"ds-nav-link\" href=\"#guide\" aria-current=\"page\"><span aria-hidden=\"true\">◎</span><span>Guide</span></a>",
-      "css": ".ds-nav-link{position:relative;min-width:44px;min-height:44px;display:grid;place-items:center;align-content:center;gap:2px;border-radius:12px;background:color-mix(in srgb,var(--secondary) 12%,transparent);color:var(--secondary);font:600 10px/1 var(--font-ui);letter-spacing:.03em;text-decoration:none}.ds-nav-link::after{content:\"\";position:absolute;left:25%;right:25%;bottom:1px;height:2px;border-radius:999px;background:var(--secondary)}.ds-nav-link:hover{background:var(--secondary-soft)}.ds-nav-link:focus-visible{outline:none;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--bg) 85%,transparent),inset 0 0 0 3px var(--ink)}"
+      "description": "The current-route state within the shared app shell.",
+      "html": "<a class=\"ds-app-nav-link\" href=\"./impact-studio.html\" aria-current=\"page\">Mechanics</a>",
+      "css": ".ds-app-nav-link { min-height:44px; display:grid; place-items:center; border-radius:12px; color:var(--muted,#A79FC7); font:700 10px/1 var(--font-ui,'Inter',sans-serif); text-decoration:none; } .ds-app-nav-link[aria-current='page'] { color:var(--ink,#F5F2FF); background:var(--secondary-soft,rgba(157,139,255,.14)); box-shadow:inset 0 -2px var(--secondary,#9D8BFF); } .ds-app-nav-link:focus-visible { outline:none; box-shadow:inset 0 0 0 1px rgba(0,0,0,.85),inset 0 0 0 3px var(--ink,#F5F2FF); }"
     }
   ],
   "narrative": {
-    "northStar": "Flightglass Field Instrument / Question Ladder",
-    "overview": "Flightglass is a cold, precise field instrument for explaining a bounded golf model. The system gives a question, its evidence, deterministic geometry, and exact comparison a single vertical chain rather than breaking them into decorative dashboard cards. It is dense enough for real measurements but calm enough for a golfer asking one practical question.\n\nThe portable visual contract complements, and never replaces, the technical authority in `docs/DESIGN-SYSTEM.md`; `sa-p3.css` remains the token and law source of truth. Dark solid lenses, thin hairlines, tonal layering, violet structure, cyan model traces, and a single rare ember action make model boundaries visible as part of the interface itself.",
-    "keyCharacteristics": ["A Browse → Answer → Lab progression: answer first, evidence and controlled comparison on demand.", "One dominant panel on a phone; a narrow ladder may sit beside the evidence lens on desktop.", "Truth labels, held constants, and model limits are first-class UI, not decorative badges.", "No fake chat, assistant orb, typewriter theatre, FAQ grid, marketing hero, or ornamental glass."],
-    "rules": [
-      { "name": "The One Ember Rule", "body": "Ember is reserved for a live point or the single primary action; it must not become general-purpose emphasis.", "section": "colors" },
-      { "name": "The One Hue, One Meaning Rule", "body": "A physical quantity keeps its labelled semantic hue across views; colour never supplies meaning without its text label.", "section": "colors" },
-      { "name": "The Exact Readout Rule", "body": "Use IBM Plex Mono with tabular numerals for measurements only; keep the existing unit grammar and never render text below 10px.", "section": "typography" },
-      { "name": "The Lens, Not Glass Rule", "body": "Prefer a dark solid answer lens and hairline separators over translucent decorative glass or repeated floating cards.", "section": "elevation" }
+    "northStar": "The Ultraviolet Ballistics Bench",
+    "overview": "Flightglass is an ultraviolet-black arena arranged like a precision ballistics bench under restrained broadcast light. Dense controls, paired views, causal facts, and live outcomes read as one instrument: etched hairlines establish structure, semantic quantity hues preserve physical meaning, and mono numerals carry the live truth.\n\nThe system is factual, impersonal, and non-coaching. Sports-broadcast density is welcome when it keeps cause and effect visible together, but spectacle never outranks traceability. The shipped paired-lens Mechanics Lab is a proven composition for that surface, not a global mandate for every page. Home, Range/Outcome, Mechanics and Guide remain one product through the shared app shell, safe-area rules, truth labels and access states.",
+    "keyCharacteristics": [
+      "Ultraviolet-black surfaces with cold violet chrome and etched hairlines.",
+      "Stable semantic hues that bind one color to one physical quantity.",
+      "IBM Plex Mono numerals for live values, units, and model output.",
+      "A scarce ember trace reserved for the ball, trajectory, and selected live data.",
+      "Compact broadcast density with factual text and immediate state continuity."
     ],
-    "dos": ["Do use violet hairlines and tonal fills to show question hierarchy and active model state.", "Do show the short answer before deeper evidence, then offer the live lab as one controlled change.", "Do pair labelled cyan traces with deterministic geometry and exact values in accessible HTML.", "Do retain visible focus, 44px minimum targets, and complete reduced-motion information parity.", "Do state provenance, held constants, estimates, and unsupported variables directly at the claim."],
-    "donts": ["Don't use ember for generic decoration, multiple competing actions, or a focus ring.", "Don't turn the Guide into a chatbot, assistant-avatar experience, typewriter simulation, or FAQ card grid.", "Don't use decorative frosted glass, heavy shadows, or card-dashboard drift to create hierarchy.", "Don't imply diagnosis, personal fitting, or precision outside the shipping model’s stated boundaries."]
+    "rules": [
+      {
+        "name": "The Restrained Ember Rule",
+        "body": "At rest, use no more than three ember elements: the ball or tracer, one live hero value, and one primary action. The logo ball remains the codified identity exception.",
+        "section": "colors"
+      },
+      {
+        "name": "The One Hue, One Quantity Rule",
+        "body": "A semantic data hue keeps exactly one physical meaning across controls, diagrams, and outputs; use the corresponding quantity role and never recycle that hue as status or decoration.",
+        "section": "colors"
+      },
+      {
+        "name": "The Mono Means Measured Rule",
+        "body": "IBM Plex Mono is for data values only. Labels, instructions, headings, and actions remain in the UI or display families.",
+        "section": "typography"
+      },
+      {
+        "name": "The Lower-Third Continuity Rule",
+        "body": "On compact live-instrument surfaces, keep causal explanation immediately above persistent telemetry and reserve its exact footprint in content. This is a responsive component rule, not a requirement that unrelated pages copy the Mechanics Lab composition.",
+        "section": "layout"
+      },
+      {
+        "name": "The Etched-Before-Floating Rule",
+        "body": "Establish hierarchy with tone, hairlines, and a one-pixel top light first; use cast shadow only when a surface must separate from moving or fixed content.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Radius Ladder Rule",
+        "body": "Keep controls, cards, and lenses on the 12/16/20px ladder; introduce a different radius only when a component's nesting or viewport attachment makes the hierarchy clearer.",
+        "section": "shapes"
+      }
+    ],
+    "dos": [
+      "Do bind every colored control, trace, and output to its established physical quantity.",
+      "Do keep live values tabular, use U+2212 for negative numbers, and mirror canvas facts in accessible DOM text.",
+      "Do preserve 44px minimum targets, the double ink focus ring, and full information parity under reduced motion.",
+      "Do use the compact Cause Trace lower third above persistent telemetry when a live instrument reaches 480px or narrower.",
+      "Do write factual causal sentences that describe model behavior without grading or coaching the golfer.",
+      "Do keep shared shell, access and truth states consistent across Home, Range/Outcome, Mechanics and Guide."
+    ],
+    "donts": [
+      "Don't use ember as generic accent, status, hover chrome, or decorative glow.",
+      "Don't reassign a semantic quantity hue or show it as an unlabeled status dot.",
+      "Don't turn the Mechanics Lab's paired-lens composition into a universal page template or a ban on other evidence-led layouts.",
+      "Don't introduce generic SaaS cards, decorative glassmorphism, dashboard clutter, or gamified scoring into mechanics surfaces.",
+      "Don't hide changing relationships behind animation; reduced motion must preserve every value and causal connection.",
+      "Don't let Range/Outcome or Guide duplicate Mechanics as a second causal authority."
+    ]
   }
 }
