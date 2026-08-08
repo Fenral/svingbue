@@ -50,11 +50,12 @@ test('the public support surface covers purchase recovery and local-data rights'
 test('the store pack describes current v1 without claiming Academy or an Android release', () => {
   const listing = read('docs/store-listing.md');
   assert.match(listing, /Outcome model/i);
-  assert.match(listing, /Impact Studio/i);
+  assert.match(listing, /Mechanics Lab/i);
   assert.match(listing, /Flightglass Guide/i);
   assert.match(listing, /marketing landing page is deferred/i);
   assert.match(listing, /Android remains a separate release track/i);
   assert.match(listing, /https:\/\/svingbue\.vercel\.app\/support\.html/);
+  assert.doesNotMatch(listing, /Impact Studio/i);
   assert.doesNotMatch(listing, /24 lessons|Academy is included|signed Android release/i);
 });
 
@@ -194,6 +195,7 @@ test('the committed store gallery contains exactly five current upload candidate
 
   const gallery = read('appstore/index.html');
   const generator = read('scripts/store-screenshots.mjs');
+  const onboardingGenerator = read('scripts/capture-onboarding-visuals.mjs');
   assert.doesNotMatch(gallery, /StrikeArc|Academy|24 lessons/i);
   assert.doesNotMatch(generator, /route:\s*['"](?:academy|geometry)\.html['"]/i);
   for (const route of ['index.html', 'impact.html', 'impact-studio.html', 'jarvis.html']) {
@@ -202,6 +204,16 @@ test('the committed store gallery contains exactly five current upload candidate
 
   const ids = [...generator.matchAll(/id:\s*'([^']+)'/g)].map((match) => match[1]);
   assert.deepEqual(ids.slice(0, 5), ['outcome', 'studio', 'guide', 'home', 'onboarding']);
+  for (const [name, source] of [
+    ['store screenshot generator', generator],
+    ['onboarding capture generator', onboardingGenerator],
+  ]) {
+    const studio = source.match(/id:\s*['"]studio['"][\s\S]{0,400}?ready:\s*['"]([^'"]+)['"]/);
+    assert.ok(studio, `${name} must declare a Studio compatibility capture`);
+    assert.equal(studio[1], 'main.mechanics', `${name} waits for the stable Mechanics root`);
+  }
+  assert.match(generator, /eyebrow:\s*['"]MECHANICS LAB['"]/);
+  assert.doesNotMatch(generator, /eyebrow:\s*['"]IMPACT STUDIO['"]/);
 });
 
 test('public support and legal pages respect safe areas and retain 44px navigation targets', () => {

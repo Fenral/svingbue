@@ -79,15 +79,18 @@ test('sa-orientation.js resolves ScreenOrientation from the native-injected brid
   assert.match(src, /isNativePlatform/, 'must guard on native so the web build is a no-op');
   assert.match(src, /export\s+(?:const|function|async function)\s+lockPortrait/, 'exports lockPortrait');
   assert.match(src, /export\s+(?:const|function|async function)\s+lockLandscape/, 'exports lockLandscape');
+  assert.match(src, /export\s+(?:const|function|async function)\s+unlockOrientation/, 'exports unlockOrientation');
   assert.match(src, /plugin\.lock\(\s*\{\s*orientation/, 'calls ScreenOrientation.lock({ orientation })');
+  assert.match(src, /plugin\.unlock\(\s*\)/, 'calls ScreenOrientation.unlock()');
 });
 
-test('native ScreenOrientation proxy receives portrait and landscape locks', async () => {
+test('native ScreenOrientation proxy receives portrait, landscape and adaptive policies', async () => {
   const registrations = [];
   const availabilityChecks = [];
   const calls = [];
   const screenOrientation = {
     async lock(options) { calls.push(options); },
+    async unlock() { calls.push('unlock'); },
   };
   const Capacitor = {
     isNativePlatform: () => true,
@@ -103,8 +106,10 @@ test('native ScreenOrientation proxy receives portrait and landscape locks', asy
 
   await withWindow({ Capacitor }, async () => {
     const orientation = await importSource('sa-orientation.js', { withoutAppShell: true });
+    assert.equal(typeof orientation.unlockOrientation, 'function', 'exports unlockOrientation');
     await orientation.lockPortrait();
     await orientation.lockLandscape();
+    await orientation.unlockOrientation();
   });
 
   assert.deepEqual(availabilityChecks, ['ScreenOrientation']);
@@ -112,6 +117,7 @@ test('native ScreenOrientation proxy receives portrait and landscape locks', asy
   assert.deepEqual(calls, [
     { orientation: 'portrait' },
     { orientation: 'landscape' },
+    'unlock',
   ]);
 });
 
@@ -190,8 +196,10 @@ test('web helpers remain honest no-ops and never register native plugins', async
   try {
     await withWindow({ Capacitor, localStorage }, async () => {
       const orientation = await importSource('sa-orientation.js', { withoutAppShell: true });
+      assert.equal(typeof orientation.unlockOrientation, 'function', 'exports unlockOrientation');
       await orientation.lockPortrait();
       await orientation.lockLandscape();
+      await orientation.unlockOrientation();
       ({ default: haptics } = await importSource('sa-haptics.js'));
       await haptics._fireImpact('light');
       await haptics._fireNotify('success');
@@ -263,13 +271,15 @@ test('iOS patch permits portrait (default) + landscape, not landscape-only', () 
   assert.match(out, /UIRequiresFullScreen<\/key>\s*<true\/>/, 'full-screen preserved');
 });
 
-test('v1 Guide defaults to portrait and Studio locks landscape', () => {
+test('v1 Guide defaults to portrait and Mechanics stays adaptive', () => {
   const guide = read('jarvis.js');
   assert.match(guide, /sa-orientation\.js/, 'Guide imports the orientation module');
   assert.match(guide, /lockPortrait\s*\(/, 'Guide calls lockPortrait()');
   const studio = read('impact-studio.html');
-  assert.match(studio, /sa-orientation\.js/, 'Studio imports the orientation module');
-  assert.match(studio, /lockLandscape\s*\(/, 'Studio calls lockLandscape()');
+  assert.match(studio, /sa-orientation\.js/, 'Mechanics imports the orientation module');
+  assert.match(studio, /unlockOrientation\s*\(/, 'Mechanics calls unlockOrientation()');
+  assert.doesNotMatch(studio, /lockLandscape\s*\(/, 'Mechanics must not force landscape');
+  assert.doesNotMatch(studio, /rotate your (?:phone|device)/i, 'Mechanics has no rotate blocker');
 });
 
 test('iOS build patch enforces the WebView baseline required by shipping v1 UI', () => {

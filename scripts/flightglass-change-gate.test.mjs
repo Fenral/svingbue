@@ -107,6 +107,21 @@ test('the protected geometry engine now maps only to shipping Impact Studio', ()
   assert.deepEqual(assessment.routes, ['impact-studio.html']);
 });
 
+test('Mechanics presentation is level B while model and controller semantics are level C', () => {
+  const presentation = classifyChanges(['impact-studio.css']);
+  assert.equal(presentation.level, 'B');
+  assert.deepEqual(presentation.routes, [
+    'impact-studio.html', 'impact.html', 'index.html', 'jarvis.html',
+  ]);
+
+  for (const file of ['impact-mechanics-model.js', 'geometry-controller.js']) {
+    const assessment = classifyChanges([file]);
+    assert.equal(assessment.level, 'C', `${file} changes Mechanics semantics`);
+    assert.deepEqual(assessment.routes, ['impact-studio.html'], `${file} owns the Mechanics route`);
+    assert.deepEqual(ids(assessment), ['v1-release'], `${file} runs the complete release gate`);
+  }
+});
+
 test('control-system changes test the gate without running product browsers', () => {
   const assessment = classifyChanges(['AGENTS.md', 'scripts/flightglass-change-gate.mjs']);
   assert.equal(assessment.level, 'B');

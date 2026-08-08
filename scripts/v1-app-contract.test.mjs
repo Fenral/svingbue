@@ -1,13 +1,23 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
-import { dirname, extname, join, relative, resolve } from 'node:path';
+import {
+  closeSync,
+  existsSync,
+  openSync,
+  readFileSync,
+  readdirSync,
+  statSync,
+  unlinkSync,
+} from 'node:fs';
+import { tmpdir } from 'node:os';
+import { basename, dirname, extname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(SCRIPT_DIR, '..');
 const WWW = join(ROOT, 'www');
+const COPY_WEB_LOCK = join(tmpdir(), `flightglass-copy-web-${basename(ROOT)}.lock`);
 
 const V1_ROUTES = [
   'index.html',
@@ -42,6 +52,9 @@ const REQUIRED_LOCAL_DEPENDENCIES = [
   'sa-v1-context.js',
   'sa-range-context.js',
   'sa-orientation.js',
+  'impact-studio.css',
+  'impact-mechanics-model.js',
+  'geometry-controller.js',
   'impact-camera.js',
   'impact-framing.js',
   'impact-outcome.js',
@@ -71,14 +84,6 @@ const REQUIRED_LOCAL_DEPENDENCIES = [
   'assets/onboarding/studio.webp',
   'assets/onboarding/guide.webp',
   'assets/range-night-3d-33.png',
-  'assets/impact-studio/turf.png',
-  'assets/impact-studio/sky-face.png',
-  'assets/impact-studio/bg-dtl.png',
-  'assets/impact-studio/ball.png',
-  'assets/impact-studio/glint.png',
-  'assets/impact-studio/tee.png',
-  'assets/impact-studio/iron-head.png',
-  'assets/impact-studio/driver-head.png',
 ];
 
 function assertByteIdentical(relativePath) {
@@ -92,6 +97,25 @@ function assertByteIdentical(relativePath) {
     readFileSync(sourcePath),
     `native copy differs from root: ${relativePath}`,
   );
+}
+
+function withCopyWebLock(run) {
+  const deadline = Date.now() + 15_000;
+  let descriptor;
+  while (descriptor === undefined) {
+    try {
+      descriptor = openSync(COPY_WEB_LOCK, 'wx');
+    } catch (error) {
+      if (error.code !== 'EEXIST' || Date.now() >= deadline) throw error;
+      Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 25);
+    }
+  }
+  try {
+    return run();
+  } finally {
+    closeSync(descriptor);
+    unlinkSync(COPY_WEB_LOCK);
+  }
 }
 
 function treeSize(directory) {
@@ -203,10 +227,10 @@ test('shipping value surfaces load the canonical Pro purchase UI', () => {
 });
 
 test('copy-web produces a byte-identical v1 native payload', () => {
-  const result = spawnSync(process.execPath, [join(SCRIPT_DIR, 'copy-web.mjs')], {
+  const result = withCopyWebLock(() => spawnSync(process.execPath, [join(SCRIPT_DIR, 'copy-web.mjs')], {
     cwd: ROOT,
     encoding: 'utf8',
-  });
+  }));
 
   assert.equal(
     result.status,
@@ -231,6 +255,7 @@ test('copy-web produces a byte-identical v1 native payload', () => {
   );
   for (const forbidden of [
     'geo3d',
+    'assets/impact-studio',
     'assets/audio',
     'assets/palette-previews',
     'vendor/three',

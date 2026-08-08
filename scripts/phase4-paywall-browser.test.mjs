@@ -276,10 +276,23 @@ test(`${ENGINE}: the three shipping value moments gate after the free allowance 
     waitForPaywall: false,
   });
   await firstStudio.page.locator('#guidedExperimentCue:visible').waitFor();
-  assert.match(await firstStudio.page.locator('#guidedExperimentCopy').textContent(), /Change one geometry control/i);
-  await firstStudio.page.locator('#range').evaluate(input => {
-    input.value = '2';
+  assert.match(await firstStudio.page.locator('#guidedExperimentCopy').textContent(), /Change Low Point X/i);
+  assert.equal(
+    await firstStudio.page.locator('button[data-mechanics-mode="arc"]').getAttribute('aria-pressed'),
+    'true',
+    'the guided handoff opens Arc Inputs',
+  );
+  assert.equal(await firstStudio.page.evaluate(() => {
+    return JSON.parse(localStorage.getItem('sa.access.v1') || '{}').usage?.['guided-experiment'] || 0;
+  }), 0, 'opening the guided Mechanics experiment does not consume it');
+  await firstStudio.page.locator('#arc-low-point').evaluate(input => {
+    input.value = String(Number(input.value) + Number(input.step || 0.5));
     input.dispatchEvent(new Event('input', { bubbles: true }));
+  });
+  assert.equal(await firstStudio.page.evaluate(() => {
+    return JSON.parse(localStorage.getItem('sa.access.v1') || '{}').usage?.['guided-experiment'] || 0;
+  }), 0, 'live input alone does not consume before the control commits');
+  await firstStudio.page.locator('#arc-low-point').evaluate(input => {
     input.dispatchEvent(new Event('change', { bubbles: true }));
   });
   await firstStudio.page.waitForFunction(() => document.body.dataset.guidedExperiment === 'complete');
@@ -297,7 +310,7 @@ test(`${ENGINE}: the three shipping value moments gate after the free allowance 
     accessUsage: { experiments: 1 },
   });
   assert.equal(await studio.page.evaluate(() => window.__sa.paywall.state().source), 'guided-experiment');
-  assert.match(await studio.page.locator('#sa-pw-body').textContent(), /first guided Studio experiment is complete/i);
+  assert.match(await studio.page.locator('#sa-pw-body').textContent(), /first guided Mechanics experiment is complete/i);
   assert.equal(new URL(studio.page.url()).searchParams.get('guided'), 'experiment');
   assert.equal(await studio.page.locator('#guidedExperimentCue').isHidden(), true);
   await studio.page.evaluate(() => { window.__iapMode = 'success'; });
@@ -305,6 +318,11 @@ test(`${ENGINE}: the three shipping value moments gate after the free allowance 
   await studio.page.locator('.sa-pw-scrim').waitFor({ state: 'hidden' });
   await studio.page.locator('#guidedExperimentCue:visible').waitFor();
   assert.equal(await studio.page.evaluate(() => document.body.dataset.guidedExperiment), 'active');
+  assert.equal(
+    await studio.page.locator('button[data-mechanics-mode="arc"]').getAttribute('aria-pressed'),
+    'true',
+    'purchase resume returns to the Arc Inputs experiment',
+  );
   assert.deepEqual(studio.errors, []);
   await studio.context.close();
 });

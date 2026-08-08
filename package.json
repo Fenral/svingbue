@@ -6,7 +6,7 @@
   "scripts": {
     "test": "npm run test:engine && npm run test:ux",
     "test:home": "node --test scripts/home-night-ladder.test.mjs",
-    "test:v1": "node --test scripts/v1-app-contract.test.mjs scripts/v1-shell-contract.test.mjs scripts/phase2-context.test.mjs scripts/guide-engine.test.mjs scripts/guide-knowledge.test.mjs scripts/guide-ui-contract.test.mjs",
+    "test:v1": "node --test scripts/mechanics-v1-product-contract.test.mjs scripts/v1-app-contract.test.mjs scripts/v1-shell-contract.test.mjs scripts/phase2-context.test.mjs scripts/guide-engine.test.mjs scripts/guide-knowledge.test.mjs scripts/guide-ui-contract.test.mjs",
     "test:v1-shell": "node --test scripts/v1-shell-contract.test.mjs",
     "test:guide:contracts": "node --test scripts/guide-engine.test.mjs scripts/guide-knowledge.test.mjs scripts/guide-ui-contract.test.mjs",
     "test:guide:chromium": "node scripts/guide-browser.test.mjs",

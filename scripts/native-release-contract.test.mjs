@@ -255,6 +255,18 @@ test('GitHub runs the exact candidate through the full risk gate without fabrica
     'test:phase4:webkit',
   ]) assert.match(release, new RegExp(required.replaceAll(':', '\\:')));
 
+  const studioContracts = pkg.scripts['test:studio:contracts'];
+  assert.equal(typeof studioContracts, 'string',
+    'package.json must define the Mechanics Studio contract suite');
+  assert.match(studioContracts, /scripts\/impact-mechanics-model\.test\.mjs/,
+    'Studio contracts must execute the pure Mechanics model contract');
+  assert.match(studioContracts, /scripts\/mechanics-v1-product-contract\.test\.mjs/,
+    'Studio contracts must execute the v1 product integration contract');
+  assert.match(pkg.scripts['test:studio'], /test:studio:contracts/,
+    'the browser Studio gate cannot skip Mechanics contracts');
+  assert.match(release, /test:studio/,
+    'the exact-candidate release gate transitively executes Mechanics contracts');
+
   const source = pkg.scripts['verify:v1:source'];
   for (const required of [
     'test:gate',
@@ -273,6 +285,9 @@ test('GitHub runs the exact candidate through the full risk gate without fabrica
   );
 
   const nativeGuide = read('NATIVE.md');
+  assert.match(nativeGuide, /Mechanics Lab:\s*`impact-studio\.html`/,
+    'native route documentation uses visible Mechanics naming');
+  assert.doesNotMatch(nativeGuide, /Impact Studio:\s*`impact-studio\.html`/);
   assert.match(nativeGuide, /Geometry\/`geo3d`[\s\S]*denied/);
   assert.doesNotMatch(nativeGuide, /`vendor\/`, `assets\/`, `geo3d\/`/);
 });
