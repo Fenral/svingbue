@@ -9,8 +9,12 @@ The owner authorized the autonomous release workflow to:
 - submit or publish the completed native app through configured Apple and
   Google release workflows.
 
-No second publication approval is required when every mandatory condition below
-is proven. This authorization does not convert an unverified or externally
+For the Mechanics v1 convergence, the owner's later 2026-08-08 instruction
+supersedes the historical no-second-approval rule. One consolidated owner
+authorization is required immediately before merge to `main`, production
+promotion, TestFlight upload, RevenueCat/App Store product changes, any real
+purchase or paid external action, GitHub Pages containment, and App Store
+submission. This authorization does not convert an unverified or externally
 incomplete candidate into a releasable build.
 
 ## How the historical Phase 8 gate maps to v1
