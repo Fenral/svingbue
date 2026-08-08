@@ -9,7 +9,7 @@ import test, { after, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
 import { createRequire } from 'node:module';
-import { mkdirSync, readFile } from 'node:fs';
+import { mkdirSync, readFile, readFileSync } from 'node:fs';
 import { dirname, extname, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -19,6 +19,7 @@ const { chromium, webkit } = require('../tools/node_modules/playwright-core');
 const WEBKIT = process.env.FG_ENGINE === 'webkit' || process.argv.includes('--project=webkit');
 const ENGINE = WEBKIT ? 'webkit' : 'chromium';
 const EVIDENCE_DIR = resolve(ROOT, 'outputs', 'flightglass-gates', 'impact-studio');
+const STUDIO_SOURCE = readFileSync(resolve(ROOT, 'impact-studio.html'), 'utf8');
 const OUTCOMES = ['start', 'curve', 'launch', 'backspin', 'apex', 'carry'];
 const DELIVERY_INPUTS = ['delivery-face', 'delivery-path', 'delivery-attack', 'delivery-loft'];
 const ARC_INPUTS = ['arc-low-point', 'arc-height', 'arc-direction', 'arc-plane'];
@@ -54,6 +55,13 @@ const contentType = file => ({
 }[extname(file).toLowerCase()] || 'application/octet-stream');
 
 before(async () => {
+  const canvasAnnotationSizes = [...STUDIO_SOURCE.matchAll(/context\.font\s*=\s*`600 (\d+)px/g)]
+    .map(match => Number(match[1]));
+  assert.deepEqual(canvasAnnotationSizes, [10, 10, 10],
+    'all three Canvas UI annotations use the documented 10px type floor');
+  assert.doesNotMatch(STUDIO_SOURCE, /context\.font\s*=\s*`[^`]*\b(?:8|9)px/,
+    'Canvas UI annotations never fall below the documented 10px type floor');
+
   server = createServer((request, response) => {
     const pathname = decodeURIComponent(new URL(request.url, 'http://127.0.0.1').pathname);
     const relativePath = pathname === '/' ? 'impact-studio.html' : pathname.replace(/^\/+/, '');
@@ -302,6 +310,92 @@ async function assertLiveRegionsSeparated(page, label) {
   }
 }
 
+async function assertPortraitInstrumentAboveEvidence(page, scenario, mode) {
+  if (scenario.viewport.width > 480) return;
+
+  const audit = await page.evaluate(() => {
+    const rect = selector => {
+      const box = document.querySelector(selector)?.getBoundingClientRect();
+      return box ? {
+        top: box.top,
+        right: box.right,
+        bottom: box.bottom,
+        left: box.left,
+        width: box.width,
+        height: box.height,
+      } : null;
+    };
+    const facts = rect('.facts');
+    const trajectory = rect('.instrument__trajectory');
+    return {
+      instrument: rect('.instrument'),
+      lenses: [...document.querySelectorAll('.instrument__lens')].map(lens => {
+        const box = lens.getBoundingClientRect();
+        const canvas = lens.querySelector('canvas');
+        return {
+          top: box.top,
+          bottom: box.bottom,
+          width: box.width,
+          height: box.height,
+          canvasWidth: canvas?.width || 0,
+          canvasHeight: canvas?.height || 0,
+        };
+      }),
+      evidenceTop: Math.min(facts?.top ?? Infinity, trajectory?.top ?? Infinity),
+    };
+  });
+
+  assert.ok(audit.instrument && audit.instrument.width > 0 && audit.instrument.height > 0,
+    `${scenario.label}, ${mode}: the paired instrument has rendered size`);
+  assert.ok(audit.instrument.bottom <= audit.evidenceTop + 1,
+    `${scenario.label}, ${mode}: instrument ends at ${audit.instrument.bottom.toFixed(1)} before evidence starts at ${audit.evidenceTop.toFixed(1)}`);
+  assert.equal(audit.lenses.length, 2, `${scenario.label}, ${mode}: both mechanics lenses render`);
+  for (const [index, lens] of audit.lenses.entries()) {
+    assert.ok(lens.width > 0 && lens.height > 0,
+      `${scenario.label}, ${mode}: lens ${index + 1} has rendered size`);
+    assert.ok(lens.bottom <= audit.evidenceTop + 1,
+      `${scenario.label}, ${mode}: lens ${index + 1} stays above the evidence row`);
+    assert.ok(lens.canvasWidth > 0 && lens.canvasHeight > 0,
+      `${scenario.label}, ${mode}: lens ${index + 1} Canvas has drawable dimensions`);
+  }
+}
+
+async function assertCompactReference(page, scenario, mode) {
+  const reference = page.locator('.compact-reference');
+  const compact = scenario.viewport.width <= 480 || scenario.viewport.height <= 500;
+  const shouldShow = compact && mode === 'arc';
+
+  assert.equal(await reference.isVisible(), shouldShow,
+    `${scenario.label}, ${mode}: compact reference visibility follows Arc-only compact semantics`);
+  if (!shouldShow) return;
+
+  const text = await trimmedText(reference);
+  assert.ok(text.includes('7-iron') && text.includes('90 mph'),
+    `${scenario.label}, ${mode}: compact Arc reference explicitly names 7-iron and 90 mph`);
+  const audit = await reference.evaluate(element => {
+    const box = element.getBoundingClientRect();
+    const facts = element.closest('.facts').getBoundingClientRect();
+    return {
+      insideFacts: box.left >= facts.left - 1 && box.right <= facts.right + 1
+        && box.top >= facts.top - 1 && box.bottom <= facts.bottom + 1,
+      insideViewport: box.left >= -1 && box.right <= innerWidth + 1
+        && box.top >= -1 && box.bottom <= innerHeight + 1,
+      unclipped: element.scrollWidth <= element.clientWidth + 1
+        && element.scrollHeight <= element.clientHeight + 1,
+      width: box.width,
+      height: box.height,
+    };
+  });
+  assert.ok(audit.width > 0 && audit.height > 0,
+    `${scenario.label}, ${mode}: compact Arc reference has rendered size`);
+  assert.equal(audit.insideFacts, true,
+    `${scenario.label}, ${mode}: compact Arc reference stays inside Cause Trace`);
+  assert.equal(audit.insideViewport, true,
+    `${scenario.label}, ${mode}: compact Arc reference stays inside the viewport`);
+  assert.equal(audit.unclipped, true,
+    `${scenario.label}, ${mode}: compact Arc reference is not clipped`);
+}
+
 async function assertArcFactsContained(page, label) {
   const rows = await page.evaluate(() => {
     const facts = document.querySelector('.facts').getBoundingClientRect();
@@ -345,6 +439,8 @@ async function runCoreContract(page, scenario) {
   await assertVisibleControlContract(page, 'Impact Inputs');
   await assertNoOverflow(page, `${scenario.label}, Impact Inputs`);
   await assertLiveRegionsSeparated(page, `${scenario.label}, Impact Inputs`);
+  await assertPortraitInstrumentAboveEvidence(page, scenario, 'Impact Inputs');
+  await assertCompactReference(page, scenario, 'delivery');
   await captureState(page, scenario, 'delivery');
 
   const start = page.locator('[data-outcome="start"]');
@@ -373,6 +469,8 @@ async function runCoreContract(page, scenario) {
   await assertNoOverflow(page, `${scenario.label}, Arc Inputs`);
   await assertLiveRegionsSeparated(page, `${scenario.label}, Arc Inputs`);
   await assertArcFactsContained(page, `${scenario.label}, Arc Inputs`);
+  await assertPortraitInstrumentAboveEvidence(page, scenario, 'Arc Inputs');
+  await assertCompactReference(page, scenario, 'arc');
   await captureState(page, scenario, 'arc');
 
   const derivedAttack = page.locator('[data-derived="attack"]');

@@ -396,6 +396,10 @@ body[data-sa-route="studio"].sa-shell-ready .mechanics {
   white-space: nowrap;
 }
 
+.facts__heading .compact-reference {
+  display: none;
+}
+
 .control-bank__form {
   min-height: 0;
   flex: 1 1 auto;
@@ -909,13 +913,34 @@ body[data-sa-route="studio"].sa-shell-ready .mechanics {
     --portrait-trajectory-width: 42%;
   }
 
+  .mechanics,
+  body[data-sa-route="studio"].sa-shell-ready .mechanics {
+    height: calc(100dvh - var(--mechanics-shell-reserve));
+    min-height: 0;
+    grid-template-rows: auto auto minmax(0, 1fr);
+    padding-bottom: calc(var(--portrait-telemetry-height) + var(--portrait-facts-height));
+    overflow: hidden;
+  }
+
   .mechanics[data-mechanics-mode="arc"] {
     --portrait-facts-height: 124px;
     --portrait-trajectory-width: 40%;
   }
 
+  .mechanics[data-mechanics-mode="arc"] #mode-scope {
+    display: none;
+  }
+
+  .mechanics[data-mechanics-mode="arc"] .facts__heading .compact-reference {
+    display: inline-flex;
+    letter-spacing: .04em;
+  }
+
   .mechanics__workspace {
-    padding-bottom: calc(var(--portrait-telemetry-height) + var(--portrait-facts-height) + var(--mechanics-shell-reserve) + 16px);
+    min-height: 0;
+    grid-template-rows: auto minmax(0, 1fr);
+    padding: 8px;
+    overflow: hidden;
   }
 
   .instrument__lens .lens-heading {
@@ -927,11 +952,40 @@ body[data-sa-route="studio"].sa-shell-ready .mechanics {
   }
 
   .control-bank {
-    min-height: 244px;
+    min-height: 0;
+  }
+
+  .control-bank__form {
+    flex: 0 0 auto;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: repeat(2, 64px);
+    column-gap: 8px;
+  }
+
+  .parameter-control {
+    min-height: 64px;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: 20px 44px;
+    gap: 0 6px;
+  }
+
+  .parameter-control__name {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .parameter-control__value {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .parameter-control input[type="range"] {
+    grid-column: 1 / -1;
+    grid-row: 2;
   }
 
   .instrument {
-    min-height: 260px;
+    min-height: 0;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     grid-template-rows: minmax(0, 1fr);
   }
@@ -1100,13 +1154,8 @@ body[data-sa-route="studio"].sa-shell-ready .mechanics {
     flex-basis: 12px;
   }
 
-  .parameter-control {
-    grid-template-columns: 72px minmax(90px, 1fr) 57px;
-    gap: 5px;
-  }
-
   .instrument {
-    min-height: 260px;
+    min-height: 0;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     grid-template-rows: minmax(0, 1fr);
   }
@@ -1283,6 +1332,15 @@ body[data-sa-route="studio"].sa-shell-ready .mechanics {
 
   .facts__heading h2 {
     font-size: var(--mechanics-type-detail);
+  }
+
+  .mechanics[data-mechanics-mode="arc"] #mode-scope {
+    display: none;
+  }
+
+  .mechanics[data-mechanics-mode="arc"] .facts__heading .compact-reference {
+    display: inline-flex;
+    letter-spacing: .04em;
   }
 
   .facts__heading span {

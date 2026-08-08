@@ -159,6 +159,7 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
         <div class="facts__heading">
           <h2>Cause trace</h2>
           <span id="mode-scope">Impact → flight</span>
+          <span class="compact-reference" aria-label="Reference club and speed">7-iron · 90 mph</span>
         </div>
         <p class="cause-copy" data-cause>Face Angle 0.0° sets the start line and contributes to curvature.</p>
         <div class="facts__divider" aria-hidden="true"></div>
@@ -393,7 +394,7 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
         .96,
       );
 
-      context.font = `600 8px ${getComputedStyle(document.documentElement).getPropertyValue('--font-ui')}`;
+      context.font = `600 10px ${getComputedStyle(document.documentElement).getPropertyValue('--font-ui')}`;
       context.fillStyle = ghost;
       context.textAlign = 'center';
       context.fillText('TARGET', anchorX, 24);
@@ -509,7 +510,7 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
         );
 
         context.fillStyle = ghost;
-        context.font = `600 8px ${getComputedStyle(document.documentElement).getPropertyValue('--font-ui')}`;
+        context.font = `600 10px ${getComputedStyle(document.documentElement).getPropertyValue('--font-ui')}`;
         context.textAlign = 'center';
         context.fillText('LOW', lowX, clamp(lowY + 17, 48, height - 5));
       }
@@ -579,7 +580,7 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
       context.arc(last.x, last.y, 3.5, 0, Math.PI * 2);
       context.fill();
       context.fillStyle = ghost;
-      context.font = `600 8px ${getComputedStyle(document.documentElement).getPropertyValue('--font-ui')}`;
+      context.font = `600 10px ${getComputedStyle(document.documentElement).getPropertyValue('--font-ui')}`;
       context.textAlign = 'left';
       context.fillText('IMPACT', 8, ground + 2);
       context.textAlign = 'right';
