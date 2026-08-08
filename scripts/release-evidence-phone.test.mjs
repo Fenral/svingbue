@@ -413,6 +413,25 @@ test('rejects edited precondition and smoke requirement text', () => {
   );
 });
 
+test('locks phone evidence to Apple credentials, visible product names, and adaptive Mechanics', () => {
+  assert.equal(
+    CANONICAL_PRECONDITIONS[4],
+    "RevenueCat has Apple's In-App Purchase Key (.p8), Key ID and matching Issuer ID; none is committed or bundled in the app.",
+  );
+  assert.equal(
+    CANONICAL_SMOKE_REQUIREMENTS[4],
+    'Product-map links open Range/Outcome, Mechanics Lab and Guide in separate fresh attempts, with the bottom navigation and Back path usable.',
+  );
+  assert.equal(
+    CANONICAL_SMOKE_REQUIREMENTS[5],
+    'Home, Range/Outcome, Mechanics and Guide each render and respond in portrait without horizontal overflow, clipped primary actions or unusable controls.',
+  );
+  assert.equal(
+    CANONICAL_SMOKE_REQUIREMENTS[6],
+    'Mechanics Lab works in portrait and landscape without a forced-rotate overlay; every other permitted orientation reflows or respects its native lock without a stuck/blank surface.',
+  );
+});
+
 test('rejects duplicate canonical headings and any second global Status line', async (t) => {
   const headings = [
     '# Flightglass v1 physical-iPhone release evidence',
