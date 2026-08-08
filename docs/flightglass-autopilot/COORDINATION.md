@@ -13,6 +13,7 @@ wait.
 
 | Agent | Branch | Working on | Since |
 |-------|--------|-----------|-------|
+| Codex `/root` | `agent/mechanics-v1-convergence` | Converge the completed Mechanics Lab into the exact PR #18 release candidate; owns Mechanics runtime, v1 shell/gating integration, packaging, product/release docs and exact-SHA evidence until handoff. | 2026-08-08 |
 
 ## Queue / free to take
 

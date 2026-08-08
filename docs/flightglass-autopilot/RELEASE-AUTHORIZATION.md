@@ -26,6 +26,9 @@ missing `landing.html` is not a native v1 release blocker. Support, Privacy,
 Terms and store metadata remain required. This scope clarification does not
 waive any product, payment, privacy, native-device or store requirement.
 
+All Phase 8 gates must pass for the exact candidate before any authorized
+production publication or store submission can begin.
+
 ## Mandatory release conditions
 
 Before GitHub/Vercel production publication or store submission:
