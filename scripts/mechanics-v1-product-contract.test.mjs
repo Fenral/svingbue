@@ -134,6 +134,8 @@ test('Mechanics design finish evidence preserves the bounded detector and review
     'the durable record pins the detector to one invocation');
   assert.match(evidence, /Detector rerun after fixes:\s*\*\*No\*\*/,
     'the durable record prohibits claiming a detector rerun');
+  assert.match(evidence, /239060970425fdeae2802d74f41601caafb4ae7c/,
+    'the detector resolution points to the real immutable token commit');
   assert.match(evidence, /detect\.mjs --json impact-studio\.html impact-studio\.css design\/mocks\/impact-studio\.html index\.html jarvis\.html/,
     'the one detector command is reproducibly identified without running it');
 

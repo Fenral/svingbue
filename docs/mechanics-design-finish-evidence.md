@@ -28,7 +28,7 @@ as a polish loop.
 | `8px` and `9px` UI text | `--mechanics-type-floor: 10px` | Keep compact annotations readable without changing the information hierarchy. |
 | Unnamed `11px`, `12px`, `14px`, `22px` sizes | `--mechanics-type-detail`, `--mechanics-type-control`, `--mechanics-type-compact-data`, `--mechanics-type-touch-data` | Make the compact and touch typography hierarchy explicit and reusable. |
 
-The mapped token implementation landed in `23906099d5d229bd12b16ce3fb81aac92439ed08`.
+The mapped token implementation landed in `239060970425fdeae2802d74f41601caafb4ae7c`.
 
 ## Independent finish review
 
