@@ -82,5 +82,7 @@ boundary and request only the minimum external input.
 GitHub, Vercel and store publication are release operations, never shortcuts
 around verification.
 
-The exact candidate, CI and rollback ledger is
-`docs/v1-release-record.md`; PR #18 is its exact-SHA execution record.
+The commit-agnostic candidate, CI and rollback contract is
+`docs/v1-release-record.md`; PR #19 is the exact-SHA execution record. Its body
+and immutable post-commit comment/GitHub artifact bind the final candidate.
+PR #18 remains inherited source ancestry and is not the release authority.

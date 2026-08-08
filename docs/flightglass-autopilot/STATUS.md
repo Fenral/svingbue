@@ -13,9 +13,12 @@ record. `origin/main` is still
 `184140a2ff5834f23510662f8c442b8a8c03d36c`.
 
 Reviewed code-and-asset checkpoint:
-`c47113bb23a3fb274277fe869dea925a6fa0a928`. Because this status update creates
-a later commit, final candidate SHA, exact-head GitHub run and deployment are
-bound only in PR #19 and immutable attestations after the documentation commit.
+`c47113bb23a3fb274277fe869dea925a6fa0a928`. Integration, design, local Level C
+and exact-head GitHub proof are complete for frozen checkpoints. Because this
+tracked status update creates a later commit, the authoritative final candidate
+SHA, base, run and artifact digest are bound post-commit in the PR #19 body and
+an immutable PR comment backed by the matching GitHub artifact. This file does
+not guess or self-reference its own commit identity.
 
 Automated checkpoint evidence is green: finish reviewer `PASS` with scores
 98/96/94/95/96/97/96 for Product fit, causal legibility, hierarchy, responsive
@@ -32,9 +35,9 @@ public GitHub Pages Academy surface remains stale and uncontained.
 
 All real native/payment/device/human gates remain `PENDING`, including
 RevenueCat/App Store setup, signed TestFlight, sandbox and real paid flows,
-physical-iPhone evidence and moderated onboarding. Local exact-head Level C,
-the fresh GitHub run, preview attestation, `main` merge, production promotion,
-Pages containment and submission are also `PENDING` after this record commit.
+physical-iPhone evidence and moderated onboarding. The exact-SHA Vercel preview
+attestation, `main` merge, production promotion, Pages containment and
+submission are also `PENDING` after this record commit.
 One consolidated owner authorization is required immediately before merge,
 promotion, Pages containment, TestFlight upload, any RevenueCat/App Store
 mutation, real purchase/paid action or App Store submission.

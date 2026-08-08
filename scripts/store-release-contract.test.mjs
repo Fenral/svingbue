@@ -68,7 +68,7 @@ test('the release record names the exact evidence sink and a recoverable web bas
   assert.match(record, /3abbd4fcc65c939cc2d0e35ea03866add3540aa5/);
   assert.match(record, /c47113bb23a3fb274277fe869dea925a6fa0a928/);
   assert.doesNotMatch(record, /canonical exact-SHA record is[\s\S]{0,100}GitHub PR #18/i);
-  assert.match(record, /final exact candidate SHA[\s\S]*PR #19 body[\s\S]*immutable evidence attestations/i);
+  assert.match(record, /final exact candidate SHA[\s\S]*PR #19 body[\s\S]*immutable PR comment[\s\S]*matching GitHub artifact/i);
   assert.match(record, /Mechanics Lab/);
   assert.match(record, /Range plus Phase 2: latest 67\/67/);
   assert.match(record, /release-evidence contracts: 204\/204/);
@@ -101,6 +101,48 @@ test('the release record names the exact evidence sink and a recoverable web bas
   assert.match(record, /Preview status[\s\S]*`PENDING`/i);
   assert.match(record, /neither `VERCEL_TOKEN` nor `VERCEL_AUTOMATION_BYPASS_SECRET`/i);
   assert.match(record, /One consolidated owner authorization[\s\S]*merge to `main`[\s\S]*App Store submission/i);
+});
+
+test('Mechanics release docs keep PR 19 authoritative without self-referential SHA claims', () => {
+  const record = read('docs/v1-release-record.md');
+  const handoff = read('docs/SESSION-HANDOFF.md')
+    .split('## Current state (2026-08-07)')[0];
+  const status = read('docs/flightglass-autopilot/STATUS.md')
+    .split('## V1 app start, learning onboarding')[0];
+  const authorization = read('docs/flightglass-autopilot/RELEASE-AUTHORIZATION.md');
+  const plan = read('docs/superpowers/plans/2026-08-08-flightglass-mechanics-v1-convergence.md');
+
+  assert.match(authorization, /PR #19 is the exact-SHA execution record/i);
+  assert.doesNotMatch(authorization, /PR #18 is its exact-SHA execution record/i);
+
+  for (const currentRecord of [record, handoff, status]) {
+    assert.match(
+      currentRecord,
+      /PR #19[\s\S]*post-commit[\s\S]*immutable PR comment[\s\S]*GitHub artifact/i,
+    );
+    assert.doesNotMatch(
+      currentRecord,
+      /(?:local exact-head Level C|exact-head Level C run, GitHub run)[\s\S]{0,80}(?:still\s+)?`?PENDING`?/i,
+    );
+    assert.match(currentRecord, /Vercel[\s\S]{0,120}`PENDING`/i);
+  }
+
+  assert.match(
+    record,
+    /Co-Authored-By[\s\S]*new first-parent commits[\s\S]*9a9b060f54495245a42fb8fed89d2fd5ba0f74f4[\s\S]*3abbd4fcc65c939cc2d0e35ea03866add3540aa5[\s\S]*preserved ancestry[\s\S]*not rewritten/i,
+  );
+
+  const completedTasks = plan.slice(
+    plan.indexOf('### Task 1:'),
+    plan.indexOf('### Task 10:'),
+  );
+  const pendingTasks = plan.slice(plan.indexOf('### Task 10:'), plan.indexOf('## Self-review'));
+  assert.doesNotMatch(completedTasks, /^- \[ \]/m);
+  assert.match(pendingTasks, /^- \[ \]/m);
+  assert.match(
+    plan,
+    /final candidate binding[\s\S]*PR #19\s+body[\s\S]*immutable PR comment[\s\S]*GitHub artifact/i,
+  );
 });
 
 test('physical-iPhone evidence uses an immutable template and external attested working copy', () => {

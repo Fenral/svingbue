@@ -16,11 +16,21 @@ green and stable at `3abbd4fcc65c939cc2d0e35ea03866add3540aa5`. PR #18 is
 source evidence, not the canonical execution record for this release.
 
 The reviewed Mechanics code-and-asset checkpoint is
-`c47113bb23a3fb274277fe869dea925a6fa0a928`. This document commit necessarily
-changes `HEAD`, so it MUST NOT claim its own commit as the final candidate.
-The final exact candidate SHA, its matching GitHub run and deployment identity
-must be bound after this documentation commit in the PR #19 body and in the
-immutable evidence attestations.
+`c47113bb23a3fb274277fe869dea925a6fa0a928`. Integration, design review, local
+Level C and exact-head GitHub proof have been completed for frozen checkpoints.
+This tracked document necessarily changes `HEAD`, so it MUST NOT claim its own
+commit as the final candidate. After the last tracked commit, the authoritative
+final exact candidate SHA, base, matching GitHub run and artifact digest are
+bound post-commit in the PR #19 body and an immutable PR comment backed by the
+matching GitHub artifact. That external record, not a self-reference here, is
+the exact-SHA execution authority.
+
+The required `Co-Authored-By: Codex <noreply@openai.com>` trailer applies to
+new first-parent commits created on `agent/mechanics-v1-convergence`. Source
+commits `9a9b060f54495245a42fb8fed89d2fd5ba0f74f4` and
+`3abbd4fcc65c939cc2d0e35ea03866add3540aa5` are preserved ancestry from PR #18
+and were intentionally not rewritten; their historical trailer state does not
+violate the integration-branch requirement.
 
 Before any production deploy, Codemagic archive or App Store submission, the
 PR #19 body MUST name all of the following from the same candidate:
@@ -46,9 +56,11 @@ Automated proof recorded for the reviewed `c47113b` checkpoint:
   and browser/build tools; and
 - 32 Mechanics viewport/mode/motion captures with 0 critical UX findings.
 
-These results do not turn the later documentation commit into an exact green
-candidate. Local Level C, the exact-head GitHub run and external attestations
-remain `PENDING` until they are repeated and bound to the final SHA in PR #19.
+These completed results do not turn a later documentation commit into an exact
+green candidate by themselves. The post-commit PR #19 body, immutable PR
+comment and matching GitHub artifact must bind the final SHA to the completed
+local Level C and exact-head GitHub evidence. Exact-SHA Vercel preview evidence
+and all account, native-device and human gates remain `PENDING`.
 
 The previous workflow run associated with source checkpoint
 `5999da325a0060e9d8abaa43f4aff78d0008d9d0` reported 269/269 passing tests in

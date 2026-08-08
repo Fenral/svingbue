@@ -20,6 +20,7 @@ access policy, release boundary and exact-SHA evidence controls.
 - Seven known conflicts: `.impeccable/design.json`, `DESIGN.md`, `PRODUCT.md`, `design/mocks/impact-studio.html`, `docs/flightglass-autopilot/COORDINATION.md`, `impact-studio.html`, `scripts/impact-studio-browser.test.mjs`.
 - Protected physics remain byte-identical: `impact-flight.js`, `swing-parameters-and-impact.js`, `diagnose-engine.js`, `diagnose-engine-v2.js`.
 - Protected IDs remain exact: `no.strikearc.app`, App Store `6768449250`, all three `strikearc_pro_*` products and existing `strikearc.academy.*` keys.
+- The co-author trailer requirement applies to new first-parent commits on the convergence branch. PR #18 source commits `9a9b060f54495245a42fb8fed89d2fd5ba0f74f4` and `3abbd4fcc65c939cc2d0e35ea03866add3540aa5` remain unmodified ancestry rather than rewritten history.
 - Academy Voice and Android remain v2. No personal swing, diagnosis, coaching, accounts, PWA, cloud sync or new physics enters this plan.
 
 ## Product contract
@@ -40,6 +41,13 @@ Impact Inputs owns Face Angle, Club Path, Attack Angle and Dynamic Loft → Star
 - **Design:** all four required viewports and both modes pass normal/reduced-motion review; no 44 px, focus, clipping, overflow, runtime, console or resource criticals; one detector run and one fresh reviewer end in `PASS`.
 - **Release:** protected diffs/IDs stay clean; local and GitHub exact-SHA Level C pass; a verified non-production Vercel preview and immutable attestation exist.
 - **External:** RevenueCat, signed TestFlight, sandbox transactions, physical-iPhone rows, moderated sessions, GitHub Pages containment, production promotion and App Store submission remain fail-closed until real evidence and the owner's consolidated authorization exist.
+
+Checked Tasks 1–9 record completed integration, design and local/GitHub proof
+work. Because the last tracked documentation commit cannot contain its own SHA,
+the authoritative final candidate binding is written afterward in the PR #19
+body and an immutable PR comment backed by the matching GitHub artifact. Any
+subsequent tracked change requires Task 9 to be repeated for the new head;
+Tasks 10–11 and every Vercel, Pages, native, store and human gate stay open.
 
 ## Execution preflight evidence
 
@@ -62,12 +70,12 @@ Impact Inputs owns Face Angle, Club Path, Attack Angle and Dynamic Loft → Star
 - Modify: `scripts/store-release-contract.test.mjs`
 - Modify: `package.json`
 
-- [ ] Add a source contract that requires Mechanics to be the sole explanatory authority, keeps internal route/access identifiers, rejects coaching language, requires shell/paywall/access/analytics hooks and forbids `lockLandscape()`/rotate overlays.
-- [ ] Require `impact-studio.css`, `impact-mechanics-model.js` and `geometry-controller.js` in root/`www`; require the legacy `www/assets/impact-studio` directory to be absent.
-- [ ] Require native `unlockOrientation()` and adaptive shell orientation while retaining portrait/landscape manifest support.
-- [ ] Point guided paywall completion at a stable Mechanics control and preserve consume-after-commit, second-use paywall and purchase-resume assertions.
-- [ ] Require Level C classification for model/controller semantics and make `verify:v1:release` transitively run the Mechanics model contract.
-- [ ] Run the focused RED set:
+- [x] Add a source contract that requires Mechanics to be the sole explanatory authority, keeps internal route/access identifiers, rejects coaching language, requires shell/paywall/access/analytics hooks and forbids `lockLandscape()`/rotate overlays.
+- [x] Require `impact-studio.css`, `impact-mechanics-model.js` and `geometry-controller.js` in root/`www`; require the legacy `www/assets/impact-studio` directory to be absent.
+- [x] Require native `unlockOrientation()` and adaptive shell orientation while retaining portrait/landscape manifest support.
+- [x] Point guided paywall completion at a stable Mechanics control and preserve consume-after-commit, second-use paywall and purchase-resume assertions.
+- [x] Require Level C classification for model/controller semantics and make `verify:v1:release` transitively run the Mechanics model contract.
+- [x] Run the focused RED set:
 
 ```powershell
 node --test scripts/mechanics-v1-product-contract.test.mjs scripts/v1-app-contract.test.mjs scripts/web-release-contract.test.mjs scripts/orientation-lock.test.mjs scripts/flightglass-change-gate.test.mjs scripts/native-release-contract.test.mjs scripts/store-release-contract.test.mjs
@@ -76,7 +84,7 @@ node scripts/phase4-paywall-browser.test.mjs
 
 Expected: failures name missing Mechanics DOM/modules, adaptive orientation, package closure and new release-script linkage—not syntax or harness errors.
 
-- [ ] Commit only tests/scripts metadata:
+- [x] Commit only tests/scripts metadata:
 
 ```powershell
 git add package.json scripts/mechanics-v1-product-contract.test.mjs scripts/v1-app-contract.test.mjs scripts/web-release-contract.test.mjs scripts/orientation-lock.test.mjs scripts/phase4-paywall-browser.test.mjs scripts/flightglass-change-gate.test.mjs scripts/native-release-contract.test.mjs scripts/store-release-contract.test.mjs
@@ -87,12 +95,12 @@ git commit -m "test(v1): lock mechanics convergence" -m "Co-Authored-By: Codex <
 
 **Files:** the seven known conflicts plus auto-merged Mechanics additions and `config/flightglass-surfaces.json`.
 
-- [ ] Create the rollback unit with `$stamp = Get-Date -Format 'yyyyMMdd-HHmmss'` and copy every planned shipping/runtime/doc file into `.sa-backups/mechanics-v1-convergence-$stamp/`.
-- [ ] Run `git merge --no-ff --no-commit agent/mechanics-mvp-codex` once. Do not abort.
-- [ ] Resolve HTML/mock from the Mechanics hierarchy, then graft PR lifecycle hooks; resolve tests from the Mechanics contract using PR's Chromium/WebKit/evidence harness; merge Product/Design instead of taking either side wholesale.
-- [ ] Preserve only the `mechanics-mvp` manifest insertion from Mechanics while retaining current PR Home/Paywall entries.
-- [ ] Preserve the active convergence claim in `COORDINATION.md`, add the completed Mechanics source row to history and declare the three delegated worker branches/file subsets before they edit.
-- [ ] Prove no markers remain:
+- [x] Create the rollback unit with `$stamp = Get-Date -Format 'yyyyMMdd-HHmmss'` and copy every planned shipping/runtime/doc file into `.sa-backups/mechanics-v1-convergence-$stamp/`.
+- [x] Run `git merge --no-ff --no-commit agent/mechanics-mvp-codex` once. Do not abort.
+- [x] Resolve HTML/mock from the Mechanics hierarchy, then graft PR lifecycle hooks; resolve tests from the Mechanics contract using PR's Chromium/WebKit/evidence harness; merge Product/Design instead of taking either side wholesale.
+- [x] Preserve only the `mechanics-mvp` manifest insertion from Mechanics while retaining current PR Home/Paywall entries.
+- [x] Preserve the active convergence claim in `COORDINATION.md`, add the completed Mechanics source row to history and declare the three delegated worker branches/file subsets before they edit.
+- [x] Prove no markers remain:
 
 ```powershell
 git diff --check
@@ -102,13 +110,13 @@ git ls-files -u
 
 Expected: no marker match and no unmerged index entries.
 
-- [ ] Run the post-merge focused set. Mechanics model tests may pass, while the integration/product/package contracts must remain RED until Tasks 3–5:
+- [x] Run the post-merge focused set. Mechanics model tests may pass, while the integration/product/package contracts must remain RED until Tasks 3–5:
 
 ```powershell
 node --test scripts/impact-mechanics-model.test.mjs scripts/mechanics-v1-product-contract.test.mjs scripts/v1-app-contract.test.mjs scripts/orientation-lock.test.mjs
 ```
 
-- [ ] Commit the intentional merge with the required trailer.
+- [x] Commit the intentional merge with the required trailer.
 
 ### Task 3: Implement the hybrid Mechanics runtime in an isolated worker worktree
 
@@ -122,15 +130,15 @@ node --test scripts/impact-mechanics-model.test.mjs scripts/mechanics-v1-product
 - Modify: `scripts/orientation-lock.test.mjs`
 - Modify: `scripts/phase4-paywall-browser.test.mjs`
 
-- [ ] Create the runtime worker branch/worktree from the completed Task-2 merge commit, never from an earlier RED/base commit. Record its ownership before editing.
-- [ ] Add the early transition guard, favicon, canonical shell/paywall CSS, `data-sa-route="studio"`, access/IAP/analytics and shell/orientation modules to the Mechanics document.
-- [ ] On `?guided=experiment`, authorize before activation, open Arc Inputs, consume only after a changed control commits, emit only allowlisted non-personal events and resume after purchase.
-- [ ] Keep filename/id/access/event compatibility; show `Mechanics`/`Mechanics Lab` visibly.
-- [ ] Add native-safe `unlockOrientation()` and set shell Studio orientation to unrestricted; remove rotate/inert behavior for Mechanics.
-- [ ] Repair responsive layout: keep the three-region cause/effect chain at 812×375, reserve shell-nav height in landscape and lift the portrait facts/telemetry lower-third above the nav.
-- [ ] Expand browser cases to 932×430, 812×375, 430×932 and 375×812 in both modes and both motion settings, Chromium and WebKit; verify 44 px targets, keyboard focus, labels, live outcomes, shell overlap and zero errors.
-- [ ] Run `node --test scripts/orientation-lock.test.mjs` and both `npm run test:studio:chromium` / `npm run test:studio:webkit`; expected GREEN before handoff.
-- [ ] Commit from the worker branch with `Co-Authored-By: Codex <noreply@openai.com>` and cherry-pick into convergence.
+- [x] Create the runtime worker branch/worktree from the completed Task-2 merge commit, never from an earlier RED/base commit. Record its ownership before editing.
+- [x] Add the early transition guard, favicon, canonical shell/paywall CSS, `data-sa-route="studio"`, access/IAP/analytics and shell/orientation modules to the Mechanics document.
+- [x] On `?guided=experiment`, authorize before activation, open Arc Inputs, consume only after a changed control commits, emit only allowlisted non-personal events and resume after purchase.
+- [x] Keep filename/id/access/event compatibility; show `Mechanics`/`Mechanics Lab` visibly.
+- [x] Add native-safe `unlockOrientation()` and set shell Studio orientation to unrestricted; remove rotate/inert behavior for Mechanics.
+- [x] Repair responsive layout: keep the three-region cause/effect chain at 812×375, reserve shell-nav height in landscape and lift the portrait facts/telemetry lower-third above the nav.
+- [x] Expand browser cases to 932×430, 812×375, 430×932 and 375×812 in both modes and both motion settings, Chromium and WebKit; verify 44 px targets, keyboard focus, labels, live outcomes, shell overlap and zero errors.
+- [x] Run `node --test scripts/orientation-lock.test.mjs` and both `npm run test:studio:chromium` / `npm run test:studio:webkit`; expected GREEN before handoff.
+- [x] Commit from the worker branch with `Co-Authored-By: Codex <noreply@openai.com>` and cherry-pick into convergence.
 
 ### Task 4: Close packaging, risk routing and recursive ESM contracts in a second worker worktree
 
@@ -143,13 +151,13 @@ node --test scripts/impact-mechanics-model.test.mjs scripts/mechanics-v1-product
 - Modify: `scripts/native-release-contract.test.mjs`
 - Modify: `package.json`
 
-- [ ] Create the packaging worker branch/worktree from the completed Task-2 merge commit. It must include the RED commit and may not touch runtime/product files.
-- [ ] Add the three direct Mechanics files to the allowlist and parity lists; preserve every transitive engine/shell/payment dependency already present.
-- [ ] Remove the eight unused `assets/impact-studio/*.png` files from the v1 artifact allowlist while leaving source assets untouched for historical mocks.
-- [ ] Require recursive module closure and 404/private boundaries for docs, mocks, scripts, tools, repository config, Academy, Geometry and Three.js.
-- [ ] Add `test:studio:contracts` and ensure `test:studio`/`verify:v1:release` cannot skip model, geometry or browser evidence.
-- [ ] Map CSS to Level B and model/controller semantics to Level C without changing existing Vercel-preview classification.
-- [ ] Run:
+- [x] Create the packaging worker branch/worktree from the completed Task-2 merge commit. It must include the RED commit and may not touch runtime/product files.
+- [x] Add the three direct Mechanics files to the allowlist and parity lists; preserve every transitive engine/shell/payment dependency already present.
+- [x] Remove the eight unused `assets/impact-studio/*.png` files from the v1 artifact allowlist while leaving source assets untouched for historical mocks.
+- [x] Require recursive module closure and 404/private boundaries for docs, mocks, scripts, tools, repository config, Academy, Geometry and Three.js.
+- [x] Add `test:studio:contracts` and ensure `test:studio`/`verify:v1:release` cannot skip model, geometry or browser evidence.
+- [x] Map CSS to Level B and model/controller semantics to Level C without changing existing Vercel-preview classification.
+- [x] Run:
 
 ```powershell
 npm run copy-web
@@ -158,7 +166,7 @@ node --test scripts/v1-app-contract.test.mjs scripts/web-release-contract.test.m
 
 Expected: all tests pass; new files are byte-identical; `www/assets/impact-studio` is absent.
 
-- [ ] Commit from the worker branch with `Co-Authored-By: Codex <noreply@openai.com>` and cherry-pick into convergence.
+- [x] Commit from the worker branch with `Co-Authored-By: Codex <noreply@openai.com>` and cherry-pick into convergence.
 
 ### Task 5: Reconcile product, onboarding, Guide and release truth in a third worker worktree
 
@@ -169,19 +177,19 @@ Expected: all tests pass; new files are byte-identical; `www/assets/impact-studi
 - Modify: `scripts/capture-onboarding-visuals.mjs`, `scripts/store-screenshots.mjs`, `config/image-provenance.json`
 - Modify: `NATIVE.md`, `docs/store-listing.md`, `docs/app-review-notes.md`, `docs/phase2-onboarding-uat.md`, `docs/phase2-phone-checklist.md`
 
-- [ ] Create the product worker branch/worktree from the completed Task-2 merge commit. It may not edit the runtime or packaging workers' files.
-- [ ] Make Mechanics the sole causal explainer and Range/Outcome support surfaces everywhere; preserve the fixed Delivered Loft onboarding demonstration as one bounded example.
-- [ ] Remove `impact.html`'s claim to be the default cause/effect authority while retaining its live replay/comparison behavior and Outcome readout.
-- [ ] Rename visible Studio wording to Mechanics while retaining internal `studio` compatibility names and the Guide `?guided=experiment` link.
-- [ ] Describe both Mechanics authorities, same six outcomes, adaptive orientation, native-only access, restore-only Lifetime and non-coaching boundaries in product/legal/store copy.
-- [ ] Merge the global Guide/app-shell design contract with the shipped Ultraviolet Ballistics Bench tokens/components; make `.impeccable/design.json` match and remove stale sidecar status.
-- [ ] Update capture/store generators to wait for the Mechanics DOM; do not fabricate screenshot data.
-- [ ] Run `node --test scripts/mechanics-v1-product-contract.test.mjs scripts/home-night-ladder.test.mjs scripts/guide-ui-contract.test.mjs scripts/store-release-contract.test.mjs`, `git diff --check` and the added-secret scan; expected GREEN before handoff.
-- [ ] Commit with `Co-Authored-By: Codex <noreply@openai.com>` and cherry-pick.
+- [x] Create the product worker branch/worktree from the completed Task-2 merge commit. It may not edit the runtime or packaging workers' files.
+- [x] Make Mechanics the sole causal explainer and Range/Outcome support surfaces everywhere; preserve the fixed Delivered Loft onboarding demonstration as one bounded example.
+- [x] Remove `impact.html`'s claim to be the default cause/effect authority while retaining its live replay/comparison behavior and Outcome readout.
+- [x] Rename visible Studio wording to Mechanics while retaining internal `studio` compatibility names and the Guide `?guided=experiment` link.
+- [x] Describe both Mechanics authorities, same six outcomes, adaptive orientation, native-only access, restore-only Lifetime and non-coaching boundaries in product/legal/store copy.
+- [x] Merge the global Guide/app-shell design contract with the shipped Ultraviolet Ballistics Bench tokens/components; make `.impeccable/design.json` match and remove stale sidecar status.
+- [x] Update capture/store generators to wait for the Mechanics DOM; do not fabricate screenshot data.
+- [x] Run `node --test scripts/mechanics-v1-product-contract.test.mjs scripts/home-night-ladder.test.mjs scripts/guide-ui-contract.test.mjs scripts/store-release-contract.test.mjs`, `git diff --check` and the added-secret scan; expected GREEN before handoff.
+- [x] Commit with `Co-Authored-By: Codex <noreply@openai.com>` and cherry-pick.
 
 ### Task 6: Close focused functional gates before visual acceptance
 
-- [ ] Run focused suites:
+- [x] Run focused suites:
 
 ```powershell
 npm run test:studio
@@ -201,18 +209,18 @@ Expected: Mechanics/phase4/v1/package/store suites pass; engine remains at least
 
 **Changed targets:** `impact-studio.html`, `impact-studio.css`, `design/mocks/impact-studio.html`, Home/onboarding/Guide surfaces affected by copy/assets.
 
-- [ ] Capture one combined screenshot pass: four viewports × Impact/Arc × normal/reduced motion in Chromium and WebKit. Inspect every image, not only DOM measurements.
-- [ ] Record Emil's required table `Before | After | Why` for hierarchy, control feedback, shell integration, responsive composition and truth labels.
-- [ ] Run the detector exactly once:
+- [x] Capture one combined screenshot pass: four viewports × Impact/Arc × normal/reduced motion in Chromium and WebKit. Inspect every image, not only DOM measurements.
+- [x] Record Emil's required table `Before | After | Why` for hierarchy, control feedback, shell integration, responsive composition and truth labels.
+- [x] Run the detector exactly once:
 
 ```powershell
 node C:\Users\siver\.agents\skills\impeccable\scripts\detect.mjs --json impact-studio.html impact-studio.css design/mocks/impact-studio.html index.html jarvis.html
 ```
 
-- [ ] Fix every detector finding in one batch without rerunning the detector; no unresolved mechanical finding may be waived.
-- [ ] Give a fresh no-history reviewer anonymous baseline/candidate pairs for provenance-blind comparison plus the original brief, direction contract, detector JSON, screenshots, evidence manifest and craft floor. Require the candidate to win the pairwise check with every category floor and critical requirement green.
-- [ ] Apply reviewer findings in one batch, recapture the same states and ask that same reviewer for final `PASS`.
-- [ ] Commit visual corrections and reviewer evidence references.
+- [x] Fix every detector finding in one batch without rerunning the detector; no unresolved mechanical finding may be waived.
+- [x] Give a fresh no-history reviewer anonymous baseline/candidate pairs for provenance-blind comparison plus the original brief, direction contract, detector JSON, screenshots, evidence manifest and craft floor. Require the candidate to win the pairwise check with every category floor and critical requirement green.
+- [x] Apply reviewer findings in one batch, recapture the same states and ask that same reviewer for final `PASS`.
+- [x] Commit visual corrections and reviewer evidence references.
 
 ### Task 8: Generate final real assets and freeze tracked candidate content
 
@@ -226,7 +234,7 @@ node C:\Users\siver\.agents\skills\impeccable\scripts\detect.mjs --json impact-s
 
 ### Task 9: Prove the frozen exact candidate locally and in GitHub
 
-- [ ] Run the clean local candidate gate and audits:
+- [x] Run the clean local candidate gate and audits:
 
 ```powershell
 npm run verify:change -- --base origin/main --level C
@@ -235,9 +243,9 @@ npm audit --omit=dev --audit-level=high
 npm audit --prefix tools --audit-level=high
 ```
 
-- [ ] Verify clean tree, no conflict markers/TODOs/secrets, exact protected blobs and required co-author trailers.
-- [ ] Push the frozen `agent/mechanics-v1-convergence` SHA and update only the draft PR body with its SHA, test results, screenshots, release holds and rollback record.
-- [ ] Wait for `Flightglass v1 release gate`; require the workflow head/base to equal the PR exact SHA/base, download its evidence artifact and validate all three audit files.
+- [x] Verify clean tree, no conflict markers/TODOs/secrets, exact protected blobs and required co-author trailers. The trailer check covers new first-parent integration commits; inherited PR #18 ancestry is not rewritten.
+- [x] Push the frozen `agent/mechanics-v1-convergence` SHA and update only the draft PR body with its SHA, test results, screenshots, release holds and rollback record.
+- [x] Wait for `Flightglass v1 release gate`; require the workflow head/base to equal the PR exact SHA/base, download its evidence artifact and validate all three audit files.
 
 ### Task 10: Create and verify the exact-SHA Vercel preview
 
