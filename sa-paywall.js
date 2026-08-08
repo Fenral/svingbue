@@ -17,7 +17,7 @@ const SOURCE_COPY = Object.freeze({
   }),
   'guided-experiment': Object.freeze({
     title: 'Take the next experiment deeper.',
-    body: 'Your first guided Studio experiment is complete. Pro unlocks the next controlled comparison.',
+    body: 'Your first guided Mechanics experiment is complete. Pro unlocks the next controlled comparison.',
   }),
   'guide-answer': Object.freeze({
     title: 'Keep digging into the model.',
@@ -25,11 +25,11 @@ const SOURCE_COPY = Object.freeze({
   }),
   'pro-history': Object.freeze({
     title: 'History is not available yet.',
-    body: 'Flightglass does not sell future history tools in this build. Range, Guide and Studio remain available within their free limits.',
+    body: 'Flightglass does not sell future history tools in this build. Range, Guide and Mechanics Lab remain available within their free limits.',
   }),
   default: Object.freeze({
     title: 'Keep the whole model open.',
-    body: 'Unlock unlimited Range comparisons, guided answers and deeper Studio experiments.',
+    body: 'Unlock unlimited Range comparisons, guided answers and deeper Mechanics experiments.',
   }),
 });
 
@@ -86,7 +86,7 @@ function buildPaywall() {
   for (const text of [
     'Unlimited Range comparisons',
     'Unlimited guided Guide answers',
-    'Unlimited guided Studio experiments',
+    'Unlimited guided Mechanics experiments',
   ]) {
     const item = document.createElement('li');
     item.append(checkIcon(), document.createTextNode(text));

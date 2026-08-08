@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#07060C" />
 <meta name="robots" content="noindex" />
 <script src="./sa-view-transition-guard.js"></script>
-<title>See the Shot — Live Outcome, Side and Top</title>
+<title>Range Replay — Outcome, Side and Top</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2052%2052'%20fill='none'%3E%3Cpath%20d='M11%2045%20C%2016%2026,%2024%2018,%2035%2015%20M21%2039%20L%2030%2024%20L%2043%2045'%20stroke='%239D8BFF'%20stroke-width='4.2'%20stroke-linecap='round'%20stroke-linejoin='round'/%3E%3Ccircle%20cx='37'%20cy='15'%20r='5.2'%20fill='%23FF8A4D'/%3E%3C/svg%3E" />
 <link rel="stylesheet" href="./sa-p3.css" />
 <link rel="stylesheet" href="./sa.css" />
@@ -291,7 +291,7 @@
       <div class="annoLabels" id="annoLabels" aria-hidden="true"></div>
 
       <section class="outcomeBoard" id="outcomeBoard" aria-label="All live shot outcomes">
-        <div class="outcomeBoardHead"><h1>LIVE OUTCOME</h1><span>UPDATES INSTANTLY</span></div>
+        <div class="outcomeBoardHead"><h1>LIVE OUTCOME</h1><span>REPLAY &amp; COMPARE</span></div>
         <div class="outcomeGroup"><h2 class="outcomeGroupTitle">DIRECTION</h2><div class="readouts" id="ogDir"></div></div>
         <div class="outcomeGroup"><h2 class="outcomeGroupTitle">LAUNCH</h2><div class="readouts" id="ogLaunch"></div></div>
         <div class="outcomeGroup"><h2 class="outcomeGroupTitle">DISTANCE</h2><div class="readouts" id="ogDist"></div></div>
@@ -303,8 +303,9 @@
       </button>
       <div class="sr-only" id="saveShotStatus" role="status" aria-live="polite"></div>
 
-      <!-- Outcome is the live cause/effect surface. Side and Top restore their
-           dedicated teaching controls without changing the physics path. -->
+      <!-- Outcome remains a live replay/comparison surface. Mechanics Lab owns
+           the complete cause-to-strike-to-flight explanation. Side and Top
+           retain their analytical cameras without changing the physics path. -->
       <div class="card" id="panel">
         <div class="stations" id="stseg" role="group" aria-label="Camera station">
           <button type="button" data-s="2" aria-pressed="false">TOP</button>
@@ -776,8 +777,9 @@ function pulseHot(key, ms = 700) {
   hotTimer = setTimeout(() => { if (hotKey === key) hotKey = null; }, ms);
 }
 
-/* ══ Camera lenses — Outcome is the default cause/effect surface. SIDE/TOP
-   retain their analytical cameras. Camera never mutates impact inputs. ══ */
+/* ══ Camera lenses — Outcome is the default replay/comparison surface.
+   Mechanics Lab owns causal explanation. SIDE/TOP retain their analytical
+   cameras. Camera never mutates impact inputs. ══ */
 let stationTarget = 0;
 let scrubbing = false;
 

@@ -100,7 +100,7 @@ timing boundaries in every session.
 
 ### Timed attempt
 
-1. Start the stopwatch when **“The numbers tell the story.”** is fully visible.
+1. Start the stopwatch when **“Start with what flew.”** is fully visible.
 2. Do not point, explain a control, tell them to scroll, name a destination or
    name the next button.
 3. Let Back and `Not now` behave naturally. `Not now` before reaching the map
@@ -152,13 +152,14 @@ Ask without suggesting an answer. These answers diagnose copy or hierarchy;
 they do not turn an assisted/failed attempt into a pass.
 
 1. “Which input did you change, and which outcomes reacted?”
-2. “Where would you go to change all five delivery inputs?”
-3. “Where would you go to inspect impact geometry?”
+2. “Where would you go to replay and compare a modelled setup?”
+3. “Where would you go to trace inputs through strike to flight?”
 4. “What would you open next if you had five more minutes? Why?”
 
 Expected understanding is Delivered Loft affecting Launch Angle, Spin Loft and
-Backspin; Outcome for all five inputs; and Studio for impact geometry. The last
-question measures product pull, not correctness.
+Backspin in the bounded example; Range/Outcome for replay and comparison; and
+Mechanics Lab for the causal chain. The last question measures product pull,
+not correctness.
 
 ## Session identity and evidence log
 

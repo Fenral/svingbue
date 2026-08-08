@@ -1,6 +1,6 @@
 # Flightglass v1 Decisions
 
-Updated: 2026-08-07
+Updated: 2026-08-08
 
 This file records durable v1 decisions and assumptions that should not be
 re-decided inside an implementation phase.
@@ -9,8 +9,10 @@ re-decided inside an implementation phase.
 
 Status: owner-decided
 
-V1 contains Home, Range, Impact Studio and Jarvis. Academy, Lab, Outcome,
-Compare and historical mocks are not part of v1 navigation. Their code and
+V1 contains Home, Range/Outcome, Mechanics Lab and Flightglass Guide. Visible
+navigation uses `Mechanics`; its route, access key, analytics value and guided
+handoff remain internally named `studio` for compatibility. Academy, standalone
+Lab routes and historical mocks are not part of v1 navigation. Their code and
 protected user data remain intact. Academy is a v2 product surface and is not
 packaged as a v1 native entry point.
 
@@ -116,7 +118,7 @@ Status: owner-decided on 2026-08-06
 
 Phase 2 replaces the current Night Ladder Home composition rather than refining
 it. The replacement keeps the Flightglass brand token system and shared
-Home/Range/Studio/Guide navigation, then gives the empty state one job:
+Home/Range/Mechanics/Guide navigation, then gives the empty state one job:
 explain how launch-monitor inputs connect to outcomes. A four-step learning tour
 uses real app captures and a fixed 7-iron/90 mph model; it collects no personal
 golf profile and creates no `currentShot`. Returning Home is a compact product
@@ -149,7 +151,7 @@ Guide answers and backlog questions use four capability classes:
 3. `external-data`: requires measured inputs, calibration or third-party data;
 4. `reject-false-precision`: no supported path to the requested certainty.
 
-Visible evidence labels distinguish `Range modelled`, `Studio geometry`,
+Visible evidence labels distinguish `Range modelled`, `Mechanics geometry`,
 `Estimate` and `Not modelled`. Stored v1 context is called `Saved guided model
 setup`, never a current, latest or measured shot. Guide recomputes outcomes from
 face, path, attack, dynamic loft and speed, and ignores serialized results.
@@ -164,18 +166,19 @@ calibration dataset exist.
 
 Status: implementation assumption on 2026-08-07
 
-Free access includes ten explicit, distinct Range comparisons, one guided Impact
-Studio experiment and five unique Guide answers per local calendar day.
+Free access includes ten explicit, distinct Range comparisons, one guided
+Mechanics experiment and five unique Guide answers per local calendar day.
 Reopening the same Guide answer on the same day does not consume another use.
 Slider movement, camera changes, cancelled work and failed renders never count.
 Range comparisons are temporary pins with at most three ghosts visible at once;
 neither the free nor paid copy describes them as persistent saves or history.
-The guided Studio allowance applies only to its labelled instruction/completion
-layer; direct Studio exploration remains available without that guided layer.
+The guided Mechanics allowance applies only to its labelled instruction and
+completion layer; direct Mechanics exploration remains available without that
+guided layer.
 
 Only the native app hard-gates; the browser remains an evaluation preview while
 store purchase is unavailable there. Usage is consumed after a completed
-result, never at task start. The 11th Range comparison, second guided Studio
+result, never at task start. The 11th Range comparison, second guided Mechanics
 experiment and sixth unique Guide answer may present Pro only after the user has
 already completed at least one result. These numeric assumptions can be tuned
 from beta evidence without changing product identifiers or the RevenueCat
@@ -192,3 +195,24 @@ project and Podfile to 16.4 after `cap sync`, and tests the pure transforms.
 Supporting older iOS versions would require a separately tested modal and
 design-token fallback; silently building with Capacitor's lower default is not
 an acceptable compatibility claim.
+
+## D-017: Mechanics is the sole causal authority
+
+Status: owner-decided on 2026-08-08
+
+Mechanics Lab replaces the old visible Impact Studio contract. Impact Inputs
+map Face Angle, Club Path, Attack Angle and Dynamic Loft to Start, Curve,
+Launch, Backspin, Apex and Carry while club speed remains a visible 90 mph held
+reference. Arc Inputs map Low Point X, Low Point Height (`lowPoint.z`), Swing
+Direction and Swing Plane to contact, Attack and Path, then to the same flight
+instrument. Only one authority is active at a time.
+
+Range/Outcome remains a live replay and comparison surface, not a duplicate
+causal explainer. Guide remains a bounded question and handoff surface. The
+product models mechanics; it does not collect personal swing data, diagnose
+technique, prescribe a fix or claim an optimal result.
+
+Mechanics must work in portrait and landscape without a forced-rotate overlay.
+The first guided experiment is free in the native app and later guided
+experiments require Pro. Browser preview does not consume access state. The
+legacy Lifetime product remains restore-only.

@@ -58,8 +58,8 @@ const SHOTS = [
     route: 'impact.html',
     viewport: { width: 430, height: 932 },
     eyebrow: 'LIVE OUTCOME',
-    title: ['Change the inputs.', 'See every outcome.'],
-    subtitle: 'Speed, face, path, attack and loft update together.',
+    title: ['Replay the setup.', 'Compare the outcome.'],
+    subtitle: 'Range keeps a modelled setup and its flight values together.',
     ready: '#outcomeBoard',
   },
   {
@@ -67,10 +67,10 @@ const SHOTS = [
     file: '02.png',
     route: 'impact-studio.html',
     viewport: { width: 932, height: 430 },
-    eyebrow: 'IMPACT STUDIO',
-    title: ['See where the club', 'meets the ground.'],
-    subtitle: 'Explore attack, path, low point and contact live.',
-    ready: '#stage[data-view="face"]',
+    eyebrow: 'MECHANICS LAB',
+    title: ['Trace cause to strike.', 'Watch flight respond.'],
+    subtitle: 'Impact or Arc Inputs update contact and six outcomes.',
+    ready: 'main.mechanics',
     landscape: true,
   },
   {
@@ -364,7 +364,7 @@ function writeGallery() {
 </head><body><span class="status">CURRENT V1 · UPLOAD SET</span><h1>Flightglass store artwork</h1>
 <p class="intro">Five current-product screenshots. Apple files are exactly 1290×2796. Google Play files are in <code>play/</code> at 1080×1920; the feature graphic is 1024×500.</p>
 <p class="links"><a href="./contact-sheet.png">Contact sheet</a><a href="./feature-graphic.png">Play feature graphic</a></p>
-<figure class="contact"><img src="./contact-sheet.png" alt="Contact sheet of all five current Flightglass screenshots"><figcaption>Current v1 set — Outcome, Studio, Guide, Home and interactive onboarding.</figcaption></figure>
+<figure class="contact"><img src="./contact-sheet.png" alt="Contact sheet of all five current Flightglass screenshots"><figcaption>Current v1 set — Range, Mechanics Lab, Guide, Home and interactive onboarding.</figcaption></figure>
 ${figures}</body></html>`, 'utf8');
 }
 

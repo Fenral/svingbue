@@ -72,7 +72,7 @@ const METRICS = Object.freeze({
 const TRUTH = Object.freeze({
   'engine-calculated': Object.freeze({ value: 'range-modelled', label: 'Range modelled' }),
   'engine-derived': Object.freeze({ value: 'range-modelled', label: 'Range modelled' }),
-  'geometry-calculated': Object.freeze({ value: 'studio-geometry', label: 'Studio geometry' }),
+  'geometry-calculated': Object.freeze({ value: 'studio-geometry', label: 'Mechanics geometry' }),
   'heuristic-estimate': Object.freeze({ value: 'estimate', label: 'Estimate' }),
   'external-reference': Object.freeze({ value: 'estimate', label: 'External reference' }),
   unsupported: Object.freeze({ value: 'not-modelled', label: 'Not modelled' }),
@@ -348,7 +348,7 @@ function renderAnswer(question) {
   } else {
     const geometry = question.truthTier === 'geometry-calculated' || question.topicId === 'impact';
     dom.answerRoute.href = geometry ? './impact-studio.html?guided=experiment' : './impact.html';
-    dom.answerRoute.querySelector('span').textContent = geometry ? 'Open Impact Studio' : question.nextAction;
+    dom.answerRoute.querySelector('span').textContent = geometry ? 'Open Mechanics Lab' : question.nextAction;
   }
 }
 

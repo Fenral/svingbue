@@ -43,7 +43,7 @@
       },
       "alt": "Flightglass Outcome showing launch, spin and distance values above five editable delivery inputs",
       "usedIn": [
-        "index.html — learning tour, Outcome product proof and product map"
+        "index.html — learning tour, Range/Outcome replay proof and product map"
       ],
       "visualCheck": "2026-08-07 — captured from shipping impact.html at 375 × 812 CSS px and 2× device scale. Visible values match the declared engine state after the UI's documented yard-to-metre conversion and display rounding."
     },
@@ -60,11 +60,11 @@
         "clubPath": 2.5,
         "attackAngle": -4.3
       },
-      "alt": "Flightglass Studio showing attack angle, club path, strike, entry, low point and exit",
+      "alt": "Flightglass Mechanics Lab reference showing attack angle, club path, strike, entry, low point and exit",
       "usedIn": [
-        "index.html — learning tour, Studio product proof and product map"
+        "index.html — learning tour, Mechanics product proof and product map"
       ],
-      "visualCheck": "2026-08-07 — captured from shipping impact-studio.html in Face On at 812 × 375 CSS px and 2× device scale. Attack and path are declared here; the swing-geometry-only labels remain owned by Studio's separate tested geometry model."
+      "visualCheck": "2026-08-07 — pre-convergence reference captured from shipping impact-studio.html at 812 × 375 CSS px and 2× device scale. The image hash is intentionally unchanged during product reconciliation. Regenerate it from the final main.mechanics DOM after visual approval; it is not final release evidence."
     },
     {
       "path": "assets/onboarding/guide.webp",

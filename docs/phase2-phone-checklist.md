@@ -91,7 +91,7 @@ mock.
 | 2 | GitHub's full release gate is green for that commit. | PENDING | PENDING |
 | 3 | The build is signed for `no.strikearc.app` and installs/launches normally. | PENDING | PENDING |
 | 4 | The native build received a valid iOS RevenueCat public SDK key at build time; no key is committed. | PENDING | PENDING |
-| 5 | RevenueCat has Apple's In-App Purchase Key (`.p8`) and matching Issuer ID; neither value is committed or bundled in the app. | PENDING | PENDING |
+| 5 | RevenueCat has Apple's In-App Purchase Key (`.p8`), Key ID and matching Issuer ID; none is committed or bundled in the app. | PENDING | PENDING |
 | 6 | App Store Connect Monthly and Annual products are available to the sandbox. | PENDING | PENDING |
 | 7 | RevenueCat's current Offering maps Monthly and Annual to entitlement `pro`. | PENDING | PENDING |
 | 8 | The legacy Lifetime product still maps to `pro` for an existing owner, but is not offered for sale. | PENDING | PENDING |
@@ -111,9 +111,9 @@ steps and an issue link. Do not simply tick a box.
 | 2 | Skip the opening, background/foreground the app, then relaunch; the opening does not replay in the same app session. | PENDING | PENDING | PENDING |
 | 3 | On fresh state, each `Not now` point resumes the same onboarding step after relaunch. | PENDING | PENDING | PENDING |
 | 4 | Moving Delivered Loft visibly updates Launch Angle, Spin Loft and Backspin together; the tour creates no personal profile or `currentShot`. | PENDING | PENDING | PENDING |
-| 5 | Product-map links open Outcome, Studio and Guide in separate fresh attempts, with the bottom navigation and Back path usable. | PENDING | PENDING | PENDING |
-| 6 | Home, Outcome, Studio and Guide each render and respond in portrait without horizontal overflow, clipped primary actions or unusable controls. | PENDING | PENDING | PENDING |
-| 7 | Rotate through every orientation the app permits; content reflows or the native lock is respected without a stuck/blank surface. | PENDING | PENDING | PENDING |
+| 5 | Product-map links open Range/Outcome, Mechanics Lab and Guide in separate fresh attempts, with the bottom navigation and Back path usable. | PENDING | PENDING | PENDING |
+| 6 | Home, Range/Outcome, Mechanics and Guide each render and respond in portrait without horizontal overflow, clipped primary actions or unusable controls. | PENDING | PENDING | PENDING |
+| 7 | Mechanics Lab works in portrait and landscape without a forced-rotate overlay; every other permitted orientation reflows or respects its native lock without a stuck/blank surface. | PENDING | PENDING | PENDING |
 | 8 | Background for at least 30 seconds during an edited Outcome state, resume, and confirm the app remains responsive and does not corrupt the state. | PENDING | PENDING | PENDING |
 | 9 | Enable iOS Reduced Motion, cold-launch and repeat opening, onboarding resume and route navigation with no essential information removed. | PENDING | PENDING | PENDING |
 | 10 | With VoiceOver on, reach the product map and Home Restore Purchases control; focus order, labels and activation are usable and status changes are announced. | PENDING | PENDING | PENDING |
@@ -141,7 +141,7 @@ physical iPhone on the same candidate. Record which method was used.
 
 1. Start from a clean install and confirm the user is Free.
 2. Complete a genuine value moment until the app opens the Pro surface (for
-   example the 11th new Outcome comparison, second guided Studio experiment or
+   example the 11th new Range comparison, second guided Mechanics experiment or
    sixth same-day Guide answer).
 3. Confirm only Monthly and Annual are visible, prices and periods come from the
    live Apple sandbox, legal/renewal copy is readable, and Lifetime is absent.

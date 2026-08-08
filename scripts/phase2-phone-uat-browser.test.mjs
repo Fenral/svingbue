@@ -14,7 +14,7 @@ const ENGINE = WEBKIT ? 'webkit' : 'chromium';
 const EVIDENCE_DIR = join(ROOT, 'outputs', 'flightglass-gates', 'phase2-phone-uat');
 const PROFILES = Object.freeze([
   { viewport: { width: 375, height: 812 }, reducedMotion: 'no-preference', destination: 'Outcome' },
-  { viewport: { width: 375, height: 812 }, reducedMotion: 'reduce', destination: 'Studio' },
+  { viewport: { width: 375, height: 812 }, reducedMotion: 'reduce', destination: 'Mechanics Lab' },
   { viewport: { width: 430, height: 932 }, reducedMotion: 'no-preference', destination: 'Guide' },
   { viewport: { width: 430, height: 932 }, reducedMotion: 'reduce', destination: 'Outcome' },
 ]);
@@ -100,7 +100,7 @@ async function assertDestination(page, destination) {
     assert.equal(await page.locator('body').getAttribute('data-sa-route'), 'range');
     return;
   }
-  if (destination === 'Studio') {
+  if (destination === 'Mechanics Lab') {
     await page.waitForURL(/impact-studio\.html$/);
     assert.equal(await page.locator('body').getAttribute('data-sa-route'), 'studio');
     return;
@@ -182,7 +182,7 @@ for (const profile of PROFILES) {
     assert.equal(await currentStep(page), 4);
     assert.deepEqual(
       await page.locator('.product-map__item strong').allTextContents(),
-      ['Outcome', 'Studio', 'Guide'],
+      ['Range / Outcome', 'Mechanics Lab', 'Guide'],
     );
     await assertPhoneLayout(page);
     await capture(page, `${profileName(profile)}--step-4`);

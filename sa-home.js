@@ -107,12 +107,12 @@ function renderHome() {
       ? 'Read the whole shot.'
       : resumable ? 'Pick up where you left off.' : 'See what every number changes.';
     byId('emptyBody').textContent = completed
-      ? 'Open the live model and change speed, face, path, attack or delivered loft.'
+      ? 'Replay a modelled setup in Range, or open Mechanics Lab to trace cause, strike and flight.'
       : resumable
         ? 'Continue from the exact product view you left.'
-        : 'Explore how speed, face, path, attack and delivered loft shape the same shot.';
+        : 'Replay a modelled setup in Range, then trace cause, strike and flight in Mechanics Lab.';
     byId('startFirstShot').textContent = completed
-      ? 'Open live Outcome'
+      ? 'Open Range replay'
       : resumable ? 'Continue the tour' : 'See how Flightglass works';
     byId('resumeSetup').hidden = !completed;
     if (completed) byId('resumeSetup').textContent = 'Review how it works';

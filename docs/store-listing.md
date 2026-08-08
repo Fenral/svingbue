@@ -41,7 +41,7 @@ See why golf shots fly
 ### Promotional text
 
 ```text
-Change the delivery numbers, watch the outcome respond, inspect impact geometry, and find a clear guided explanation — all in one interactive golf model.
+Trace impact and arc inputs through strike to ball flight, replay outcomes, and open bounded explanations in one interactive golf model.
 ```
 
 ### Description
@@ -49,22 +49,22 @@ Change the delivery numbers, watch the outcome respond, inspect impact geometry,
 ```text
 See why it flew.
 
-Flightglass makes launch-monitor-style golf numbers visible. Change the five delivery inputs and see the modelled outcome respond immediately — then inspect the geometry or open a guided explanation when you want to understand why.
+Flightglass makes golf mechanics visible without measuring or judging a golfer. Mechanics Lab is the causal instrument; Range and the Outcome model support replay and comparison; Flightglass Guide answers bounded questions.
 
-OUTCOME
-Explore club speed, face angle, club path, attack angle and delivered loft. See launch, spin, direction, curve, height and distance update live.
+MECHANICS LAB
+Choose one input authority at a time. Impact Inputs connect Face Angle, Club Path, Attack Angle and Dynamic Loft to Start, Curve, Launch, Backspin, Apex and Carry. Arc Inputs connect Low Point X, Low Point Height, Swing Direction and Swing Plane to contact, Attack and Path, then to the same flight instrument. A visible 90 mph club-speed reference stays held.
 
-IMPACT STUDIO
-Move from ball flight to cause. Inspect the swing arc, low point, contact zone and where the club is modelled to meet the ground.
+RANGE / OUTCOME
+Replay a modelled setup, compare outcomes and inspect Side or Top views without turning Range into a second causal explainer.
 
 FLIGHTGLASS GUIDE
-Start with a specific predefined question instead of a blank chat box. Follow a clear answer, supporting values and a bounded interactive model. Guide distinguishes what the shipping model can calculate from what would need measurement, calibration or a future model.
+Start with a predefined question instead of a blank chat box. Follow a clear answer, supporting values and a bounded experiment. Guide distinguishes what the model can calculate from what would require measurement, calibration or a future model.
 
 BUILT TO UNDERSTAND, NOT DIAGNOSE
-Flightglass is an educational deterministic model. It does not connect to a launch monitor, measure your swing, analyse video, prescribe coaching or claim that a modelled setup is personal or optimal.
+Flightglass is an educational deterministic model. It does not connect to a launch monitor, analyse video, diagnose technique, prescribe a fix or claim that a modelled setup is personal or optimal.
 
 FREE TO EXPLORE
-Use the core model, complete the learning tour, try one guided Studio experiment, make 10 distinct Outcome comparisons and open five unique guided answers per day. Flightglass Pro unlocks unlimited comparisons and guided exploration.
+Complete the learning tour, try one guided Mechanics experiment, make 10 distinct Range comparisons and open five unique guided answers per day. In the native app, Flightglass Pro unlocks later guided experiments and unlimited comparisons. The browser preview does not consume this access state.
 
 No account is required. The models run locally after install. Purchases are handled securely by the App Store and can be restored at any time.
 ```
@@ -78,7 +78,7 @@ golf,launch monitor,ball flight,club path,face angle,attack angle,spin loft,impa
 ### What's New — version 1.0.0
 
 ```text
-Flightglass v1 introduces the live Outcome model, Impact Studio, the guided Flightglass Guide, and a short learning tour that connects launch-monitor-style inputs to ball flight.
+Flightglass v1 introduces Mechanics Lab, Range replay, Flightglass Guide, and a short learning tour that connects model inputs to strike and ball flight.
 ```
 
 ### Classification starting point
@@ -106,24 +106,23 @@ metadata. The visible app paywall must show the localized StoreKit prices.
 
 | Product | Reference name | Display name | Description |
 |---|---|---|---|
-| `strikearc_pro_monthly` | Flightglass Pro Monthly | Flightglass Pro Monthly | Unlimited Outcome, Guide and Studio access. |
-| `strikearc_pro_annual` | Flightglass Pro Annual | Flightglass Pro Annual | Unlimited Outcome, Guide and Studio access. |
+| `strikearc_pro_monthly` | Flightglass Pro Monthly | Flightglass Pro Monthly | Unlimited Range, Guide and Mechanics. |
+| `strikearc_pro_annual` | Flightglass Pro Annual | Flightglass Pro Annual | Unlimited Range, Guide and Mechanics. |
 | `strikearc_pro_lifetime` | Legacy Flightglass Pro Lifetime | Keep the existing customer-facing metadata | Legacy non-consumable preserved only for existing-owner restore; do not expose it to new customers. |
 
 Both current subscriptions and the legacy product must grant the exact
 RevenueCat entitlement `pro`.
 
-The two current descriptions are 43 characters. Keep every customer-facing
-product display name at 30 characters or fewer and every product description at
-45 characters or fewer. App Store Connect already displays the configured
+Keep every customer-facing product display name at 30 characters or fewer and
+every product description at 45 characters or fewer. App Store Connect already displays the configured
 duration and renewal terms; do not try to fit those into the description field.
 
 Put Monthly and Annual in one subscription group, with a localized group
-display name such as `Flightglass Pro`. For the first auto-renewable
-subscription submission, add the subscription group and both subscriptions to
-the same submission as the v1 app version. Upload an App Review Screenshot from
-the final native paywall for each subscription. These screenshots are review
-evidence, not the five public product-page screenshots.
+display name such as `Flightglass Pro`. The first auto-renewable subscription
+and first subscription group must ship with a new app version: add the group and
+both subscriptions to the same v1 app-version submission. Upload an
+`App Review Screenshot` from the final native paywall for each subscription.
+These screenshots are review evidence, not the five public product-page screenshots.
 
 ### RevenueCat Apple credential contract
 
@@ -133,8 +132,8 @@ confused:
 1. The release build receives only the app-specific public RevenueCat SDK key
    beginning `appl_` through the protected Codemagic environment group.
 2. The RevenueCat App Store app must also have an active Apple In-App Purchase
-   Key (`.p8`) and Issuer ID uploaded in the RevenueCat dashboard, with its
-   credential validator showing valid. This key never enters the app bundle or
+   Key (`.p8`), Key ID and Issuer ID uploaded in the RevenueCat dashboard, with
+   its credential validator showing valid. This key never enters the app bundle or
    Git. RevenueCat requires it for Capacitor SDK 9.0.0 and newer; Flightglass
    currently ships `@revenuecat/purchases-capacitor` 11.x.
 
@@ -188,16 +187,18 @@ Recommended five-image narrative:
 
 | Order | Surface | Headline | What the image must prove |
 |---:|---|---|---|
-| 1 | Outcome | Change the numbers. See the outcome. | All five inputs and live outcome relationship |
-| 2 | Impact Studio | See where impact happens. | Swing arc, Low Point and contact geometry |
+| 1 | Range / Outcome | Replay the setup. Compare the outcome. | Modelled setup, flight values and comparison behavior |
+| 2 | Mechanics Lab | Trace cause to strike and flight. | Both four-input authorities and six live outcomes |
 | 3 | Guide | Ask a precise golf question. | Guided buttons, structured answer, no free text |
-| 4 | Home | One model. Three ways to understand it. | Outcome, Studio and Guide as one app |
+| 4 | Home | One model. Three ways to understand it. | Range, Mechanics and Guide as one app |
 | 5 | Onboarding or Pro | Learn first. Go deeper when ready. | Product-understanding tour or value-before-price Pro gate |
 
 Apple accepts one to ten screenshots per device class. For the iPhone-only v1,
-use one current 6.9-inch portrait set at an accepted size such as 1290 × 2796;
-include a truthful Studio composition inside the portrait marketing frame
-rather than rotating the uploaded canvas. Verify the final sizes against
+use one current 6.9-inch portrait set at 1290 × 2796. Upload opaque PNG or
+JPEG/JPG files with no alpha; one to ten images are valid for the device class.
+Include a truthful Mechanics composition inside the portrait marketing frame.
+Mechanics itself must also be verified in portrait and landscape. Verify the
+final sizes against
 [Apple screenshot specifications](https://developer.apple.com/help/app-store-connect/reference/app-information/screenshot-specifications/).
 
 Google Play requires a 1024 × 500 feature graphic and at least two screenshots;
@@ -281,12 +282,14 @@ Additional answers:
 Immediately before submission, verify:
 
 - listing names match the visible app name Flightglass;
-- screenshots show Home, Outcome, Impact Studio and Flightglass Guide from the
+- screenshots show Home, Range/Outcome, Mechanics Lab and Flightglass Guide from the
   release candidate, not Academy or legacy StrikeArc;
 - no copy claims measurement, diagnosis, AI, personalisation or optimisation;
 - subscription descriptions match the current Offering and entitlement;
 - Monthly and Annual descriptions remain within Apple's 45-character limit;
-- the RevenueCat Apple In-App Purchase Key and Issuer ID validate successfully;
+- the RevenueCat Apple In-App Purchase Key, Key ID and Issuer ID validate successfully;
+- TestFlight purchases use Apple's sandbox environment and Restore Purchases is
+  triggered by the reviewer/user, never automatically on launch;
 - Privacy, Terms and Support return HTTP 200 over HTTPS and each response
   contains its expected Flightglass title or page heading, not an auth page;
 - the privacy declarations still match every SDK in the final binary;

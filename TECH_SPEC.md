@@ -2,7 +2,7 @@
 
 Status: normative draft for v1 execution
 
-Updated: 2026-08-06
+Updated: 2026-08-08
 
 Product UI language: English
 
@@ -17,8 +17,8 @@ physics, purchase identifiers and Academy storage remain governed by
 
 Flightglass v1 is an interactive explainer for golfers:
 
-> Make launch-monitor-style numbers visible, explain their relationship, and
-> give the golfer one useful variable to explore next.
+> Make golf mechanics inspectable: connect one active input authority to
+> strike, then to modelled flight, without measuring or correcting a golfer.
 
 The first release MUST feel like one native app, not a collection of HTML
 demos. The memorable product promise is the existing Flightglass line:
@@ -28,10 +28,11 @@ demos. The memorable product promise is the existing Flightglass line:
 
 1. Open the app, pass the skippable Flightglass opening and see one obvious
    learning action on Home.
-2. Complete the four-step product tour: Outcome proof, Studio proof, one live
+2. Complete the four-step product tour: Range replay, Mechanics proof, one live
    engine relationship and the product map.
-3. Open Outcome and manipulate the five delivery inputs in real time.
-4. Inspect cause and effect in Impact Studio.
+3. Open Range/Outcome to replay or compare a modelled setup.
+4. Open Mechanics Lab and inspect the complete cause-to-strike-to-flight chain
+   through Impact Inputs or Arc Inputs.
 5. Ask Guide one predefined question about a selected model setup or topic.
 
 ## 2. Stack and safety boundary
@@ -87,9 +88,9 @@ The native app has four primary destinations:
 | Destination | Route | Dominant job |
 |---|---|---|
 | Home | `index.html` | Tell the golfer what to do next |
-| Range | `impact.html` | Change one input and see flight immediately |
-| Impact Studio | `impact-studio.html` | Understand one cause/effect relationship |
-| Jarvis | `jarvis.html` | Choose one guided question and get one next action |
+| Range / Outcome | `impact.html` | Replay and compare a modelled setup |
+| Mechanics Lab | `impact-studio.html` | Trace one active authority through strike to flight |
+| Flightglass Guide | `jarvis.html` | Choose one bounded question and get one next action |
 
 Every destination MUST expose the same shared app identity, current-location
 state, safe-area behavior, focus treatment and route semantics. Range may use a
@@ -100,10 +101,12 @@ Home MUST be an app home, not a generative scene. Its content is deterministic
 and state-driven:
 
 - first use: `See how Flightglass works` and the four-step learning tour;
-- completed tour with no saved setup: `Open live Outcome`;
+- completed tour with no saved setup: `Open Range replay`;
 - compatible legacy saved setup: most recent model and one next experiment;
 - no setup context: an honest fixed-example or model label;
-- no Lab, Academy, Outcome or mock routes in v1 navigation.
+- no Academy, standalone Lab or historical mock routes in v1 navigation;
+- the visible Mechanics label preserves the internal route/access/analytics id
+  `studio` and the Guide handoff `?guided=experiment`.
 
 ## 4. Shared state contract
 
@@ -145,7 +148,7 @@ The adapter MUST:
 - fail safely when storage is unavailable or malformed;
 - never overwrite protected Academy keys;
 - treat the engine output as authoritative;
-- allow Range, Studio and Jarvis to read the same optional shot context;
+- allow Range, Mechanics and Guide to read the same optional model context;
 - preserve current screen defaults when context is absent.
 
 The v1 learning tour MUST write only `complete`, `step`, `dismissed` and the
@@ -168,14 +171,15 @@ It MUST:
 - label stored onboarding context as a `Saved guided model setup`; it MUST NOT
   be described as the user's current, latest or measured shot;
 - use deterministic answer templates and existing engine facts in v1;
-- distinguish Range-modelled output, Studio geometry, bounded estimates and
+- distinguish Range-modelled output, Mechanics geometry, bounded estimates and
   unsupported real-world variables with visible truth labels;
 - recompute every shown output from the five saved delivery inputs instead of
   trusting a serialized result;
 - reject or disclose out-of-domain, no-flight and capped-spin states;
 - cite at least one visible input or model output when a saved setup exists;
 - end with exactly one next action or one bounded one-variable comparison;
-- deep-link to Range or Impact Studio with the context preserved.
+- deep-link to Range or Mechanics Lab with the context preserved; the Mechanics
+  handoff keeps `?guided=experiment` for compatibility.
 
 The initial library is outcome-first. It MUST provide the three entry intents
 `Saved setup`, `Explore a topic` and `Compare the model`, followed by the six
@@ -223,14 +227,16 @@ Target: a new golfer reaches the product map in 90 seconds or less.
 
 Flow:
 
-1. Outcome proof: show a real captured Outcome surface and explain that speed,
-   face, path, attack and delivered loft tell the shot's story.
-2. Studio proof: show a real captured Impact Studio surface and name two causal
-   pairs: Face + Path -> start/curve; Attack + Loft -> launch/spin.
+1. Range proof: show a real captured Range/Outcome surface as replay and
+   comparison support, not the causal authority.
+2. Mechanics proof: show a real captured Mechanics Lab surface. Name both
+   authorities: Face/Path/Attack/Dynamic Loft to six flight outcomes; and Low
+   Point X/Height, Swing Direction/Plane to contact, Attack and Path, then the
+   same flight instrument.
 3. Live relationship: use a clearly labelled fixed 7-iron example at 90 mph.
    Let the learner change Delivered Loft from 16-34 degrees and recompute Launch
    Angle, Spin Loft and Backspin through the unchanged shipping engine.
-4. Product map: show real Outcome, Studio and Guide previews with one concise
+4. Product map: show real Range/Outcome, Mechanics and Guide previews with one concise
    job for each, then offer `Open the live model`.
 
 The screenshots MUST be reproducible captures of shipping routes, not invented
@@ -250,7 +256,7 @@ The v1 model is freemium with value before price.
 - complete the learning tour and use its fixed live relationship;
 - Home and the core Range flight model;
 - 10 distinct Range comparisons, pinned through the existing comparison control;
-- the first guided Impact Studio experiment;
+- the first guided Mechanics experiment in the native app;
 - five unique Flightglass Guide answers per local calendar day;
 - restore purchases and legal routes always available.
 
@@ -258,7 +264,7 @@ The v1 model is freemium with value before price.
 
 - unlimited Range comparisons;
 - unlimited guided Flightglass Guide answers;
-- unlimited guided Impact Studio experiments;
+- unlimited guided Mechanics experiments;
 - later cross-device sync when that phase exists.
 
 Current product pricing remains `kr 99` monthly and `kr 590` annually, with
@@ -270,7 +276,7 @@ not shown on the v1 paywall.
 The paywall MUST appear only after one of these value moments:
 
 - the 11th distinct Range comparison;
-- the second guided Impact Studio experiment;
+- the second guided Mechanics experiment in the native app;
 - the sixth unique Guide answer in the same local calendar day.
 
 It MUST NOT appear on cold launch or before the first completed result.
@@ -306,11 +312,31 @@ tables are preferred for exact comparisons, SVG/Canvas is used for measurable
 geometry, and generative image tools such as Nano Banana Pro may be used only
 for non-metric conceptual art when the tool is available.
 
-Impact Studio is the first migration target because it currently duplicates an
-older token family and uses system fonts. Range and the canonical token file are
-temporarily excluded from edits while another active branch owns them.
+Mechanics Lab is the sole cause-to-strike-to-flight instrument. Its visible
+name replaces the retired visible Studio name while internal `studio` compatibility identifiers
+remain stable. Range/Outcome retains replay and comparison behavior and must
+not claim causal ownership.
 
-The Impact Studio Low Point marker is a measurement instrument, not a generic
+### Mechanics runtime contract
+
+- Impact Inputs controls Face Angle, Club Path, Attack Angle and Dynamic Loft.
+  Club speed is a visible held 90 mph reference, not a fifth control.
+- Arc Inputs controls Low Point X, Low Point Height (`lowPoint.z`), Swing
+  Direction and Swing Plane. It derives contact/Ballstrike, Attack Angle and
+  Club Path before using the same flight instrument.
+- The persistent flight outputs are Start, Curve, Launch, Backspin, Apex and
+  Carry. Only one input authority is active at a time.
+- Arc handoff may update Attack and Path. Face, Dynamic Loft and held club
+  speed persist.
+- Mechanics works in portrait and landscape without a rotate overlay. Every
+  orientation preserves 44 px controls, safe-area clearance, focus and reduced
+  motion information parity.
+- Native access grants the first completed guided experiment free and requires
+  Pro for later guided experiments. Browser preview does not consume access.
+- No event or UI state stores personal swing data or introduces diagnosis,
+  technique grading, a prescribed fix or an optimal-value claim.
+
+The Mechanics Low Point marker is a model instrument, not a generic
 status dot. The exact point MUST remain visible above the swing arc, use the
 Contact/Low Point semantic color, align its open aperture to the local arc
 tangent and use a fine datum line/tick when projected depth needs explanation.
@@ -362,14 +388,14 @@ Objective: establish a truthful v1 baseline before UI expansion.
 
 - [x] `npm run verify:v1` passes for the four shipping v1 routes without running
   Academy v2 controls.
-- [x] The Capacitor web allowlist contains Home, Range, Impact Studio, Jarvis
+- [x] The Capacitor web allowlist contains Home, Range, Mechanics and Guide
   and the required legal pages; Academy and other v2/legacy entry points are
   excluded.
 - [x] `npm run copy-web` produces byte-identical root/`www` copies for all four
   v1 routes and their required local dependencies.
 - [x] A focused v1 shipping-contract test fails before the copy fix and passes
   after it.
-- [x] Chromium and WebKit open Home, Range, Studio and Jarvis with zero critical
+- [x] Chromium and WebKit open Home, Range, Mechanics and Guide with zero critical
   runtime findings.
 
 Verification record, 2026-08-06:
@@ -389,8 +415,8 @@ Objective: make the four v1 routes read as one app without changing physics.
 
 - [x] One shared shell contract defines brand, route state, 44 px navigation,
   safe areas, focus and reduced motion.
-- [x] Home, Range, Studio and Jarvis load the canonical token layer.
-- [x] Impact Studio has no local token mirror or system-font fallback.
+- [x] Home, Range, Mechanics and Guide load the canonical token layer.
+- [x] Mechanics Lab has no local token mirror or system-font fallback.
 - [x] Every route identifies current location and can reach the other v1 routes.
 - [x] Shared navigation does not obscure Range controls at target viewports.
 - [x] Automated source tests reject shipping-page token duplication and
@@ -408,10 +434,10 @@ Verification record, 2026-08-06:
 
 Stop condition met: `PHASE 1 DONE`. Do not begin Phase 2 automatically.
 
-Instrument follow-up, 2026-08-07: the Studio Low Point disk was replaced by an
+Instrument follow-up, 2026-08-07: the Mechanics Low Point disk was replaced by an
 exact core, tangent-aligned open aperture, subtle bloom and optional turf datum.
 It is drawn last, stays opaque and visible, and uses a 280 ms update echo that
-is removed under reduced motion. The unchanged Studio geometry passes 9/9
+is removed under reduced motion. The unchanged Mechanics geometry passes 9/9
 Chromium and 9/9 WebKit browser cases.
 
 ### Phase 2: Onboarding and app Home
@@ -429,7 +455,7 @@ public animated marketing landing remains a separate future web surface.
 - [x] Skip and resume work at every step.
 - [x] A once-per-session opening is immediately skippable and has complete
   reduced-motion and safe-fallback behavior.
-- [x] The tour uses reproducible captures of Outcome, Studio and Guide and one
+- [x] The tour uses reproducible captures of Range/Outcome, Mechanics and Guide and one
   fixed live Delivered Loft relationship backed by the shipping engine.
 - [x] The tour asks for no personal golf data and creates no `currentShot`.
 - [x] Home shows a learning CTA when empty, a live-Outcome CTA after completion
@@ -468,7 +494,7 @@ text or false precision.
   optimization language and end with one action.
 - [x] At least one live lab exposes all five inputs, changes exactly one at a
   time, names held constants and updates exact outcome deltas in real time.
-- [x] Guide to Range/Studio navigation preserves context and defaults safely
+- [x] Guide to Range/Mechanics navigation preserves context and defaults safely
   when context is missing or corrupt.
 - [x] Valid, empty, corrupt, out-of-domain, no-flight and capped-output states
   pass deterministic adapter and browser tests in Chromium and WebKit.
@@ -478,7 +504,7 @@ text or false precision.
 Fresh completion evidence (2026-08-07): 28 researched guided questions ship
 across the six topics; 30 deterministic Guide contracts and 22 Chromium/WebKit
 browser cases pass. The browser cases include empty/corrupt fallback, saved
-one-variable Range handoff, Studio navigation context persistence, 390x844 and
+one-variable Range handoff, Mechanics navigation context persistence, 390x844 and
 1440x900 containment, reduced motion and target-size checks. The final fresh
 Impeccable/Terra review returned `REVIEW-READY` after the 10 px type-floor fix.
 
@@ -500,7 +526,7 @@ Objective: charge after demonstrated value and preserve existing purchases.
 
 Fresh source/test evidence (2026-08-07): 23/23 monetization/IAP contracts and
 12/12 Chromium plus 12/12 WebKit browser cases pass. The browser cases trigger the
-11th Range comparison, second guided Studio experiment and sixth same-day Guide
+11th Range comparison, second guided Mechanics experiment and sixth same-day Guide
 answer from the actual shipping pages; verify the distinct guided layer,
 automatic resumption of each gated action after unlock, no-cost re-pinning of a
 previously counted setup, a keyboard-completed successful purchase,

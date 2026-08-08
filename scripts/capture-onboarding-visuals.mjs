@@ -22,7 +22,7 @@ const captures = [
     id: 'studio',
     route: 'impact-studio.html',
     viewport: { width: 812, height: 375 },
-    ready: '#stage[data-view="face"]',
+    ready: 'main.mechanics',
   },
   {
     id: 'guide',

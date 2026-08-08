@@ -85,3 +85,44 @@ test('Home, Guide and commerce use visible Mechanics naming', () => {
   assert.match(paywall, /Mechanics experiments/i);
   assert.doesNotMatch(paywall, /guided Studio|Studio experiments/i);
 });
+
+test('product and release copy preserve the Mechanics authority boundary', () => {
+  const product = read('PRODUCT.md');
+  const technical = read('TECH_SPEC.md');
+  const listing = read('docs/store-listing.md');
+  const reviewer = read('docs/app-review-notes.md');
+  const support = read('support.html');
+  const range = read('impact.html');
+
+  for (const source of [product, technical, listing, reviewer]) {
+    assert.match(source, /Mechanics Lab/i);
+    assert.match(source, /Range(?:\s*\/\s*Outcome|\/Outcome|[^\r\n]{0,40}(?:replay|comparison))/i);
+    assert.match(source, /(?:Face(?: Angle)?[^\r\n]{0,80}(?:Club )?Path[^\r\n]{0,80}Attack[^\r\n]{0,80}(?:Dynamic )?Loft|Impact Inputs)/i);
+    assert.match(source, /(?:Low Point X[^\r\n]{0,100}Low Point (?:Height|Y)|Arc Inputs)/i);
+  }
+
+  assert.match(technical, /Start, Curve, Launch, Backspin, Apex and\s+Carry/);
+  assert.match(technical, /Browser preview does not consume access/i);
+  assert.match(technical, /portrait and landscape without a rotate overlay/i);
+  assert.match(listing, /browser preview does not consume this access state/i);
+  assert.doesNotMatch(listing, /Impact Studio/i);
+
+  assert.match(range, /default replay\/comparison surface/i);
+  assert.doesNotMatch(range, /default cause\/effect surface/i);
+  assert.match(support, /Mechanics Lab adapts to portrait and landscape/i);
+  assert.doesNotMatch(support, /rotate your (?:phone|device)|uses landscape|needs landscape/i);
+});
+
+test('the bounded onboarding example remains a fixed Delivered Loft demonstration', () => {
+  const home = read('index.html');
+  const homeRuntime = read('sa-home.js');
+
+  assert.match(home, /This is a fixed example/i);
+  assert.match(home, /id="onboardingLoft"[^>]+value="24"/i);
+  assert.match(home, /Only delivered loft changes\. Speed, face, path and attack stay fixed\./i);
+  assert.match(homeRuntime, /clubSpeed:\s*90/);
+  assert.match(homeRuntime, /faceAngle:\s*2/);
+  assert.match(homeRuntime, /clubPath:\s*0/);
+  assert.match(homeRuntime, /attackAngle:\s*3/);
+  assert.doesNotMatch(home, /my swing|your technique|fix your/i);
+});

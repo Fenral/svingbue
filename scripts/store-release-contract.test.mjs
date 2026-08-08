@@ -164,6 +164,7 @@ test('Apple metadata fits store field limits and retains every purchase credenti
 
   for (const source of [listing, reviewNotes, phoneChecklist]) {
     assert.match(source, /In-App Purchase Key/i);
+    assert.match(source, /Key ID/i);
     assert.match(source, /Issuer ID/i);
   }
   for (const source of [listing, reviewNotes]) {
@@ -177,6 +178,12 @@ test('Apple metadata fits store field limits and retains every purchase credenti
   assert.match(phoneChecklist, /public Support URL over HTTPS/i);
   assert.match(phoneChecklist, /npm run verify:v1:phone-evidence/);
   assert.doesNotMatch(phoneChecklist, /Open Support, Privacy and Terms from the native/i);
+
+  assert.match(listing, /first subscription group must ship with a new app version/i);
+  assert.match(listing, /1290\s*\u00d7\s*2796/i);
+  assert.match(listing, /opaque PNG or\s+JPEG\/JPG files with no alpha/i);
+  assert.match(reviewNotes, /exact TestFlight build[\s\S]{0,120}sandbox environment/i);
+  assert.match(reviewNotes, /never restores automatically on\s+launch/i);
 });
 
 test('the committed store gallery contains exactly five current upload candidates', async () => {

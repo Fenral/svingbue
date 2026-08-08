@@ -387,7 +387,7 @@ test(`${ENGINE}: learning tour uses real product proof, a live engine lab, and n
   await settleStepEntry(page, 4);
   assert.deepEqual(
     await page.locator('.product-map__item strong').allTextContents(),
-    ['Outcome', 'Studio', 'Guide'],
+    ['Range / Outcome', 'Mechanics Lab', 'Guide'],
   );
   assert.equal((await stored(page)).currentShot, null);
   await assertNoPreValueFriction(page);
@@ -397,7 +397,7 @@ test(`${ENGINE}: learning tour uses real product proof, a live engine lab, and n
   await page.locator('#finishOnboarding').click();
   assert.equal(await page.locator('#onboarding').getAttribute('open'), null);
   assert.equal(await page.locator('#homeEmpty').isVisible(), true);
-  assert.equal(await page.locator('#startFirstShot').textContent(), 'Open live Outcome');
+  assert.equal(await page.locator('#startFirstShot').textContent(), 'Open Range replay');
   await capture(page, 'home-learning--430x932');
 
   await page.reload({ waitUntil: 'networkidle' });
@@ -454,7 +454,7 @@ test(`${ENGINE}: onboarding remains usable with throwing localStorage and comple
   await page.locator('#finishOnboarding').click();
   assert.equal(await page.locator('#onboarding').getAttribute('open'), null);
   assert.equal(await page.locator('#homeEmpty').isVisible(), true);
-  assert.equal(await page.locator('#startFirstShot').textContent(), 'Open live Outcome');
+  assert.equal(await page.locator('#startFirstShot').textContent(), 'Open Range replay');
 
   const afterCompletion = await page.evaluate(() => ({
     context: window.__flightglassHome.getContext(),
