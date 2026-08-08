@@ -83,6 +83,36 @@ const station = (page, name) => page.locator('.stations button', {
 const noFavicon = errors => errors.filter(error => !error.includes('favicon'));
 const visibleRangeIds = page => page.locator('#panel input[type="range"]:visible')
   .evaluateAll(nodes => nodes.map(node => node.id).sort());
+const renderedTracerBounds = page => page.locator('#scene').evaluate(canvas => {
+  const context = canvas.getContext('2d');
+  const pixels = context.getImageData(0, 0, canvas.width, canvas.height);
+  let minX = pixels.width;
+  let minY = pixels.height;
+  let maxX = -1;
+  let maxY = -1;
+  for (let y = 0; y < pixels.height; y++) {
+    for (let x = 0; x < pixels.width; x++) {
+      const index = (y * pixels.width + x) * 4;
+      if (pixels.data[index + 3] <= 128) continue;
+      minX = Math.min(minX, x);
+      minY = Math.min(minY, y);
+      maxX = Math.max(maxX, x);
+      maxY = Math.max(maxY, y);
+    }
+  }
+  const width = maxX >= minX ? maxX - minX + 1 : 0;
+  const height = maxY >= minY ? maxY - minY + 1 : 0;
+  return {
+    canvasWidth: pixels.width,
+    canvasHeight: pixels.height,
+    widthRatio: width / pixels.width,
+    heightRatio: height / pixels.height,
+    leftGapRatio: minX / pixels.width,
+    rightGapRatio: (pixels.width - maxX - 1) / pixels.width,
+    topGapRatio: minY / pixels.height,
+    bottomGapRatio: (pixels.height - maxY - 1) / pixels.height,
+  };
+});
 
 test('top strip is a single back-to-menu control', { timeout: 60_000 }, async () => {
   const { page, errors } = await open();
@@ -217,6 +247,57 @@ for (const viewport of [
     await page.close();
   });
 }
+
+test('settled Side and Top use the available tracer canvas', { timeout: 60_000 }, async () => {
+  const { page, errors } = await open({ width: 390, height: 844 });
+  await page.locator('#stage').waitFor();
+  const failures = [];
+
+  for (const lens of [
+    { name: 'SIDE', station: 1, minWidth: 0.68, minHeight: 0.29 },
+    { name: 'TOP', station: 2, minWidth: 0.24, minHeight: 0.60 },
+  ]) {
+    await page.evaluate(stationValue => window.__impact.setStation(stationValue, false), lens.station);
+    await page.waitForTimeout(100);
+    const bounds = await renderedTracerBounds(page);
+    if (bounds.widthRatio < lens.minWidth) failures.push(`${lens.name}: tracer is too narrow ${JSON.stringify(bounds)}`);
+    if (bounds.heightRatio < lens.minHeight) failures.push(`${lens.name}: tracer is too short ${JSON.stringify(bounds)}`);
+    if (bounds.bottomGapRatio > 0.12) failures.push(`${lens.name}: tracer sits too high ${JSON.stringify(bounds)}`);
+  }
+
+  assert.deepEqual(failures, []);
+  assert.deepEqual(noFavicon(errors), []);
+  await page.close();
+});
+
+test('Side and Top remain framed from 60 to 150 mph', { timeout: 60_000 }, async () => {
+  const { page, errors } = await open({ width: 390, height: 844 });
+  await page.locator('#stage').waitFor();
+  const failures = [];
+
+  for (const speed of [60, 90, 110, 130, 150]) {
+    await page.evaluate(value => { window.__impact.state.speed = value; }, speed);
+    for (const lens of [{ name: 'SIDE', station: 1 }, { name: 'TOP', station: 2 }]) {
+      await page.evaluate(stationValue => window.__impact.setStation(stationValue, false), lens.station);
+      await page.waitForTimeout(150);
+      const bounds = await renderedTracerBounds(page);
+      const id = `${lens.name} ${speed} mph`;
+      if (bounds.leftGapRatio < 0.02 || bounds.rightGapRatio < 0.02) {
+        failures.push(`${id}: tracer clips horizontally ${JSON.stringify(bounds)}`);
+      }
+      if (bounds.topGapRatio < 0.02 || bounds.bottomGapRatio < 0.02) {
+        failures.push(`${id}: tracer clips vertically ${JSON.stringify(bounds)}`);
+      }
+      if (bounds.bottomGapRatio > 0.14) {
+        failures.push(`${id}: tracer sits too high ${JSON.stringify(bounds)}`);
+      }
+    }
+  }
+
+  assert.deepEqual(failures, []);
+  assert.deepEqual(noFavicon(errors), []);
+  await page.close();
+});
 
 test('guided experiment hydration refreshes all five visible values', { timeout: 60_000 }, async () => {
   const { page } = await open();

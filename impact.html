@@ -322,7 +322,7 @@
 
 <script type="module">
 import { rigAt, buildBasis, project } from './impact-camera.js';
-import { fitZoom, gridStops, lateralStops, dollyRig } from './impact-framing.js';
+import { RANGE_HOME_FIT, fitZoom, gridStops, lateralStops, dollyRig } from './impact-framing.js';
 import { selectOutcome } from './impact-outcome.js';
 import { buildAnnotations, placeLabels, cometPoint, MEASURE_KEEPOUT } from './impact-annotate.js';
 import haptics from './sa-haptics.js';
@@ -1225,23 +1225,35 @@ let lastT = 0;
  * Eksakt-ortografi (A2) er bevart strukturelt — zDiv = refDist ved orthoK=1
  * uansett hvilken verdi refDist får.
  */
-function frameForShot(rig, outcome, aspectFix) {
-  const carry = Math.max(outcome.m.carry, 1);
-  const apex = outcome.m.apex || 0;
-  const side = Math.abs(outcome.m.side || 0);
+function frameForShot(rig, outcome, aspectFix, station, pins = []) {
+  const visibleOutcomes = [outcome, ...pins.map(pin => pin.outcome).filter(Boolean)];
+  const carry = Math.max(1, ...visibleOutcomes.map(item => item.m.carry || 0));
+  const apex = Math.max(0, ...visibleOutcomes.map(item => item.m.apex || 0));
+  const side = Math.max(0, ...visibleOutcomes.map(item => Math.abs(item.m.side || 0)));
   const mid = carry / 2;
-  const dx = (mid - rig.look.x) * rig.orthoK;
-  const look = { x: rig.look.x + dx, y: rig.look.y, z: rig.look.z };
-  const pos = { x: rig.pos.x + dx, y: rig.pos.y, z: rig.pos.z };
-  const maxDist = Math.max(mid, apex, side + 8);   // halv-utstrekning som må få plass
-  // Hybrid-innramming: en FAST «hjemme»-ramme for hele det normale slag-spennet,
-  // fit-to-shot zoomer KUN ut når slaget faktisk går utenfor den. HOME_FIT er den
-  // halve utstrekningen hjemme-rammen så vidt rommer — kile (~62), jern (~92) og
-  // en realistisk driver (~141) ligger alle under, så de deler nøyaktig samme
-  // stabile målestokk (ingen «bakken flytter seg» når du drar i sliderne). Bare
-  // de bratte 300–386 m-ekstremene (maxDist > HOME_FIT) trigger utzoom.
-  const HOME_FIT = 150;
-  const k = fitZoom(Math.max(maxDist, HOME_FIT));
+  const s = clamp(station, 0, 2);
+  const segmentT = s <= 1 ? s : s - 1;
+  const easedT = segmentT * segmentT * (3 - 2 * segmentT);
+  const sideWeight = s <= 1 ? easedT : 1 - easedT;
+  const topWeight = s <= 1 ? 0 : easedT;
+  const maxDist = Math.max(mid, apex, side + 8);   // half-extent that must fit
+  // The compact portrait stage uses a stock-iron home frame. Wedges and the
+  // default iron stay visually stable; longer shots zoom out continuously so
+  // their tracer keeps using the available canvas instead of clipping.
+  const k = fitZoom(Math.max(maxDist, RANGE_HOME_FIT));
+  const homeScale = fitZoom(RANGE_HOME_FIT);
+  const screenBiasCompensation = homeScale / k;
+  // The shorter tracer canvas needs an off-centre camera target: SIDE keeps
+  // the ground low in frame, while TOP keeps impact low and downrange above.
+  // Translating pos + look together preserves the endpoint camera direction,
+  // exact orthographic projection and every measured angle. Compensating the
+  // world-space bias for dolly keeps the anchor fixed on screen at every speed.
+  const topCentre = Math.max(mid, RANGE_HOME_FIT) + 25 * screenBiasCompensation;
+  const targetX = mid + (topCentre - mid) * topWeight;
+  const dx = (targetX - rig.look.x) * rig.orthoK;
+  const dz = 30 * sideWeight * screenBiasCompensation;
+  const look = { x: rig.look.x + dx, y: rig.look.y, z: rig.look.z + dz };
+  const pos = { x: rig.pos.x + dx, y: rig.pos.y, z: rig.pos.z + dz };
   const zoomed = dollyRig({ ...rig, pos, look }, k);
   return {
     rig: { ...zoomed, xStretch: (rig.xStretch ?? 1) * aspectFix },
@@ -1277,7 +1289,7 @@ function frame(now) {
   // Skudd-tilpasset innramming: kjenn slaget FØRST, så sentrer og zoom riggen
   // rundt det. selectOutcome er memoisert, så å hente den før basis er gratis.
   const liveOutcome = selectOutcome(state);
-  const framed = frameForShot(rig0, liveOutcome, aspectFix);
+  const framed = frameForShot(rig0, liveOutcome, aspectFix, state.station, state.pins);
   basis = buildBasis(framed.rig, { w: W, h: H });
   ctx.clearRect(0, 0, W, H);
   const tracerVisible = stage.dataset.tracer === 'on';

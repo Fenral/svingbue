@@ -26,6 +26,10 @@
 
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 
+// Stock-iron half-extent used by the portrait Range home frame. Shorter shots
+// share this scale; longer shots fit outward continuously.
+export const RANGE_HOME_FIT = 90;
+
 /**
  * Continuous fit-zoom factor for a shot whose farthest interesting point is
  * `maxDist` metres from the (shot-centred) look target.
