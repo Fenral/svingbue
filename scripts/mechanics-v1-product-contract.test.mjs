@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -125,4 +125,68 @@ test('the bounded onboarding example remains a fixed Delivered Loft demonstratio
   assert.match(homeRuntime, /clubPath:\s*0/);
   assert.match(homeRuntime, /attackAngle:\s*3/);
   assert.doesNotMatch(home, /my swing|your technique|fix your/i);
+});
+
+test('Mechanics design finish evidence preserves the bounded detector and reviewer record', () => {
+  const evidence = read('docs/mechanics-design-finish-evidence.md');
+
+  assert.match(evidence, /Detector invocations:\s*\*\*exactly `1`\*\*/,
+    'the durable record pins the detector to one invocation');
+  assert.match(evidence, /Detector rerun after fixes:\s*\*\*No\*\*/,
+    'the durable record prohibits claiming a detector rerun');
+  assert.match(evidence, /detect\.mjs --json impact-studio\.html impact-studio\.css design\/mocks\/impact-studio\.html index\.html jarvis\.html/,
+    'the one detector command is reproducibly identified without running it');
+
+  for (const token of [
+    '--mechanics-black-absolute',
+    '--mechanics-black-focus',
+    '--mechanics-black-contact',
+    '--mechanics-black-depth',
+    '--mechanics-black-float',
+    '--mechanics-radius-indicator',
+    '--mechanics-radius-track',
+    '--mechanics-radius-compact',
+    '--mechanics-radius-switch',
+    '--mechanics-type-floor',
+    '--mechanics-type-detail',
+    '--mechanics-type-control',
+    '--mechanics-type-compact-data',
+    '--mechanics-type-touch-data',
+  ]) {
+    assert.match(evidence, new RegExp(token), `${token} resolution is documented`);
+  }
+
+  assert.match(evidence, /first provenance-blind finish review returned \*\*CHANGES\*\*/);
+  assert.match(evidence, /6a9ecf717cec17413dbb9ed4117136842e5746bf/,
+    'the one reviewer-fix batch is immutable');
+  assert.match(evidence, /pair 1 winner was \*\*A\*\* and pair 2 winner was \*\*B\*\*/);
+  for (const [dimension, score] of [
+    ['Product fit', 98],
+    ['Causal legibility', 96],
+    ['Hierarchy', 94],
+    ['Responsive integrity', 95],
+    ['Accessibility', 96],
+    ['Brand specificity', 97],
+    ['Non-generic craft', 96],
+  ]) {
+    assert.match(evidence, new RegExp(`\\| ${dimension} \\| ${score} \\|`),
+      `${dimension} score is preserved`);
+  }
+  assert.match(evidence, /All critical requirements were green/);
+  assert.match(evidence, /No material design finding remains open/);
+
+  for (const path of ['assets/onboarding/studio.webp', 'appstore/contact-sheet.png']) {
+    assert.equal(existsSync(join(ROOT, path)), true, `${path} is durable tracked visual evidence`);
+  }
+  for (const artifactPath of [
+    'change-gate/impact-studio/chromium--932x430--normal--delivery.png',
+    'change-gate/impact-studio/chromium--932x430--normal--arc.png',
+    'change-gate/impact-studio/webkit--430x932--reduced--delivery.png',
+    'change-gate/impact-studio/webkit--430x932--reduced--arc.png',
+  ]) {
+    assert.match(evidence, new RegExp(artifactPath.replaceAll('.', '\\.')),
+      `${artifactPath} is bound to the CI artifact`);
+  }
+  assert.match(evidence, /actions\/runs\/31234474478\/artifacts\/9014962682/);
+  assert.match(evidence, /sha256:d8b70ab0b334e2fb18d741db3ae20764fa33a6450e5e512ff37b5795a1ca22c3/);
 });

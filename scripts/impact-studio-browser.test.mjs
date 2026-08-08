@@ -23,6 +23,27 @@ const STUDIO_SOURCE = readFileSync(resolve(ROOT, 'impact-studio.html'), 'utf8');
 const OUTCOMES = ['start', 'curve', 'launch', 'backspin', 'apex', 'carry'];
 const DELIVERY_INPUTS = ['delivery-face', 'delivery-path', 'delivery-attack', 'delivery-loft'];
 const ARC_INPUTS = ['arc-low-point', 'arc-height', 'arc-direction', 'arc-plane'];
+const PERSISTENT_CONTROL_NAMES = [
+  { role: 'link', name: 'Home' },
+  { role: 'button', name: 'Impact Inputs' },
+  { role: 'button', name: 'Arc Inputs' },
+  { role: 'button', name: 'Reset active inputs' },
+];
+const MODE_CONTROL_NAMES = {
+  delivery: [
+    { role: 'slider', name: 'Face Angle' },
+    { role: 'slider', name: 'Club Path' },
+    { role: 'slider', name: 'Attack Angle' },
+    { role: 'slider', name: 'Dynamic Loft' },
+  ],
+  arc: [
+    { role: 'slider', name: 'Low Point X' },
+    { role: 'slider', name: 'Low Point Height' },
+    { role: 'slider', name: 'Swing Direction' },
+    { role: 'slider', name: 'Swing Plane' },
+    { role: 'button', name: 'Use in Impact Inputs' },
+  ],
+};
 const SCENARIOS = [
   { label: '932x430, normal motion', viewport: { width: 932, height: 430 }, reducedMotion: 'no-preference' },
   { label: '812x375, normal motion', viewport: { width: 812, height: 375 }, reducedMotion: 'no-preference' },
@@ -235,6 +256,70 @@ async function assertVisibleControlContract(page, label) {
   }
 }
 
+async function assertAccessibleControlNames(page, mode, label) {
+  const expected = [...PERSISTENT_CONTROL_NAMES, ...MODE_CONTROL_NAMES[mode]];
+  const mechanics = page.locator('main.mechanics');
+  const visibleControls = page.locator([
+    'main.mechanics button:visible',
+    'main.mechanics input:visible',
+    'main.mechanics select:visible',
+    'main.mechanics textarea:visible',
+    'main.mechanics a[href]:visible',
+  ].join(','));
+
+  assert.equal(await visibleControls.count(), expected.length,
+    `${label}: every visible interactive Mechanics control is covered by the accessible-name contract`);
+  for (const { role, name } of expected) {
+    const control = mechanics.getByRole(role, { name, exact: true });
+    assert.equal(await control.count(), 1,
+      `${label}: ${role} "${name}" resolves through Playwright's accessible-name algorithm`);
+    assert.equal(await control.isVisible(), true, `${label}: ${role} "${name}" is visible`);
+  }
+}
+
+async function assertKeyboardFocusVisible(page, selector, label) {
+  const target = page.locator(selector);
+  assert.equal(await target.count(), 1, `${label}: focus target exists`);
+
+  await page.evaluate(() => {
+    document.body.setAttribute('tabindex', '-1');
+    document.body.focus();
+  });
+
+  const tabLimit = await page.locator([
+    'main.mechanics button',
+    'main.mechanics input',
+    'main.mechanics select',
+    'main.mechanics textarea',
+    'main.mechanics a[href]',
+  ].join(',')).count() + 2;
+  let reached = false;
+  for (let step = 0; step < tabLimit; step += 1) {
+    await page.keyboard.press('Tab');
+    reached = await target.evaluate(element => document.activeElement === element);
+    if (reached) break;
+  }
+
+  const focus = await target.evaluate(element => {
+    const style = getComputedStyle(element);
+    return {
+      active: document.activeElement === element,
+      focusVisible: element.matches(':focus-visible'),
+      outlineStyle: style.outlineStyle,
+      outlineWidth: style.outlineWidth,
+      boxShadow: style.boxShadow,
+    };
+  });
+  await page.evaluate(() => document.body.removeAttribute('tabindex'));
+
+  assert.equal(reached && focus.active, true, `${label}: keyboard traversal reaches ${selector}`);
+  assert.equal(focus.focusVisible, true, `${label}: ${selector} matches :focus-visible after Tab`);
+  const visiblyStyled = (focus.outlineStyle !== 'none' && focus.outlineWidth !== '0px')
+    || focus.boxShadow !== 'none';
+  assert.equal(visiblyStyled, true,
+    `${label}: computed focus treatment is visible (outline=${focus.outlineStyle} ${focus.outlineWidth}; box-shadow=${focus.boxShadow})`);
+}
+
 async function assertNoOverflow(page, label) {
   const widths = await page.evaluate(() => ({
     body: document.body.scrollWidth,
@@ -437,6 +522,8 @@ async function runCoreContract(page, scenario) {
   await assertInputSet(page, DELIVERY_INPUTS);
   await assertPersistentFlightAndOutcomes(page);
   await assertVisibleControlContract(page, 'Impact Inputs');
+  await assertAccessibleControlNames(page, 'delivery', `${scenario.label}, Impact Inputs`);
+  await assertKeyboardFocusVisible(page, '#delivery-face', `${scenario.label}, Impact Inputs`);
   await assertNoOverflow(page, `${scenario.label}, Impact Inputs`);
   await assertLiveRegionsSeparated(page, `${scenario.label}, Impact Inputs`);
   await assertPortraitInstrumentAboveEvidence(page, scenario, 'Impact Inputs');
@@ -466,6 +553,8 @@ async function runCoreContract(page, scenario) {
   await assertInputSet(page, ARC_INPUTS);
   await assertPersistentFlightAndOutcomes(page);
   await assertVisibleControlContract(page, 'Arc Inputs');
+  await assertAccessibleControlNames(page, 'arc', `${scenario.label}, Arc Inputs`);
+  await assertKeyboardFocusVisible(page, '#arc-low-point', `${scenario.label}, Arc Inputs`);
   await assertNoOverflow(page, `${scenario.label}, Arc Inputs`);
   await assertLiveRegionsSeparated(page, `${scenario.label}, Arc Inputs`);
   await assertArcFactsContained(page, `${scenario.label}, Arc Inputs`);
