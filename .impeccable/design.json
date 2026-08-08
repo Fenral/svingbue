@@ -148,6 +148,31 @@
         "displayName": "Instrument Label",
         "purpose": "Uppercase telemetry labels, causal steps, and metadata."
       },
+      "instrument-floor": {
+        "displayName": "Instrument Floor",
+        "fontSize": "10px",
+        "purpose": "Hard minimum for compact lens metadata, derived labels, causal nodes, and guided-state text; 8px and 9px text are prohibited."
+      },
+      "instrument-detail": {
+        "displayName": "Instrument Detail",
+        "fontSize": "11px",
+        "purpose": "Compact headings, value annotations, handoff copy, and short causal support."
+      },
+      "instrument-control": {
+        "displayName": "Instrument Control",
+        "fontSize": "12px",
+        "purpose": "Authority segments and control values with sufficient viewport room."
+      },
+      "compact-data": {
+        "displayName": "Compact Data",
+        "fontSize": "14px",
+        "purpose": "Minimum mono telemetry value in the fixed portrait strip."
+      },
+      "touch-data": {
+        "displayName": "Touch Data",
+        "fontSize": "22px",
+        "purpose": "Large mono telemetry on touch layouts before the portrait lower-third contract takes over."
+      },
       "data": {
         "displayName": "Live Data",
         "purpose": "Tabular live outcomes, values, and model output."
@@ -159,6 +184,48 @@
       "reading": {
         "displayName": "Guide Reading",
         "purpose": "Progressive-depth explanations, tables and model boundaries."
+      }
+    },
+    "functionalTokens": {
+      "colors": {
+        "mechanics-black-absolute": {
+          "value": "#000",
+          "purpose": "Mask-only opaque black for the arena atmospheric fade."
+        },
+        "mechanics-black-focus": {
+          "value": "rgba(0, 0, 0, .85)",
+          "purpose": "Inner separation line beneath the ink-white keyboard focus ring."
+        },
+        "mechanics-black-contact": {
+          "value": "rgba(0, 0, 0, .9)",
+          "purpose": "Compact contact shadow beneath range thumbs."
+        },
+        "mechanics-black-depth": {
+          "value": "rgba(0, 0, 0, .92)",
+          "purpose": "Instrument lift and compact lower-third separation."
+        },
+        "mechanics-black-float": {
+          "value": "rgba(0, 0, 0, .96)",
+          "purpose": "Strongest bounded shadow for the guided cue over live diagrams."
+        }
+      },
+      "radii": {
+        "mechanics-radius-indicator": {
+          "value": "2px",
+          "purpose": "Active causal-step indicator."
+        },
+        "mechanics-radius-track": {
+          "value": "3px",
+          "purpose": "Range-control track."
+        },
+        "mechanics-radius-compact": {
+          "value": "10px",
+          "purpose": "Nested authority segments and compact short-landscape panels."
+        },
+        "mechanics-radius-switch": {
+          "value": "14px",
+          "purpose": "Authority-switch group boundary."
+        }
       }
     },
     "shadows": [
@@ -181,6 +248,11 @@
         "name": "ink-focus",
         "value": "inset 0 0 0 1px rgba(0, 0, 0, .85), inset 0 0 0 3px var(--ink)",
         "purpose": "Shared keyboard focus signal on controls."
+      },
+      {
+        "name": "guided-cue-float",
+        "value": "0 16px 38px -24px rgba(0, 0, 0, .96)",
+        "purpose": "Keeps the bounded experiment cue distinct from live canvas evidence."
       },
       {
         "name": "lens-top-light",

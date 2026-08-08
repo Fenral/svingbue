@@ -9,7 +9,21 @@
   --mechanics-lens-radius: var(--radius-lens);
   --motion-press: 140ms cubic-bezier(.23, 1, .32, 1);
   --motion-state: 180ms cubic-bezier(.23, 1, .32, 1);
-  --instrument-shadow: 0 18px 54px -34px rgba(0, 0, 0, .92);
+  --mechanics-black-absolute: #000;
+  --mechanics-black-focus: rgba(0, 0, 0, .85);
+  --mechanics-black-contact: rgba(0, 0, 0, .9);
+  --mechanics-black-depth: rgba(0, 0, 0, .92);
+  --mechanics-black-float: rgba(0, 0, 0, .96);
+  --mechanics-radius-indicator: 2px;
+  --mechanics-radius-track: 3px;
+  --mechanics-radius-compact: 10px;
+  --mechanics-radius-switch: 14px;
+  --mechanics-type-floor: 10px;
+  --mechanics-type-detail: 11px;
+  --mechanics-type-control: 12px;
+  --mechanics-type-compact-data: 14px;
+  --mechanics-type-touch-data: 22px;
+  --instrument-shadow: 0 18px 54px -34px var(--mechanics-black-depth);
   --mechanics-shell-reserve: calc(52px + env(safe-area-inset-bottom));
 }
 
@@ -96,7 +110,7 @@ body[data-sa-route="studio"].sa-shell-ready .mechanics {
   inset: 0;
   pointer-events: none;
   background: linear-gradient(118deg, transparent 0 49.8%, rgba(255, 255, 255, .025) 50%, transparent 50.2%);
-  mask-image: linear-gradient(to bottom, #000, transparent 78%);
+  mask-image: linear-gradient(to bottom, var(--mechanics-black-absolute), transparent 78%);
 }
 
 .mechanics__header {
@@ -149,7 +163,7 @@ body[data-sa-route="studio"].sa-shell-ready .mechanics {
 .handoff-button:focus-visible,
 .parameter-control input:focus-visible {
   outline: none;
-  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .85), inset 0 0 0 3px var(--ink);
+  box-shadow: inset 0 0 0 1px var(--mechanics-black-focus), inset 0 0 0 3px var(--ink);
 }
 
 .mechanics__identity {
@@ -187,7 +201,7 @@ body[data-sa-route="studio"].sa-shell-ready .mechanics {
   margin-left: auto;
   padding: 2px;
   border: 0;
-  border-radius: 14px;
+  border-radius: var(--mechanics-radius-switch);
   background: rgba(255, 255, 255, .025);
 }
 
@@ -195,11 +209,11 @@ body[data-sa-route="studio"].sa-shell-ready .mechanics {
   min-height: 44px;
   padding: 0 15px;
   border: 0;
-  border-radius: 10px;
+  border-radius: var(--mechanics-radius-compact);
   background: transparent;
   color: var(--muted);
   cursor: pointer;
-  font-size: 12px;
+  font-size: var(--mechanics-type-control);
   font-weight: 700;
   letter-spacing: -.01em;
   white-space: nowrap;
@@ -270,7 +284,7 @@ body[data-sa-route="studio"].sa-shell-ready .mechanics {
   right: 0;
   bottom: -1px;
   height: 2px;
-  border-radius: 2px 2px 0 0;
+  border-radius: var(--mechanics-radius-indicator) var(--mechanics-radius-indicator) 0 0;
   background: var(--secondary);
   opacity: 0;
 }
@@ -305,13 +319,13 @@ body[data-sa-route="studio"].sa-shell-ready .mechanics {
   border: 1px solid color-mix(in srgb, var(--secondary) 54%, transparent);
   border-radius: var(--mechanics-control-radius);
   background: color-mix(in srgb, var(--plate-solid) 94%, transparent);
-  box-shadow: 0 16px 38px -24px rgba(0, 0, 0, .96);
+  box-shadow: 0 16px 38px -24px var(--mechanics-black-float);
   transform: translateX(-50%);
 }
 
 .guided-cue__state {
   color: var(--secondary);
-  font-size: 9px;
+  font-size: var(--mechanics-type-floor);
   font-weight: 800;
   letter-spacing: .11em;
   white-space: nowrap;
@@ -321,7 +335,7 @@ body[data-sa-route="studio"].sa-shell-ready .mechanics {
   min-width: 0;
   margin: 0;
   color: var(--ink);
-  font-size: 11px;
+  font-size: var(--mechanics-type-detail);
   font-weight: 650;
   line-height: 1.25;
 }
@@ -417,7 +431,7 @@ body[data-sa-route="studio"].sa-shell-ready .mechanics {
   min-width: 0;
   color: var(--ink);
   font-family: var(--mechanics-data);
-  font-size: 11px;
+  font-size: var(--mechanics-type-detail);
   font-variant-numeric: tabular-nums;
   font-weight: 550;
   text-align: right;
@@ -447,7 +461,7 @@ body[data-sa-route="studio"].sa-shell-ready .mechanics {
 
 .parameter-control input[type="range"]::-webkit-slider-runnable-track {
   height: 3px;
-  border-radius: 3px;
+  border-radius: var(--mechanics-radius-track);
   background: linear-gradient(90deg, color-mix(in srgb, var(--parameter) 72%, transparent) 0 50%, rgba(255, 255, 255, .16) 50% 100%);
 }
 
@@ -460,18 +474,18 @@ body[data-sa-route="studio"].sa-shell-ready .mechanics {
   border: 3px solid var(--mechanics-panel);
   border-radius: 50%;
   background: var(--parameter);
-  box-shadow: 0 3px 10px -3px rgba(0, 0, 0, .9);
+  box-shadow: 0 3px 10px -3px var(--mechanics-black-contact);
 }
 
 .parameter-control input[type="range"]::-moz-range-track {
   height: 3px;
-  border-radius: 3px;
+  border-radius: var(--mechanics-radius-track);
   background: rgba(255, 255, 255, .16);
 }
 
 .parameter-control input[type="range"]::-moz-range-progress {
   height: 3px;
-  border-radius: 3px;
+  border-radius: var(--mechanics-radius-track);
   background: var(--parameter);
 }
 
@@ -481,7 +495,7 @@ body[data-sa-route="studio"].sa-shell-ready .mechanics {
   border: 3px solid var(--mechanics-panel);
   border-radius: 50%;
   background: var(--parameter);
-  box-shadow: 0 3px 10px -3px rgba(0, 0, 0, .9);
+  box-shadow: 0 3px 10px -3px var(--mechanics-black-contact);
 }
 
 .handoff-button {
@@ -498,7 +512,7 @@ body[data-sa-route="studio"].sa-shell-ready .mechanics {
   background: var(--secondary-soft);
   color: var(--ink);
   cursor: pointer;
-  font-size: 11px;
+  font-size: var(--mechanics-type-detail);
   font-weight: 700;
   transition: transform var(--motion-press), background-color var(--motion-state), border-color var(--motion-state);
 }
@@ -578,7 +592,7 @@ body[data-sa-route="studio"].sa-shell-ready .mechanics {
   margin: 0;
   color: var(--ink);
   font-family: var(--font-display);
-  font-size: 11px;
+  font-size: var(--mechanics-type-detail);
   font-weight: 650;
   line-height: 1;
   letter-spacing: -.015em;
@@ -657,7 +671,7 @@ body[data-sa-route="studio"].sa-shell-ready .mechanics {
   margin: 0;
   color: var(--ink);
   font-family: var(--mechanics-data);
-  font-size: 11px;
+  font-size: var(--mechanics-type-detail);
   font-variant-numeric: tabular-nums;
   font-weight: 550;
   text-align: right;
@@ -843,11 +857,11 @@ body[data-sa-route="studio"].sa-shell-ready .mechanics {
   }
 
   .parameter-control__name {
-    font-size: 11px;
+    font-size: var(--mechanics-type-detail);
   }
 
   .parameter-control__value {
-    font-size: 12px;
+    font-size: var(--mechanics-type-control);
   }
 
   .instrument {
@@ -884,7 +898,7 @@ body[data-sa-route="studio"].sa-shell-ready .mechanics {
   }
 
   .telemetry output {
-    font-size: 22px;
+    font-size: var(--mechanics-type-touch-data);
   }
 }
 
@@ -943,7 +957,7 @@ body[data-sa-route="studio"].sa-shell-ready .mechanics {
 
   .instrument__trajectory .trajectory-heading p {
     overflow: hidden;
-    font-size: 8px;
+    font-size: var(--mechanics-type-floor);
     text-overflow: ellipsis;
     white-space: nowrap;
   }
@@ -965,7 +979,7 @@ body[data-sa-route="studio"].sa-shell-ready .mechanics {
     border-bottom: 1px solid var(--line);
     border-radius: 0;
     background: var(--plate-solid);
-    box-shadow: 0 -18px 42px -28px rgba(0, 0, 0, .92);
+    box-shadow: 0 -18px 42px -28px var(--mechanics-black-depth);
   }
 
   .facts__heading {
@@ -974,7 +988,7 @@ body[data-sa-route="studio"].sa-shell-ready .mechanics {
   }
 
   .facts__heading h2 {
-    font-size: 11px;
+    font-size: var(--mechanics-type-detail);
   }
 
   .cause-copy {
@@ -1062,7 +1076,7 @@ body[data-sa-route="studio"].sa-shell-ready .mechanics {
   .telemetry output {
     display: block;
     width: 100%;
-    font-size: clamp(14px, 4vw, 17px);
+    font-size: clamp(var(--mechanics-type-compact-data), 4vw, 17px);
     letter-spacing: -.045em;
   }
 }
@@ -1077,7 +1091,7 @@ body[data-sa-route="studio"].sa-shell-ready .mechanics {
   }
 
   .causal-node {
-    font-size: 9px;
+    font-size: var(--mechanics-type-floor);
     letter-spacing: .04em;
   }
 
@@ -1168,7 +1182,7 @@ body[data-sa-route="studio"].sa-shell-ready .mechanics {
   .mode-switch button {
     min-height: 44px;
     padding-inline: 7px;
-    font-size: 11px;
+    font-size: var(--mechanics-type-detail);
   }
 
   .causal-strip {
@@ -1179,7 +1193,7 @@ body[data-sa-route="studio"].sa-shell-ready .mechanics {
   }
 
   .causal-node {
-    font-size: 8px;
+    font-size: var(--mechanics-type-floor);
   }
 
   .causal-link {
@@ -1195,7 +1209,7 @@ body[data-sa-route="studio"].sa-shell-ready .mechanics {
   }
 
   .mechanics__workspace {
-    grid-template-columns: minmax(204px, .72fr) minmax(0, 1.8fr) minmax(142px, .58fr);
+    grid-template-columns: minmax(204px, .72fr) minmax(0, 1.8fr) minmax(160px, .58fr);
     gap: 6px;
     padding: 4px 8px;
   }
@@ -1204,7 +1218,7 @@ body[data-sa-route="studio"].sa-shell-ready .mechanics {
   .facts {
     min-height: 0;
     padding: 4px;
-    border-radius: 10px;
+    border-radius: var(--mechanics-radius-compact);
   }
 
   .control-bank__heading {
@@ -1221,7 +1235,7 @@ body[data-sa-route="studio"].sa-shell-ready .mechanics {
   }
 
   .parameter-control__name {
-    font-size: 9px;
+    font-size: var(--mechanics-type-floor);
   }
 
   .parameter-control__value {
@@ -1233,7 +1247,7 @@ body[data-sa-route="studio"].sa-shell-ready .mechanics {
     left: auto;
     right: 8px;
     bottom: 63px;
-    width: 142px;
+    width: 160px;
     min-height: 44px;
     margin: 0;
     z-index: 3;
@@ -1259,7 +1273,7 @@ body[data-sa-route="studio"].sa-shell-ready .mechanics {
 
   .lens-heading p,
   .trajectory-heading p {
-    font-size: 8px;
+    font-size: var(--mechanics-type-floor);
   }
 
   .facts__heading {
@@ -1268,7 +1282,7 @@ body[data-sa-route="studio"].sa-shell-ready .mechanics {
   }
 
   .facts__heading h2 {
-    font-size: 11px;
+    font-size: var(--mechanics-type-detail);
   }
 
   .facts__heading span {
@@ -1277,7 +1291,7 @@ body[data-sa-route="studio"].sa-shell-ready .mechanics {
 
   .cause-copy {
     max-width: none;
-    font-size: 11px;
+    font-size: var(--mechanics-type-detail);
     line-height: 1.18;
   }
 
@@ -1294,11 +1308,11 @@ body[data-sa-route="studio"].sa-shell-ready .mechanics {
   }
 
   .derived-grid__row dt {
-    font-size: 8px;
+    font-size: var(--mechanics-type-floor);
   }
 
   .derived-grid__row dd {
-    font-size: 9px;
+    font-size: var(--mechanics-type-floor);
   }
 
   .facts__scope {

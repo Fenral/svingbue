@@ -3,6 +3,11 @@ name: Flightglass
 description: "A live ultraviolet mechanics instrument for inspecting cause, strike, and modeled flight."
 colors:
   arena-black: "#07060C"
+  mechanics-absolute-black: "#000"
+  mechanics-focus-black: "rgba(0, 0, 0, .85)"
+  mechanics-contact-black: "rgba(0, 0, 0, .9)"
+  mechanics-depth-black: "rgba(0, 0, 0, .92)"
+  mechanics-floating-black: "rgba(0, 0, 0, .96)"
   raised-ultraviolet-black: "#110D1C"
   solid-plate: "#0D0A18"
   lens-violet-black: "color-mix(in srgb, #110D1C 82%, #07060C)"
@@ -48,6 +53,36 @@ typography:
     fontWeight: 700
     lineHeight: 1.2
     letterSpacing: "0.08em"
+  instrument-floor:
+    fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+    fontSize: "10px"
+    fontWeight: 700
+    lineHeight: 1.1
+    letterSpacing: "0.04em"
+  instrument-detail:
+    fontFamily: "UI or mono family according to content semantics"
+    fontSize: "11px"
+    fontWeight: 650
+    lineHeight: 1.18
+    letterSpacing: "0"
+  instrument-control:
+    fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+    fontSize: "12px"
+    fontWeight: 700
+    lineHeight: 1.2
+    letterSpacing: "-0.01em"
+  compact-data:
+    fontFamily: "'IBM Plex Mono', ui-monospace, 'SF Mono', 'JetBrains Mono', Menlo, monospace"
+    fontSize: "14px"
+    fontWeight: 550
+    lineHeight: 1
+    letterSpacing: "-0.045em"
+  touch-data:
+    fontFamily: "'IBM Plex Mono', ui-monospace, 'SF Mono', 'JetBrains Mono', Menlo, monospace"
+    fontSize: "22px"
+    fontWeight: 550
+    lineHeight: 1
+    letterSpacing: "-0.035em"
   data:
     fontFamily: "'IBM Plex Mono', ui-monospace, 'SF Mono', 'JetBrains Mono', Menlo, monospace"
     fontSize: "clamp(15px, 2.25vw, 24px)"
@@ -55,6 +90,10 @@ typography:
     lineHeight: 1
     letterSpacing: "-0.035em"
 rounded:
+  indicator: "2px"
+  track: "3px"
+  compact: "10px"
+  switch: "14px"
   control: "12px"
   card: "16px"
   lens: "20px"
@@ -72,13 +111,13 @@ components:
   mode-segment:
     backgroundColor: "transparent"
     textColor: "{colors.muted-lavender}"
-    rounded: "10px"
+    rounded: "{rounded.compact}"
     padding: "0 15px"
     height: "44px"
   mode-segment-active:
     backgroundColor: "rgba(157,139,255,.15)"
     textColor: "{colors.ink-white}"
-    rounded: "10px"
+    rounded: "{rounded.compact}"
     padding: "0 15px"
     height: "44px"
   handoff-action:
@@ -159,6 +198,16 @@ The palette keeps the arena cold and structural, then spends saturation only whe
 - **Ink White, Muted Lavender, and Dim Lavender**: separate primary facts, supporting copy, and telemetry labels.
 - **Etched Hairlines** (`etched-hairline`, `etched-hairline-strong`): divide regions and mark interactive structure without turning panels into boxes.
 
+### Functional Black and Depth Tokens
+
+- **Mechanics Absolute Black** (`#000`): mask-only opaque black for the arena's atmospheric fade; it is not a visible surface color.
+- **Mechanics Focus Black** (`rgba(0, 0, 0, .85)`): the inner separation line beneath the ink-white keyboard focus ring.
+- **Mechanics Contact Black** (`rgba(0, 0, 0, .9)`): the compact contact shadow beneath range thumbs.
+- **Mechanics Depth Black** (`rgba(0, 0, 0, .92)`): instrument lift and lower-third separation.
+- **Mechanics Floating Black** (`rgba(0, 0, 0, .96)`): the stronger shadow behind the guided cue that must stay legible over live diagrams.
+
+These five values are functional opacity stops, not ad-hoc palette additions. Mechanics CSS exposes them as `--mechanics-black-absolute`, `--mechanics-black-focus`, `--mechanics-black-contact`, `--mechanics-black-depth`, and `--mechanics-black-float`.
+
 ### Named Rules
 
 **The Restrained Ember Rule.** At rest, use no more than three ember elements: the ball or tracer, one live hero value, and one primary action. The logo ball remains the codified identity exception.
@@ -181,6 +230,11 @@ The palette keeps the arena cold and structural, then spends saturation only whe
 - **Title** (650, 13px, 1): panel, lens, trajectory, and facts headings.
 - **Body** (560, `clamp(13px, 1.45vw, 17px)`, 1.24): the short causal sentence that explains what changed.
 - **Label** (700, 10px, 0.08em): uppercase telemetry labels, causal steps, and metadata; 10px is the hard minimum.
+- **Instrument Floor** (700, 10px, 1.1): the absolute minimum for compact lens metadata, derived labels, causal nodes, and guided-state text. No 8px or 9px text is permitted.
+- **Instrument Detail** (650, 11px, 1.18): compact headings, value annotations, handoff copy, and short causal support.
+- **Instrument Control** (700, 12px, 1.2): authority segments and control values when the viewport gives them enough room.
+- **Compact Data** (550, 14px, 1): the minimum mono telemetry value in the fixed portrait strip.
+- **Touch Data** (550, 22px, 1): large mono telemetry on touch layouts before the portrait lower-third contract takes over.
 - **Data** (550, `clamp(15px, 2.25vw, 24px)`, 1): live outcomes; use tabular numerals and the true minus sign (U+2212).
 
 ### Named Rules
@@ -196,9 +250,9 @@ areas. Fixed Mechanics facts and telemetry sit above, never beneath, the shell
 in portrait and compact landscape. Home, Range/Outcome and Guide remain
 portrait-first; Mechanics is adaptive and never asks the user to rotate.
 
-Mechanics Lab establishes a responsive instrument pattern. Above 820px, the workspace uses control bank / paired instrument / facts columns and a six-cell telemetry strip. At 820px and below, the workspace becomes one column, the header gains a dedicated authority row, and telemetry becomes two columns. At 380px and below, the two instrument lenses stack rather than shrink past legibility.
+Mechanics Lab establishes a responsive instrument pattern. Above 820px, the workspace uses control bank / paired instrument / facts columns and a six-cell telemetry strip. At 820px and below, portrait uses one content column, a dedicated authority row, and a two-column telemetry fallback. Short landscape retains the three-part instrument and six-value strip above the shared shell, including at 812×375. At 380px and below, the paired direction and height lenses remain side by side while the persistent trajectory and Cause Trace share the fixed evidence row.
 
-At 480px and below, Cause Trace becomes a fixed lower third directly above a fixed 3-by-2 telemetry grid. The workspace reserves the combined lower-third height so neither surface covers controls or visual evidence; delivery mode uses an 82px facts band and arc mode uses 118px for its derived values.
+At 480px and below, trajectory and Cause Trace form a split fixed evidence row directly above a 104px, 3-by-2 telemetry grid. The workspace reserves the evidence row, telemetry, and shell as distinct non-overlapping footprints; delivery uses an 88px evidence row and arc uses 124px so Contact, derived Attack, and derived Path all remain readable.
 
 **The Lower-Third Continuity Rule.** On compact live-instrument surfaces, keep causal explanation immediately above persistent telemetry and reserve its exact footprint in content. This is a responsive component rule, not a requirement that unrelated pages copy the Mechanics Lab composition.
 
@@ -212,6 +266,7 @@ Depth is structural and sparse. Dark tonal changes distinguish canvas, raised su
 - **Thumb Contact** (`0 3px 10px -3px rgba(0, 0, 0, .9)`): range-control thumbs only.
 - **Lower-Third Separation** (`0 -18px 42px -28px rgba(0, 0, 0, .92)`): the fixed Cause Trace band on compact screens.
 - **Ink Focus** (`inset 0 0 0 1px rgba(0, 0, 0, .85), inset 0 0 0 3px var(--ink)`): keyboard focus on controls; the focus signal is never ember.
+- **Guided Cue Float** (`0 16px 38px -24px rgba(0, 0, 0, .96)`): keeps the bounded experiment cue distinct from live canvas evidence.
 
 ### Named Rules
 
@@ -219,7 +274,7 @@ Depth is structural and sparse. Dark tonal changes distinguish canvas, raised su
 
 ## Shapes
 
-Shapes encode functional scale. Controls use gently curved 12px corners, cards and plates use 16px, instrument lenses use 20px, and chips or tracks may use the 999px pill. The shipped authority switch is a deliberate compact exception: 14px around the group and 10px around each option. Fixed mobile lower thirds meet the viewport edge with square corners.
+Shapes encode functional scale. Controls use gently curved 12px corners, cards and plates use 16px, instrument lenses use 20px, and chips or tracks may use the 999px pill. Four smaller radii have exact instrument jobs: 2px for active-step indicators, 3px for range tracks, 10px for nested segments and compact short-landscape panels, and 14px for the authority-switch group. Fixed mobile lower thirds meet the viewport edge with square corners. Mechanics CSS exposes these as `--mechanics-radius-indicator`, `--mechanics-radius-track`, `--mechanics-radius-compact`, and `--mechanics-radius-switch`.
 
 **The Radius Ladder Rule.** Keep controls, cards, and lenses on the 12/16/20px ladder; introduce a different radius only when a component's nesting or viewport attachment makes the hierarchy clearer.
 
