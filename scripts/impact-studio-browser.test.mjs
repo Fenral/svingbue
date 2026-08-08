@@ -9,7 +9,7 @@ import test, { after, before } from 'node:test';
 import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
 import { createRequire } from 'node:module';
-import { readFile } from 'node:fs';
+import { mkdirSync, readFile } from 'node:fs';
 import { dirname, extname, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -17,15 +17,23 @@ const require = createRequire(import.meta.url);
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const { chromium, webkit } = require('../tools/node_modules/playwright-core');
 const WEBKIT = process.env.FG_ENGINE === 'webkit' || process.argv.includes('--project=webkit');
+const ENGINE = WEBKIT ? 'webkit' : 'chromium';
+const EVIDENCE_DIR = resolve(ROOT, 'outputs', 'flightglass-gates', 'impact-studio');
 const OUTCOMES = ['start', 'curve', 'launch', 'backspin', 'apex', 'carry'];
 const DELIVERY_INPUTS = ['delivery-face', 'delivery-path', 'delivery-attack', 'delivery-loft'];
 const ARC_INPUTS = ['arc-low-point', 'arc-height', 'arc-direction', 'arc-plane'];
 const SCENARIOS = [
-  { label: 'landscape, normal motion', viewport: { width: 932, height: 430 }, reducedMotion: 'no-preference' },
-  { label: 'portrait, normal motion', viewport: { width: 430, height: 932 }, reducedMotion: 'no-preference' },
-  { label: 'landscape, reduced motion', viewport: { width: 932, height: 430 }, reducedMotion: 'reduce' },
-  { label: 'portrait, reduced motion', viewport: { width: 430, height: 932 }, reducedMotion: 'reduce' },
+  { label: '932x430, normal motion', viewport: { width: 932, height: 430 }, reducedMotion: 'no-preference' },
+  { label: '812x375, normal motion', viewport: { width: 812, height: 375 }, reducedMotion: 'no-preference' },
+  { label: '430x932, normal motion', viewport: { width: 430, height: 932 }, reducedMotion: 'no-preference' },
+  { label: '375x812, normal motion', viewport: { width: 375, height: 812 }, reducedMotion: 'no-preference' },
+  { label: '932x430, reduced motion', viewport: { width: 932, height: 430 }, reducedMotion: 'reduce' },
+  { label: '812x375, reduced motion', viewport: { width: 812, height: 375 }, reducedMotion: 'reduce' },
+  { label: '430x932, reduced motion', viewport: { width: 430, height: 932 }, reducedMotion: 'reduce' },
+  { label: '375x812, reduced motion', viewport: { width: 375, height: 812 }, reducedMotion: 'reduce' },
 ];
+
+mkdirSync(EVIDENCE_DIR, { recursive: true });
 
 let server;
 let browser;
@@ -111,6 +119,20 @@ async function open({ viewport, reducedMotion }) {
 }
 
 const trimmedText = locator => locator.textContent().then(value => value?.trim() || '');
+
+async function captureState(page, scenario, mode) {
+  const motion = scenario.reducedMotion === 'reduce' ? 'reduced' : 'normal';
+  const viewport = `${scenario.viewport.width}x${scenario.viewport.height}`;
+  await page.evaluate(() => {
+    if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+  });
+  await page.evaluate(() => new Promise(requestAnimationFrame));
+  await page.screenshot({
+    path: resolve(EVIDENCE_DIR, `${ENGINE}--${viewport}--${motion}--${mode}.png`),
+    fullPage: false,
+    animations: 'disabled',
+  });
+}
 
 async function assertMode(page, mode) {
   const root = page.locator('main.mechanics');
@@ -217,6 +239,101 @@ async function assertNoOverflow(page, label) {
     `${label}: body overflows horizontally by ${widths.body - widths.viewport}px`);
 }
 
+async function assertLiveRegionsSeparated(page, label) {
+  const audit = await page.evaluate(() => {
+    const box = selector => {
+      const rect = document.querySelector(selector)?.getBoundingClientRect();
+      return rect ? { top: rect.top, right: rect.right, bottom: rect.bottom, left: rect.left } : null;
+    };
+    const values = [...document.querySelectorAll('[data-outcome]')].map(output => {
+      const cell = output.closest('.telemetry__cell');
+      const outputRect = output.getBoundingClientRect();
+      const cellRect = cell.getBoundingClientRect();
+      return {
+        name: output.dataset.outcome,
+        fitsText: output.scrollWidth <= output.clientWidth + 1,
+        contained: outputRect.left >= cellRect.left - 1
+          && outputRect.right <= cellRect.right + 1
+          && outputRect.top >= cellRect.top - 1
+          && outputRect.bottom <= cellRect.bottom + 1,
+        cell: { top: cellRect.top, right: cellRect.right, bottom: cellRect.bottom, left: cellRect.left },
+      };
+    });
+    return {
+      viewport: { width: innerWidth, height: innerHeight },
+      facts: box('.facts'),
+      trajectory: box('.instrument__trajectory'),
+      telemetry: box('.telemetry'),
+      shell: box('.sa-app-nav'),
+      values,
+    };
+  });
+
+  assert.ok(audit.facts && audit.trajectory && audit.telemetry && audit.shell,
+    `${label}: trajectory, facts, telemetry and shell exist`);
+  assert.ok(audit.shell.top >= -1 && audit.shell.bottom <= audit.viewport.height + 1,
+    `${label}: shell stays visible inside the ${audit.viewport.width}×${audit.viewport.height} viewport`);
+  assert.ok(audit.telemetry.top >= -1 && audit.telemetry.bottom <= audit.viewport.height + 1,
+    `${label}: complete telemetry strip stays inside the viewport`);
+  assert.ok(audit.trajectory.bottom <= audit.telemetry.top + 1,
+    `${label}: trajectory ends before telemetry starts`);
+  assert.ok(audit.trajectory.right <= audit.facts.left + 1 || audit.facts.right <= audit.trajectory.left + 1,
+    `${label}: trajectory and Cause Trace occupy distinct horizontal regions`);
+  assert.ok(audit.facts.bottom <= audit.telemetry.top + 1,
+    `${label}: Cause Trace ends at ${audit.facts.bottom.toFixed(1)} before telemetry starts at ${audit.telemetry.top.toFixed(1)}`);
+  assert.ok(audit.telemetry.bottom <= audit.shell.top + 1,
+    `${label}: telemetry ends at ${audit.telemetry.bottom.toFixed(1)} before shell starts at ${audit.shell.top.toFixed(1)}`);
+  for (const value of audit.values) {
+    assert.equal(value.fitsText, true, `${label}: ${value.name} text fits inside its own cell`);
+    assert.equal(value.contained, true, `${label}: ${value.name} remains inside its own cell`);
+  }
+
+  const rows = new Map();
+  for (const value of audit.values) {
+    const key = Math.round(value.cell.top);
+    rows.set(key, [...(rows.get(key) || []), value]);
+  }
+  for (const row of rows.values()) {
+    row.sort((left, right) => left.cell.left - right.cell.left);
+    for (let index = 1; index < row.length; index += 1) {
+      assert.ok(row[index - 1].cell.right <= row[index].cell.left + 1,
+        `${label}: ${row[index - 1].name} and ${row[index].name} cells do not collide`);
+    }
+  }
+}
+
+async function assertArcFactsContained(page, label) {
+  const rows = await page.evaluate(() => {
+    const facts = document.querySelector('.facts').getBoundingClientRect();
+    return [...document.querySelectorAll('#arc-facts .derived-grid__row')].map(row => {
+      const term = row.querySelector('dt');
+      const value = row.querySelector('dd');
+      const inspect = element => {
+        const rect = element.getBoundingClientRect();
+        return {
+          text: element.textContent.trim(),
+          visible: rect.width > 0 && rect.height > 0,
+          insideFacts: rect.left >= facts.left - 1 && rect.right <= facts.right + 1
+            && rect.top >= facts.top - 1 && rect.bottom <= facts.bottom + 1,
+          insideViewport: rect.left >= -1 && rect.right <= innerWidth + 1
+            && rect.top >= -1 && rect.bottom <= innerHeight + 1,
+        };
+      };
+      return { term: inspect(term), value: inspect(value) };
+    });
+  });
+
+  assert.deepEqual(rows.map(row => row.term.text), ['Derived Attack', 'Derived Path', 'Contact'],
+    `${label}: Arc facts expose Attack, Path and Contact in that causal order`);
+  for (const row of rows) {
+    for (const item of [row.term, row.value]) {
+      assert.equal(item.visible, true, `${label}: ${item.text} is visible`);
+      assert.equal(item.insideFacts, true, `${label}: ${item.text} stays inside Cause Trace`);
+      assert.equal(item.insideViewport, true, `${label}: ${item.text} stays inside the viewport`);
+    }
+  }
+}
+
 async function runCoreContract(page, scenario) {
   const impactButton = page.getByRole('button', { name: 'Impact Inputs', exact: true });
   const arcButton = page.getByRole('button', { name: 'Arc Inputs', exact: true });
@@ -227,6 +344,8 @@ async function runCoreContract(page, scenario) {
   await assertPersistentFlightAndOutcomes(page);
   await assertVisibleControlContract(page, 'Impact Inputs');
   await assertNoOverflow(page, `${scenario.label}, Impact Inputs`);
+  await assertLiveRegionsSeparated(page, `${scenario.label}, Impact Inputs`);
+  await captureState(page, scenario, 'delivery');
 
   const start = page.locator('[data-outcome="start"]');
   const curve = page.locator('[data-outcome="curve"]');
@@ -252,6 +371,9 @@ async function runCoreContract(page, scenario) {
   await assertPersistentFlightAndOutcomes(page);
   await assertVisibleControlContract(page, 'Arc Inputs');
   await assertNoOverflow(page, `${scenario.label}, Arc Inputs`);
+  await assertLiveRegionsSeparated(page, `${scenario.label}, Arc Inputs`);
+  await assertArcFactsContained(page, `${scenario.label}, Arc Inputs`);
+  await captureState(page, scenario, 'arc');
 
   const derivedAttack = page.locator('[data-derived="attack"]');
   const derivedPath = page.locator('[data-derived="path"]');

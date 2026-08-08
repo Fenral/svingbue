@@ -7,11 +7,14 @@
   <meta name="theme-color" content="#07060C">
   <meta name="description" content="Explore how impact delivery and swing-arc geometry change modeled strike and ball flight.">
   <title>Flightglass · Mechanics Lab</title>
-  <link rel="icon" href="data:,">
+  <script src="./sa-view-transition-guard.js"></script>
+  <link rel="icon" href="./assets/flightglass-mark-micro.svg" type="image/svg+xml">
   <link rel="stylesheet" href="./sa-p3.css">
+  <link rel="stylesheet" href="./sa-app-shell.css">
+  <link rel="stylesheet" href="./sa-paywall.css">
   <link rel="stylesheet" href="./impact-studio.css">
 </head>
-<body><!--
+<body data-sa-route="studio"><!--
 THESIS: One causal instrument connects impact inputs and arc inputs; it refuses the category-default dashboard of disconnected metrics.
 OWN-WORLD: Ultraviolet-black arena, semantic quantity hues, etched hairlines, mono live truth, one restrained ember focal trace.
 STORY: Change one cause, watch delivery/strike/flight update together, then inspect the factual causal sentence.
@@ -60,6 +63,11 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
       <svg class="causal-link" viewBox="0 0 28 10" fill="none" aria-hidden="true"><path d="M1 5h23m-4-4 4 4-4 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
       <span class="causal-node" data-chain="flight">Flight</span>
     </nav>
+
+    <aside id="guidedExperimentCue" class="guided-cue" role="status" aria-live="polite" hidden>
+      <span id="guidedExperimentState" class="guided-cue__state">GUIDED · 1 OF 1</span>
+      <p id="guidedExperimentCopy" class="guided-cue__copy">Change Low Point X, then release the slider to compare the result.</p>
+    </aside>
 
     <section class="mechanics__workspace">
       <aside class="control-bank" aria-label="Live inputs">
@@ -226,6 +234,11 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
       solveArc,
       handoffArcToDelivery,
     } from './impact-mechanics-model.js';
+    import haptics from './sa-haptics.js';
+    import { authorize, consume } from './sa-access.js';
+    import * as saIap from './sa-iap.js';
+    import { track } from './sa-analytics.js';
+    import { unlockOrientation } from './sa-orientation.js';
 
     const MINUS = '−';
     const state = {
@@ -247,7 +260,14 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
     const flightCanvas = document.getElementById('flight-canvas');
     const handoffButton = document.getElementById('use-arc-in-delivery');
     const resetButton = document.getElementById('reset-inputs');
+    const guidedExperimentRequested = new URLSearchParams(location.search).get('guided') === 'experiment';
+    const iapReady = saIap.init();
+    const showPaywall = async moment => (await import('./sa-paywall.js')).openPaywall(moment);
+    let guidedExperimentCompleted = false;
+    let guidedBaseline = null;
     let latest = null;
+
+    void unlockOrientation();
 
     const clamp = (value, minimum, maximum) => Math.max(minimum, Math.min(maximum, value));
     const radians = degrees => degrees * Math.PI / 180;
@@ -662,12 +682,51 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
       render();
     }
 
-    modeButtons.forEach(button => button.addEventListener('click', () => setMode(button.dataset.mechanicsMode)));
+    const guidedExperimentPreparation = (async () => {
+      if (!guidedExperimentRequested) return false;
+      await iapReady;
+      const access = authorize('guided-experiment', { pro: saIap.isPro() });
+      if (!access.allowed) {
+        if (!access.shouldPaywall) return false;
+        await showPaywall('guided-experiment');
+        if (!saIap.isPro()) return false;
+      }
+
+      guidedBaseline = new Map(arcInputs.map(input => [input.id, Number.parseFloat(input.value)]));
+      setMode('arc');
+      document.body.dataset.guidedExperiment = 'active';
+      document.getElementById('guidedExperimentCue').hidden = false;
+      track('experiment_started', { route: 'studio' });
+      return true;
+    })();
+
+    async function completeGuidedExperiment(input) {
+      if (!guidedExperimentRequested || guidedExperimentCompleted) return;
+      if (!await guidedExperimentPreparation) return;
+      const before = guidedBaseline?.get(input.id);
+      const after = Number.parseFloat(input.value);
+      if (!Number.isFinite(before) || !Number.isFinite(after) || before === after) return;
+
+      guidedExperimentCompleted = true;
+      consume('guided-experiment', { pro: saIap.isPro(), completed: true });
+      track('experiment_completed', { route: 'studio', completed: true });
+      document.body.dataset.guidedExperiment = 'complete';
+      document.getElementById('guidedExperimentState').textContent = 'EXPERIMENT COMPLETE';
+      document.getElementById('guidedExperimentCopy').textContent =
+        'Low Point X changed. Compare contact, derived delivery, and the flight outcomes.';
+      haptics.notify('success');
+    }
+
+    modeButtons.forEach(button => button.addEventListener('click', () => {
+      haptics.impact('light');
+      setMode(button.dataset.mechanicsMode);
+    }));
 
     deliveryInputs.forEach(input => input.addEventListener('input', () => {
       const key = input.dataset.deliveryKey;
       state.delivery[key] = Number.parseFloat(input.value);
       state.deliveryCause = key;
+      haptics.tick(`delivery-${key}`);
       render();
     }));
 
@@ -675,7 +734,12 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
       const key = input.dataset.arcKey;
       state.arc[key] = Number.parseFloat(input.value);
       state.arcCause = key;
+      haptics.tick(`arc-${key}`);
       render();
+    }));
+
+    arcInputs.forEach(input => input.addEventListener('change', () => {
+      void completeGuidedExperiment(input);
     }));
 
     handoffButton.addEventListener('click', () => {
@@ -685,6 +749,7 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
       document.getElementById('delivery-attack').value = state.delivery.attack;
       state.deliveryCause = 'path';
       state.mode = 'delivery';
+      haptics.impact('light');
       render();
     });
 
@@ -698,6 +763,7 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
         state.arcCause = 'lowPointCm';
         arcInputs.forEach(input => { input.value = state.arc[input.dataset.arcKey]; });
       }
+      haptics.impact('light');
       render();
     });
 
@@ -709,7 +775,11 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
     });
     resizeObserver.observe(document.querySelector('.instrument'));
     window.addEventListener('pageshow', render);
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) requestAnimationFrame(render);
+    });
     render();
   </script>
+  <script type="module" src="./sa-app-shell.js"></script>
 </body>
 </html>

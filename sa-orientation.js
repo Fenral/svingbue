@@ -3,10 +3,10 @@
    Imported with `<script type="module">` from each shipping page.
 
    Product rule: the app is PORTRAIT by default; geometry is the one LANDSCAPE
-   screen. Each page owns its orientation and asserts it on load
-   (index/impact/academy → lockPortrait, geometry → lockLandscape). Because the
-   pages are separate documents, a full-page navigation into geometry rotates
-   to landscape and navigating back rotates to portrait.
+   screen and Mechanics is adaptive. Each page owns its orientation and asserts
+   it on load (index/impact/academy → lockPortrait, geometry → lockLandscape,
+   Mechanics → unlockOrientation). Because the pages are separate documents,
+   a full-page navigation applies the next surface's policy.
 
    Platform (mirrors sa-haptics.js):
      • window.Capacitor?.isNativePlatform() → resolve ScreenOrientation
@@ -27,6 +27,7 @@
    Public API (named exports):
      lockPortrait()   → Promise<void>  lock the device to portrait (native)
      lockLandscape()  → Promise<void>  lock the device to landscape (native)
+     unlockOrientation() → Promise<void> release the lock (native)
    ══════════════════════════════════════════════════════════════════════════ */
 
 import './sa-app-shell.js';
@@ -87,6 +88,17 @@ async function lock(orientation) {
   }
 }
 
+async function unlock() {
+  if (!isNative()) return; // web: there is no native orientation lock to release
+  const plugin = resolveScreenOrientationPlugin();
+  if (!plugin || typeof plugin.unlock !== 'function') return;
+  try {
+    await plugin.unlock();
+  } catch (e) {
+    // Adaptive layout still works if the native bridge is absent or not ready.
+  }
+}
+
 export function lockPortrait() {
   return lock('portrait');
 }
@@ -95,4 +107,8 @@ export function lockLandscape() {
   return lock('landscape');
 }
 
-export default { lockPortrait, lockLandscape };
+export function unlockOrientation() {
+  return unlock();
+}
+
+export default { lockPortrait, lockLandscape, unlockOrientation };

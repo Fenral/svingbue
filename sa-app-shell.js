@@ -15,7 +15,7 @@ export const APP_ROUTES = Object.freeze([
   },
   {
     id: 'studio',
-    label: 'Studio',
+    label: 'Mechanics',
     href: './impact-studio.html',
     file: 'impact-studio.html',
     icon: '<path d="M4 14h12"/><path d="M7 4v12"/><path d="m10 8 5-3"/><circle cx="10" cy="8" r="1.5"/>',
@@ -32,7 +32,7 @@ export const APP_ROUTES = Object.freeze([
 const ORIENTATION = Object.freeze({
   home: 'portrait',
   range: 'portrait',
-  studio: 'landscape',
+  studio: null,
   jarvis: null,
 });
 

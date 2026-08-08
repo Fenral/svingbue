@@ -10,6 +10,7 @@
   --motion-press: 140ms cubic-bezier(.23, 1, .32, 1);
   --motion-state: 180ms cubic-bezier(.23, 1, .32, 1);
   --instrument-shadow: 0 18px 54px -34px rgba(0, 0, 0, .92);
+  --mechanics-shell-reserve: calc(52px + env(safe-area-inset-bottom));
 }
 
 * {
@@ -69,6 +70,7 @@ button {
 }
 
 .mechanics {
+  position: relative;
   width: 100%;
   height: 100dvh;
   min-height: 430px;
@@ -76,6 +78,15 @@ button {
   grid-template-rows: 58px 31px minmax(0, 1fr) 72px;
   overflow: hidden;
   isolation: isolate;
+}
+
+body[data-sa-route="studio"].sa-shell-ready {
+  padding-bottom: 0;
+}
+
+body[data-sa-route="studio"].sa-shell-ready .mechanics {
+  height: calc(100dvh - var(--mechanics-shell-reserve));
+  min-height: 320px;
 }
 
 .mechanics::before {
@@ -277,6 +288,42 @@ button {
   height: 10px;
   color: rgba(245, 242, 255, .23);
   flex: 0 1 27px;
+}
+
+.guided-cue {
+  position: absolute;
+  z-index: 43;
+  top: 96px;
+  left: 50%;
+  width: min(460px, calc(100% - 24px));
+  min-height: 44px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border: 1px solid color-mix(in srgb, var(--secondary) 54%, transparent);
+  border-radius: var(--mechanics-control-radius);
+  background: color-mix(in srgb, var(--plate-solid) 94%, transparent);
+  box-shadow: 0 16px 38px -24px rgba(0, 0, 0, .96);
+  transform: translateX(-50%);
+}
+
+.guided-cue__state {
+  color: var(--secondary);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .11em;
+  white-space: nowrap;
+}
+
+.guided-cue__copy {
+  min-width: 0;
+  margin: 0;
+  color: var(--ink);
+  font-size: 11px;
+  font-weight: 650;
+  line-height: 1.25;
 }
 
 .mechanics__workspace {
@@ -714,6 +761,11 @@ button {
     overflow: visible;
   }
 
+  body[data-sa-route="studio"].sa-shell-ready .mechanics {
+    height: auto;
+    min-height: 100dvh;
+  }
+
   .mechanics__header {
     display: grid;
     grid-template-columns: 44px minmax(0, 1fr) 44px;
@@ -766,6 +818,10 @@ button {
   .causal-link {
     width: 17px;
     flex-basis: 17px;
+  }
+
+  .guided-cue {
+    top: 148px;
   }
 
   .mechanics__workspace {
@@ -834,16 +890,18 @@ button {
 
 @media (max-width: 480px) {
   .mechanics {
-    --portrait-telemetry-height: calc(112px + env(safe-area-inset-bottom));
-    --portrait-facts-height: 82px;
+    --portrait-telemetry-height: calc(104px + env(safe-area-inset-bottom));
+    --portrait-facts-height: 88px;
+    --portrait-trajectory-width: 42%;
   }
 
   .mechanics[data-mechanics-mode="arc"] {
-    --portrait-facts-height: 118px;
+    --portrait-facts-height: 124px;
+    --portrait-trajectory-width: 40%;
   }
 
   .mechanics__workspace {
-    padding-bottom: calc(var(--portrait-telemetry-height) + var(--portrait-facts-height) + 16px);
+    padding-bottom: calc(var(--portrait-telemetry-height) + var(--portrait-facts-height) + var(--mechanics-shell-reserve) + 16px);
   }
 
   .instrument__lens .lens-heading {
@@ -854,18 +912,55 @@ button {
     display: none;
   }
 
+  .control-bank {
+    min-height: 244px;
+  }
+
+  .instrument {
+    min-height: 260px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: minmax(0, 1fr);
+  }
+
+  .instrument__trajectory {
+    position: fixed;
+    z-index: 39;
+    left: 0;
+    bottom: calc(var(--portrait-telemetry-height) + var(--mechanics-shell-reserve));
+    width: var(--portrait-trajectory-width);
+    height: var(--portrait-facts-height);
+    grid-column: auto;
+    border-left: 0;
+    border-radius: 0;
+    background: var(--plate-solid);
+  }
+
+  .instrument__trajectory .trajectory-heading {
+    top: 7px;
+    left: 10px;
+    right: 8px;
+  }
+
+  .instrument__trajectory .trajectory-heading p {
+    overflow: hidden;
+    font-size: 8px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
   .facts {
     position: fixed;
     z-index: 40;
-    left: 0;
+    left: var(--portrait-trajectory-width);
     right: 0;
-    bottom: var(--portrait-telemetry-height);
-    width: 100%;
+    bottom: calc(var(--portrait-telemetry-height) + var(--mechanics-shell-reserve));
+    width: auto;
     height: var(--portrait-facts-height);
     min-height: 0;
-    padding: 7px 12px 8px;
+    padding: 6px 10px 5px;
     overflow: hidden;
     border: 0;
+    border-left: 1px solid var(--line);
     border-top: 1px solid var(--secondary-line);
     border-bottom: 1px solid var(--line);
     border-radius: 0;
@@ -885,8 +980,8 @@ button {
   .cause-copy {
     max-width: none;
     margin: 0;
-    font-size: 14px;
-    line-height: 1.18;
+    font-size: 13px;
+    line-height: 1.15;
   }
 
   .facts__divider,
@@ -896,9 +991,9 @@ button {
   }
 
   #arc-facts {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 0;
-    margin-top: 6px;
+    margin-top: 4px;
     border-top: 1px solid rgba(255, 255, 255, .07);
   }
 
@@ -907,7 +1002,7 @@ button {
     flex-direction: column;
     align-items: flex-start;
     gap: 2px;
-    padding: 5px 8px 0;
+    padding: 3px 5px 0;
     border-left: 1px solid rgba(255, 255, 255, .07);
   }
 
@@ -917,9 +1012,19 @@ button {
   }
 
   #arc-facts .derived-grid__row dd {
-    font-size: 11px;
+    font-size: 10px;
     text-align: left;
     white-space: nowrap;
+  }
+
+  #arc-facts .derived-grid__row--strike {
+    grid-column: 1 / -1;
+    flex-direction: row;
+    align-items: baseline;
+    justify-content: space-between;
+    padding: 3px 0 0;
+    border-top: 1px solid rgba(255, 255, 255, .07);
+    border-left: 0;
   }
 
   .telemetry {
@@ -927,7 +1032,7 @@ button {
     z-index: 41;
     left: 0;
     right: 0;
-    bottom: 0;
+    bottom: var(--mechanics-shell-reserve);
     width: 100%;
     height: var(--portrait-telemetry-height);
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -940,7 +1045,8 @@ button {
   .telemetry__cell,
   .telemetry__cell:nth-child(odd) {
     min-height: 0;
-    padding: 5px 9px;
+    overflow: hidden;
+    padding: 4px 6px;
     border-top: 1px solid rgba(255, 255, 255, .07);
     border-left: 1px solid rgba(255, 255, 255, .07);
   }
@@ -954,7 +1060,10 @@ button {
   }
 
   .telemetry output {
-    font-size: 18px;
+    display: block;
+    width: 100%;
+    font-size: clamp(14px, 4vw, 17px);
+    letter-spacing: -.045em;
   }
 }
 
@@ -983,13 +1092,17 @@ button {
   }
 
   .instrument {
-    min-height: 460px;
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: 155px 155px 136px;
+    min-height: 260px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: minmax(0, 1fr);
   }
 
   .instrument__trajectory {
-    grid-column: 1;
+    grid-column: auto;
+  }
+
+  .instrument__trajectory .trajectory-heading p {
+    display: none;
   }
 }
 
@@ -1014,6 +1127,211 @@ button {
 
   .derived-grid {
     gap: 5px;
+  }
+}
+
+/* Mechanics is adaptive: compact landscape keeps the two-lens instrument,
+   all eight 44px inputs, cause trace and six outcomes above the shared shell. */
+@media (orientation: landscape) and (max-height: 500px) {
+  .mechanics,
+  body[data-sa-route="studio"].sa-shell-ready .mechanics {
+    height: calc(100dvh - var(--mechanics-shell-reserve));
+    min-height: 0;
+    grid-template-rows: 48px 25px minmax(0, 1fr) 58px;
+    overflow: hidden;
+  }
+
+  .mechanics__header {
+    display: flex;
+    gap: 7px;
+    padding: 1px max(8px, env(safe-area-inset-right)) 1px max(8px, env(safe-area-inset-left));
+  }
+
+  .mechanics__identity {
+    min-width: 116px;
+  }
+
+  .mechanics__identity p,
+  .reference-speed {
+    display: none;
+  }
+
+  .mode-switch {
+    width: min(286px, 40vw);
+    height: 48px;
+    grid-column: auto;
+    grid-row: auto;
+    margin: 0 0 0 auto;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .mode-switch button {
+    min-height: 44px;
+    padding-inline: 7px;
+    font-size: 11px;
+  }
+
+  .causal-strip {
+    min-height: 25px;
+    justify-content: center;
+    gap: 6px;
+    padding-inline: 10px;
+  }
+
+  .causal-node {
+    font-size: 8px;
+  }
+
+  .causal-link {
+    width: 16px;
+    flex-basis: 16px;
+  }
+
+  .guided-cue {
+    top: 75px;
+    width: min(430px, calc(100% - 20px));
+    min-height: 40px;
+    padding-block: 5px;
+  }
+
+  .mechanics__workspace {
+    grid-template-columns: minmax(204px, .72fr) minmax(0, 1.8fr) minmax(142px, .58fr);
+    gap: 6px;
+    padding: 4px 8px;
+  }
+
+  .control-bank,
+  .facts {
+    min-height: 0;
+    padding: 4px;
+    border-radius: 10px;
+  }
+
+  .control-bank__heading {
+    display: none;
+  }
+
+  .control-bank__form {
+    grid-template-rows: repeat(4, minmax(44px, 1fr));
+  }
+
+  .parameter-control {
+    grid-template-columns: 64px minmax(72px, 1fr) 48px;
+    gap: 4px;
+  }
+
+  .parameter-control__name {
+    font-size: 9px;
+  }
+
+  .parameter-control__value {
+    font-size: 10px;
+  }
+
+  .handoff-button {
+    position: absolute;
+    left: auto;
+    right: 8px;
+    bottom: 63px;
+    width: 142px;
+    min-height: 44px;
+    margin: 0;
+    z-index: 3;
+  }
+
+  .instrument {
+    min-height: 0;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: minmax(0, 1fr) 58px;
+    gap: 4px;
+  }
+
+  .instrument__trajectory {
+    grid-column: 1 / -1;
+  }
+
+  .lens-heading,
+  .trajectory-heading {
+    top: 5px;
+    left: 7px;
+    right: 7px;
+  }
+
+  .lens-heading p,
+  .trajectory-heading p {
+    font-size: 8px;
+  }
+
+  .facts__heading {
+    min-height: 18px;
+    padding: 0 1px 4px;
+  }
+
+  .facts__heading h2 {
+    font-size: 11px;
+  }
+
+  .facts__heading span {
+    display: none;
+  }
+
+  .cause-copy {
+    max-width: none;
+    font-size: 11px;
+    line-height: 1.18;
+  }
+
+  .facts__divider {
+    margin-block: 5px;
+  }
+
+  .derived-grid {
+    gap: 3px;
+  }
+
+  .derived-grid__row {
+    gap: 4px;
+  }
+
+  .derived-grid__row dt {
+    font-size: 8px;
+  }
+
+  .derived-grid__row dd {
+    font-size: 9px;
+  }
+
+  .facts__scope {
+    display: none;
+  }
+
+  .telemetry {
+    position: relative;
+    inset: auto;
+    width: auto;
+    height: auto;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    grid-template-rows: minmax(0, 1fr);
+    padding: 0 max(8px, env(safe-area-inset-right)) 0 max(8px, env(safe-area-inset-left));
+  }
+
+  .telemetry__cell,
+  .telemetry__cell:nth-child(odd) {
+    min-height: 58px;
+    overflow: hidden;
+    padding: 6px 7px;
+    border-top: 0;
+    border-left: 1px solid rgba(255, 255, 255, .07);
+  }
+
+  .telemetry__cell:first-child {
+    border-left: 0;
+  }
+
+  .telemetry output {
+    display: block;
+    width: 100%;
+    font-size: clamp(13px, 2vw, 17px);
   }
 }
 
