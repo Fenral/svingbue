@@ -14,6 +14,9 @@ wait.
 | Agent | Branch | Working on | Since |
 |-------|--------|-----------|-------|
 | Codex `/root` | `agent/mechanics-v1-convergence` | Converge the completed Mechanics Lab into the exact PR #18 release candidate; owns Mechanics runtime, v1 shell/gating integration, packaging, product/release docs and exact-SHA evidence until handoff. | 2026-08-08 |
+| Codex runtime worker | `agent/mechanics-v1-runtime` | Mechanics runtime, adaptive orientation, Studio browser coverage and guided/paywall integration; owns only the Task 3 file set. | 2026-08-08 |
+| Codex packaging worker | `agent/mechanics-v1-packaging` | Explicit web/native payload, risk routing and release-contract closure; owns only the Task 4 file set. | 2026-08-08 |
+| Codex product worker | `agent/mechanics-v1-product` | Product/design, Home/Range/Guide/commerce/legal/store truth and capture generators; owns only the Task 5 file set. | 2026-08-08 |
 
 ## Queue / free to take
 
