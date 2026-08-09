@@ -720,6 +720,7 @@ export function validateEvidenceMetadata(markdown, {
   cwd = process.cwd(),
   evidenceRoot,
   evidenceFile,
+  originRepositoryLookup = resolveOriginRepository,
   now = new Date(),
 } = {}) {
   assertNoSensitiveData(markdown, 'Evidence Markdown');
@@ -754,7 +755,7 @@ export function validateEvidenceMetadata(markdown, {
     );
   }
 
-  const originRepository = resolveOriginRepository(cwd);
+  const originRepository = originRepositoryLookup(cwd);
   if (originRepository.toLowerCase() !== EXPECTED_REPOSITORY.toLowerCase()) {
     throw new EvidenceError(
       'invalid',
@@ -1031,9 +1032,12 @@ export function evaluateEvidence(markdown, {
   evidenceRoot,
   evidenceFile,
   githubRun,
+  originRepositoryLookup = resolveOriginRepository,
   now = new Date(),
 } = {}) {
-  const metadata = validateEvidenceMetadata(markdown, { cwd, evidenceRoot, evidenceFile, now });
+  const metadata = validateEvidenceMetadata(markdown, {
+    cwd, evidenceRoot, evidenceFile, originRepositoryLookup, now,
+  });
   const github = validateGithubRun(githubRun, metadata, now);
   const quantitative = summarizeEvidence(parseEvidence(markdown));
   const lastSessionAt = Math.max(...metadata.identityRows.map(row => Date.parse(row.timestamp)));
@@ -1275,6 +1279,7 @@ export function runCli({
   stderr = message => console.error(message),
   githubRunLookup = fetchGithubRun,
   sourceTreeStatus = listDirtySourceEntries,
+  originRepositoryLookup = resolveOriginRepository,
   now = new Date(),
   outputRoot,
 } = {}) {
@@ -1293,7 +1298,9 @@ export function runCli({
     }
     const { evidenceRoot, evidenceFile } = resolveEvidencePaths(cwd, options);
     const markdown = fs.readFileSync(evidenceFile, 'utf8');
-    const metadata = validateEvidenceMetadata(markdown, { cwd, evidenceRoot, evidenceFile, now });
+    const metadata = validateEvidenceMetadata(markdown, {
+      cwd, evidenceRoot, evidenceFile, originRepositoryLookup, now,
+    });
     if (metadata.candidateCommit !== head) {
       throw new EvidenceError('invalid', 'Recorded candidate does not match --candidate and HEAD.');
     }
@@ -1302,7 +1309,7 @@ export function runCli({
     }
     const githubRun = githubRunLookup(metadata.releaseRun, cwd);
     const summary = evaluateEvidence(markdown, {
-      cwd, evidenceRoot, evidenceFile, githubRun, now,
+      cwd, evidenceRoot, evidenceFile, githubRun, originRepositoryLookup, now,
     });
     const attestation = writeAttestation({ cwd, outputRoot, evidenceFile, summary, now });
 

@@ -177,12 +177,17 @@ function createEvidenceWorkspace(markdown = completedEvidence()) {
   return { directory, file };
 }
 
+function canonicalOriginRepository() {
+  return 'Fenral/svingbue';
+}
+
 function context(workspace, overrides = {}) {
   return {
     cwd: REPO_ROOT,
     evidenceRoot: workspace.directory,
     evidenceFile: workspace.file,
     githubRun: githubRun(),
+    originRepositoryLookup: canonicalOriginRepository,
     now: NOW,
     ...overrides,
   };
@@ -298,6 +303,7 @@ test('CLI verifies injected GitHub API data and writes a checked SHA-256 attesta
         return githubRun();
       },
       sourceTreeStatus: () => [],
+      originRepositoryLookup: canonicalOriginRepository,
       now: NOW,
       outputRoot,
     });
@@ -334,6 +340,7 @@ test('CLI refuses the tracked template and records outside the evidence root', (
     stderr: value => errors.push(value),
     githubRunLookup: () => githubRun(),
     sourceTreeStatus: () => [],
+    originRepositoryLookup: canonicalOriginRepository,
     now: NOW,
   }), 2);
   assert.match(errors.join('\n'), /tracked PENDING template is immutable/);
@@ -349,6 +356,7 @@ test('CLI refuses the tracked template and records outside the evidence root', (
       stderr: value => outsideErrors.push(value),
       githubRunLookup: () => githubRun(),
       sourceTreeStatus: () => [],
+      originRepositoryLookup: canonicalOriginRepository,
       now: NOW,
     }), 2);
     assert.match(outsideErrors.join('\n'), /inside --evidence-root/);
@@ -373,6 +381,7 @@ test('CLI refuses a dirty source tree before querying GitHub', () => {
         return githubRun();
       },
       sourceTreeStatus: () => [' M impact.html', '?? untracked-source.js'],
+      originRepositoryLookup: canonicalOriginRepository,
       now: NOW,
     });
     assert.equal(code, 2);
