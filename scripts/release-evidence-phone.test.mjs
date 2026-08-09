@@ -823,6 +823,7 @@ test('keeps the committed checklist PENDING and rejects it as a completed record
     now: FIXED_NOW,
     queryGithubRun: () => validGithubRun(),
     queryGithubWorkflow: () => validGithubWorkflow(),
+    resolveGitOrigin: () => 'https://github.com/Fenral/svingbue.git',
     stdout: () => {},
     stderr: value => errors.push(value),
   });
@@ -900,6 +901,7 @@ test('CLI reports a missing completed record without querying GitHub', () => {
       return validGithubRun();
     },
     queryGithubWorkflow: () => validGithubWorkflow(),
+    resolveGitOrigin: () => 'https://github.com/Fenral/svingbue.git',
     stdout: () => {},
     stderr: value => errors.push(value),
   });
@@ -922,6 +924,7 @@ test('a completed record copied under a non-ignored repository path is rejected'
       now: FIXED_NOW,
       queryGithubRun: () => validGithubRun(),
       queryGithubWorkflow: () => validGithubWorkflow(),
+      resolveGitOrigin: () => 'https://github.com/Fenral/svingbue.git',
       stdout: () => {},
       stderr: value => errors.push(value),
     });
