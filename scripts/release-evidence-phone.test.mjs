@@ -42,7 +42,19 @@ const PACKAGE_VERSION = JSON.parse(readFileSync(join(REPO_ROOT, 'package.json'),
 const BUILD = `${PACKAGE_VERSION} (42)`;
 const RUN_ID = '31221030000';
 const RUN_URL = `https://github.com/Fenral/svingbue/actions/runs/${RUN_ID}`;
-const FIXED_NOW = Date.parse('2026-08-09T12:00:00Z');
+const MINUTE_MS = 60_000;
+const COMMIT_TIME = Date.parse(COMMIT_TIMESTAMP);
+
+function timestampAfterCommit(minutes) {
+  return new Date(COMMIT_TIME + (minutes * MINUTE_MS)).toISOString().replace('.000Z', 'Z');
+}
+
+const AUTOMATED_COMPLETION_TIMESTAMP = timestampAfterCommit(5);
+const PHYSICAL_TEST_START_TIMESTAMP = timestampAfterCommit(10);
+const SMOKE_TIMESTAMPS = Array.from({ length: 12 }, (_, index) => timestampAfterCommit(11 + index));
+const PURCHASE_TIMESTAMPS = Array.from({ length: 6 }, (_, index) => timestampAfterCommit(30 + index));
+const REVIEWER_TIMESTAMP = timestampAfterCommit(40);
+const FIXED_NOW = Date.parse(timestampAfterCommit(60));
 const TEMP_BASE = mkdtempSync(join(tmpdir(), 'flightglass-phone-evidence-'));
 
 after(() => rmSync(TEMP_BASE, { recursive: true, force: true }));
@@ -78,7 +90,7 @@ function completedEvidence({
   runUrl = RUN_URL,
 } = {}) {
   const candidateRows = [
-    ['Test date/time and timezone', '2026-08-08T10:00:00+02:00'],
+    ['Test date/time and timezone', PHYSICAL_TEST_START_TIMESTAMP],
     ['Tester initials / role', 'RK / release reviewer'],
     ['Candidate commit SHA', commit],
     ['GitHub release-gate run URL', runUrl],
@@ -100,8 +112,7 @@ function completedEvidence({
   const preconditions = CANONICAL_PRECONDITIONS.map((requirement, index) =>
     `| ${index + 1} | ${requirement} | PASS | precondition-${index + 1}.log |`);
   const smoke = CANONICAL_SMOKE_REQUIREMENTS.map((requirement, index) => {
-    const minute = String(index + 1).padStart(2, '0');
-    return `| ${index + 1} | ${requirement} | PASS | 2026-08-08T10:${minute}:00+02:00 | smoke-${index + 1}.png |`;
+    return `| ${index + 1} | ${requirement} | PASS | ${SMOKE_TIMESTAMPS[index]} | smoke-${index + 1}.png |`;
   });
   const purchaseRows = [
     ['Live Offering', 'SUB-A', 'Monthly + Annual visible; Lifetime hidden'],
@@ -112,7 +123,7 @@ function completedEvidence({
     ['Clean-install restore', 'SUB-A', 'Current subscription to pro'],
   ].map(([flow, alias, plan], index) => {
     const name = slug(flow);
-    return `| ${flow} | ${alias} | ${plan} | PASS | 2026-08-08T10:${20 + index}:00+02:00 | ${name}-device.png | ${name}-store.log | Observed as expected |`;
+    return `| ${flow} | ${alias} | ${plan} | PASS | ${PURCHASE_TIMESTAMPS[index]} | ${name}-device.png | ${name}-store.log | Observed as expected |`;
   });
 
   return `# Flightglass v1 physical-iPhone release evidence
@@ -147,8 +158,8 @@ ${purchaseRows.join('\n')}
 
 | Engine | 375x812 normal | 375x812 reduced | 430x932 normal | 430x932 reduced | Run URL / timestamp |
 |---|---|---|---|---|---|
-| Chromium | PASS | PASS | PASS | PASS | ${runUrl} - 2026-08-08T09:55:00+02:00 |
-| WebKit | PASS | PASS | PASS | PASS | ${runUrl} - 2026-08-08T09:55:00+02:00 |
+| Chromium | PASS | PASS | PASS | PASS | ${runUrl} - ${AUTOMATED_COMPLETION_TIMESTAMP} |
+| WebKit | PASS | PASS | PASS | PASS | ${runUrl} - ${AUTOMATED_COMPLETION_TIMESTAMP} |
 
 ## Final handoff
 
@@ -159,7 +170,7 @@ ${purchaseRows.join('\n')}
 | Required purchase/restore rows passed | 6 / 6 |
 | Unresolved launch-blocking defects | 0 |
 | Physical-iPhone gate verdict | PASS |
-| Reviewer and review timestamp | RK - 2026-08-08T11:00:00+02:00 |
+| Reviewer and review timestamp | RK - ${REVIEWER_TIMESTAMP} |
 `;
 }
 
@@ -228,7 +239,7 @@ function validGithubRun(overrides = {}) {
     conclusion: 'success',
     head_sha: CURRENT_COMMIT,
     html_url: RUN_URL,
-    updated_at: '2026-08-08T07:55:00Z',
+    updated_at: AUTOMATED_COMPLETION_TIMESTAMP,
     repository: { full_name: 'Fenral/svingbue' },
     workflow_id: 777,
     ...overrides,
@@ -668,26 +679,26 @@ test('rejects future and incoherent evidence timelines', async (t) => {
   const cases = [
     [
       'future observation',
-      '2026-08-08T10:03:00+02:00 | smoke-3.png',
-      '2026-08-10T10:03:00+02:00 | smoke-3.png',
+      `${SMOKE_TIMESTAMPS[2]} | smoke-3.png`,
+      `${timestampAfterCommit(66)} | smoke-3.png`,
       /in the future/,
     ],
     [
       'observation before test start',
-      '2026-08-08T10:01:00+02:00 | smoke-1.png',
-      '2026-08-08T09:59:00+02:00 | smoke-1.png',
+      `${SMOKE_TIMESTAMPS[0]} | smoke-1.png`,
+      `${timestampAfterCommit(9)} | smoke-1.png`,
       /must not predate the recorded test start/,
     ],
     [
       'non-chronological smoke',
-      '2026-08-08T10:06:00+02:00 | smoke-6.png',
-      '2026-08-08T10:04:00+02:00 | smoke-6.png',
+      `${SMOKE_TIMESTAMPS[5]} | smoke-6.png`,
+      `${SMOKE_TIMESTAMPS[3]} | smoke-6.png`,
       /Core-smoke timestamps must be chronological/,
     ],
     [
       'review before observations',
-      'RK - 2026-08-08T11:00:00+02:00',
-      'RK - 2026-08-08T10:10:00+02:00',
+      `RK - ${REVIEWER_TIMESTAMP}`,
+      `RK - ${PURCHASE_TIMESTAMPS[4]}`,
       /must not predate any recorded observation/,
     ],
   ];
@@ -705,7 +716,7 @@ test('rejects a physical test record dated before the candidate commit', () => {
   const beforeCommit = new Date(Date.parse(COMMIT_TIMESTAMP) - 60_000).toISOString().replace('.000Z', 'Z');
   const changed = replaceOnce(
     fix.markdown,
-    '2026-08-08T10:00:00+02:00',
+    PHYSICAL_TEST_START_TIMESTAMP,
     beforeCommit,
   );
   expectEvidenceError(
@@ -718,7 +729,7 @@ test('rejects a physical test record dated before the candidate commit', () => {
 test('rejects a GitHub run timestamp after physical testing starts', () => {
   const fix = fixture();
   const result = runFixtureCli(fix, {
-    run: validGithubRun({ updated_at: '2026-08-08T08:05:00Z' }),
+    run: validGithubRun({ updated_at: timestampAfterCommit(11) }),
   });
   assert.equal(result.code, 2);
   assert.match(result.errors.join('\n'), /must complete before physical testing starts/);
@@ -727,8 +738,8 @@ test('rejects a GitHub run timestamp after physical testing starts', () => {
 test('requires the automated matrix timestamp to equal the verified run completion', () => {
   const fix = fixture();
   const changed = fix.markdown.replaceAll(
-    '2026-08-08T09:55:00+02:00',
-    '2026-08-08T09:54:00+02:00',
+    AUTOMATED_COMPLETION_TIMESTAMP,
+    timestampAfterCommit(4),
   );
   writeFileSync(fix.recordPath, changed);
   const result = runFixtureCli(fix);
