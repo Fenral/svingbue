@@ -6,6 +6,7 @@ import {
   mkdirSync,
   mkdtempSync,
   readFileSync,
+  realpathSync,
   readdirSync,
   rmSync,
   writeFileSync,
@@ -165,7 +166,7 @@ function githubRun(overrides = {}, workflowOverrides = {}) {
 }
 
 function createEvidenceWorkspace(markdown = completedEvidence()) {
-  const directory = mkdtempSync(join(tmpdir(), 'flightglass-onboarding-evidence-'));
+  const directory = realpathSync(mkdtempSync(join(tmpdir(), 'flightglass-onboarding-evidence-')));
   const sessions = join(directory, 'sessions');
   mkdirSync(sessions);
   for (let index = 1; index <= 10; index += 1) {
