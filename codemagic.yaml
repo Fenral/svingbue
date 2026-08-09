@@ -153,13 +153,30 @@ workflows:
 
       - name: Use profiles in Xcode project
         script: |
-          xcode-project use-profiles
+          # Limit signing mutation to the generated app project. Without an
+          # explicit project, Codemagic recursively scans the checkout and can
+          # apply profiles to dependency projects under node_modules instead.
+          xcode-project use-profiles --project ios/App/App.xcodeproj
 
       - name: Build .ipa
         script: |
+          # Keep the full archive output as an artifact and surface the first
+          # actionable Xcode errors directly in the Codemagic build log.
+          # `xcode-project` also writes its own detailed logs under /tmp.
+          set -o pipefail
+          mkdir -p /tmp/xcodebuild_logs
           xcode-project build-ipa \
             --workspace "$XCODE_WORKSPACE" \
-            --scheme "$XCODE_SCHEME"
+            --scheme "$XCODE_SCHEME" \
+            2>&1 | tee /tmp/xcodebuild_logs/build-ipa-console.log
+          build_status=${PIPESTATUS[0]}
+          if [ "$build_status" -ne 0 ]; then
+            echo "--- actionable Xcode errors ---"
+            grep -inE '(^|[^a-z])(error:|failed:|provisioning profile|signing certificate|code signing)' \
+              /tmp/xcodebuild_logs/*.log 2>/dev/null || true
+            echo "--- end actionable Xcode errors ---"
+            exit "$build_status"
+          fi
 
     artifacts:
       - build/ios/ipa/*.ipa
