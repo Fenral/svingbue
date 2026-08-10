@@ -71,11 +71,16 @@ workflows:
       # schema rejects it as a top-level workflow key ("extra fields not
       # permitted"). Verified live against Codemagic's own validator
       # 2026-08-10 after the first push failed silently (no build queued).
+      #
+      # Profile reference keeps the .mobileprovision suffix: Codemagic used
+      # the uploaded filename verbatim as the reference name (no separate
+      # rename step like the certificate upload has). Confirmed via build
+      # #35's actual error message, which listed the exact available names.
       ios_signing:
         certificates:
           - flightglass_distribution_20260810
         provisioning_profiles:
-          - flightglass_appstore_20260810
+          - flightglass_appstore_20260810.mobileprovision
       vars:
         BUNDLE_ID: *bundle_id
         APP_STORE_APPLE_ID: 6768449250   # existing ASC app id; do not migrate
