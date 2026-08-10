@@ -6,15 +6,47 @@
 # no.strikearc.app, team PL9G26C26C). This build supersedes the React/Vite
 # strikearc-3.0 build on TestFlight — chosen by Sivert 2026-07-03.
 #
-# Signing/publish machinery mirrors the proven strikearc-3.0 pipeline
-# (same app record, same ryddy-asc-key), adapted for the static-web +
-# landscape + CocoaPods (Capacitor 7 → .xcworkspace) shape of svingbue.
+# Signing — PINNED IDENTITY (changed 2026-08-10, see incident note below):
+#   ios_signing below references two NAMED Codemagic code-signing
+#   identities instead of the old "regenerate + revoke everything + create"
+#   flow. Both must exist in Codemagic → Team settings → Code signing
+#   identities (iOS certificates / iOS provisioning profiles) BEFORE this
+#   workflow can build:
+#     - certificate:         flightglass_distribution_20260810
+#     - provisioning profile: flightglass_appstore_20260810
+#   Uploading/creating those is an owner-only, 2FA-gated step (Apple
+#   Developer + Codemagic dashboard) — not something CI or an agent can do.
+#
+#   INCIDENT NOTE (2026-08-10): the previous version of this workflow
+#   generated a brand-new local private key on every single build, then
+#   force-revoked ALL Distribution certs on the team (via
+#   `app-store-connect certificates delete`) before creating a fresh one
+#   (`fetch-signing-files --create`). Apple's Distribution-certificate quota
+#   (max 2) is TEAM-WIDE, not per-app — so every svingbue/Flightglass build
+#   was silently revoking whichever certs currently occupied those 2 slots,
+#   including ones belonging to OTHER apps under team PL9G26C26C (e.g.
+#   babyora_distribution, used by the unrelated Babyora app). That's the
+#   most likely explanation for babyora_distribution showing as
+#   invalid/revoked, and for intermittent "already have a current
+#   Distribution certificate or a pending certificate request" failures
+#   here (the revoke step and Apple's create-cert call can race, or a
+#   half-finished CSR can leave the account looking "full"). Because the
+#   key was generated fresh inside an ephemeral Codemagic build VM and
+#   never persisted anywhere, neither of the two certs Apple currently
+#   shows as active has a recoverable private key — they cannot be reused,
+#   only replaced. Pinning to a named, Codemagic-persisted identity (this
+#   change) stops future builds from touching the shared team-wide cert
+#   pool at all.
 #
 # Setup status:
-#   1. ASC API key integration `ryddy-asc-key` (Key JQVPW4D944) — ✅ reused.
+#   1. ASC API key integration `ryddy-asc-key` (Key JQVPW4D944) — ✅ reused
+#      (still used for the TestFlight publish step + build-number lookup).
 #   2. GitHub repo Fenral/svingbue connected as iOS app — ✅ done.
 #   3. App record no.strikearc.app (Apple ID 6768449250) — ✅ already exists.
-#   → No manual Apple steps remain. Push to main (or run manually) to build.
+#   4. flightglass_distribution_20260810 / flightglass_appstore_20260810
+#      code-signing identities in Codemagic — ⏳ owner must create/upload
+#      (see incident note above). Until then this workflow will fail fast
+#      at the signing step instead of silently touching other apps' certs.
 
 definitions:
   bundle_id: &bundle_id no.strikearc.app
@@ -30,9 +62,15 @@ workflows:
       # Reuses the existing team-level App Store Connect API key
       # `ryddy-asc-key` (Key ID JQVPW4D944) — same key that already signs +
       # publishes strikearc, strikearc-3.0, wool-app and ryddy for team
-      # PL9G26C26C. Codemagic injects key/issuer/key-id for both signing
-      # and the TestFlight publish step; no secrets live in this file.
+      # PL9G26C26C. Used here for the TestFlight publish step and the
+      # latest-build-number lookup (NOT for cert creation any more).
       app_store_connect: ryddy-asc-key
+
+    ios_signing:
+      certificates:
+        - flightglass_distribution_20260810
+      provisioning_profiles:
+        - flightglass_appstore_20260810
 
     environment:
       vars:
@@ -128,60 +166,40 @@ workflows:
           cd ios/App
           agvtool new-version -all "$NEXT"
 
-      - name: Initialize keychain
-        script: |
-          keychain initialize
-
-      - name: Generate certificate private key
-        script: |
-          set -ex
-          openssl genrsa -out /tmp/cert_private_key.pem 2048
-
-      - name: Revoke old Distribution certs (cert-quota maintenance)
-        script: |
-          set +e
-          # Apple's quota is 2 active Distribution certs per team. Codemagic
-          # generates a NEW private key each build → existing certs have no
-          # matching local key → unusable → quota fills up. Auto-revoke so
-          # `fetch-signing-files --create` always has headroom. Safe: App
-          # Store IPAs stay valid post-revoke (cert only signs new IPAs).
-          for CERT_TYPE in DISTRIBUTION IOS_DISTRIBUTION; do
-            echo "==== Listing $CERT_TYPE certs ===="
-            JSON=$(app-store-connect certificates list --type "$CERT_TYPE" --json 2>/dev/null || echo "[]")
-            CERT_IDS=$(echo "$JSON" | jq -r '.[]? | .id // empty' 2>/dev/null || true)
-            if [ -z "$CERT_IDS" ]; then
-              echo "No $CERT_TYPE certs to revoke."
-              continue
-            fi
-            for CERT_ID in $CERT_IDS; do
-              echo "Revoking $CERT_TYPE cert: $CERT_ID"
-              app-store-connect certificates delete "$CERT_ID" --ignore-not-found || true
-            done
-          done
-          set -e
-
-      - name: Fetch signing files (create cert + profile)
-        script: |
-          set -ex
-          app-store-connect fetch-signing-files "$BUNDLE_ID" \
-            --certificate-key=@file:/tmp/cert_private_key.pem \
-            --type IOS_APP_STORE \
-            --create \
-            --verbose
-
-      - name: Add certificates to keychain
-        script: |
-          keychain add-certificates
+      # NOTE: no manual "Initialize keychain" / "Generate certificate private
+      # key" / "Revoke old Distribution certs" / "Fetch signing files" / "Add
+      # certificates to keychain" steps any more — the `ios_signing:` block
+      # above makes Codemagic install the named certificate + profile into
+      # the build keychain automatically, before scripts run, without
+      # touching any other cert on the team.
 
       - name: Use profiles in Xcode project
         script: |
-          xcode-project use-profiles
+          # Limit signing mutation to the generated app project. Without an
+          # explicit project, Codemagic recursively scans the checkout and can
+          # apply profiles to dependency projects under node_modules instead.
+          # (carried over from agent/revenuecat-499 commit c4e79c1, 2026-08-10)
+          xcode-project use-profiles --project ios/App/App.xcodeproj
 
       - name: Build .ipa
         script: |
+          # Keep the full archive output as an artifact and surface the first
+          # actionable Xcode errors directly in the Codemagic build log.
+          # (carried over from agent/revenuecat-499 commit c4e79c1, 2026-08-10)
+          set -o pipefail
+          mkdir -p /tmp/xcodebuild_logs
           xcode-project build-ipa \
             --workspace "$XCODE_WORKSPACE" \
-            --scheme "$XCODE_SCHEME"
+            --scheme "$XCODE_SCHEME" \
+            2>&1 | tee /tmp/xcodebuild_logs/build-ipa-console.log
+          build_status=${PIPESTATUS[0]}
+          if [ "$build_status" -ne 0 ]; then
+            echo "--- actionable Xcode errors ---"
+            grep -inE '(^|[^a-z])(error:|failed:|provisioning profile|signing certificate|code signing)' \
+              /tmp/xcodebuild_logs/*.log 2>/dev/null || true
+            echo "--- end actionable Xcode errors ---"
+            exit "$build_status"
+          fi
 
     artifacts:
       - build/ios/ipa/*.ipa
