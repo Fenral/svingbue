@@ -66,13 +66,16 @@ workflows:
       # latest-build-number lookup (NOT for cert creation any more).
       app_store_connect: ryddy-asc-key
 
-    ios_signing:
-      certificates:
-        - flightglass_distribution_20260810
-      provisioning_profiles:
-        - flightglass_appstore_20260810
-
     environment:
+      # ios_signing lives here, nested under environment — Codemagic's
+      # schema rejects it as a top-level workflow key ("extra fields not
+      # permitted"). Verified live against Codemagic's own validator
+      # 2026-08-10 after the first push failed silently (no build queued).
+      ios_signing:
+        certificates:
+          - flightglass_distribution_20260810
+        provisioning_profiles:
+          - flightglass_appstore_20260810
       vars:
         BUNDLE_ID: *bundle_id
         APP_STORE_APPLE_ID: 6768449250   # existing ASC app id; do not migrate
