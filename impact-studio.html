@@ -73,7 +73,7 @@
     overflow:hidden;border:1px solid var(--line);
     background:var(--dusk-scene-bg)}
   #scene{position:absolute;inset:0;width:100%;height:100%;display:block}
-  /* right rail: next view, club, and the MVP contact-zone inspector. */
+  /* right rail: perspective, club, and the dedicated Strike contact view. */
   .rail{position:absolute;top:8px;right:8px;display:flex;flex-direction:column;gap:6px;z-index:5}
   .orb{
     width:58px;min-height:60px;padding:4px 2px 6px;border-radius:14px;cursor:pointer;
@@ -257,7 +257,7 @@
       <div class="eyebrow"><span>STRIKE<span class="ez"> · CONTACT ZONE</span></span>
         <span class="st"><em id="insetQual">PURE</em>&nbsp;·&nbsp;<span id="insetMm">−20 mm</span></span></div>
       <canvas id="insetCv"></canvas>
-      <button id="insetMax" class="inset__max" aria-label="Inspect contact zone">⤢</button>
+      <button id="insetMax" class="inset__max" aria-label="Open Strike contact zone">⤢</button>
     </div>
     <div class="rail">
       <button class="orb" id="btnView" aria-label="Switch to Down the line">
@@ -293,7 +293,7 @@
         </svg>
         <span class="cap" id="clubCap">IRON</span>
       </button>
-      <button class="orb" id="btnContact" aria-label="Inspect contact zone" aria-controls="inset" aria-expanded="false">
+      <button class="orb" id="btnContact" aria-label="Open Strike contact zone" aria-controls="inset" aria-expanded="false">
         <svg viewBox="0 0 44 40" aria-hidden="true">
           <line x1="6" y1="30" x2="38" y2="30" stroke="rgba(130,185,85,.72)" stroke-width="1.6"/>
           <path d="M7 19 C14 23 17 31 22 31 C27 31 30 23 37 19" fill="none"
@@ -301,7 +301,7 @@
           <circle cx="22" cy="31" r="2.6" fill="#D9B36A"/>
           <path d="M12 30 v4 M32 30 v4" stroke="rgba(217,179,106,.55)" stroke-width="1.2"/>
         </svg>
-        <span class="cap">CONTACT</span>
+        <span class="cap">STRIKE</span>
       </button>
     </div>
   </div>
@@ -644,13 +644,12 @@ $('insetMax').addEventListener('click', () => {
   haptics.impact('light');
 });
 function setInspect(on){
-  if (on && state.view !== 'face') setView('face');
   state.inspect = on;
   $('inset').classList.toggle('inset--max', on);
   $('insetMax').textContent = on ? '⤡' : '⤢';
-  $('insetMax').setAttribute('aria-label', on ? 'Close contact zone' : 'Inspect contact zone');
+  $('insetMax').setAttribute('aria-label', on ? 'Close Strike contact zone' : 'Open Strike contact zone');
   $('btnContact').setAttribute('aria-expanded', String(on));
-  $('btnContact').setAttribute('aria-label', on ? 'Close contact zone' : 'Inspect contact zone');
+  $('btnContact').setAttribute('aria-label', on ? 'Close Strike contact zone' : 'Open Strike contact zone');
   $('btnContact').classList.toggle('contact-active', on);
   IW = 0;                                       // re-measure the inset canvas
   kick();

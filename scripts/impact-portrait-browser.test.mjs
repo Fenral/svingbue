@@ -78,9 +78,11 @@ const open = async (viewport = { width: 390, height: 844 }) => {
   return { page, errors };
 };
 
-const station = (page, name) => page.locator('.stations button', {
-  hasText: new RegExp(`^${name}$`),
-}).click();
+const station = async (page, name) => {
+  const selector = page.locator('.stations button', { hasText: new RegExp(`^${name}$`) });
+  if (!await selector.isVisible()) await page.getByRole('button', { name: /^Change input$/i }).click();
+  await selector.click();
+};
 const noFavicon = errors => errors.filter(error => !error.includes('favicon'));
 const visibleRangeIds = page => page.locator('#panel input[type="range"]:visible')
   .evaluateAll(nodes => nodes.map(node => node.id).sort());
@@ -128,17 +130,17 @@ test('top strip is a single back-to-menu control', { timeout: 60_000 }, async ()
   await page.close();
 });
 
-test('all thirteen outcomes are visible by default', { timeout: 60_000 }, async () => {
+test('Shot is the calm default; telemetry opens only on request', { timeout: 60_000 }, async () => {
   const { page, errors } = await open();
   await page.locator('#stage').waitFor();
-  await page.waitForTimeout(200);
-  const metrics = await page.locator('#outcomeBoard .chip:visible').evaluateAll(nodes =>
-    nodes.map(node => node.dataset.metric).sort());
-  assert.deepEqual(metrics, [
-    'apex', 'backspin', 'ballSpeed', 'carry', 'curve', 'landingAng', 'launchAng',
-    'launchDir', 'side', 'smash', 'spinAxis', 'spinLoft', 'total',
-  ]);
-  assert.equal(await page.locator('#outcomeBoard').isVisible(), true);
+  assert.equal(await page.locator('#stage').getAttribute('data-range-mode'), 'shot');
+  assert.equal(await page.locator('#shotBrief').isVisible(), true);
+  assert.match(await page.locator('#shotLine').textContent(), /Starts .* finishes/i);
+  assert.equal(await page.locator('#outcomeBoard').isVisible(), false);
+  assert.equal(await page.locator('#parameterRail').count(), 0);
+  await page.getByRole('button', { name: /^Details$/i }).click();
+  assert.equal(await page.locator('#stage').getAttribute('data-range-mode'), 'details');
+  assert.equal(await page.locator('#detailReadouts .chip:visible').count(), 4);
   assert.deepEqual(noFavicon(errors), []);
   await page.close();
 });
@@ -160,7 +162,7 @@ test('Carry is a permanent large left-side readout in every lens', { timeout: 60
   }).m.carry);
 
   for (const lens of [
-    { name: 'OUTCOME', station: 0 },
+    { name: 'FLIGHT', station: 0 },
     { name: 'SIDE', station: 1 },
     { name: 'TOP', station: 2 },
   ]) {
@@ -299,19 +301,22 @@ test('Pin comparison crosses to the left without covering Carry when a tracer re
   await page.close();
 });
 
-test('Outcome is the default lens and replaces Flight / 3D Range', { timeout: 60_000 }, async () => {
+test('Flight is a Change lens, while Shot remains the default surface', { timeout: 60_000 }, async () => {
   const { page, errors } = await open();
   await page.locator('#stage').waitFor();
+  assert.equal(await page.locator('#stseg').isVisible(), false);
+  assert.equal(await page.locator('#stage').getAttribute('data-range-mode'), 'shot');
+  await page.getByRole('button', { name: /^Change input$/i }).click();
   assert.deepEqual(
     (await page.locator('#stseg button').allTextContents()).map(value => value.trim()),
-    ['TOP', 'SIDE', 'OUTCOME'],
+    ['TOP', 'SIDE', 'FLIGHT'],
   );
-  const outcome = page.getByRole('button', { name: /^OUTCOME$/i });
-  assert.equal(await outcome.getAttribute('aria-pressed'), 'true');
+  const flight = page.getByRole('button', { name: /^FLIGHT$/i });
+  assert.equal(await flight.getAttribute('aria-pressed'), 'true');
   assert.equal(await page.locator('#stage').getAttribute('data-lens'), 'outcome');
-  assert.equal(await page.locator('#stage').getAttribute('data-tracer'), 'off');
+  assert.equal(await page.locator('#stage').getAttribute('data-tracer'), 'on');
   assert.equal(await page.locator('#replayFlight').count(), 0);
-  assert.equal(await page.locator('#stseg button', { hasText: /^(FLIGHT|3D RANGE)$/i }).count(), 0);
+  assert.equal(await page.locator('#stseg button', { hasText: /^OUTCOME$/i }).count(), 0);
   assert.deepEqual(noFavicon(errors), []);
   await page.close();
 });
@@ -374,7 +379,7 @@ for (const viewport of [
       assert.deepEqual(geometry.labelsBehindPanel, [], `${name}: measurement labels clear the editor`);
     }
 
-    await station(page, 'OUTCOME');
+    await station(page, 'FLIGHT');
     await page.waitForTimeout(150);
     const restored = await page.evaluate(() => {
       const stage = document.querySelector('#stage').getBoundingClientRect();
@@ -387,9 +392,9 @@ for (const viewport of [
         tracer: document.querySelector('#stage').dataset.tracer,
       };
     });
-    assert.equal(restored.tracer, 'off');
-    assert.ok(Math.abs(restored.canvasBottom - restored.stageBottom) <= 1, 'Outcome restores the full canvas');
-    assert.ok(Math.abs(restored.labelLayerBottom - restored.stageBottom) <= 1, 'Outcome restores the full label layer');
+    assert.equal(restored.tracer, 'on');
+    assert.ok(restored.canvasBottom <= restored.stageBottom, 'Flight canvas remains contained by the stage');
+    assert.ok(restored.labelLayerBottom <= restored.stageBottom, 'Flight label layer remains contained by the stage');
 
     assert.deepEqual(noFavicon(errors), []);
     await page.close();
@@ -531,6 +536,7 @@ test('guided experiment hydration refreshes all five visible values', { timeout:
   });
   await page.goto(`${baseUrl}/impact.html?guided=experiment`, { waitUntil: 'networkidle' });
   await page.waitForFunction(() => document.body.dataset.saGuidedRange === 'experiment');
+  await page.getByRole('button', { name: /^Change input$/i }).click();
   const hydrated = {
     speed: experiment.inputs.clubSpeed,
     face: experiment.inputs.faceAngle,
@@ -549,9 +555,10 @@ test('guided experiment hydration refreshes all five visible values', { timeout:
   await page.close();
 });
 
-test('Outcome keeps all five values visible and every parameter editable', { timeout: 60_000 }, async () => {
+test('Change keeps all five values visible and every parameter editable', { timeout: 60_000 }, async () => {
   const { page } = await open();
   await page.locator('#stage').waitFor();
+  await page.getByRole('button', { name: /^Change input$/i }).click();
   assert.equal(await page.locator('#parameterRail button').count(), 5);
   assert.equal(await page.locator('#spVal').getAttribute('aria-valuenow'), null);
   const edits = { speed: 107, face: -4.2, path: 3.1, attack: -2.4, dynLoft: 30.5 };
@@ -571,24 +578,17 @@ test('Outcome keeps all five values visible and every parameter editable', { tim
   await page.close();
 });
 
-test('Outcome chips update immediately and visibly', { timeout: 60_000 }, async () => {
+test('Shot evidence updates immediately after a controlled change', { timeout: 60_000 }, async () => {
   const { page, errors } = await open();
   await page.locator('#stage').waitFor();
-  const chip = page.locator('.chip[data-metric="ballSpeed"]:visible').first();
-  const beforeText = await chip.textContent();
-  const signature = locator => locator.evaluate(element => {
-    const box = getComputedStyle(element);
-    const value = getComputedStyle(element.querySelector('.v'));
-    return [box.backgroundColor, box.borderColor, box.boxShadow, box.transform, value.color].join('|');
-  });
-  const beforeVisual = await signature(chip);
+  const beforeText = await page.locator('#shotProof').textContent();
+  await page.getByRole('button', { name: /^Change input$/i }).click();
   await page.locator('#sl-speed').fill('110');
   await page.waitForFunction(previous => {
-    const element = document.querySelector('.chip[data-metric="ballSpeed"]');
-    return element?.textContent !== previous && element.dataset.changed === 'true';
+    const element = document.querySelector('#shotProof');
+    return element?.textContent !== previous;
   }, beforeText, { timeout: 500 });
-  assert.notEqual(await chip.textContent(), beforeText);
-  assert.notEqual(await signature(chip), beforeVisual);
+  assert.notEqual(await page.locator('#shotProof').textContent(), beforeText);
   assert.deepEqual(noFavicon(errors), []);
   await page.close();
 });
@@ -596,6 +596,7 @@ test('Outcome chips update immediately and visibly', { timeout: 60_000 }, async 
 test('screen-reader telemetry debounces rapid changes to the final shot', { timeout: 60_000 }, async () => {
   const { page } = await open();
   await page.locator('#stage').waitFor();
+  await page.getByRole('button', { name: /^Change input$/i }).click();
   const mutationCount = await page.evaluate(async () => {
     const live = document.getElementById('fCarryLive');
     const input = document.getElementById('sl-speed');
@@ -618,7 +619,7 @@ test('screen-reader telemetry debounces rapid changes to the final shot', { time
 test('no TARGET label appears in any lens', { timeout: 60_000 }, async () => {
   const { page } = await open();
   await page.locator('#stage').waitFor();
-  for (const name of ['TOP', 'SIDE', 'OUTCOME']) {
+  for (const name of ['TOP', 'SIDE', 'FLIGHT']) {
     await station(page, name);
     await page.waitForTimeout(300);
     const labels = (await page.locator('#annoLabels').textContent()) || '';
@@ -635,7 +636,7 @@ for (const viewport of [
   test(`primary controls stay contained at ${viewport.width}×${viewport.height}`, { timeout: 60_000 }, async () => {
     const { page, errors } = await open(viewport);
     await page.locator('#stage').waitFor();
-    for (const name of ['OUTCOME', 'SIDE', 'TOP']) {
+    for (const name of ['FLIGHT', 'SIDE', 'TOP']) {
       await station(page, name);
       await page.waitForTimeout(100);
       const result = await page.evaluate(() => {

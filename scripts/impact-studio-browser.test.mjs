@@ -160,16 +160,16 @@ test(`${ENGINE}: Studio camera announces its destination and contact stays reach
   assert.equal(await currentView(page), 'face');
 
   const contactButton = page.locator('#btnContact');
-  assert.equal(await contactButton.count(), 1, 'Studio needs a dedicated third contact-zone rail control');
+  assert.equal(await contactButton.count(), 1, 'Studio needs a dedicated third Strike rail control');
   const contactBox = await contactButton.boundingBox();
-  assert.ok(contactBox.width >= 44 && contactBox.height >= 44, 'contact-zone rail target must be at least 44px');
+  assert.ok(contactBox.width >= 44 && contactBox.height >= 44, 'Strike rail target must be at least 44px');
   const insetMaxBox = await page.locator('#insetMax').boundingBox();
   assert.ok(insetMaxBox.width >= 44 && insetMaxBox.height >= 44, 'contact-zone expansion target must be at least 44px');
 
   await page.locator('#btnView').click();
   assert.equal(await currentView(page), 'dtl');
   assert.equal((await page.locator('#viewCap').textContent()).trim(), 'FO');
-  assert.equal(await page.locator('#inset').isVisible(), true, 'mini Contact inset remains available in DTL');
+  assert.equal(await page.locator('#inset').isVisible(), true, 'Strike preview remains available in DTL');
   const toast = page.locator('.view-toast');
   await toast.waitFor({ state: 'visible' });
   assert.match((await toast.textContent()).trim(), /DOWN THE LINE/i);
@@ -183,13 +183,13 @@ test(`${ENGINE}: Studio camera announces its destination and contact stays reach
     'view feedback should fade away after it has confirmed the new mode');
 
   await contactButton.click();
-  assert.equal(await currentView(page), 'face', 'Contact inspection returns to Face On');
+  assert.equal(await currentView(page), 'dtl', 'Strike preserves the selected Geometry perspective');
   assert.equal(await page.locator('#inset').evaluate(element => element.classList.contains('inset--max')), true);
-  assert.equal(await contactButton.getAttribute('aria-label'), 'Close contact zone');
+  assert.equal(await contactButton.getAttribute('aria-label'), 'Close Strike contact zone');
   await capture(page, 'contact-inspection--812x375');
   await page.locator('#insetMax').click();
   assert.equal(await page.locator('#inset').evaluate(element => element.classList.contains('inset--max')), false);
-  assert.equal(await contactButton.getAttribute('aria-label'), 'Inspect contact zone');
+  assert.equal(await contactButton.getAttribute('aria-label'), 'Open Strike contact zone');
   assert.deepEqual(errors, []);
   await browserContext.close();
 });

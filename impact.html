@@ -85,10 +85,11 @@
   .scene canvas{position:absolute;top:0;left:0;z-index:1;width:100%;height:var(--range-visual-height,100%);display:block;touch-action:none;cursor:grab}
   .scene canvas:active{cursor:grabbing}
 
-  /* Outcome uses the freed scene as a live data field, not a tracer canvas. */
+  /* Details are an intentional reading state, never the default dashboard. */
   .outcomeBoard{position:absolute;left:50%;top:64px;z-index:5;width:min(760px,calc(100% - 24px));
     transform:translateX(-50%);display:none;pointer-events:none}
-  .scene[data-lens="outcome"] .outcomeBoard{display:block}
+  /* The grouped Details pane renders the selected telemetry set; keep this
+     legacy board dormant so the values never appear twice. */
   .outcomeBoardHead{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin:0 3px 14px}
   .outcomeBoardHead h1{font:700 13px/1 var(--font-ui);letter-spacing:.14em;color:var(--accent)}
   .outcomeBoardHead span{font:600 8px/1 var(--font-ui);letter-spacing:.1em;color:var(--muted-2)}
@@ -113,6 +114,16 @@
   .carryHero .label{margin-top:5px;color:var(--muted-2);
     font:600 10px/1 var(--font-data);letter-spacing:.16em}
 
+  /* A settled shot earns the canvas: one conclusion and two supporting facts. */
+  .shotBrief{position:absolute;left:max(12px,env(safe-area-inset-left));top:86px;z-index:5;
+    width:min(250px,calc(100% - 112px));pointer-events:none}
+  .shotBrief[hidden]{display:none}
+  .shotLine{margin:0;color:var(--ink);font:650 clamp(16px,4.5vw,21px)/1.14 var(--font-ui);letter-spacing:-.025em}
+  .shotLine strong{color:var(--accent);font-weight:700}
+  .shotProof{display:flex;gap:12px;margin-top:10px;color:var(--muted);font:600 10px/1 var(--font-data);letter-spacing:.02em}
+  .shotProof span{white-space:nowrap}
+  .shotProof b{margin-left:4px;color:var(--ink);font-size:12px;font-weight:700}
+
   /* Lens switch: camera is independent of the active input. */
   .stations{display:grid;grid-template-columns:1fr 1fr 1px 1.28fr;gap:4px;width:100%;margin:0 0 10px;padding:3px;
     border:1px solid color-mix(in srgb,var(--line) 72%,transparent);border-radius:var(--radius-control);
@@ -124,6 +135,7 @@
     transition:background .25s,color .25s}
   .stations button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
   .stations button[aria-pressed="true"]{background:var(--secondary-soft);color:var(--secondary)}
+  .stations[hidden]{display:none}
 
   /* Top actions use SVG and true 44 px targets. */
   .pinfab{position:absolute;top:12px;z-index:6;min-width:44px;min-height:44px;
@@ -145,7 +157,7 @@
     backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
     box-shadow:0 18px 46px color-mix(in srgb,var(--bg) 48%,transparent);
     padding:10px 12px 12px;pointer-events:auto}
-  .scene[data-lens="outcome"] .card{
+  .scene[data-range-mode="change"][data-lens="outcome"] .card{
     border-color:color-mix(in srgb,var(--secondary) 28%,var(--line));
     background:linear-gradient(180deg,color-mix(in srgb,var(--surface) 88%,transparent),color-mix(in srgb,var(--plate-solid) 94%,transparent));
     box-shadow:0 22px 54px color-mix(in srgb,var(--bg) 58%,transparent)}
@@ -153,7 +165,26 @@
   .panehead{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 3px 8px}
   .panehead .h-title{color:var(--secondary);font:700 10px/1 var(--font-ui);letter-spacing:.18em}
   .panehead .h-title.live{color:var(--accent)}
+  .panelDone{min-height:30px;padding:0 9px;border:1px solid color-mix(in srgb,var(--secondary) 34%,transparent);border-radius:9px;background:transparent;color:var(--secondary);font:700 9px/1 var(--font-ui);letter-spacing:.07em;cursor:pointer}
+  .panelDone[hidden]{display:none}
+  .panelDone:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
   .pane{min-height:118px}
+  .shotActions{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:stretch}
+  .shotAction{min-height:48px;padding:0 16px;border-radius:var(--radius-control);font:700 11px/1 var(--font-ui);letter-spacing:.04em;cursor:pointer}
+  .shotAction--primary{border:1px solid color-mix(in srgb,var(--accent) 72%,transparent);background:var(--accent);color:var(--bg);box-shadow:0 10px 24px color-mix(in srgb,var(--accent) 22%,transparent)}
+  .shotAction--secondary{border:1px solid var(--line-strong);background:transparent;color:var(--ink)}
+  .shotAction:focus-visible,.detailTabs button:focus-visible,.panelBack:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+  .shotAction:active,.panelBack:active{transform:scale(.98)}
+  .detailTabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;margin-bottom:9px}
+  .detailTabs button{min-height:40px;padding:0 6px;border:1px solid transparent;border-radius:var(--radius-control);background:transparent;color:var(--muted);font:700 10px/1 var(--font-ui);letter-spacing:.06em;cursor:pointer}
+  .detailTabs button[aria-pressed="true"]{border-color:color-mix(in srgb,var(--secondary) 36%,transparent);background:var(--secondary-soft);color:var(--ink)}
+  .detailReadouts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+  .detailReadouts .chip{min-width:0;padding:9px 10px}
+  .detailReadouts .chip.read{border-style:solid;border-color:color-mix(in srgb,var(--secondary) 30%,transparent);background:color-mix(in srgb,var(--surface) 82%,transparent)}
+  .detailReadouts .chip .k{font-size:10px;letter-spacing:.06em;overflow:hidden;text-overflow:ellipsis}
+  .detailReadouts .chip .v{font-size:17px}
+  .detailReadouts .chip .delta{display:none}
+  .panelBack{width:100%;min-height:42px;margin-top:9px;border:1px solid var(--line);border-radius:var(--radius-control);background:transparent;color:var(--muted);font:700 10px/1 var(--font-ui);letter-spacing:.08em;cursor:pointer}
   .parameterRail{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:3px;margin-bottom:10px}
   .parameterRail button{--control-color:var(--secondary);appearance:none;min-width:0;min-height:52px;padding:6px 3px 5px;
     display:grid;place-items:center;align-content:center;gap:4px;border:1px solid color-mix(in srgb,var(--control-color) 18%,transparent);
@@ -268,6 +299,7 @@
     .pinfab{padding-inline:10px}.pinfab span{display:none}
     .card{padding-inline:9px}
     .paramName{font-size:7px;letter-spacing:.03em}.paramValue{font-size:11px}
+    .shotBrief{top:82px;width:min(228px,calc(100% - 106px))}.shotLine{font-size:16px}.shotProof{gap:8px}
     .outcomeBoard{top:66px}.outcomeBoardHead{margin-bottom:11px}
     .outcomeBoard .chip{padding:6px 5px}.outcomeBoard .chip .k{font-size:6.8px;letter-spacing:.03em}
     .outcomeBoard .chip .v{font-size:12px}.outcomeBoard .chip .v em{font-size:8px}
@@ -313,6 +345,10 @@
         <div class="num"><span id="fCarryNum">0</span><span class="unit">m</span></div>
         <div class="label">CARRY</div>
       </div>
+      <div class="shotBrief" id="shotBrief">
+        <p class="shotLine" id="shotLine"></p>
+        <div class="shotProof" id="shotProof"></div>
+      </div>
       <div class="sr-only" id="fCarryLive" aria-live="polite" aria-atomic="true"></div>
 
       <button type="button" class="pinfab" id="pinFab" aria-label="Pin comparison">
@@ -320,17 +356,17 @@
       </button>
       <div class="sr-only" id="saveShotStatus" role="status" aria-live="polite"></div>
 
-      <!-- Outcome is the live cause/effect surface. Side and Top restore their
-           dedicated teaching controls without changing the physics path. -->
+      <!-- Shot reads first. Change and Details are intentional depths; the
+           camera is never a second source of physics. -->
       <div class="card" id="panel">
         <div class="stations" id="stseg" role="group" aria-label="Camera station">
           <button type="button" data-s="2" aria-pressed="false">TOP</button>
           <button type="button" data-s="1" aria-pressed="false">SIDE</button>
           <span class="stdiv" aria-hidden="true"></span>
-          <button type="button" data-s="0" aria-pressed="false">OUTCOME</button>
+          <button type="button" data-s="0" aria-pressed="false">FLIGHT</button>
         </div>
         <div class="panewrap">
-          <div class="panehead"><span class="h-title" id="paneTitle">EDIT INPUT</span></div>
+          <div class="panehead"><span class="h-title" id="paneTitle">EDIT INPUT</span><button type="button" class="panelDone" id="rangeDone" hidden>Done</button></div>
           <div class="pane" id="pane"></div>
         </div>
       </div>
@@ -356,6 +392,7 @@ const showPaywall = async moment => (await import('./sa-paywall.js')).openPaywal
 const state = {
   face: 2.0, path: 0.0, attack: 3.0, dynLoft: 24, speed: 90,
   station: 0,            // kontinuerlig 0=OUTCOME · 1=SIDE · 2=TOP (§3.2)
+  rangeMode: 'shot',     // shot = read, change = one controlled edit, details = grouped telemetry
   pins: [],              // maks 3, eldste ut
   allMetrics: false,
   collapsed: false,
@@ -377,6 +414,9 @@ const editorPanel = document.getElementById('panel');
 const pinFab = document.getElementById('pinFab');
 const fCarryStack = document.getElementById('fCarryStack');
 const fCarryNum = document.getElementById('fCarryNum');
+const shotBrief = document.getElementById('shotBrief');
+const shotLine = document.getElementById('shotLine');
+const shotProof = document.getElementById('shotProof');
 const VISUAL_PANEL_GAP = 8;
 let W = 0, H = 0;
 let resizePending = false;
@@ -826,17 +866,24 @@ function syncSeg() {
   for (const b of segButtons) b.setAttribute('aria-pressed', String(+b.dataset.s === snapped && !scrubbing));
   const lens = snapped === 0 ? 'outcome' : snapped === 1 ? 'side' : 'top';
   stage.dataset.lens = lens;
-  stage.dataset.tracer = lens === 'outcome' ? 'off' : 'on';
+  stage.dataset.rangeMode = state.rangeMode;
+  // A settled shot must show the flight. Details deliberately frees the canvas
+  // for reading; Change retains the camera trace as immediate visual proof.
+  stage.dataset.tracer = state.rangeMode === 'details' ? 'off' : 'on';
   document.body.dataset.rangeLens = lens;
-  sideTopSpeed.hidden = snapped === 0;
+  sideTopSpeed.hidden = state.rangeMode !== 'change' || snapped === 0;
+  document.getElementById('stseg').hidden = state.rangeMode !== 'change';
   scheduleResize();
 }
 function setStation(s, animate = true) {
+  // Camera lenses belong to the focused experiment. Programmatic callers get
+  // the same transition as a person who taps Change input before choosing a lens.
+  if (state.rangeMode !== 'change') setRangeMode('change');
   stationTarget = clamp(s, 0, 2);
   if (!animate || reduceMotion) state.station = stationTarget;
   syncSeg();
   const snapped = Math.round(stationTarget);
-  if (snapped !== activePaneStation) renderPane(snapped);
+  if (state.rangeMode === 'change' && snapped !== activePaneStation) renderPane(snapped);
   // The lens and editor footprint changed synchronously. Resize before the
   // next paint so no frame can reuse the full-height Outcome canvas behind the
   // Side/Top input panel under a busy WebKit or Chromium event loop.
@@ -870,6 +917,7 @@ const SLDEF = {
 const PARAM_ORDER = ['speed', 'face', 'path', 'attack', 'dynLoft'];
 const paneTitleEl = document.getElementById('paneTitle');
 const paneEl = document.getElementById('pane');
+const rangeDone = document.getElementById('rangeDone');
 let parameterRail = null;
 let activeControl = null;
 let activeParam = 'speed';
@@ -1068,6 +1116,12 @@ const METRICS = {
   total:{ label:'TOTAL', get:o=>o.m.total, format:v=>[Math.round(v),'m'], decimals:0, deltaUnit:'m' },
   apex:{ label:'APEX', get:o=>o.m.apex, format:v=>[Math.round(v),'m'], decimals:0, deltaUnit:'m' },
 };
+const METRIC_GROUPS = {
+  direction: { label:'DIRECTION', keys:['launchDir', 'spinAxis', 'curve', 'side'] },
+  launch: { label:'LAUNCH & SPIN', keys:['launchAng', 'spinLoft', 'backspin', 'landingAng'] },
+  distance: { label:'DISTANCE', keys:['smash', 'ballSpeed', 'carry', 'total', 'apex'] },
+};
+let activeDetailsGroup = 'direction';
 
 function deltaText(def, value) {
   if (!interactionBaselineOutcome) return '';
@@ -1090,14 +1144,85 @@ function metricChip(key, outcome, live = false) {
 
 function renderMetricChips(outcome) {
   const groups = {
-    ogDir:['launchDir', 'spinAxis', 'curve', 'side'],
-    ogLaunch:['launchAng', 'spinLoft', 'backspin', 'landingAng'],
-    ogDist:['smash', 'ballSpeed', 'carry', 'total', 'apex'],
+    ogDir:METRIC_GROUPS.direction.keys,
+    ogLaunch:METRIC_GROUPS.launch.keys,
+    ogDist:METRIC_GROUPS.distance.keys,
   };
   for (const [id, keys] of Object.entries(groups)) {
     const group = document.getElementById(id);
     if (group) group.innerHTML = keys.map(key => metricChip(key, outcome, true)).join('');
   }
+  const detailReadouts = document.getElementById('detailReadouts');
+  if (detailReadouts) detailReadouts.innerHTML = METRIC_GROUPS[activeDetailsGroup].keys.map(key => metricChip(key, outcome, false)).join('');
+  renderShotBrief(outcome);
+}
+
+function signedDirection(value, unit, zeroText) {
+  const magnitude = Math.abs(value);
+  if (magnitude < (unit === '°' ? .2 : .5)) return zeroText;
+  const rounded = unit === '°' ? magnitude.toFixed(1) : Math.round(magnitude);
+  return `${rounded}${unit} ${value > 0 ? 'right' : 'left'}`;
+}
+
+function renderShotBrief(outcome) {
+  const start = signedDirection(outcome.deg.launchDir, '°', 'on line');
+  const finish = signedDirection(outcome.m.side, 'm', 'on line');
+  shotLine.innerHTML = `<strong>Starts ${start}</strong> → finishes ${finish}.`;
+  shotProof.innerHTML = `<span>Ball speed <b>${Math.round(outcome.misc.ballSpeed)} mph</b></span><span>Backspin <b>${Math.round(outcome.misc.backspin)} rpm</b></span>`;
+}
+
+function renderShotPane() {
+  parameterRail = null;
+  activeControl = null;
+  activePaneStation = null;
+  paneTitleEl.textContent = 'THIS SHOT';
+  paneTitleEl.className = 'h-title live';
+  rangeDone.hidden = true;
+  paneEl.innerHTML = `<div class="shotActions">
+    <button class="shotAction shotAction--primary" id="changeInput" type="button">Change input</button>
+    <button class="shotAction shotAction--secondary" id="openDetails" type="button">Details</button>
+  </div>`;
+  document.getElementById('changeInput').addEventListener('click', () => setRangeMode('change'));
+  document.getElementById('openDetails').addEventListener('click', () => setRangeMode('details'));
+}
+
+function renderDetailsPane() {
+  parameterRail = null;
+  activeControl = null;
+  activePaneStation = null;
+  paneTitleEl.textContent = 'SHOT DETAILS';
+  paneTitleEl.className = 'h-title';
+  rangeDone.hidden = true;
+  paneEl.innerHTML = `<div class="detailTabs" role="group" aria-label="Shot detail group">
+    ${Object.entries(METRIC_GROUPS).map(([key, group]) => `<button type="button" data-detail-group="${key}" aria-pressed="${key === activeDetailsGroup}">${group.label}</button>`).join('')}
+  </div><div class="detailReadouts" id="detailReadouts"></div>
+  <button type="button" class="panelBack" id="backToShot">Back to shot</button>`;
+  for (const button of paneEl.querySelectorAll('[data-detail-group]')) {
+    button.addEventListener('click', () => {
+      activeDetailsGroup = button.dataset.detailGroup;
+      renderDetailsPane();
+      renderMetricChips(selectOutcome(state));
+    });
+  }
+  document.getElementById('backToShot').addEventListener('click', () => setRangeMode('shot'));
+  renderMetricChips(selectOutcome(state));
+}
+
+function setRangeMode(mode) {
+  if (!['shot', 'change', 'details'].includes(mode)) return;
+  state.rangeMode = mode;
+  shotBrief.hidden = mode !== 'shot';
+  if (mode === 'shot') renderShotPane();
+  else if (mode === 'details') renderDetailsPane();
+  else {
+    stationTarget = 0;
+    state.station = 0;
+    renderPane(0);
+  }
+  renderMetricChips(selectOutcome(state));
+  syncSeg();
+  resizePending = false;
+  resize();
 }
 
 function outcomePaneHTML() {
@@ -1117,6 +1242,7 @@ function renderPane(station) {
   if (station === 0) {
     paneTitleEl.textContent = 'EDIT INPUT';
     paneTitleEl.className = 'h-title';
+    rangeDone.hidden = false;
     paneEl.innerHTML = outcomePaneHTML();
     parameterRail = document.getElementById('parameterRail');
     activeControl = document.getElementById('activeControl');
@@ -1131,12 +1257,15 @@ function renderPane(station) {
   }
   paneTitleEl.className = 'h-title';
   paneTitleEl.textContent = station === 1 ? 'INPUT · LAUNCH PLANE' : 'INPUT · DIRECTION PLANE';
+  rangeDone.hidden = false;
   paneEl.innerHTML = `<div class="planeSliders" id="${station === 1 ? 'slSide' : 'slTop'}"></div>`;
   const container = paneEl.firstElementChild;
   if (station === 1) { buildSlider(container, 'dynLoft'); buildSlider(container, 'attack'); }
   else { buildSlider(container, 'face'); buildSlider(container, 'path'); }
   syncAllInputUI(true);
 }
+
+rangeDone.addEventListener('click', () => setRangeMode('shot'));
 
 bindHold(document.getElementById('spMinus'), -1, 'speed');
 bindHold(document.getElementById('spPlus'), 1, 'speed');
@@ -1150,7 +1279,7 @@ document.getElementById('topSpeedVal').addEventListener('keydown', event => {
   event.preventDefault();
   setParamValue('speed', keyValues[event.key]);
 });
-renderPane(0);
+setRangeMode('shot');
 
 /* ══ Pin pill — maks 3 ghosts, eldste ut (ordre §2, S7) ══ */
 const saveShotStatus = document.getElementById('saveShotStatus');
@@ -1522,7 +1651,7 @@ function frame(now) {
 
 // instrumenteringskrok for evidens (K1/K6: logget skalarverdi per frame når
 // `capture` er på) og for senere økter/dommer
-const api = { state, setStation,
+const api = { state, setStation, setRangeMode,
   get stationTarget() { return stationTarget; }, setFlightRef(m) { flightRef = m; },
   get flightRef() { return flightRef; },
   projectPoint(point) { return basis ? project(point, basis) : null; },
