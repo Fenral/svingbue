@@ -11,6 +11,7 @@ const WWW = join(ROOT, 'www');
 
 const V1_ROUTES = [
   'index.html',
+  'connections.html',
   'impact.html',
   'impact-studio.html',
   'jarvis.html',
@@ -24,6 +25,7 @@ const NATIVE_HTML = [
 ].sort();
 
 const REQUIRED_LOCAL_DEPENDENCIES = [
+  'connections.css',
   'sa-p3.css',
   'sa.css',
   'sa-app-shell.css',

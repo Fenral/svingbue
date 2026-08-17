@@ -29,6 +29,7 @@ test('Vercel publishes only the explicit Flightglass v1 artifact', () => {
 
   for (const required of [
     'index.html',
+    'connections.html',
     'impact.html',
     'impact-studio.html',
     'jarvis.html',

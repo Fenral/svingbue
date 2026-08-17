@@ -6,8 +6,11 @@
   "scripts": {
     "test": "npm run test:engine && npm run test:ux",
     "test:home": "node --test scripts/home-night-ladder.test.mjs",
-    "test:v1": "node --test scripts/v1-app-contract.test.mjs scripts/v1-shell-contract.test.mjs scripts/phase2-context.test.mjs scripts/guide-engine.test.mjs scripts/guide-knowledge.test.mjs scripts/guide-ui-contract.test.mjs",
+    "test:v1": "node --test scripts/v1-app-contract.test.mjs scripts/v1-shell-contract.test.mjs scripts/connections-contract.test.mjs scripts/phase2-context.test.mjs scripts/guide-engine.test.mjs scripts/guide-knowledge.test.mjs scripts/guide-ui-contract.test.mjs",
     "test:v1-shell": "node --test scripts/v1-shell-contract.test.mjs",
+    "test:connections:chromium": "node scripts/connections-browser.test.mjs",
+    "test:connections:webkit": "node scripts/connections-browser.test.mjs --project=webkit",
+    "test:connections": "node --test scripts/connections-contract.test.mjs && npm run test:connections:chromium && npm run test:connections:webkit",
     "test:guide:contracts": "node --test scripts/guide-engine.test.mjs scripts/guide-knowledge.test.mjs scripts/guide-ui-contract.test.mjs",
     "test:guide:chromium": "node scripts/guide-browser.test.mjs",
     "test:guide:webkit": "node scripts/guide-browser.test.mjs --project=webkit",

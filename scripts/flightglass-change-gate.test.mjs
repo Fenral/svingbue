@@ -64,11 +64,11 @@ test('Home changes receive the focused level A contract and Chromium runtime spo
   assert.deepEqual(ids(assessment), ['home-contract', 'chromium-spot']);
 });
 
-test('shared browser runtime promotes to B and covers the actual four v1 routes in two engines', () => {
+test('shared browser runtime promotes to B and covers every v1 route in two engines', () => {
   const assessment = classifyChanges(['sa-p3.css']);
   assert.equal(assessment.level, 'B');
   assert.deepEqual(assessment.routes, [
-    'impact-studio.html', 'impact.html', 'index.html', 'jarvis.html'
+    'connections.html', 'impact-studio.html', 'impact.html', 'index.html', 'jarvis.html'
   ]);
   assert.deepEqual(ids(assessment), ['home-contract', 'chromium-spot', 'webkit-spot']);
 });
@@ -85,9 +85,16 @@ test('Studio and Guide changes stay focused on their shipping routes', () => {
   assert.deepEqual(ids(assessment), ['home-contract', 'chromium-spot', 'webkit-spot']);
 });
 
+test('Connections changes stay focused on the immersive relationship route', () => {
+  const assessment = classifyChanges(['connections.html', 'connections.css']);
+  assert.equal(assessment.level, 'B');
+  assert.deepEqual(assessment.routes, ['connections.html']);
+  assert.deepEqual(ids(assessment), ['home-contract', 'chromium-spot', 'webkit-spot']);
+});
+
 test('the v1 route map excludes retired Geometry and Academy surfaces', () => {
   assert.deepEqual(CHANGE_GATE_ROUTES, [
-    'index.html', 'impact.html', 'impact-studio.html', 'jarvis.html'
+    'index.html', 'connections.html', 'impact.html', 'impact-studio.html', 'jarvis.html'
   ]);
 
   const assessment = classifyChanges([

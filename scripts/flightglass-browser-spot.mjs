@@ -33,6 +33,13 @@ const REQUIRED_SELECTORS = Object.freeze({
     '[data-home-main]',
     '#homeEmpty',
     '#onboarding'
+  ],
+  'connections.html': [
+    'body[data-sa-route="connections"]',
+    '#nodes',
+    '#causes',
+    '#effects',
+    '#back[href="./index.html"]'
   ]
 });
 

@@ -3,6 +3,7 @@ const SECRET_PATTERN = /AKIA[0-9A-Z]{16}|gh[pousr]_[A-Za-z0-9]{30,}|sk_(?:live|t
 
 const SHIPPING_ROUTES = Object.freeze([
   'index.html',
+  'connections.html',
   'impact.html',
   'impact-studio.html',
   'jarvis.html'
@@ -62,6 +63,7 @@ export function inspectTextIntegrity(text) {
 function routesFor(file) {
   if (file === 'index.html' || file === 'scripts/home-night-ladder.test.mjs'
       || /^assets\/onboarding\//.test(file)) return ['index.html'];
+  if (/^connections\.(?:css|html|js)$/.test(file)) return ['connections.html'];
   if (/^assets\/range-night-/.test(file)) return ['index.html', 'impact.html'];
   if (file === 'impact.html' || file === 'impact-flight.js'
       || file === 'flightglass-3d-spin-model.js'

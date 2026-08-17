@@ -10,7 +10,7 @@ const read = (file) => readFileSync(join(ROOT, file), 'utf8');
 const expect = (condition, message) => { if (!condition) failures.push(message); };
 
 const visibleFiles = [
-  'index.html', 'academy.html', 'appstore/index.html', 'sa-firstrun.js',
+  'index.html', 'connections.html', 'academy.html', 'appstore/index.html', 'sa-firstrun.js',
   'sa-paywall.js', 'privacy.html', 'terms.html', 'capacitor.config.ts',
   'scripts/ios-landscape.mjs', '.github/workflows/android-debug.yml',
   'codemagic.yaml', 'package.json'

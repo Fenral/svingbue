@@ -185,6 +185,8 @@ Controls use the gently rounded control radius, cards and plates use the card ra
 
 The shared four-route navigation is a compact bottom bar with 44px links, violet active state, and a 2px active indicator. It remains visible but spatially subordinate to the current Guide panel.
 
+**Immersive tool exception.** A full-height instrument, model, or relationship canvas may omit the bottom bar when it materially reduces the working area. It must instead expose one 44px minimum back control in the upper-left corner that returns to the Home navigation surface. Do not add parallel route controls inside the canvas.
+
 ### Truth Labels
 
 Outlined mono pills expose provenance such as range-modelled, studio geometry, estimate, and not-modelled. They pair colour with explicit text and are required wherever a claim’s boundary matters.

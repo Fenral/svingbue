@@ -30,7 +30,12 @@ import { patchManifest } from './android-landscape.mjs';
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const read = (rel) => readFileSync(join(ROOT, rel), 'utf8');
 
-const PORTRAIT_PAGES = ['index.html', 'impact.html', 'academy.html'];
+const PORTRAIT_PAGES = [
+  { page: 'index.html' },
+  { page: 'impact.html' },
+  { page: 'academy.html' },
+  { page: 'connections.html', fallback: 'connections.css' },
+];
 
 function moduleSpecifiers(source) {
   const specifiers = [];
@@ -209,14 +214,14 @@ test('web helpers remain honest no-ops and never register native plugins', async
   assert.equal(debugCalls.length, 3, 'web no-ops remain observable to the test harness');
 });
 
-for (const page of PORTRAIT_PAGES) {
+for (const { page, fallback = page } of PORTRAIT_PAGES) {
   test(`${page} locks portrait on load`, () => {
     const src = read(page);
     assert.match(src, /sa-orientation\.js/, `${page} imports the orientation module`);
     assert.match(src, /lockPortrait\s*\(/, `${page} calls lockPortrait()`);
   });
   test(`${page} has a web fallback rotate-to-portrait hint for landscape phones`, () => {
-    const src = read(page);
+    const src = `${read(page)}\n${fallback === page ? '' : read(fallback)}`;
     assert.match(src, /@media[^{]*orientation:\s*landscape/, `${page} needs a landscape-orientation media query`);
     assert.match(src, /rotate your phone to portrait/i, `${page} needs the rotate-to-portrait copy`);
   });

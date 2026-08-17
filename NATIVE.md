@@ -26,6 +26,7 @@ metadata is an App Store Connect task; it does not require a new bundle ID.
 the v1 app:
 
 - Home: `index.html`
+- Connections: `connections.html`
 - Outcome/Range: `impact.html`
 - Impact Studio: `impact-studio.html`
 - Flightglass Guide: `jarvis.html`

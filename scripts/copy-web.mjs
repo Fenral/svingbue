@@ -15,6 +15,7 @@ const WWW = join(ROOT, 'www');
 // remain local so the purchase sheet never depends on network availability.
 const ALLOWED_HTML_FILES = [
   'index.html',
+  'connections.html',
   'impact.html',
   'impact-studio.html',
   'jarvis.html',
@@ -24,6 +25,7 @@ const ALLOWED_HTML_FILES = [
 ];
 
 const ALLOWED_TOP_LEVEL_FILES = [
+  'connections.css',
   'guide-engine.js',
   'guide-knowledge.js',
   'flightglass-3d-spin-model.js',
