@@ -6,16 +6,48 @@
 # no.strikearc.app, team PL9G26C26C). This build supersedes the React/Vite
 # strikearc-3.0 build on TestFlight — chosen by Sivert 2026-07-03.
 #
-# Signing/publish machinery mirrors the proven strikearc-3.0 pipeline
-# (same app record, same ryddy-asc-key), adapted for the static-web +
-# landscape + CocoaPods (Capacitor 7 → .xcworkspace) shape of svingbue.
+# Signing — PINNED IDENTITY (changed 2026-08-10, see incident note below):
+#   ios_signing below references two NAMED Codemagic code-signing
+#   identities instead of the old "regenerate + revoke everything + create"
+#   flow. Both must exist in Codemagic → Team settings → Code signing
+#   identities (iOS certificates / iOS provisioning profiles) BEFORE this
+#   workflow can build:
+#     - certificate:         flightglass_distribution_20260810
+#     - provisioning profile: flightglass_appstore_20260810
+#   Uploading/creating those is an owner-only, 2FA-gated step (Apple
+#   Developer + Codemagic dashboard) — not something CI or an agent can do.
+#
+#   INCIDENT NOTE (2026-08-10): the previous version of this workflow
+#   generated a brand-new local private key on every single build, then
+#   force-revoked ALL Distribution certs on the team before requesting a
+#   fresh one. Apple's Distribution-certificate quota
+#   (max 2) is TEAM-WIDE, not per-app — so every svingbue/Flightglass build
+#   was silently revoking whichever certs currently occupied those 2 slots,
+#   including ones belonging to OTHER apps under team PL9G26C26C (e.g.
+#   babyora_distribution, used by the unrelated Babyora app). That's the
+#   most likely explanation for babyora_distribution showing as
+#   invalid/revoked, and for intermittent "already have a current
+#   Distribution certificate or a pending certificate request" failures
+#   here (the revoke step and Apple's create-cert call can race, or a
+#   half-finished CSR can leave the account looking "full"). Because the
+#   key was generated fresh inside an ephemeral Codemagic build VM and
+#   never persisted anywhere, neither of the two certs Apple currently
+#   shows as active has a recoverable private key — they cannot be reused,
+#   only replaced. Pinning to a named, Codemagic-persisted identity (this
+#   change) stops future builds from touching the shared team-wide cert
+#   pool at all.
 #
 # Setup status:
-#   1. ASC API key integration `ryddy-asc-key` (Key JQVPW4D944) — ✅ reused.
+#   1. ASC API key integration `ryddy-asc-key` (Key JQVPW4D944) — ✅ reused
+#      (still used for the TestFlight publish step + build-number lookup).
 #   2. GitHub repo Fenral/svingbue connected as iOS app — ✅ done.
 #   3. App record no.strikearc.app (Apple ID 6768449250) — ✅ already exists.
 #   4. RevenueCat public key + store offering — required before this workflow.
 #   → Manual-only; the workflow fails closed when billing is not configured.
+#   5. `flightglass_distribution_20260810` and
+#      `flightglass_appstore_20260810.mobileprovision` must exist as named
+#      Codemagic signing identities. Missing identities fail fast without
+#      touching the shared Apple certificate pool.
 
 definitions:
   bundle_id: &bundle_id no.strikearc.app
@@ -31,20 +63,28 @@ workflows:
       # Reuses the existing team-level App Store Connect API key
       # `ryddy-asc-key` (Key ID JQVPW4D944) — same key that already signs +
       # publishes strikearc, strikearc-3.0, wool-app and ryddy for team
-      # PL9G26C26C. Codemagic injects key/issuer/key-id for both signing
-      # and the TestFlight publish step; no secrets live in this file.
+      # PL9G26C26C. Used here for the TestFlight publish step and the
+      # latest-build-number lookup (NOT for cert creation any more).
       app_store_connect: ryddy-asc-key
 
     environment:
-      # Fetch one persistent, uploaded Apple Distribution certificate and its
-      # matching App Store profile. The workflow never creates or revokes team
-      # certificates during a build.
+      # ios_signing lives here, nested under environment — Codemagic's
+      # schema rejects it as a top-level workflow key ("extra fields not
+      # permitted"). Verified live against Codemagic's own validator
+      # 2026-08-10 after the first push failed silently (no build queued).
+      #
+      # Profile reference keeps the .mobileprovision suffix: Codemagic used
+      # the uploaded filename verbatim as the reference name (no separate
+      # rename step like the certificate upload has). Confirmed via build
+      # #35's actual error message, which listed the exact available names.
       ios_signing:
-        distribution_type: app_store
-        bundle_identifier: *bundle_id
+        certificates:
+          - flightglass_distribution_20260810
+        provisioning_profiles:
+          - flightglass_appstore_20260810.mobileprovision
       groups:
-        # Create this Codemagic group with the public
-        # REVENUECAT_IOS_PUBLIC_SDK_KEY value from Flightglass in RevenueCat.
+        # Contains the public REVENUECAT_IOS_PUBLIC_SDK_KEY value for the
+        # Flightglass RevenueCat app. No store credential lives in Git.
         - revenuecat-flightglass
       vars:
         BUNDLE_ID: *bundle_id
@@ -143,13 +183,10 @@ workflows:
           cd ios/App
           agvtool new-version -all "$NEXT"
 
-      - name: Initialize keychain
-        script: |
-          keychain initialize
-
-      - name: Add certificates to keychain
-        script: |
-          keychain add-certificates
+      # NOTE: no manual certificate generation, revocation, or keychain-install
+      # steps remain. The `ios_signing:` block above makes Codemagic install the
+      # named certificate + profile automatically before scripts run, without
+      # touching any other certificate on the team.
 
       - name: Use profiles in Xcode project
         script: |

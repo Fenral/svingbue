@@ -96,7 +96,10 @@ test('Codemagic is manual-only and refuses ambiguous billing or build-number sta
   assert.match(yaml, /node scripts\/generate-ios-assets\.mjs/);
   assert.doesNotMatch(yaml, /capacitor-assets/);
   assert.match(yaml, /node scripts\/verify-generated-ios-assets\.mjs/);
-  assert.match(yaml, /ios_signing:[\s\S]*distribution_type: app_store[\s\S]*bundle_identifier: \*bundle_id/);
+  assert.match(yaml, /environment:[\s\S]*ios_signing:[\s\S]*certificates:[\s\S]*- flightglass_distribution_20260810/);
+  assert.match(yaml, /provisioning_profiles:[\s\S]*- flightglass_appstore_20260810\.mobileprovision/);
+  assert.doesNotMatch(yaml, /distribution_type:\s*app_store|bundle_identifier:\s*\*bundle_id/);
+  assert.doesNotMatch(yaml, /- name: (?:Initialize keychain|Add certificates to keychain)/);
   assert.match(yaml, /^\s+node:\s+24\s*$/m);
   assert.match(yaml, /xcode: 26\.6/);
   assert.doesNotMatch(yaml, /openssl genrsa|fetch-signing-files|certificate-key|--create/);
