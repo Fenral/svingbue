@@ -95,14 +95,14 @@ test('Home ships only local, canonical assets required by Phase 2', () => {
 });
 
 test('Home audit covers the two target portrait sizes and both motion modes', () => {
-  const surface = manifest.surfaces.find(({ id }) => id === 'home');
+  const surface = manifest.surfaces.find(({ id }) => id === 'home-ready');
   assert.ok(surface);
   assert.deepEqual(surface.viewportIds, ['portrait-wide', 'portrait-compact']);
   assert.deepEqual(surface.requiredSelectors, [
     'body[data-home-experience="learning-tour"]',
-    '[data-home-main]',
+    '#homeMain',
     '#homeEmpty',
-    '#onboarding',
+    '#startFirstShot',
   ]);
-  assert.equal(surface.primaryJob, 'Understand familiar launch-monitor inputs, see one modelled relationship, and choose where to explore it.');
+  assert.equal(surface.primaryJob, 'Resume a calm Home without replaying onboarding.');
 });

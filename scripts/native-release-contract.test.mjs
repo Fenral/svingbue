@@ -236,6 +236,15 @@ test('GitHub runs the exact candidate through the full risk gate without fabrica
   assert.match(workflow, /npm-audit-all\.json/);
   assert.match(workflow, /npm-audit-production\.json/);
   assert.match(workflow, /npm-audit-tools\.json/);
+  assert.match(workflow, /name: Reset UX verification evidence workspace[\s\S]*rm -rf outputs\/flightglass-ux\/verify/);
+  assert.match(
+    workflow,
+    /name: Collect immutable UX verification evidence[\s\S]*outputs\/flightglass-ux\/verify-report\.json[\s\S]*outputs\/flightglass-ux\/verify-report\.md[\s\S]*outputs\/flightglass-ux\/verify\/\*\.png/,
+  );
+  assert.match(workflow, /ux-verify-files\.json/);
+  assert.match(workflow, /sha256sum "\$file"/);
+  assert.match(workflow, /diff -u <\(printf '%s\\n' "\$\{expected_screenshots\[@\]\}"\) <\(printf '%s\\n' "\$\{actual_screenshots\[@\]\}"\)/);
+  assert.match(workflow, /uxVerify:\s*\{[\s\S]*inventory: \$uxVerifyFiles/);
   assert.match(workflow, /path: \$\{\{ runner\.temp \}\}\/flightglass-v1-evidence\//);
   assert.match(workflow, /if-no-files-found: error/);
   assert.match(workflow, /name: Upload immutable release evidence[\s\S]*if: always\(\)/);
@@ -248,6 +257,8 @@ test('GitHub runs the exact candidate through the full risk gate without fabrica
   const release = pkg.scripts['verify:v1:release'];
   for (const required of [
     'verify:v1:source',
+    'test:connections',
+    'ux:verify',
     'test:phase2:chromium',
     'test:phase2:webkit',
     'test:phase2:phone',
@@ -261,10 +272,15 @@ test('GitHub runs the exact candidate through the full risk gate without fabrica
   const source = pkg.scripts['verify:v1:source'];
   for (const required of [
     'test:gate',
+    'test:ux-audit',
     'test:native-release',
     'test:store-release',
     'test:release-evidence',
   ]) assert.match(source, new RegExp(required.replaceAll(':', '\\:')));
+  assert.equal(
+    pkg.scripts['test:ux-audit'],
+    'node --test scripts/flightglass-ux.test.mjs && npm run ux:manifest',
+  );
   assert.equal(
     pkg.scripts['verify:v1:onboarding-evidence'],
     'node scripts/release-evidence-onboarding.mjs',

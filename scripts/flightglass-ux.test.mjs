@@ -1,13 +1,14 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 import {
   loadManifest,
   validateManifest,
+  validateFixture,
   evaluateSnapshot,
+  countBlockingFindings,
   normalizeResourceErrors,
   shouldIgnoreResourceFailure,
   reportFileStem,
@@ -17,19 +18,24 @@ import {
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const manifestPath = join(ROOT, 'config', 'flightglass-surfaces.json');
 
-test('manifest defines every owner-named surface with a 90+ target', () => {
+test('manifest defines the current V1 shipping surfaces and states', () => {
   const manifest = loadManifest(manifestPath);
   const result = validateManifest(manifest, ROOT);
   assert.deepEqual(result.errors, []);
   assert.deepEqual(
     manifest.surfaces.map((surface) => surface.id),
     [
-      'home', 'range', 'visualise', 'outcome', 'compare',
-      'geometry-3d', 'strike-window-2d', 'academy-overview',
-      'academy-lesson', 'paywall'
+      'home-ready', 'onboarding-opening-intro', 'onboarding-live-step-3',
+      'onboarding-map-step-4', 'connections', 'range-outcome-default',
+      'range-input-change-input', 'range-side', 'range-top', 'studio-face',
+      'studio-dtl', 'studio-strike', 'guide-browse', 'guide-answer-backspin',
+      'guide-lab', 'paywall', 'support', 'terms', 'privacy'
     ]
   );
   assert.ok(manifest.surfaces.every((surface) => surface.targetScore >= 90));
+  assert.ok(manifest.surfaces.every((surface) => surface.sourceType.startsWith('shipping')));
+  assert.ok(manifest.surfaces.every((surface) => surface.baselineScore === null
+    || Number.isFinite(surface.baselineScore)));
 });
 
 test('manifest maps every surface to existing files and target viewports', () => {
@@ -40,74 +46,51 @@ test('manifest maps every surface to existing files and target viewports', () =>
   assert.ok(manifest.surfaces.every((surface) => surface.references.length >= 1));
 });
 
-test('Academy overview audit targets the shipping outcome Home', () => {
+test('each manifest fixture uses only deterministic storage, click and wait primitives', () => {
   const manifest = loadManifest(manifestPath);
-  const overview = manifest.surfaces.find((surface) => surface.id === 'academy-overview');
-  assert.deepEqual(overview.requiredSelectors, [
-    '#app',
-    '[data-academy-home]',
-    '.academy-home__hero'
-  ]);
-});
-
-test('Backspin reference lesson targets 96 before Academy rollout', () => {
-  const manifest = loadManifest(manifestPath);
-  const lesson = manifest.surfaces.find((surface) => surface.id === 'academy-lesson');
-  assert.equal(lesson.targetScore, 96);
-  // EV-NAT-04: the audit contract covers Mission, Lab, Mastery AND Result.
-  assert.deepEqual(lesson.requiredSelectors, [
-    '#nativeLesson',
-    '#missionStageBuild',
-    '#backspinTruth',
-    '#labRange',
-    '#masteryTask',
-    '#nativeLessonResult'
-  ]);
-});
-
-test('copy-web keeps deferred Academy source out of the native v1 payload', () => {
-  const copyResult = spawnSync(process.execPath, [join(ROOT, 'scripts', 'copy-web.mjs')], {
-    encoding: 'utf8'
-  });
-  assert.equal(copyResult.status, 0, copyResult.stderr || copyResult.stdout);
-  const academyEntries = readdirSync(join(ROOT, 'www'))
-    .filter((name) => name === 'academy.html' || name.startsWith('academy-'));
-  assert.deepEqual(academyEntries, [], 'Academy is source-only until v2');
-  assert.equal(existsSync(join(ROOT, 'www', 'assets', 'audio', 'academy')), false);
-  assert.equal(existsSync(join(ROOT, 'www', 'assets', 'mission-backspin.jpg')), false);
-  assert.equal(existsSync(join(ROOT, 'www', 'assets', 'rw-backspin-green-bite.jpg')), false);
-  assert.equal(existsSync(join(ROOT, 'academy.html')), true, 'deferred Academy source stays in the repo');
-});
-
-test('instrument typography tokens: one font pair, no ad-hoc families in lesson CSS', () => {
-  // EV-TYPO-04: the font pair lives once in the token file; the lesson
-  // stylesheet may only reference tokens (var(...)) or inherit.
-  const lessonCss = readFileSync(join(ROOT, 'academy-native-lesson.css'), 'utf8');
-  const literalFamilies = [...lessonCss.matchAll(/font-family\s*:\s*([^;}]+)[;}]/g)]
-    .map((match) => match[1].trim().replace(/\s*!important$/, ''))
-    .filter((value) => !value.startsWith('var(') && value !== 'inherit');
-  assert.deepEqual(literalFamilies, [],
-    'lesson CSS must not declare ad-hoc font stacks — use the token file');
-
-  const tokens = readFileSync(join(ROOT, 'sa-p3.css'), 'utf8');
-  assert.equal([...tokens.matchAll(/--font-ui\s*:/g)].length, 1,
-    'exactly one UI font definition in the token file');
-  assert.equal([...tokens.matchAll(/--font-mono\s*:/g)].length, 1,
-    'exactly one truth mono definition in the token file');
-});
-
-test('instrument render signature: no glow, gradient, shadow or filter in the lesson', () => {
-  // EV-REN-01: the trace is an instrument, not an illustration. Elevation
-  // and rings are drawn with borders/outlines, bands with solid plates.
-  const lessonCss = readFileSync(join(ROOT, 'academy-native-lesson.css'), 'utf8');
-  for (const forbidden of ['box-shadow', 'text-shadow', '-gradient(', 'backdrop-filter', 'filter:']) {
-    assert.equal(lessonCss.includes(forbidden), false,
-      `"${forbidden}" must not appear in lesson CSS`);
+  for (const surface of manifest.surfaces) {
+    assert.deepEqual(validateFixture(surface.fixture, surface.id), []);
   }
-  const rendererSource = readFileSync(join(ROOT, 'academy-native-lesson.js'), 'utf8');
-  assert.doesNotMatch(rendererSource,
-    /createLinearGradient|createRadialGradient|shadowBlur|shadowColor|context\.filter/,
-    'canvas code must not paint gradients, glows or filters');
+});
+
+test('fixture validation rejects arbitrary evaluation and unsupported storage', () => {
+  assert.deepEqual(validateFixture({ actions: [{ type: 'evaluate', source: 'alert(1)' }] }, 'unsafe'), [
+    'unsafe: fixture action 1 must use click or wait'
+  ]);
+  assert.deepEqual(validateFixture({ storage: [{ area: 'cookie', key: 'x', value: 'y' }] }, 'unsafe'), [
+    'unsafe: fixture storage 1 has invalid area'
+  ]);
+});
+
+test('manifest rejects non-shipping source types', () => {
+  const manifest = loadManifest(manifestPath);
+  const invalid = structuredClone(manifest);
+  invalid.surfaces[0].sourceType = 'reference';
+  assert.ok(validateManifest(invalid, ROOT).errors.includes('home-ready: sourceType must equal shipping'));
+});
+
+test('motion-specific selectors are validated and keep reduced opening evidence truthful', () => {
+  const manifest = loadManifest(manifestPath);
+  const opening = manifest.surfaces.find((surface) => surface.id === 'onboarding-opening-intro');
+  assert.deepEqual(opening.requiredSelectorsByMotion, {
+    normal: ['#saSplash[open]', '#saSplashSkip'],
+    reduced: ['#homeMain']
+  });
+
+  const invalid = structuredClone(manifest);
+  invalid.surfaces[1].requiredSelectorsByMotion = { sideways: ['#saSplash'] };
+  assert.ok(validateManifest(invalid, ROOT).errors.some(error => error.includes('invalid mode sideways')));
+});
+
+test('Range outcome default keeps the carry readout as a required visible selector', () => {
+  const manifest = loadManifest(manifestPath);
+  const range = manifest.surfaces.find((surface) => surface.id === 'range-outcome-default');
+  assert.deepEqual(range.requiredSelectors, [
+    '#stage[data-lens="outcome"][data-range-mode="shot"]',
+    '#shotBrief',
+    '#fCarryNum',
+    '#changeInput'
+  ]);
 });
 
 test('snapshot evaluation separates critical failures from improvement findings', () => {
@@ -215,6 +198,24 @@ test('markdown report names scores, criticals and screenshot evidence', () => {
   assert.match(markdown, /404 .*missing\.glb/);
 });
 
+test('verify blocks on design-system floors while baseline remains advisory', () => {
+  const report = { results: [{ critical: [], improvements: ['1 interactive target below 44 px'] }] };
+  assert.equal(countBlockingFindings(report, 'baseline'), 0);
+  assert.equal(countBlockingFindings(report, 'verify'), 1);
+});
+
+test('markdown report labels missing historical scores as unscored', () => {
+  const markdown = renderMarkdownReport({
+    generatedAt: '2026-08-18T09:00:00.000Z',
+    mode: 'verify',
+    results: [{
+      surfaceId: 'connections', viewportId: 'portrait-wide', baselineScore: null,
+      targetScore: 90, screenshot: 'verify/connections.png', critical: [], improvements: [],
+    }]
+  });
+  assert.match(markdown, /unscored -> 90/);
+});
+
 test('audit CLI validates the manifest without launching a browser', () => {
   const run = spawnSync(
     process.execPath,
@@ -224,7 +225,7 @@ test('audit CLI validates the manifest without launching a browser', () => {
   assert.equal(run.status, 0, run.stderr);
   const payload = JSON.parse(run.stdout);
   assert.equal(payload.valid, true);
-  assert.equal(payload.surfaceCount, 10);
+  assert.equal(payload.surfaceCount, 19);
   assert.equal(payload.viewportCount, 4);
 });
 

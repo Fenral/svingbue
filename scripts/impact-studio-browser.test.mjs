@@ -204,6 +204,13 @@ for (const viewport of [{ width: 568, height: 320 }, { width: 812, height: 375 }
     const contactBox = await page.locator('#btnContact').boundingBox();
     assert.ok(contactBox.y + contactBox.height <= stageBox.y + stageBox.height + 1,
       `contact rail escapes the stage at ${viewport.width}x${viewport.height}`);
+    const controlsBox = await page.locator('.controls').boundingBox();
+    const sliderBox = await page.locator('.sliderZone').boundingBox();
+    const navBox = await page.locator('.sa-app-nav').boundingBox();
+    assert.ok(controlsBox.y + controlsBox.height <= navBox.y + 1,
+      `Studio controls overlap the app navigation at ${viewport.width}x${viewport.height}`);
+    assert.ok(sliderBox.y + sliderBox.height <= navBox.y + 1,
+      `Studio slider overlaps the app navigation at ${viewport.width}x${viewport.height}`);
     await capture(page, `face--${viewport.width}x${viewport.height}`);
     assert.deepEqual(errors, []);
     await browserContext.close();
@@ -216,9 +223,17 @@ test(`${ENGINE}: Studio honors reduced motion after settling`, async () => {
     reducedMotion: 'reduce',
   });
   await page.waitForTimeout(350);
+  assert.equal(await page.locator('#range').getAttribute('aria-label'), 'Ball position');
   const running = await page.evaluate(() => document.getAnimations()
     .filter(animation => animation.playState === 'running').length);
   assert.equal(running, 0);
+  await page.locator('#range').fill('5');
+  await page.waitForTimeout(80);
+  const firstFrame = await page.locator('#scene').evaluate(canvas => canvas.toDataURL());
+  await page.waitForTimeout(1100);
+  const settledFrame = await page.locator('#scene').evaluate(canvas => canvas.toDataURL());
+  assert.equal(settledFrame, firstFrame,
+    'reduced motion must render the final Studio state without a timed canvas fade');
   await capture(page, 'face--812x375--reduce');
   assert.deepEqual(errors, []);
   await browserContext.close();

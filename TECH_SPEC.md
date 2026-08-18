@@ -89,7 +89,15 @@ The native app has four primary destinations:
 | Home | `index.html` | Tell the golfer what to do next |
 | Range | `impact.html` | Change one input and see flight immediately |
 | Impact Studio | `impact-studio.html` | Understand one cause/effect relationship |
-| Jarvis | `jarvis.html` | Choose one guided question and get one next action |
+| Flightglass Guide | `jarvis.html` | Choose one guided question and get one next action |
+
+`connections.html` is an owner-approved secondary v1 instrument: a portrait,
+immersive relationship map that explains which parameters shape or follow one
+another without adding a fifth primary navigation destination. It MUST use the
+canonical design tokens, keep every parameter directly selectable, expose no
+bottom navigation, and return to Home through one explicit 44 px back control.
+Its eventual Home entry belongs to the separately commissioned Home redesign;
+the release candidate MUST NOT invent a temporary parallel navigation pattern.
 
 Every destination MUST expose the same shared app identity, current-location
 state, safe-area behavior, focus treatment and route semantics. Range may use a

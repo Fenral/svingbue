@@ -1,15 +1,15 @@
 {
-  "generatedAt": "2026-07-13T08:01:03.930Z",
+  "generatedAt": "2026-08-18T16:33:19.507Z",
   "mode": "baseline",
   "results": [
     {
-      "surfaceId": "home",
-      "label": "Home",
-      "viewportId": "landscape-wide",
+      "surfaceId": "home-ready",
+      "label": "Home · ready",
+      "viewportId": "portrait-wide",
       "motion": "normal",
       "baselineScore": 67,
       "targetScore": 90,
-      "screenshot": "baseline/home--landscape-wide--normal.png",
+      "screenshot": "baseline/home-ready--portrait-wide--normal.png",
       "critical": [],
       "improvements": [],
       "snapshot": {
@@ -24,13 +24,13 @@
       }
     },
     {
-      "surfaceId": "home",
-      "label": "Home",
-      "viewportId": "landscape-wide",
+      "surfaceId": "home-ready",
+      "label": "Home · ready",
+      "viewportId": "portrait-wide",
       "motion": "reduced",
       "baselineScore": 67,
       "targetScore": 90,
-      "screenshot": "baseline/home--landscape-wide--reduced.png",
+      "screenshot": "baseline/home-ready--portrait-wide--reduced.png",
       "critical": [],
       "improvements": [],
       "snapshot": {
@@ -45,13 +45,13 @@
       }
     },
     {
-      "surfaceId": "home",
-      "label": "Home",
-      "viewportId": "landscape-compact",
+      "surfaceId": "home-ready",
+      "label": "Home · ready",
+      "viewportId": "portrait-compact",
       "motion": "normal",
       "baselineScore": 67,
       "targetScore": 90,
-      "screenshot": "baseline/home--landscape-compact--normal.png",
+      "screenshot": "baseline/home-ready--portrait-compact--normal.png",
       "critical": [],
       "improvements": [],
       "snapshot": {
@@ -66,13 +66,13 @@
       }
     },
     {
-      "surfaceId": "home",
-      "label": "Home",
-      "viewportId": "landscape-compact",
+      "surfaceId": "home-ready",
+      "label": "Home · ready",
+      "viewportId": "portrait-compact",
       "motion": "reduced",
       "baselineScore": 67,
       "targetScore": 90,
-      "screenshot": "baseline/home--landscape-compact--reduced.png",
+      "screenshot": "baseline/home-ready--portrait-compact--reduced.png",
       "critical": [],
       "improvements": [],
       "snapshot": {
@@ -87,18 +87,351 @@
       }
     },
     {
-      "surfaceId": "range",
-      "label": "Impact / Range",
-      "viewportId": "landscape-wide",
+      "surfaceId": "onboarding-opening-intro",
+      "label": "Onboarding · opening / intro",
+      "viewportId": "portrait-wide",
+      "motion": "normal",
+      "baselineScore": null,
+      "targetScore": 90,
+      "screenshot": "baseline/onboarding-opening-intro--portrait-wide--normal.png",
+      "critical": [],
+      "improvements": [],
+      "snapshot": {
+        "httpStatus": 200,
+        "consoleErrors": [],
+        "pageErrors": [],
+        "resourceErrors": [],
+        "horizontalOverflowPx": 0,
+        "missingSelectors": [],
+        "smallTargets": [],
+        "clippedText": []
+      }
+    },
+    {
+      "surfaceId": "onboarding-opening-intro",
+      "label": "Onboarding · opening / intro",
+      "viewportId": "portrait-wide",
+      "motion": "reduced",
+      "baselineScore": null,
+      "targetScore": 90,
+      "screenshot": "baseline/onboarding-opening-intro--portrait-wide--reduced.png",
+      "critical": [],
+      "improvements": [],
+      "snapshot": {
+        "httpStatus": 200,
+        "consoleErrors": [],
+        "pageErrors": [],
+        "resourceErrors": [],
+        "horizontalOverflowPx": 0,
+        "missingSelectors": [],
+        "smallTargets": [],
+        "clippedText": []
+      }
+    },
+    {
+      "surfaceId": "onboarding-opening-intro",
+      "label": "Onboarding · opening / intro",
+      "viewportId": "portrait-compact",
+      "motion": "normal",
+      "baselineScore": null,
+      "targetScore": 90,
+      "screenshot": "baseline/onboarding-opening-intro--portrait-compact--normal.png",
+      "critical": [],
+      "improvements": [],
+      "snapshot": {
+        "httpStatus": 200,
+        "consoleErrors": [],
+        "pageErrors": [],
+        "resourceErrors": [],
+        "horizontalOverflowPx": 0,
+        "missingSelectors": [],
+        "smallTargets": [],
+        "clippedText": []
+      }
+    },
+    {
+      "surfaceId": "onboarding-opening-intro",
+      "label": "Onboarding · opening / intro",
+      "viewportId": "portrait-compact",
+      "motion": "reduced",
+      "baselineScore": null,
+      "targetScore": 90,
+      "screenshot": "baseline/onboarding-opening-intro--portrait-compact--reduced.png",
+      "critical": [],
+      "improvements": [],
+      "snapshot": {
+        "httpStatus": 200,
+        "consoleErrors": [],
+        "pageErrors": [],
+        "resourceErrors": [],
+        "horizontalOverflowPx": 0,
+        "missingSelectors": [],
+        "smallTargets": [],
+        "clippedText": []
+      }
+    },
+    {
+      "surfaceId": "onboarding-live-step-3",
+      "label": "Onboarding · live step 3",
+      "viewportId": "portrait-wide",
+      "motion": "normal",
+      "baselineScore": null,
+      "targetScore": 90,
+      "screenshot": "baseline/onboarding-live-step-3--portrait-wide--normal.png",
+      "critical": [],
+      "improvements": [],
+      "snapshot": {
+        "httpStatus": 200,
+        "consoleErrors": [],
+        "pageErrors": [],
+        "resourceErrors": [],
+        "horizontalOverflowPx": 0,
+        "missingSelectors": [],
+        "smallTargets": [],
+        "clippedText": []
+      }
+    },
+    {
+      "surfaceId": "onboarding-live-step-3",
+      "label": "Onboarding · live step 3",
+      "viewportId": "portrait-wide",
+      "motion": "reduced",
+      "baselineScore": null,
+      "targetScore": 90,
+      "screenshot": "baseline/onboarding-live-step-3--portrait-wide--reduced.png",
+      "critical": [],
+      "improvements": [],
+      "snapshot": {
+        "httpStatus": 200,
+        "consoleErrors": [],
+        "pageErrors": [],
+        "resourceErrors": [],
+        "horizontalOverflowPx": 0,
+        "missingSelectors": [],
+        "smallTargets": [],
+        "clippedText": []
+      }
+    },
+    {
+      "surfaceId": "onboarding-live-step-3",
+      "label": "Onboarding · live step 3",
+      "viewportId": "portrait-compact",
+      "motion": "normal",
+      "baselineScore": null,
+      "targetScore": 90,
+      "screenshot": "baseline/onboarding-live-step-3--portrait-compact--normal.png",
+      "critical": [],
+      "improvements": [],
+      "snapshot": {
+        "httpStatus": 200,
+        "consoleErrors": [],
+        "pageErrors": [],
+        "resourceErrors": [],
+        "horizontalOverflowPx": 0,
+        "missingSelectors": [],
+        "smallTargets": [],
+        "clippedText": []
+      }
+    },
+    {
+      "surfaceId": "onboarding-live-step-3",
+      "label": "Onboarding · live step 3",
+      "viewportId": "portrait-compact",
+      "motion": "reduced",
+      "baselineScore": null,
+      "targetScore": 90,
+      "screenshot": "baseline/onboarding-live-step-3--portrait-compact--reduced.png",
+      "critical": [],
+      "improvements": [],
+      "snapshot": {
+        "httpStatus": 200,
+        "consoleErrors": [],
+        "pageErrors": [],
+        "resourceErrors": [],
+        "horizontalOverflowPx": 0,
+        "missingSelectors": [],
+        "smallTargets": [],
+        "clippedText": []
+      }
+    },
+    {
+      "surfaceId": "onboarding-map-step-4",
+      "label": "Onboarding · map step 4",
+      "viewportId": "portrait-wide",
+      "motion": "normal",
+      "baselineScore": null,
+      "targetScore": 90,
+      "screenshot": "baseline/onboarding-map-step-4--portrait-wide--normal.png",
+      "critical": [],
+      "improvements": [],
+      "snapshot": {
+        "httpStatus": 200,
+        "consoleErrors": [],
+        "pageErrors": [],
+        "resourceErrors": [],
+        "horizontalOverflowPx": 0,
+        "missingSelectors": [],
+        "smallTargets": [],
+        "clippedText": []
+      }
+    },
+    {
+      "surfaceId": "onboarding-map-step-4",
+      "label": "Onboarding · map step 4",
+      "viewportId": "portrait-wide",
+      "motion": "reduced",
+      "baselineScore": null,
+      "targetScore": 90,
+      "screenshot": "baseline/onboarding-map-step-4--portrait-wide--reduced.png",
+      "critical": [],
+      "improvements": [],
+      "snapshot": {
+        "httpStatus": 200,
+        "consoleErrors": [],
+        "pageErrors": [],
+        "resourceErrors": [],
+        "horizontalOverflowPx": 0,
+        "missingSelectors": [],
+        "smallTargets": [],
+        "clippedText": []
+      }
+    },
+    {
+      "surfaceId": "onboarding-map-step-4",
+      "label": "Onboarding · map step 4",
+      "viewportId": "portrait-compact",
+      "motion": "normal",
+      "baselineScore": null,
+      "targetScore": 90,
+      "screenshot": "baseline/onboarding-map-step-4--portrait-compact--normal.png",
+      "critical": [],
+      "improvements": [],
+      "snapshot": {
+        "httpStatus": 200,
+        "consoleErrors": [],
+        "pageErrors": [],
+        "resourceErrors": [],
+        "horizontalOverflowPx": 0,
+        "missingSelectors": [],
+        "smallTargets": [],
+        "clippedText": []
+      }
+    },
+    {
+      "surfaceId": "onboarding-map-step-4",
+      "label": "Onboarding · map step 4",
+      "viewportId": "portrait-compact",
+      "motion": "reduced",
+      "baselineScore": null,
+      "targetScore": 90,
+      "screenshot": "baseline/onboarding-map-step-4--portrait-compact--reduced.png",
+      "critical": [],
+      "improvements": [],
+      "snapshot": {
+        "httpStatus": 200,
+        "consoleErrors": [],
+        "pageErrors": [],
+        "resourceErrors": [],
+        "horizontalOverflowPx": 0,
+        "missingSelectors": [],
+        "smallTargets": [],
+        "clippedText": []
+      }
+    },
+    {
+      "surfaceId": "connections",
+      "label": "Connections",
+      "viewportId": "portrait-wide",
+      "motion": "normal",
+      "baselineScore": 58,
+      "targetScore": 90,
+      "screenshot": "baseline/connections--portrait-wide--normal.png",
+      "critical": [],
+      "improvements": [],
+      "snapshot": {
+        "httpStatus": 200,
+        "consoleErrors": [],
+        "pageErrors": [],
+        "resourceErrors": [],
+        "horizontalOverflowPx": 0,
+        "missingSelectors": [],
+        "smallTargets": [],
+        "clippedText": []
+      }
+    },
+    {
+      "surfaceId": "connections",
+      "label": "Connections",
+      "viewportId": "portrait-wide",
+      "motion": "reduced",
+      "baselineScore": 58,
+      "targetScore": 90,
+      "screenshot": "baseline/connections--portrait-wide--reduced.png",
+      "critical": [],
+      "improvements": [],
+      "snapshot": {
+        "httpStatus": 200,
+        "consoleErrors": [],
+        "pageErrors": [],
+        "resourceErrors": [],
+        "horizontalOverflowPx": 0,
+        "missingSelectors": [],
+        "smallTargets": [],
+        "clippedText": []
+      }
+    },
+    {
+      "surfaceId": "connections",
+      "label": "Connections",
+      "viewportId": "portrait-compact",
+      "motion": "normal",
+      "baselineScore": 58,
+      "targetScore": 90,
+      "screenshot": "baseline/connections--portrait-compact--normal.png",
+      "critical": [],
+      "improvements": [],
+      "snapshot": {
+        "httpStatus": 200,
+        "consoleErrors": [],
+        "pageErrors": [],
+        "resourceErrors": [],
+        "horizontalOverflowPx": 0,
+        "missingSelectors": [],
+        "smallTargets": [],
+        "clippedText": []
+      }
+    },
+    {
+      "surfaceId": "connections",
+      "label": "Connections",
+      "viewportId": "portrait-compact",
+      "motion": "reduced",
+      "baselineScore": 58,
+      "targetScore": 90,
+      "screenshot": "baseline/connections--portrait-compact--reduced.png",
+      "critical": [],
+      "improvements": [],
+      "snapshot": {
+        "httpStatus": 200,
+        "consoleErrors": [],
+        "pageErrors": [],
+        "resourceErrors": [],
+        "horizontalOverflowPx": 0,
+        "missingSelectors": [],
+        "smallTargets": [],
+        "clippedText": []
+      }
+    },
+    {
+      "surfaceId": "range-outcome-default",
+      "label": "Range · outcome / default",
+      "viewportId": "portrait-wide",
       "motion": "normal",
       "baselineScore": 63,
       "targetScore": 90,
-      "screenshot": "baseline/range--landscape-wide--normal.png",
+      "screenshot": "baseline/range-outcome-default--portrait-wide--normal.png",
       "critical": [],
-      "improvements": [
-        "1 potentially clipped text element(s)",
-        "5 interactive target(s) below 44 px"
-      ],
+      "improvements": [],
       "snapshot": {
         "httpStatus": 200,
         "consoleErrors": [],
@@ -106,54 +439,20 @@
         "resourceErrors": [],
         "horizontalOverflowPx": 0,
         "missingSelectors": [],
-        "smallTargets": [
-          {
-            "selector": "a.home",
-            "width": 30,
-            "height": 30
-          },
-          {
-            "selector": "a.tab",
-            "width": 62,
-            "height": 30
-          },
-          {
-            "selector": "a.tab",
-            "width": 47,
-            "height": 30
-          },
-          {
-            "selector": "#playFlight",
-            "width": 84,
-            "height": 30
-          },
-          {
-            "selector": "#helpBtn",
-            "width": 30,
-            "height": 30
-          }
-        ],
-        "clippedText": [
-          {
-            "selector": "#speed_help",
-            "text": "Global club-head speed in miles per hour. Drives ball speed and carry."
-          }
-        ]
+        "smallTargets": [],
+        "clippedText": []
       }
     },
     {
-      "surfaceId": "range",
-      "label": "Impact / Range",
-      "viewportId": "landscape-wide",
+      "surfaceId": "range-outcome-default",
+      "label": "Range · outcome / default",
+      "viewportId": "portrait-wide",
       "motion": "reduced",
       "baselineScore": 63,
       "targetScore": 90,
-      "screenshot": "baseline/range--landscape-wide--reduced.png",
+      "screenshot": "baseline/range-outcome-default--portrait-wide--reduced.png",
       "critical": [],
-      "improvements": [
-        "1 potentially clipped text element(s)",
-        "5 interactive target(s) below 44 px"
-      ],
+      "improvements": [],
       "snapshot": {
         "httpStatus": 200,
         "consoleErrors": [],
@@ -161,54 +460,20 @@
         "resourceErrors": [],
         "horizontalOverflowPx": 0,
         "missingSelectors": [],
-        "smallTargets": [
-          {
-            "selector": "a.home",
-            "width": 30,
-            "height": 30
-          },
-          {
-            "selector": "a.tab",
-            "width": 62,
-            "height": 30
-          },
-          {
-            "selector": "a.tab",
-            "width": 47,
-            "height": 30
-          },
-          {
-            "selector": "#playFlight",
-            "width": 84,
-            "height": 30
-          },
-          {
-            "selector": "#helpBtn",
-            "width": 30,
-            "height": 30
-          }
-        ],
-        "clippedText": [
-          {
-            "selector": "#speed_help",
-            "text": "Global club-head speed in miles per hour. Drives ball speed and carry."
-          }
-        ]
+        "smallTargets": [],
+        "clippedText": []
       }
     },
     {
-      "surfaceId": "range",
-      "label": "Impact / Range",
-      "viewportId": "landscape-compact",
+      "surfaceId": "range-outcome-default",
+      "label": "Range · outcome / default",
+      "viewportId": "portrait-compact",
       "motion": "normal",
       "baselineScore": 63,
       "targetScore": 90,
-      "screenshot": "baseline/range--landscape-compact--normal.png",
+      "screenshot": "baseline/range-outcome-default--portrait-compact--normal.png",
       "critical": [],
-      "improvements": [
-        "1 potentially clipped text element(s)",
-        "5 interactive target(s) below 44 px"
-      ],
+      "improvements": [],
       "snapshot": {
         "httpStatus": 200,
         "consoleErrors": [],
@@ -216,468 +481,18 @@
         "resourceErrors": [],
         "horizontalOverflowPx": 0,
         "missingSelectors": [],
-        "smallTargets": [
-          {
-            "selector": "a.home",
-            "width": 30,
-            "height": 30
-          },
-          {
-            "selector": "a.tab",
-            "width": 62,
-            "height": 30
-          },
-          {
-            "selector": "a.tab",
-            "width": 47,
-            "height": 30
-          },
-          {
-            "selector": "#playFlight",
-            "width": 84,
-            "height": 30
-          },
-          {
-            "selector": "#helpBtn",
-            "width": 30,
-            "height": 30
-          }
-        ],
-        "clippedText": [
-          {
-            "selector": "#speed_help",
-            "text": "Global club-head speed in miles per hour. Drives ball speed and carry."
-          }
-        ]
+        "smallTargets": [],
+        "clippedText": []
       }
     },
     {
-      "surfaceId": "range",
-      "label": "Impact / Range",
-      "viewportId": "landscape-compact",
+      "surfaceId": "range-outcome-default",
+      "label": "Range · outcome / default",
+      "viewportId": "portrait-compact",
       "motion": "reduced",
       "baselineScore": 63,
       "targetScore": 90,
-      "screenshot": "baseline/range--landscape-compact--reduced.png",
-      "critical": [],
-      "improvements": [
-        "1 potentially clipped text element(s)",
-        "5 interactive target(s) below 44 px"
-      ],
-      "snapshot": {
-        "httpStatus": 200,
-        "consoleErrors": [],
-        "pageErrors": [],
-        "resourceErrors": [],
-        "horizontalOverflowPx": 0,
-        "missingSelectors": [],
-        "smallTargets": [
-          {
-            "selector": "a.home",
-            "width": 30,
-            "height": 30
-          },
-          {
-            "selector": "a.tab",
-            "width": 62,
-            "height": 30
-          },
-          {
-            "selector": "a.tab",
-            "width": 47,
-            "height": 30
-          },
-          {
-            "selector": "#playFlight",
-            "width": 84,
-            "height": 30
-          },
-          {
-            "selector": "#helpBtn",
-            "width": 30,
-            "height": 30
-          }
-        ],
-        "clippedText": [
-          {
-            "selector": "#speed_help",
-            "text": "Global club-head speed in miles per hour. Drives ball speed and carry."
-          }
-        ]
-      }
-    },
-    {
-      "surfaceId": "visualise",
-      "label": "Visualise",
-      "viewportId": "landscape-wide",
-      "motion": "normal",
-      "baselineScore": 81,
-      "targetScore": 90,
-      "screenshot": "baseline/visualise--landscape-wide--normal.png",
-      "critical": [],
-      "improvements": [
-        "5 interactive target(s) below 44 px"
-      ],
-      "snapshot": {
-        "httpStatus": 200,
-        "consoleErrors": [],
-        "pageErrors": [],
-        "resourceErrors": [],
-        "horizontalOverflowPx": 0,
-        "missingSelectors": [],
-        "smallTargets": [
-          {
-            "selector": "a.sa-strip__home.fTop__home",
-            "width": 30,
-            "height": 30
-          },
-          {
-            "selector": "#flightReplay",
-            "width": 91,
-            "height": 36
-          },
-          {
-            "selector": "#fGhostPill",
-            "width": 90,
-            "height": 36
-          },
-          {
-            "selector": "#fGhostClear",
-            "width": 36,
-            "height": 36
-          },
-          {
-            "selector": "#fPinBtn",
-            "width": 67,
-            "height": 36
-          }
-        ],
-        "clippedText": []
-      }
-    },
-    {
-      "surfaceId": "visualise",
-      "label": "Visualise",
-      "viewportId": "landscape-wide",
-      "motion": "reduced",
-      "baselineScore": 81,
-      "targetScore": 90,
-      "screenshot": "baseline/visualise--landscape-wide--reduced.png",
-      "critical": [],
-      "improvements": [
-        "1 potentially clipped text element(s)",
-        "5 interactive target(s) below 44 px"
-      ],
-      "snapshot": {
-        "httpStatus": 200,
-        "consoleErrors": [],
-        "pageErrors": [],
-        "resourceErrors": [],
-        "horizontalOverflowPx": 0,
-        "missingSelectors": [],
-        "smallTargets": [
-          {
-            "selector": "a.sa-strip__home.fTop__home",
-            "width": 30,
-            "height": 30
-          },
-          {
-            "selector": "#flightReplay",
-            "width": 91,
-            "height": 36
-          },
-          {
-            "selector": "#fGhostPill",
-            "width": 90,
-            "height": 36
-          },
-          {
-            "selector": "#fGhostClear",
-            "width": 36,
-            "height": 36
-          },
-          {
-            "selector": "#fPinBtn",
-            "width": 67,
-            "height": 36
-          }
-        ],
-        "clippedText": [
-          {
-            "selector": "#fCarryLive",
-            "text": "162 meters total, 16 meters left of centre — Draw"
-          }
-        ]
-      }
-    },
-    {
-      "surfaceId": "visualise",
-      "label": "Visualise",
-      "viewportId": "landscape-compact",
-      "motion": "normal",
-      "baselineScore": 81,
-      "targetScore": 90,
-      "screenshot": "baseline/visualise--landscape-compact--normal.png",
-      "critical": [],
-      "improvements": [
-        "5 interactive target(s) below 44 px"
-      ],
-      "snapshot": {
-        "httpStatus": 200,
-        "consoleErrors": [],
-        "pageErrors": [],
-        "resourceErrors": [],
-        "horizontalOverflowPx": 0,
-        "missingSelectors": [],
-        "smallTargets": [
-          {
-            "selector": "a.sa-strip__home.fTop__home",
-            "width": 30,
-            "height": 30
-          },
-          {
-            "selector": "#flightReplay",
-            "width": 91,
-            "height": 36
-          },
-          {
-            "selector": "#fGhostPill",
-            "width": 90,
-            "height": 36
-          },
-          {
-            "selector": "#fGhostClear",
-            "width": 36,
-            "height": 36
-          },
-          {
-            "selector": "#fPinBtn",
-            "width": 67,
-            "height": 36
-          }
-        ],
-        "clippedText": []
-      }
-    },
-    {
-      "surfaceId": "visualise",
-      "label": "Visualise",
-      "viewportId": "landscape-compact",
-      "motion": "reduced",
-      "baselineScore": 81,
-      "targetScore": 90,
-      "screenshot": "baseline/visualise--landscape-compact--reduced.png",
-      "critical": [],
-      "improvements": [
-        "1 potentially clipped text element(s)",
-        "5 interactive target(s) below 44 px"
-      ],
-      "snapshot": {
-        "httpStatus": 200,
-        "consoleErrors": [],
-        "pageErrors": [],
-        "resourceErrors": [],
-        "horizontalOverflowPx": 0,
-        "missingSelectors": [],
-        "smallTargets": [
-          {
-            "selector": "a.sa-strip__home.fTop__home",
-            "width": 30,
-            "height": 30
-          },
-          {
-            "selector": "#flightReplay",
-            "width": 91,
-            "height": 36
-          },
-          {
-            "selector": "#fGhostPill",
-            "width": 90,
-            "height": 36
-          },
-          {
-            "selector": "#fGhostClear",
-            "width": 36,
-            "height": 36
-          },
-          {
-            "selector": "#fPinBtn",
-            "width": 67,
-            "height": 36
-          }
-        ],
-        "clippedText": [
-          {
-            "selector": "#fCarryLive",
-            "text": "162 meters total, 16 meters left of centre — Draw"
-          }
-        ]
-      }
-    },
-    {
-      "surfaceId": "outcome",
-      "label": "Outcome",
-      "viewportId": "landscape-wide",
-      "motion": "normal",
-      "baselineScore": 72,
-      "targetScore": 90,
-      "screenshot": "baseline/outcome--landscape-wide--normal.png",
-      "critical": [],
-      "improvements": [
-        "3 interactive target(s) below 44 px"
-      ],
-      "snapshot": {
-        "httpStatus": 200,
-        "consoleErrors": [],
-        "pageErrors": [],
-        "resourceErrors": [],
-        "horizontalOverflowPx": 0,
-        "missingSelectors": [],
-        "smallTargets": [
-          {
-            "selector": "a.sa-strip__home",
-            "width": 30,
-            "height": 30
-          },
-          {
-            "selector": "#playFlight",
-            "width": 104,
-            "height": 30
-          },
-          {
-            "selector": "#helpBtn",
-            "width": 30,
-            "height": 30
-          }
-        ],
-        "clippedText": []
-      }
-    },
-    {
-      "surfaceId": "outcome",
-      "label": "Outcome",
-      "viewportId": "landscape-wide",
-      "motion": "reduced",
-      "baselineScore": 72,
-      "targetScore": 90,
-      "screenshot": "baseline/outcome--landscape-wide--reduced.png",
-      "critical": [],
-      "improvements": [
-        "3 interactive target(s) below 44 px"
-      ],
-      "snapshot": {
-        "httpStatus": 200,
-        "consoleErrors": [],
-        "pageErrors": [],
-        "resourceErrors": [],
-        "horizontalOverflowPx": 0,
-        "missingSelectors": [],
-        "smallTargets": [
-          {
-            "selector": "a.sa-strip__home",
-            "width": 30,
-            "height": 30
-          },
-          {
-            "selector": "#playFlight",
-            "width": 104,
-            "height": 30
-          },
-          {
-            "selector": "#helpBtn",
-            "width": 30,
-            "height": 30
-          }
-        ],
-        "clippedText": []
-      }
-    },
-    {
-      "surfaceId": "outcome",
-      "label": "Outcome",
-      "viewportId": "landscape-compact",
-      "motion": "normal",
-      "baselineScore": 72,
-      "targetScore": 90,
-      "screenshot": "baseline/outcome--landscape-compact--normal.png",
-      "critical": [],
-      "improvements": [
-        "3 interactive target(s) below 44 px"
-      ],
-      "snapshot": {
-        "httpStatus": 200,
-        "consoleErrors": [],
-        "pageErrors": [],
-        "resourceErrors": [],
-        "horizontalOverflowPx": 0,
-        "missingSelectors": [],
-        "smallTargets": [
-          {
-            "selector": "a.sa-strip__home",
-            "width": 30,
-            "height": 30
-          },
-          {
-            "selector": "#playFlight",
-            "width": 104,
-            "height": 30
-          },
-          {
-            "selector": "#helpBtn",
-            "width": 30,
-            "height": 30
-          }
-        ],
-        "clippedText": []
-      }
-    },
-    {
-      "surfaceId": "outcome",
-      "label": "Outcome",
-      "viewportId": "landscape-compact",
-      "motion": "reduced",
-      "baselineScore": 72,
-      "targetScore": 90,
-      "screenshot": "baseline/outcome--landscape-compact--reduced.png",
-      "critical": [],
-      "improvements": [
-        "3 interactive target(s) below 44 px"
-      ],
-      "snapshot": {
-        "httpStatus": 200,
-        "consoleErrors": [],
-        "pageErrors": [],
-        "resourceErrors": [],
-        "horizontalOverflowPx": 0,
-        "missingSelectors": [],
-        "smallTargets": [
-          {
-            "selector": "a.sa-strip__home",
-            "width": 30,
-            "height": 30
-          },
-          {
-            "selector": "#playFlight",
-            "width": 104,
-            "height": 30
-          },
-          {
-            "selector": "#helpBtn",
-            "width": 30,
-            "height": 30
-          }
-        ],
-        "clippedText": []
-      }
-    },
-    {
-      "surfaceId": "compare",
-      "label": "Compare / Ghosts",
-      "viewportId": "landscape-wide",
-      "motion": "normal",
-      "baselineScore": 78,
-      "targetScore": 90,
-      "screenshot": "baseline/compare--landscape-wide--normal.png",
+      "screenshot": "baseline/range-outcome-default--portrait-compact--reduced.png",
       "critical": [],
       "improvements": [],
       "snapshot": {
@@ -692,13 +507,13 @@
       }
     },
     {
-      "surfaceId": "compare",
-      "label": "Compare / Ghosts",
-      "viewportId": "landscape-wide",
-      "motion": "reduced",
-      "baselineScore": 78,
+      "surfaceId": "range-input-change-input",
+      "label": "Range · input after Change input",
+      "viewportId": "portrait-wide",
+      "motion": "normal",
+      "baselineScore": 63,
       "targetScore": 90,
-      "screenshot": "baseline/compare--landscape-wide--reduced.png",
+      "screenshot": "baseline/range-input-change-input--portrait-wide--normal.png",
       "critical": [],
       "improvements": [],
       "snapshot": {
@@ -713,13 +528,13 @@
       }
     },
     {
-      "surfaceId": "compare",
-      "label": "Compare / Ghosts",
-      "viewportId": "landscape-compact",
-      "motion": "normal",
-      "baselineScore": 78,
+      "surfaceId": "range-input-change-input",
+      "label": "Range · input after Change input",
+      "viewportId": "portrait-wide",
+      "motion": "reduced",
+      "baselineScore": 63,
       "targetScore": 90,
-      "screenshot": "baseline/compare--landscape-compact--normal.png",
+      "screenshot": "baseline/range-input-change-input--portrait-wide--reduced.png",
       "critical": [],
       "improvements": [],
       "snapshot": {
@@ -734,13 +549,13 @@
       }
     },
     {
-      "surfaceId": "compare",
-      "label": "Compare / Ghosts",
-      "viewportId": "landscape-compact",
-      "motion": "reduced",
-      "baselineScore": 78,
+      "surfaceId": "range-input-change-input",
+      "label": "Range · input after Change input",
+      "viewportId": "portrait-compact",
+      "motion": "normal",
+      "baselineScore": 63,
       "targetScore": 90,
-      "screenshot": "baseline/compare--landscape-compact--reduced.png",
+      "screenshot": "baseline/range-input-change-input--portrait-compact--normal.png",
       "critical": [],
       "improvements": [],
       "snapshot": {
@@ -755,390 +570,477 @@
       }
     },
     {
-      "surfaceId": "geometry-3d",
-      "label": "Geometry 3D",
+      "surfaceId": "range-input-change-input",
+      "label": "Range · input after Change input",
+      "viewportId": "portrait-compact",
+      "motion": "reduced",
+      "baselineScore": 63,
+      "targetScore": 90,
+      "screenshot": "baseline/range-input-change-input--portrait-compact--reduced.png",
+      "critical": [],
+      "improvements": [],
+      "snapshot": {
+        "httpStatus": 200,
+        "consoleErrors": [],
+        "pageErrors": [],
+        "resourceErrors": [],
+        "horizontalOverflowPx": 0,
+        "missingSelectors": [],
+        "smallTargets": [],
+        "clippedText": []
+      }
+    },
+    {
+      "surfaceId": "range-side",
+      "label": "Range · side",
+      "viewportId": "portrait-wide",
+      "motion": "normal",
+      "baselineScore": 63,
+      "targetScore": 90,
+      "screenshot": "baseline/range-side--portrait-wide--normal.png",
+      "critical": [],
+      "improvements": [],
+      "snapshot": {
+        "httpStatus": 200,
+        "consoleErrors": [],
+        "pageErrors": [],
+        "resourceErrors": [],
+        "horizontalOverflowPx": 0,
+        "missingSelectors": [],
+        "smallTargets": [],
+        "clippedText": []
+      }
+    },
+    {
+      "surfaceId": "range-side",
+      "label": "Range · side",
+      "viewportId": "portrait-wide",
+      "motion": "reduced",
+      "baselineScore": 63,
+      "targetScore": 90,
+      "screenshot": "baseline/range-side--portrait-wide--reduced.png",
+      "critical": [],
+      "improvements": [],
+      "snapshot": {
+        "httpStatus": 200,
+        "consoleErrors": [],
+        "pageErrors": [],
+        "resourceErrors": [],
+        "horizontalOverflowPx": 0,
+        "missingSelectors": [],
+        "smallTargets": [],
+        "clippedText": []
+      }
+    },
+    {
+      "surfaceId": "range-side",
+      "label": "Range · side",
+      "viewportId": "portrait-compact",
+      "motion": "normal",
+      "baselineScore": 63,
+      "targetScore": 90,
+      "screenshot": "baseline/range-side--portrait-compact--normal.png",
+      "critical": [],
+      "improvements": [],
+      "snapshot": {
+        "httpStatus": 200,
+        "consoleErrors": [],
+        "pageErrors": [],
+        "resourceErrors": [],
+        "horizontalOverflowPx": 0,
+        "missingSelectors": [],
+        "smallTargets": [],
+        "clippedText": []
+      }
+    },
+    {
+      "surfaceId": "range-side",
+      "label": "Range · side",
+      "viewportId": "portrait-compact",
+      "motion": "reduced",
+      "baselineScore": 63,
+      "targetScore": 90,
+      "screenshot": "baseline/range-side--portrait-compact--reduced.png",
+      "critical": [],
+      "improvements": [],
+      "snapshot": {
+        "httpStatus": 200,
+        "consoleErrors": [],
+        "pageErrors": [],
+        "resourceErrors": [],
+        "horizontalOverflowPx": 0,
+        "missingSelectors": [],
+        "smallTargets": [],
+        "clippedText": []
+      }
+    },
+    {
+      "surfaceId": "range-top",
+      "label": "Range · top",
+      "viewportId": "portrait-wide",
+      "motion": "normal",
+      "baselineScore": 63,
+      "targetScore": 90,
+      "screenshot": "baseline/range-top--portrait-wide--normal.png",
+      "critical": [],
+      "improvements": [],
+      "snapshot": {
+        "httpStatus": 200,
+        "consoleErrors": [],
+        "pageErrors": [],
+        "resourceErrors": [],
+        "horizontalOverflowPx": 0,
+        "missingSelectors": [],
+        "smallTargets": [],
+        "clippedText": []
+      }
+    },
+    {
+      "surfaceId": "range-top",
+      "label": "Range · top",
+      "viewportId": "portrait-wide",
+      "motion": "reduced",
+      "baselineScore": 63,
+      "targetScore": 90,
+      "screenshot": "baseline/range-top--portrait-wide--reduced.png",
+      "critical": [],
+      "improvements": [],
+      "snapshot": {
+        "httpStatus": 200,
+        "consoleErrors": [],
+        "pageErrors": [],
+        "resourceErrors": [],
+        "horizontalOverflowPx": 0,
+        "missingSelectors": [],
+        "smallTargets": [],
+        "clippedText": []
+      }
+    },
+    {
+      "surfaceId": "range-top",
+      "label": "Range · top",
+      "viewportId": "portrait-compact",
+      "motion": "normal",
+      "baselineScore": 63,
+      "targetScore": 90,
+      "screenshot": "baseline/range-top--portrait-compact--normal.png",
+      "critical": [],
+      "improvements": [],
+      "snapshot": {
+        "httpStatus": 200,
+        "consoleErrors": [],
+        "pageErrors": [],
+        "resourceErrors": [],
+        "horizontalOverflowPx": 0,
+        "missingSelectors": [],
+        "smallTargets": [],
+        "clippedText": []
+      }
+    },
+    {
+      "surfaceId": "range-top",
+      "label": "Range · top",
+      "viewportId": "portrait-compact",
+      "motion": "reduced",
+      "baselineScore": 63,
+      "targetScore": 90,
+      "screenshot": "baseline/range-top--portrait-compact--reduced.png",
+      "critical": [],
+      "improvements": [],
+      "snapshot": {
+        "httpStatus": 200,
+        "consoleErrors": [],
+        "pageErrors": [],
+        "resourceErrors": [],
+        "horizontalOverflowPx": 0,
+        "missingSelectors": [],
+        "smallTargets": [],
+        "clippedText": []
+      }
+    },
+    {
+      "surfaceId": "studio-face",
+      "label": "Studio · face",
       "viewportId": "landscape-wide",
       "motion": "normal",
-      "baselineScore": 74,
+      "baselineScore": null,
       "targetScore": 90,
-      "screenshot": "baseline/geometry-3d--landscape-wide--normal.png",
-      "critical": [
-        "1 failed resource request(s)"
-      ],
-      "improvements": [
-        "1 potentially clipped text element(s)"
-      ],
+      "screenshot": "baseline/studio-face--landscape-wide--normal.png",
+      "critical": [],
+      "improvements": [],
       "snapshot": {
         "httpStatus": 200,
-        "consoleErrors": [
-          {
-            "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
-            "url": "http://127.0.0.1:62506/vendor/three/build/three.module.js",
-            "line": 0,
-            "column": 0
-          }
-        ],
+        "consoleErrors": [],
         "pageErrors": [],
-        "resourceErrors": [
-          {
-            "status": 404,
-            "url": "http://127.0.0.1:62506/vendor/three/build/three.module.js"
-          }
-        ],
+        "resourceErrors": [],
         "horizontalOverflowPx": 0,
         "missingSelectors": [],
         "smallTargets": [],
-        "clippedText": [
-          {
-            "selector": "#sceneData",
-            "text": "Swing arc loading."
-          }
-        ]
+        "clippedText": []
       }
     },
     {
-      "surfaceId": "geometry-3d",
-      "label": "Geometry 3D",
+      "surfaceId": "studio-face",
+      "label": "Studio · face",
       "viewportId": "landscape-wide",
       "motion": "reduced",
-      "baselineScore": 74,
+      "baselineScore": null,
       "targetScore": 90,
-      "screenshot": "baseline/geometry-3d--landscape-wide--reduced.png",
-      "critical": [
-        "1 failed resource request(s)"
-      ],
-      "improvements": [
-        "1 potentially clipped text element(s)"
-      ],
+      "screenshot": "baseline/studio-face--landscape-wide--reduced.png",
+      "critical": [],
+      "improvements": [],
       "snapshot": {
         "httpStatus": 200,
-        "consoleErrors": [
-          {
-            "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
-            "url": "http://127.0.0.1:62506/vendor/three/build/three.module.js",
-            "line": 0,
-            "column": 0
-          }
-        ],
+        "consoleErrors": [],
         "pageErrors": [],
-        "resourceErrors": [
-          {
-            "status": 404,
-            "url": "http://127.0.0.1:62506/vendor/three/build/three.module.js"
-          }
-        ],
+        "resourceErrors": [],
         "horizontalOverflowPx": 0,
         "missingSelectors": [],
         "smallTargets": [],
-        "clippedText": [
-          {
-            "selector": "#sceneData",
-            "text": "Swing arc loading."
-          }
-        ]
+        "clippedText": []
       }
     },
     {
-      "surfaceId": "geometry-3d",
-      "label": "Geometry 3D",
+      "surfaceId": "studio-face",
+      "label": "Studio · face",
       "viewportId": "landscape-compact",
       "motion": "normal",
-      "baselineScore": 74,
+      "baselineScore": null,
       "targetScore": 90,
-      "screenshot": "baseline/geometry-3d--landscape-compact--normal.png",
-      "critical": [
-        "1 failed resource request(s)"
-      ],
-      "improvements": [
-        "1 potentially clipped text element(s)"
-      ],
+      "screenshot": "baseline/studio-face--landscape-compact--normal.png",
+      "critical": [],
+      "improvements": [],
       "snapshot": {
         "httpStatus": 200,
-        "consoleErrors": [
-          {
-            "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
-            "url": "http://127.0.0.1:62506/vendor/three/build/three.module.js",
-            "line": 0,
-            "column": 0
-          }
-        ],
+        "consoleErrors": [],
         "pageErrors": [],
-        "resourceErrors": [
-          {
-            "status": 404,
-            "url": "http://127.0.0.1:62506/vendor/three/build/three.module.js"
-          }
-        ],
+        "resourceErrors": [],
         "horizontalOverflowPx": 0,
         "missingSelectors": [],
         "smallTargets": [],
-        "clippedText": [
-          {
-            "selector": "#sceneData",
-            "text": "Swing arc loading."
-          }
-        ]
+        "clippedText": []
       }
     },
     {
-      "surfaceId": "geometry-3d",
-      "label": "Geometry 3D",
+      "surfaceId": "studio-face",
+      "label": "Studio · face",
       "viewportId": "landscape-compact",
       "motion": "reduced",
-      "baselineScore": 74,
+      "baselineScore": null,
       "targetScore": 90,
-      "screenshot": "baseline/geometry-3d--landscape-compact--reduced.png",
-      "critical": [
-        "1 failed resource request(s)"
-      ],
-      "improvements": [
-        "1 potentially clipped text element(s)"
-      ],
+      "screenshot": "baseline/studio-face--landscape-compact--reduced.png",
+      "critical": [],
+      "improvements": [],
       "snapshot": {
         "httpStatus": 200,
-        "consoleErrors": [
-          {
-            "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
-            "url": "http://127.0.0.1:62506/vendor/three/build/three.module.js",
-            "line": 0,
-            "column": 0
-          }
-        ],
+        "consoleErrors": [],
         "pageErrors": [],
-        "resourceErrors": [
-          {
-            "status": 404,
-            "url": "http://127.0.0.1:62506/vendor/three/build/three.module.js"
-          }
-        ],
+        "resourceErrors": [],
         "horizontalOverflowPx": 0,
         "missingSelectors": [],
         "smallTargets": [],
-        "clippedText": [
-          {
-            "selector": "#sceneData",
-            "text": "Swing arc loading."
-          }
-        ]
-      }
-    },
-    {
-      "surfaceId": "strike-window-2d",
-      "label": "Strike Window 2D",
-      "viewportId": "portrait-wide",
-      "motion": "normal",
-      "baselineScore": 82,
-      "targetScore": 90,
-      "screenshot": "baseline/strike-window-2d--portrait-wide--normal.png",
-      "critical": [],
-      "improvements": [
-        "2 potentially clipped text element(s)",
-        "1 interactive target(s) below 44 px"
-      ],
-      "snapshot": {
-        "httpStatus": 200,
-        "consoleErrors": [],
-        "pageErrors": [],
-        "resourceErrors": [],
-        "horizontalOverflowPx": 0,
-        "missingSelectors": [],
-        "smallTargets": [
-          {
-            "selector": "a.sa-strip__home",
-            "width": 30,
-            "height": 30
-          }
-        ],
-        "clippedText": [
-          {
-            "selector": "h1.sr",
-            "text": "Strike Window. A side-on view of how the swing arc meets the ball and the ground."
-          },
-          {
-            "selector": "#srLive",
-            "text": "Pure strike. Attack 3.3 degrees down. Club path 1.9 degrees in to out. Low point 8 cm ahead of the b"
-          }
-        ]
-      }
-    },
-    {
-      "surfaceId": "strike-window-2d",
-      "label": "Strike Window 2D",
-      "viewportId": "portrait-wide",
-      "motion": "reduced",
-      "baselineScore": 82,
-      "targetScore": 90,
-      "screenshot": "baseline/strike-window-2d--portrait-wide--reduced.png",
-      "critical": [],
-      "improvements": [
-        "2 potentially clipped text element(s)",
-        "1 interactive target(s) below 44 px"
-      ],
-      "snapshot": {
-        "httpStatus": 200,
-        "consoleErrors": [],
-        "pageErrors": [],
-        "resourceErrors": [],
-        "horizontalOverflowPx": 0,
-        "missingSelectors": [],
-        "smallTargets": [
-          {
-            "selector": "a.sa-strip__home",
-            "width": 30,
-            "height": 30
-          }
-        ],
-        "clippedText": [
-          {
-            "selector": "h1.sr",
-            "text": "Strike Window. A side-on view of how the swing arc meets the ball and the ground."
-          },
-          {
-            "selector": "#srLive",
-            "text": "Pure strike. Attack 3.3 degrees down. Club path 1.9 degrees in to out. Low point 8 cm ahead of the b"
-          }
-        ]
-      }
-    },
-    {
-      "surfaceId": "strike-window-2d",
-      "label": "Strike Window 2D",
-      "viewportId": "portrait-compact",
-      "motion": "normal",
-      "baselineScore": 82,
-      "targetScore": 90,
-      "screenshot": "baseline/strike-window-2d--portrait-compact--normal.png",
-      "critical": [],
-      "improvements": [
-        "2 potentially clipped text element(s)",
-        "1 interactive target(s) below 44 px"
-      ],
-      "snapshot": {
-        "httpStatus": 200,
-        "consoleErrors": [],
-        "pageErrors": [],
-        "resourceErrors": [],
-        "horizontalOverflowPx": 0,
-        "missingSelectors": [],
-        "smallTargets": [
-          {
-            "selector": "a.sa-strip__home",
-            "width": 30,
-            "height": 30
-          }
-        ],
-        "clippedText": [
-          {
-            "selector": "h1.sr",
-            "text": "Strike Window. A side-on view of how the swing arc meets the ball and the ground."
-          },
-          {
-            "selector": "#srLive",
-            "text": "Pure strike. Attack 3.3 degrees down. Club path 1.9 degrees in to out. Low point 8 cm ahead of the b"
-          }
-        ]
-      }
-    },
-    {
-      "surfaceId": "strike-window-2d",
-      "label": "Strike Window 2D",
-      "viewportId": "portrait-compact",
-      "motion": "reduced",
-      "baselineScore": 82,
-      "targetScore": 90,
-      "screenshot": "baseline/strike-window-2d--portrait-compact--reduced.png",
-      "critical": [],
-      "improvements": [
-        "2 potentially clipped text element(s)",
-        "1 interactive target(s) below 44 px"
-      ],
-      "snapshot": {
-        "httpStatus": 200,
-        "consoleErrors": [],
-        "pageErrors": [],
-        "resourceErrors": [],
-        "horizontalOverflowPx": 0,
-        "missingSelectors": [],
-        "smallTargets": [
-          {
-            "selector": "a.sa-strip__home",
-            "width": 30,
-            "height": 30
-          }
-        ],
-        "clippedText": [
-          {
-            "selector": "h1.sr",
-            "text": "Strike Window. A side-on view of how the swing arc meets the ball and the ground."
-          },
-          {
-            "selector": "#srLive",
-            "text": "Pure strike. Attack 3.3 degrees down. Club path 1.9 degrees in to out. Low point 8 cm ahead of the b"
-          }
-        ]
-      }
-    },
-    {
-      "surfaceId": "academy-overview",
-      "label": "Academy overview",
-      "viewportId": "portrait-wide",
-      "motion": "normal",
-      "baselineScore": 70,
-      "targetScore": 90,
-      "screenshot": "baseline/academy-overview--portrait-wide--normal.png",
-      "critical": [],
-      "improvements": [
-        "5 interactive target(s) below 44 px"
-      ],
-      "snapshot": {
-        "httpStatus": 200,
-        "consoleErrors": [],
-        "pageErrors": [],
-        "resourceErrors": [],
-        "horizontalOverflowPx": 0,
-        "missingSelectors": [],
-        "smallTargets": [
-          {
-            "selector": "a.skip-link",
-            "width": 169,
-            "height": 41
-          },
-          {
-            "selector": "a.sa-strip__home",
-            "width": 30,
-            "height": 30
-          },
-          {
-            "selector": "#act-progress",
-            "width": 194,
-            "height": 40
-          },
-          {
-            "selector": "#act-next",
-            "width": 194,
-            "height": 40
-          },
-          {
-            "selector": "#path-how",
-            "width": 118,
-            "height": 19
-          }
-        ],
         "clippedText": []
       }
     },
     {
-      "surfaceId": "academy-overview",
-      "label": "Academy overview",
+      "surfaceId": "studio-dtl",
+      "label": "Studio · DTL",
+      "viewportId": "landscape-wide",
+      "motion": "normal",
+      "baselineScore": null,
+      "targetScore": 90,
+      "screenshot": "baseline/studio-dtl--landscape-wide--normal.png",
+      "critical": [],
+      "improvements": [],
+      "snapshot": {
+        "httpStatus": 200,
+        "consoleErrors": [],
+        "pageErrors": [],
+        "resourceErrors": [],
+        "horizontalOverflowPx": 0,
+        "missingSelectors": [],
+        "smallTargets": [],
+        "clippedText": []
+      }
+    },
+    {
+      "surfaceId": "studio-dtl",
+      "label": "Studio · DTL",
+      "viewportId": "landscape-wide",
+      "motion": "reduced",
+      "baselineScore": null,
+      "targetScore": 90,
+      "screenshot": "baseline/studio-dtl--landscape-wide--reduced.png",
+      "critical": [],
+      "improvements": [],
+      "snapshot": {
+        "httpStatus": 200,
+        "consoleErrors": [],
+        "pageErrors": [],
+        "resourceErrors": [],
+        "horizontalOverflowPx": 0,
+        "missingSelectors": [],
+        "smallTargets": [],
+        "clippedText": []
+      }
+    },
+    {
+      "surfaceId": "studio-dtl",
+      "label": "Studio · DTL",
+      "viewportId": "landscape-compact",
+      "motion": "normal",
+      "baselineScore": null,
+      "targetScore": 90,
+      "screenshot": "baseline/studio-dtl--landscape-compact--normal.png",
+      "critical": [],
+      "improvements": [],
+      "snapshot": {
+        "httpStatus": 200,
+        "consoleErrors": [],
+        "pageErrors": [],
+        "resourceErrors": [],
+        "horizontalOverflowPx": 0,
+        "missingSelectors": [],
+        "smallTargets": [],
+        "clippedText": []
+      }
+    },
+    {
+      "surfaceId": "studio-dtl",
+      "label": "Studio · DTL",
+      "viewportId": "landscape-compact",
+      "motion": "reduced",
+      "baselineScore": null,
+      "targetScore": 90,
+      "screenshot": "baseline/studio-dtl--landscape-compact--reduced.png",
+      "critical": [],
+      "improvements": [],
+      "snapshot": {
+        "httpStatus": 200,
+        "consoleErrors": [],
+        "pageErrors": [],
+        "resourceErrors": [],
+        "horizontalOverflowPx": 0,
+        "missingSelectors": [],
+        "smallTargets": [],
+        "clippedText": []
+      }
+    },
+    {
+      "surfaceId": "studio-strike",
+      "label": "Studio · strike",
+      "viewportId": "landscape-wide",
+      "motion": "normal",
+      "baselineScore": null,
+      "targetScore": 90,
+      "screenshot": "baseline/studio-strike--landscape-wide--normal.png",
+      "critical": [],
+      "improvements": [],
+      "snapshot": {
+        "httpStatus": 200,
+        "consoleErrors": [],
+        "pageErrors": [],
+        "resourceErrors": [],
+        "horizontalOverflowPx": 0,
+        "missingSelectors": [],
+        "smallTargets": [],
+        "clippedText": []
+      }
+    },
+    {
+      "surfaceId": "studio-strike",
+      "label": "Studio · strike",
+      "viewportId": "landscape-wide",
+      "motion": "reduced",
+      "baselineScore": null,
+      "targetScore": 90,
+      "screenshot": "baseline/studio-strike--landscape-wide--reduced.png",
+      "critical": [],
+      "improvements": [],
+      "snapshot": {
+        "httpStatus": 200,
+        "consoleErrors": [],
+        "pageErrors": [],
+        "resourceErrors": [],
+        "horizontalOverflowPx": 0,
+        "missingSelectors": [],
+        "smallTargets": [],
+        "clippedText": []
+      }
+    },
+    {
+      "surfaceId": "studio-strike",
+      "label": "Studio · strike",
+      "viewportId": "landscape-compact",
+      "motion": "normal",
+      "baselineScore": null,
+      "targetScore": 90,
+      "screenshot": "baseline/studio-strike--landscape-compact--normal.png",
+      "critical": [],
+      "improvements": [],
+      "snapshot": {
+        "httpStatus": 200,
+        "consoleErrors": [],
+        "pageErrors": [],
+        "resourceErrors": [],
+        "horizontalOverflowPx": 0,
+        "missingSelectors": [],
+        "smallTargets": [],
+        "clippedText": []
+      }
+    },
+    {
+      "surfaceId": "studio-strike",
+      "label": "Studio · strike",
+      "viewportId": "landscape-compact",
+      "motion": "reduced",
+      "baselineScore": null,
+      "targetScore": 90,
+      "screenshot": "baseline/studio-strike--landscape-compact--reduced.png",
+      "critical": [],
+      "improvements": [],
+      "snapshot": {
+        "httpStatus": 200,
+        "consoleErrors": [],
+        "pageErrors": [],
+        "resourceErrors": [],
+        "horizontalOverflowPx": 0,
+        "missingSelectors": [],
+        "smallTargets": [],
+        "clippedText": []
+      }
+    },
+    {
+      "surfaceId": "guide-browse",
+      "label": "Guide · browse",
+      "viewportId": "portrait-wide",
+      "motion": "normal",
+      "baselineScore": null,
+      "targetScore": 90,
+      "screenshot": "baseline/guide-browse--portrait-wide--normal.png",
+      "critical": [],
+      "improvements": [],
+      "snapshot": {
+        "httpStatus": 200,
+        "consoleErrors": [],
+        "pageErrors": [],
+        "resourceErrors": [],
+        "horizontalOverflowPx": 0,
+        "missingSelectors": [],
+        "smallTargets": [],
+        "clippedText": []
+      }
+    },
+    {
+      "surfaceId": "guide-browse",
+      "label": "Guide · browse",
       "viewportId": "portrait-wide",
       "motion": "reduced",
-      "baselineScore": 70,
+      "baselineScore": null,
       "targetScore": 90,
-      "screenshot": "baseline/academy-overview--portrait-wide--reduced.png",
+      "screenshot": "baseline/guide-browse--portrait-wide--reduced.png",
       "critical": [],
-      "improvements": [
-        "5 interactive target(s) below 44 px"
-      ],
+      "improvements": [],
       "snapshot": {
         "httpStatus": 200,
         "consoleErrors": [],
@@ -1146,49 +1048,20 @@
         "resourceErrors": [],
         "horizontalOverflowPx": 0,
         "missingSelectors": [],
-        "smallTargets": [
-          {
-            "selector": "a.skip-link",
-            "width": 169,
-            "height": 41
-          },
-          {
-            "selector": "a.sa-strip__home",
-            "width": 30,
-            "height": 30
-          },
-          {
-            "selector": "#act-progress",
-            "width": 194,
-            "height": 40
-          },
-          {
-            "selector": "#act-next",
-            "width": 194,
-            "height": 40
-          },
-          {
-            "selector": "#path-how",
-            "width": 118,
-            "height": 19
-          }
-        ],
+        "smallTargets": [],
         "clippedText": []
       }
     },
     {
-      "surfaceId": "academy-overview",
-      "label": "Academy overview",
+      "surfaceId": "guide-browse",
+      "label": "Guide · browse",
       "viewportId": "portrait-compact",
       "motion": "normal",
-      "baselineScore": 70,
+      "baselineScore": null,
       "targetScore": 90,
-      "screenshot": "baseline/academy-overview--portrait-compact--normal.png",
+      "screenshot": "baseline/guide-browse--portrait-compact--normal.png",
       "critical": [],
-      "improvements": [
-        "1 potentially clipped text element(s)",
-        "5 interactive target(s) below 44 px"
-      ],
+      "improvements": [],
       "snapshot": {
         "httpStatus": 200,
         "consoleErrors": [],
@@ -1196,54 +1069,20 @@
         "resourceErrors": [],
         "horizontalOverflowPx": 0,
         "missingSelectors": [],
-        "smallTargets": [
-          {
-            "selector": "a.skip-link",
-            "width": 169,
-            "height": 41
-          },
-          {
-            "selector": "a.sa-strip__home",
-            "width": 30,
-            "height": 30
-          },
-          {
-            "selector": "#act-progress",
-            "width": 167,
-            "height": 40
-          },
-          {
-            "selector": "#act-next",
-            "width": 167,
-            "height": 40
-          },
-          {
-            "selector": "#path-how",
-            "width": 118,
-            "height": 19
-          }
-        ],
-        "clippedText": [
-          {
-            "selector": "#hdr-lvline",
-            "text": "Level 1 · Rookie"
-          }
-        ]
+        "smallTargets": [],
+        "clippedText": []
       }
     },
     {
-      "surfaceId": "academy-overview",
-      "label": "Academy overview",
+      "surfaceId": "guide-browse",
+      "label": "Guide · browse",
       "viewportId": "portrait-compact",
       "motion": "reduced",
-      "baselineScore": 70,
+      "baselineScore": null,
       "targetScore": 90,
-      "screenshot": "baseline/academy-overview--portrait-compact--reduced.png",
+      "screenshot": "baseline/guide-browse--portrait-compact--reduced.png",
       "critical": [],
-      "improvements": [
-        "1 potentially clipped text element(s)",
-        "5 interactive target(s) below 44 px"
-      ],
+      "improvements": [],
       "snapshot": {
         "httpStatus": 200,
         "consoleErrors": [],
@@ -1251,53 +1090,20 @@
         "resourceErrors": [],
         "horizontalOverflowPx": 0,
         "missingSelectors": [],
-        "smallTargets": [
-          {
-            "selector": "a.skip-link",
-            "width": 169,
-            "height": 41
-          },
-          {
-            "selector": "a.sa-strip__home",
-            "width": 30,
-            "height": 30
-          },
-          {
-            "selector": "#act-progress",
-            "width": 167,
-            "height": 40
-          },
-          {
-            "selector": "#act-next",
-            "width": 167,
-            "height": 40
-          },
-          {
-            "selector": "#path-how",
-            "width": 118,
-            "height": 19
-          }
-        ],
-        "clippedText": [
-          {
-            "selector": "#hdr-lvline",
-            "text": "Level 1 · Rookie"
-          }
-        ]
+        "smallTargets": [],
+        "clippedText": []
       }
     },
     {
-      "surfaceId": "academy-lesson",
-      "label": "Academy lesson",
+      "surfaceId": "guide-answer-backspin",
+      "label": "Guide · answer / backspin",
       "viewportId": "portrait-wide",
       "motion": "normal",
-      "baselineScore": 73,
+      "baselineScore": null,
       "targetScore": 90,
-      "screenshot": "baseline/academy-lesson--portrait-wide--normal.png",
+      "screenshot": "baseline/guide-answer-backspin--portrait-wide--normal.png",
       "critical": [],
-      "improvements": [
-        "13 interactive target(s) below 44 px"
-      ],
+      "improvements": [],
       "snapshot": {
         "httpStatus": 200,
         "consoleErrors": [],
@@ -1305,88 +1111,20 @@
         "resourceErrors": [],
         "horizontalOverflowPx": 0,
         "missingSelectors": [],
-        "smallTargets": [
-          {
-            "selector": "a.skip-link",
-            "width": 169,
-            "height": 41
-          },
-          {
-            "selector": "a.sa-strip__home",
-            "width": 30,
-            "height": 30
-          },
-          {
-            "selector": "#backBtn",
-            "width": 86,
-            "height": 40
-          },
-          {
-            "selector": "button.hexpand",
-            "width": 30,
-            "height": 30
-          },
-          {
-            "selector": "button.hexpand",
-            "width": 30,
-            "height": 30
-          },
-          {
-            "selector": "button.hexpand",
-            "width": 30,
-            "height": 30
-          },
-          {
-            "selector": "button.hexpand",
-            "width": 30,
-            "height": 30
-          },
-          {
-            "selector": "button.hexpand",
-            "width": 30,
-            "height": 30
-          },
-          {
-            "selector": "button.hexpand",
-            "width": 30,
-            "height": 30
-          },
-          {
-            "selector": "button",
-            "width": 84,
-            "height": 40
-          },
-          {
-            "selector": "button",
-            "width": 61,
-            "height": 40
-          },
-          {
-            "selector": "button",
-            "width": 67,
-            "height": 40
-          },
-          {
-            "selector": "#sm-friction",
-            "width": 228,
-            "height": 40
-          }
-        ],
+        "smallTargets": [],
         "clippedText": []
       }
     },
     {
-      "surfaceId": "academy-lesson",
-      "label": "Academy lesson",
+      "surfaceId": "guide-answer-backspin",
+      "label": "Guide · answer / backspin",
       "viewportId": "portrait-wide",
       "motion": "reduced",
-      "baselineScore": 73,
+      "baselineScore": null,
       "targetScore": 90,
-      "screenshot": "baseline/academy-lesson--portrait-wide--reduced.png",
+      "screenshot": "baseline/guide-answer-backspin--portrait-wide--reduced.png",
       "critical": [],
-      "improvements": [
-        "13 interactive target(s) below 44 px"
-      ],
+      "improvements": [],
       "snapshot": {
         "httpStatus": 200,
         "consoleErrors": [],
@@ -1394,88 +1132,20 @@
         "resourceErrors": [],
         "horizontalOverflowPx": 0,
         "missingSelectors": [],
-        "smallTargets": [
-          {
-            "selector": "a.skip-link",
-            "width": 169,
-            "height": 41
-          },
-          {
-            "selector": "a.sa-strip__home",
-            "width": 30,
-            "height": 30
-          },
-          {
-            "selector": "#backBtn",
-            "width": 86,
-            "height": 40
-          },
-          {
-            "selector": "button.hexpand",
-            "width": 30,
-            "height": 30
-          },
-          {
-            "selector": "button.hexpand",
-            "width": 30,
-            "height": 30
-          },
-          {
-            "selector": "button.hexpand",
-            "width": 30,
-            "height": 30
-          },
-          {
-            "selector": "button.hexpand",
-            "width": 30,
-            "height": 30
-          },
-          {
-            "selector": "button.hexpand",
-            "width": 30,
-            "height": 30
-          },
-          {
-            "selector": "button.hexpand",
-            "width": 30,
-            "height": 30
-          },
-          {
-            "selector": "button",
-            "width": 84,
-            "height": 40
-          },
-          {
-            "selector": "button",
-            "width": 61,
-            "height": 40
-          },
-          {
-            "selector": "button",
-            "width": 67,
-            "height": 40
-          },
-          {
-            "selector": "#sm-friction",
-            "width": 228,
-            "height": 40
-          }
-        ],
+        "smallTargets": [],
         "clippedText": []
       }
     },
     {
-      "surfaceId": "academy-lesson",
-      "label": "Academy lesson",
+      "surfaceId": "guide-answer-backspin",
+      "label": "Guide · answer / backspin",
       "viewportId": "portrait-compact",
       "motion": "normal",
-      "baselineScore": 73,
+      "baselineScore": null,
       "targetScore": 90,
-      "screenshot": "baseline/academy-lesson--portrait-compact--normal.png",
+      "screenshot": "baseline/guide-answer-backspin--portrait-compact--normal.png",
       "critical": [],
-      "improvements": [
-        "13 interactive target(s) below 44 px"
-      ],
+      "improvements": [],
       "snapshot": {
         "httpStatus": 200,
         "consoleErrors": [],
@@ -1483,88 +1153,20 @@
         "resourceErrors": [],
         "horizontalOverflowPx": 0,
         "missingSelectors": [],
-        "smallTargets": [
-          {
-            "selector": "a.skip-link",
-            "width": 169,
-            "height": 41
-          },
-          {
-            "selector": "a.sa-strip__home",
-            "width": 30,
-            "height": 30
-          },
-          {
-            "selector": "#backBtn",
-            "width": 86,
-            "height": 40
-          },
-          {
-            "selector": "button.hexpand",
-            "width": 30,
-            "height": 30
-          },
-          {
-            "selector": "button.hexpand",
-            "width": 30,
-            "height": 30
-          },
-          {
-            "selector": "button.hexpand",
-            "width": 30,
-            "height": 30
-          },
-          {
-            "selector": "button.hexpand",
-            "width": 30,
-            "height": 30
-          },
-          {
-            "selector": "button.hexpand",
-            "width": 30,
-            "height": 30
-          },
-          {
-            "selector": "button.hexpand",
-            "width": 30,
-            "height": 30
-          },
-          {
-            "selector": "button",
-            "width": 84,
-            "height": 40
-          },
-          {
-            "selector": "button",
-            "width": 61,
-            "height": 40
-          },
-          {
-            "selector": "button",
-            "width": 67,
-            "height": 40
-          },
-          {
-            "selector": "#sm-friction",
-            "width": 228,
-            "height": 40
-          }
-        ],
+        "smallTargets": [],
         "clippedText": []
       }
     },
     {
-      "surfaceId": "academy-lesson",
-      "label": "Academy lesson",
+      "surfaceId": "guide-answer-backspin",
+      "label": "Guide · answer / backspin",
       "viewportId": "portrait-compact",
       "motion": "reduced",
-      "baselineScore": 73,
+      "baselineScore": null,
       "targetScore": 90,
-      "screenshot": "baseline/academy-lesson--portrait-compact--reduced.png",
+      "screenshot": "baseline/guide-answer-backspin--portrait-compact--reduced.png",
       "critical": [],
-      "improvements": [
-        "13 interactive target(s) below 44 px"
-      ],
+      "improvements": [],
       "snapshot": {
         "httpStatus": 200,
         "consoleErrors": [],
@@ -1572,73 +1174,91 @@
         "resourceErrors": [],
         "horizontalOverflowPx": 0,
         "missingSelectors": [],
-        "smallTargets": [
-          {
-            "selector": "a.skip-link",
-            "width": 169,
-            "height": 41
-          },
-          {
-            "selector": "a.sa-strip__home",
-            "width": 30,
-            "height": 30
-          },
-          {
-            "selector": "#backBtn",
-            "width": 86,
-            "height": 40
-          },
-          {
-            "selector": "button.hexpand",
-            "width": 30,
-            "height": 30
-          },
-          {
-            "selector": "button.hexpand",
-            "width": 30,
-            "height": 30
-          },
-          {
-            "selector": "button.hexpand",
-            "width": 30,
-            "height": 30
-          },
-          {
-            "selector": "button.hexpand",
-            "width": 30,
-            "height": 30
-          },
-          {
-            "selector": "button.hexpand",
-            "width": 30,
-            "height": 30
-          },
-          {
-            "selector": "button.hexpand",
-            "width": 30,
-            "height": 30
-          },
-          {
-            "selector": "button",
-            "width": 84,
-            "height": 40
-          },
-          {
-            "selector": "button",
-            "width": 61,
-            "height": 40
-          },
-          {
-            "selector": "button",
-            "width": 67,
-            "height": 40
-          },
-          {
-            "selector": "#sm-friction",
-            "width": 228,
-            "height": 40
-          }
-        ],
+        "smallTargets": [],
+        "clippedText": []
+      }
+    },
+    {
+      "surfaceId": "guide-lab",
+      "label": "Guide · lab",
+      "viewportId": "portrait-wide",
+      "motion": "normal",
+      "baselineScore": null,
+      "targetScore": 90,
+      "screenshot": "baseline/guide-lab--portrait-wide--normal.png",
+      "critical": [],
+      "improvements": [],
+      "snapshot": {
+        "httpStatus": 200,
+        "consoleErrors": [],
+        "pageErrors": [],
+        "resourceErrors": [],
+        "horizontalOverflowPx": 0,
+        "missingSelectors": [],
+        "smallTargets": [],
+        "clippedText": []
+      }
+    },
+    {
+      "surfaceId": "guide-lab",
+      "label": "Guide · lab",
+      "viewportId": "portrait-wide",
+      "motion": "reduced",
+      "baselineScore": null,
+      "targetScore": 90,
+      "screenshot": "baseline/guide-lab--portrait-wide--reduced.png",
+      "critical": [],
+      "improvements": [],
+      "snapshot": {
+        "httpStatus": 200,
+        "consoleErrors": [],
+        "pageErrors": [],
+        "resourceErrors": [],
+        "horizontalOverflowPx": 0,
+        "missingSelectors": [],
+        "smallTargets": [],
+        "clippedText": []
+      }
+    },
+    {
+      "surfaceId": "guide-lab",
+      "label": "Guide · lab",
+      "viewportId": "portrait-compact",
+      "motion": "normal",
+      "baselineScore": null,
+      "targetScore": 90,
+      "screenshot": "baseline/guide-lab--portrait-compact--normal.png",
+      "critical": [],
+      "improvements": [],
+      "snapshot": {
+        "httpStatus": 200,
+        "consoleErrors": [],
+        "pageErrors": [],
+        "resourceErrors": [],
+        "horizontalOverflowPx": 0,
+        "missingSelectors": [],
+        "smallTargets": [],
+        "clippedText": []
+      }
+    },
+    {
+      "surfaceId": "guide-lab",
+      "label": "Guide · lab",
+      "viewportId": "portrait-compact",
+      "motion": "reduced",
+      "baselineScore": null,
+      "targetScore": 90,
+      "screenshot": "baseline/guide-lab--portrait-compact--reduced.png",
+      "critical": [],
+      "improvements": [],
+      "snapshot": {
+        "httpStatus": 200,
+        "consoleErrors": [],
+        "pageErrors": [],
+        "resourceErrors": [],
+        "horizontalOverflowPx": 0,
+        "missingSelectors": [],
+        "smallTargets": [],
         "clippedText": []
       }
     },
@@ -1651,10 +1271,7 @@
       "targetScore": 90,
       "screenshot": "baseline/paywall--portrait-wide--normal.png",
       "critical": [],
-      "improvements": [
-        "1 potentially clipped text element(s)",
-        "4 interactive target(s) below 44 px"
-      ],
+      "improvements": [],
       "snapshot": {
         "httpStatus": 200,
         "consoleErrors": [],
@@ -1662,34 +1279,8 @@
         "resourceErrors": [],
         "horizontalOverflowPx": 0,
         "missingSelectors": [],
-        "smallTargets": [
-          {
-            "selector": "button.close",
-            "width": 38,
-            "height": 38
-          },
-          {
-            "selector": "button.legal-link",
-            "width": 95,
-            "height": 33
-          },
-          {
-            "selector": "a",
-            "width": 32,
-            "height": 33
-          },
-          {
-            "selector": "a",
-            "width": 39,
-            "height": 33
-          }
-        ],
-        "clippedText": [
-          {
-            "selector": "legend",
-            "text": "Choose a plan"
-          }
-        ]
+        "smallTargets": [],
+        "clippedText": []
       }
     },
     {
@@ -1701,10 +1292,7 @@
       "targetScore": 90,
       "screenshot": "baseline/paywall--portrait-wide--reduced.png",
       "critical": [],
-      "improvements": [
-        "1 potentially clipped text element(s)",
-        "4 interactive target(s) below 44 px"
-      ],
+      "improvements": [],
       "snapshot": {
         "httpStatus": 200,
         "consoleErrors": [],
@@ -1712,34 +1300,8 @@
         "resourceErrors": [],
         "horizontalOverflowPx": 0,
         "missingSelectors": [],
-        "smallTargets": [
-          {
-            "selector": "button.close",
-            "width": 38,
-            "height": 38
-          },
-          {
-            "selector": "button.legal-link",
-            "width": 95,
-            "height": 33
-          },
-          {
-            "selector": "a",
-            "width": 32,
-            "height": 33
-          },
-          {
-            "selector": "a",
-            "width": 39,
-            "height": 33
-          }
-        ],
-        "clippedText": [
-          {
-            "selector": "legend",
-            "text": "Choose a plan"
-          }
-        ]
+        "smallTargets": [],
+        "clippedText": []
       }
     },
     {
@@ -1751,10 +1313,7 @@
       "targetScore": 90,
       "screenshot": "baseline/paywall--portrait-compact--normal.png",
       "critical": [],
-      "improvements": [
-        "1 potentially clipped text element(s)",
-        "4 interactive target(s) below 44 px"
-      ],
+      "improvements": [],
       "snapshot": {
         "httpStatus": 200,
         "consoleErrors": [],
@@ -1762,34 +1321,8 @@
         "resourceErrors": [],
         "horizontalOverflowPx": 0,
         "missingSelectors": [],
-        "smallTargets": [
-          {
-            "selector": "button.close",
-            "width": 38,
-            "height": 38
-          },
-          {
-            "selector": "button.legal-link",
-            "width": 67,
-            "height": 33
-          },
-          {
-            "selector": "a",
-            "width": 32,
-            "height": 33
-          },
-          {
-            "selector": "a",
-            "width": 39,
-            "height": 33
-          }
-        ],
-        "clippedText": [
-          {
-            "selector": "legend",
-            "text": "Choose a plan"
-          }
-        ]
+        "smallTargets": [],
+        "clippedText": []
       }
     },
     {
@@ -1801,10 +1334,7 @@
       "targetScore": 90,
       "screenshot": "baseline/paywall--portrait-compact--reduced.png",
       "critical": [],
-      "improvements": [
-        "1 potentially clipped text element(s)",
-        "4 interactive target(s) below 44 px"
-      ],
+      "improvements": [],
       "snapshot": {
         "httpStatus": 200,
         "consoleErrors": [],
@@ -1812,34 +1342,260 @@
         "resourceErrors": [],
         "horizontalOverflowPx": 0,
         "missingSelectors": [],
-        "smallTargets": [
-          {
-            "selector": "button.close",
-            "width": 38,
-            "height": 38
-          },
-          {
-            "selector": "button.legal-link",
-            "width": 67,
-            "height": 33
-          },
-          {
-            "selector": "a",
-            "width": 32,
-            "height": 33
-          },
-          {
-            "selector": "a",
-            "width": 39,
-            "height": 33
-          }
-        ],
-        "clippedText": [
-          {
-            "selector": "legend",
-            "text": "Choose a plan"
-          }
-        ]
+        "smallTargets": [],
+        "clippedText": []
+      }
+    },
+    {
+      "surfaceId": "support",
+      "label": "Support",
+      "viewportId": "portrait-wide",
+      "motion": "normal",
+      "baselineScore": null,
+      "targetScore": 90,
+      "screenshot": "baseline/support--portrait-wide--normal.png",
+      "critical": [],
+      "improvements": [],
+      "snapshot": {
+        "httpStatus": 200,
+        "consoleErrors": [],
+        "pageErrors": [],
+        "resourceErrors": [],
+        "horizontalOverflowPx": 0,
+        "missingSelectors": [],
+        "smallTargets": [],
+        "clippedText": []
+      }
+    },
+    {
+      "surfaceId": "support",
+      "label": "Support",
+      "viewportId": "portrait-wide",
+      "motion": "reduced",
+      "baselineScore": null,
+      "targetScore": 90,
+      "screenshot": "baseline/support--portrait-wide--reduced.png",
+      "critical": [],
+      "improvements": [],
+      "snapshot": {
+        "httpStatus": 200,
+        "consoleErrors": [],
+        "pageErrors": [],
+        "resourceErrors": [],
+        "horizontalOverflowPx": 0,
+        "missingSelectors": [],
+        "smallTargets": [],
+        "clippedText": []
+      }
+    },
+    {
+      "surfaceId": "support",
+      "label": "Support",
+      "viewportId": "portrait-compact",
+      "motion": "normal",
+      "baselineScore": null,
+      "targetScore": 90,
+      "screenshot": "baseline/support--portrait-compact--normal.png",
+      "critical": [],
+      "improvements": [],
+      "snapshot": {
+        "httpStatus": 200,
+        "consoleErrors": [],
+        "pageErrors": [],
+        "resourceErrors": [],
+        "horizontalOverflowPx": 0,
+        "missingSelectors": [],
+        "smallTargets": [],
+        "clippedText": []
+      }
+    },
+    {
+      "surfaceId": "support",
+      "label": "Support",
+      "viewportId": "portrait-compact",
+      "motion": "reduced",
+      "baselineScore": null,
+      "targetScore": 90,
+      "screenshot": "baseline/support--portrait-compact--reduced.png",
+      "critical": [],
+      "improvements": [],
+      "snapshot": {
+        "httpStatus": 200,
+        "consoleErrors": [],
+        "pageErrors": [],
+        "resourceErrors": [],
+        "horizontalOverflowPx": 0,
+        "missingSelectors": [],
+        "smallTargets": [],
+        "clippedText": []
+      }
+    },
+    {
+      "surfaceId": "terms",
+      "label": "Terms",
+      "viewportId": "portrait-wide",
+      "motion": "normal",
+      "baselineScore": null,
+      "targetScore": 90,
+      "screenshot": "baseline/terms--portrait-wide--normal.png",
+      "critical": [],
+      "improvements": [],
+      "snapshot": {
+        "httpStatus": 200,
+        "consoleErrors": [],
+        "pageErrors": [],
+        "resourceErrors": [],
+        "horizontalOverflowPx": 0,
+        "missingSelectors": [],
+        "smallTargets": [],
+        "clippedText": []
+      }
+    },
+    {
+      "surfaceId": "terms",
+      "label": "Terms",
+      "viewportId": "portrait-wide",
+      "motion": "reduced",
+      "baselineScore": null,
+      "targetScore": 90,
+      "screenshot": "baseline/terms--portrait-wide--reduced.png",
+      "critical": [],
+      "improvements": [],
+      "snapshot": {
+        "httpStatus": 200,
+        "consoleErrors": [],
+        "pageErrors": [],
+        "resourceErrors": [],
+        "horizontalOverflowPx": 0,
+        "missingSelectors": [],
+        "smallTargets": [],
+        "clippedText": []
+      }
+    },
+    {
+      "surfaceId": "terms",
+      "label": "Terms",
+      "viewportId": "portrait-compact",
+      "motion": "normal",
+      "baselineScore": null,
+      "targetScore": 90,
+      "screenshot": "baseline/terms--portrait-compact--normal.png",
+      "critical": [],
+      "improvements": [],
+      "snapshot": {
+        "httpStatus": 200,
+        "consoleErrors": [],
+        "pageErrors": [],
+        "resourceErrors": [],
+        "horizontalOverflowPx": 0,
+        "missingSelectors": [],
+        "smallTargets": [],
+        "clippedText": []
+      }
+    },
+    {
+      "surfaceId": "terms",
+      "label": "Terms",
+      "viewportId": "portrait-compact",
+      "motion": "reduced",
+      "baselineScore": null,
+      "targetScore": 90,
+      "screenshot": "baseline/terms--portrait-compact--reduced.png",
+      "critical": [],
+      "improvements": [],
+      "snapshot": {
+        "httpStatus": 200,
+        "consoleErrors": [],
+        "pageErrors": [],
+        "resourceErrors": [],
+        "horizontalOverflowPx": 0,
+        "missingSelectors": [],
+        "smallTargets": [],
+        "clippedText": []
+      }
+    },
+    {
+      "surfaceId": "privacy",
+      "label": "Privacy",
+      "viewportId": "portrait-wide",
+      "motion": "normal",
+      "baselineScore": null,
+      "targetScore": 90,
+      "screenshot": "baseline/privacy--portrait-wide--normal.png",
+      "critical": [],
+      "improvements": [],
+      "snapshot": {
+        "httpStatus": 200,
+        "consoleErrors": [],
+        "pageErrors": [],
+        "resourceErrors": [],
+        "horizontalOverflowPx": 0,
+        "missingSelectors": [],
+        "smallTargets": [],
+        "clippedText": []
+      }
+    },
+    {
+      "surfaceId": "privacy",
+      "label": "Privacy",
+      "viewportId": "portrait-wide",
+      "motion": "reduced",
+      "baselineScore": null,
+      "targetScore": 90,
+      "screenshot": "baseline/privacy--portrait-wide--reduced.png",
+      "critical": [],
+      "improvements": [],
+      "snapshot": {
+        "httpStatus": 200,
+        "consoleErrors": [],
+        "pageErrors": [],
+        "resourceErrors": [],
+        "horizontalOverflowPx": 0,
+        "missingSelectors": [],
+        "smallTargets": [],
+        "clippedText": []
+      }
+    },
+    {
+      "surfaceId": "privacy",
+      "label": "Privacy",
+      "viewportId": "portrait-compact",
+      "motion": "normal",
+      "baselineScore": null,
+      "targetScore": 90,
+      "screenshot": "baseline/privacy--portrait-compact--normal.png",
+      "critical": [],
+      "improvements": [],
+      "snapshot": {
+        "httpStatus": 200,
+        "consoleErrors": [],
+        "pageErrors": [],
+        "resourceErrors": [],
+        "horizontalOverflowPx": 0,
+        "missingSelectors": [],
+        "smallTargets": [],
+        "clippedText": []
+      }
+    },
+    {
+      "surfaceId": "privacy",
+      "label": "Privacy",
+      "viewportId": "portrait-compact",
+      "motion": "reduced",
+      "baselineScore": null,
+      "targetScore": 90,
+      "screenshot": "baseline/privacy--portrait-compact--reduced.png",
+      "critical": [],
+      "improvements": [],
+      "snapshot": {
+        "httpStatus": 200,
+        "consoleErrors": [],
+        "pageErrors": [],
+        "resourceErrors": [],
+        "horizontalOverflowPx": 0,
+        "missingSelectors": [],
+        "smallTargets": [],
+        "clippedText": []
       }
     }
   ]

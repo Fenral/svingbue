@@ -313,19 +313,16 @@ test('Android patch defaults MainActivity to portrait, not sensorLandscape', () 
   assert.match(out, /android:name="\.MainActivity"/, 'MainActivity element preserved');
 });
 
-// ── Surface manifest: the shipping impact surface is measured in portrait ──
-test('range (impact) surface is portrait with selectors that exist in impact.html', () => {
+// ── Surface manifest: every shipping Range state is measured in portrait ──
+test('all shipping Range states are audited only in portrait', () => {
   const manifest = JSON.parse(read('config/flightglass-surfaces.json'));
-  const range = manifest.surfaces.find((s) => s.id === 'range');
-  assert.ok(range, 'range surface present');
-  assert.equal(range.route, 'impact.html', 'range is the shipping impact screen');
-  assert.ok(
-    range.viewportIds.length > 0 && range.viewportIds.every((v) => v.startsWith('portrait')),
-    'range is audited in portrait viewports only'
-  );
-  const impact = read('impact.html');
-  for (const sel of range.requiredSelectors) {
-    assert.match(sel, /^#[\w-]+$/, `${sel} is an id selector`);
-    assert.match(impact, new RegExp(`id="${sel.slice(1)}"`), `impact.html must contain ${sel}`);
+  const ranges = manifest.surfaces.filter((surface) => surface.id.startsWith('range-'));
+  assert.equal(ranges.length, 4, 'all four shipping Range states are present');
+  for (const range of ranges) {
+    assert.equal(range.route, 'impact.html', `${range.id} is a shipping impact state`);
+    assert.ok(
+      range.viewportIds.length > 0 && range.viewportIds.every((viewport) => viewport.startsWith('portrait')),
+      `${range.id} is audited in portrait viewports only`,
+    );
   }
 });

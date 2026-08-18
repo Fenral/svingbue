@@ -1,6 +1,34 @@
 # Flightglass autonomous execution status
 
-Updated: 2026-08-09
+Updated: 2026-08-18
+
+## Current V1 launch-candidate UX evidence (2026-08-18)
+
+The current master UX baseline now describes the V1 product rather than the
+historical Academy build. `npm run ux:baseline` completed with:
+
+- 19 registered product states: Home ready; three onboarding states;
+  Connections; four Range states; three Studio perspectives; Guide Browse,
+  Answer and Lab; Paywall; Support; Terms; and Privacy;
+- 76 captures, with two target viewport sizes and normal/reduced motion for
+  every registered state;
+- zero critical findings;
+- zero design-floor findings, including small targets and clipped text.
+
+The machine and human-readable records are
+`outputs/flightglass-ux/baseline-report.json` and `baseline-report.md`. Their 76
+linked screenshots are the current evidence set. Older master/focused captures
+that presented Academy, Geometry or legacy landscape navigation as the current
+product have been removed. The explicitly historical Academy `task5` through
+`task8` evidence remains preserved.
+
+This baseline is evidence of the rendered UX states, not release acceptance.
+The strict `npm run ux:verify` and complete `npm run verify:v1:release` gate
+must pass again after the final working-tree changes. Production and native
+release also remain held on the exact-SHA CI/preview record, moderated
+first-time onboarding evidence, physical-iPhone purchase/cancel/error/restore
+checks, current App Store/IAP evidence, and a successful signed Codemagic /
+TestFlight build. No App Store publication is authorized by this checkpoint.
 
 ## V1 app start, learning onboarding and Studio instrument checkpoint (2026-08-07)
 
@@ -230,7 +258,7 @@ an owner verdict is recorded.
 
 | Phase | State | Evidence |
 |---|---|---|
-| 0 - QA baseline and control package | Complete | 40-state baseline, 11 contract tests, brand and handoff verifiers |
+| 0 - QA baseline and control package | Complete | Historical 40-state baseline, 11 contract tests, brand and handoff verifiers; superseded by the current V1 baseline above |
 | 1 · Home / Night Ladder | STUDIO-GRADE | Owner-selected night-range Home; 17/17 manifest PASS, 2/2 blind wins, portrait and landscape evidence |
 | 2 · Range / Visualise | Ready | Decisions and references locked in master plan |
 | 3 · Outcome / Compare | Ready | Decisions and references locked in master plan |
@@ -644,8 +672,8 @@ Task 11 verification evidence (all runs fresh on 2026-07-14):
 - `npm run brand:verify`: PASS. `npm run copy-web`: clean; the five Academy
   assets ship in `www/` and `academy-lesson-v2-mock.html` does not.
 - Focused audit `--mode verify --surface academy-lesson --motion both`:
-  4 captures, 0 critical findings. Reports:
-  `outputs/flightglass-ux/verify--academy-lesson-report.json` / `.md`.
+  4 captures, 0 critical findings. Those generated focused reports were later
+  retired when the current V1 evidence set replaced the root audit artifacts.
 - Full six-surface walk captured and visually inspected at 430x932 and
   375x812 in normal and reduced motion (24 screenshots, 0 runtime errors):
   `outputs/flightglass-ux/verify/task11-surfaces/` (regeneratable local
@@ -923,27 +951,28 @@ tier or blocks the rollout; carry them into a future refinement round because th
   card and sticky action name the same Launch Angle destination. Consolidate to a
   single destination in a future pass.
 
-## Phase 0 evidence
+## Historical Phase 0 evidence (superseded)
 
-- Baseline: 40 captures across 10 surfaces, normal and reduced motion.
+- This 40-capture, 10-surface result records the original 2026-07 Phase 0
+  audit. It is not the current V1 product baseline.
 - Automated findings: 4 critical state occurrences and 48 improvement flags.
 - The only critical surface is Geometry 3D. Its four viewport/motion states
   share one root cause: missing `/vendor/three/build/three.module.js`.
 - Compare's browser-generated `/favicon.ico` probe is correctly excluded from
   product findings.
-- Machine report: `outputs/flightglass-ux/baseline-report.json`.
-- Human-readable report: `outputs/flightglass-ux/baseline-report.md`.
+- The master report paths were regenerated for the current 19-state V1 product
+  on 2026-08-18; they no longer contain this historical run.
 - Control package tests: 11 passing.
-- Focused phase reports use separate filenames and cannot overwrite the full
-  baseline report.
+- Explicitly historical Academy `task5` through `task8` evidence is retained;
+  obsolete master/focused reports are not current evidence.
 
-## Derived indicator ledger
+## Historical derived indicator ledger
 
-Scores are derived byproducts and tripwires, never targets. Acceptance per
-surface is the four evidence gates: zero critical defects, every category floor
-cleared, all critical checks pass, and pairwise-blind won against the previous
-generation. The "expected derived score" column is what typically falls out once
-the gates pass — a lower figure with all gates green still ships.
+These are planning-era indicators from the superseded Academy baseline, not
+current V1 acceptance scores. Scores are derived byproducts and tripwires,
+never targets. Acceptance per surface is the four evidence gates: zero critical
+defects, every category floor cleared, all critical checks pass, and
+pairwise-blind won against the previous generation.
 
 | Surface | Current derived indicator | Expected derived indicator |
 |---|---:|---:|

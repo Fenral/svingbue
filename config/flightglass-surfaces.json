@@ -2,261 +2,173 @@
   "version": 1,
   "brand": "Flightglass",
   "viewports": {
-    "landscape-wide": {
-      "width": 932,
-      "height": 430,
-      "orientation": "landscape"
-    },
-    "landscape-compact": {
-      "width": 812,
-      "height": 375,
-      "orientation": "landscape"
-    },
-    "portrait-wide": {
-      "width": 430,
-      "height": 932,
-      "orientation": "portrait"
-    },
-    "portrait-compact": {
-      "width": 375,
-      "height": 812,
-      "orientation": "portrait"
-    }
+    "landscape-wide": { "width": 932, "height": 430, "orientation": "landscape" },
+    "landscape-compact": { "width": 812, "height": 375, "orientation": "landscape" },
+    "portrait-wide": { "width": 430, "height": 932, "orientation": "portrait" },
+    "portrait-compact": { "width": 375, "height": 812, "orientation": "portrait" }
   },
   "surfaces": [
     {
-      "id": "home",
-      "label": "Home",
-      "phase": 2,
-      "baselineScore": 67,
-      "targetScore": 90,
-      "route": "index.html",
-      "sourceType": "shipping",
-      "viewportIds": [
-        "portrait-wide",
-        "portrait-compact"
-      ],
-      "requiredSelectors": [
-        "body[data-home-experience=\"learning-tour\"]",
-        "[data-home-main]",
-        "#homeEmpty",
-        "#onboarding"
-      ],
-      "references": [
-        "TECH_SPEC.md",
-        "DECISIONS.md"
-      ],
-      "primaryJob": "Understand familiar launch-monitor inputs, see one modelled relationship, and choose where to explore it."
+      "id": "home-ready", "label": "Home · ready", "baselineScore": 67, "targetScore": 90,
+      "route": "index.html", "sourceType": "shipping", "viewportIds": ["portrait-wide", "portrait-compact"],
+      "requiredSelectors": ["body[data-home-experience=\"learning-tour\"]", "#homeMain", "#homeEmpty", "#startFirstShot"],
+      "references": ["TECH_SPEC.md", "docs/phase2-onboarding-uat.md"],
+      "primaryJob": "Resume a calm Home without replaying onboarding.",
+      "fixture": { "storage": [
+        { "area": "session", "key": "sa.opening.v1", "value": "1" },
+        { "area": "local", "key": "sa.v1.context", "value": "{\"version\":1,\"onboarding\":{\"complete\":true,\"dismissed\":true}}" }
+      ], "actions": [] }
     },
     {
-      "id": "range",
-      "label": "Impact / Range",
-      "phase": 2,
-      "baselineScore": 63,
-      "targetScore": 90,
-      "route": "impact.html",
-      "sourceType": "shipping",
-      "viewportIds": [
-        "portrait-wide",
-        "portrait-compact"
-      ],
-      "requiredSelectors": [
-        "#stage",
-        "#panel",
-        "#spVal"
-      ],
-      "references": [
-        "design/mocks/impact-kamera.html",
-        "design/orders/impact-kamera.md"
-      ],
-      "primaryJob": "Change one impact input and see the resulting ball flight immediately."
+      "id": "onboarding-opening-intro", "label": "Onboarding · opening / intro", "baselineScore": null, "targetScore": 90,
+      "route": "index.html", "sourceType": "shipping", "viewportIds": ["portrait-wide", "portrait-compact"],
+      "requiredSelectors": ["body[data-home-experience=\"learning-tour\"]"],
+      "requiredSelectorsByMotion": { "normal": ["#saSplash[open]", "#saSplashSkip"], "reduced": ["#homeMain"] },
+      "references": ["TECH_SPEC.md", "docs/phase2-onboarding-uat.md"],
+      "primaryJob": "Start the skippable Flightglass opening.",
+      "fixture": { "storage": [], "actions": [{ "type": "wait", "ms": 100 }] }
     },
     {
-      "id": "visualise",
-      "label": "Visualise",
-      "phase": 2,
-      "baselineScore": 81,
-      "targetScore": 90,
-      "route": "impact-viz-mock.html",
-      "sourceType": "reference",
-      "viewportIds": [
-        "landscape-wide",
-        "landscape-compact"
-      ],
-      "requiredSelectors": [
-        "#stage",
-        "#lensDir"
-      ],
-      "references": [
-        "impact-viz-mock.html",
-        "impact-presentation.html"
-      ],
-      "primaryJob": "Change perspective without creating a second simulator or duplicated controls."
+      "id": "onboarding-live-step-3", "label": "Onboarding · live step 3", "baselineScore": null, "targetScore": 90,
+      "route": "index.html", "sourceType": "shipping", "viewportIds": ["portrait-wide", "portrait-compact"],
+      "requiredSelectors": ["#onboarding[open][data-current-step=\"3\"]", "[data-onboarding-step=\"3\"]:not([hidden])", "#onboardingLoft", "#labLaunch", "#labBackspin"],
+      "references": ["TECH_SPEC.md", "docs/phase2-onboarding-uat.md"],
+      "primaryJob": "Change one delivered-loft value in the live introductory model.",
+      "fixture": { "storage": [
+        { "area": "session", "key": "sa.opening.v1", "value": "1" },
+        { "area": "local", "key": "sa.v1.context", "value": "{\"version\":1,\"onboarding\":{\"complete\":false,\"dismissed\":false,\"step\":3,\"labLoft\":24}}" }
+      ], "actions": [{ "type": "wait", "ms": 250 }] }
     },
     {
-      "id": "outcome",
-      "label": "Outcome",
-      "phase": 3,
-      "baselineScore": 72,
-      "targetScore": 90,
-      "route": "impact-outcome-mock.html",
-      "sourceType": "reference",
-      "viewportIds": [
-        "landscape-wide",
-        "landscape-compact"
-      ],
-      "requiredSelectors": [
-        "#stage",
-        "#panelDir"
-      ],
-      "references": [
-        "impact-outcome-mock.html"
-      ],
-      "primaryJob": "Explain the shot result and its cause before revealing supporting metrics."
+      "id": "onboarding-map-step-4", "label": "Onboarding · map step 4", "baselineScore": null, "targetScore": 90,
+      "route": "index.html", "sourceType": "shipping", "viewportIds": ["portrait-wide", "portrait-compact"],
+      "requiredSelectors": ["#onboarding[open][data-current-step=\"4\"]", "[data-onboarding-step=\"4\"]:not([hidden])", ".product-map", "#openLiveModel"],
+      "references": ["TECH_SPEC.md", "docs/phase2-onboarding-uat.md"],
+      "primaryJob": "Choose the next product view from the onboarding map.",
+      "fixture": { "storage": [
+        { "area": "session", "key": "sa.opening.v1", "value": "1" },
+        { "area": "local", "key": "sa.v1.context", "value": "{\"version\":1,\"onboarding\":{\"complete\":false,\"dismissed\":false,\"step\":4,\"labLoft\":24}}" }
+      ], "actions": [{ "type": "wait", "ms": 250 }] }
     },
     {
-      "id": "compare",
-      "label": "Compare / Ghosts",
-      "phase": 3,
-      "baselineScore": 78,
-      "targetScore": 90,
-      "route": "range-3d-compare-mock.html",
-      "sourceType": "reference",
-      "viewportIds": [
-        "landscape-wide",
-        "landscape-compact"
-      ],
-      "requiredSelectors": [
-        "#status-line",
-        "#cardList"
-      ],
-      "references": [
-        "range-compare-mock.html",
-        "range-3d-compare-mock.html",
-        "range-night-final-compare-mock.html"
-      ],
-      "primaryJob": "Understand the most important delta against one named reference shot."
+      "id": "connections", "label": "Connections", "baselineScore": 58, "targetScore": 90,
+      "route": "connections.html", "sourceType": "shipping", "viewportIds": ["portrait-wide", "portrait-compact"],
+      "requiredSelectors": ["body[data-sa-route=\"connections\"]", "#stage", "#nodes .node[data-id=\"attack\"]", "#detail", "#back[href=\"./index.html\"]"],
+      "references": ["DESIGN.md", "NATIVE.md", "scripts/connections-contract.test.mjs"],
+      "primaryJob": "Trace what shapes a selected model parameter.",
+      "fixture": { "storage": [], "actions": [] }
     },
     {
-      "id": "geometry-3d",
-      "label": "Geometry 3D",
-      "phase": 4,
-      "baselineScore": 74,
-      "targetScore": 90,
-      "route": "geometry.html",
-      "sourceType": "shipping",
-      "viewportIds": [
-        "landscape-wide",
-        "landscape-compact"
-      ],
-      "requiredSelectors": [
-        "#scene3d",
-        "#view2d"
-      ],
-      "references": [
-        "geometry.html",
-        "docs/geometry-rethink.md"
-      ],
-      "primaryJob": "See how direction, plane and low point create delivery geometry and contact."
+      "id": "range-outcome-default", "label": "Range · outcome / default", "baselineScore": 63, "targetScore": 90,
+      "route": "impact.html", "sourceType": "shipping", "viewportIds": ["portrait-wide", "portrait-compact"],
+      "requiredSelectors": ["#stage[data-lens=\"outcome\"][data-range-mode=\"shot\"]", "#shotBrief", "#fCarryNum", "#changeInput"],
+      "references": ["design/mocks/impact-kamera.html", "design/orders/impact-kamera.md", "TECH_SPEC.md"],
+      "primaryJob": "Read the current modelled shot before editing an input.",
+      "fixture": { "storage": [], "actions": [] }
     },
     {
-      "id": "strike-window-2d",
-      "label": "Strike Window 2D",
-      "phase": 4,
-      "baselineScore": 82,
-      "targetScore": 90,
-      "route": "geometry-window-mock.html",
-      "sourceType": "normative-reference",
-      "viewportIds": [
-        "portrait-wide",
-        "portrait-compact"
-      ],
-      "requiredSelectors": [
-        "#winCard",
-        "#winSvg",
-        "#inRow"
-      ],
-      "references": [
-        "geometry-window-mock.html",
-        "docs/strike-window-consensus.md",
-        "docs/strike-window-polish-notes.md"
-      ],
-      "primaryJob": "Diagnose ball-first, turf-first and strike height while the active input changes live."
+      "id": "range-input-change-input", "label": "Range · input after Change input", "baselineScore": 63, "targetScore": 90,
+      "route": "impact.html", "sourceType": "shipping", "viewportIds": ["portrait-wide", "portrait-compact"],
+      "requiredSelectors": ["#stage[data-range-mode=\"change\"]", "#parameterRail", "#activeControl", "#spVal"],
+      "references": ["design/mocks/impact-kamera.html", "design/orders/impact-kamera.md", "TECH_SPEC.md"],
+      "primaryJob": "Select one delivery input to change.",
+      "fixture": { "storage": [], "actions": [{ "type": "click", "selector": "#changeInput" }, { "type": "wait", "ms": 100 }] }
     },
     {
-      "id": "academy-overview",
-      "label": "Academy overview",
-      "phase": 5,
-      "baselineScore": 70,
-      "targetScore": 90,
-      "route": "academy.html",
-      "sourceType": "shipping-web",
-      "viewportIds": [
-        "portrait-wide",
-        "portrait-compact"
-      ],
-      "requiredSelectors": [
-        "#app",
-        "[data-academy-home]",
-        ".academy-home__hero"
-      ],
-      "references": [
-        "academy.html",
-        "docs/academy-path-verdict.md",
-        "docs/academy-polish-spec.md"
-      ],
-      "primaryJob": "Know current progress, the recommended next lesson and why it is worth opening."
+      "id": "range-side", "label": "Range · side", "baselineScore": 63, "targetScore": 90,
+      "route": "impact.html", "sourceType": "shipping", "viewportIds": ["portrait-wide", "portrait-compact"],
+      "requiredSelectors": ["#stage[data-lens=\"side\"]", "#slSide", "#topSpeedVal"],
+      "references": ["design/mocks/impact-kamera.html", "design/orders/impact-kamera.md", "TECH_SPEC.md"],
+      "primaryJob": "Inspect the side camera while changing launch-plane inputs.",
+      "fixture": { "storage": [], "actions": [{ "type": "click", "selector": "#changeInput" }, { "type": "click", "selector": "#stseg button[data-s=\"1\"]" }, { "type": "wait", "ms": 150 }] }
     },
     {
-      "id": "academy-lesson",
-      "label": "Academy lesson",
-      "phase": 6,
-      "baselineScore": 73,
-      "targetScore": 96,
-      "route": "academy.html#/lesson/backspin",
-      "sourceType": "shipping-web-state",
-      "viewportIds": [
-        "portrait-wide",
-        "portrait-compact"
-      ],
-      "requiredSelectors": [
-        "#nativeLesson",
-        "#missionStageBuild",
-        "#backspinTruth",
-        "#labRange",
-        "#masteryTask",
-        "#nativeLessonResult"
-      ],
-      "references": [
-        "academy-lesson-v2-mock.html",
-        "docs/academy-native-v2-spec.md",
-        "docs/superpowers/specs/2026-07-13-backspin-96-97-design.md"
-      ],
-      "primaryJob": "Predict, manipulate and demonstrate control of backspin in an honest live model."
+      "id": "range-top", "label": "Range · top", "baselineScore": 63, "targetScore": 90,
+      "route": "impact.html", "sourceType": "shipping", "viewportIds": ["portrait-wide", "portrait-compact"],
+      "requiredSelectors": ["#stage[data-lens=\"top\"]", "#slTop", "#topSpeedVal"],
+      "references": ["design/mocks/impact-kamera.html", "design/orders/impact-kamera.md", "TECH_SPEC.md"],
+      "primaryJob": "Inspect the top camera while changing direction-plane inputs.",
+      "fixture": { "storage": [], "actions": [{ "type": "click", "selector": "#changeInput" }, { "type": "click", "selector": "#stseg button[data-s=\"2\"]" }, { "type": "wait", "ms": 150 }] }
     },
     {
-      "id": "paywall",
-      "label": "Paywall",
-      "phase": 4,
-      "baselineScore": 76,
-      "targetScore": 90,
-      "route": "impact.html?sa_debug=paywall&source=instrument-shot",
-      "sourceType": "shipping-state",
-      "viewportIds": [
-        "portrait-wide",
-        "portrait-compact"
-      ],
-      "requiredSelectors": [
-        ".sa-pw-scrim",
-        "#sa-pw-title",
-        ".sa-pw-plans"
-      ],
-      "references": [
-        "TECH_SPEC.md",
-        "sa-paywall.js",
-        "sa-paywall.css"
-      ],
-      "primaryJob": "Understand Pro value before choosing monthly or annual access."
+      "id": "studio-face", "label": "Studio · face", "baselineScore": null, "targetScore": 90,
+      "route": "impact-studio.html", "sourceType": "shipping", "viewportIds": ["landscape-wide", "landscape-compact"],
+      "requiredSelectors": ["body[data-sa-route=\"studio\"]", "#stage[data-view=\"face\"]", "#scene", "#inset", "#range"],
+      "references": ["design/mocks/impact-studio.html", "docs/systemkontrakt.md", "TECH_SPEC.md"],
+      "primaryJob": "Read club geometry from the face-on impact view.",
+      "fixture": { "storage": [], "actions": [] }
+    },
+    {
+      "id": "studio-dtl", "label": "Studio · DTL", "baselineScore": null, "targetScore": 90,
+      "route": "impact-studio.html", "sourceType": "shipping", "viewportIds": ["landscape-wide", "landscape-compact"],
+      "requiredSelectors": ["#stage[data-view=\"dtl\"]", "#viewCap", "#scene", "#range"],
+      "references": ["design/mocks/impact-studio.html", "docs/systemkontrakt.md", "TECH_SPEC.md"],
+      "primaryJob": "Read club geometry from down the line.",
+      "fixture": { "storage": [], "actions": [{ "type": "click", "selector": "#btnView" }, { "type": "wait", "ms": 100 }] }
+    },
+    {
+      "id": "studio-strike", "label": "Studio · strike", "baselineScore": null, "targetScore": 90,
+      "route": "impact-studio.html", "sourceType": "shipping", "viewportIds": ["landscape-wide", "landscape-compact"],
+      "requiredSelectors": ["#inset.inset--max", "#btnContact[aria-expanded=\"true\"]", "#insetCv"],
+      "references": ["design/mocks/impact-studio.html", "docs/systemkontrakt.md", "TECH_SPEC.md"],
+      "primaryJob": "Open the strike contact-zone inspector.",
+      "fixture": { "storage": [], "actions": [{ "type": "click", "selector": "#btnContact" }, { "type": "wait", "ms": 100 }] }
+    },
+    {
+      "id": "guide-browse", "label": "Guide · browse", "baselineScore": null, "targetScore": 90,
+      "route": "jarvis.html", "sourceType": "shipping", "viewportIds": ["portrait-wide", "portrait-compact"],
+      "requiredSelectors": ["body[data-guide-view=\"browse\"]", "#guideMain", "[data-guide-panel=\"browse\"]:not([hidden])", "[data-guide-intent=\"explore-topic\"]", ".guide-topic-ladder"],
+      "references": ["TECH_SPEC.md", "docs/superpowers/specs/2026-08-07-flightglass-guide-design.md", "docs/guide-question-research.md"],
+      "primaryJob": "Choose a predefined model question.",
+      "fixture": { "storage": [], "actions": [] }
+    },
+    {
+      "id": "guide-answer-backspin", "label": "Guide · answer / backspin", "baselineScore": null, "targetScore": 90,
+      "route": "jarvis.html?topic=launch-spin&question=backspin", "sourceType": "shipping", "viewportIds": ["portrait-wide", "portrait-compact"],
+      "requiredSelectors": ["body[data-guide-view=\"answer\"]", "[data-guide-panel=\"answer\"]:not([hidden])", "#guideAnswerBullets", "#guideMetricRows", "#guideTruthTier"],
+      "references": ["TECH_SPEC.md", "docs/superpowers/specs/2026-08-07-flightglass-guide-design.md", "docs/guide-question-research.md"],
+      "primaryJob": "Read the bounded answer to the backspin question.",
+      "fixture": { "storage": [], "actions": [{ "type": "wait", "ms": 100 }] }
+    },
+    {
+      "id": "guide-lab", "label": "Guide · lab", "baselineScore": null, "targetScore": 90,
+      "route": "jarvis.html?topic=launch-spin&question=backspin", "sourceType": "shipping", "viewportIds": ["portrait-wide", "portrait-compact"],
+      "requiredSelectors": ["body[data-guide-view=\"lab\"]", "[data-guide-panel=\"lab\"]:not([hidden])", "#guideLabSlider", "#guideOutcomeChips", "#guideDeltaRows"],
+      "references": ["TECH_SPEC.md", "docs/superpowers/specs/2026-08-07-flightglass-guide-design.md", "docs/guide-question-research.md"],
+      "primaryJob": "Compare one held-variable model relationship.",
+      "fixture": { "storage": [], "actions": [{ "type": "wait", "ms": 100 }, { "type": "click", "selector": "#guideOpenLab" }, { "type": "wait", "ms": 100 }] }
+    },
+    {
+      "id": "paywall", "label": "Paywall", "baselineScore": 76, "targetScore": 90,
+      "route": "impact.html?sa_debug=paywall&source=instrument-shot", "sourceType": "shipping", "viewportIds": ["portrait-wide", "portrait-compact"],
+      "requiredSelectors": [".sa-pw-scrim[open]", "#sa-pw-title", ".sa-pw-plans", ".sa-pw-legal"],
+      "references": ["TECH_SPEC.md", "docs/paywall-verdict.md", "docs/monetization-strategy.md"],
+      "primaryJob": "Understand Pro access before choosing a subscription.",
+      "fixture": { "storage": [], "actions": [{ "type": "wait", "ms": 100 }] }
+    },
+    {
+      "id": "support", "label": "Support", "baselineScore": null, "targetScore": 90,
+      "route": "support.html", "sourceType": "shipping", "viewportIds": ["portrait-wide", "portrait-compact"],
+      "requiredSelectors": ["#main", "#support-title", "#faq-heading", "#restore", "nav[aria-label=\"Support and legal links\"]"],
+      "references": ["TECH_SPEC.md", "docs/store-listing.md", "docs/app-review-notes.md"],
+      "primaryJob": "Find support and model-boundary help.",
+      "fixture": { "storage": [], "actions": [] }
+    },
+    {
+      "id": "terms", "label": "Terms", "baselineScore": null, "targetScore": 90,
+      "route": "terms.html", "sourceType": "shipping", "viewportIds": ["portrait-wide", "portrait-compact"],
+      "requiredSelectors": ["#main", ".toc", "#tiers", "#renewal", "nav[aria-label=\"Legal links\"]"],
+      "references": ["TECH_SPEC.md", "docs/store-listing.md", "docs/app-review-notes.md"],
+      "primaryJob": "Read the Flightglass terms of use.",
+      "fixture": { "storage": [], "actions": [] }
+    },
+    {
+      "id": "privacy", "label": "Privacy", "baselineScore": null, "targetScore": 90,
+      "route": "privacy.html", "sourceType": "shipping", "viewportIds": ["portrait-wide", "portrait-compact"],
+      "requiredSelectors": ["#main", ".toc", "#purchases", "#revenuecat", "nav[aria-label=\"Legal links\"]"],
+      "references": ["TECH_SPEC.md", "docs/store-listing.md", "docs/app-review-notes.md"],
+      "primaryJob": "Read the Flightglass privacy policy.",
+      "fixture": { "storage": [], "actions": [] }
     }
   ]
 }

@@ -194,13 +194,36 @@ test('the GitHub release workflow verifies the exact event candidate through the
   assert.match(releaseWorkflowSource, /npm-audit-all\.json/);
   assert.match(releaseWorkflowSource, /npm-audit-production\.json/);
   assert.match(releaseWorkflowSource, /npm-audit-tools\.json/);
+  assert.match(
+    releaseWorkflowSource,
+    /name: Reset UX verification evidence workspace[\s\S]*rm -rf outputs\/flightglass-ux\/verify[\s\S]*rm -f outputs\/flightglass-ux\/verify-report\.json outputs\/flightglass-ux\/verify-report\.md/
+  );
+  assert.match(
+    releaseWorkflowSource,
+    /name: Collect immutable UX verification evidence[\s\S]*if: always\(\)[\s\S]*outputs\/flightglass-ux\/verify-report\.json[\s\S]*outputs\/flightglass-ux\/verify-report\.md[\s\S]*outputs\/flightglass-ux\/verify\/\*\.png/
+  );
+  assert.match(releaseWorkflowSource, /jq -r '\.results\[\]\.screenshot'/);
+  assert.match(releaseWorkflowSource, /find "\$screenshot_root" -maxdepth 1 -type f -name '\*\.png'/);
+  assert.match(releaseWorkflowSource, /diff -u <\(printf '%s\\n' "\$\{expected_screenshots\[@\]\}"\) <\(printf '%s\\n' "\$\{actual_screenshots\[@\]\}"\)/);
+  assert.match(releaseWorkflowSource, /sha256sum "\$file"/);
+  assert.match(releaseWorkflowSource, /stat -c %s "\$file"/);
+  assert.match(releaseWorkflowSource, /ux-verify-files\.json/);
   assert.match(releaseWorkflowSource, /name: Write immutable release evidence manifest[\s\S]*if: always\(\)[\s\S]*release-evidence-manifest\.json/);
   assert.match(releaseWorkflowSource, /steps:\s*\{[\s\S]*checkout: \$checkout[\s\S]*auditTools: \$auditTools/);
+  assert.match(
+    releaseWorkflowSource,
+    /uxVerify:\s*\{[\s\S]*reports:[\s\S]*outputs\/flightglass-ux\/verify-report\.json[\s\S]*outputs\/flightglass-ux\/verify-report\.md[\s\S]*screenshots:[\s\S]*outputs\/flightglass-ux\/verify\/\*\.png[\s\S]*inventory: \$uxVerifyFiles/
+  );
   assert.match(releaseWorkflowSource, /name: Upload immutable release evidence[\s\S]*if: always\(\)/);
   assert.match(releaseWorkflowSource, /name: flightglass-v1-release-evidence-\$\{\{ github\.run_id \}\}/);
   assert.match(releaseWorkflowSource, /path: \$\{\{ runner\.temp \}\}\/flightglass-v1-evidence\//);
   assert.match(releaseWorkflowSource, /if-no-files-found: error/);
   assert.match(releaseWorkflowSource, /retention-days: 30/);
+  const resetUxIndex = releaseWorkflowSource.indexOf('name: Reset UX verification evidence workspace');
+  const changeGateIndex = releaseWorkflowSource.indexOf('name: Verify the exact candidate through the complete risk gate');
+  const collectUxIndex = releaseWorkflowSource.indexOf('name: Collect immutable UX verification evidence');
+  const manifestIndex = releaseWorkflowSource.indexOf('name: Write immutable release evidence manifest');
+  assert.ok(resetUxIndex < changeGateIndex && changeGateIndex < collectUxIndex && collectUxIndex < manifestIndex);
   assert.doesNotMatch(
     releaseWorkflowSource,
     /uses: actions\/(?:checkout|setup-node|upload-artifact)@v4/,

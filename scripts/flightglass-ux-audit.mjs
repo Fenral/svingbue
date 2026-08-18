@@ -8,6 +8,7 @@ import {
   loadManifest,
   validateManifest,
   evaluateSnapshot,
+  countBlockingFindings,
   normalizeResourceErrors,
   shouldIgnoreResourceFailure,
   reportFileStem,
@@ -105,9 +106,13 @@ async function launchBrowser() {
 async function inspectPage(page, requiredSelectors) {
   return page.evaluate((selectors) => {
     const isVisible = (element) => {
-      const style = getComputedStyle(element);
       const rect = element.getBoundingClientRect();
-      return style.display !== 'none' && style.visibility !== 'hidden' && Number(style.opacity) !== 0 && rect.width > 0 && rect.height > 0;
+      if (rect.width <= 0 || rect.height <= 0) return false;
+      for (let current = element; current; current = current.parentElement) {
+        const style = getComputedStyle(current);
+        if (style.display === 'none' || style.visibility === 'hidden' || Number(style.opacity) === 0) return false;
+      }
+      return true;
     };
     const selectorFor = (element) => {
       if (element.id) return `#${element.id}`;
@@ -115,15 +120,22 @@ async function inspectPage(page, requiredSelectors) {
       return `${element.tagName.toLowerCase()}${classes}`;
     };
 
-    const missingSelectors = selectors.filter((selector) => !document.querySelector(selector));
+    const missingSelectors = selectors.filter((selector) => {
+      const element = document.querySelector(selector);
+      return !element || !isVisible(element);
+    });
     const horizontalOverflowPx = Math.max(0, Math.ceil(document.documentElement.scrollWidth - innerWidth));
     const interactive = [...document.querySelectorAll('a,button,input,select,textarea,[role="button"],[role="slider"],[tabindex]:not([tabindex="-1"])')]
       .filter((element) => isVisible(element) && !element.disabled && element.getAttribute('aria-hidden') !== 'true');
     const smallTargets = interactive
       .map((element) => {
         const rect = element.getBoundingClientRect();
+        const style = getComputedStyle(element);
+        if (rect.right <= 0 || rect.left >= innerWidth || rect.bottom <= 0 || rect.top >= innerHeight) return null;
+        if (element.tagName === 'A' && style.display === 'inline') return null;
         return { selector: selectorFor(element), width: Math.round(rect.width), height: Math.round(rect.height) };
       })
+      .filter(Boolean)
       .filter((target) => target.width < 44 || target.height < 44)
       .slice(0, 60);
 
@@ -131,6 +143,10 @@ async function inspectPage(page, requiredSelectors) {
       .filter((element) => {
         if (!isVisible(element) || element.children.length > 0 || !element.textContent.trim()) return false;
         const style = getComputedStyle(element);
+        const rect = element.getBoundingClientRect();
+        const visuallyHidden = rect.width <= 2 && rect.height <= 2
+          && (style.clip !== 'auto' || style.clipPath !== 'none');
+        if (visuallyHidden) return false;
         const clips = ['hidden', 'clip'].includes(style.overflow) || ['hidden', 'clip'].includes(style.overflowX) || style.textOverflow === 'ellipsis';
         return clips && (element.scrollWidth > element.clientWidth + 1 || element.scrollHeight > element.clientHeight + 1);
       })
@@ -139,6 +155,26 @@ async function inspectPage(page, requiredSelectors) {
 
     return { horizontalOverflowPx, missingSelectors, smallTargets, clippedText };
   }, requiredSelectors);
+}
+
+async function installFixtureStorage(browserContext, fixture) {
+  const entries = fixture?.storage || [];
+  await browserContext.addInitScript((fixtureEntries) => {
+    for (const entry of fixtureEntries) {
+      const storage = entry.area === 'session' ? window.sessionStorage : window.localStorage;
+      storage.setItem(entry.key, entry.value);
+    }
+  }, entries);
+}
+
+async function runFixtureActions(page, fixture) {
+  for (const action of fixture?.actions || []) {
+    if (action.type === 'click') {
+      await page.locator(action.selector).click({ timeout: 5000 });
+    } else if (action.type === 'wait') {
+      await page.waitForTimeout(action.ms);
+    }
+  }
 }
 
 async function runAudit(manifest, options) {
@@ -162,10 +198,12 @@ async function runAudit(manifest, options) {
       for (const viewportId of surface.viewportIds) {
         for (const motion of motionModes) {
           const viewport = manifest.viewports[viewportId];
-          const page = await browser.newPage({
+          const browserContext = await browser.newContext({
             viewport: { width: viewport.width, height: viewport.height },
             reducedMotion: motion === 'reduced' ? 'reduce' : 'no-preference'
           });
+          await installFixtureStorage(browserContext, surface.fixture);
+          const page = await browserContext.newPage();
           const consoleErrors = [];
           const pageErrors = [];
           const resourceErrors = [];
@@ -200,8 +238,13 @@ async function runAudit(manifest, options) {
           });
 
           const response = await page.goto(`${base}/${surface.route}`, { waitUntil: 'load', timeout: 20000 });
-          await page.waitForTimeout(surface.id === 'home' ? 1600 : 800);
-          const inspection = await inspectPage(page, surface.requiredSelectors);
+          await runFixtureActions(page, surface.fixture);
+          await page.waitForTimeout(250);
+          const requiredSelectors = [
+            ...surface.requiredSelectors,
+            ...(surface.requiredSelectorsByMotion?.[motion] || []),
+          ];
+          const inspection = await inspectPage(page, requiredSelectors);
           const snapshot = {
             httpStatus: response?.status(),
             consoleErrors,
@@ -213,7 +256,7 @@ async function runAudit(manifest, options) {
           const basename = `${surface.id}--${viewportId}--${motion}`;
           const screenshotFile = join(outputRoot, `${basename}.png`);
           await page.screenshot({ path: screenshotFile, fullPage: false });
-          await page.close();
+          await browserContext.close();
 
           results.push({
             surfaceId: surface.id,
@@ -263,8 +306,10 @@ async function main() {
 
   const report = await runAudit(manifest, options);
   const criticalCount = report.results.reduce((total, result) => total + result.critical.length, 0);
-  process.stdout.write(`Flightglass UX ${options.mode} complete: ${report.results.length} captures, ${criticalCount} critical finding(s).\n`);
-  if (options.mode === 'verify' && criticalCount > 0) process.exitCode = 1;
+  const improvementCount = report.results.reduce((total, result) => total + result.improvements.length, 0);
+  const blockingCount = countBlockingFindings(report, options.mode);
+  process.stdout.write(`Flightglass UX ${options.mode} complete: ${report.results.length} captures, ${criticalCount} critical and ${improvementCount} design-floor finding(s).\n`);
+  if (blockingCount > 0) process.exitCode = 1;
 }
 
 main().catch((error) => {

@@ -78,6 +78,31 @@ const open = async (viewport = { width: 390, height: 844 }) => {
   return { page, errors };
 };
 
+const openWithRafProbe = async reducedMotion => {
+  const context = await browser.newContext({
+    viewport: { width: 390, height: 844 },
+    reducedMotion,
+  });
+  await context.addInitScript(() => {
+    const nativeRequestAnimationFrame = window.requestAnimationFrame.bind(window);
+    let callbacks = 0;
+    window.requestAnimationFrame = callback => nativeRequestAnimationFrame(timestamp => {
+      callbacks += 1;
+      callback(timestamp);
+    });
+    window.__rangeRafCallbacks = () => callbacks;
+  });
+  const page = await context.newPage();
+  const errors = [];
+  page.on('pageerror', error => errors.push(`page:${error.message}`));
+  page.on('console', message => {
+    if (message.type() === 'error') errors.push(`console:${message.text()}`);
+  });
+  await page.goto(`${baseUrl}/impact.html`, { waitUntil: 'networkidle' });
+  await page.locator('#stage').waitFor();
+  return { context, page, errors };
+};
+
 const station = async (page, name) => {
   const selector = page.locator('.stations button', { hasText: new RegExp(`^${name}$`) });
   if (!await selector.isVisible()) await page.getByRole('button', { name: /^Change input$/i }).click();
@@ -117,6 +142,54 @@ const renderedTracerBounds = page => page.locator('#scene').evaluate(canvas => {
   };
 });
 
+test('Range idles under reduced motion while live input and normal camera motion still render',
+  { timeout: 60_000 }, async () => {
+    const reduced = await openWithRafProbe('reduce');
+    await reduced.page.waitForTimeout(120);
+    const reducedIdleStart = await reduced.page.evaluate(() => window.__rangeRafCallbacks());
+    await reduced.page.waitForTimeout(300);
+    const reducedIdleEnd = await reduced.page.evaluate(() => window.__rangeRafCallbacks());
+    assert.ok(reducedIdleEnd - reducedIdleStart <= 1,
+      `reduced-motion Range must stop rendering while idle; saw ${reducedIdleEnd - reducedIdleStart} frames`);
+
+    const carryBefore = await reduced.page.locator('#fCarryNum').textContent();
+    await reduced.page.getByRole('button', { name: /^Change input$/i }).click();
+    await reduced.page.locator('#sl-speed').fill('110');
+    await reduced.page.waitForFunction(previous => document.querySelector('#fCarryNum')?.textContent !== previous,
+      carryBefore, { timeout: 500 });
+    await reduced.page.waitForTimeout(80);
+    const changedFrame = await reduced.page.locator('#scene').evaluate(canvas => canvas.toDataURL());
+    const reducedSettleStart = await reduced.page.evaluate(() => window.__rangeRafCallbacks());
+    await reduced.page.waitForTimeout(1000);
+    const settledFrame = await reduced.page.locator('#scene').evaluate(canvas => canvas.toDataURL());
+    const reducedSettleEnd = await reduced.page.evaluate(() => window.__rangeRafCallbacks());
+    assert.equal(settledFrame, changedFrame,
+      'reduced-motion Range must hold the final live-input frame');
+    assert.ok(reducedSettleEnd - reducedSettleStart <= 1,
+      `reduced-motion Range must settle after live input; saw ${reducedSettleEnd - reducedSettleStart} frames`);
+    assert.deepEqual(noFavicon(reduced.errors), []);
+    await reduced.context.close();
+
+    const normal = await openWithRafProbe('no-preference');
+    await normal.page.evaluate(() => {
+      window.__impact.capture = true;
+      window.__impact.trace.length = 0;
+      window.__impact.setStation(1);
+    });
+    await normal.page.waitForTimeout(360);
+    const motion = await normal.page.evaluate(() => ({
+      callbacks: window.__rangeRafCallbacks(),
+      stations: window.__impact.trace.map(sample => sample.station),
+      station: window.__impact.state.station,
+    }));
+    assert.ok(motion.callbacks >= 4, `normal motion must keep rendering; saw ${motion.callbacks} frames`);
+    assert.ok(new Set(motion.stations.map(value => value.toFixed(3))).size >= 3,
+      'normal camera motion must render intermediate stations');
+    assert.ok(motion.station > 0.9, `normal camera motion must approach Side; got ${motion.station}`);
+    assert.deepEqual(noFavicon(normal.errors), []);
+    await normal.context.close();
+  });
+
 test('top strip is a single back-to-menu control', { timeout: 60_000 }, async () => {
   const { page, errors } = await open();
   await page.locator('#stage').waitFor();
@@ -143,6 +216,93 @@ test('Shot is the calm default; telemetry opens only on request', { timeout: 60_
   assert.equal(await page.locator('#detailReadouts .chip:visible').count(), 4);
   assert.deepEqual(noFavicon(errors), []);
   await page.close();
+});
+
+test('Shot annotations stay clear of the compact evidence brief', { timeout: 60_000 }, async () => {
+  const readCollisions = page => page.evaluate(() => {
+    const brief = document.querySelector('#shotBrief').getBoundingClientRect();
+    return [...document.querySelectorAll('#annoLabels .annoLabel')]
+      .filter(label => {
+        const style = getComputedStyle(label);
+        const rect = label.getBoundingClientRect();
+        return style.display !== 'none' && style.visibility !== 'hidden'
+          && rect.width > 0 && rect.height > 0;
+      })
+      .map(label => ({ text: label.textContent.trim(), rect: label.getBoundingClientRect().toJSON() }))
+      .filter(({ rect }) => rect.left < brief.right && rect.right > brief.left
+        && rect.top < brief.bottom && rect.bottom > brief.top);
+  });
+  const readLabelViolations = page => page.evaluate(() => {
+    const layer = document.querySelector('#annoLabels').getBoundingClientRect();
+    const labels = [...document.querySelectorAll('#annoLabels .annoLabel')]
+      .filter(label => {
+        const style = getComputedStyle(label);
+        const rect = label.getBoundingClientRect();
+        return style.display !== 'none' && style.visibility !== 'hidden'
+          && rect.width > 0 && rect.height > 0;
+      })
+      .map(label => ({ text: label.textContent.trim(), rect: label.getBoundingClientRect().toJSON() }));
+    const outOfBounds = labels.filter(({ rect }) => rect.left < layer.left - 0.5
+      || rect.right > layer.right + 0.5 || rect.top < layer.top - 0.5
+      || rect.bottom > layer.bottom + 0.5);
+    const overlaps = [];
+    for (let a = 0; a < labels.length; a++) for (let b = a + 1; b < labels.length; b++) {
+      const x = labels[a].rect;
+      const y = labels[b].rect;
+      if (x.left < y.right && x.right > y.left && x.top < y.bottom && x.bottom > y.top) {
+        overlaps.push([labels[a].text, labels[b].text]);
+      }
+    }
+    return { outOfBounds, overlaps };
+  });
+
+  for (const viewport of [
+    { width: 375, height: 812 },
+    { width: 390, height: 844 },
+    { width: 430, height: 932 },
+  ]) {
+    const { page, errors } = await open(viewport);
+    await page.locator('#stage').waitFor();
+    await page.waitForFunction(() => document.querySelectorAll('#annoLabels .annoLabel').length > 0);
+    const collisions = await readCollisions(page);
+    assert.deepEqual(collisions, [], `${viewport.width}×${viewport.height}: labels clear the shot brief`);
+
+    if (viewport.width === 430) {
+      await page.evaluate(() => { window.__impact.state.attack = 15; });
+      await page.waitForTimeout(80);
+      assert.deepEqual(await readCollisions(page), [], '430×932 high-Attack labels clear the shot brief');
+    }
+
+    if (viewport.width === 375) {
+      await page.evaluate(() => {
+        Object.assign(window.__impact.state, {
+          speed: 150, face: -15, path: 15, attack: -15, dynLoft: 25,
+        });
+        window.__impact.setRangeMode('change');
+        window.__impact.setStation(2, false);
+        window.__impact.setRangeMode('shot');
+      });
+      await page.waitForTimeout(80);
+      assert.deepEqual(await readCollisions(page), [],
+        '375×812 extreme Top → Shot labels clear the shot brief');
+      assert.deepEqual(await readLabelViolations(page), { outOfBounds: [], overlaps: [] },
+        '375×812 extreme Top → Shot labels stay separate and inside the annotation layer');
+
+      await page.evaluate(() => {
+        Object.assign(window.__impact.state, {
+          speed: 150, face: 15, path: -15, attack: 0, dynLoft: 25,
+        });
+        window.__impact.setRangeMode('change');
+        window.__impact.setStation(2, false);
+        window.__impact.setRangeMode('shot');
+      });
+      await page.waitForTimeout(80);
+      assert.deepEqual(await readLabelViolations(page), { outOfBounds: [], overlaps: [] },
+        '375×812 mirrored extreme keeps every rendered label inside the annotation layer');
+    }
+    assert.deepEqual(noFavicon(errors), []);
+    await page.close();
+  }
 });
 
 test('the pin control reads Pin comparison', { timeout: 60_000 }, async () => {
@@ -561,6 +721,10 @@ test('Change keeps all five values visible and every parameter editable', { time
   await page.getByRole('button', { name: /^Change input$/i }).click();
   assert.equal(await page.locator('#parameterRail button').count(), 5);
   assert.equal(await page.locator('#spVal').getAttribute('aria-valuenow'), null);
+  assert.equal(await page.locator('.controlValue').getAttribute('aria-valuenow'), null,
+    'the read-only output must not expose unsupported range semantics');
+  assert.equal(await page.locator('.controlValue').getAttribute('aria-valuetext'), null,
+    'the real range input owns slider value semantics');
   const edits = { speed: 107, face: -4.2, path: 3.1, attack: -2.4, dynLoft: 30.5 };
   for (const [key, value] of Object.entries(edits)) {
     const selector = page.locator(`#parameterRail button[data-param="${key}"]`);

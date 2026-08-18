@@ -22,7 +22,7 @@
   }
 
   /* ---------- outcome strip ---------- */
-  .top{display:flex;gap:8px;align-items:stretch;padding:6px 10px 4px;height:52px;flex:0 0 auto}
+  .top{display:flex;gap:8px;align-items:stretch;padding:5px 10px;height:54px;flex:0 0 auto}
   .card{
     flex:1 1 0;min-width:0;border-radius:12px;background:var(--surface);
     display:flex;align-items:center;justify-content:center;gap:10px;
@@ -141,9 +141,9 @@
   /* ---------- controls ---------- */
   /* compressed control block: chips + slider flush mot safe-area (HIG: siste
      kontroll like over hjem-indikatoren) — frigjør høyde til scenen */
-  .controls{flex:0 0 auto;height:calc(84px + env(safe-area-inset-bottom));
-    padding:4px 10px calc(4px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:4px}
-  .chips{display:flex;gap:8px;height:44px}
+  .controls{flex:0 0 auto;height:calc(96px + env(safe-area-inset-bottom));
+    padding:2px 10px calc(2px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:4px}
+  .chips{display:flex;gap:8px;flex:0 0 44px}
   .chip{
     flex:1 1 0;min-width:0;border-radius:12px;background:var(--surface);cursor:pointer;
     border:1px solid var(--line);display:flex;flex-direction:column;align-items:center;
@@ -161,7 +161,7 @@
   .chip[data-p="low"]{--chip-hue:var(--accent)}   /* Ball Position: live ball → ember */
   .chip[data-p="arc"]{--chip-hue:var(--q-depth)}
 
-  .sliderZone{position:relative;height:36px;display:flex;align-items:center}
+  .sliderZone{position:relative;flex:0 0 44px;display:flex;align-items:center}
   .track{position:absolute;left:13px;right:13px;top:50%;height:4px;margin-top:-2px;
     border-radius:2px;background:color-mix(in srgb,var(--ink) 14%,transparent)}
   .fill{position:absolute;top:50%;height:4px;margin-top:-2px;border-radius:2px;
@@ -172,23 +172,23 @@
     position:absolute;inset:0;width:100%;appearance:none;-webkit-appearance:none;
     background:transparent;margin:0;cursor:pointer;
   }
-  #range::-webkit-slider-runnable-track{height:36px;background:transparent}
+  #range::-webkit-slider-runnable-track{height:44px;background:transparent}
   #range::-webkit-slider-thumb{
-    -webkit-appearance:none;width:26px;height:26px;border-radius:50%;margin-top:5px;
+    -webkit-appearance:none;width:26px;height:26px;border-radius:50%;margin-top:9px;
     background:var(--ink);border:3px solid var(--slider-hue,var(--secondary));
     box-shadow:0 2px 10px color-mix(in srgb,var(--bg) 60%,transparent);
   }
-  #range::-moz-range-track{height:36px;background:transparent}
+  #range::-moz-range-track{height:44px;background:transparent}
   #range::-moz-range-thumb{width:22px;height:22px;border-radius:50%;
     background:var(--ink);border:3px solid var(--slider-hue,var(--secondary))}
 
   /* compact phones (568x320) */
   @media (max-width:620px){
-    .top{height:46px}
+    .top{height:54px}
     .card .val{font-size:15px}
     .card .lab{font-size:10px;letter-spacing:.04em}
     .chip .cl{font-size:10px;letter-spacing:.03em}
-    .controls{height:calc(80px + env(safe-area-inset-bottom))}
+    .controls{height:calc(96px + env(safe-area-inset-bottom))}
     .orb{width:52px;min-height:54px}
     .orb svg{width:34px;height:30px}
   }
@@ -341,6 +341,7 @@ import * as saIap from './sa-iap.js';
 import { track } from './sa-analytics.js';
 
 const guidedExperimentRequested = new URLSearchParams(location.search).get('guided') === 'experiment';
+const PARAM_LABELS = { plane:'Swing plane', dir:'Swing direction', low:'Ball position', arc:'Arc height' };
 const iapReady = saIap.init();
 const showPaywall = async moment => (await import('./sa-paywall.js')).openPaywall(moment);
 let guidedExperimentCompleted = false;
@@ -368,12 +369,11 @@ async function completeGuidedExperiment() {
   guidedExperimentCompleted = true;
   consume('guided-experiment', { pro: saIap.isPro(), completed: true });
   track('experiment_completed', { route: 'studio', completed: true });
-  const labels = { plane:'Swing plane', dir:'Swing direction', low:'Ball position', arc:'Arc height' };
   const before = guidedBaseline?.[state.sel] ?? PARAMS[state.sel].def;
   document.body.dataset.guidedExperiment = 'complete';
   document.getElementById('guidedExperimentState').textContent = 'EXPERIMENT COMPLETE';
   document.getElementById('guidedExperimentCopy').textContent =
-    `${labels[state.sel]}: ${PARAMS[state.sel].fmt(before)} → ${PARAMS[state.sel].fmt(state[state.sel])}. Compare the arc and outcome readouts.`;
+    `${PARAM_LABELS[state.sel]}: ${PARAMS[state.sel].fmt(before)} → ${PARAMS[state.sel].fmt(state[state.sel])}. Compare the arc and outcome readouts.`;
 }
 const d2r = d => d * Math.PI / 180, r2d = r => r * 180 / Math.PI;
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
@@ -583,6 +583,8 @@ function selectParam(key){
   range.style.setProperty('--slider-hue', p.hue);
   fillEl.style.background = p.hue;
   range.min = p.min; range.max = p.max; range.step = p.step; range.value = state[key];
+  range.setAttribute('aria-label', PARAM_LABELS[key]);
+  range.setAttribute('aria-valuetext', p.fmt(state[key]));
   prevSliderVal = state[key];
   layoutSlider(); kick();
 }
@@ -601,6 +603,7 @@ range.addEventListener('input', () => {
   }
   prevSliderVal = nv;
   state[state.sel] = nv;
+  range.setAttribute('aria-valuetext', p.fmt(nv));
   vecFlashAt = performance.now();
   updateChipValues(); layoutSlider(); updateOutcomes(); crossViewHint(); kick();
 });
@@ -615,6 +618,7 @@ $('resetBtn').addEventListener('click', () => {
   for (const k in PARAMS) state[k] = PARAMS[k].def;
   state.plane = PLANE_PRESET[state.club];
   range.value = state[state.sel];
+  range.setAttribute('aria-valuetext', PARAMS[state.sel].fmt(state[state.sel]));
   haptics.impact('light');
   vecFlashAt = performance.now();
   updateChipValues(); layoutSlider(); updateOutcomes(); kick();
@@ -628,6 +632,7 @@ function setClub(c){
   $('clubCap').textContent = c === 'iron' ? 'IRON' : 'DRIVER';
   if (state.sel === 'plane') range.value = state.plane;
   if (state.sel === 'arc') range.value = state.arc;
+  range.setAttribute('aria-valuetext', PARAMS[state.sel].fmt(state[state.sel]));
   vecFlashAt = performance.now();
   updateChipValues(); layoutSlider(); updateOutcomes(); kick();
 }
@@ -686,10 +691,15 @@ function setView(v){
 /* ============================================================ RENDER LOOP
  * Static scene + short one-shot transitions (tangent draw-in, sequence flash).
  * kick() restarts the 400 ms animation window. */
+const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
 let animStart = 0, rafId = 0;
 function kick(){
   animStart = performance.now();
   cancelAnimationFrame(rafId);
+  if (REDUCED) {
+    draw(1);
+    return;
+  }
   const loop = now => {
     draw(clamp((now - animStart) / 400, 0, 1));
     if (now - animStart < 1750) rafId = requestAnimationFrame(loop);
@@ -712,10 +722,10 @@ function draw(t){
  * parameter change, then fade out over ~700 ms */
 let vecFlashAt = -1e9;
 function flashAlpha(){
+  if (REDUCED) return 0;
   const dt = performance.now() - vecFlashAt;
   return dt < 900 ? 1 : clamp(1 - (dt - 900) / 700, 0, 1);
 }
-const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 /* ============================================================ HIGGSFIELD-ASSETS
  * Eier-autorisert unntak fra imagery-defaulten (2026-07-22): genererte

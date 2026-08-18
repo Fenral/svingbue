@@ -165,7 +165,7 @@
   .panehead{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 3px 8px}
   .panehead .h-title{color:var(--secondary);font:700 10px/1 var(--font-ui);letter-spacing:.18em}
   .panehead .h-title.live{color:var(--accent)}
-  .panelDone{min-height:30px;padding:0 9px;border:1px solid color-mix(in srgb,var(--secondary) 34%,transparent);border-radius:9px;background:transparent;color:var(--secondary);font:700 9px/1 var(--font-ui);letter-spacing:.07em;cursor:pointer}
+  .panelDone{min-width:44px;min-height:44px;padding:0 10px;border:1px solid color-mix(in srgb,var(--secondary) 34%,transparent);border-radius:12px;background:transparent;color:var(--secondary);font:700 10px/1 var(--font-ui);letter-spacing:.07em;cursor:pointer}
   .panelDone[hidden]{display:none}
   .panelDone:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
   .pane{min-height:118px}
@@ -405,6 +405,11 @@ state.pins.push({ params: seedParams, outcome: selectOutcome(seedParams) });
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 const TAU = Math.PI * 2;
+let frameRequest = null;
+function queueFrame() {
+  if (frameRequest !== null) return;
+  frameRequest = requestAnimationFrame(frame);
+}
 
 /* ══ canvas ══ */
 const stage = document.getElementById('stage');
@@ -440,7 +445,7 @@ function resize() {
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   overlayMetricsDirty = true;
 }
-function scheduleResize() { resizePending = true; }
+function scheduleResize() { resizePending = true; queueFrame(); }
 addEventListener('resize', scheduleResize);
 if ('ResizeObserver' in window) new ResizeObserver(scheduleResize).observe(editorPanel);
 resize();
@@ -851,7 +856,13 @@ let hotTimer = null;
 function pulseHot(key, ms = 700) {
   hotKey = key;
   clearTimeout(hotTimer);
-  hotTimer = setTimeout(() => { if (hotKey === key) hotKey = null; }, ms);
+  queueFrame();
+  hotTimer = setTimeout(() => {
+    if (hotKey === key) {
+      hotKey = null;
+      queueFrame();
+    }
+  }, ms);
 }
 
 /* ══ Camera lenses — Outcome is the default cause/effect surface. SIDE/TOP
@@ -889,6 +900,7 @@ function setStation(s, animate = true) {
   // Side/Top input panel under a busy WebKit or Chromium event loop.
   resizePending = false;
   resize();
+  queueFrame();
 }
 for (const b of segButtons) b.addEventListener('click', () => setStation(+b.dataset.s));
 
@@ -944,8 +956,6 @@ function syncActiveControl() {
   const output = activeControl.querySelector('.controlValue');
   if (output) {
     output.textContent = d.fmt(value);
-    output.setAttribute('aria-valuenow', String(value));
-    output.setAttribute('aria-valuetext', d.fmt(value));
   }
 }
 
@@ -996,6 +1006,7 @@ function setParamValue(key, raw) {
   if (key === 'speed') pulseHot('speed');
   syncAllInputUI();
   settleOutcomeInteraction();
+  queueFrame();
 }
 
 function bindHold(btn, dir, fixedKey = null) {
@@ -1027,7 +1038,7 @@ function renderActiveControl(key) {
   for (const b of parameterRail.querySelectorAll('button')) b.setAttribute('aria-pressed', String(b.dataset.param === key));
   activeControl.innerHTML = `
     <div class="controlHead"><label class="controlName" for="${id}">${d.name}</label>
-      <output class="controlValue" aria-label="Current ${d.name.toLowerCase()}" aria-valuenow="${state[key]}">${d.fmt(state[key])}</output></div>
+      <output class="controlValue" aria-label="Current ${d.name.toLowerCase()}">${d.fmt(state[key])}</output></div>
     <div class="controlBody">
       <button type="button" class="stepControl" id="controlMinus" aria-label="Decrease ${d.name.toLowerCase()}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/></svg></button>
       <div class="controlMeter">
@@ -1039,8 +1050,13 @@ function renderActiveControl(key) {
     </div><p class="controlCause" id="controlCause-${key}">${d.cause}</p>`;
   const input = activeControl.querySelector('input');
   input.addEventListener('input', () => setParamValue(key, input.value));
-  input.addEventListener('pointerdown', () => { hotKey = key; });
-  const clearHot = () => { if (hotKey === key) hotKey = null; };
+  input.addEventListener('pointerdown', () => { hotKey = key; queueFrame(); });
+  const clearHot = () => {
+    if (hotKey === key) {
+      hotKey = null;
+      queueFrame();
+    }
+  };
   input.addEventListener('pointerup', clearHot);input.addEventListener('pointercancel', clearHot);
   bindHold(document.getElementById('controlMinus'), -1);bindHold(document.getElementById('controlPlus'), 1);
   syncActiveControl();
@@ -1095,8 +1111,13 @@ function buildSlider(container, key) {
   container.appendChild(wrap);
   const input = wrap.querySelector('input');
   input.addEventListener('input', () => setParamValue(key, input.value));
-  input.addEventListener('pointerdown', () => { hotKey = key; });
-  const clearHot = () => { if (hotKey === key) hotKey = null; };
+  input.addEventListener('pointerdown', () => { hotKey = key; queueFrame(); });
+  const clearHot = () => {
+    if (hotKey === key) {
+      hotKey = null;
+      queueFrame();
+    }
+  };
   input.addEventListener('pointerup', clearHot);input.addEventListener('pointercancel', clearHot);
   syncPlaneSlider(wrap, key);
 }
@@ -1169,6 +1190,7 @@ function renderShotBrief(outcome) {
   const finish = signedDirection(outcome.m.side, 'm', 'on line');
   shotLine.innerHTML = `<strong>Starts ${start}</strong> → finishes ${finish}.`;
   shotProof.innerHTML = `<span>Ball speed <b>${Math.round(outcome.misc.ballSpeed)} mph</b></span><span>Backspin <b>${Math.round(outcome.misc.backspin)} rpm</b></span>`;
+  overlayMetricsDirty = true;
 }
 
 function renderShotPane() {
@@ -1212,6 +1234,7 @@ function setRangeMode(mode) {
   if (!['shot', 'change', 'details'].includes(mode)) return;
   state.rangeMode = mode;
   shotBrief.hidden = mode !== 'shot';
+  overlayMetricsDirty = true;
   if (mode === 'shot') renderShotPane();
   else if (mode === 'details') renderDetailsPane();
   else {
@@ -1223,6 +1246,7 @@ function setRangeMode(mode) {
   syncSeg();
   resizePending = false;
   resize();
+  queueFrame();
 }
 
 function outcomePaneHTML() {
@@ -1327,6 +1351,7 @@ pinFab.addEventListener('click', async () => {
     limit: used.limit,
     remaining: remaining ?? 0,
   });
+  queueFrame();
 });
 
 let cometEpoch = performance.now();
@@ -1344,6 +1369,7 @@ cv.addEventListener('pointermove', e => {
   const ds = (pan.y0 - e.clientY) * 0.0055;
   stationTarget = clamp(pan.s0 + ds, 0, 2);
   state.station = stationTarget; // følg fingeren direkte under scrub
+  queueFrame();
 });
 function endPan() {
   if (!pan) return;
@@ -1387,13 +1413,22 @@ const PIN_RETURN_DELAY = 320;
 let overlayMetrics = null;
 let pinSide = 'right';
 let pinRightClearSince = null;
+let pinReturnTimer = null;
 
 function getOverlayMetrics() {
   if (!overlayMetricsDirty && overlayMetrics) return overlayMetrics;
+  const stageRect = stage.getBoundingClientRect();
+  const shotBriefBounds = shotBrief.hidden ? null : shotBrief.getBoundingClientRect();
   overlayMetrics = {
     pinW: pinFab.offsetWidth,
     pinH: pinFab.offsetHeight,
     carryBottom: fCarryStack.offsetTop + fCarryStack.offsetHeight,
+    shotBriefRect: shotBriefBounds ? {
+      x: shotBriefBounds.left - stageRect.left,
+      y: shotBriefBounds.top - stageRect.top,
+      w: shotBriefBounds.width,
+      h: shotBriefBounds.height,
+    } : null,
   };
   overlayMetricsDirty = false;
   return overlayMetrics;
@@ -1477,11 +1512,24 @@ function syncSceneHud(liveOutcome, pins, placed, now, tracerVisible) {
   if (rightBlocked) {
     pinSide = 'left';
     pinRightClearSince = null;
+    clearTimeout(pinReturnTimer);
+    pinReturnTimer = null;
   } else if (pinSide === 'left') {
-    if (pinRightClearSince == null) pinRightClearSince = now;
+    if (pinRightClearSince == null) {
+      pinRightClearSince = now;
+      if (reduceMotion) {
+        clearTimeout(pinReturnTimer);
+        pinReturnTimer = setTimeout(() => {
+          pinReturnTimer = null;
+          queueFrame();
+        }, PIN_RETURN_DELAY + 16);
+      }
+    }
     if (now - pinRightClearSince >= PIN_RETURN_DELAY) {
       pinSide = 'right';
       pinRightClearSince = null;
+      clearTimeout(pinReturnTimer);
+      pinReturnTimer = null;
     }
   }
 
@@ -1592,6 +1640,7 @@ function buildVisibleBasis(rig, vbox, keepImpactVisible) {
 let flightRef = 'gates';
 
 function frame(now) {
+  frameRequest = null;
   // Resize the bitmap inside the render frame, immediately before drawing it.
   // A ResizeObserver callback that resizes independently can clear the canvas
   // after paint, which caused a one-frame blank tracer during lens changes.
@@ -1630,8 +1679,13 @@ function frame(now) {
   }
   updateStats(liveOutcome);
 
+  const sceneHud = getOverlayMetrics();
   const placed = tracerVisible
-    ? placeLabels(buildAnnotations(liveOutcome, state.station, basis, hotKey), MEASURE_KEEPOUT, { w: W, h: H })
+    ? placeLabels(buildAnnotations(liveOutcome, state.station, basis, hotKey), MEASURE_KEEPOUT, {
+      w: W,
+      h: H,
+      hudKeepOut: state.rangeMode === 'shot' ? sceneHud.shotBriefRect : null,
+    })
     : [];
   if (tracerVisible) drawAnnotationPrimitives(placed);
   renderAnnotationLabels(placed);
@@ -1646,13 +1700,13 @@ function frame(now) {
     lastChipsOutcome = liveOutcome;
   }
   syncAllInputUI();
-  requestAnimationFrame(frame);
+  if (!reduceMotion) queueFrame();
 }
 
 // instrumenteringskrok for evidens (K1/K6: logget skalarverdi per frame når
 // `capture` er på) og for senere økter/dommer
 const api = { state, setStation, setRangeMode,
-  get stationTarget() { return stationTarget; }, setFlightRef(m) { flightRef = m; },
+  get stationTarget() { return stationTarget; }, setFlightRef(m) { flightRef = m; queueFrame(); },
   get flightRef() { return flightRef; },
   projectPoint(point) { return basis ? project(point, basis) : null; },
   capture: false, trace: [] };
@@ -1666,7 +1720,8 @@ lastChipsOutcome = initialOutcome;
 syncSeg();
 resizePending = false;
 resize();
-requestAnimationFrame(frame);
+queueFrame();
+document.fonts?.ready?.then(queueFrame);
 </script>
 <!-- Portrait lock (see sa-orientation.js): the native app holds portrait; this
      is the web fallback shown only on a landscape phone, where the browser

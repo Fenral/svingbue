@@ -199,6 +199,8 @@ test('the committed store gallery contains exactly five current upload candidate
   for (const route of ['index.html', 'impact.html', 'impact-studio.html', 'jarvis.html']) {
     assert.match(generator, new RegExp(route.replace('.', '\\.')));
   }
+  assert.match(generator, /id:\s*'outcome'[\s\S]*ready:\s*'#shotBrief:not\(\[hidden\]\)'/,
+    'the Outcome artwork must capture the current calm Shot state');
 
   const ids = [...generator.matchAll(/id:\s*'([^']+)'/g)].map((match) => match[1]);
   assert.deepEqual(ids.slice(0, 5), ['outcome', 'studio', 'guide', 'home', 'onboarding']);
