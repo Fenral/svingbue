@@ -157,10 +157,12 @@ test('Range idles under reduced motion while live input and normal camera motion
     await reduced.page.locator('#sl-speed').fill('110');
     await reduced.page.waitForFunction(previous => document.querySelector('#fCarryNum')?.textContent !== previous,
       carryBefore, { timeout: 500 });
-    await reduced.page.waitForTimeout(80);
+    // The input owns a bounded 700 ms hot-state. Let that intentional response
+    // finish before proving that reduced-motion has no continuing idle loop.
+    await reduced.page.waitForTimeout(900);
     const changedFrame = await reduced.page.locator('#scene').evaluate(canvas => canvas.toDataURL());
     const reducedSettleStart = await reduced.page.evaluate(() => window.__rangeRafCallbacks());
-    await reduced.page.waitForTimeout(1000);
+    await reduced.page.waitForTimeout(500);
     const settledFrame = await reduced.page.locator('#scene').evaluate(canvas => canvas.toDataURL());
     const reducedSettleEnd = await reduced.page.evaluate(() => window.__rangeRafCallbacks());
     assert.equal(settledFrame, changedFrame,
