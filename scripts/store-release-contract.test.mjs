@@ -62,7 +62,7 @@ test('the release record names the exact evidence sink and a recoverable web bas
   const record = read('docs/v1-release-record.md');
   const packageManifest = JSON.parse(read('package.json'));
   const ignore = read('.gitignore');
-  assert.match(record, /GitHub PR #18/);
+  assert.match(record, /GitHub PR #23/);
   assert.match(record, /full 40-character candidate commit/);
   assert.match(record, /Flightglass v1 release gate/);
   assert.match(record, /184140a2ff5834f23510662f8c442b8a8c03d36c/);
@@ -104,7 +104,7 @@ test('physical-iPhone evidence uses an immutable template and external attested 
   assert.match(checklist, /flightglass-phone-evidence-attestation-<candidate>-v<version>-b<build>\.json/);
   assert.match(checklist, /refuses to overwrite an existing attestation/i);
   assert.match(checklist, /SHA-256 payload binds the candidate, build,\s+verified GitHub run/i);
-  assert.match(checklist, /link all three from PR #18/i);
+  assert.match(checklist, /link all three from PR #23/i);
 
   assert.match(releaseRecord, /immutable\s+`PENDING`\s+templates?/i);
   assert.match(releaseRecord, /--file <evidence-root>\/phone-release-evidence\.md/);

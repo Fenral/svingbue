@@ -271,5 +271,5 @@ verified GitHub run, completed record and every referenced local evidence file.
 The validator refuses to overwrite an existing attestation; a new candidate or
 build receives a different filename. Keep the completed Markdown, media/logs
 and attestation outside the candidate commit. Upload them to the approved
-release-evidence store and link all three from PR #18. The attestation protects
+release-evidence store and link all three from PR #23. The attestation protects
 integrity; it does not replace the direct observations or reviewer.

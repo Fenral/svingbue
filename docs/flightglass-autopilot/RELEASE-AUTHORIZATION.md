@@ -80,4 +80,4 @@ GitHub, Vercel and store publication are release operations, never shortcuts
 around verification.
 
 The exact candidate, CI and rollback ledger is
-`docs/v1-release-record.md`; PR #18 is its exact-SHA execution record.
+`docs/v1-release-record.md`; PR #23 is its exact-SHA execution record.
