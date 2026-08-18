@@ -9,7 +9,7 @@ prove. A green source gate is necessary, but it is not App Store authorization.
 
 ## Exact candidate record
 
-The canonical exact-SHA record is [GitHub PR #18](https://github.com/Fenral/svingbue/pull/18).
+The canonical exact-SHA record is [GitHub PR #23](https://github.com/Fenral/svingbue/pull/23).
 Before any production deploy, Codemagic archive or App Store submission, its
 body MUST name all of the following from the same candidate:
 
@@ -50,7 +50,7 @@ For a new candidate:
    --audit-level=high` and `npm audit --prefix tools --audit-level=high`.
    Record the full app, production app and build/browser-tool results separately
    alongside the change-gate controls.
-4. Record the exact outputs in PR #18 before any release action.
+4. Record the exact outputs in PR #23 before any release action.
 
 `npm run verify:v1:release` tests the evidence checkers; it does not invent
 participant or device observations. Keep both committed documents as immutable
@@ -67,7 +67,7 @@ npm run verify:v1:onboarding-evidence -- --candidate <full-40-character-sha> --b
 Exit code `0` emits an `onboarding-<candidate>-<build>.attestation.json` file
 and matching `.sha256` checksum bound to the clean candidate, successful GitHub
 run, completed study record and recursively referenced evidence. Preserve and
-link the record, evidence, attestation and checksum from PR #18.
+link the record, evidence, attestation and checksum from PR #23.
 
 The physical-iPhone checklist must likewise be copied to an ignored
 `outputs/release-evidence/phone/<candidate>-<build>/` working directory,
@@ -83,15 +83,15 @@ whose SHA-256 payload binds the exact candidate, build, successful GitHub
 release-gate run, completed record and recursively linked evidence-index files.
 It cannot overwrite an earlier attestation. The completed record, media/logs
 and attestation remain external to the candidate and MUST all be uploaded to
-the approved release-evidence store and linked in PR #18 before release
+the approved release-evidence store and linked in PR #23 before release
 authorization.
 
 ## Rollback record
 
-Repository baseline recorded on 2026-08-07:
+Repository baseline recorded on 2026-08-18:
 
-- `origin/main`: `184140a2ff5834f23510662f8c442b8a8c03d36c`
-- open release work: `agent/page-overview`, PR #18
+- `origin/main`: `0afcf668f8c3197f19772edbfa914b5b627c2bf3`
+- open release work: `agent/revenuecat-499`, PR #23
 
 Production web baseline inspected through the authenticated Vercel CLI on
 2026-08-07:
@@ -103,7 +103,7 @@ Production web baseline inspected through the authenticated Vercel CLI on
 
 The alias still serves the older Night Ladder product, old legal copy and no
 `support.html`. Re-inspect the alias immediately before deployment. If its
-deployment ID has changed, update the exact record in PR #18 before proceeding.
+deployment ID has changed, update the exact record in PR #23 before proceeding.
 
 The Vercel project is currently CLI-deployed and has no Git repository link.
 Merging `main` does not publish it. Before promotion:
@@ -143,7 +143,7 @@ Merging `main` does not publish it. Before promotion:
    verification exclusively creates a candidate/deployment-specific JSON
    attestation and `.sha256` checksum under ignored
    `outputs/release-evidence/vercel-preview/`. Existing evidence is never
-   overwritten; link both files from PR #18.
+   overwritten; link both files from PR #23.
 4. confirm Monthly and Annual use `Store price`, with no Lifetime sale or
    percentage-savings claim. The verifier requires `/codemagic.yaml`,
    `/package.json`, `/vercel.json`, `/scripts/store-screenshots.mjs`,
@@ -161,7 +161,7 @@ used for store URLs.
 Web rollback procedure:
 
 1. Promote the pre-deploy production deployment recorded above (or the newer
-   ID recorded in PR #18) back to the production alias in Vercel.
+   ID recorded in PR #23) back to the production alias in Vercel.
 2. Verify Home, Terms, Privacy and Support over HTTPS by expected Flightglass
    title/content as well as HTTP status.
 3. Revert the release through a new GitHub PR. Do not force-push or reset
