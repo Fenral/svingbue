@@ -37,14 +37,45 @@ import {
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const CANDIDATE = 'a'.repeat(40);
 
-async function withTempDirectory(run) {
+const TEMP_DIRECTORY_REMOVE_OPTIONS = Object.freeze({
+  recursive: true,
+  force: true,
+  maxRetries: 5,
+  retryDelay: 100,
+});
+
+async function withTempDirectory(run, { removeDirectory = rm } = {}) {
   const directory = await mkdtemp(join(tmpdir(), 'flightglass-iap-preflight-'));
   try {
     return await run(directory);
   } finally {
-    await rm(directory, { recursive: true, force: true });
+    await removeDirectory(directory, TEMP_DIRECTORY_REMOVE_OPTIONS);
   }
 }
+
+test('temporary repositories enable bounded cleanup retries for transient ENOTEMPTY failures', async () => {
+  let calls = 0;
+  let observedOptions;
+
+  await withTempDirectory(async () => {}, {
+    removeDirectory: async (directory, options) => {
+      calls += 1;
+      observedOptions = options;
+      if (!Number.isInteger(options?.maxRetries) || options.maxRetries < 1) {
+        throw Object.assign(new Error('simulated transient cleanup race'), { code: 'ENOTEMPTY' });
+      }
+      await rm(directory, options);
+    },
+  });
+
+  assert.equal(calls, 1);
+  assert.deepEqual(observedOptions, {
+    recursive: true,
+    force: true,
+    maxRetries: 5,
+    retryDelay: 100,
+  });
+});
 
 function git(cwd, args) {
   return execFileSync('git', args, { cwd, encoding: 'utf8', windowsHide: true }).trim();
