@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="no">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Flightglass — sideoversikt</title>
+  <style>
+    :root { color-scheme: dark; --ink:#07060c; --panel:#11101b; --line:#322b48; --muted:#a59db8; --violet:#9d8bff; --ember:#ff8a4d; --gold:#f2c66d; }
+    * { box-sizing:border-box; }
+    body { margin:0; min-height:100vh; color:#f5f2ed; background:radial-gradient(circle at 10% 0%, #221a3d 0, transparent 38rem), radial-gradient(circle at 100% 20%, #321c22 0, transparent 34rem), var(--ink); font:16px/1.5 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+    main { width:min(1180px, calc(100% - 40px)); margin:0 auto; padding:58px 0 80px; }
+    .eyebrow { color:var(--ember); letter-spacing:.18em; text-transform:uppercase; font:700 12px/1.2 ui-monospace,SFMono-Regular,Consolas,monospace; }
+    h1 { max-width:760px; margin:18px 0 12px; font-size:clamp(42px, 7vw, 84px); line-height:.95; letter-spacing:-.06em; }
+    .intro { max-width:680px; color:var(--muted); font-size:19px; }
+    .note { margin:28px 0 42px; padding:18px 20px; border:1px solid #4c3f69; border-left:3px solid var(--ember); border-radius:14px; background:#151221cc; color:#d9d2e5; }
+    .toolbar { display:flex; gap:12px; align-items:center; margin:0 0 26px; }
+    input { width:min(440px,100%); padding:13px 16px; border:1px solid var(--line); border-radius:10px; background:#0d0c15; color:#fff; font:inherit; outline:none; }
+    input:focus { border-color:var(--violet); box-shadow:0 0 0 3px #9d8bff33; }
+    #count { color:var(--muted); font:14px ui-monospace,SFMono-Regular,Consolas,monospace; }
+    section { margin-top:42px; }
+    section[hidden] { display:none; }
+    .section-head { display:flex; justify-content:space-between; gap:24px; align-items:baseline; border-bottom:1px solid var(--line); padding-bottom:11px; }
+    h2 { margin:0; font-size:24px; letter-spacing:-.02em; }
+    .section-head p { margin:0; color:var(--muted); font-size:14px; }
+    .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(245px,1fr)); gap:12px; margin-top:16px; }
+    a.page { min-height:92px; display:flex; flex-direction:column; justify-content:space-between; gap:8px; padding:15px 16px; color:inherit; text-decoration:none; border:1px solid var(--line); border-radius:12px; background:linear-gradient(145deg,#151322,#0f0e17); transition:border-color .15s ease, transform .15s ease, background .15s ease; }
+    a.page:hover, a.page:focus-visible { border-color:var(--violet); background:#1a1629; transform:translateY(-2px); outline:none; }
+    .page-name { font-weight:650; letter-spacing:-.01em; }
+    .page-path { color:#827a96; overflow-wrap:anywhere; font:12px ui-monospace,SFMono-Regular,Consolas,monospace; }
+    .badge { align-self:flex-start; padding:2px 7px; border-radius:5px; color:#19120d; background:var(--gold); text-transform:uppercase; letter-spacing:.08em; font:700 10px ui-monospace,SFMono-Regular,Consolas,monospace; }
+    .empty { color:var(--muted); padding:24px 0; }
+    footer { margin-top:68px; color:#756d86; font-size:13px; }
+    @media (max-width:680px) { main { width:min(100% - 28px,1180px); padding-top:34px; } .section-head { display:block; } .section-head p { margin-top:6px; } .grid { grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="eyebrow">Internal · v1 planning</div>
+    <h1>Alle sider, ett sted.</h1>
+    <p class="intro">En arbeidsoversikt over alle HTML-flatene som finnes i repoet akkurat nå. Åpne hver lenke, og marker hvilke destinasjoner som faktisk skal leve videre på framsiden.</p>
+    <div class="note">Dette er en separat oversiktsside. Den endrer ikke navigasjonen i appen. Når du har valgt v1-flatene, kan vi bruke utvalget til å bygge den endelige framsiden.</div>
+    <div class="toolbar"><label for="filter" class="eyebrow" style="color:var(--muted)">Filter</label><input id="filter" type="search" placeholder="Søk etter side eller filnavn"><span id="count" aria-live="polite"></span></div>
+    <div id="sections"></div>
+    <footer>Generert fra HTML-filene i dette prosjektet. Lenker er relative og fungerer lokalt uten ekstra oppsett.</footer>
+  </main>
+  <script>
+    const files = [
+      "academy.html", "academy-lesson-v2-mock.html", "appflow-mock.html", "app-mock-1.html", "app-mock-2.html", "app-mock-3.html", "appstore/index.html", "club-calibration.html", "jarvis.html",
+      "design/mocks/candidates/bilder-forslag.html", "design/mocks/candidates/lesson-card-stack.html", "design/mocks/candidates/lesson-inline-instrument.html", "design/mocks/candidates/lesson-sheet-first.html", "design/mocks/candidates/table-apex-window-equal-carry.html", "design/mocks/candidates/table-attack-vs-loft-carry-grid.html", "design/mocks/candidates/table-curve-gearing-by-loft.html", "design/mocks/candidates/table-face-error-cost-by-club.html", "design/mocks/candidates/table-face-path-outcome-matrix.html", "design/mocks/geometry.html", "design/mocks/impact-kamera.html", "design/mocks/impact-studio.html",
+      "design-system-1.html", "design-system-2.html", "design-system-3.html", "diagnose-mock.html", "docs/concepts/flightglass/01-waiting-logo-brief.html", "docs/concepts/flightglass/02-logo-directions.html", "docs/concepts/flightglass/03-trajectory-aperture-system.html", "docs/concepts/flightglass/04-spec-approval.html", "geo-canvas-mock.html", "geometry.html", "geometry-glass.html", "geometry-mock.html", "geometry-window-mock.html", "home-concept-1.html", "home-concept-2.html", "home-concept-3.html", "home-mock.html", "home-portrait-1.html", "home-portrait-2.html", "home-portrait-3.html", "impact.html", "impact-focus-mock.html", "impact-glass.html", "impact-inset-mock.html", "impact-launch-arrow-mock.html", "impact-outcome-mock.html", "impact-presentation.html", "impact-scene-mock.html", "impact-studio.html", "impact-viz-mock.html", "impact-viz-mock-p3-cand29.html", "impact-viz-mock-p3-cand31.html", "index.html", "index-glass.html", "palette-compare-mock.html", "palette-decision.html", "paywall-mock.html", "privacy.html", "range-08-elevated-mock.html", "range-08-final-mock.html", "range-14-gridground-mock.html", "range-3d-compare-mock.html", "range-compare-mock.html", "range-final-3.html", "range-night-final-compare-mock.html", "range-round2-compare.html", "range-round3-compare.html", "reels-storyboard.html", "terms.html", "tools/appstore-shots/01.html", "tools/appstore-shots/02.html", "tools/appstore-shots/03.html", "tools/appstore-shots/04.html", "tools/appstore-shots/07.html", "tools/appstore-shots/08.html", "tools/appstore-shots/09.html", "tools/appstore-shots/contact.html", "tools/appstore-shots/pano.html"
+    ];
+    const shipping = new Set(["index.html", "impact.html", "geometry.html", "academy.html", "impact-studio.html", "geometry-window-mock.html", "privacy.html", "terms.html", "jarvis.html"]);
+    const sections = [
+      ["Kjørbare appflater", "De sidene som ligner mest på faktisk produktflyt.", p => shipping.has(p)],
+      ["Academy og appflyt", "Læringsflater, onboarding og app-prototyper.", p => !shipping.has(p) && (p.startsWith("academy") || p.startsWith("appflow") || p.startsWith("app-mock") || p === "club-calibration.html")],
+      ["Range, Outcome og Impact", "Treff, ballflukt, sammenligning og Impact Studio-varianter.", p => !shipping.has(p) && (p.startsWith("impact") || p.startsWith("range") || p.startsWith("geo-canvas") || p.startsWith("diagnose") || p.startsWith("paywall") || p.startsWith("design/mocks/impact"))],
+      ["Geometry og Strike Window", "3D, glass-varianter og kontakt-/geometriflater.", p => !shipping.has(p) && (p.startsWith("geometry") || p.startsWith("design/mocks/geometry"))],
+      ["Home, identitet og design", "Home-konsepter, designsystemer, paletter og brand-arbeid.", p => p.startsWith("home") || p.startsWith("index-") || p.startsWith("design-system") || p.startsWith("palette") || p.startsWith("docs/concepts")],
+      ["Presentasjon og eksport", "Reels, App Store-flater og øvrige arbeidsutkast.", p => p.startsWith("tools/") || p === "reels-storyboard.html" || p.startsWith("design/mocks/candidates/") || p === "appstore/index.html"],
+    ];
+    const titleOverrides = { "index.html":"Night Ladder / Home", "impact.html":"Range / Impact", "geometry.html":"Geometry 3D", "academy.html":"Academy overview", "impact-studio.html":"Impact Studio", "jarvis.html":"Jarvis / Preset coach", "geometry-window-mock.html":"Strike Window 2D", "privacy.html":"Privacy", "terms.html":"Terms" };
+    const titleFor = path => titleOverrides[path] || path.split("/").pop().replace(/\.html$/, "").replace(/[-_]/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+    const sectionFor = path => sections.find(([, , test]) => test(path));
+    const root = document.querySelector("#sections");
+    const filter = document.querySelector("#filter");
+    const count = document.querySelector("#count");
+    function render() {
+      const term = filter.value.trim().toLowerCase();
+      let visible = 0;
+      root.replaceChildren();
+      for (const [heading, description, test] of sections) {
+        const matches = files.filter(path => test(path) && (!term || `${titleFor(path)} ${path}`.toLowerCase().includes(term)));
+        if (!matches.length) continue;
+        visible += matches.length;
+        const section = document.createElement("section");
+        section.innerHTML = `<div class="section-head"><h2>${heading}</h2><p>${description}</p></div><div class="grid"></div>`;
+        const grid = section.querySelector(".grid");
+        for (const path of matches) {
+          const link = document.createElement("a");
+          link.className = "page";
+          link.href = `./${path}`;
+          link.innerHTML = `<span class="page-name">${titleFor(path)}</span><span class="page-path">${path}</span>`;
+          if (shipping.has(path)) link.insertAdjacentHTML("beforeend", '<span class="badge">runtime</span>');
+          grid.append(link);
+        }
+        root.append(section);
+      }
+      count.textContent = `${visible} av ${files.length} sider`;
+      if (!visible) root.innerHTML = '<p class="empty">Ingen sider matcher søket.</p>';
+    }
+    filter.addEventListener("input", render);
+    render();
+  </script>
+</body>
+</html>

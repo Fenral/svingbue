@@ -12,7 +12,7 @@
 <style>
   /* §1.4 dusk migration: local names now resolve to the sa-p3 world.
      Violet = structure (cards, edges, radios); --gold = the value framing
-     («2 months free», quota annotation); ember = the CTA — the screen's ONE
+     (annual value framing, quota annotation); ember = the CTA — the screen's ONE
      warm focal point. */
   :root{
     --bg-2:#0E0A18;
@@ -110,7 +110,7 @@
     font-size:9.5px;font-weight:800;letter-spacing:.1em;color:#241708;
     background:var(--gold);border-radius:999px;padding:3px 9px;
   }
-  .save{color:var(--gold);font-weight:600}   /* «2 months free» = gold value framing */
+  .save{color:var(--gold);font-weight:600}   /* annual monthly-equivalent framing */
   /* selected state */
   .tier input:checked + .box{
     border-color:var(--secondary);
@@ -209,7 +209,7 @@
             <fieldset>
               <legend>Choose a plan</legend>
 
-              <!-- §1.4: Monthly kr 99 · Annual kr 590 («2 months free», never percent).
+              <!-- §1.4: Monthly kr 99 · Annual kr 499 (live store prices; no fixed savings claim).
                    Lifetime removed. -->
               <label class="tier decoy">
                 <input type="radio" name="plan" value="monthly">
@@ -223,14 +223,14 @@
               </label>
 
               <label class="tier hero">
-                <span class="badge" aria-hidden="true">KR 49 / MO</span>
+                <span class="badge" aria-hidden="true">KR 42 / MO</span>
                 <input type="radio" name="plan" value="annual" checked>
                 <span class="box">
                   <span class="left">
                     <span class="radio" aria-hidden="true"></span>
-                    <span><span class="t-name">Annual</span><span class="t-sub"><span class="save">kr 49/mo</span> billed yearly</span></span>
+                    <span><span class="t-name">Annual</span><span class="t-sub"><span class="save">kr 42/mo</span> billed yearly</span></span>
                   </span>
-                  <span class="t-price">kr 590<small>/ year</small></span>
+                  <span class="t-price">kr 499<small>/ year</small></span>
                 </span>
               </label>
             </fieldset>
@@ -257,14 +257,14 @@
       </div>
       <div class="note">
         <h3>Why this shape</h3>
-        <p>No trial: the 10 free shots <em>are</em> the trial. Annual is the hero (front-loaded revenue, framed as <em>2&nbsp;months free</em> — never a percent), Monthly is the reference price that makes the framing land. Hard wall on shot&nbsp;#11 = pay to continue.</p>
+        <p>No trial: the 10 free shots <em>are</em> the trial. Annual is the hero, with the live store price shown without a fixed savings claim. Monthly remains the reference plan. Hard wall on shot&nbsp;#11 = pay to continue.</p>
       </div>
     </div>
   </div>
 
   <script>
     // Minimal: reflect selected plan in the CTA label (mock feel only).
-    var labels = { monthly:"Continue — kr 99/mo →", annual:"Unlock Pro — kr 590/yr →" };
+    var labels = { monthly:"Continue — kr 99/mo →", annual:"Unlock Pro — kr 499/yr →" };
     var cta = document.querySelector(".cta");
     document.querySelectorAll('input[name="plan"]').forEach(function(r){
       r.addEventListener("change", function(){ cta.textContent = labels[r.value] || "Unlock Pro"; });

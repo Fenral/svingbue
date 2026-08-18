@@ -4,8 +4,8 @@
 // Patches ios/App/App/Info.plist AFTER `npx cap add ios` has generated the
 // Xcode project (this only exists on the Codemagic Mac runner — there is no
 // ios/ folder on Windows dev machines, so this script is a no-op/error there
-// until CI creates it). Run this in the Codemagic pipeline, after
-// `npx cap add ios` and before `npx cap sync ios`.
+// until CI creates it). Run this in the Codemagic pipeline after
+// `npx cap sync ios` and before the final `pod install`.
 //
 // Orientation model (see sa-orientation.js): the app is PORTRAIT by default;
 // geometry is the one landscape screen, flipped at runtime by the
@@ -22,6 +22,9 @@
 //   3. Sets UIRequiresFullScreen to true (no Slide Over / Split View on iPad).
 //   4. Sets CFBundleDisplayName to "Flightglass" (the name shown under the
 //      home-screen icon; separate from CFBundleName).
+//   5. Raises the generated Xcode project's iOS deployment target to 16.4.
+//   6. Restricts the generated app target to iPhone (device family 1).
+//   7. Raises the generated Podfile platform to the same iOS target.
 //
 // Implementation notes / assumptions:
 //   - This is a plain-text/regex plist editor, not a full plist parser —
@@ -46,6 +49,9 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, '..');
 const PLIST_PATH = join(ROOT, 'ios', 'App', 'App', 'Info.plist');
+const XCODE_PROJECT_PATH = join(ROOT, 'ios', 'App', 'App.xcodeproj', 'project.pbxproj');
+const PODFILE_PATH = join(ROOT, 'ios', 'App', 'Podfile');
+export const IOS_DEPLOYMENT_TARGET = '16.4';
 
 // Portrait first (the launch default), then both landscape rotations so the
 // runtime plugin can flip the geometry screen to landscape.
@@ -110,6 +116,33 @@ function setStringKey(xml, keyName, stringValue) {
   );
 }
 
+export function patchXcodeDeploymentTarget(project) {
+  const targetPattern = /IPHONEOS_DEPLOYMENT_TARGET\s*=\s*[^;]+;/g;
+  if (!targetPattern.test(project)) {
+    throw new Error('[ios-landscape] Xcode project has no IPHONEOS_DEPLOYMENT_TARGET setting.');
+  }
+  targetPattern.lastIndex = 0;
+  let patched = project.replace(
+    targetPattern,
+    `IPHONEOS_DEPLOYMENT_TARGET = ${IOS_DEPLOYMENT_TARGET};`,
+  );
+  const familyPattern = /TARGETED_DEVICE_FAMILY\s*=\s*[^;]+;/g;
+  if (!familyPattern.test(patched)) {
+    throw new Error('[ios-landscape] Xcode project has no TARGETED_DEVICE_FAMILY setting.');
+  }
+  familyPattern.lastIndex = 0;
+  patched = patched.replace(familyPattern, 'TARGETED_DEVICE_FAMILY = 1;');
+  return patched;
+}
+
+export function patchPodfileDeploymentTarget(podfile) {
+  const platformPattern = /platform\s+:ios\s*,\s*['"][^'"]+['"]/;
+  if (!platformPattern.test(podfile)) {
+    throw new Error('[ios-landscape] Podfile has no iOS platform declaration.');
+  }
+  return podfile.replace(platformPattern, `platform :ios, '${IOS_DEPLOYMENT_TARGET}'`);
+}
+
 /**
  * Inserts a raw XML snippet immediately before the LAST `</dict>` that
  * precedes `</plist>` — i.e. the root dict's closing tag. Capacitor/Xcode
@@ -142,9 +175,10 @@ export function patchPlist(xml) {
 }
 
 function runCli() {
-  if (!existsSync(PLIST_PATH)) {
+  const missingPath = [PLIST_PATH, XCODE_PROJECT_PATH, PODFILE_PATH].find((path) => !existsSync(path));
+  if (missingPath) {
     console.error(
-      `[ios-landscape] ERROR: ${PLIST_PATH} does not exist.\n` +
+      `[ios-landscape] ERROR: ${missingPath} does not exist.\n` +
       `This script must run AFTER "npx cap add ios" has generated the iOS\n` +
       `project (Codemagic mac_mini_m2 build step), not on a Windows dev\n` +
       `machine where ios/ is never generated locally.`
@@ -154,11 +188,17 @@ function runCli() {
 
   const original = readFileSync(PLIST_PATH, 'utf8');
   const plist = patchPlist(original);
+  const originalProject = readFileSync(XCODE_PROJECT_PATH, 'utf8');
+  const project = patchXcodeDeploymentTarget(originalProject);
+  const originalPodfile = readFileSync(PODFILE_PATH, 'utf8');
+  const podfile = patchPodfileDeploymentTarget(originalPodfile);
 
   log('set UISupportedInterfaceOrientations -> portrait (default) + landscape-left + landscape-right');
   log('set UISupportedInterfaceOrientations~ipad -> portrait (default) + landscape-left + landscape-right');
   log('set UIRequiresFullScreen -> true');
   log('set CFBundleDisplayName -> Flightglass');
+  log(`set iOS deployment target -> ${IOS_DEPLOYMENT_TARGET}`);
+  log('set targeted device family -> iPhone only');
 
   if (plist === original) {
     log('no changes needed (already patched) — plist untouched on disk.');
@@ -166,6 +206,9 @@ function runCli() {
     writeFileSync(PLIST_PATH, plist, 'utf8');
     log(`wrote ${PLIST_PATH}`);
   }
+
+  if (project !== originalProject) writeFileSync(XCODE_PROJECT_PATH, project, 'utf8');
+  if (podfile !== originalPodfile) writeFileSync(PODFILE_PATH, podfile, 'utf8');
 
   log('done.');
 }

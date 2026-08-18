@@ -7,6 +7,8 @@
    fallbacks are provided so this file also works if a token is missing.
    ══════════════════════════════════════════════════════════════════════════ */
 
+@import url('./sa-app-shell.css');
+
 /* ── Cross-document View Transitions ─────────────────────────────────────── */
 @view-transition { navigation: auto; }
 

@@ -33,7 +33,7 @@ Ingen designbeslutninger her. Alt er avgjort; utfør mekanisk.
 - Fullførte noder: liten gull-hake.
 
 ### 1.4 Paywall (tekst + priser — beslutning tatt, kun implementering)
-- Priser: Månedlig kr 99 · Årlig kr 590 (framing: «2 måneder gratis», IKKE prosent-rabatt). Lifetime FJERNES.
+- Priser: Månedlig kr 99 · Årlig kr 499. Bruk live StoreKit-priser; ingen fast påstand om måneder gratis eller prosent-rabatt. Lifetime fjernes fra synlig paywall.
 - Fiks manglende mellomrom: «MonthlyBilled every month» → «Monthly · Billed every month» osv.
 - Trigger beholdes (10 free shots).
 - Migreres til skumring-tokens (se Økt 2-tokens); teal ut.

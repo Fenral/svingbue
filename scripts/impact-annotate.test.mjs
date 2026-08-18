@@ -67,7 +67,7 @@ test('S1 · normaltilfelle: span ≥ 74 px, midtpunkt utenfor keep-out → midtp
   const A = { x: 400, y: 300 };
   const B = { x: 600, y: 300 }; // span=200, midtpunkt x=500 > keepOut.x1=246
   const prims = [{ kind: 'dimline', points: [A, B], label: '18 m curve', tone: 'measure', alpha: 1 }];
-  const [placed] = placeLabels(prims, MEASURE_KEEPOUT, VBOX);
+  const [placed] = placeLabels(prims, MEASURE_KEEPOUT, { w: 932, h: VBOX.h });
   assert.equal(placed.labelPos.x, 500);
   assert.equal(placed.labelPos.y, 300 - 15);
 });
@@ -81,6 +81,98 @@ test('S1 · kollisjonsregister: overlappende etiketter nudges vertikalt vekk, ma
   const out2 = placeLabels(prims, null, VBOX); // samme input igjen — stateless per kall (ingen jitter)
   assert.notEqual(out1[0].labelPos.y, out1[1].labelPos.y, 'de to etikettene må skilles vertikalt');
   assert.deepEqual(out1.map(p => p.labelPos), out2.map(p => p.labelPos), 'samme input → identisk resultat (ingen jitter)');
+});
+
+test('S1 · synlig scene-HUD flytter bare en overlappende etikett til ledig plass til høyre', () => {
+  const hudKeepOut = { x: 12, y: 82, w: 228, h: 70 };
+  const overlapping = [{
+    kind: 'apex', points: [{ x: 202, y: 145 }], label: 'Apex 29 m',
+    labelAnchor: { x: 202, y: 145 },
+  }];
+  const clear = [{
+    kind: 'apex', points: [{ x: 300, y: 210 }], label: 'Apex 29 m',
+    labelAnchor: { x: 300, y: 210 },
+  }];
+
+  const [moved] = placeLabels(overlapping, null, { ...VBOX, hudKeepOut });
+  const [unchanged] = placeLabels(clear, null, { ...VBOX, hudKeepOut });
+  const halfWidth = Math.max(30, 'Apex 29 m'.length * 6.3 + 16) / 2;
+
+  assert.ok(moved.labelPos.x - halfWidth >= hudKeepOut.x + hudKeepOut.w + 10,
+    'overlappende etikett skal ligge helt til høyre for HUD-feltet');
+  assert.ok(moved.labelPos.x + halfWidth <= VBOX.w,
+    'flyttet etikett skal fortsatt være innenfor visningsflaten');
+  assert.deepEqual(unchanged.labelPos, clear[0].labelAnchor,
+    'etiketter som ikke overlapper skal beholde sin autoritative forankring');
+});
+
+test('S1 · kollisjonsnudge kan ikke flytte en etikett tilbake inn i scene-HUD', () => {
+  const hudKeepOut = { x: 12, y: 82, w: 228, h: 70 };
+  const prims = [
+    {
+      kind: 'label', points: [], label: '156 m L',
+      labelAnchor: { x: 202, y: 164 },
+    },
+    {
+      kind: 'label', points: [], label: '156 m L',
+      labelAnchor: { x: 202, y: 164 },
+    },
+  ];
+
+  const placed = placeLabels(prims, null, { ...VBOX, hudKeepOut });
+  const second = placed[1].labelPos;
+  const width = Math.max(30, '156 m L'.length * 6.3 + 16);
+  const overlapsHud = second.x - width / 2 < hudKeepOut.x + hudKeepOut.w
+    && second.x + width / 2 > hudKeepOut.x
+    && second.y - 19 / 2 < hudKeepOut.y + hudKeepOut.h
+    && second.y + 19 / 2 > hudKeepOut.y;
+
+  assert.equal(overlapsHud, false,
+    'etiketten skal fortsatt ligge utenfor HUD etter nudge mot en tidligere etikett');
+});
+
+test('S1 · flere HUD-flyttede etiketter forblir adskilt og innenfor viewporten', () => {
+  const hudKeepOut = { x: 12, y: 82, w: 228, h: 70 };
+  const prims = [
+    { kind: 'label', points: [], label: 'Launch dir −15.0°', labelAnchor: { x: 316.96801737356, y: 166.99928332399577 } },
+    { kind: 'label', points: [], label: '187 m curve', labelAnchor: { x: 162.46611189525575, y: 133.02517104241997 } },
+    { kind: 'label', points: [], label: '156 m L', labelAnchor: { x: 190.89775067227893, y: 153.85481009539217 } },
+  ];
+  const placed = placeLabels(prims, null, { w: 390, h: 780, hudKeepOut });
+  const rects = placed.map((prim, index) => {
+    const w = Math.max(30, prims[index].label.length * 6.3 + 16);
+    return { x: prim.labelPos.x - w / 2, y: prim.labelPos.y - 19 / 2, w, h: 19 };
+  });
+
+  for (const rect of rects) {
+    assert.ok(rect.x >= 0 && rect.y >= 0 && rect.x + rect.w <= 390 && rect.y + rect.h <= 780,
+      'hver etikett skal ligge helt innenfor viewporten');
+    assert.equal(rect.x < hudKeepOut.x + hudKeepOut.w && rect.x + rect.w > hudKeepOut.x
+      && rect.y < hudKeepOut.y + hudKeepOut.h && rect.y + rect.h > hudKeepOut.y, false,
+    'hver etikett skal ligge utenfor HUD-feltet');
+  }
+  for (let a = 0; a < rects.length; a++) for (let b = a + 1; b < rects.length; b++) {
+    assert.equal(rects[a].x < rects[b].x + rects[b].w && rects[a].x + rects[a].w > rects[b].x
+      && rects[a].y < rects[b].y + rects[b].h && rects[a].y + rects[a].h > rects[b].y, false,
+    'HUD-flyttede etiketter skal ikke kollidere med hverandre');
+  }
+});
+
+test('S1 · kollisjonsløsning holder etiketter helt innenfor toppen av viewporten', () => {
+  const hudKeepOut = { x: 12, y: 82, w: 228, h: 70 };
+  const prims = [
+    { kind: 'label', points: [], label: '187 m curve', labelAnchor: { x: 195.54980493739714, y: 50.582375487312675 } },
+    { kind: 'label', points: [], label: 'Apex 77 m', labelAnchor: { x: 123.49058093763888, y: 57.20288813393563 } },
+    { kind: 'label', points: [], label: 'Launch dir −15.0°', labelAnchor: { x: 281.18993920397475, y: 65.14558582380414 } },
+    { kind: 'label', points: [], label: 'Launch dir −15.0°', labelAnchor: { x: 304.8346944845747, y: 28.311637931503356 } },
+  ];
+  const placed = placeLabels(prims, null, { w: 390, h: 780, hudKeepOut });
+  for (const prim of placed) {
+    assert.ok(prim.labelPos.y - 19 / 2 >= 0,
+      'etiketten skal ikke nudges delvis over viewportens toppkant');
+    assert.ok(prim.labelPos.y + 19 / 2 <= 780,
+      'etiketten skal ikke nudges delvis under viewportens bunnkant');
+  }
 });
 
 test('S1 · primitiver uten label går uendret gjennom placeLabels', () => {
@@ -165,16 +257,22 @@ test('buildAnnotations · TOP-elementer er fraværende under skalar ~1.25, til s
   assert.ok(byKind(atTop, 'arc').some(a => a.label === null), 'retningsbuen (uten etikett) til stede i TOP');
 });
 
-test('buildAnnotations · SIDE-elementer (launch/land-buer) er til stede rundt skalar 1, fraværende ved 0 og 2', () => {
+test('buildAnnotations · SIDE uses honest endpoint readouts, not distorted launch/landing angle strokes', () => {
   const atFlight = annotationsAt(0);
   const atSide = annotationsAt(1);
   const atTop = annotationsAt(2);
-  const sideArcs = a => byKind(a, 'arc').filter(x => typeof x.label === 'string');
-  assert.equal(sideArcs(atFlight).length, 0);
-  assert.equal(sideArcs(atTop).length, 0);
-  assert.ok(sideArcs(atSide).length >= 1, 'Launch/Land-buer til stede ved SIDE');
-  assert.ok(sideArcs(atSide).some(a => a.label.startsWith('Launch ')));
-  assert.ok(sideArcs(atSide).some(a => a.label.startsWith('Land ')));
+  const angleLabels = a => byKind(a, 'label').filter(x => /^(Launch|Landing) Angle\b/.test(x.label || ''));
+  assert.equal(angleLabels(atFlight).length, 0);
+  assert.equal(angleLabels(atTop).length, 0);
+  assert.deepEqual(angleLabels(atSide).map(x => x.label), [
+    `Launch Angle ${selectOutcome(DEFAULTS).deg.launchAng.toFixed(1)}°`,
+    `Landing Angle ${Math.round(selectOutcome(DEFAULTS).deg.landAng)}°`,
+  ]);
+  assert.equal(byKind(atSide, 'arc').length, 0,
+    'SIDE must not imply grade-accurate angles with camera-distorted arcs or strokes');
+  assert.deepEqual(angleLabels(atSide).map(x => x.tone), ['launch', 'measure'],
+    'launch and landing retain distinct semantic tones');
+  assert.ok(angleLabels(atSide).every(x => x.labelAnchor && Number.isFinite(x.labelAnchor.x) && Number.isFinite(x.labelAnchor.y)));
 });
 
 test('buildAnnotations · kurvemål skjules når |curve| < 3 m', () => {

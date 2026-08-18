@@ -2,13 +2,61 @@ import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 const EXPECTED_SURFACES = [
-  'home', 'range', 'visualise', 'outcome', 'compare',
-  'geometry-3d', 'strike-window-2d', 'academy-overview',
-  'academy-lesson', 'paywall'
+  'home-ready', 'onboarding-opening-intro', 'onboarding-live-step-3',
+  'onboarding-map-step-4', 'connections', 'range-outcome-default',
+  'range-input-change-input', 'range-side', 'range-top', 'studio-face',
+  'studio-dtl', 'studio-strike', 'guide-browse', 'guide-answer-backspin',
+  'guide-lab', 'paywall', 'support', 'terms', 'privacy'
 ];
 
 export function loadManifest(file) {
   return JSON.parse(readFileSync(file, 'utf8'));
+}
+
+export function validateFixture(fixture, surfaceId = 'surface') {
+  const errors = [];
+  if (!fixture || typeof fixture !== 'object' || Array.isArray(fixture)) {
+    return [`${surfaceId}: fixture is required`];
+  }
+
+  const storage = fixture.storage ?? [];
+  const actions = fixture.actions ?? [];
+  if (!Array.isArray(storage)) errors.push(`${surfaceId}: fixture storage must be an array`);
+  if (!Array.isArray(actions)) errors.push(`${surfaceId}: fixture actions must be an array`);
+
+  if (Array.isArray(storage)) {
+    storage.forEach((entry, index) => {
+      const number = index + 1;
+      if (!entry || typeof entry !== 'object' || Array.isArray(entry)) {
+        errors.push(`${surfaceId}: fixture storage ${number} must be an object`);
+        return;
+      }
+      if (!['local', 'session'].includes(entry.area)) errors.push(`${surfaceId}: fixture storage ${number} has invalid area`);
+      if (typeof entry.key !== 'string' || !entry.key) errors.push(`${surfaceId}: fixture storage ${number} requires a key`);
+      if (typeof entry.value !== 'string') errors.push(`${surfaceId}: fixture storage ${number} requires a string value`);
+    });
+  }
+
+  if (Array.isArray(actions)) {
+    actions.forEach((action, index) => {
+      const number = index + 1;
+      if (!action || typeof action !== 'object' || Array.isArray(action)) {
+        errors.push(`${surfaceId}: fixture action ${number} must be an object`);
+        return;
+      }
+      if (!['click', 'wait'].includes(action.type)) {
+        errors.push(`${surfaceId}: fixture action ${number} must use click or wait`);
+        return;
+      }
+      if (action.type === 'click' && (typeof action.selector !== 'string' || !action.selector)) {
+        errors.push(`${surfaceId}: fixture action ${number} click requires a selector`);
+      }
+      if (action.type === 'wait' && (!Number.isInteger(action.ms) || action.ms < 0 || action.ms > 5000)) {
+        errors.push(`${surfaceId}: fixture action ${number} wait requires 0-5000 integer ms`);
+      }
+    });
+  }
+  return errors;
 }
 
 export function validateManifest(manifest, root) {
@@ -36,7 +84,9 @@ export function validateManifest(manifest, root) {
 
   for (const surface of surfaces) {
     if (!surface.label) errors.push(`${surface.id}: label is required`);
-    if (!Number.isFinite(surface.baselineScore)) errors.push(`${surface.id}: baselineScore is required`);
+    if (surface.baselineScore !== null && !Number.isFinite(surface.baselineScore)) {
+      errors.push(`${surface.id}: baselineScore must be a number or null`);
+    }
     if (!Number.isFinite(surface.targetScore) || surface.targetScore < 90) {
       errors.push(`${surface.id}: targetScore must be at least 90`);
     }
@@ -51,9 +101,25 @@ export function validateManifest(manifest, root) {
     if (!Array.isArray(surface.requiredSelectors) || surface.requiredSelectors.length === 0) {
       errors.push(`${surface.id}: requiredSelectors are required`);
     }
+    if (surface.requiredSelectorsByMotion !== undefined) {
+      if (!surface.requiredSelectorsByMotion || typeof surface.requiredSelectorsByMotion !== 'object'
+        || Array.isArray(surface.requiredSelectorsByMotion)) {
+        errors.push(`${surface.id}: requiredSelectorsByMotion must be an object`);
+      } else {
+        for (const [motion, selectors] of Object.entries(surface.requiredSelectorsByMotion)) {
+          if (!['normal', 'reduced'].includes(motion)) {
+            errors.push(`${surface.id}: requiredSelectorsByMotion has invalid mode ${motion}`);
+          }
+          if (!Array.isArray(selectors) || selectors.some(selector => typeof selector !== 'string' || !selector)) {
+            errors.push(`${surface.id}: requiredSelectorsByMotion.${motion} must contain selectors`);
+          }
+        }
+      }
+    }
     if (!Array.isArray(surface.references) || surface.references.length === 0) {
       errors.push(`${surface.id}: references are required`);
     }
+    errors.push(...validateFixture(surface.fixture, surface.id));
 
     const routeFile = String(surface.route || '').split(/[?#]/)[0];
     if (!routeFile || !existsSync(resolve(root, routeFile))) {
@@ -64,8 +130,8 @@ export function validateManifest(manifest, root) {
         errors.push(`${surface.id}: reference does not exist: ${reference}`);
       }
     }
-    if (surface.sourceType !== 'shipping' && surface.sourceType !== 'shipping-web' && surface.sourceType !== 'shipping-web-state') {
-      warnings.push(`${surface.id}: audit uses a reference surface until it is promoted to shipping code`);
+    if (surface.sourceType !== 'shipping') {
+      errors.push(`${surface.id}: sourceType must equal shipping`);
     }
   }
 
@@ -107,6 +173,12 @@ export function evaluateSnapshot(snapshot) {
   }
 
   return { critical, improvements };
+}
+
+export function countBlockingFindings(report, mode) {
+  if (mode !== 'verify') return 0;
+  return report.results.reduce((total, result) =>
+    total + result.critical.length + result.improvements.length, 0);
 }
 
 export function normalizeResourceErrors(errors = []) {
@@ -155,8 +227,9 @@ export function renderMarkdownReport(report) {
 
   for (const result of report.results) {
     const name = result.label || titleCase(result.surfaceId);
+    const baseline = Number.isFinite(result.baselineScore) ? result.baselineScore : 'unscored';
     lines.push(
-      `| ${name} | ${result.viewportId} | ${result.baselineScore} -> ${result.targetScore} | ${result.critical.length} | ${result.improvements.length} | [screenshot](${result.screenshot}) |`
+      `| ${name} | ${result.viewportId} | ${baseline} -> ${result.targetScore} | ${result.critical.length} | ${result.improvements.length} | [screenshot](${result.screenshot}) |`
     );
   }
 

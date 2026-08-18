@@ -1,0 +1,293 @@
+name: Flightglass v1 release gate
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      base_sha:
+        description: Exact 40-character base commit SHA for the release diff
+        required: true
+        type: string
+
+concurrency:
+  group: v1-release-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      EXPECTED_CANDIDATE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+      EXPECTED_BASE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event_name == 'push' && github.event.before || inputs.base_sha }}
+    steps:
+      - name: Check out the exact release candidate
+        id: checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+
+      - name: Prepare release evidence directory
+        id: evidence_directory
+        if: always()
+        shell: bash
+        run: mkdir -p "$RUNNER_TEMP/flightglass-v1-evidence"
+
+      - name: Assert exact release identity and resolve the base
+        id: release_identity
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [[ ! "$EXPECTED_CANDIDATE_SHA" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "Candidate identity is not a full Git commit SHA: $EXPECTED_CANDIDATE_SHA" >&2
+            exit 1
+          fi
+
+          actual_candidate="$(git rev-parse HEAD)"
+          expected_candidate="$(git rev-parse "${EXPECTED_CANDIDATE_SHA}^{commit}")"
+          if [[ "$actual_candidate" != "$expected_candidate" ]]; then
+            echo "Checked-out HEAD $actual_candidate does not equal expected candidate $expected_candidate" >&2
+            exit 1
+          fi
+
+          base_candidate="$EXPECTED_BASE_SHA"
+          if [[ ! "$base_candidate" =~ ^[0-9a-f]{40}$ || "$base_candidate" =~ ^0+$ ]]; then
+            echo "Release base must be a non-zero, full Git commit SHA: $base_candidate" >&2
+            exit 1
+          fi
+          if ! git cat-file -e "${base_candidate}^{commit}" 2>/dev/null; then
+            git fetch --no-tags origin "$base_candidate"
+          fi
+          resolved_base="$(git rev-parse "${base_candidate}^{commit}")"
+          if [[ "$resolved_base" == "$actual_candidate" ]]; then
+            echo "Release base must differ from the candidate commit" >&2
+            exit 1
+          fi
+
+          echo "FLIGHTGLASS_CANDIDATE_SHA=$actual_candidate" >> "$GITHUB_ENV"
+          echo "FLIGHTGLASS_BASE_SHA=$resolved_base" >> "$GITHUB_ENV"
+          echo "Verified exact candidate $actual_candidate against base $resolved_base"
+
+      - id: setup_node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install app and browser-test dependencies
+        id: install_dependencies
+        run: |
+          npm ci
+          npm ci --prefix tools
+
+      - name: Install deterministic browser engines
+        id: install_browsers
+        run: ./tools/node_modules/.bin/playwright-core install --with-deps chromium webkit
+
+      - name: Verify synthetic-native IAP screenshot preflight (do not submit)
+        id: iap_review_preflight
+        run: npm run test:iap-review-preflight
+
+      - name: Reset UX verification evidence workspace
+        id: reset_ux_evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf outputs/flightglass-ux/verify
+          rm -f outputs/flightglass-ux/verify-report.json outputs/flightglass-ux/verify-report.md
+
+      - name: Verify the exact candidate through the complete risk gate
+        id: change_gate
+        run: npm run verify:change -- --base "$FLIGHTGLASS_BASE_SHA" --level C
+
+      - name: Collect immutable UX verification evidence
+        id: collect_ux_evidence
+        if: always()
+        shell: bash
+        env:
+          OUTCOME_CHANGE_GATE: ${{ steps.change_gate.outcome }}
+        run: |
+          set -euo pipefail
+          source_root="outputs/flightglass-ux"
+          report_json="$source_root/verify-report.json"
+          report_markdown="$source_root/verify-report.md"
+          screenshot_root="$source_root/verify"
+          evidence_dir="$RUNNER_TEMP/flightglass-v1-evidence"
+          artifact_root="$evidence_dir/outputs/flightglass-ux"
+          inventory_file="$evidence_dir/ux-verify-files.json"
+          mkdir -p "$evidence_dir"
+
+          if [[ ! -f "$report_json" || ! -f "$report_markdown" || ! -d "$screenshot_root" ]]; then
+            printf '[]\n' > "$inventory_file"
+            if [[ "$OUTCOME_CHANGE_GATE" == "success" ]]; then
+              echo "The successful release gate did not produce the complete UX verification evidence set" >&2
+              exit 1
+            fi
+            echo "UX verification evidence was unavailable because the release gate did not complete"
+            exit 0
+          fi
+
+          jq -e '.mode == "verify" and (.results | type == "array" and length > 0)' "$report_json" >/dev/null
+          mapfile -t expected_screenshots < <(jq -r '.results[].screenshot' "$report_json" | LC_ALL=C sort -u)
+          mapfile -t actual_screenshots < <(find "$screenshot_root" -maxdepth 1 -type f -name '*.png' -printf 'verify/%f\n' | LC_ALL=C sort)
+
+          if printf '%s\n' "${expected_screenshots[@]}" | grep -Eqv '^verify/[A-Za-z0-9][A-Za-z0-9._-]*\.png$'; then
+            echo "UX report contains an unsafe screenshot path" >&2
+            exit 1
+          fi
+          if ! diff -u <(printf '%s\n' "${expected_screenshots[@]}") <(printf '%s\n' "${actual_screenshots[@]}"); then
+            echo "UX report screenshot listing does not match outputs/flightglass-ux/verify/*.png" >&2
+            exit 1
+          fi
+
+          mkdir -p "$artifact_root/verify"
+          cp "$report_json" "$artifact_root/verify-report.json"
+          cp "$report_markdown" "$artifact_root/verify-report.md"
+          for relative_path in "${expected_screenshots[@]}"; do
+            cp "$source_root/$relative_path" "$artifact_root/$relative_path"
+          done
+
+          inventory_lines="$(mktemp)"
+          while IFS= read -r file; do
+            relative_path="${file#"$evidence_dir/"}"
+            jq -nc \
+              --arg path "$relative_path" \
+              --arg sha256 "$(sha256sum "$file" | awk '{print $1}')" \
+              --argjson bytes "$(stat -c %s "$file")" \
+              '{path: $path, bytes: $bytes, sha256: $sha256}' >> "$inventory_lines"
+          done < <(find "$artifact_root" -type f | LC_ALL=C sort)
+          jq -s . "$inventory_lines" > "$inventory_file"
+          rm -f "$inventory_lines"
+
+      - name: Audit all app dependencies
+        id: audit_all
+        shell: bash
+        run: |
+          set -o pipefail
+          npm audit --audit-level=high --json | tee "$RUNNER_TEMP/flightglass-v1-evidence/npm-audit-all.json"
+
+      - name: Audit production app dependencies
+        id: audit_production
+        shell: bash
+        run: |
+          set -o pipefail
+          npm audit --omit=dev --audit-level=high --json | tee "$RUNNER_TEMP/flightglass-v1-evidence/npm-audit-production.json"
+
+      - name: Audit build and browser-test dependencies
+        id: audit_tools
+        shell: bash
+        run: |
+          set -o pipefail
+          npm audit --prefix tools --audit-level=high --json | tee "$RUNNER_TEMP/flightglass-v1-evidence/npm-audit-tools.json"
+
+      - name: Write immutable release evidence manifest
+        if: always()
+        shell: bash
+        env:
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          JOB_STATUS: ${{ job.status }}
+          OUTCOME_CHECKOUT: ${{ steps.checkout.outcome }}
+          OUTCOME_EVIDENCE_DIRECTORY: ${{ steps.evidence_directory.outcome }}
+          OUTCOME_RELEASE_IDENTITY: ${{ steps.release_identity.outcome }}
+          OUTCOME_SETUP_NODE: ${{ steps.setup_node.outcome }}
+          OUTCOME_INSTALL_DEPENDENCIES: ${{ steps.install_dependencies.outcome }}
+          OUTCOME_INSTALL_BROWSERS: ${{ steps.install_browsers.outcome }}
+          OUTCOME_IAP_REVIEW_PREFLIGHT: ${{ steps.iap_review_preflight.outcome }}
+          OUTCOME_RESET_UX_EVIDENCE: ${{ steps.reset_ux_evidence.outcome }}
+          OUTCOME_CHANGE_GATE: ${{ steps.change_gate.outcome }}
+          OUTCOME_COLLECT_UX_EVIDENCE: ${{ steps.collect_ux_evidence.outcome }}
+          OUTCOME_AUDIT_ALL: ${{ steps.audit_all.outcome }}
+          OUTCOME_AUDIT_PRODUCTION: ${{ steps.audit_production.outcome }}
+          OUTCOME_AUDIT_TOOLS: ${{ steps.audit_tools.outcome }}
+        run: |
+          set -euo pipefail
+          evidence_dir="$RUNNER_TEMP/flightglass-v1-evidence"
+          mkdir -p "$evidence_dir"
+          actual_candidate="$(git rev-parse HEAD 2>/dev/null || printf unavailable)"
+          resolved_base="${FLIGHTGLASS_BASE_SHA:-unavailable}"
+          ux_verify_files='[]'
+
+          if [[ -d outputs/flightglass-gates ]]; then
+            cp -R outputs/flightglass-gates "$evidence_dir/change-gate"
+          fi
+          if [[ -f "$evidence_dir/ux-verify-files.json" ]]; then
+            ux_verify_files="$(jq -c . "$evidence_dir/ux-verify-files.json")"
+          fi
+
+          jq -n \
+            --arg generatedAt "$(date -u +'%Y-%m-%dT%H:%M:%SZ')" \
+            --arg runUrl "$RUN_URL" \
+            --arg status "$JOB_STATUS" \
+            --arg expectedCandidate "$EXPECTED_CANDIDATE_SHA" \
+            --arg actualCandidate "$actual_candidate" \
+            --arg expectedBase "$EXPECTED_BASE_SHA" \
+            --arg resolvedBase "$resolved_base" \
+            --arg checkout "$OUTCOME_CHECKOUT" \
+            --arg evidenceDirectory "$OUTCOME_EVIDENCE_DIRECTORY" \
+            --arg releaseIdentity "$OUTCOME_RELEASE_IDENTITY" \
+            --arg setupNode "$OUTCOME_SETUP_NODE" \
+            --arg installDependencies "$OUTCOME_INSTALL_DEPENDENCIES" \
+            --arg installBrowsers "$OUTCOME_INSTALL_BROWSERS" \
+            --arg iapReviewPreflight "$OUTCOME_IAP_REVIEW_PREFLIGHT" \
+            --arg resetUxEvidence "$OUTCOME_RESET_UX_EVIDENCE" \
+            --arg changeGate "$OUTCOME_CHANGE_GATE" \
+            --arg collectUxEvidence "$OUTCOME_COLLECT_UX_EVIDENCE" \
+            --arg auditAll "$OUTCOME_AUDIT_ALL" \
+            --arg auditProduction "$OUTCOME_AUDIT_PRODUCTION" \
+            --arg auditTools "$OUTCOME_AUDIT_TOOLS" \
+            --argjson uxVerifyFiles "$ux_verify_files" \
+            '{
+              schemaVersion: 1,
+              generatedAt: $generatedAt,
+              runUrl: $runUrl,
+              status: $status,
+              candidate: { expected: $expectedCandidate, actual: $actualCandidate },
+              base: { expected: $expectedBase, resolved: $resolvedBase },
+              steps: {
+                checkout: $checkout,
+                evidenceDirectory: $evidenceDirectory,
+                releaseIdentity: $releaseIdentity,
+                setupNode: $setupNode,
+                installDependencies: $installDependencies,
+                installBrowsers: $installBrowsers,
+                iapReviewPreflight: $iapReviewPreflight,
+                resetUxEvidence: $resetUxEvidence,
+                changeGate: $changeGate,
+                collectUxEvidence: $collectUxEvidence,
+                auditAll: $auditAll,
+                auditProduction: $auditProduction,
+                auditTools: $auditTools
+              },
+              files: {
+                changeGate: "change-gate/",
+                auditAll: "npm-audit-all.json",
+                auditProduction: "npm-audit-production.json",
+                auditTools: "npm-audit-tools.json",
+                uxVerify: {
+                  reports: [
+                    "outputs/flightglass-ux/verify-report.json",
+                    "outputs/flightglass-ux/verify-report.md"
+                  ],
+                  screenshots: "outputs/flightglass-ux/verify/*.png",
+                  inventoryFile: "ux-verify-files.json",
+                  inventory: $uxVerifyFiles
+                }
+              }
+            }' > "$evidence_dir/release-evidence-manifest.json"
+
+      - name: Upload immutable release evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: flightglass-v1-release-evidence-${{ github.run_id }}
+          path: ${{ runner.temp }}/flightglass-v1-evidence/
+          if-no-files-found: error
+          retention-days: 30

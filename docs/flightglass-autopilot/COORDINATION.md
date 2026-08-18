@@ -13,7 +13,6 @@ wait.
 
 | Agent | Branch | Working on | Since |
 |-------|--------|-----------|-------|
-| Claude Code | `agent/impact-kamera` | Impact-kamera (design/orders/impact-kamera.md): Økt A ferdig (docs/systemkontrakt.md), Økt B–F via scripts/impact-kamera-workflow.mjs. Files: impact.html, impact-camera.js, impact-outcome.js, impact-annotate.js, sa-p3.css | 2026-07-17 |
 
 ## Queue / free to take
 
@@ -30,6 +29,63 @@ wait.
   pair before build.
 
 ## Done / handed off
+
+- Codex `agent/revenuecat-499` — completed the RevenueCat/App Store configuration
+  checkpoint on 2026-08-09. Apple Monthly/Annual are NOK 99/499, RevenueCat's
+  default Offering exposes only those subscriptions, the protected Codemagic
+  iOS public key is configured outside Git, and the zero-Lifetime-buyer release
+  contract is executable. The complete v1 working-tree gate passed in 550.4
+  seconds. Native TestFlight/sandbox evidence, two IAP review screenshots and
+  the blocked Apple payout account remain external release gates.
+
+- Codex `agent/page-overview` — completed Flightglass Guide on 2026-08-07.
+  Jarvis is now a no-free-text Question Ladder with 28 researched questions,
+  explicit truth/addability boundaries and one-variable live Range labs across
+  all five delivery inputs. Thirty deterministic contracts, 22 Chromium/WebKit
+  browser cases, native copy parity, the level-C change gate and a fresh
+  Impeccable/Terra review pass. Academy remains v2 and protected physics output
+  is unchanged.
+
+- Codex `agent/page-overview` — completed the owner-directed Range instrument
+  redesign on 2026-08-07. 3D Range is now the default replayable lens, one
+  precision Vector Rail controls all five inputs, the left telemetry spine
+  keeps Spin Loft/Ball Speed/Backspin live, and SIDE uses honest Launch Angle /
+  Landing Angle endpoint readouts without distorted angle strokes. Focused
+  Chromium/WebKit contracts, the Range UX audit, brand/v1 checks, the level-B
+  change gate and Impeccable detector are green.
+
+- The stale `agent/impact-kamera` claim from 2026-07-17 was superseded on
+  2026-08-07 for the owner-directed Range redesign. No matching branch or
+  worktree exists, and the claimed shipping file has been clean since its
+  2026-07-22 commit.
+
+- Codex `agent/page-overview` — completed the Impact Studio teaching pass and
+  prerequisite v1 gate repairs without touching active Impact/sa-p3 ownership.
+  Low Point clears the arc/rail, DTL framing uses the scene, view controls show
+  their destination with transient confirmation, turf-first ghost clubs anchor
+  at Entry, and Contact Zone remains available as a mini-screen plus dedicated
+  inspector. Eight Chromium and eight WebKit Studio contracts, the focused v1
+  gate, and the level-B change gate passed on 2026-08-06.
+
+- Codex `agent/page-overview` — implemented the Phase 2 Home/onboarding slice
+  without editing active Impact/sa-p3 ownership. Night Ladder was replaced by
+  the first-shot app Home, all four onboarding steps resume from local v1
+  context, and the deterministic experiment hydrates the existing Range. The
+  full Chromium/WebKit automated gate passed on 2026-08-06; moderated 10-user
+  usability acceptance remains open, so Phase 2 is not declared done.
+
+- Codex `agent/page-overview` — completed v1 Phase 1 app-shell/design-system
+  convergence without editing the active Impact/sa-p3 ownership. Home, Range,
+  Studio and Jarvis share a four-route 44 px shell with current-route state;
+  Studio consumes canonical tokens/fonts, rotation blockers are inert-safe, and
+  64 Chromium/WebKit viewport/motion cases passed on 2026-08-06.
+
+- Codex `agent/page-overview` — defined the owner-approved v1 scope and completed
+  Phase 0 shipping parity. The native payload now contains Home, Range, Impact
+  Studio, Jarvis and legal pages; Academy/legacy entry points are excluded.
+  The focused v1 gate and Chromium/WebKit route spots passed on 2026-08-06.
+
+- Codex `agent/page-overview` — added standalone `page-overview.html` with 78 unique links to the repository's HTML surfaces; Chromium/WebKit spot checks and the level-B change gate passed on 2026-08-05.
 
 - Academy complete analysis pack — `agent/academy-codex`; one tracked module
   description and 15 visual contact sheets cover Academy Home plus all 84

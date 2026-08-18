@@ -35,6 +35,7 @@ const LABEL_DY = -15;        // px, regel 3: "midtpunkt, 15 px over linjen"
 const NUDGE_GAP = 3;         // px, kollisjonsregisterets vertikale luft
 const MAX_NUDGE_ITER = 3;    // maks iterasjoner
 const LABEL_H = 19;          // px, smallLabel-høyde (samme stil på alt her)
+const LABEL_WIDTH_SAFETY = 4; // px, Inter kan rendres litt bredere enn heuristikken
 
 // ordre §3 "stats-keep-out (x < 246 px, y 88–356 px)" — eksportert slik
 // kalleren har ett sted å hente det normative tallet fra, ikke en kopi.
@@ -44,7 +45,7 @@ function estWidth(label) {
   // Ingen canvas-measureText her (K: ingen canvas-kall) — grov, deterministisk
   // bredde-heuristikk. Avgjør ikke kaskade-grenen (den styres av span/keepOut,
   // ikke av denne bredden alene bortsett fra som offset), kun visuell nudge.
-  return Math.max(30, label.length * 6.3 + 16);
+  return Math.max(30, label.length * 6.3 + 16 + LABEL_WIDTH_SAFETY);
 }
 
 /**
@@ -184,26 +185,27 @@ export function buildAnnotations(outcome, station, basis, hotKey = null) {
     }
   }
 
-  // ── SIDE · launchplanet (ordre §3 SIDE, bell rundt skalar 1) ──
+  // ── SIDE · ærlige endepunkt-readouts (bell rundt skalar 1) ──
+  // Kameraet forvrenger skjermromsvinkler, så launch/landing skal ikke tegnes
+  // som gradnøyaktige buer eller referansestreker. Tallene er autoritative og
+  // forankres i stedet nær banens faktiske start- og sluttpunkt.
   const sideA = smoothstep(clamp(1 - Math.abs(s - 1) * 1.7, 0, 1));
   if (sideA > 0.03) {
-    const launchArc = buildArc(basis,
-      (a, m) => ({ x: Math.cos(a) * 24 * m, y: 0, z: Math.sin(a) * 24 * m }),
-      launchAng);
-    if (launchArc) primitives.push({
-      kind: 'arc', points: launchArc.points, tick: launchArc.tick,
-      tone: 'measure', alpha: sideA, hot: hotLaunch,
-      label: `Launch ${launchAng.toFixed(1)}°`, labelAnchor: launchArc.labelAnchor,
-    });
-
+    const p0 = path[0] || { x: 0, y: 0, z: 0 };
     const p2 = path[path.length - 1];
-    const landArc = buildArc(basis,
-      (a, m) => ({ x: p2.x - Math.cos(a) * 18 * m, y: p2.y, z: Math.sin(a) * 18 * m }),
-      landAng);
-    if (landArc) primitives.push({
-      kind: 'arc', points: landArc.points, tick: landArc.tick,
-      tone: 'measure', alpha: sideA * 0.95, hot: hotLaunch,
-      label: `Land ${Math.round(landAng)}°`, labelAnchor: landArc.labelAnchor,
+    const launchEnd = P(p0.x, p0.y, p0.z);
+    const landingEnd = p2 ? P(p2.x, p2.y, p2.z) : null;
+    const inward = launchEnd && landingEnd ? sign(landingEnd.x - launchEnd.x) : 1;
+
+    if (launchEnd) primitives.push({
+      kind: 'label', points: [launchEnd], tone: 'launch', alpha: sideA, hot: hotLaunch,
+      label: `Launch Angle ${launchAng.toFixed(1)}°`,
+      labelAnchor: { x: launchEnd.x + inward * 58, y: launchEnd.y - 26 },
+    });
+    if (landingEnd) primitives.push({
+      kind: 'label', points: [landingEnd], tone: 'measure', alpha: sideA * 0.95, hot: hotLaunch,
+      label: `Landing Angle ${Math.round(landAng)}°`,
+      labelAnchor: { x: landingEnd.x - inward * 64, y: landingEnd.y - 32 },
     });
   }
 
@@ -232,11 +234,104 @@ export function placeLabels(primitives, keepOut, vbox) {
       : prim.labelAnchor;
     if (!base) { out.push(prim); continue; }
     const w = estWidth(prim.label);
-    const placed = nudge(base, w, LABEL_H, rects);
+    const clearOfHud = avoidHudKeepOut(base, w, LABEL_H, vbox?.hudKeepOut, vbox);
+    const nudged = nudge(clearOfHud, w, LABEL_H, rects);
+    const placed = resolveLabelPosition(nudged, base, w, LABEL_H, rects, vbox?.hudKeepOut, vbox);
     rects.push({ x: placed.x - w / 2, y: placed.y - LABEL_H / 2, w, h: LABEL_H });
     out.push({ ...prim, labelPos: placed });
   }
-  return out; // vbox reservert for kaller-side off-screen-clamp; ikke i bruk (§3 spesifiserer ikke skjermkant-atferd)
+  return out;
+}
+
+function overlapsRect(pos, w, h, rect) {
+  return pos.x - w / 2 < rect.x + rect.w
+    && pos.x + w / 2 > rect.x
+    && pos.y - h / 2 < rect.y + rect.h
+    && pos.y + h / 2 > rect.y;
+}
+
+/**
+ * Scene-HUD er ikke en måleetikett og inngår derfor ikke i den vanlige
+ * etikett-kaskaden. Når en label faktisk treffer HUD-feltet, flyttes bare den
+ * labelen til nærmeste ledige side. Kamera og autoritativt anker forblir urørt.
+ */
+function avoidHudKeepOut(pos, w, h, keepOut, vbox) {
+  if (!keepOut || !overlapsRect(pos, w, h, keepOut)) return pos;
+  const minX = w / 2;
+  const maxX = Math.max(minX, (vbox?.w ?? Infinity) - w / 2);
+  const rightX = keepOut.x + keepOut.w + LABEL_GAP + w / 2;
+  if (rightX <= maxX) return { x: rightX, y: pos.y };
+
+  const minY = h / 2;
+  const maxY = Math.max(minY, (vbox?.h ?? Infinity) - h / 2);
+  const belowY = keepOut.y + keepOut.h + LABEL_GAP + h / 2;
+  if (belowY <= maxY) return { x: clamp(pos.x, minX, maxX), y: belowY };
+
+  const aboveY = keepOut.y - LABEL_GAP - h / 2;
+  return { x: clamp(pos.x, minX, maxX), y: clamp(aboveY, minY, maxY) };
+}
+
+/**
+ * HUD, tidligere etiketter og viewport er likestilte sluttkrav. Den låste
+ * vertikale nudge-kaskaden kjører først; bare hvis resultatet fortsatt bryter
+ * et krav velges nærmeste deterministiske frie kryss mellom hindringskantene.
+ */
+function resolveLabelPosition(initial, base, w, h, rects, hudKeepOut, vbox) {
+  const hasWidth = Number.isFinite(vbox?.w);
+  const hasHeight = Number.isFinite(vbox?.h);
+  const minX = hasWidth ? Math.min(w / 2, vbox.w / 2) : -Infinity;
+  const maxX = hasWidth ? Math.max(minX, vbox.w - w / 2) : Infinity;
+  const minY = hasHeight ? Math.min(h / 2, vbox.h / 2) : -Infinity;
+  const maxY = hasHeight ? Math.max(minY, vbox.h - h / 2) : Infinity;
+  const clampPos = pos => ({ x: clamp(pos.x, minX, maxX), y: clamp(pos.y, minY, maxY) });
+  const obstacles = rects.map(rect => ({ rect, gap: NUDGE_GAP }));
+  if (hudKeepOut) obstacles.push({ rect: hudKeepOut, gap: LABEL_GAP });
+  const valid = pos => pos.x >= minX && pos.x <= maxX && pos.y >= minY && pos.y <= maxY
+    && obstacles.every(({ rect }) => !overlapsRect(pos, w, h, rect));
+
+  const clampedInitial = clampPos(initial);
+  if (valid(clampedInitial)) return clampedInitial;
+
+  const clampedBase = clampPos(base);
+  const xs = new Set([clampedBase.x, clampedInitial.x]);
+  const ys = new Set([clampedBase.y, clampedInitial.y]);
+  for (const { rect, gap } of obstacles) {
+    xs.add(clamp(rect.x - gap - w / 2, minX, maxX));
+    xs.add(clamp(rect.x + rect.w + gap + w / 2, minX, maxX));
+    ys.add(clamp(rect.y - gap - h / 2, minY, maxY));
+    ys.add(clamp(rect.y + rect.h + gap + h / 2, minY, maxY));
+  }
+
+  const baseHitsHud = hudKeepOut && overlapsRect(clampedBase, w, h, hudKeepOut);
+  const preferredRight = baseHitsHud
+    ? hudKeepOut.x + hudKeepOut.w + LABEL_GAP + w / 2
+    : null;
+  const canPreferRight = preferredRight !== null && preferredRight >= minX && preferredRight <= maxX;
+  if (canPreferRight) xs.add(preferredRight);
+
+  const candidates = [];
+  for (const x of xs) for (const y of ys) {
+    const pos = { x, y };
+    if (!valid(pos)) continue;
+    const dx = x - base.x;
+    const dy = y - base.y;
+    candidates.push({
+      pos,
+      rank: [canPreferRight && Math.abs(x - preferredRight) > 0.01 ? 1 : 0,
+        dx * dx + dy * dy, Math.abs(dy), Math.abs(dx), y, x],
+    });
+  }
+  candidates.sort((a, b) => {
+    for (let i = 0; i < a.rank.length; i++) {
+      if (a.rank[i] !== b.rank[i]) return a.rank[i] - b.rank[i];
+    }
+    return 0;
+  });
+  if (candidates.length) return candidates[0].pos;
+
+  // A physically overfull viewport has no collision-free solution. Preserve
+  // the primary HUD reading layer and keep the fallback fully on-screen.
+  return clampPos(avoidHudKeepOut(clampedInitial, w, h, hudKeepOut, vbox));
 }
 
 /** ordre §3, regel 1–3, verbatim på A (indre/nær) → B (ytre/fjern). */

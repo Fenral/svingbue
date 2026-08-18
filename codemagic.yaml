@@ -1,7 +1,8 @@
 # Codemagic iOS workflow for Flightglass — NATIVE (svingbue) build.
 #
-# Wraps the static web app (index/geometry/impact + geo3d/vendor/assets)
-# in a Capacitor 7 iOS shell, landscape-locked, and ships it to TestFlight
+# Wraps the v1 Home/Range/Studio/Guide package in a Capacitor 7 iOS shell
+# and uploads a manually triggered, verified build to App Store Connect
+# without entering TestFlight beta review unless the operator explicitly opts in
 # on the existing App Store record (ASC Apple ID 6768449250, bundle
 # no.strikearc.app, team PL9G26C26C). This build supersedes the React/Vite
 # strikearc-3.0 build on TestFlight — chosen by Sivert 2026-07-03.
@@ -19,9 +20,8 @@
 #
 #   INCIDENT NOTE (2026-08-10): the previous version of this workflow
 #   generated a brand-new local private key on every single build, then
-#   force-revoked ALL Distribution certs on the team (via
-#   `app-store-connect certificates delete`) before creating a fresh one
-#   (`fetch-signing-files --create`). Apple's Distribution-certificate quota
+#   force-revoked ALL Distribution certs on the team before requesting a
+#   fresh one. Apple's Distribution-certificate quota
 #   (max 2) is TEAM-WIDE, not per-app — so every svingbue/Flightglass build
 #   was silently revoking whichever certs currently occupied those 2 slots,
 #   including ones belonging to OTHER apps under team PL9G26C26C (e.g.
@@ -43,10 +43,12 @@
 #      (still used for the TestFlight publish step + build-number lookup).
 #   2. GitHub repo Fenral/svingbue connected as iOS app — ✅ done.
 #   3. App record no.strikearc.app (Apple ID 6768449250) — ✅ already exists.
-#   4. flightglass_distribution_20260810 / flightglass_appstore_20260810
-#      code-signing identities in Codemagic — ⏳ owner must create/upload
-#      (see incident note above). Until then this workflow will fail fast
-#      at the signing step instead of silently touching other apps' certs.
+#   4. RevenueCat public key + store offering — required before this workflow.
+#   → Manual-only; the workflow fails closed when billing is not configured.
+#   5. `flightglass_distribution_20260810` and
+#      `flightglass_appstore_20260810.mobileprovision` must exist as named
+#      Codemagic signing identities. Missing identities fail fast without
+#      touching the shared Apple certificate pool.
 
 definitions:
   bundle_id: &bundle_id no.strikearc.app
@@ -57,6 +59,12 @@ workflows:
     name: Flightglass — iOS TestFlight (native)
     instance_type: mac_mini_m2
     max_build_duration: 60
+
+    inputs:
+      submitToTestFlightReview:
+        description: Submit the uploaded build to TestFlight beta review
+        type: boolean
+        default: false
 
     integrations:
       # Reuses the existing team-level App Store Connect API key
@@ -81,32 +89,38 @@ workflows:
           - flightglass_distribution_20260810
         provisioning_profiles:
           - flightglass_appstore_20260810.mobileprovision
+      groups:
+        # Contains the public REVENUECAT_IOS_PUBLIC_SDK_KEY value for the
+        # Flightglass RevenueCat app. No store credential lives in Git.
+        - revenuecat-flightglass
       vars:
         BUNDLE_ID: *bundle_id
         APP_STORE_APPLE_ID: 6768449250   # existing ASC app id; do not migrate
         XCODE_WORKSPACE: "ios/App/App.xcworkspace"
         XCODE_SCHEME: "App"
-      node: 20
-      xcode: latest
+      node: 24
+      # Apple requires the iOS 26 SDK for uploads after 28 April 2026. Pin the
+      # accepted toolchain so a release cannot silently change under us.
+      xcode: 26.6
       cocoapods: default
-
-    triggering:
-      events:
-        - push
-      branch_patterns:
-        - pattern: main
-          include: true
-          source: true
-      cancel_previous_builds: true
 
     scripts:
       - name: Install npm dependencies
         script: |
           npm ci
 
+      - name: Verify shipping source and native release contracts
+        script: |
+          npm run verify:v1:source
+
       - name: Assemble www/ from web source (denylist mocks/tooling)
         script: |
           npm run copy-web
+
+      - name: Inject and verify the RevenueCat iOS public key
+        script: |
+          npm run configure:iap:ios
+          npm run verify:iap:ios
 
       # ios/ is never committed (Windows dev machine can't generate it —
       # needs Xcode/CocoaPods), so every CI run creates it fresh here.
@@ -120,7 +134,7 @@ workflows:
         script: |
           npx cap sync ios
 
-      - name: Patch Info.plist for portrait-default orientation + display name
+      - name: Patch iOS orientation, display name, and minimum OS
         script: |
           # Must run AFTER cap sync (cap add/sync own Info.plist). Idempotent.
           node scripts/ios-landscape.mjs
@@ -139,9 +153,13 @@ workflows:
       - name: Generate app icons/splash from resources/
         script: |
           # resources/icon.png (1024²) + resources/splash.png (2732²) are the
-          # sources — capacitor-assets fans them out to every iOS size after
-          # the platform exists.
-          npx capacitor-assets generate --ios --iconBackgroundColor "#07060C"
+          # only sources. The project-owned generator writes the universal iOS
+          # catalogs after the platform exists and then verifies their pixels.
+          node scripts/generate-ios-assets.mjs
+
+      - name: Verify generated app icons/splash
+        script: |
+          node scripts/verify-generated-ios-assets.mjs
 
       - name: CocoaPods install
         script: |
@@ -162,38 +180,33 @@ workflows:
           # so a fixed offset can't guarantee we beat the existing highest
           # CFBundleVersion on no.strikearc.app. Query ASC for the latest and
           # add 1 — bulletproof regardless of which pipeline built last.
-          set +e
-          LATEST=$(app-store-connect get-latest-testflight-build-number "$APP_STORE_APPLE_ID" 2>/dev/null)
-          set -e
+          LATEST=$(app-store-connect get-latest-testflight-build-number "$APP_STORE_APPLE_ID")
           if ! printf '%s' "$LATEST" | grep -Eq '^[0-9]+$'; then
-            echo "Could not read latest build number (got '$LATEST') — falling back to 0."
-            LATEST=0
+            echo "Could not read a numeric latest TestFlight build number; refusing an ambiguous upload."
+            exit 1
           fi
           NEXT=$((LATEST + 1))
           echo "Latest TestFlight build: $LATEST → setting CFBundleVersion=$NEXT"
           cd ios/App
           agvtool new-version -all "$NEXT"
 
-      # NOTE: no manual "Initialize keychain" / "Generate certificate private
-      # key" / "Revoke old Distribution certs" / "Fetch signing files" / "Add
-      # certificates to keychain" steps any more — the `ios_signing:` block
-      # above makes Codemagic install the named certificate + profile into
-      # the build keychain automatically, before scripts run, without
-      # touching any other cert on the team.
+      # NOTE: no manual certificate generation, revocation, or keychain-install
+      # steps remain. The `ios_signing:` block above makes Codemagic install the
+      # named certificate + profile automatically before scripts run, without
+      # touching any other certificate on the team.
 
       - name: Use profiles in Xcode project
         script: |
           # Limit signing mutation to the generated app project. Without an
           # explicit project, Codemagic recursively scans the checkout and can
           # apply profiles to dependency projects under node_modules instead.
-          # (carried over from agent/revenuecat-499 commit c4e79c1, 2026-08-10)
           xcode-project use-profiles --project ios/App/App.xcodeproj
 
       - name: Build .ipa
         script: |
           # Keep the full archive output as an artifact and surface the first
           # actionable Xcode errors directly in the Codemagic build log.
-          # (carried over from agent/revenuecat-499 commit c4e79c1, 2026-08-10)
+          # `xcode-project` also writes its own detailed logs under /tmp.
           set -o pipefail
           mkdir -p /tmp/xcodebuild_logs
           xcode-project build-ipa \
@@ -217,7 +230,9 @@ workflows:
     publishing:
       app_store_connect:
         auth: integration
-        submit_to_testflight: true
+        # Upload always; beta-review submission is an explicit, default-off
+        # operator choice in Codemagic's Start new build form.
+        submit_to_testflight: ${{ inputs.submitToTestFlightReview }}
         # Add a beta group name here once one exists in App Store Connect:
         # beta_groups:
         #   - "Internal Testers"

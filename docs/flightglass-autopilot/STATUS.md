@@ -1,9 +1,158 @@
 # Flightglass autonomous execution status
 
-Updated: 2026-07-28
+Updated: 2026-08-18
+
+## Current V1 launch-candidate UX evidence (2026-08-18)
+
+The current master UX baseline now describes the V1 product rather than the
+historical Academy build. `npm run ux:baseline` completed with:
+
+- 19 registered product states: Home ready; three onboarding states;
+  Connections; four Range states; three Studio perspectives; Guide Browse,
+  Answer and Lab; Paywall; Support; Terms; and Privacy;
+- 76 captures, with two target viewport sizes and normal/reduced motion for
+  every registered state;
+- zero critical findings;
+- zero design-floor findings, including small targets and clipped text.
+
+The machine and human-readable records are
+`outputs/flightglass-ux/baseline-report.json` and `baseline-report.md`. Their 76
+linked screenshots are the current evidence set. Older master/focused captures
+that presented Academy, Geometry or legacy landscape navigation as the current
+product have been removed. The explicitly historical Academy `task5` through
+`task8` evidence remains preserved.
+
+This baseline is evidence of the rendered UX states, not release acceptance.
+The strict `npm run ux:verify` and complete `npm run verify:v1:release` gate
+must pass again after the final working-tree changes. Production and native
+release also remain held on the exact-SHA CI/preview record, moderated
+first-time onboarding evidence, physical-iPhone purchase/cancel/error/restore
+checks, current App Store/IAP evidence, and a successful signed Codemagic /
+TestFlight build. No App Store publication is authorized by this checkpoint.
+
+## V1 app start, learning onboarding and Studio instrument checkpoint (2026-08-07)
+
+The shipping Home on `agent/page-overview` now starts with a short Flightglass
+instrument opening and a four-step launch-monitor understanding tour. This is
+the current v1 direction and supersedes the historical Night Ladder onboarding
+description later in this evidence ledger.
+
+The opening runs once per session, is immediately skippable by pointer, Enter
+or Escape, has a 150 ms reduced-motion equivalent and cannot strand the app when
+session storage is unavailable. The separate public landing page was not
+changed.
+
+The tour is product education, not personal golf intake:
+
+- real registered captures show Outcome, Impact Studio and Guide;
+- a fixed 7-iron/90 mph example changes Delivered Loft from 16–34 degrees;
+- Launch Angle, Spin Loft and Backspin update from the unchanged shipping
+  engine;
+- Back, `Not now`, resume and completion state are preserved;
+- the tour writes no profile answers and creates no `currentShot`.
+
+Impact Studio's Low Point is now an instrument marker rather than an outlined
+status dot. Its exact core, tangent aperture and optional turf datum are drawn
+after competing geometry and stay visible. A 280 ms update echo supplies live
+feedback; reduced motion removes only that echo. No physics or geometry output
+changed.
+
+Fresh automated evidence:
+
+- onboarding: 10/10 Chromium and 10/10 WebKit;
+- Studio marker/geometry: 9/9 Chromium and 9/9 WebKit;
+- v1 shell/context/Guide contracts: 51/51;
+- native release contracts: 7/7;
+- automated phone matrix: 4/4 Chromium and 4/4 WebKit;
+- level-C change gate: PASS, zero critical Chromium/WebKit findings;
+- the three onboarding captures are registered and byte-identical in the
+  native web package.
+
+The source and automated evidence are complete, but Phase 2 is not
+release-accepted. Its formal human gate remains fail-closed: 10 first-time
+moderated sessions, at least 8 unassisted completions and median completion no
+greater than 90 seconds. The live protocol and empty evidence table are in
+`docs/phase2-onboarding-uat.md`.
+
+## V1 monetization readiness checkpoint (2026-08-09)
+
+Phase 4 source, browser and store-account setup are ready, but native-store
+acceptance is still fail-closed. Native free access now ends only after 10 distinct Range
+comparisons, one completed guided Studio experiment, or five unique Guide
+answers in the same local day. The next real value action opens a source-aware
+Monthly/Annual paywall; browser preview remains ungated and no price appears on
+cold launch.
+
+The temporary Range action and purchase promise now both say comparisons rather
+than persistent saves. Guided Studio has an authorized instruction/completion
+layer that direct free Studio does not. Terms and Privacy remove stale prices,
+the stale savings claim and the new-customer Lifetime offer. The protected
+Lifetime compatibility product is mapped to `pro` outside Offering; the owner
+confirmed that no Lifetime buyers exist. Supabase is intentionally absent.
+
+The legacy global `window.__saShots.setPro` entitlement hook is removed and
+forbidden by contract. Native CI raises both generated iOS targets to 16.4 so
+the shipping modal and design-system feature baseline is explicit.
+
+Fresh evidence:
+
+- monetization and IAP contracts: 23/23;
+- Chromium purchase/gate cases: 13/13;
+- WebKit purchase/gate cases: 13/13;
+- actual Range, Studio and Guide gates, automatic post-purchase action resume,
+  no-cost re-pinning of a counted Range setup, successful keyboard purchase,
+  cancel/pending/error, Home/paywall restore, focus return, axe WCAG A/AA,
+  reduced motion and both paywall orientations are covered.
+
+Fresh complete working-tree evidence on 2026-08-09: `npm run
+verify:v1:release` passes in 550.4 seconds. This includes the protected engine,
+source/native/store/release-evidence contracts, both onboarding/Guide engines,
+the 8-case automated phone matrix, Range 22/22, Studio 18/18 and paywall 26/26.
+A lens-change resize race found by the first full run was fixed and then passed
+at 390x844, 375x812 and 800x1280 inside the green rerun. Academy is excluded
+from the v1 package, so its historical v2 voice debt is not part of this
+release gate. Human observations, physical-iPhone behavior and real store
+transactions remain separate gates.
+
+Do not declare `PHASE 4 DONE`. Committed RevenueCat keys remain intentional
+fail-closed placeholders. Apple Monthly NOK 99 and Annual NOK 499, RevenueCat
+`pro`, the default Monthly/Annual Offering, hidden Lifetime compatibility,
+valid IAP credentials and the protected Codemagic public iOS key are configured.
+An exact TestFlight build must still prove key injection, purchase,
+cancellation/error and subscription restore. Apple also reports a blocked
+payout account, and native IAP Review Screenshots are missing.
 
 Release authorization: granted for GitHub, Vercel and configured Apple/Google
 publication after all Phase 8 gates pass. See `RELEASE-AUTHORIZATION.md`.
+
+## Flightglass Guide completion checkpoint (2026-08-07)
+
+Phase 3 is source-complete on `agent/page-overview`. The legacy Jarvis route is
+now the visible **Flightglass Guide**: a button-led Question Ladder with three
+entry intents, six topics and 28 researched golfer questions. Browse, Answer
+and Lab form one progressive path; there is no free-text or LLM request path.
+
+Every answer declares provenance and one of four capability outcomes. Missing
+engine knowledge is classified as available now, buildable with a bounded new
+model, dependent on external data/calibration, or unsafe false precision. Live
+labs use the unchanged Range outcome solver through a strict five-input adapter,
+hold four values constant, show exact deltas and hand exactly one selected
+change back to Range. Saved context is never described as a measured shot.
+
+Fresh evidence:
+
+- 30/30 deterministic engine/catalog/UI contracts pass;
+- 11/11 Chromium and 11/11 WebKit Guide cases pass, including corrupt context,
+  Range handoff, Studio navigation persistence, reduced motion and mobile/
+  desktop containment;
+- `npm run verify:v1` passes 46/46 v1 contracts plus Home/brand checks;
+- the level-C change gate passes with zero critical Chromium/WebKit findings;
+- final independent Impeccable/Terra review: `REVIEW-READY`;
+- research record: `docs/guide-question-research.md`;
+- portable design contract: `DESIGN.md` plus `.impeccable/design.json`.
+
+No protected physics output, Academy runtime, payment identity or account flow
+changed. No deployment or store publication was performed.
 
 > **Read `docs/SESSION-HANDOFF.md` first.** Its "Current state (2026-07-28)"
 > block supersedes the branch topology described throughout this file. In
@@ -109,7 +258,7 @@ an owner verdict is recorded.
 
 | Phase | State | Evidence |
 |---|---|---|
-| 0 - QA baseline and control package | Complete | 40-state baseline, 11 contract tests, brand and handoff verifiers |
+| 0 - QA baseline and control package | Complete | Historical 40-state baseline, 11 contract tests, brand and handoff verifiers; superseded by the current V1 baseline above |
 | 1 · Home / Night Ladder | STUDIO-GRADE | Owner-selected night-range Home; 17/17 manifest PASS, 2/2 blind wins, portrait and landscape evidence |
 | 2 · Range / Visualise | Ready | Decisions and references locked in master plan |
 | 3 · Outcome / Compare | Ready | Decisions and references locked in master plan |
@@ -523,8 +672,8 @@ Task 11 verification evidence (all runs fresh on 2026-07-14):
 - `npm run brand:verify`: PASS. `npm run copy-web`: clean; the five Academy
   assets ship in `www/` and `academy-lesson-v2-mock.html` does not.
 - Focused audit `--mode verify --surface academy-lesson --motion both`:
-  4 captures, 0 critical findings. Reports:
-  `outputs/flightglass-ux/verify--academy-lesson-report.json` / `.md`.
+  4 captures, 0 critical findings. Those generated focused reports were later
+  retired when the current V1 evidence set replaced the root audit artifacts.
 - Full six-surface walk captured and visually inspected at 430x932 and
   375x812 in normal and reduced motion (24 screenshots, 0 runtime errors):
   `outputs/flightglass-ux/verify/task11-surfaces/` (regeneratable local
@@ -802,27 +951,28 @@ tier or blocks the rollout; carry them into a future refinement round because th
   card and sticky action name the same Launch Angle destination. Consolidate to a
   single destination in a future pass.
 
-## Phase 0 evidence
+## Historical Phase 0 evidence (superseded)
 
-- Baseline: 40 captures across 10 surfaces, normal and reduced motion.
+- This 40-capture, 10-surface result records the original 2026-07 Phase 0
+  audit. It is not the current V1 product baseline.
 - Automated findings: 4 critical state occurrences and 48 improvement flags.
 - The only critical surface is Geometry 3D. Its four viewport/motion states
   share one root cause: missing `/vendor/three/build/three.module.js`.
 - Compare's browser-generated `/favicon.ico` probe is correctly excluded from
   product findings.
-- Machine report: `outputs/flightglass-ux/baseline-report.json`.
-- Human-readable report: `outputs/flightglass-ux/baseline-report.md`.
+- The master report paths were regenerated for the current 19-state V1 product
+  on 2026-08-18; they no longer contain this historical run.
 - Control package tests: 11 passing.
-- Focused phase reports use separate filenames and cannot overwrite the full
-  baseline report.
+- Explicitly historical Academy `task5` through `task8` evidence is retained;
+  obsolete master/focused reports are not current evidence.
 
-## Derived indicator ledger
+## Historical derived indicator ledger
 
-Scores are derived byproducts and tripwires, never targets. Acceptance per
-surface is the four evidence gates: zero critical defects, every category floor
-cleared, all critical checks pass, and pairwise-blind won against the previous
-generation. The "expected derived score" column is what typically falls out once
-the gates pass — a lower figure with all gates green still ships.
+These are planning-era indicators from the superseded Academy baseline, not
+current V1 acceptance scores. Scores are derived byproducts and tripwires,
+never targets. Acceptance per surface is the four evidence gates: zero critical
+defects, every category floor cleared, all critical checks pass, and
+pairwise-blind won against the previous generation.
 
 | Surface | Current derived indicator | Expected derived indicator |
 |---|---:|---:|

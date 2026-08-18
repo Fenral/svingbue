@@ -1,6 +1,134 @@
 # Flightglass session handoff
 
-Updated: 2026-07-28
+Updated: 2026-08-09
+
+## Current state (2026-08-07) — app opening, learning tour and Studio marker
+
+The owner-directed Home/onboarding revision is implemented on
+`agent/page-overview`. Home no longer asks the golfer to describe personal golf,
+choose a goal or generate a first shot. First use now follows one learning path:
+
+1. a real Outcome capture introduces the five delivery inputs;
+2. a real Impact Studio capture shows Face + Path and Attack + Loft;
+3. a fixed 7-iron example at 90 mph lets the learner change Delivered Loft from
+   16–34 degrees while Launch Angle, Spin Loft and Backspin update through the
+   unchanged shipping engine;
+4. real Outcome, Studio and Guide previews form a three-destination product map.
+
+The tour persists only progress, dismissal and example loft. It does not create
+or replace `currentShot`; legacy saved setups still render through the existing
+compatibility path. Every step supports Back and `Not now`, and completion opens
+the normal live Outcome model.
+
+Cold launch now has a short Flightglass instrument opening. It runs once per
+session, can be skipped by pointer, Enter or Escape, falls back safely when
+storage is unavailable and contracts to a 150 ms reduced-motion state. The
+public marketing landing remains untouched.
+
+Impact Studio's old outlined Low Point disk was replaced by an instrument
+marker: exact core, tangent-aligned open aperture, subtle lens bloom and an
+optional turf datum line/tick. It is drawn after competing geometry, remains
+visible in its settled state and uses only a brief 280 ms update echo. Reduced
+motion removes the echo without removing the information. Impact physics and
+geometry were not changed.
+
+Fresh evidence:
+
+- onboarding journeys: 10/10 Chromium and 10/10 WebKit;
+- Studio marker/geometry journeys: 9/9 Chromium and 9/9 WebKit;
+- v1 shell/context/Guide contracts: 51/51;
+- native release contracts: 7/7, including byte-identical registered
+  onboarding captures;
+- automated phone matrix: 4/4 Chromium and 4/4 WebKit;
+- level-C change gate: PASS with zero critical Chromium/WebKit findings;
+- representative onboarding and Low Point screenshots inspected manually.
+
+Phase 2 is still deliberately open. The automated gate is green, but the
+moderated protocol in `docs/phase2-onboarding-uat.md` still requires 10
+first-time participants, at least 8 unassisted completions and a median of 90
+seconds or less. Do not declare `PHASE 2 DONE` until those rows are observed.
+
+## Current state (2026-08-09) — monetization account configured, native proof blocked
+
+The native-only value gates are implemented at three named moments: the 11th
+distinct Range comparison, the second guided Studio experiment and the sixth
+unique Guide answer in the same local calendar day. Usage is consumed only
+after a completed result; duplicate comparison/question identities do not spend
+another allowance. Browser preview remains ungated.
+
+The paywall renders only Monthly and Annual, uses live RevenueCat price strings
+when available, calculates no unverified savings claim and keeps the protected
+Lifetime product mapped to `pro` outside Offering. The owner confirmed there is
+no Lifetime buyer cohort. Range now
+truthfully calls its temporary three-ghost action `Pin comparison`; the paid
+promise is unlimited comparisons, not persistent save history. Guided Studio
+has a distinct instruction/completion layer. A successful purchase or restore
+continues the exact Range, Guide or Studio action that opened the paywall;
+dismissal returns a denied guided request to free direct Studio. Terms and
+Privacy match these promises.
+
+Fresh evidence: monetization/IAP contracts 23/23; Chromium 13/13; WebKit 13/13.
+The browser matrix triggers all three gates through their shipping pages and
+covers automatic post-unlock action resumption, no-cost re-pinning of a counted
+setup, keyboard plan selection, successful purchase, cancel, pending, error,
+paywall/Home restore, focus return, axe WCAG A/AA, reduced motion, 375x812 and
+932x430. Supabase and account sync remain out of v1.
+
+Fresh complete working-tree evidence on 2026-08-09: `npm run
+verify:v1:release` passes in 550.4 seconds. It includes the protected engine,
+source/native/store/release-evidence contracts, both onboarding/Guide engines,
+the 8-case automated phone matrix, Range 22/22, Studio 18/18 and paywall 26/26.
+The first full run exposed a Range lens-resize race; the fix then passed at
+390x844, 375x812 and 800x1280 inside the complete green rerun. Academy is
+excluded from the v1 native allowlist, so its historical v2 voice debt is not
+part of this release gate. Human observations, physical-iPhone behavior and
+real store transactions remain separate gates.
+
+This is not production purchase acceptance. `sa-iap.js` deliberately keeps
+fail-closed public SDK placeholders in Git; Codemagic now holds the real public
+iOS key outside source. Apple Monthly NOK 99 and Annual NOK 499, valid Apple IAP
+credentials, RevenueCat `pro`, the default Monthly/Annual Offering and hidden
+Lifetime compatibility are configured. The optional RevenueCat App Store
+Connect API key is absent by design because products were entered manually.
+The exact TestFlight candidate must still prove key injection, purchase,
+cancellation/error and subscription restore. Apple also reports a blocked
+payout account, and native IAP Review Screenshots are missing.
+
+The shipping bundle exposes no global entitlement mutator; the legacy
+`window.__saShots.setPro` console hook was removed and is contract-tested.
+Codemagic also enforces iOS 16.4 in both the generated Xcode project and
+Podfile, matching the WKWebView baseline required by the modal/design system.
+
+## Current state (2026-08-07) — Flightglass Guide complete
+
+The owner-directed v1 Guide phase is complete on `agent/page-overview`.
+`jarvis.html` remains the compatibility route, but the visible product is now
+**Flightglass Guide** and the shared navigation label is **Guide**. It contains
+three guided intents, six topic branches and 28 concrete questions; no text
+field, contenteditable surface or LLM path exists.
+
+The Guide recomputes values through `guide-engine.js` from the existing
+five-input Range model. Every catalog entry carries a truth tier, a visible
+model boundary and a quick addability verdict: available now, bounded model,
+external data/calibration, or reject false precision. Engine-backed questions
+may open a one-variable lab; four inputs remain explicitly held, exact outcomes
+and deltas update live, and one selected change can be handed to Range. Context
+also survives shared navigation to Studio and corrupt storage fails to the
+illustrative model.
+
+Fresh verification: Guide contracts 30/30, Chromium 11/11, WebKit 11/11,
+`verify:v1` 46/46 plus Home/brand checks, and the level-C change gate PASS. A
+fresh Impeccable/Terra review returned `REVIEW-READY`. Mobile/desktop evidence
+is under `outputs/guide/`; question research is in
+`docs/guide-question-research.md`; durable visual rules are in `DESIGN.md` and
+`.impeccable/design.json`.
+
+No protected physics output or Academy runtime changed. Academy remains v2.
+No deployment or store publication was performed; source publication is limited
+to the working branch/draft-review path. Exact next action is owner visual/product
+review of the three mobile Guide states; subsequent work
+should add an unsupported topic only after its new inputs, calibration source
+and deterministic regression fixtures are named.
 
 ## Current state (2026-07-28) — supersedes everything below
 
