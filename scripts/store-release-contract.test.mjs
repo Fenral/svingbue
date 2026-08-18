@@ -65,7 +65,7 @@ test('the release record names the exact evidence sink and a recoverable web bas
   assert.match(record, /GitHub PR #23/);
   assert.match(record, /full 40-character candidate commit/);
   assert.match(record, /Flightglass v1 release gate/);
-  assert.match(record, /184140a2ff5834f23510662f8c442b8a8c03d36c/);
+  assert.match(record, /0afcf668f8c3197f19772edbfa914b5b627c2bf3/);
   assert.match(record, /dpl_BKJgyzjJWn1QtSFrtgFGKS7b69dv/);
   assert.match(record, /npm audit --prefix tools --audit-level=high/);
   assert.match(record, /clean checkout whose `HEAD` equals the PR head/);
