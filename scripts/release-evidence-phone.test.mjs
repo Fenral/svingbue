@@ -7,6 +7,7 @@ import {
   mkdtempSync,
   readFileSync,
   rmSync,
+  symlinkSync,
   writeFileSync,
 } from 'node:fs';
 import { createHash } from 'node:crypto';
@@ -14,6 +15,7 @@ import { execFileSync } from 'node:child_process';
 import { dirname, join, resolve } from 'node:path';
 import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
+import sharp from 'sharp';
 import {
   CANONICAL_PRECONDITIONS,
   CANONICAL_SMOKE_REQUIREMENTS,
@@ -56,6 +58,102 @@ const PURCHASE_TIMESTAMPS = Array.from({ length: 6 }, (_, index) => timestampAft
 const REVIEWER_TIMESTAMP = timestampAfterCommit(40);
 const FIXED_NOW = Date.parse(timestampAfterCommit(60));
 const TEMP_BASE = mkdtempSync(join(tmpdir(), 'flightglass-phone-evidence-'));
+const IAP_REVIEW_CAPTURE_SOURCE = 'Captured from the exact TestFlight build and live Store offering';
+
+async function reviewPng({ width = 1179, height = 2556, accent, secondary }) {
+  const artwork = Buffer.from(`<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
+    <defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#15172f"/><stop offset="0.55" stop-color="#28204a"/><stop offset="1" stop-color="#101b30"/>
+    </linearGradient></defs>
+    <rect width="${width}" height="${height}" fill="url(#bg)"/>
+    <rect x="70" y="180" width="${width - 140}" height="360" rx="48" fill="#f4f1ff" opacity=".94"/>
+    <rect x="120" y="250" width="${width - 240}" height="34" rx="17" fill="${accent}"/>
+    <rect x="120" y="330" width="${Math.round(width * 0.58)}" height="24" rx="12" fill="#4a4862"/>
+    <circle cx="${Math.round(width * 0.78)}" cy="420" r="72" fill="${secondary}"/>
+    <rect x="70" y="620" width="${width - 140}" height="620" rx="52" fill="#242746" stroke="${accent}" stroke-width="8"/>
+    <path d="M130 1080 C 300 760, ${width - 340} 1030, ${width - 130} 720" fill="none" stroke="${secondary}" stroke-width="28"/>
+    <rect x="110" y="1320" width="${width - 220}" height="150" rx="38" fill="${accent}"/>
+    <rect x="110" y="1530" width="${Math.round(width * 0.72)}" height="30" rx="15" fill="#d8d4ec"/>
+    <rect x="110" y="1610" width="${Math.round(width * 0.51)}" height="30" rx="15" fill="#8c88aa"/>
+    <rect x="70" y="1810" width="${width - 140}" height="520" rx="52" fill="#ece9f8"/>
+    <circle cx="210" cy="1980" r="62" fill="${accent}"/><circle cx="410" cy="1980" r="62" fill="${secondary}"/>
+    <rect x="130" y="2150" width="${width - 260}" height="70" rx="35" fill="#363951"/>
+  </svg>`);
+  return sharp(artwork).flatten({ background: '#15172f' }).png().toBuffer();
+}
+
+async function complexityFixturePng(body) {
+  const artwork = Buffer.from(`<svg width="1179" height="2556" xmlns="http://www.w3.org/2000/svg">${body}</svg>`);
+  return sharp(artwork).flatten({ background: '#101010' }).png().toBuffer();
+}
+
+const MONTHLY_REVIEW_PNG = await reviewPng({ accent: '#7458ff', secondary: '#ff8d6b' });
+const ANNUAL_REVIEW_PNG = await reviewPng({ accent: '#37a8a4', secondary: '#f5b642' });
+const WRONG_DEVICE_REVIEW_PNG = await reviewPng({
+  width: 1290,
+  height: 2796,
+  accent: '#7458ff',
+  secondary: '#ff8d6b',
+});
+const CURRENT_DEVICE_REVIEW_PNGS = Object.fromEntries(await Promise.all(
+  Object.entries({
+    'iPhone 17': [1206, 2622],
+    'iPhone 17 Pro': [1206, 2622],
+    'iPhone 17 Pro Max': [1320, 2868],
+    'iPhone Air': [1260, 2736],
+  }).map(async ([device, [width, height]]) => [device, await Promise.all([
+    reviewPng({ width, height, accent: '#7458ff', secondary: '#ff8d6b' }),
+    reviewPng({ width, height, accent: '#37a8a4', secondary: '#f5b642' }),
+  ])]),
+));
+const WRONG_DIMENSIONS_REVIEW_PNG = await sharp({
+  create: {
+    width: 1280,
+    height: 720,
+    channels: 3,
+    background: { r: 28, g: 36, b: 68 },
+  },
+}).png().toBuffer();
+const ALPHA_REVIEW_PNG = await sharp({
+  create: {
+    width: 1179,
+    height: 2556,
+    channels: 4,
+    background: { r: 28, g: 36, b: 68, alpha: 0.5 },
+  },
+}).png().toBuffer();
+const UNIFORM_REVIEW_PNG = await sharp({
+  create: {
+    width: 1179,
+    height: 2556,
+    channels: 3,
+    background: { r: 28, g: 36, b: 68 },
+  },
+}).png().toBuffer();
+const LOW_COLOR_ONLY_REVIEW_PNG = await complexityFixturePng(
+  [0, 85, 170, 255]
+    .map((gray, index) => `<rect x="0" y="${index * 639}" width="1179" height="639" fill="rgb(${gray},${gray},${gray})"/>`)
+    .join(''),
+);
+const LOW_LUMA_DEVIATION_ONLY_REVIEW_PNG = await complexityFixturePng(
+  [90, 98, 106, 114].flatMap((base, row) => (
+    Array.from({ length: 4 }, (_, column) => {
+      const left = Math.floor((column * 1179) / 4);
+      const right = Math.floor(((column + 1) * 1179) / 4);
+      const red = base + (column * 3);
+      const green = base - column;
+      return `<rect x="${left}" y="${row * 639}" width="${right - left}" height="639" fill="rgb(${red},${green},${base})"/>`;
+    })
+  )).join(''),
+);
+const LOW_ENTROPY_ONLY_REVIEW_PNG = await complexityFixturePng(
+  `<rect width="1179" height="2400" fill="#101010"/>${Array.from({ length: 16 }, (_, column) => {
+    const left = Math.floor((column * 1179) / 16);
+    const right = Math.floor(((column + 1) * 1179) / 16);
+    const gray = 32 + (column * 14);
+    return `<rect x="${left}" y="2400" width="${right - left}" height="156" fill="rgb(${gray},${gray},${gray})"/>`;
+  }).join('')}`,
+);
 
 after(() => rmSync(TEMP_BASE, { recursive: true, force: true }));
 
@@ -63,10 +161,40 @@ function slug(value) {
   return value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 }
 
-function makeEvidenceRoot() {
+function iapReviewIndex({
+  commit = CURRENT_COMMIT,
+  buildNumber = '42',
+  monthlyProduct = 'strikearc_pro_monthly',
+  annualProduct = 'strikearc_pro_annual',
+  monthlyPlan = 'Monthly',
+  annualPlan = 'Annual',
+  monthlyPrice = 'NOK 99',
+  annualPrice = 'NOK 499',
+  device = 'iPhone 15 Pro',
+  monthlyTimestamp = timestampAfterCommit(28),
+  annualTimestamp = timestampAfterCommit(29),
+} = {}) {
+  return `# Flightglass native IAP Review evidence
+
+| Screenshot | Product ID | Selected plan | Localized price | Candidate SHA | Build number | Device | Timestamp | Capture source |
+|---|---|---|---|---|---|---|---|---|
+| [strikearc_pro_monthly.png](strikearc_pro_monthly.png) | ${monthlyProduct} | ${monthlyPlan} | ${monthlyPrice} | ${commit} | ${buildNumber} | ${device} | ${monthlyTimestamp} | ${IAP_REVIEW_CAPTURE_SOURCE} |
+| [strikearc_pro_annual.png](strikearc_pro_annual.png) | ${annualProduct} | ${annualPlan} | ${annualPrice} | ${commit} | ${buildNumber} | ${device} | ${annualTimestamp} | ${IAP_REVIEW_CAPTURE_SOURCE} |
+`;
+}
+
+function writeIapReviewIndex(root, options) {
+  writeFileSync(join(root, 'iap-review', 'index.md'), iapReviewIndex(options));
+}
+
+function makeEvidenceRoot({ device = 'iPhone 15 Pro' } = {}) {
   const root = mkdtempSync(join(TEMP_BASE, 'case-'));
   writeFileSync(join(root, 'record-index.md'), 'Flightglass physical-device evidence index.\n\n[Supplementary video](supplementary.mov)\n');
   writeFileSync(join(root, 'supplementary.mov'), 'supplementary-video-placeholder');
+  mkdirSync(join(root, 'iap-review'));
+  writeIapReviewIndex(root, { device });
+  writeFileSync(join(root, 'iap-review', 'strikearc_pro_monthly.png'), MONTHLY_REVIEW_PNG);
+  writeFileSync(join(root, 'iap-review', 'strikearc_pro_annual.png'), ANNUAL_REVIEW_PNG);
   for (let index = 1; index <= 9; index += 1) {
     writeFileSync(join(root, `precondition-${index}.log`), `Precondition ${index} verified.\n`);
   }
@@ -88,6 +216,7 @@ function completedEvidence({
   commit = CURRENT_COMMIT,
   build = BUILD,
   runUrl = RUN_URL,
+  device = 'iPhone 15 Pro',
 } = {}) {
   const candidateRows = [
     ['Test date/time and timezone', PHYSICAL_TEST_START_TIMESTAMP],
@@ -96,7 +225,7 @@ function completedEvidence({
     ['GitHub release-gate run URL', runUrl],
     ['App version and build number', build],
     ['Distribution source', 'TestFlight'],
-    ['iPhone model', 'iPhone 15 Pro'],
+    ['iPhone model', device],
     ['iOS version', '18.6'],
     ['Device language / region', 'Norwegian / Norway'],
     ['Display Zoom / text size', 'Standard / accessibility large'],
@@ -174,8 +303,8 @@ ${purchaseRows.join('\n')}
 `;
 }
 
-function fixture(options) {
-  const root = makeEvidenceRoot();
+function fixture(options = {}) {
+  const root = makeEvidenceRoot({ device: options.device });
   const markdown = completedEvidence(options);
   const recordPath = join(root, 'phone-release-evidence.md');
   writeFileSync(recordPath, markdown);
@@ -185,6 +314,50 @@ function fixture(options) {
 function replaceOnce(source, from, to) {
   assert.ok(source.includes(from), `fixture does not contain: ${from}`);
   return source.replace(from, to);
+}
+
+function pngCrc32(data) {
+  let crc = 0xffffffff;
+  for (const byte of data) {
+    crc ^= byte;
+    for (let bit = 0; bit < 8; bit += 1) {
+      crc = (crc >>> 1) ^ (crc & 1 ? 0xedb88320 : 0);
+    }
+  }
+  return (crc ^ 0xffffffff) >>> 0;
+}
+
+function corruptFirstIdat(png) {
+  const corrupted = Buffer.from(png);
+  let offset = 8;
+  while (offset + 12 <= corrupted.length) {
+    const length = corrupted.readUInt32BE(offset);
+    const type = corrupted.toString('ascii', offset + 4, offset + 8);
+    if (type === 'IDAT' && length > 0) {
+      corrupted[offset + 8 + Math.floor(length / 2)] ^= 0xff;
+      corrupted.writeUInt32BE(
+        pngCrc32(corrupted.subarray(offset + 4, offset + 8 + length)),
+        offset + 8 + length,
+      );
+      return corrupted;
+    }
+    offset += 12 + length;
+  }
+  assert.fail('valid fixture PNG has no IDAT chunk');
+}
+
+function corruptIendCrc(png) {
+  const corrupted = Buffer.from(png);
+  let offset = 8;
+  while (offset + 12 <= corrupted.length) {
+    const length = corrupted.readUInt32BE(offset);
+    if (corrupted.toString('ascii', offset + 4, offset + 8) === 'IEND') {
+      corrupted[offset + 8 + length] ^= 0xff;
+      return corrupted;
+    }
+    offset += 12 + length;
+  }
+  assert.fail('valid fixture PNG has no IEND chunk');
 }
 
 function hideFirstTableInSection(markdown, heading, style) {
@@ -297,8 +470,205 @@ test('accepts a complete exact-candidate physical-iPhone record', () => {
   assert.equal(result.smokeRowsPassed, 12);
   assert.equal(result.purchaseRowsPassed, 6);
   assert.equal(result.automatedCellsPassed, 8);
+  assert.equal(result.iapReviewScreenshotsPassed, 2);
   assert.equal(result.verdict, 'PASS');
-  assert.equal(result.referencedFiles.length, 35);
+  assert.equal(result.referencedFiles.length, 38);
+});
+
+test('requires the exact two-product native IAP Review evidence bundle', () => {
+  const missingIndex = fixture();
+  rmSync(join(missingIndex.root, 'iap-review', 'index.md'));
+  expectEvidenceError(
+    () => evaluate(missingIndex.markdown, missingIndex.root),
+    'invalid',
+    /missing.*iap-review\/index\.md/i,
+  );
+
+  const missingScreenshot = fixture();
+  rmSync(join(missingScreenshot.root, 'iap-review', 'strikearc_pro_annual.png'));
+  expectEvidenceError(
+    () => evaluate(missingScreenshot.markdown, missingScreenshot.root),
+    'invalid',
+    /missing.*strikearc_pro_annual\.png/i,
+  );
+
+  const swapped = fixture();
+  writeIapReviewIndex(swapped.root, {
+    monthlyProduct: 'strikearc_pro_annual',
+    annualProduct: 'strikearc_pro_monthly',
+  });
+  expectEvidenceError(
+    () => evaluate(swapped.markdown, swapped.root),
+    'invalid',
+    /strikearc_pro_monthly\.png.*product ID.*strikearc_pro_monthly/i,
+  );
+});
+
+test('requires supported opaque Apple portrait IAP Review screenshots', () => {
+  const wrongDimensions = fixture();
+  writeFileSync(
+    join(wrongDimensions.root, 'iap-review', 'strikearc_pro_monthly.png'),
+    WRONG_DIMENSIONS_REVIEW_PNG,
+  );
+  expectEvidenceError(
+    () => evaluate(wrongDimensions.markdown, wrongDimensions.root),
+    'invalid',
+    /strikearc_pro_monthly\.png.*iPhone 15 Pro.*1179x2556.*1280x720/i,
+  );
+
+  const alpha = fixture();
+  writeFileSync(join(alpha.root, 'iap-review', 'strikearc_pro_monthly.png'), ALPHA_REVIEW_PNG);
+  expectEvidenceError(
+    () => evaluate(alpha.markdown, alpha.root),
+    'invalid',
+    /strikearc_pro_monthly\.png.*alpha|alpha.*strikearc_pro_monthly\.png/i,
+  );
+});
+
+test('fully decodes PNG evidence and rejects corrupt, truncated, or trailing data', () => {
+  const cases = [
+    ['corrupt IDAT', corruptFirstIdat(MONTHLY_REVIEW_PNG), /fully decoded by sharp/i],
+    ['corrupt IEND CRC', corruptIendCrc(MONTHLY_REVIEW_PNG), /corrupt PNG chunk CRC.*IEND/i],
+    ['truncated PNG', MONTHLY_REVIEW_PNG.subarray(0, MONTHLY_REVIEW_PNG.length - 20), /truncated|end marker/i],
+    ['trailing bytes', Buffer.concat([MONTHLY_REVIEW_PNG, Buffer.from('not-part-of-the-png')]), /bytes after IEND/i],
+  ];
+  for (const [label, invalidPng, pattern] of cases) {
+    const fix = fixture();
+    writeFileSync(join(fix.root, 'iap-review', 'strikearc_pro_monthly.png'), invalidPng);
+    assert.throws(
+      () => evaluate(fix.markdown, fix.root),
+      error => error instanceof EvidenceError && error.kind === 'invalid' && pattern.test(error.message),
+      label,
+    );
+  }
+});
+
+test('binds each IAP Review screenshot to its exact NOK localized price', () => {
+  for (const [field, value, expected] of [
+    ['monthlyPrice', 'USD 99', 'NOK 99'],
+    ['monthlyPrice', 'NOK 98', 'NOK 99'],
+    ['annualPrice', 'NOK 99', 'NOK 499'],
+  ]) {
+    const fix = fixture();
+    writeIapReviewIndex(fix.root, { [field]: value });
+    expectEvidenceError(
+      () => evaluate(fix.markdown, fix.root),
+      'invalid',
+      new RegExp(`Localized price must be exactly "${expected}"`, 'i'),
+    );
+  }
+});
+
+test('binds the recorded physical iPhone model to its native screenshot dimensions', () => {
+  const fix = fixture();
+  writeFileSync(
+    join(fix.root, 'iap-review', 'strikearc_pro_monthly.png'),
+    WRONG_DEVICE_REVIEW_PNG,
+  );
+  expectEvidenceError(
+    () => evaluate(fix.markdown, fix.root),
+    'invalid',
+    /iPhone 15 Pro.*1179x2556.*1290x2796/i,
+  );
+});
+
+test('accepts every current 2025 physical iPhone native-pixel mapping', () => {
+  for (const [device, [monthly, annual]] of Object.entries(CURRENT_DEVICE_REVIEW_PNGS)) {
+    const fix = fixture({ device });
+    writeFileSync(join(fix.root, 'iap-review', 'strikearc_pro_monthly.png'), monthly);
+    writeFileSync(join(fix.root, 'iap-review', 'strikearc_pro_annual.png'), annual);
+    assert.equal(evaluate(fix.markdown, fix.root).iapReviewScreenshotsPassed, 2, device);
+  }
+});
+
+test('rejects visually blank or uniform native IAP Review screenshots', () => {
+  const fix = fixture();
+  writeFileSync(join(fix.root, 'iap-review', 'strikearc_pro_monthly.png'), UNIFORM_REVIEW_PNG);
+  expectEvidenceError(
+    () => evaluate(fix.markdown, fix.root),
+    'invalid',
+    /visual complexity.*too low/i,
+  );
+});
+
+test('enforces each visual-complexity threshold independently', () => {
+  const cases = [
+    ['sampled colors', LOW_COLOR_ONLY_REVIEW_PNG, ({ colors, deviation, entropy }) => (
+      colors < 16 && deviation >= 10 && entropy >= 1
+    )],
+    ['luma standard deviation', LOW_LUMA_DEVIATION_ONLY_REVIEW_PNG, ({ colors, deviation, entropy }) => (
+      colors >= 16 && deviation < 10 && entropy >= 1
+    )],
+    ['luma entropy', LOW_ENTROPY_ONLY_REVIEW_PNG, ({ colors, deviation, entropy }) => (
+      colors >= 16 && deviation >= 10 && entropy < 1
+    )],
+  ];
+  for (const [label, image, isolatesExpectedThreshold] of cases) {
+    const fix = fixture();
+    writeFileSync(join(fix.root, 'iap-review', 'strikearc_pro_monthly.png'), image);
+    let error;
+    try {
+      evaluate(fix.markdown, fix.root);
+    } catch (caught) {
+      error = caught;
+    }
+    assert.ok(error instanceof EvidenceError, `${label} fixture must fail validation`);
+    assert.match(error.message, /visual complexity is too low/i);
+    const metrics = /\((\d+) sampled colors, luma standard deviation ([\d.]+), entropy ([\d.]+) bits\)/i.exec(error.message);
+    assert.ok(metrics, `${label} failure must report decoded complexity metrics`);
+    assert.ok(isolatesExpectedThreshold({
+      colors: Number(metrics[1]),
+      deviation: Number(metrics[2]),
+      entropy: Number(metrics[3]),
+    }), `${label} fixture must fail only its named floor: ${error.message}`);
+  }
+});
+
+test('rejects JPEG bytes masquerading under the exact PNG evidence filenames', async () => {
+  const jpegData = await sharp({
+    create: {
+      width: 1179,
+      height: 2556,
+      channels: 3,
+      background: { r: 48, g: 56, b: 88 },
+    },
+  }).jpeg().toBuffer();
+  const fix = fixture();
+  writeFileSync(join(fix.root, 'iap-review', 'strikearc_pro_monthly.png'), jpegData);
+  expectEvidenceError(
+    () => evaluate(fix.markdown, fix.root),
+    'invalid',
+    /strikearc_pro_monthly\.png.*must contain PNG image data/i,
+  );
+});
+
+test('rejects duplicate IAP Review screenshot bytes and wrong candidate/build mappings', () => {
+  const duplicate = fixture();
+  copyFileSync(
+    join(duplicate.root, 'iap-review', 'strikearc_pro_monthly.png'),
+    join(duplicate.root, 'iap-review', 'strikearc_pro_annual.png'),
+  );
+  expectEvidenceError(
+    () => evaluate(duplicate.markdown, duplicate.root),
+    'invalid',
+    /IAP Review screenshots must have distinct SHA-256 hashes/i,
+  );
+
+  const wrongSha = fixture();
+  writeIapReviewIndex(wrongSha.root, { commit: PARENT_COMMIT });
+  expectEvidenceError(
+    () => evaluate(wrongSha.markdown, wrongSha.root),
+    'invalid',
+    /Candidate SHA.*does not match.*exact candidate/i,
+  );
+
+  const wrongBuild = fixture();
+  writeIapReviewIndex(wrongBuild.root, { buildNumber: '43' });
+  expectEvidenceError(
+    () => evaluate(wrongBuild.markdown, wrongBuild.root),
+    'invalid',
+    /Build number.*does not match.*exact candidate build/i,
+  );
 });
 
 test('CLI requires explicit candidate, build, completed file, and evidence root', () => {
@@ -592,6 +962,32 @@ test('requires every evidence cell to resolve inside the evidence root or to saf
   assert.ok(result.externalUrls.includes('https://evidence.example.com/smoke-2.png'));
 });
 
+test('recursively validates and attests reference-style Markdown links', () => {
+  const fix = fixture();
+  writeFileSync(
+    join(fix.root, 'record-index.md'),
+    'Flightglass physical-device evidence index.\n\n[Supplementary video][video]\n\n[video]: supplementary.mov\n',
+  );
+  const result = evaluate(fix.markdown, fix.root);
+  assert.ok(
+    result.referencedFiles.some(file => file.relative === 'supplementary.mov'),
+    'reference-style linked media must be included in recursive evidence snapshots',
+  );
+});
+
+test('recursively attests shortcut reference links instead of silently omitting them', () => {
+  const fix = fixture();
+  writeFileSync(
+    join(fix.root, 'record-index.md'),
+    'Flightglass physical-device evidence index.\n\n[video]\n\n[video]: supplementary.mov\n',
+  );
+  const result = evaluate(fix.markdown, fix.root);
+  assert.ok(
+    result.referencedFiles.some(file => file.relative === 'supplementary.mov'),
+    'shortcut reference-linked media must be included in recursive evidence snapshots',
+  );
+});
+
 test('rejects the generated attestation as an evidence input', () => {
   const fix = fixture();
   const generatedName = attestationFileName({
@@ -852,7 +1248,17 @@ test('CLI emits a SHA-256 attestation bound to candidate, build, run, record, an
   assert.equal(attestation.releaseGate.id, RUN_ID);
   assert.match(attestation.evidence.record.sha256, /^[0-9a-f]{64}$/);
   assert.match(attestation.evidenceBundleSha256, /^[0-9a-f]{64}$/);
-  assert.equal(attestation.evidence.files.length, 35);
+  assert.equal(attestation.evidence.files.length, 38);
+  for (const requiredPath of [
+    'iap-review/index.md',
+    'iap-review/strikearc_pro_monthly.png',
+    'iap-review/strikearc_pro_annual.png',
+  ]) {
+    assert.ok(
+      attestation.evidence.files.some(file => file.path === requiredPath && /^[0-9a-f]{64}$/.test(file.sha256)),
+      `${requiredPath} must be recursively bound into the attestation`,
+    );
+  }
 
   const { attestationSha256, ...payload } = attestation;
   assert.equal(
@@ -870,6 +1276,7 @@ test('CLI emits a SHA-256 attestation bound to candidate, build, run, record, an
 
   const nextBuild = `${PACKAGE_VERSION} (43)`;
   writeFileSync(fix.recordPath, completedEvidence({ build: nextBuild }));
+  writeIapReviewIndex(fix.root, { buildNumber: '43' });
   const nextBuildRun = runFixtureCli(fix, { build: nextBuild });
   assert.equal(nextBuildRun.code, 0, nextBuildRun.errors.join('\n'));
   const nextBuildName = attestationFileName({
@@ -886,6 +1293,85 @@ test('CLI emits a SHA-256 attestation bound to candidate, build, run, record, an
     buildNumber: '42',
   });
   assert.notEqual(otherCandidateName, attestationName);
+});
+
+test('attestation fails closed if validated evidence changes during GitHub lookups', () => {
+  const fix = fixture();
+  const screenshotPath = join(fix.root, 'iap-review', 'strikearc_pro_monthly.png');
+  const replacement = Buffer.from('mutated after native screenshot validation');
+  const errors = [];
+  const code = runCli({
+    argv: cliArgs({ recordPath: fix.recordPath, root: fix.root }),
+    cwd: REPO_ROOT,
+    now: FIXED_NOW,
+    queryGithubRun: () => validGithubRun(),
+    queryGithubWorkflow: () => {
+      writeFileSync(screenshotPath, replacement);
+      return validGithubWorkflow();
+    },
+    resolveGitOrigin: () => 'https://github.com/Fenral/svingbue.git',
+    stdout: () => {},
+    stderr: value => errors.push(value),
+  });
+  assert.equal(code, 2);
+  assert.match(errors.join('\n'), /referenced evidence changed after validation.*strikearc_pro_monthly\.png/i);
+  assert.equal(existsSync(join(fix.root, attestationFileName({
+    candidateCommit: CURRENT_COMMIT,
+    appVersion: PACKAGE_VERSION,
+    buildNumber: '42',
+  }))), false);
+});
+
+test('attestation fails closed if a logical evidence path is retargeted', () => {
+  const fix = fixture();
+  const secondTarget = join(fix.root, 'proof-target-b');
+  const logicalDirectory = join(fix.root, 'proof-current');
+  for (const target of [logicalDirectory, secondTarget]) {
+    mkdirSync(target);
+    writeFileSync(
+      join(target, 'record-index.md'),
+      'Flightglass physical-device evidence index.\n\n[Supplementary video](supplementary.mov)\n',
+    );
+    writeFileSync(join(target, 'supplementary.mov'), 'same-supplementary-video-bytes');
+  }
+  const retargetedMarkdown = replaceOnce(
+    fix.markdown,
+    'record-index.md',
+    'proof-current/record-index.md',
+  );
+  writeFileSync(fix.recordPath, retargetedMarkdown);
+  const errors = [];
+  const code = runCli({
+    argv: cliArgs({ recordPath: fix.recordPath, root: fix.root }),
+    cwd: REPO_ROOT,
+    now: FIXED_NOW,
+    queryGithubRun: () => validGithubRun(),
+    queryGithubWorkflow: () => {
+      rmSync(logicalDirectory, { recursive: true, force: true });
+      symlinkSync(secondTarget, logicalDirectory, process.platform === 'win32' ? 'junction' : 'dir');
+      return validGithubWorkflow();
+    },
+    resolveGitOrigin: () => 'https://github.com/Fenral/svingbue.git',
+    stdout: () => {},
+    stderr: value => errors.push(value),
+  });
+  assert.equal(code, 2);
+  assert.match(errors.join('\n'), /referenced evidence changed after validation.*proof-current\/record-index\.md/i);
+});
+
+test('rejects symbolic-link or junction indirection in evidence paths', () => {
+  const fix = fixture();
+  const target = join(fix.root, 'proof-target');
+  const link = join(fix.root, 'proof-link');
+  mkdirSync(target);
+  writeFileSync(join(target, 'record-index.md'), 'Physical-device evidence.\n');
+  symlinkSync(target, link, process.platform === 'win32' ? 'junction' : 'dir');
+  const linked = replaceOnce(fix.markdown, 'record-index.md', 'proof-link/record-index.md');
+  expectEvidenceError(
+    () => evaluate(linked, fix.root),
+    'invalid',
+    /must not use symbolic links or junctions.*proof-link/i,
+  );
 });
 
 test('CLI reports a missing completed record without querying GitHub', () => {

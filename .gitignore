@@ -69,3 +69,7 @@ outputs/academy-analysis/
 
 # Agent-artefakter og skann-output. Genereres av workflow-agenter, aldri kilde.
 outputs/
+
+# Synthetic-native IAP screenshot preflights are local previews that must never
+# be submitted as final TestFlight/StoreKit evidence.
+outputs/release-evidence/iap-review/synthetic-native-do-not-submit/

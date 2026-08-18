@@ -115,6 +115,45 @@ test('physical-iPhone evidence uses an immutable template and external attested 
   assert.match(ignore, /^outputs\/release-evidence\/phone\/$/m);
 });
 
+test('native IAP Review evidence requires both exact products from the final TestFlight offering', () => {
+  const checklist = read('docs/phase2-phone-checklist.md');
+
+  for (const requiredPath of [
+    'iap-review/index.md',
+    'iap-review/strikearc_pro_monthly.png',
+    'iap-review/strikearc_pro_annual.png',
+  ]) {
+    assert.match(checklist, new RegExp(requiredPath.replace(/[./]/g, '\\$&')));
+  }
+  assert.match(
+    checklist,
+    /Screenshot\s*\|\s*Product ID\s*\|\s*Selected plan\s*\|\s*Localized price\s*\|\s*Candidate SHA\s*\|\s*Build number\s*\|\s*Device\s*\|\s*Timestamp\s*\|\s*Capture source/i,
+  );
+  assert.match(checklist, /strikearc_pro_monthly\.png[\s\S]*strikearc_pro_monthly[\s\S]*Monthly/i);
+  assert.match(checklist, /strikearc_pro_annual\.png[\s\S]*strikearc_pro_annual[\s\S]*Annual/i);
+  assert.match(checklist, /strikearc_pro_monthly\.png[^\n]*NOK 99/i);
+  assert.match(checklist, /strikearc_pro_annual\.png[^\n]*NOK 499/i);
+  assert.match(checklist, /captured from the exact TestFlight build and live Store offering/i);
+  assert.match(checklist, /1290\s*x\s*2796/);
+  assert.match(checklist, /exact PNG binary data[\s\S]*opaque[\s\S]*(?:no alpha|without alpha)/i);
+  assert.match(checklist, /valid CRC for every PNG chunk/i);
+  assert.match(checklist, /full Sharp decode[\s\S]*corrupt[\s\S]*truncated[\s\S]*trailing/i);
+  assert.match(checklist, /iPhone 15 Pro[^\n]*1179x2556/i);
+  assert.match(checklist, /iPhone 15 Pro Max[^\n]*1290x2796/i);
+  assert.match(checklist, /^\| iPhone 17 \| `1206x2622` \|$/m);
+  assert.match(checklist, /^\| iPhone 17 Pro \| `1206x2622` \|$/m);
+  assert.match(checklist, /^\| iPhone 17 Pro Max \| `1320x2868` \|$/m);
+  assert.match(checklist, /^\| iPhone Air \| `1260x2736` \|$/m);
+  assert.match(checklist, /at least 16 sampled colors[\s\S]*10\.0[\s\S]*1\.0 bit/i);
+  assert.match(checklist, /operator-attested[\s\S]*not cryptographically proven/i);
+  assert.match(checklist, /retains the validated bytes and SHA-256[\s\S]*attestation/i);
+  assert.match(checklist, /distinct SHA-256 hashes/i);
+  assert.match(
+    checklist,
+    /browser[\s\S]{0,160}(?:preflight|synthetic-native)[\s\S]{0,240}cannot\s+satisfy\s+(?:the\s+)?final\s+native\s+IAP\s+Review\s+screenshot\s+gate/i,
+  );
+});
+
 test('moderated onboarding evidence uses an immutable external attested working copy', () => {
   const checklist = read('docs/phase2-onboarding-uat.md');
   const releaseRecord = read('docs/v1-release-record.md');

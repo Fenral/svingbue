@@ -52,6 +52,19 @@ For a new candidate:
    alongside the change-gate controls.
 4. Record the exact outputs in PR #23 before any release action.
 
+The manual Codemagic workflow uploads a successful IPA to App Store Connect,
+but its `Submit the uploaded build to TestFlight beta review` input defaults to
+`false`. Keep it off for candidate and sandbox validation. Turning it on is a
+separate release action that requires the native, subscription and account
+gates below to be complete.
+
+The legacy `npm run claude:ready` Academy-autopilot gate is not a V1 release
+gate. Academy is excluded from the V1 native/web allowlist and remains deferred
+to V2. That legacy gate currently records seven caption/audio hash mismatches
+after later Academy copy edits (inventory 1579 words versus the stale 1546-word
+assertion). Do not hide that debt by rebinding old audio or changing hashes;
+repair or regenerate the voice pack before Academy work resumes.
+
 `npm run verify:v1:release` tests the evidence checkers; it does not invent
 participant or device observations. Keep both committed documents as immutable
 `PENDING` templates.

@@ -6,8 +6,9 @@ App Store Connect Apple ID: `6768449250`
 
 Paste the block below into the version's **App Review Information → Notes** in
 App Store Connect. This text is metadata, not part of `codemagic.yaml`.
-Codemagic uploads an authorized build to TestFlight; an operator still selects
-the build, attaches the first subscription products and submits the version for
+Codemagic uploads an authorized build to App Store Connect. TestFlight beta
+review is a separate, default-off build input; an operator still selects the
+build, attaches the first subscription products and submits the version for
 review in App Store Connect.
 
 ## Reviewer notes (ready to paste)
@@ -112,7 +113,9 @@ Contact: sivertskotvold@gmail.com
       app price/tax category, availability, release mode and export-compliance
       answer against the exact selected build.
 - [ ] Start the Codemagic `ios-testflight` workflow manually on the exact green
-      release commit. Record its build number and successful signing identity.
+      release commit with TestFlight beta review left off. Record its build
+      number and successful signing identity; opt into beta review only after
+      the native/store gates below are complete.
 - [ ] On a native sandbox build, complete one Monthly or Annual purchase and
       verify purchase, cancellation and restore behavior.
 - [x] Record the owner's 2026-08-09 confirmation that no Lifetime buyers exist.

@@ -97,6 +97,118 @@ const LEGACY_ATTESTATION_NAME = `${ATTESTATION_PREFIX}.json`;
 const BINARY_EVIDENCE_EXTENSIONS = new Set([
   '.gif', '.heic', '.jpeg', '.jpg', '.mov', '.mp4', '.pdf', '.png', '.webp', '.zip',
 ]);
+const IAP_REVIEW_INDEX_PATH = 'iap-review/index.md';
+const IAP_REVIEW_INDEX_H1 = '# Flightglass native IAP Review evidence';
+const IAP_REVIEW_CAPTURE_SOURCE = 'Captured from the exact TestFlight build and live Store offering';
+const IAP_REVIEW_HEADERS = Object.freeze([
+  'Screenshot',
+  'Product ID',
+  'Selected plan',
+  'Localized price',
+  'Candidate SHA',
+  'Build number',
+  'Device',
+  'Timestamp',
+  'Capture source',
+]);
+const REQUIRED_IAP_REVIEW_SCREENSHOTS = Object.freeze([
+  Object.freeze({
+    filename: 'strikearc_pro_monthly.png',
+    productId: 'strikearc_pro_monthly',
+    selectedPlan: 'Monthly',
+    localizedPrice: 'NOK 99',
+  }),
+  Object.freeze({
+    filename: 'strikearc_pro_annual.png',
+    productId: 'strikearc_pro_annual',
+    selectedPlan: 'Annual',
+    localizedPrice: 'NOK 499',
+  }),
+]);
+const APPLE_IPHONE_NATIVE_PORTRAIT_DIMENSIONS = Object.freeze({
+  'iPhone 14': Object.freeze([1170, 2532]),
+  'iPhone 14 Plus': Object.freeze([1284, 2778]),
+  'iPhone 14 Pro': Object.freeze([1179, 2556]),
+  'iPhone 14 Pro Max': Object.freeze([1290, 2796]),
+  'iPhone 15': Object.freeze([1179, 2556]),
+  'iPhone 15 Plus': Object.freeze([1290, 2796]),
+  'iPhone 15 Pro': Object.freeze([1179, 2556]),
+  'iPhone 15 Pro Max': Object.freeze([1290, 2796]),
+  'iPhone 16': Object.freeze([1179, 2556]),
+  'iPhone 16 Plus': Object.freeze([1290, 2796]),
+  'iPhone 16 Pro': Object.freeze([1206, 2622]),
+  'iPhone 16 Pro Max': Object.freeze([1320, 2868]),
+  'iPhone 16e': Object.freeze([1170, 2532]),
+  'iPhone 17': Object.freeze([1206, 2622]),
+  'iPhone 17 Pro': Object.freeze([1206, 2622]),
+  'iPhone 17 Pro Max': Object.freeze([1320, 2868]),
+  'iPhone Air': Object.freeze([1260, 2736]),
+});
+const PNG_SIGNATURE = Buffer.from('89504e470d0a1a0a', 'hex');
+const PNG_CRC_TABLE = Uint32Array.from({ length: 256 }, (_, value) => {
+  let crc = value;
+  for (let bit = 0; bit < 8; bit += 1) {
+    crc = (crc >>> 1) ^ (crc & 1 ? 0xedb88320 : 0);
+  }
+  return crc >>> 0;
+});
+const MAX_IAP_REVIEW_IMAGE_BYTES = 50 * 1024 * 1024;
+const MIN_IAP_REVIEW_SAMPLED_COLORS = 16;
+const MIN_IAP_REVIEW_LUMA_STANDARD_DEVIATION = 10;
+const MIN_IAP_REVIEW_LUMA_ENTROPY_BITS = 1;
+const DECODED_PNG_CACHE = new Map();
+const SHARP_PNG_DECODE_SCRIPT = String.raw`
+const fs = require('node:fs');
+const sharp = require('sharp');
+
+(async () => {
+  const input = fs.readFileSync(0);
+  const image = sharp(input, { failOn: 'error' });
+  const metadata = await image.metadata();
+  const decoded = await image.raw().toBuffer({ resolveWithObject: true });
+  const { data, info } = decoded;
+  const pixels = info.width * info.height;
+  const stride = Math.max(1, Math.floor(pixels / 100000));
+  const colors = new Set();
+  const bins = new Array(32).fill(0);
+  let samples = 0;
+  let lumaTotal = 0;
+  let lumaSquaredTotal = 0;
+
+  for (let pixel = 0; pixel < pixels; pixel += stride) {
+    const offset = pixel * info.channels;
+    const red = data[offset];
+    const green = info.channels >= 3 ? data[offset + 1] : red;
+    const blue = info.channels >= 3 ? data[offset + 2] : red;
+    const luma = (0.2126 * red) + (0.7152 * green) + (0.0722 * blue);
+    colors.add((red << 16) | (green << 8) | blue);
+    bins[Math.min(31, Math.floor(luma / 8))] += 1;
+    lumaTotal += luma;
+    lumaSquaredTotal += luma * luma;
+    samples += 1;
+  }
+
+  const mean = lumaTotal / samples;
+  const variance = Math.max(0, (lumaSquaredTotal / samples) - (mean * mean));
+  const entropy = bins.reduce((total, count) => {
+    if (count === 0) return total;
+    const probability = count / samples;
+    return total - (probability * Math.log2(probability));
+  }, 0);
+  process.stdout.write(JSON.stringify({
+    format: metadata.format,
+    width: info.width,
+    height: info.height,
+    hasAlpha: metadata.hasAlpha === true,
+    sampledColors: colors.size,
+    lumaStandardDeviation: Math.sqrt(variance),
+    lumaEntropyBits: entropy,
+  }));
+})().catch(error => {
+  process.stderr.write(error instanceof Error ? error.message : String(error));
+  process.exitCode = 1;
+});
+`;
 
 export class EvidenceError extends Error {
   constructor(kind, message) {
@@ -498,10 +610,55 @@ function evidenceContext(evidenceRoot) {
   if (!fs.statSync(root).isDirectory()) {
     throw new EvidenceError('invalid', `Evidence root must be a directory: ${root}`);
   }
-  return { root, referencedFiles: new Map(), externalUrls: new Set() };
+  return {
+    root,
+    referencedFiles: new Map(),
+    fileSnapshots: new Map(),
+    externalUrls: new Set(),
+  };
 }
 
-function validateEvidenceReference(value, location, context) {
+function snapshotEvidenceFile(context, relative, absolute = context.referencedFiles.get(relative)) {
+  const existing = context.fileSnapshots.get(relative);
+  if (existing) return existing;
+  let data;
+  try {
+    data = fs.readFileSync(absolute);
+  } catch {
+    throw new EvidenceError('invalid', `Referenced evidence could not be read: ${relative}`);
+  }
+  const snapshot = Object.freeze({
+    relative,
+    absolute,
+    data,
+    bytes: data.byteLength,
+    sha256: sha256(data),
+  });
+  context.fileSnapshots.set(relative, snapshot);
+  return snapshot;
+}
+
+function assertNoEvidenceLinkIndirection(root, candidate, location) {
+  const relative = path.relative(root, candidate);
+  let current = root;
+  for (const segment of relative.split(path.sep).filter(Boolean)) {
+    current = path.join(current, segment);
+    let stat;
+    try {
+      stat = fs.lstatSync(current);
+    } catch {
+      return;
+    }
+    if (stat.isSymbolicLink()) {
+      throw new EvidenceError(
+        'invalid',
+        `${location} must not use symbolic links or junctions: ${path.relative(root, current)}`,
+      );
+    }
+  }
+}
+
+function validateEvidenceReference(value, location, context, { baseDirectory = context.root } = {}) {
   assertRecorded(value, location);
   const reference = stripMarkdownLink(value);
   if (/^https:/i.test(reference)) {
@@ -515,7 +672,11 @@ function validateEvidenceReference(value, location, context) {
       `${location} must be a relative file inside the evidence root or a safe HTTPS URL.`,
     );
   }
-  const candidate = path.resolve(context.root, reference);
+  const candidate = path.resolve(baseDirectory, reference);
+  if (!isWithin(context.root, candidate)) {
+    throw new EvidenceError('invalid', `${location} escapes the evidence root: ${reference}`);
+  }
+  assertNoEvidenceLinkIndirection(context.root, candidate, location);
   let real;
   try {
     real = fs.realpathSync(candidate);
@@ -529,10 +690,10 @@ function validateEvidenceReference(value, location, context) {
   if (!stat.isFile()) {
     throw new EvidenceError('invalid', `${location} must reference an evidence file, not a directory: ${reference}`);
   }
-  const relative = path.relative(context.root, real).split(path.sep).join('/');
-  const basename = path.basename(relative).toLowerCase();
-  if (basename === LEGACY_ATTESTATION_NAME.toLowerCase()
-    || (basename.startsWith(`${ATTESTATION_PREFIX}-`) && basename.endsWith('.json'))) {
+  const relative = path.relative(context.root, candidate).split(path.sep).join('/');
+  const basenames = [path.basename(relative), path.basename(real)].map(value => value.toLowerCase());
+  if (basenames.some(basename => basename === LEGACY_ATTESTATION_NAME.toLowerCase()
+    || (basename.startsWith(`${ATTESTATION_PREFIX}-`) && basename.endsWith('.json')))) {
     throw new EvidenceError(
       'invalid',
       `${location} must not reference the generated attestation itself.`,
@@ -547,13 +708,13 @@ function scanReferencedTextFiles(context) {
   for (const [relative, absolute] of context.referencedFiles) {
     if (scanned.has(relative)) continue;
     scanned.add(relative);
+    const snapshot = snapshotEvidenceFile(context, relative, absolute);
     const extension = path.extname(relative).toLowerCase();
     if (BINARY_EVIDENCE_EXTENSIONS.has(extension)) continue;
-    const stat = fs.statSync(absolute);
-    if (stat.size > 10 * 1024 * 1024) {
+    if (snapshot.bytes > 10 * 1024 * 1024) {
       throw new EvidenceError('invalid', `Referenced text evidence is larger than 10 MiB: ${relative}`);
     }
-    const content = fs.readFileSync(absolute, 'utf8');
+    const content = snapshot.data.toString('utf8');
     if (content.includes('\0')) {
       throw new EvidenceError(
         'invalid',
@@ -562,13 +723,296 @@ function scanReferencedTextFiles(context) {
     }
     assertNoSensitiveData(content, `Referenced evidence file "${relative}"`);
     if (extension === '.md' || extension === '.markdown') {
-      for (const match of content.matchAll(/!?\[[^\]]*\]\(([^)]+)\)/g)) {
-        const target = match[1].trim();
+      const targets = [...content.matchAll(/!?\[[^\]]*\]\(([^)]+)\)/g)]
+        .map(match => match[1].trim());
+      const definitions = new Map();
+      for (const match of content.matchAll(/^[ \t]{0,3}\[([^\]\r\n]+)\]:[ \t]*(?:<([^>\r\n]+)>|(\S+))/gm)) {
+        const identifier = match[1].trim().replace(/\s+/g, ' ').toLowerCase();
+        if (!definitions.has(identifier)) definitions.set(identifier, (match[2] || match[3]).trim());
+      }
+      for (const match of content.matchAll(/!?\[([^\]\r\n]+)\]\[([^\]\r\n]*)\]/g)) {
+        const identifier = (match[2] || match[1]).trim().replace(/\s+/g, ' ').toLowerCase();
+        const target = definitions.get(identifier);
+        if (target) targets.push(target);
+      }
+      for (const match of content.matchAll(/!?\[([^\]\r\n]+)\](?![ \t]*(?:\(|\[|:))/g)) {
+        const identifier = match[1].trim().replace(/\s+/g, ' ').toLowerCase();
+        const target = definitions.get(identifier);
+        if (target) targets.push(target);
+      }
+      for (const target of targets) {
         if (!target || target.startsWith('#')) continue;
-        validateEvidenceReference(target, `Evidence index "${relative}" link`, context);
+        validateEvidenceReference(
+          target,
+          `Evidence index "${relative}" link`,
+          context,
+          { baseDirectory: path.dirname(path.resolve(context.root, ...relative.split('/'))) },
+        );
       }
     }
   }
+}
+
+function pngCrc32(data) {
+  let crc = 0xffffffff;
+  for (const byte of data) crc = PNG_CRC_TABLE[(crc ^ byte) & 0xff] ^ (crc >>> 8);
+  return (crc ^ 0xffffffff) >>> 0;
+}
+
+function parsePngMetadata(data, location) {
+  if (data.length < 33
+    || !data.subarray(0, PNG_SIGNATURE.length).equals(PNG_SIGNATURE)
+    || data.readUInt32BE(8) !== 13
+    || data.toString('ascii', 12, 16) !== 'IHDR') {
+    throw new EvidenceError('invalid', `${location} is not a structurally valid PNG.`);
+  }
+  const width = data.readUInt32BE(16);
+  const height = data.readUInt32BE(20);
+  const colorType = data[25];
+  if (![0, 2, 3, 4, 6].includes(colorType)) {
+    throw new EvidenceError('invalid', `${location} has an invalid PNG color type.`);
+  }
+
+  let offset = PNG_SIGNATURE.length;
+  let hasTransparencyChunk = false;
+  let foundImageData = false;
+  let foundEnd = false;
+  while (offset + 12 <= data.length) {
+    const chunkBytes = data.readUInt32BE(offset);
+    const chunkEnd = offset + 12 + chunkBytes;
+    if (chunkEnd > data.length) {
+      throw new EvidenceError('invalid', `${location} contains a truncated PNG chunk.`);
+    }
+    const chunkType = data.toString('ascii', offset + 4, offset + 8);
+    const recordedCrc = data.readUInt32BE(chunkEnd - 4);
+    const decodedCrc = pngCrc32(data.subarray(offset + 4, chunkEnd - 4));
+    if (recordedCrc !== decodedCrc) {
+      throw new EvidenceError('invalid', `${location} contains a corrupt PNG chunk CRC (${chunkType}).`);
+    }
+    if (chunkType === 'tRNS') hasTransparencyChunk = true;
+    if (chunkType === 'IDAT') foundImageData = true;
+    if (chunkType === 'IEND') {
+      if (chunkBytes !== 0) {
+        throw new EvidenceError('invalid', `${location} has a malformed PNG end marker.`);
+      }
+      if (chunkEnd !== data.length) {
+        throw new EvidenceError('invalid', `${location} contains bytes after IEND.`);
+      }
+      foundEnd = true;
+      break;
+    }
+    offset = chunkEnd;
+  }
+  if (!foundEnd) {
+    throw new EvidenceError('invalid', `${location} is missing the PNG end marker.`);
+  }
+  if (!foundImageData) {
+    throw new EvidenceError('invalid', `${location} is missing PNG image data.`);
+  }
+  return {
+    format: 'PNG',
+    width,
+    height,
+    hasAlpha: colorType === 4 || colorType === 6 || hasTransparencyChunk,
+  };
+}
+
+function decodePngWithSharp(data, location) {
+  const digest = sha256(data);
+  const cached = DECODED_PNG_CACHE.get(digest);
+  if (cached) return cached;
+  const decoded = spawnSync(process.execPath, ['-e', SHARP_PNG_DECODE_SCRIPT], {
+    cwd: path.dirname(fileURLToPath(import.meta.url)),
+    input: data,
+    encoding: 'utf8',
+    maxBuffer: 1024 * 1024,
+    timeout: 30_000,
+    windowsHide: true,
+  });
+  if (decoded.error || decoded.status !== 0) {
+    const detail = decoded.error?.message || decoded.stderr.trim() || 'unknown decoder error';
+    throw new EvidenceError(
+      'invalid',
+      `${location} could not be fully decoded by sharp: ${detail}`,
+    );
+  }
+  let metadata;
+  try {
+    metadata = JSON.parse(decoded.stdout);
+  } catch {
+    throw new EvidenceError('invalid', `${location} could not be fully decoded by sharp: invalid decoder result.`);
+  }
+  if (metadata.format !== 'png') {
+    throw new EvidenceError('invalid', `${location} must decode as PNG image data.`);
+  }
+  DECODED_PNG_CACHE.set(digest, Object.freeze(metadata));
+  return metadata;
+}
+
+function parseIapReviewImage(data, location) {
+  if (data.subarray(0, PNG_SIGNATURE.length).equals(PNG_SIGNATURE)) {
+    const structural = parsePngMetadata(data, location);
+    const decoded = decodePngWithSharp(data, location);
+    if (decoded.width !== structural.width || decoded.height !== structural.height) {
+      throw new EvidenceError('invalid', `${location} PNG header does not match its fully decoded pixels.`);
+    }
+    return { ...decoded, hasAlpha: structural.hasAlpha || decoded.hasAlpha };
+  }
+  throw new EvidenceError('invalid', `${location} must contain PNG image data.`);
+}
+
+function parseIapScreenshotLink(value, location) {
+  const clean = normalized(value);
+  const match = /^\[([^\]]+)\]\(([^)]+)\)$/.exec(clean);
+  if (!match) {
+    throw new EvidenceError('invalid', `${location} must be a Markdown link to the adjacent exact screenshot filename.`);
+  }
+  const label = normalized(match[1]);
+  const target = match[2].trim();
+  if (label !== target || path.basename(target) !== target) {
+    throw new EvidenceError('invalid', `${location} link label and target must be the same exact filename.`);
+  }
+  return target;
+}
+
+function validateIapReviewEvidence(candidate, context) {
+  const indexReference = validateEvidenceReference(
+    IAP_REVIEW_INDEX_PATH,
+    'Native IAP Review index',
+    context,
+  );
+  const indexAbsolute = context.referencedFiles.get(indexReference.value);
+  const indexLogicalAbsolute = path.resolve(context.root, ...indexReference.value.split('/'));
+  const indexSnapshot = snapshotEvidenceFile(context, indexReference.value, indexAbsolute);
+  const indexMarkdown = indexSnapshot.data.toString('utf8');
+  if (indexMarkdown.includes('\0')) {
+    throw new EvidenceError('invalid', `${IAP_REVIEW_INDEX_PATH} must be UTF-8 text without NUL bytes.`);
+  }
+  assertNoSensitiveData(indexMarkdown, `Native IAP Review index "${IAP_REVIEW_INDEX_PATH}"`);
+  const visibleIndex = maskHiddenMarkdown(indexMarkdown);
+  const h1Count = visibleIndex
+    .split(/\r?\n/)
+    .filter(line => line.trim() === IAP_REVIEW_INDEX_H1).length;
+  if (h1Count !== 1 || visibleIndex.trimStart().split(/\r?\n/, 1)[0].trim() !== IAP_REVIEW_INDEX_H1) {
+    throw new EvidenceError('invalid', `${IAP_REVIEW_INDEX_PATH} must begin with exactly one "${IAP_REVIEW_INDEX_H1}" heading.`);
+  }
+
+  const rows = parseTable(visibleIndex, IAP_REVIEW_INDEX_H1, IAP_REVIEW_HEADERS)
+    .map(row => [parseIapScreenshotLink(row[0], `${IAP_REVIEW_INDEX_PATH} Screenshot`), ...row.slice(1)]);
+  assertExactKeys(
+    rows,
+    REQUIRED_IAP_REVIEW_SCREENSHOTS.map(item => item.filename),
+    'Native IAP Review evidence',
+  );
+  const rowsByFilename = new Map(rows.map(row => [row[0], row]));
+  const hashes = [];
+  const timestamps = [];
+  const expectedDimensions = APPLE_IPHONE_NATIVE_PORTRAIT_DIMENSIONS[candidate.iPhoneModel];
+  if (!expectedDimensions) {
+    throw new EvidenceError(
+      'invalid',
+      `Candidate iPhone model "${candidate.iPhoneModel}" is not in the supported native-pixel map.`,
+    );
+  }
+
+  for (const expected of REQUIRED_IAP_REVIEW_SCREENSHOTS) {
+    const [filename, productId, selectedPlan, localizedPrice, candidateSha,
+      buildNumber, device, timestamp, captureSource] = rowsByFilename.get(expected.filename);
+    const location = `${IAP_REVIEW_INDEX_PATH} row "${filename}"`;
+    for (const [field, value] of [
+      ['Product ID', productId],
+      ['Selected plan', selectedPlan],
+      ['Localized price', localizedPrice],
+      ['Candidate SHA', candidateSha],
+      ['Build number', buildNumber],
+      ['Device', device],
+      ['Capture source', captureSource],
+    ]) assertRecorded(value, `${location} ${field}`);
+    if (normalized(productId) !== expected.productId) {
+      throw new EvidenceError(
+        'invalid',
+        `${filename} product ID must be exactly "${expected.productId}".`,
+      );
+    }
+    if (normalized(selectedPlan) !== expected.selectedPlan) {
+      throw new EvidenceError(
+        'invalid',
+        `${filename} selected plan must be exactly "${expected.selectedPlan}".`,
+      );
+    }
+    if (normalized(localizedPrice) !== expected.localizedPrice) {
+      throw new EvidenceError(
+        'invalid',
+        `${filename} Localized price must be exactly "${expected.localizedPrice}".`,
+      );
+    }
+    const recordedCandidate = normalized(candidateSha).toLowerCase();
+    if (!validFullCommit(recordedCandidate) || recordedCandidate !== candidate.candidateCommit) {
+      throw new EvidenceError(
+        'invalid',
+        `${filename} Candidate SHA does not match the exact candidate ${candidate.candidateCommit}.`,
+      );
+    }
+    if (normalized(buildNumber) !== candidate.buildIdentity.buildNumber) {
+      throw new EvidenceError(
+        'invalid',
+        `${filename} Build number does not match the exact candidate build ${candidate.buildIdentity.buildNumber}.`,
+      );
+    }
+    if (normalized(device) !== candidate.iPhoneModel) {
+      throw new EvidenceError(
+        'invalid',
+        `${filename} Device must match candidate iPhone model "${candidate.iPhoneModel}".`,
+      );
+    }
+    if (normalized(captureSource) !== IAP_REVIEW_CAPTURE_SOURCE) {
+      throw new EvidenceError(
+        'invalid',
+        `${filename} Capture source must be exactly "${IAP_REVIEW_CAPTURE_SOURCE}".`,
+      );
+    }
+    timestamps.push(requireIsoTimestamp(timestamp, `${location} Timestamp`));
+
+    const imageReference = validateEvidenceReference(
+      filename,
+      `Native IAP Review screenshot "${filename}"`,
+      context,
+      { baseDirectory: path.dirname(indexLogicalAbsolute) },
+    );
+    if (imageReference.value !== `iap-review/${filename}`) {
+      throw new EvidenceError('invalid', `${filename} must be stored directly beside ${IAP_REVIEW_INDEX_PATH}.`);
+    }
+    const imageAbsolute = context.referencedFiles.get(imageReference.value);
+    const snapshot = snapshotEvidenceFile(context, imageReference.value, imageAbsolute);
+    if (snapshot.bytes === 0 || snapshot.bytes > MAX_IAP_REVIEW_IMAGE_BYTES) {
+      throw new EvidenceError('invalid', `${filename} must be a non-empty image no larger than 50 MiB.`);
+    }
+    const metadata = parseIapReviewImage(snapshot.data, filename);
+    const [expectedWidth, expectedHeight] = expectedDimensions;
+    if (metadata.width !== expectedWidth || metadata.height !== expectedHeight) {
+      throw new EvidenceError(
+        'invalid',
+        `${filename} for ${candidate.iPhoneModel} must use its supported Apple portrait native pixels ${expectedWidth}x${expectedHeight}; decoded ${metadata.width}x${metadata.height}.`,
+      );
+    }
+    if (metadata.hasAlpha) {
+      throw new EvidenceError('invalid', `${filename} is a PNG with alpha/transparency; the screenshot must be opaque.`);
+    }
+    if (metadata.sampledColors < MIN_IAP_REVIEW_SAMPLED_COLORS
+      || metadata.lumaStandardDeviation < MIN_IAP_REVIEW_LUMA_STANDARD_DEVIATION
+      || metadata.lumaEntropyBits < MIN_IAP_REVIEW_LUMA_ENTROPY_BITS) {
+      throw new EvidenceError(
+        'invalid',
+        `${filename} visual complexity is too low (${metadata.sampledColors} sampled colors, luma standard deviation ${metadata.lumaStandardDeviation.toFixed(1)}, entropy ${metadata.lumaEntropyBits.toFixed(2)} bits).`,
+      );
+    }
+    hashes.push(snapshot.sha256);
+  }
+
+  if (new Set(hashes).size !== hashes.length) {
+    throw new EvidenceError('invalid', 'Native IAP Review screenshots must have distinct SHA-256 hashes.');
+  }
+  return { count: REQUIRED_IAP_REVIEW_SCREENSHOTS.length, timestamps };
 }
 
 function gitResult(cwd, args) {
@@ -780,6 +1224,7 @@ function validateCandidate(markdown, cwd, context) {
     releaseRun,
     freshAlias,
     lifetimeCohortStatus,
+    iPhoneModel: normalized(record.get('iPhone model')),
     testTimestamp,
     commitTimestamp,
   };
@@ -943,17 +1388,18 @@ function assertMonotonic(timestamps, label) {
   }
 }
 
-function validateTimeline({ candidate, smoke, purchase, automated, finalHandoff, now }) {
+function validateTimeline({ candidate, smoke, purchase, iapReview, automated, finalHandoff, now }) {
   const commitTime = Date.parse(candidate.commitTimestamp);
   const testStart = Date.parse(candidate.testTimestamp);
   const reviewer = Date.parse(finalHandoff.reviewerTimestamp);
-  const observations = [...smoke.timestamps, ...purchase.timestamps];
+  const observations = [...smoke.timestamps, ...purchase.timestamps, ...iapReview.timestamps];
   for (const [location, timestamps] of [
     ['Candidate test time', [candidate.testTimestamp]],
     ['Candidate commit time', [candidate.commitTimestamp]],
     ['Automated phone prerequisite', automated.timestamps],
     ['Physical-iPhone core smoke', smoke.timestamps],
     ['Purchase evidence', purchase.timestamps],
+    ['Native IAP Review evidence', iapReview.timestamps],
     ['Reviewer timestamp', [finalHandoff.reviewerTimestamp]],
   ]) {
     for (const timestamp of timestamps) assertNotFuture(timestamp, location, now);
@@ -972,6 +1418,7 @@ function validateTimeline({ candidate, smoke, purchase, automated, finalHandoff,
   }
   assertMonotonic(smoke.timestamps, 'Core-smoke');
   assertMonotonic(purchase.timestamps, 'Purchase-flow');
+  assertMonotonic(iapReview.timestamps, 'Native IAP Review');
   if (reviewer < Math.max(testStart, ...observations.map(Date.parse))) {
     throw new EvidenceError('invalid', 'Reviewer timestamp must not predate any recorded observation.');
   }
@@ -988,24 +1435,26 @@ export function evaluatePhoneEvidence(markdown, {
   const context = evidenceContext(evidenceRoot);
   validateTopLevelStatus(visibleMarkdown);
   const candidate = validateCandidate(visibleMarkdown, cwd, context);
+  const iapReview = validateIapReviewEvidence(candidate, context);
   const preconditionsPassed = validatePreconditions(visibleMarkdown, context);
   const smoke = validateSmokeRows(visibleMarkdown, context);
   const purchase = validatePurchaseRows(visibleMarkdown, candidate, context);
   const automated = validateAutomatedMatrix(visibleMarkdown, candidate, context);
   const finalHandoff = validateFinalHandoff(visibleMarkdown);
-  validateTimeline({ candidate, smoke, purchase, automated, finalHandoff, now });
+  validateTimeline({ candidate, smoke, purchase, iapReview, automated, finalHandoff, now });
   scanReferencedTextFiles(context);
   return {
     ...candidate,
     preconditionsPassed,
     smokeRowsPassed: smoke.count,
     purchaseRowsPassed: purchase.count,
+    iapReviewScreenshotsPassed: iapReview.count,
     automatedCellsPassed: automated.count,
     unresolvedBlockers: finalHandoff.unresolvedBlockers,
     verdict: finalHandoff.verdict,
     reviewerTimestamp: finalHandoff.reviewerTimestamp,
     evidenceRoot: context.root,
-    referencedFiles: [...context.referencedFiles.entries()].map(([relative, absolute]) => ({ relative, absolute })),
+    referencedFiles: [...context.fileSnapshots.values()],
     externalUrls: [...context.externalUrls].sort(),
     automatedTimestamps: automated.timestamps,
   };
@@ -1166,17 +1615,35 @@ function relativeEvidencePath(root, absolute, location) {
   return relative.split(path.sep).join('/');
 }
 
-function buildAttestation({ summary, repository, githubRun, evidencePath, markdown, now }) {
+function assertSnapshotUnchanged(root, snapshot, location) {
+  const expectedPath = path.resolve(root, ...snapshot.relative.split('/'));
+  let currentAbsolute;
+  let currentData;
+  try {
+    currentAbsolute = fs.realpathSync(expectedPath);
+    currentData = fs.readFileSync(currentAbsolute);
+  } catch {
+    throw new EvidenceError('invalid', `${location} changed after validation: ${snapshot.relative}.`);
+  }
+  if (path.relative(currentAbsolute, snapshot.absolute) !== ''
+    || currentData.byteLength !== snapshot.bytes
+    || sha256(currentData) !== snapshot.sha256) {
+    throw new EvidenceError('invalid', `${location} changed after validation: ${snapshot.relative}.`);
+  }
+}
+
+function buildAttestation({ summary, repository, githubRun, recordSnapshot, now }) {
+  assertSnapshotUnchanged(summary.evidenceRoot, recordSnapshot, 'Completed evidence record');
+  for (const snapshot of summary.referencedFiles) {
+    assertSnapshotUnchanged(summary.evidenceRoot, snapshot, 'Referenced evidence');
+  }
   const files = summary.referencedFiles
-    .map(({ relative, absolute }) => {
-      const data = fs.readFileSync(absolute);
-      return { path: relative, bytes: data.byteLength, sha256: sha256(data) };
-    })
+    .map(({ relative, bytes, sha256: digest }) => ({ path: relative, bytes, sha256: digest }))
     .sort((left, right) => left.path.localeCompare(right.path));
   const record = {
-    path: relativeEvidencePath(summary.evidenceRoot, evidencePath, 'Completed evidence record'),
-    bytes: Buffer.byteLength(markdown),
-    sha256: sha256(markdown),
+    path: recordSnapshot.relative,
+    bytes: recordSnapshot.bytes,
+    sha256: recordSnapshot.sha256,
   };
   const evidenceManifest = {
     record,
@@ -1300,15 +1767,24 @@ export function runCli({
     const evidenceRoot = rootContext.root;
     const requestedEvidencePath = path.resolve(cwd, options.file);
     let evidencePath;
+    let evidenceData;
     let markdown;
     try {
       evidencePath = fs.realpathSync(requestedEvidencePath);
       if (!fs.statSync(evidencePath).isFile()) throw new Error('not a file');
-      markdown = fs.readFileSync(evidencePath, 'utf8');
+      evidenceData = fs.readFileSync(evidencePath);
+      markdown = evidenceData.toString('utf8');
     } catch {
       throw new EvidenceError('invalid', `Evidence file does not exist or is not a file: ${requestedEvidencePath}`);
     }
     ensureExternalEvidenceLocation({ cwd, evidencePath, evidenceRoot });
+    const recordSnapshot = Object.freeze({
+      relative: relativeEvidencePath(evidenceRoot, evidencePath, 'Completed evidence record'),
+      absolute: evidencePath,
+      data: evidenceData,
+      bytes: evidenceData.byteLength,
+      sha256: sha256(evidenceData),
+    });
     const summary = evaluatePhoneEvidence(markdown, { cwd, evidenceRoot, now });
     if (summary.candidateCommit !== expectedCommit) {
       throw new EvidenceError(
@@ -1346,7 +1822,7 @@ export function runCli({
     }
     const githubRun = validateGithubWorkflow(workflowRecord, validatedRun);
     const attestation = buildAttestation({
-      summary, repository, githubRun, evidencePath, markdown, now,
+      summary, repository, githubRun, recordSnapshot, now,
     });
     const attestationPath = writeAttestation(attestation, evidenceRoot);
 
@@ -1356,6 +1832,7 @@ export function runCli({
     stdout(`Preconditions: ${summary.preconditionsPassed}/9 PASS`);
     stdout(`Physical-iPhone core smoke: ${summary.smokeRowsPassed}/12 PASS`);
     stdout(`Apple sandbox purchase/restore: ${summary.purchaseRowsPassed}/6 PASS`);
+    stdout(`Native IAP Review screenshots: ${summary.iapReviewScreenshotsPassed}/2 PASS`);
     stdout(`Automated phone matrix: ${summary.automatedCellsPassed}/8 PASS`);
     stdout(`Unresolved launch-blocking defects: ${summary.unresolvedBlockers}`);
     stdout(`Attestation: ${attestationPath}`);

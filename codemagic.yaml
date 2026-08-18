@@ -1,7 +1,8 @@
 # Codemagic iOS workflow for Flightglass — NATIVE (svingbue) build.
 #
 # Wraps the v1 Home/Range/Studio/Guide package in a Capacitor 7 iOS shell
-# and ships a manually triggered, verified build to TestFlight
+# and uploads a manually triggered, verified build to App Store Connect
+# without entering TestFlight beta review unless the operator explicitly opts in
 # on the existing App Store record (ASC Apple ID 6768449250, bundle
 # no.strikearc.app, team PL9G26C26C). This build supersedes the React/Vite
 # strikearc-3.0 build on TestFlight — chosen by Sivert 2026-07-03.
@@ -58,6 +59,12 @@ workflows:
     name: Flightglass — iOS TestFlight (native)
     instance_type: mac_mini_m2
     max_build_duration: 60
+
+    inputs:
+      submitToTestFlightReview:
+        description: Submit the uploaded build to TestFlight beta review
+        type: boolean
+        default: false
 
     integrations:
       # Reuses the existing team-level App Store Connect API key
@@ -223,7 +230,9 @@ workflows:
     publishing:
       app_store_connect:
         auth: integration
-        submit_to_testflight: true
+        # Upload always; beta-review submission is an explicit, default-off
+        # operator choice in Codemagic's Start new build form.
+        submit_to_testflight: ${{ inputs.submitToTestFlightReview }}
         # Add a beta group name here once one exists in App Store Connect:
         # beta_groups:
         #   - "Internal Testers"

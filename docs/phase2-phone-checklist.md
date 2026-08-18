@@ -22,6 +22,7 @@ $candidateSha = git rev-parse HEAD
 $buildIdentity = "1.0.0 (42)"
 $phoneEvidenceRoot = "outputs/release-evidence/phone/$candidateSha-42"
 New-Item -ItemType Directory -Force -Path $phoneEvidenceRoot
+New-Item -ItemType Directory -Force -Path "$phoneEvidenceRoot/iap-review"
 Copy-Item docs/phase2-phone-checklist.md "$phoneEvidenceRoot/phone-release-evidence.md"
 ```
 
@@ -30,8 +31,9 @@ relative file beneath `$phoneEvidenceRoot` or one public HTTPS URL with no
 credentials, query string or fragment. Use an index file when a row needs
 multiple artifacts, and list each artifact as a Markdown link in that index.
 The validator recursively validates and hashes those linked files; it rejects
-missing files, its own generated attestation and paths that escape the evidence
-root.
+missing files, its own generated attestation, paths that escape the evidence
+root, and symbolic-link or junction indirection. Inline and reference-style
+Markdown links are both followed into the recursive evidence snapshot.
 
 ## Pass rule
 
@@ -40,6 +42,8 @@ This gate passes only when:
 - one exact signed candidate is identified below and its GitHub release gate is
   green;
 - every required physical-device row is `PASS` on that candidate;
+- exactly two native IAP Review screenshots prove the selected Monthly and
+  Annual plans from the exact TestFlight build and live Store offering;
 - a real Apple sandbox Monthly **or** Annual purchase grants RevenueCat
   entitlement `pro`;
 - cancellation and a store/network error remain locked and recover cleanly;
@@ -191,6 +195,98 @@ the current Offering. Do not fabricate a transaction or tester.
 If the owner later discovers a historic Lifetime purchase, this assumption is
 invalid. Add a real clean-install restore row and require it to pass before App
 Review.
+
+### Required native IAP Review screenshot bundle - final gate
+
+Create this exact local bundle beneath the external evidence root for every new
+candidate SHA and build number:
+
+```text
+iap-review/index.md
+iap-review/strikearc_pro_monthly.png
+iap-review/strikearc_pro_annual.png
+```
+
+These are the two App Review Screenshot upload candidates: one screenshot with
+Monthly selected and one with Annual selected. Do not add Lifetime or substitute
+the public App Store gallery. Browser, simulator, composited and
+`synthetic-native` preflight captures are rehearsal only and cannot satisfy the
+final native IAP Review screenshot gate. Capture both final files on a physical
+iPhone from the exact TestFlight build after its live Apple Store offering and
+localized prices have loaded.
+
+Before capture on iOS 26, choose **Settings > General > Screen Capture > SDR**;
+Apple documents SDR screenshots as PNG and HDR screenshots as HEIC. The
+validator requires each exact file to contain exact PNG binary data with its PNG
+signature, `IHDR`, image data and `IEND`, a valid CRC for every PNG chunk, and no
+bytes after `IEND`. A full Sharp decode must succeed, so corrupt, truncated,
+trailing or otherwise undecodable files fail. Every capture must be opaque
+without alpha or transparency.
+
+`iPhone model` and both IAP `Device` cells must use one exact canonical model
+name from this native portrait-pixel map:
+
+| Canonical physical device | Required PNG width x height |
+|---|---:|
+| iPhone 14 | `1170x2532` |
+| iPhone 14 Plus | `1284x2778` |
+| iPhone 14 Pro | `1179x2556` |
+| iPhone 14 Pro Max | `1290x2796` |
+| iPhone 15 | `1179x2556` |
+| iPhone 15 Plus | `1290x2796` |
+| iPhone 15 Pro | `1179x2556` |
+| iPhone 15 Pro Max | `1290x2796` |
+| iPhone 16 | `1179x2556` |
+| iPhone 16 Plus | `1290x2796` |
+| iPhone 16 Pro | `1206x2622` |
+| iPhone 16 Pro Max | `1320x2868` |
+| iPhone 16e | `1170x2532` |
+| iPhone 17 | `1206x2622` |
+| iPhone 17 Pro | `1206x2622` |
+| iPhone 17 Pro Max | `1320x2868` |
+| iPhone Air | `1260x2736` |
+
+Each final artifact must be an untouched, full-screen portrait PNG captured on
+that recorded physical iPhone and must exactly match its mapped native pixels.
+Cropped, resized, rotated, exported, simulator, browser, composited or merely
+App-Store-compatible substitute dimensions fail. An unlisted model fails closed
+until its Apple tech-spec resolution is explicitly added and tested. The map is
+based on Apple's model tech specs and
+[layout reference](https://developer.apple.com/design/human-interface-guidelines/layout).
+Exact equality is this project's conservative untouched-capture evidence
+contract; Apple's
+[App Store screenshot specifications](https://developer.apple.com/help/app-store-connect/reference/app-information/screenshot-specifications)
+describe acceptable upload buckets, not physical-source proof.
+
+Each decoded screenshot must also meet the documented visual-complexity floor:
+at least 16 sampled colors, luma standard deviation `10.0`, and luma entropy
+`1.0 bit`. A blank, uniform or obviously content-free image fails. These checks
+bind plausible image content to the bundle, but capture provenance remains
+operator-attested and is not cryptographically proven.
+
+Create `iap-review/index.md` with exactly this schema and two rows. Replace every
+`PENDING` cell; keep the capture-source text exact:
+
+```markdown
+# Flightglass native IAP Review evidence
+
+| Screenshot | Product ID | Selected plan | Localized price | Candidate SHA | Build number | Device | Timestamp | Capture source |
+|---|---|---|---|---|---|---|---|---|
+| [strikearc_pro_monthly.png](strikearc_pro_monthly.png) | strikearc_pro_monthly | Monthly | NOK 99 | PENDING | PENDING | PENDING | PENDING | Captured from the exact TestFlight build and live Store offering |
+| [strikearc_pro_annual.png](strikearc_pro_annual.png) | strikearc_pro_annual | Annual | NOK 499 | PENDING | PENDING | PENDING | PENDING | Captured from the exact TestFlight build and live Store offering |
+```
+
+`Candidate SHA`, numeric `Build number` and `Device` must exactly match the
+completed candidate record. `Localized price` must be exactly `NOK 99` for
+Monthly and `NOK 499` for Annual; any other observed currency or price leaves the
+gate closed until the release contract is deliberately updated. `Timestamp`
+must be ISO 8601 with `Z` or a UTC offset. The two screenshot files must have
+distinct SHA-256 hashes. The validator follows the index links relative to
+`iap-review/` and recursively includes the index and both images in the
+candidate/build attestation. It retains the validated bytes and SHA-256 for
+every local evidence file, then immediately before attestation rereads each path
+and fails if its target or bytes changed; attestation hashes come from the
+retained validated snapshots.
 
 ## Purchase evidence record
 

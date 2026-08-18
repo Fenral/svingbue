@@ -89,6 +89,12 @@ test('Codemagic is manual-only and refuses ambiguous billing or build-number sta
   const yaml = read('codemagic.yaml');
   const pkg = JSON.parse(read('package.json'));
   assert.doesNotMatch(yaml, /^\s+triggering:/m, 'TestFlight must be started manually');
+  assert.match(yaml, /submitToTestFlightReview:[\s\S]*type:\s*boolean[\s\S]*default:\s*false/,
+    'TestFlight beta review must be an explicit default-off build input');
+  assert.match(yaml, /submit_to_testflight:\s*\$\{\{ inputs\.submitToTestFlightReview \}\}/,
+    'publishing must use the explicit beta-review input instead of auto-submitting');
+  assert.doesNotMatch(yaml, /submit_to_testflight:\s*true/,
+    'a successful archive must not automatically enter TestFlight beta review');
   assert.match(yaml, /- revenuecat-flightglass/);
   assert.match(yaml, /npm run verify:v1:source/);
   assert.match(yaml, /npm run configure:iap:ios/);

@@ -92,6 +92,10 @@ jobs:
         id: install_browsers
         run: ./tools/node_modules/.bin/playwright-core install --with-deps chromium webkit
 
+      - name: Verify synthetic-native IAP screenshot preflight (do not submit)
+        id: iap_review_preflight
+        run: npm run test:iap-review-preflight
+
       - name: Reset UX verification evidence workspace
         id: reset_ux_evidence
         shell: bash
@@ -196,6 +200,7 @@ jobs:
           OUTCOME_SETUP_NODE: ${{ steps.setup_node.outcome }}
           OUTCOME_INSTALL_DEPENDENCIES: ${{ steps.install_dependencies.outcome }}
           OUTCOME_INSTALL_BROWSERS: ${{ steps.install_browsers.outcome }}
+          OUTCOME_IAP_REVIEW_PREFLIGHT: ${{ steps.iap_review_preflight.outcome }}
           OUTCOME_RESET_UX_EVIDENCE: ${{ steps.reset_ux_evidence.outcome }}
           OUTCOME_CHANGE_GATE: ${{ steps.change_gate.outcome }}
           OUTCOME_COLLECT_UX_EVIDENCE: ${{ steps.collect_ux_evidence.outcome }}
@@ -231,6 +236,7 @@ jobs:
             --arg setupNode "$OUTCOME_SETUP_NODE" \
             --arg installDependencies "$OUTCOME_INSTALL_DEPENDENCIES" \
             --arg installBrowsers "$OUTCOME_INSTALL_BROWSERS" \
+            --arg iapReviewPreflight "$OUTCOME_IAP_REVIEW_PREFLIGHT" \
             --arg resetUxEvidence "$OUTCOME_RESET_UX_EVIDENCE" \
             --arg changeGate "$OUTCOME_CHANGE_GATE" \
             --arg collectUxEvidence "$OUTCOME_COLLECT_UX_EVIDENCE" \
@@ -252,6 +258,7 @@ jobs:
                 setupNode: $setupNode,
                 installDependencies: $installDependencies,
                 installBrowsers: $installBrowsers,
+                iapReviewPreflight: $iapReviewPreflight,
                 resetUxEvidence: $resetUxEvidence,
                 changeGate: $changeGate,
                 collectUxEvidence: $collectUxEvidence,
